@@ -9,7 +9,7 @@ import {MusicSystem} from "./MusicSystem";
 import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "./GraphicalLabel";
-import { SkyBottomLine } from "./SkyBottomLine";
+import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
 import { GraphicalSlur } from "./GraphicalSlur";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
@@ -24,7 +24,7 @@ export abstract class StaffLine extends GraphicalObject {
     protected parentMusicSystem: MusicSystem;
     protected parentStaff: Staff;
     protected octaveShifts: GraphicalOctaveShift[] = [];
-    protected skyBottomLine: SkyBottomLine;
+    protected skyBottomLineCalculator: SkyBottomLineCalculator;
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
     protected abstractExpressions: AbstractGraphicalExpression[] = [];
@@ -41,7 +41,7 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentMusicSystem = parentSystem;
         this.parentStaff = parentStaff;
         this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
-        this.skyBottomLine = new SkyBottomLine(this);
+        this.skyBottomLineCalculator = new SkyBottomLineCalculator(this);
         this.staffHeight = this.parentMusicSystem.rules.StaffHeight;
         this.topLineOffset = 0;
         this.bottomLineOffset = 4;
@@ -149,16 +149,16 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentStaff = value;
     }
 
-    public get SkyBottomLine(): SkyBottomLine {
-        return this.skyBottomLine;
+    public get SkyBottomLineCalculator(): SkyBottomLineCalculator {
+        return this.skyBottomLineCalculator;
     }
 
     public get SkyLine(): number[] {
-        return this.skyBottomLine.SkyLine;
+        return this.skyBottomLineCalculator.SkyLine;
     }
 
     public get BottomLine(): number[] {
-        return this.skyBottomLine.BottomLine;
+        return this.skyBottomLineCalculator.BottomLine;
     }
 
     public get OctaveShifts(): GraphicalOctaveShift[] {

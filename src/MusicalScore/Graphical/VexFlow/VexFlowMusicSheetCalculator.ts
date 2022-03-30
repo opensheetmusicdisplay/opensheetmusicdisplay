@@ -3,7 +3,6 @@ import { VexFlowGraphicalSymbolFactory } from "./VexFlowGraphicalSymbolFactory";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { StaffLine } from "../StaffLine";
 import { SkyBottomLineBatchCalculator } from "../SkyBottomLineBatchCalculator";
-import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -538,7 +537,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
 
   protected updateStaffLineBorders(staffLine: StaffLine): void {
-    staffLine.SkyBottomLine.updateStaffLineBorders();
+    staffLine.SkyBottomLineCalculator.updateStaffLineBorders();
   }
 
   protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
@@ -1015,20 +1014,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const fontSize: number = (textBracket as any).font.size / 10;
 
     if ((<any>textBracket).position === VF.TextBracket.Positions.TOP) {
-      const headroom: number = Math.ceil(parentStaffline.SkyBottomLine.getSkyLineMinInRange(startX, stopX));
+      const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
       if (headroom === Infinity) { // will cause Vexflow error
         return;
       }
       (textBracket.start.getStave().options as any).top_text_position = Math.abs(headroom);
-      parentStaffline.SkyBottomLine.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
+      parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
     } else {
-      const footroom: number = parentStaffline.SkyBottomLine.getBottomLineMaxInRange(startX, stopX);
+      const footroom: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
       if (footroom === Infinity) { // will cause Vexflow error
         return;
       }
       (textBracket.start.getStave().options as any).bottom_text_position = footroom;
       //Vexflow positions top vs. bottom text in a slightly inconsistent way it seems
-      parentStaffline.SkyBottomLine.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);
+      parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);
     }
   }
 
@@ -1065,9 +1064,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         staffLines, this.rules.PreferredSkyBottomLineBatchCalculatorBackend);
       calculator.calculateLines();
     } else {
-      const calculator: SkyBottomLineCalculator = new SkyBottomLineCalculator();
       for (const staffLine of staffLines) {
-        staffLine.SkyBottomLine.updateLines(calculator.calculateLines(staffLine));
+        staffLine.SkyBottomLineCalculator.calculateLines();
       }
     }
   }

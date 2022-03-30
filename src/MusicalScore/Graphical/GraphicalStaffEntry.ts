@@ -19,7 +19,7 @@ import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { MusicSheetCalculator } from "./MusicSheetCalculator";
 import { Tie } from "../VoiceData/Tie";
 import { GraphicalLabel } from "./GraphicalLabel";
-import { SkyBottomLine } from "./SkyBottomLine";
+import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 
 /**
  * The graphical counterpart of a [[SourceStaffEntry]].
@@ -318,7 +318,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     }
 
     public getSkylineMin(): number {
-        const skybottomcalculator: SkyBottomLine = this.parentMeasure?.ParentStaffLine.SkyBottomLine;
+        const skybottomcalculator: SkyBottomLineCalculator = this.parentMeasure?.ParentStaffLine.SkyBottomLineCalculator;
         if (!skybottomcalculator) {
             return undefined;
         }
@@ -339,7 +339,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     }
 
     public getBottomlineMax(): number {
-        const skybottomcalculator: SkyBottomLine = this.parentMeasure?.ParentStaffLine.SkyBottomLine;
+        const skybottomcalculator: SkyBottomLineCalculator = this.parentMeasure?.ParentStaffLine.SkyBottomLineCalculator;
         if (!skybottomcalculator) {
             return undefined;
         }

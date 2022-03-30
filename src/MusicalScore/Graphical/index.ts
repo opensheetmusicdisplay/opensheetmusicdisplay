@@ -42,7 +42,7 @@ export * from "./MusicSystemBuilder";
 export * from "./OctaveShiftParams";
 export * from "./SelectionEndSymbol";
 export * from "./SelectionStartSymbol";
-export * from "./SkyBottomLine";
+export * from "./SkyBottomLineCalculator";
 export * from "./StaffLine";
 export * from "./StaffLineActivitySymbol";
 export * from "./SystemLine";

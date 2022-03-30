@@ -1,7 +1,7 @@
 import { SkyBottomLineBatchCalculatorBackendType } from "../../OpenSheetMusicDisplay";
 import { EngravingRules } from "./EngravingRules";
 import { PlainSkyBottomLineBatchCalculatorBackend } from "./PlainSkyBottomLineBatchCalculatorBackend";
-import { SkyBottomLine } from "./SkyBottomLine";
+import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { SkyBottomLineBatchCalculatorBackend } from "./SkyBottomLineBatchCalculatorBackend";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { StaffLine } from "./StaffLine";
@@ -9,7 +9,7 @@ import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import { WebGLSkyBottomLineBatchCalculatorBackend } from "./WebGLSkyBottomLineBatchCalculatorBackend";
 
 interface IBatchEntry {
-    skyBottomLine: SkyBottomLine;
+    skyBottomLineCalculator: SkyBottomLineCalculator;
     measures: VexFlowMeasure[];
 }
 
@@ -38,7 +38,7 @@ export class SkyBottomLineBatchCalculator {
                 }
             })();
             batchEntryArray.push({
-                skyBottomLine: staffLine.SkyBottomLine,
+                skyBottomLineCalculator: staffLine.SkyBottomLineCalculator,
                 measures: staffLine.Measures as VexFlowMeasure[]
             });
         }
@@ -73,9 +73,9 @@ export class SkyBottomLineBatchCalculator {
         for (const [, { backend, entries }] of this.batches) {
             const results: SkyBottomLineCalculationResult[] = backend.calculateLines();
             let start: number = 0;
-            for (const { skyBottomLine, measures } of entries) {
+            for (const { skyBottomLineCalculator, measures } of entries) {
                 const end: number = start + measures.length;
-                skyBottomLine.updateLines(results.slice(start, end));
+                skyBottomLineCalculator.updateLines(results.slice(start, end));
                 start = end;
             }
         }

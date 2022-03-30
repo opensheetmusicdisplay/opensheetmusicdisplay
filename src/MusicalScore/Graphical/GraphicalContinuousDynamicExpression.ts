@@ -5,7 +5,7 @@ import { ContDynamicEnum, ContinuousDynamicExpression } from "../VoiceData/Expre
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-import { SkyBottomLine } from "./SkyBottomLine";
+import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { ISqueezable } from "./ISqueezable";
 import log from "loglevel";
 import { SourceMeasure } from "../VoiceData/SourceMeasure";
@@ -64,11 +64,11 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
 
     public updateSkyBottomLine(): void {
         // update Sky-BottomLine
-        const skyBottomLine: SkyBottomLine = this.parentStaffLine.SkyBottomLine;
+        const skyBottomLineCalculator: SkyBottomLineCalculator = this.parentStaffLine.SkyBottomLineCalculator;
         const left: number = this.IsVerbal ? this.label.PositionAndShape.RelativePosition.x + this.label.PositionAndShape.BorderMarginLeft : 0;
         const right: number = this.IsVerbal ? this.label.PositionAndShape.RelativePosition.x + this.label.PositionAndShape.BorderMarginRight : 0;
         if (!this.IsVerbal && this.lines.length < 2) {
-            log.warn("Not enough lines for SkyBottomLine calculation");
+            log.warn("Not enough lines for SkyBottomLineCalculator calculation");
         }
         if (!this.IsVerbal) {
             if (this.ContinuousDynamic.DynamicType !== ContDynamicEnum.crescendo &&
@@ -82,26 +82,26 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
             case PlacementEnum.Above:
                 if (!this.IsVerbal) {
                     if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
-                        skyBottomLine.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
+                        skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
                     } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
-                        skyBottomLine.updateSkyLineWithWedge(this.lines[0].End, this.lines[0].Start);
+                        skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].End, this.lines[0].Start);
                     } // else covered with the log.warn above
                 } else {
                     const yValue: number = this.label.PositionAndShape.BorderMarginTop + this.label.PositionAndShape.RelativePosition.y;
-                    skyBottomLine.updateSkyLineInRange(left, right, yValue);
+                    skyBottomLineCalculator.updateSkyLineInRange(left, right, yValue);
                 }
                 break;
             case PlacementEnum.Below:
                 if (!this.IsVerbal) {
                     // console.log(`id: ${this.parentStaffLine.ParentStaff.Id}`);
                     if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
-                        skyBottomLine.updateBottomLineWithWedge(this.lines[1].Start, this.lines[1].End);
+                        skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].Start, this.lines[1].End);
                     } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
-                        skyBottomLine.updateBottomLineWithWedge(this.lines[1].End, this.lines[1].Start);
+                        skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].End, this.lines[1].Start);
                     } // else covered with the log.warn above
                 } else {
                     const yValue: number = this.label.PositionAndShape.BorderMarginBottom + this.label.PositionAndShape.RelativePosition.y;
-                    skyBottomLine.updateBottomLineInRange(left, right, yValue);
+                    skyBottomLineCalculator.updateBottomLineInRange(left, right, yValue);
                 }
                 break;
             default:

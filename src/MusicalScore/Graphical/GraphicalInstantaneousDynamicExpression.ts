@@ -2,7 +2,7 @@ import { StaffLine } from "./StaffLine";
 import { InstantaneousDynamicExpression } from "../VoiceData/Expressions/InstantaneousDynamicExpression";
 import { GraphicalMeasure } from "./GraphicalMeasure";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
-import { SkyBottomLine } from "./SkyBottomLine";
+import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import log from "loglevel";
 
@@ -17,18 +17,18 @@ export class GraphicalInstantaneousDynamicExpression extends AbstractGraphicalEx
     }
 
     public updateSkyBottomLine(): void {
-        const skyBottomLine: SkyBottomLine = this.parentStaffLine.SkyBottomLine;
+        const skyBottomLineCalculator: SkyBottomLineCalculator = this.parentStaffLine.SkyBottomLineCalculator;
         const left: number = this.PositionAndShape.RelativePosition.x + this.PositionAndShape.BorderMarginLeft;
         const right: number = this.PositionAndShape.RelativePosition.x + this.PositionAndShape.BorderMarginRight;
         let yValue: number = 0;
         switch (this.Placement) {
             case PlacementEnum.Above:
                 yValue = this.PositionAndShape.RelativePosition.y + this.PositionAndShape.BorderMarginTop;
-                skyBottomLine.updateSkyLineInRange(left, right, yValue);
+                skyBottomLineCalculator.updateSkyLineInRange(left, right, yValue);
                 break;
             case PlacementEnum.Below:
                 yValue = this.PositionAndShape.RelativePosition.y + this.PositionAndShape.BorderMarginBottom;
-                skyBottomLine.updateBottomLineInRange(left, right, yValue);
+                skyBottomLineCalculator.updateBottomLineInRange(left, right, yValue);
                 break;
             default:
                 log.error("Placement for GraphicalInstantaneousDynamicExpression is unknown");
