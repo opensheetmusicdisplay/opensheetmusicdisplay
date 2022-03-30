@@ -204,55 +204,6 @@ export class SkyBottomLineCalculator {
     }
 
     /**
-     * go backwards through the skyline array and find a number so that
-     * we can properly calculate the average
-     * @param start
-     * @param backend
-     * @param color
-     */
-    private findPreviousValidNumber(start: number, tSkyLine: number[]): number {
-        for (let idx: number = start; idx >= 0; idx--) {
-            if (!isNaN(tSkyLine[idx])) {
-                return tSkyLine[idx];
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * go forward through the skyline array and find a number so that
-     * we can properly calculate the average
-     * @param start
-     * @param backend
-     * @param color
-     */
-    private findNextValidNumber(start: number, tSkyLine: Array<number>): number {
-        if (start >= tSkyLine.length) {
-            return tSkyLine[start - 1];
-        }
-        for (let idx: number = start; idx < tSkyLine.length; idx++) {
-            if (!isNaN(tSkyLine[idx])) {
-                return tSkyLine[idx];
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * Debugging drawing function that can draw single pixels
-     * @param coord Point to draw to
-     * @param backend the backend to be used
-     * @param color the color to be used, default is red
-     */
-    private drawPixel(coord: PointF2D, backend: CanvasVexFlowBackend, color: string = "#FF0000FF"): void {
-        const ctx: any = backend.getContext();
-        const oldStyle: string = ctx.fillStyle;
-        ctx.fillStyle = color;
-        ctx.fillRect(coord.x, coord.y, 2, 2);
-        ctx.fillStyle = oldStyle;
-    }
-
-    /**
      * This method updates the SkyLine for a given Wedge.
      * @param start Start point of the wedge (the point where both lines meet)
      * @param end End point of the wedge (the end of the most extreme line: upper line for skyline, lower line for bottomline)
@@ -326,8 +277,8 @@ export class SkyBottomLineCalculator {
     /**
      * This method updates the SkyLine for a given range with a given value
      * //param  to update the SkyLine for
-     * @param start Start index of the range
-     * @param end End index of the range
+     * @param startIndex Start index of the range
+     * @param endIndex End index of the range
      * @param value ??
      */
     public updateSkyLineInRange(startIndex: number, endIndex: number, value: number): void {
@@ -336,9 +287,8 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method updates the BottomLine for a given range with a given value
-     * @param  to update the BottomLine for
-     * @param start Start index of the range
-     * @param end End index of the range (excluding)
+     * @param startIndex Start index of the range
+     * @param endIndex End index of the range (excluding)
      * @param value ??
      */
     public updateBottomLineInRange(startIndex: number, endIndex: number, value: number): void {
@@ -347,7 +297,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * Resets a SkyLine in a range to its original value
-     * @param  to reset the SkyLine in
      * @param startIndex Start index of the range
      * @param endIndex End index of the range (excluding)
      */
@@ -357,7 +306,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * Resets a bottom line in a range to its original value
-     * @param  to reset the bottomline in
      * @param startIndex Start index of the range
      * @param endIndex End index of the range
      */
@@ -421,7 +369,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method finds the minimum value of the SkyLine.
-     * @param staffLine StaffLine to apply to
      */
     public getSkyLineMin(): number {
         return Math.min(...this.SkyLine.filter(s => !isNaN(s)));
@@ -434,7 +381,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method finds the SkyLine's minimum value within a given range.
-     * @param staffLine Staffline to apply to
      * @param startIndex Starting index
      * @param endIndex End index (including)
      */
@@ -444,7 +390,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method finds the maximum value of the BottomLine.
-     * @param staffLine Staffline to apply to
      */
     public getBottomLineMax(): number {
         return Math.max(...this.BottomLine.filter(s => !isNaN(s)));
@@ -457,7 +402,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method finds the BottomLine's maximum value within a given range.
-     * @param staffLine Staffline to find the max value in
      * @param startIndex Start index of the range
      * @param endIndex End index of the range (excluding)
      */
@@ -478,12 +422,9 @@ export class SkyBottomLineCalculator {
         return this.getMaxInRange(this.mBottomLine, startPoint, endPoint);
     }
 
-    //#region Private methods
-
     /**
      * Updates sky- and bottom line with a boundingBox and its children
      * @param boundingBox Bounding box to be added
-     * @param topBorder top
      */
     public updateWithBoundingBoxRecursively(boundingBox: BoundingBox): void {
         if (boundingBox.ChildElements && boundingBox.ChildElements.length > 0) {
@@ -504,6 +445,55 @@ export class SkyBottomLineCalculator {
                 this.updateInRange(this.mBottomLine, startPoint, endPoint, currentBottomBorder);
             }
         }
+    }
+
+    //#region Private methods
+
+    /**
+     * go backwards through the skyline array and find a number so that
+     * we can properly calculate the average
+     * @param start the starting index of the search
+     * @param tSkyLine the skyline to search through
+     */
+     private findPreviousValidNumber(start: number, tSkyLine: number[]): number {
+        for (let idx: number = start; idx >= 0; idx--) {
+            if (!isNaN(tSkyLine[idx])) {
+                return tSkyLine[idx];
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * go forward through the skyline array and find a number so that
+     * we can properly calculate the average
+     * @param start the starting index of the search
+     * @param tSkyLine the skyline to search through
+     */
+    private findNextValidNumber(start: number, tSkyLine: Array<number>): number {
+        if (start >= tSkyLine.length) {
+            return tSkyLine[start - 1];
+        }
+        for (let idx: number = start; idx < tSkyLine.length; idx++) {
+            if (!isNaN(tSkyLine[idx])) {
+                return tSkyLine[idx];
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Debugging drawing function that can draw single pixels
+     * @param coord Point to draw to
+     * @param backend the backend to be used
+     * @param color the color to be used, default is red
+     */
+    private drawPixel(coord: PointF2D, backend: CanvasVexFlowBackend, color: string = "#FF0000FF"): void {
+        const ctx: any = backend.getContext();
+        const oldStyle: string = ctx.fillStyle;
+        ctx.fillStyle = color;
+        ctx.fillRect(coord.x, coord.y, 2, 2);
+        ctx.fillStyle = oldStyle;
     }
 
     /**
