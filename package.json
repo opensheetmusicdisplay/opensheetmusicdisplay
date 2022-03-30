@@ -29,11 +29,14 @@
     "generatePNG:paged:debug": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./export png 210 297 all --debug 5000",
     "generatePNG:paged:single": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./export png 0 0 ^Beethoven",
     "generate:current": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --osmdtesting",
+    "generate:current:batch": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --osmdtesting 0 --batch",
+    "generate:current:webgl": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --osmdtesting 0 --webgl",
     "generate:current:debug": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --debugosmdtesting",
     "generate:current:singletest": "node test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 ^Beethoven --osmdtestingsingle",
-    "generate:blessed": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/blessed png 0 0 allSmall --osmdtesting",
     "test:visual": "bash ./test/Util/visual_regression.sh ./visual_regression",
     "test:visual:build": "npm-run-all prebuild build:webpack generate:current test:visual",
+    "test:visual:build:batch": "npm-run-all prebuild build:webpack generate:current:batch test:visual",
+    "test:visual:build:webgl": "npm-run-all prebuild build:webpack generate:current:webgl test:visual",
     "test:visual:singletest": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven",
     "fix-memory-limit": "cross-env NODE_OPTIONS=--max_old_space_size=4096"
   },
@@ -66,6 +69,7 @@
   "homepage": "http://opensheetmusicdisplay.org",
   "dependencies": {
     "@types/vexflow": "^1.2.37",
+    "gl": "^5.0.0",
     "jszip": "3.7.1",
     "loglevel": "^1.8.0",
     "typescript-collections": "^1.3.3",

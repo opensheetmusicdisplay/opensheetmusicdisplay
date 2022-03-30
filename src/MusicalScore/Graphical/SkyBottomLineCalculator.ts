@@ -1,11 +1,12 @@
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
-import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 import log from "loglevel";
 import { BoundingBox } from "./BoundingBox";
+import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
+import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
 /**
  * This class calculates and holds the skyline and bottom line information.
  * It also has functions to update areas of the two lines if new elements are
@@ -31,16 +32,83 @@ export class SkyBottomLineCalculator {
     }
 
     /**
-     * This method calculates the Sky- and BottomLines for a StaffLine.
+     * This method updates the skylines and bottomlines for mStaffLineParent.
+     * @param calculationResults the skylines and bottomlines of mStaffLineParent's measures calculated by SkyBottomLineBatchCalculator
      */
-    public calculateLines(): void {
-        // calculate arrayLength
+    public updateLines(calculationResults: SkyBottomLineCalculationResult[]): void {
+        const measures: VexFlowMeasure[] = this.StaffLineParent.Measures as VexFlowMeasure[];
+
+        if (calculationResults.length !== measures.length) {
+            log.warn("SkyBottomLineCalculator: lengths of calculation result array and measure array do not match");
+
+            if (calculationResults.length < measures.length) {
+                while (calculationResults.length < measures.length) {
+                    calculationResults.push(new SkyBottomLineCalculationResult([], []));
+                }
+            } else {
+                calculationResults = calculationResults.slice(0, measures.length);
+            }
+        }
+
         const arrayLength: number = Math.max(Math.ceil(this.StaffLineParent.PositionAndShape.Size.width * this.SamplingUnit), 1);
         this.mSkyLine = [];
         this.mBottomLine = [];
 
+        for (const { skyLine, bottomLine } of calculationResults) {
+            this.mSkyLine.push(...skyLine);
+            this.mBottomLine.push(...bottomLine);
+        }
+
+        // Subsampling:
+        // The pixel width is bigger than the measure size in units. So we split the array into
+        // chunks with the size of MeasurePixelWidth/measureUnitWidth and reduce the value to its
+        // average
+        const arrayChunkSize: number = this.mSkyLine.length / arrayLength;
+
+        const subSampledSkyLine: number[] = [];
+        const subSampledBottomLine: number[] = [];
+        for (let chunkIndex: number = 0; chunkIndex < this.mSkyLine.length; chunkIndex += arrayChunkSize) {
+            if (subSampledSkyLine.length === arrayLength) {
+                break; // TODO find out why skyline.length becomes arrayLength + 1. see log.debug below
+            }
+
+            const endIndex: number = Math.min(this.mSkyLine.length, chunkIndex + arrayChunkSize);
+            let chunk: number[] = this.mSkyLine.slice(chunkIndex, endIndex + 1); // slice does not include end index
+            // TODO chunkIndex + arrayChunkSize is sometimes bigger than this.mSkyLine.length -> out of bounds
+            // TODO chunkIndex + arrayChunkSize is often a non-rounded float as well. is that ok to use with slice?
+            /*const diff: number = this.mSkyLine.length - (chunkIndex + arrayChunkSize);
+            if (diff < 0) { // out of bounds
+                console.log("length - slice end index: " + diff);
+            }*/
+
+            subSampledSkyLine.push(Math.min(...chunk));
+            chunk = this.mBottomLine.slice(chunkIndex, endIndex + 1); // slice does not include end index
+            subSampledBottomLine.push(Math.max(...chunk));
+        }
+
+        this.mSkyLine = subSampledSkyLine;
+        this.mBottomLine = subSampledBottomLine;
+        if (this.mSkyLine.length !== arrayLength) { // bottomline will always be same length as well
+            log.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength})`);
+        }
+
+        // Remap the values from 0 to +/- height in units
+        const lowestSkyLine: number = Math.max(...this.mSkyLine);
+        this.mSkyLine = this.mSkyLine.map(v => (v - lowestSkyLine) / unitInPixels + this.StaffLineParent.TopLineOffset);
+
+        const highestBottomLine: number = Math.min(...this.mBottomLine);
+        this.mBottomLine = this.mBottomLine.map(v => (v - highestBottomLine) / unitInPixels + this.StaffLineParent.BottomLineOffset);
+    }
+
+    /**
+     * This method calculates the Sky- and BottomLines for a StaffLine.
+     */
+    public calculateLines(): void {
+        const samplingUnit: number = this.mRules.SamplingUnit;
+        const results: SkyBottomLineCalculationResult[] = [];
+
         // Create a temporary canvas outside the DOM to draw the measure in.
-        const tmpCanvas: any = new CanvasVexFlowBackend(this.StaffLineParent.ParentMusicSystem.rules);
+        const tmpCanvas: any = new CanvasVexFlowBackend(this.mRules);
         // search through all Measures
         for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
             // must calculate first AbsolutePositions
@@ -82,7 +150,7 @@ export class SkyBottomLineCalculator {
             // Since we are only interested in black or white we can take 32bit words at once
             const imageData: any = ctx.getImageData(0, 0, width, height);
             const rgbaLength: number = 4;
-            const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * this.mRules.SamplingUnit), 1);
+            const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * samplingUnit), 1);
             const tmpSkyLine: number[] = new Array(measureArrayLength);
             const tmpBottomLine: number[] = new Array(measureArrayLength);
             for (let x: number = 0; x < width; x++) {
@@ -119,8 +187,7 @@ export class SkyBottomLineCalculator {
                 }
             }
 
-            this.mSkyLine.push(...tmpSkyLine);
-            this.mBottomLine.push(...tmpBottomLine);
+            results.push(new SkyBottomLineCalculationResult(tmpSkyLine, tmpBottomLine));
 
             // Set to true to only show the "mini canvases" and the corresponding skylines
             const debugTmpCanvas: boolean = false;
@@ -132,90 +199,8 @@ export class SkyBottomLineCalculator {
             }
             tmpCanvas.clear();
         }
-        // Subsampling:
-        // The pixel width is bigger than the measure size in units. So we split the array into
-        // chunks with the size of MeasurePixelWidth/measureUnitWidth and reduce the value to its
-        // average
-        const arrayChunkSize: number = this.mSkyLine.length / arrayLength;
 
-        const subSampledSkyLine: number[] = [];
-        const subSampledBottomLine: number[] = [];
-        for (let chunkIndex: number = 0; chunkIndex < this.mSkyLine.length; chunkIndex += arrayChunkSize) {
-            if (subSampledSkyLine.length === arrayLength) {
-                break; // TODO find out why skyline.length becomes arrayLength + 1. see log.debug below
-            }
-
-            const endIndex: number = Math.min(this.mSkyLine.length, chunkIndex + arrayChunkSize);
-            let chunk: number[] = this.mSkyLine.slice(chunkIndex, endIndex + 1); // slice does not include end index
-            // TODO chunkIndex + arrayChunkSize is sometimes bigger than this.mSkyLine.length -> out of bounds
-            // TODO chunkIndex + arrayChunkSize is often a non-rounded float as well. is that ok to use with slice?
-            /*const diff: number = this.mSkyLine.length - (chunkIndex + arrayChunkSize);
-            if (diff < 0) { // out of bounds
-                console.log("length - slice end index: " + diff);
-            }*/
-
-            subSampledSkyLine.push(Math.min(...chunk));
-            chunk = this.mBottomLine.slice(chunkIndex, endIndex + 1); // slice does not include end index
-            subSampledBottomLine.push(Math.max(...chunk));
-        }
-
-        this.mSkyLine = subSampledSkyLine;
-        this.mBottomLine = subSampledBottomLine;
-        if (this.mSkyLine.length !== arrayLength) { // bottomline will always be same length as well
-            log.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength})`);
-        }
-        // Remap the values from 0 to +/- height in units
-        this.mSkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels + this.StaffLineParent.TopLineOffset);
-        this.mBottomLine = this.mBottomLine.map(v => (v - Math.min(...this.mBottomLine)) / unitInPixels + this.StaffLineParent.BottomLineOffset);
-    }
-
-    /**
-     * go backwards through the skyline array and find a number so that
-     * we can properly calculate the average
-     * @param start
-     * @param backend
-     * @param color
-     */
-    private findPreviousValidNumber(start: number, tSkyLine: number[]): number {
-        for (let idx: number = start; idx >= 0; idx--) {
-            if (!isNaN(tSkyLine[idx])) {
-                return tSkyLine[idx];
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * go forward through the skyline array and find a number so that
-     * we can properly calculate the average
-     * @param start
-     * @param backend
-     * @param color
-     */
-    private findNextValidNumber(start: number, tSkyLine: Array<number>): number {
-        if (start >= tSkyLine.length) {
-            return tSkyLine[start - 1];
-        }
-        for (let idx: number = start; idx < tSkyLine.length; idx++) {
-            if (!isNaN(tSkyLine[idx])) {
-                return tSkyLine[idx];
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * Debugging drawing function that can draw single pixels
-     * @param coord Point to draw to
-     * @param backend the backend to be used
-     * @param color the color to be used, default is red
-     */
-    private drawPixel(coord: PointF2D, backend: CanvasVexFlowBackend, color: string = "#FF0000FF"): void {
-        const ctx: any = backend.getContext();
-        const oldStyle: string = ctx.fillStyle;
-        ctx.fillStyle = color;
-        ctx.fillRect(coord.x, coord.y, 2, 2);
-        ctx.fillStyle = oldStyle;
+        this.updateLines(results);
     }
 
     /**
@@ -292,8 +277,8 @@ export class SkyBottomLineCalculator {
     /**
      * This method updates the SkyLine for a given range with a given value
      * //param  to update the SkyLine for
-     * @param start Start index of the range
-     * @param end End index of the range
+     * @param startIndex Start index of the range
+     * @param endIndex End index of the range
      * @param value ??
      */
     public updateSkyLineInRange(startIndex: number, endIndex: number, value: number): void {
@@ -302,9 +287,8 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method updates the BottomLine for a given range with a given value
-     * @param  to update the BottomLine for
-     * @param start Start index of the range
-     * @param end End index of the range (excluding)
+     * @param startIndex Start index of the range
+     * @param endIndex End index of the range (excluding)
      * @param value ??
      */
     public updateBottomLineInRange(startIndex: number, endIndex: number, value: number): void {
@@ -313,7 +297,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * Resets a SkyLine in a range to its original value
-     * @param  to reset the SkyLine in
      * @param startIndex Start index of the range
      * @param endIndex End index of the range (excluding)
      */
@@ -323,7 +306,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * Resets a bottom line in a range to its original value
-     * @param  to reset the bottomline in
      * @param startIndex Start index of the range
      * @param endIndex End index of the range
      */
@@ -387,7 +369,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method finds the minimum value of the SkyLine.
-     * @param staffLine StaffLine to apply to
      */
     public getSkyLineMin(): number {
         return Math.min(...this.SkyLine.filter(s => !isNaN(s)));
@@ -400,7 +381,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method finds the SkyLine's minimum value within a given range.
-     * @param staffLine Staffline to apply to
      * @param startIndex Starting index
      * @param endIndex End index (including)
      */
@@ -410,7 +390,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method finds the maximum value of the BottomLine.
-     * @param staffLine Staffline to apply to
      */
     public getBottomLineMax(): number {
         return Math.max(...this.BottomLine.filter(s => !isNaN(s)));
@@ -423,7 +402,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method finds the BottomLine's maximum value within a given range.
-     * @param staffLine Staffline to find the max value in
      * @param startIndex Start index of the range
      * @param endIndex End index of the range (excluding)
      */
@@ -444,12 +422,9 @@ export class SkyBottomLineCalculator {
         return this.getMaxInRange(this.mBottomLine, startPoint, endPoint);
     }
 
-    //#region Private methods
-
     /**
      * Updates sky- and bottom line with a boundingBox and its children
      * @param boundingBox Bounding box to be added
-     * @param topBorder top
      */
     public updateWithBoundingBoxRecursively(boundingBox: BoundingBox): void {
         if (boundingBox.ChildElements && boundingBox.ChildElements.length > 0) {
@@ -470,6 +445,55 @@ export class SkyBottomLineCalculator {
                 this.updateInRange(this.mBottomLine, startPoint, endPoint, currentBottomBorder);
             }
         }
+    }
+
+    //#region Private methods
+
+    /**
+     * go backwards through the skyline array and find a number so that
+     * we can properly calculate the average
+     * @param start the starting index of the search
+     * @param tSkyLine the skyline to search through
+     */
+     private findPreviousValidNumber(start: number, tSkyLine: number[]): number {
+        for (let idx: number = start; idx >= 0; idx--) {
+            if (!isNaN(tSkyLine[idx])) {
+                return tSkyLine[idx];
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * go forward through the skyline array and find a number so that
+     * we can properly calculate the average
+     * @param start the starting index of the search
+     * @param tSkyLine the skyline to search through
+     */
+    private findNextValidNumber(start: number, tSkyLine: Array<number>): number {
+        if (start >= tSkyLine.length) {
+            return tSkyLine[start - 1];
+        }
+        for (let idx: number = start; idx < tSkyLine.length; idx++) {
+            if (!isNaN(tSkyLine[idx])) {
+                return tSkyLine[idx];
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Debugging drawing function that can draw single pixels
+     * @param coord Point to draw to
+     * @param backend the backend to be used
+     * @param color the color to be used, default is red
+     */
+    private drawPixel(coord: PointF2D, backend: CanvasVexFlowBackend, color: string = "#FF0000FF"): void {
+        const ctx: any = backend.getContext();
+        const oldStyle: string = ctx.fillStyle;
+        ctx.fillStyle = color;
+        ctx.fillRect(coord.x, coord.y, 2, 2);
+        ctx.fillStyle = oldStyle;
     }
 
     /**

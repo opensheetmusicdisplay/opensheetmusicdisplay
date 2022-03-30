@@ -593,6 +593,12 @@ export class OpenSheetMusicDisplay {
         } else {
             this.cursorsOptions = [{type: 0, color: this.EngravingRules.DefaultColorCursor, alpha: 0.5, follow: true}];
         }
+        if (options.preferredSkyBottomLineBatchCalculatorBackend !== undefined) {
+            this.rules.PreferredSkyBottomLineBatchCalculatorBackend = options.preferredSkyBottomLineBatchCalculatorBackend;
+        }
+        if (options.skyBottomLineBatchMinMeasures !== undefined) {
+            this.rules.SkyBottomLineBatchMinMeasures = options.skyBottomLineBatchMinMeasures;
+        }
     }
 
     public setColoringMode(options: IOSMDOptions): void {

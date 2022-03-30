@@ -2529,12 +2529,8 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    private calculateSkyBottomLines(): void {
-        for (const musicSystem of this.musicSystems) {
-            for (const staffLine of musicSystem.StaffLines) {
-                staffLine.SkyBottomLineCalculator.calculateLines();
-            }
-        }
+    protected calculateSkyBottomLines(): void {
+        // override
     }
 
     /**
