@@ -667,7 +667,7 @@ export class GraphicalSlur extends GraphicalCurve {
                 eX += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
             }
 
-            // get SkyBottomLineCalculator borders
+            // get SkyBottomLine borders
             const minAbove: number = skyBottomLineCalculator.getSkyLineMinInRange(sX, eX) * -1;
             const maxBelow: number = skyBottomLineCalculator.getBottomLineMaxInRange(sX, eX) - staffLine.StaffHeight;
 

@@ -68,7 +68,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         const left: number = this.IsVerbal ? this.label.PositionAndShape.RelativePosition.x + this.label.PositionAndShape.BorderMarginLeft : 0;
         const right: number = this.IsVerbal ? this.label.PositionAndShape.RelativePosition.x + this.label.PositionAndShape.BorderMarginRight : 0;
         if (!this.IsVerbal && this.lines.length < 2) {
-            log.warn("Not enough lines for SkyBottomLineCalculator calculation");
+            log.warn("Not enough lines for SkyBottomLine calculation");
         }
         if (!this.IsVerbal) {
             if (this.ContinuousDynamic.DynamicType !== ContDynamicEnum.crescendo &&

@@ -8,7 +8,7 @@ import { BoundingBox } from "./BoundingBox";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
 /**
- * This class holds the skyline and bottom line information.
+ * This class calculates and holds the skyline and bottom line information.
  * It also has functions to update areas of the two lines if new elements are
  * added to the staffline (e.g. measure number, annotations, ...)
  */

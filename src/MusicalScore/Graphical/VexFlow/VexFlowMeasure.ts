@@ -529,12 +529,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 for (let i: number = 0; i < prevStaveModifiers.length; i++) {
                     const nextStaveModifier: VF.StaveModifier = prevStaveModifiers[i];
                     if (nextStaveModifier.hasOwnProperty("volta")) {
-                        const prevskyBottomLine: SkyBottomLineCalculator = prevMeasure.ParentStaffLine.SkyBottomLineCalculator;
+                        const prevskyBottomLineCalculator: SkyBottomLineCalculator = prevMeasure.ParentStaffLine.SkyBottomLineCalculator;
                         const prevStart: number = prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginLeft + 0.4;
                         const prevEnd: number = Math.max(
                             prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginRight,
                             prevStart + 0.4);
-                        const prevMeasureSkyline: number = prevskyBottomLine.getSkyLineMinInRange(prevStart, prevEnd);
+                        const prevMeasureSkyline: number = prevskyBottomLineCalculator.getSkyLineMinInRange(prevStart, prevEnd);
                         //if prev skyline is higher, use it
                         if (prevMeasureSkyline <= newSkylineValueForMeasure) {
                             const skylineDifference: number = prevMeasureSkyline - newSkylineValueForMeasure;

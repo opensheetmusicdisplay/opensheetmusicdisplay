@@ -24,7 +24,7 @@ export abstract class StaffLine extends GraphicalObject {
     protected parentMusicSystem: MusicSystem;
     protected parentStaff: Staff;
     protected octaveShifts: GraphicalOctaveShift[] = [];
-    protected skyBottomLineCalculator: SkyBottomLineCalculator;
+    protected skyBottomLine: SkyBottomLineCalculator;
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
     protected abstractExpressions: AbstractGraphicalExpression[] = [];
@@ -41,7 +41,7 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentMusicSystem = parentSystem;
         this.parentStaff = parentStaff;
         this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
-        this.skyBottomLineCalculator = new SkyBottomLineCalculator(this);
+        this.skyBottomLine = new SkyBottomLineCalculator(this);
         this.staffHeight = this.parentMusicSystem.rules.StaffHeight;
         this.topLineOffset = 0;
         this.bottomLineOffset = 4;
@@ -150,15 +150,15 @@ export abstract class StaffLine extends GraphicalObject {
     }
 
     public get SkyBottomLineCalculator(): SkyBottomLineCalculator {
-        return this.skyBottomLineCalculator;
+        return this.skyBottomLine;
     }
 
     public get SkyLine(): number[] {
-        return this.skyBottomLineCalculator.SkyLine;
+        return this.skyBottomLine.SkyLine;
     }
 
     public get BottomLine(): number[] {
-        return this.skyBottomLineCalculator.BottomLine;
+        return this.skyBottomLine.BottomLine;
     }
 
     public get OctaveShifts(): GraphicalOctaveShift[] {
