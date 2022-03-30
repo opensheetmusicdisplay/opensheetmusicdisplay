@@ -7,6 +7,7 @@ import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult
 import { StaffLine } from "./StaffLine";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import { WebGLSkyBottomLineBatchCalculatorBackend } from "./WebGLSkyBottomLineBatchCalculatorBackend";
+import log from "loglevel";
 
 interface IBatchEntry {
     skyBottomLineCalculator: SkyBottomLineCalculator;
@@ -53,6 +54,7 @@ export class SkyBottomLineBatchCalculator {
                     try {
                         return new WebGLSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
                     } catch {
+                        log.info("Couldn't create WebGLBackend for Skyline. Using fallback.");
                         return new PlainSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
                     }
                 }
