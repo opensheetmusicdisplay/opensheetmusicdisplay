@@ -66,7 +66,7 @@ export class VoiceGenerator {
   // private lastBeamTag: string = "";
   private openBeams: Beam[] = []; // works like a stack, with push and pop
   private beamNumberOffset: number = 0;
-  private openTieDict: { [_: number]: Tie } = {};
+  private get openTieDict(): { [_: number]: Tie } { return this.staff.openTieDict; }
   private currentOctaveShift: number = 0;
   private tupletDict: { [_: number]: Tuplet } = {};
   private openTupletNumber: number = 0;
