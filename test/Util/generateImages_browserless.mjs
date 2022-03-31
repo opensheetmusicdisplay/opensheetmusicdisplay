@@ -1,7 +1,6 @@
 import Blob from "cross-blob";
 import FS from "fs";
 import jsdom from "jsdom";
-import headless_gl from "gl";
 import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
 /*
   Render each OSMD sample, grab the generated images, and
@@ -108,25 +107,32 @@ async function init () {
     }
 
     // For WebGLSkyBottomLineCalculatorBackend
-    const oldCreateElement = document.createElement.bind(document);
-    document.createElement = function (tagName, options) {
-        if (tagName.toLowerCase() === "canvas") {
-            const canvas = oldCreateElement(tagName, options);
-            const oldGetContext = canvas.getContext.bind(canvas);
-            canvas.getContext = function (contextType, contextAttributes) {
-                if (contextType.toLowerCase() === "webgl" || contextType.toLowerCase() === "experimental-webgl") {
-                    const gl = headless_gl(canvas.width, canvas.height, contextAttributes);
-                    gl.canvas = canvas;
-                    return gl;
-                } else {
-                    return oldGetContext(contextType, contextAttributes);
-                }
-            };
-            return canvas;
-        } else {
-            return oldCreateElement(tagName, options);
+    try {
+        const { default: headless_gl } = await import("gl");
+        const oldCreateElement = document.createElement.bind(document);
+        document.createElement = function (tagName, options) {
+            if (tagName.toLowerCase() === "canvas") {
+                const canvas = oldCreateElement(tagName, options);
+                const oldGetContext = canvas.getContext.bind(canvas);
+                canvas.getContext = function (contextType, contextAttributes) {
+                    if (contextType.toLowerCase() === "webgl" || contextType.toLowerCase() === "experimental-webgl") {
+                        const gl = headless_gl(canvas.width, canvas.height, contextAttributes);
+                        gl.canvas = canvas;
+                        return gl;
+                    } else {
+                        return oldGetContext(contextType, contextAttributes);
+                    }
+                };
+                return canvas;
+            } else {
+                return oldCreateElement(tagName, options);
+            }
+        };
+    } catch {
+        if (skyBottomLinePreference === "--webgl") {
+            console.log("WebGL image generation was requested but gl is not installed; using non-WebGL generation.");
         }
-    };
+    }
 
     // fix Blob not found (to support external modules like is-blob)
     global.Blob = Blob;
