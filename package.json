@@ -92,7 +92,6 @@
     "eslint-plugin-no-null": "^1.0.2",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-standard": "^4.1.0",
-    "gl": "^5.0.0",
     "html-webpack-plugin": "^5.5.0",
     "jquery": "^3.6.0",
     "jsdom": "^19.0.0",
@@ -119,6 +118,9 @@
     "webpack-dev-server": "^4.7.0",
     "webpack-merge": "^5.8.0",
     "webpack-visualizer-plugin2": "^1.0.0"
+  },
+  "optionalDependencies": {
+    "gl": "^5.0.0"
   },
   "config": {
     "commitizen": {
