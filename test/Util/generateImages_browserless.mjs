@@ -1,6 +1,7 @@
 import Blob from "cross-blob";
 import FS from "fs";
 import jsdom from "jsdom";
+//import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
 import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
 /*
   Render each OSMD sample, grab the generated images, and
@@ -106,7 +107,9 @@ async function init () {
         global.Canvas = window.Canvas;
     }
 
-    // For WebGLSkyBottomLineCalculatorBackend
+    // For WebGLSkyBottomLineCalculatorBackend: Try to import gl dynamically
+    //   this is so that the script doesn't fail if gl could not be installed,
+    //   which can happen in some linux setups where gcc-11 is installed, see #1160
     try {
         const { default: headless_gl } = await import("gl");
         const oldCreateElement = document.createElement.bind(document);
