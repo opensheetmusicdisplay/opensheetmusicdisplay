@@ -675,8 +675,10 @@ export class EngravingRules {
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
         this.NoteToGraphicalNoteMapObjectCount = 0;
 
-        if ((globalThis.navigator?.vendor ?? "").match(/apple/i)) {
-            // On Safari, the plain version is faster
+        const vendor: string = globalThis.navigator?.vendor ?? "";
+        const userAgent: string = globalThis.navigator?.userAgent ?? "";
+        if (vendor.match(/apple/i) || userAgent.includes("Firefox")) {
+            // In Safari and Firefox, the plain version is faster
             this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
         } else {
             this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.WebGL;
