@@ -678,7 +678,7 @@ export class EngravingRules {
         const vendor: string = globalThis.navigator?.vendor ?? "";
         const userAgent: string = globalThis.navigator?.userAgent ?? "";
         if (vendor.match(/apple/i) || userAgent.includes("Firefox")) {
-            // In Safari and Firefox, the plain version is faster
+            // In Safari and Firefox, the plain version is faster. WebGL is faster In Chrome and Edge (both Chromium based). See #1158
             this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
         } else {
             this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.WebGL;
