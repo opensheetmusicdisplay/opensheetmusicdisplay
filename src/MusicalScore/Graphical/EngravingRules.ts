@@ -341,11 +341,21 @@ export class EngravingRules {
 
     public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
 
-    /** The skyline and bottom-line batch calculation algorithm to use. */
+    /** The skyline and bottom-line batch calculation algorithm to use.
+     *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
+     */
     public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
 
-    /** The minimum number of measures in the entire sheet music where the skyline and bottom-line batch calculation is enabled. */
+    /** The minimum number of measures in the sheet where the skyline and bottom-line batch calculation is enabled.
+     *  Batch is faster for medium to large size scores, but slower for very short scores.
+     */
     public SkyBottomLineBatchMinMeasures: number;
+    /** The minimum number of measures in the sheet where WebGL will be used. WebGL is slower for short scores, but much faster for large ones.
+     * Note that WebGL is currently never used in Safari and Firefox, because it's always slower there.
+     */
+    public SkyBottomLineWebGLMinMeasures: number;
+    /** Whether to always set preferred backend (WebGL or Plain) automatically, depending on browser and number of measures. */
+    public AlwaysSetPreferredSkyBottomLineBackendAutomatically: boolean;
 
     constructor() {
         this.loadDefaultValues();
@@ -675,15 +685,10 @@ export class EngravingRules {
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
         this.NoteToGraphicalNoteMapObjectCount = 0;
 
-        const vendor: string = globalThis.navigator?.vendor ?? "";
-        const userAgent: string = globalThis.navigator?.userAgent ?? "";
-        if (vendor.match(/apple/i) || userAgent.includes("Firefox")) {
-            // In Safari and Firefox, the plain version is faster. WebGL is faster In Chrome and Edge (both Chromium based). See #1158
-            this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
-        } else {
-            this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.WebGL;
-        }
         this.SkyBottomLineBatchMinMeasures = 5;
+        this.SkyBottomLineWebGLMinMeasures = 80;
+        this.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
+        this.setPreferredSkyBottomLineBackendAutomatically();
 
         // this.populateDictionaries(); // these values aren't used currently
         try {
@@ -695,6 +700,20 @@ export class EngravingRules {
             //}
         } catch (ex) {
             log.info("EngravingRules()", ex);
+        }
+    }
+
+    public setPreferredSkyBottomLineBackendAutomatically(numberOfGraphicalMeasures: number = -1): void {
+        const vendor: string = globalThis.navigator?.vendor ?? "";
+        const userAgent: string = globalThis.navigator?.userAgent ?? "";
+        const alwaysUsePlain: boolean = (/apple/i).test(vendor) || userAgent.includes("Firefox");
+        // In Safari and Firefox, the plain version is always faster.
+        //   WebGL is faster for large scores in Chrome and Edge (both Chromium based). See #1158
+        this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
+        if (!alwaysUsePlain) {
+            if (numberOfGraphicalMeasures >= this.SkyBottomLineWebGLMinMeasures) {
+                this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.WebGL;
+            }
         }
     }
 

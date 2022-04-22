@@ -1057,9 +1057,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   protected calculateSkyBottomLines(): void {
     const staffLines: StaffLine[] = this.musicSystems.map(musicSystem => musicSystem.StaffLines).flat();
-    const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
-    const threshold: number = this.rules.SkyBottomLineBatchMinMeasures;
-    if (numMeasures >= threshold) {
+    //const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
+    let numMeasures: number = 0; // number of graphical measures that are rendered
+    for (const staffline of staffLines) {
+      for (const measure of staffline.Measures) {
+        if (measure) { // can be undefined and not rendered in multi-measure rest
+          numMeasures++;
+        }
+      }
+    }
+    if (this.rules.AlwaysSetPreferredSkyBottomLineBackendAutomatically) {
+      this.rules.setPreferredSkyBottomLineBackendAutomatically(numMeasures);
+    }
+    if (numMeasures >= this.rules.SkyBottomLineBatchMinMeasures) {
       const calculator: SkyBottomLineBatchCalculator = new SkyBottomLineBatchCalculator(
         staffLines, this.rules.PreferredSkyBottomLineBatchCalculatorBackend);
       calculator.calculateLines();
