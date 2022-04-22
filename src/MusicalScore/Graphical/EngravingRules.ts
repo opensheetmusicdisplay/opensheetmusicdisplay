@@ -345,6 +345,10 @@ export class EngravingRules {
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
      */
     public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
+    /** Whether to consider using WebGL in Firefox in EngravingRules.setPreferredSkyBottomLineBackendAutomatically() */
+    public DisableWebGLInFirefox: boolean;
+    /** Whether to consider using WebGL in Safari/iOS in EngravingRules.setPreferredSkyBottomLineBackendAutomatically() */
+    public DisableWebGLInSafariAndIOS: boolean;
 
     /** The minimum number of measures in the sheet where the skyline and bottom-line batch calculation is enabled.
      *  Batch is faster for medium to large size scores, but slower for very short scores.
@@ -688,6 +692,8 @@ export class EngravingRules {
         this.SkyBottomLineBatchMinMeasures = 5;
         this.SkyBottomLineWebGLMinMeasures = 80;
         this.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
+        this.DisableWebGLInFirefox = true;
+        this.DisableWebGLInSafariAndIOS = true;
         this.setPreferredSkyBottomLineBackendAutomatically();
 
         // this.populateDictionaries(); // these values aren't used currently
@@ -706,8 +712,13 @@ export class EngravingRules {
     public setPreferredSkyBottomLineBackendAutomatically(numberOfGraphicalMeasures: number = -1): void {
         const vendor: string = globalThis.navigator?.vendor ?? "";
         const userAgent: string = globalThis.navigator?.userAgent ?? "";
-        const alwaysUsePlain: boolean = (/apple/i).test(vendor) || userAgent.includes("Firefox");
-        // In Safari and Firefox, the plain version is always faster.
+        let alwaysUsePlain: boolean = false;
+        if (this.DisableWebGLInSafariAndIOS && (/apple/i).test(vendor)) { // doesn't apply to Chrome on MacOS
+            alwaysUsePlain = true;
+        } else if (this.DisableWebGLInFirefox && userAgent.includes("Firefox")) {
+            alwaysUsePlain = true;
+        }
+        // In Safari (/iOS) and Firefox, the plain version is always faster (currently, Safari 15).
         //   WebGL is faster for large scores in Chrome and Edge (both Chromium based). See #1158
         this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
         if (!alwaysUsePlain) {
