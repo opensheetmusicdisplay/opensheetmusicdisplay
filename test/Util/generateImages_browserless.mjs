@@ -340,6 +340,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             pageFormat: pageFormat, // reset by drawingparameters default,
             ...makeSkyBottomLineOptions()
         });
+        osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false; // this would override the command line options (--plain etc)
         includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
         osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
         osmdInstance.drawBottomLine = includeSkyBottomLine;
