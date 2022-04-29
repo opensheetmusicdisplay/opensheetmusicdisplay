@@ -38,7 +38,7 @@ export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
     ): SkyBottomLineCalculationResult[] {
         // vexFlowContext is CanvasRenderingContext2D in runtime
         const canvasWidth: number = canvas.width;
-        const context: CanvasRenderingContext2D = vexFlowContext as unknown as CanvasRenderingContext2D;
+        const context: CanvasRenderingContext2D = vexFlowContext.context2D as CanvasRenderingContext2D;
         const imageData: ImageData = context.getImageData(0, 0, canvas.width, canvas.height);
         const rgbaLength: number = 4;
         const { elementWidth, elementHeight, numColumns } = tableConfiguration;

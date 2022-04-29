@@ -135,7 +135,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
         const numElementsPerTable: number = numColumns * numRows;
 
         const vexFlowContext: VF.CanvasContext = this.canvas.getContext();
-        const context: CanvasRenderingContext2D = vexFlowContext as unknown as CanvasRenderingContext2D;
+        const context: CanvasRenderingContext2D = vexFlowContext.context2D as CanvasRenderingContext2D;
         const canvasElement: HTMLCanvasElement = this.canvas.getCanvas() as HTMLCanvasElement;
 
         if (debugTmpCanvas) {
