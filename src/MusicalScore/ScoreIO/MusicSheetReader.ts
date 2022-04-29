@@ -586,11 +586,13 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     const creditYInfo: number = creditYGiven ? parseFloat(creditY) : Number.MIN_VALUE;
                     if (creditYGiven && creditYInfo > systemYCoordinates) {
                         if (!this.musicSheet.Title) {
-                            const creditSize: string = creditChild.attribute("font-size").value;
-                            const titleCreditSizeInt: number = parseFloat(creditSize);
-                            if (largestTitleCreditSize < titleCreditSizeInt) {
-                                largestTitleCreditSize = titleCreditSizeInt;
-                                finalTitle = creditChild.value;
+                            const creditSize: string = creditChild.attribute("font-size")?.value;
+                            if (creditSize) {
+                                const titleCreditSizeInt: number = parseFloat(creditSize);
+                                if (largestTitleCreditSize < titleCreditSizeInt) {
+                                    largestTitleCreditSize = titleCreditSizeInt;
+                                    finalTitle = creditChild.value;
+                                }
                             }
                         }
                         if (!this.musicSheet.Subtitle) {

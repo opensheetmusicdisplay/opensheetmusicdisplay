@@ -2,6 +2,7 @@ import { MusicSheetCalculator } from "../MusicSheetCalculator";
 import { VexFlowGraphicalSymbolFactory } from "./VexFlowGraphicalSymbolFactory";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { StaffLine } from "../StaffLine";
+import { SkyBottomLineBatchCalculator } from "../SkyBottomLineBatchCalculator";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -816,7 +817,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // const section: VF.StaveSection = new VF.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
     // (vfStave as any).modifiers.push(section);
     const fontSize: number = this.rules.RehearsalMarkFontSize;
-    (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
+    (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize, false); // fontSize is an extra argument from VexFlowPatch
   }
 
   /**
@@ -1051,6 +1052,31 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // use top measure and staffline for positioning.
     if (uppermostMeasure) {
       uppermostMeasure.addWordRepetition(repetitionInstruction);
+    }
+  }
+
+  protected calculateSkyBottomLines(): void {
+    const staffLines: StaffLine[] = this.musicSystems.map(musicSystem => musicSystem.StaffLines).flat();
+    //const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
+    let numMeasures: number = 0; // number of graphical measures that are rendered
+    for (const staffline of staffLines) {
+      for (const measure of staffline.Measures) {
+        if (measure) { // can be undefined and not rendered in multi-measure rest
+          numMeasures++;
+        }
+      }
+    }
+    if (this.rules.AlwaysSetPreferredSkyBottomLineBackendAutomatically) {
+      this.rules.setPreferredSkyBottomLineBackendAutomatically(numMeasures);
+    }
+    if (numMeasures >= this.rules.SkyBottomLineBatchMinMeasures) {
+      const calculator: SkyBottomLineBatchCalculator = new SkyBottomLineBatchCalculator(
+        staffLines, this.rules.PreferredSkyBottomLineBatchCalculatorBackend);
+      calculator.calculateLines();
+    } else {
+      for (const staffLine of staffLines) {
+        staffLine.SkyBottomLineCalculator.calculateLines();
+      }
     }
   }
 

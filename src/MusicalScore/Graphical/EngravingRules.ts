@@ -3,7 +3,12 @@ import { PagePlacementEnum } from "./GraphicalMusicPage";
 import log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-import { AutoBeamOptions, AlignRestOption, FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
+import {
+    AutoBeamOptions,
+    AlignRestOption,
+    FillEmptyMeasuresWithWholeRests,
+    SkyBottomLineBatchCalculatorBackendType
+} from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
@@ -336,6 +341,26 @@ export class EngravingRules {
 
     public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
 
+    /** The skyline and bottom-line batch calculation algorithm to use.
+     *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
+     */
+    public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
+    /** Whether to consider using WebGL in Firefox in EngravingRules.setPreferredSkyBottomLineBackendAutomatically() */
+    public DisableWebGLInFirefox: boolean;
+    /** Whether to consider using WebGL in Safari/iOS in EngravingRules.setPreferredSkyBottomLineBackendAutomatically() */
+    public DisableWebGLInSafariAndIOS: boolean;
+
+    /** The minimum number of measures in the sheet where the skyline and bottom-line batch calculation is enabled.
+     *  Batch is faster for medium to large size scores, but slower for very short scores.
+     */
+    public SkyBottomLineBatchMinMeasures: number;
+    /** The minimum number of measures in the sheet where WebGL will be used. WebGL is slower for short scores, but much faster for large ones.
+     * Note that WebGL is currently never used in Safari and Firefox, because it's always slower there.
+     */
+    public SkyBottomLineWebGLMinMeasures: number;
+    /** Whether to always set preferred backend (WebGL or Plain) automatically, depending on browser and number of measures. */
+    public AlwaysSetPreferredSkyBottomLineBackendAutomatically: boolean;
+
     constructor() {
         this.loadDefaultValues();
     }
@@ -664,6 +689,13 @@ export class EngravingRules {
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
         this.NoteToGraphicalNoteMapObjectCount = 0;
 
+        this.SkyBottomLineBatchMinMeasures = 5;
+        this.SkyBottomLineWebGLMinMeasures = 80;
+        this.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
+        this.DisableWebGLInFirefox = true;
+        this.DisableWebGLInSafariAndIOS = true;
+        this.setPreferredSkyBottomLineBackendAutomatically();
+
         // this.populateDictionaries(); // these values aren't used currently
         try {
             this.MaxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin + 11;
@@ -674,6 +706,25 @@ export class EngravingRules {
             //}
         } catch (ex) {
             log.info("EngravingRules()", ex);
+        }
+    }
+
+    public setPreferredSkyBottomLineBackendAutomatically(numberOfGraphicalMeasures: number = -1): void {
+        const vendor: string = globalThis.navigator?.vendor ?? "";
+        const userAgent: string = globalThis.navigator?.userAgent ?? "";
+        let alwaysUsePlain: boolean = false;
+        if (this.DisableWebGLInSafariAndIOS && (/apple/i).test(vendor)) { // doesn't apply to Chrome on MacOS
+            alwaysUsePlain = true;
+        } else if (this.DisableWebGLInFirefox && userAgent.includes("Firefox")) {
+            alwaysUsePlain = true;
+        }
+        // In Safari (/iOS) and Firefox, the plain version is always faster (currently, Safari 15).
+        //   WebGL is faster for large scores in Chrome and Edge (both Chromium based). See #1158
+        this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
+        if (!alwaysUsePlain) {
+            if (numberOfGraphicalMeasures >= this.SkyBottomLineWebGLMinMeasures) {
+                this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.WebGL;
+            }
         }
     }
 

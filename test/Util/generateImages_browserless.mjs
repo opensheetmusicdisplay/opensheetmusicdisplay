@@ -1,6 +1,7 @@
 import Blob from "cross-blob";
 import FS from "fs";
 import jsdom from "jsdom";
+//import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
 import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
 /*
   Render each OSMD sample, grab the generated images, and
@@ -32,7 +33,7 @@ function sleep (ms) {
 // global variables
 //   (without these being global, we'd have to pass many of these values to the generateSampleImage function)
 // eslint-disable-next-line prefer-const
-let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString] = process.argv.slice(2, 11);
+let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 12);
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
         // eslint-disable-next-line max-len
@@ -104,6 +105,36 @@ async function init () {
     global.Node = window.Node;
     if (imageFormat === "png") {
         global.Canvas = window.Canvas;
+    }
+
+    // For WebGLSkyBottomLineCalculatorBackend: Try to import gl dynamically
+    //   this is so that the script doesn't fail if gl could not be installed,
+    //   which can happen in some linux setups where gcc-11 is installed, see #1160
+    try {
+        const { default: headless_gl } = await import("gl");
+        const oldCreateElement = document.createElement.bind(document);
+        document.createElement = function (tagName, options) {
+            if (tagName.toLowerCase() === "canvas") {
+                const canvas = oldCreateElement(tagName, options);
+                const oldGetContext = canvas.getContext.bind(canvas);
+                canvas.getContext = function (contextType, contextAttributes) {
+                    if (contextType.toLowerCase() === "webgl" || contextType.toLowerCase() === "experimental-webgl") {
+                        const gl = headless_gl(canvas.width, canvas.height, contextAttributes);
+                        gl.canvas = canvas;
+                        return gl;
+                    } else {
+                        return oldGetContext(contextType, contextAttributes);
+                    }
+                };
+                return canvas;
+            } else {
+                return oldCreateElement(tagName, options);
+            }
+        };
+    } catch {
+        if (skyBottomLinePreference === "--webgl") {
+            console.log("WebGL image generation was requested but gl is not installed; using non-WebGL generation.");
+        }
     }
 
     // fix Blob not found (to support external modules like is-blob)
@@ -246,6 +277,27 @@ async function init () {
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
 async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestingMode,
     options = {}, DEBUG = false) {
+
+    function makeSkyBottomLineOptions() {
+        const preference = skyBottomLinePreference ?? "";
+        if (preference === "--batch") {
+            return {
+                preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
+                skyBottomLineBatchCriteria: 0, // use batch algorithm only
+            };
+        } else if (preference === "--webgl") {
+            return {
+                preferredSkyBottomLineBatchCalculatorBackend: 1, // webgl
+                skyBottomLineBatchCriteria: 0, // use batch algorithm only
+            };
+        } else {
+            return {
+                preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
+                skyBottomLineBatchCriteria: Infinity, // use non-batch algorithm only
+            };
+        }
+    }
+
     const samplePath = directory + "/" + sampleFilename;
     let loadParameter = FS.readFileSync(samplePath);
 
@@ -285,8 +337,10 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             newSystemFromXML: isFunctionTestSystemAndPageBreaks,
             newPageFromXML: isFunctionTestSystemAndPageBreaks,
             pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
-            pageFormat: pageFormat // reset by drawingparameters default
+            pageFormat: pageFormat, // reset by drawingparameters default,
+            ...makeSkyBottomLineOptions()
         });
+        osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false; // this would override the command line options (--plain etc)
         includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
         osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
         osmdInstance.drawBottomLine = includeSkyBottomLine;
