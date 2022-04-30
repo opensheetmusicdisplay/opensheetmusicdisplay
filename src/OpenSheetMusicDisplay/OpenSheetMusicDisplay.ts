@@ -123,13 +123,14 @@ export class OpenSheetMusicDisplay {
             if (/^\s/.test(trimmedStr)) { // only trim if we need to. (end of string is irrelevant)
                 trimmedStr = trimmedStr.trim(); // trim away empty lines at beginning etc
             }
-            if (trimmedStr.substr(0, 6).includes("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
+
+            if (!(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(str))) {
                 const modifiedXml: string = this.OnXMLRead(trimmedStr); // by default just returns trimmedStr unless a function options.OnXMLRead was set.
                 log.debug("[OSMD] Finally parsing XML content, length: " + modifiedXml.length);
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
                 content = parser.parseFromString(modifiedXml, "application/xml");
-            } else if (trimmedStr.length < 2083) { // TODO do proper URL format check
+            } else {
                 log.debug("[OSMD] Retrieve the file at the given URL: " + trimmedStr);
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
@@ -137,8 +138,6 @@ export class OpenSheetMusicDisplay {
                     (s: string) => { return self.load(s); },
                     (exc: Error) => { throw exc; }
                 );
-            } else {
-                console.error("[OSMD] osmd.load(string): Could not process string. Did not find <?xml at beginning.");
             }
         }
 
