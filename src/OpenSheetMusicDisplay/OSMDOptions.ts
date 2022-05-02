@@ -255,6 +255,14 @@ export interface IOSMDOptions {
      * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used.
      */
     cursorsOptions?: CursorOptions[];
+    /**
+     * Defines which skyline and bottom-line batch calculation algorithm to use.
+     */
+    preferredSkyBottomLineBatchCalculatorBackend?: SkyBottomLineBatchCalculatorBackendType;
+    /**
+     * Defines the minimum number of measures in the entire sheet music where the skyline and bottom-line batch calculation is enabled.
+     */
+    skyBottomLineBatchMinMeasures?: number;
 }
 
 export enum AlignRestOption {
@@ -272,6 +280,11 @@ export enum FillEmptyMeasuresWithWholeRests {
 export enum BackendType {
     SVG = 0,
     Canvas = 1
+}
+
+export enum SkyBottomLineBatchCalculatorBackendType {
+    Plain = 0,
+    WebGL = 1,
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */

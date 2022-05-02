@@ -176,10 +176,12 @@ export class Cursor {
     }
 
     // y is common for both multirest and non-multirest, given the MusicSystem
-    y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
+    y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0]?.PositionAndShape.RelativePosition.y ?? 0;
+    let endY: number = musicSystem.PositionAndShape.AbsolutePosition.y;
     const bottomStaffline: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
-    const endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
-    bottomStaffline.PositionAndShape.RelativePosition.y + bottomStaffline.StaffHeight;
+    if (bottomStaffline) { // can be undefined if drawFromMeasureNumber changed after cursor was shown
+      endY += bottomStaffline.PositionAndShape.RelativePosition.y + bottomStaffline.StaffHeight;
+    }
     height = endY - y;
 
     // Update the graphical cursor

@@ -980,7 +980,7 @@ export class GraphicalMusicSheet {
         }
         const graphicalMeasure: GraphicalMeasure = sourceStaffEntry.VerticalContainerParent.ParentMeasure.VerticalMeasureList
             [sourceStaffEntry.ParentStaff.idInMusicSheet];
-        return graphicalMeasure.findGraphicalStaffEntryFromTimestamp(sourceStaffEntry.Timestamp);
+        return graphicalMeasure?.findGraphicalStaffEntryFromTimestamp(sourceStaffEntry.Timestamp);
     }
 
     private CalculateDistance(pt1: PointF2D, pt2: PointF2D): number {

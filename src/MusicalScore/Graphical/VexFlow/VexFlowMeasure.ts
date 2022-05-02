@@ -12,7 +12,6 @@ import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
-import StaveConnector = VF.StaveConnector;
 import StaveNote = VF.StaveNote;
 import StemmableNote = VF.StemmableNote;
 import NoteSubGroup = VF.NoteSubGroup;
@@ -1497,8 +1496,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param lineType
      */
     public lineTo(top: VexFlowMeasure, lineType: string|number): void {
-        const connector: StaveConnector = new VF.StaveConnector(top.getVFStave(), this.stave);
-        connector.setType(lineType);
+        const connector: VF.StaveConnector = new VF.StaveConnector(top.getVFStave(), this.stave);
+        connector.setType(lineType as VF.StaveConnectorType);
         this.connectors.push(connector);
     }
 
