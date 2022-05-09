@@ -13,7 +13,6 @@ import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
-import StaveConnector = VF.StaveConnector;
 import StaveNote = VF.StaveNote;
 import StemmableNote = VF.StemmableNote;
 import NoteSubGroup = VF.NoteSubGroup;
@@ -41,7 +40,7 @@ import { GraphicalTie } from "../GraphicalTie";
 // type StemmableNote = VF.StemmableNote;
 
 export class VexFlowMeasure extends GraphicalMeasure {
-    constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
+    constructor(staff: Staff, sourceMeasure?: SourceMeasure, staffLine?: StaffLine) {
         super(staff, sourceMeasure, staffLine);
         this.minimumStaffEntriesWidth = -1;
 
@@ -54,6 +53,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             this.rules = staffLine.ParentMusicSystem.rules;
         } else if (sourceMeasure) {
             this.rules = sourceMeasure.Rules;
+        } else {
+            this.rules = new EngravingRules();
         }
 
         this.resetLayout();
@@ -65,23 +66,23 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** The VexFlow Voices in the measure */
     public vfVoices: { [voiceID: number]: VF.Voice } = {};
     /** Call this function (if present) to x-format all the voices in the measure */
-    public formatVoices: (width: number, parent: VexFlowMeasure) => void;
+    public formatVoices?: (width: number, parent: VexFlowMeasure) => void;
     /** The VexFlow Ties in the measure */
     public vfTies: VF.StaveTie[] = [];
     /** The repetition instructions given as words or symbols (coda, dal segno..) */
     public vfRepetitionWords: VF.Repetition[] = [];
     /** The VexFlow Stave (= one measure in a staffline) */
-    protected stave: VF.Stave;
+    protected stave!: VF.Stave;
     /** VexFlow StaveConnectors (vertical lines) */
     protected connectors: VF.StaveConnector[] = [];
     /** Intermediate object to construct beams */
-    private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][] } = {};
+    private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]] [] } = {};
     /** Beams created by (optional) autoBeam function. */
-    private autoVfBeams: VF.Beam[];
+    private autoVfBeams: VF.Beam[] = [];
     /** Beams of tuplet notes created by (optional) autoBeam function. */
-    private autoTupletVfBeams: VF.Beam[];
+    private autoTupletVfBeams: VF.Beam[] = [];
     /** VexFlow Beams */
-    private vfbeams: { [voiceID: number]: VF.Beam[] };
+    private vfbeams: { [voiceID: number]: VF.Beam[] } = {};
     /** Intermediate object to construct tuplets */
     protected tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][] } = {};
     /** VexFlow Tuplets */
@@ -400,18 +401,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public addMeasureNumber(): void {
         const text: string = this.MeasureNumber.toString();
         const position: number = StavePositionEnum.ABOVE;  //VF.StaveModifier.Position.ABOVE;
-        const options: any = {
+        this.stave.setText(text, position, {
             justification: 1,
             shift_x: 0,
             shift_y: 0,
-          };
-
-        this.stave.setText(text, position, options);
+          }
+        );
     }
 
     public addWordRepetition(repetitionInstruction: RepetitionInstruction): void {
-        let instruction: VF.Repetition.type = undefined;
-        let position: any = VF.StaveModifier.Position.END;
+        let instruction: number | undefined;
+        let position: number = VF.StaveModifier.Position.END;
         const xShift: number = this.beginInstructionsWidth;
         switch (repetitionInstruction.type) {
           case RepetitionInstructionEnum.Segno:
@@ -1534,7 +1534,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param lineType
      */
     public lineTo(top: VexFlowMeasure, lineType: any): void {
-        const connector: StaveConnector = new VF.StaveConnector(top.getVFStave(), this.stave);
+        const connector: VF.StaveConnector = new VF.StaveConnector(top.getVFStave(), this.stave);
         connector.setType(lineType);
         this.connectors.push(connector);
     }

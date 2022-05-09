@@ -1,3 +1,5 @@
+import Vex from "vexflow";
+import VF = Vex.Flow;
 import { EngravingRules } from "./EngravingRules";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
@@ -167,7 +169,7 @@ export class WebGLSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
 
     protected calculateFromCanvas(
         canvas: HTMLCanvasElement,
-        _: Vex.Flow.CanvasContext,
+        _: VF.CanvasContext,
         measures: VexFlowMeasure[],
         samplingUnit: number,
         tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration
