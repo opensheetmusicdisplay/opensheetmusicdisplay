@@ -677,7 +677,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     } else {
                         relPosY += 0.5; // center-align bbox
                     }
-                    const line: any = -gNote.notehead(vfnote).line; // vexflow y direction is opposite of osmd's
+                    const line: number = -gNote.notehead(vfnote).line; // vexflow y direction is opposite of osmd's
                     relPosY += line + (gNote.parentVoiceEntry.notes.last() as VexFlowGraphicalNote).notehead().line; // don't move for first note: - (-vexline)
                     gNote.PositionAndShape.RelativePosition.y = relPosY;
                 }
@@ -725,7 +725,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param voice the voice for which the ghost notes shall be searched.
      */
     protected getRestFilledVexFlowStaveNotesPerVoice(voice: Voice): GraphicalVoiceEntry[] {
-        let latestVoiceTimestamp: Fraction = undefined;
+        let latestVoiceTimestamp: Fraction;
         let gvEntries: GraphicalVoiceEntry[] = this.getGraphicalVoiceEntriesPerVoice(voice);
         for (let idx: number = 0; idx < gvEntries.length; idx++) {
             const gve: GraphicalVoiceEntry = gvEntries[idx];
