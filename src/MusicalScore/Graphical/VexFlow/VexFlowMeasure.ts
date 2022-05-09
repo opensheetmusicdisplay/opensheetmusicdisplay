@@ -405,8 +405,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             justification: 1,
             shift_x: 0,
             shift_y: 0,
-          }
-        );
+          });
     }
 
     public addWordRepetition(repetitionInstruction: RepetitionInstruction): void {
@@ -892,7 +891,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     let beamColor: string;
                     const stemColors: string[] = [];
                     for (const entry of voiceEntries) {
-                        const note: VF.StaveNote = ((<VexFlowVoiceEntry>entry).vfStaveNote as StaveNote);
+                        const note: VF.StaveNote = entry.vfStaveNote as StaveNote;
                         if (note) {
                           notes.push(note);
                           beamedNotes.push(note);
@@ -1097,7 +1096,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * Complete the creation of VexFlow Tuplets in this measure
      */
     public finalizeTuplets(): void {
-        // The following line resets the created Vex.Flow Tuplets and
+        // The following line resets the created VF Tuplets and
         // created them brand new. Is this needed? And more importantly,
         // should the old tuplets be removed manually from the notes?
         this.vftuplets = {};
