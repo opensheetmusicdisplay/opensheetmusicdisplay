@@ -368,7 +368,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public addMeasureNumber(): void {
         const text: string = this.MeasureNumber.toString();
         const position: number = StavePositionEnum.ABOVE;  //VF.StaveModifier.Position.ABOVE;
-
         this.stave.setText(text, position, {
             justification: 1,
             shift_x: 0,
