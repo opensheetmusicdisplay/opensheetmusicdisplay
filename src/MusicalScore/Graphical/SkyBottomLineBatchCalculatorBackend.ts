@@ -1,3 +1,5 @@
+import Vex from "vexflow";
+import VF = Vex.Flow;
 import { EngravingRules } from "./EngravingRules";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
@@ -117,7 +119,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
      */
     protected abstract calculateFromCanvas(
         canvas: HTMLCanvasElement,
-        context: Vex.Flow.CanvasContext,
+        context: VF.CanvasContext,
         measures: VexFlowMeasure[],
         samplingUnit: number,
         tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration
@@ -133,7 +135,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
         const elementHeight: number = this.elementHeight;
         const numElementsPerTable: number = numColumns * numRows;
 
-        const vexFlowContext: Vex.Flow.CanvasContext = this.canvas.getContext();
+        const vexFlowContext: VF.CanvasContext = this.canvas.getContext();
         const context: CanvasRenderingContext2D = vexFlowContext as unknown as CanvasRenderingContext2D;
         const canvasElement: HTMLCanvasElement = this.canvas.getCanvas() as HTMLCanvasElement;
 
@@ -149,7 +151,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
 
             for (let j: number = 0; j < measures.length; ++j) {
                 const measure: VexFlowMeasure = measures[j];
-                const vsStaff: Vex.Flow.Stave = measure.getVFStave();
+                const vsStaff: VF.Stave = measure.getVFStave();
 
                 // (u, v) is the position of measure in the table
                 const u: number = j % numColumns;
