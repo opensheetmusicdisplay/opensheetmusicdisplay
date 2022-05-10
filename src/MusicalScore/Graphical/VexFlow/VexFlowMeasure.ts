@@ -188,14 +188,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public setLineNumber(lineNumber: number): void {
         if (lineNumber !== 5) {
             if (lineNumber === 0) {
-                (this.stave as any).setNumLines(0);
+                this.stave.setNumLines(0);
                 this.stave.getBottomLineY = function(): number {
                     return this.getYForLine(this.options.num_lines);
                 };
             } else if (lineNumber === 1) {
                 // VF.Stave.setNumLines hides all but the top line.
                 // this is better
-                (this.stave.options as any).line_config = [
+                this.stave.options.line_config = [
                     { visible: false },
                     { visible: false },
                     { visible: true }, // show middle
@@ -209,7 +209,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 //lines (which isn't this case here)
                 //this.stave.options.num_lines = parseInt(lines, 10);
             } else if (lineNumber === 2) {
-                (this.stave.options as any).line_config = [
+                this.stave.options.line_config = [
                     { visible: false },
                     { visible: false },
                     { visible: true }, // show middle
@@ -220,7 +220,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     return this.getYForLine(3);
                 };
             } else if (lineNumber === 3) {
-                (this.stave.options as any).line_config = [
+                this.stave.options.line_config = [
                     { visible: false },
                     { visible: true },
                     { visible: true }, // show middle
@@ -231,7 +231,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     return this.getYForLine(2);
                 };
             } else {
-                (this.stave as any).setNumLines(lineNumber);
+                this.stave.setNumLines(lineNumber);
                 this.stave.getBottomLineY = function(): number {
                     return this.getYForLine(this.options.num_lines);
                 };
@@ -271,7 +271,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         );
         if (!this.ShowTimeSignature) {
             // extends Element is missing from class StaveModifier in DefinitelyTyped definitions, so setStyle isn't found
-            (timeSig as any).setStyle({ fillStyle: "#00000000"}); // transparent. requires VexflowPatch
+            timeSig.setStyle({ fillStyle: "#00000000"}); // transparent. requires VexflowPatch
         }
         this.updateInstructionWidth();
     }
@@ -283,7 +283,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      */
     public addClefAtEnd(clef: ClefInstruction, visible: boolean = true): void {
         const vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "small");
-        if (!visible && (this.stave as any).endClef) {
+        if (!visible && this.stave.endClef) {
             return; // don't overwrite existing clef with invisible clef
         }
         this.stave.setEndClef(vfclef.type, vfclef.size, vfclef.annotation);
@@ -293,25 +293,25 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (modifier.getCategory() === "clefs" && modifier.getPosition() === VF.StaveModifier.Position.END) {
                     if ((modifier as any).type === vfclef.type) { // any = VF.Clef
                         const transparentStyle: string = "#12345600";
-                        const originalStyle: any = (modifier as any).getStyle();
+                        const originalStyle: any = modifier.getStyle();
                         if (originalStyle) {
                             (modifier as any).originalStrokeStyle = originalStyle.strokeStyle;
                             (modifier as any).originalFillStyle = originalStyle.fillStyle;
                         }
-                        (modifier as any).setStyle({strokeStyle: transparentStyle, fillStyle: transparentStyle});
+                        modifier.setStyle({strokeStyle: transparentStyle, fillStyle: transparentStyle});
                     }
                 }
             } else {
                 // reset invisible style
                 const originalStrokeStyle: any = (modifier as any).originalStrokeStyle;
                 const originalFillStyle: any = (modifier as any).originalFillStyle;
-                if ((modifier as any).getStyle()) {
+                if (modifier.getStyle()) {
                     if (originalStrokeStyle && originalFillStyle) {
-                        ((modifier as any).getStyle() as any).strokeStyle = originalStrokeStyle;
-                        ((modifier as any).getStyle() as any).fillStyle = originalFillStyle;
+                        modifier.getStyle().strokeStyle = originalStrokeStyle;
+                        modifier.getStyle().fillStyle = originalFillStyle;
                     } else {
-                        ((modifier as any).getStyle() as any).strokeStyle = null;
-                        ((modifier as any).getStyle() as any).fillStyle = null;
+                        modifier.getStyle().strokeStyle = null;
+                        modifier.getStyle().fillStyle = null;
                     }
                 }
             }
@@ -1240,7 +1240,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
 
                 const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
-                if ((vexFlowVoiceEntry.vfStaveNote as any).ticks.denominator === 0) {
+                if (vexFlowVoiceEntry.vfStaveNote.getTicks().denominator === 0) {
                     continue; // TODO not sure why the ticks aren't calculated correctly, see #1073
                     // if denominator === 0, addTickable() below goes into an infinite loop.
                 }
@@ -1455,7 +1455,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     fretFinger.setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
                 } else if (!this.rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
                     const stringNumber: VF.StringNumber = new VF.StringNumber(fingering.value);
-                    (<any>stringNumber).radius = 0; // hack to remove the circle around the number
+                    stringNumber.radius = 0; // hack to remove the circle around the number
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
                     // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
@@ -1508,7 +1508,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // Remove circle from string number. Not needed for
                 // disambiguation from fingerings since we use Roman
                 // Numerals for RenderStringNumbersClassical
-                (<any>vfStringNumber).radius = 0;
+                vfStringNumber.radius = 0;
                 const offsetY: number = -this.rules.StringNumberOffsetY;
                 // if (note.sourceNote.halfTone < 50) { // place string number a little higher for notes with ledger lines below staff
                 //     // TODO also check for treble clef (adjust for viola, cello, etc)

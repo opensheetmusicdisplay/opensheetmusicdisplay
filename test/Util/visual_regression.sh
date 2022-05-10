@@ -92,9 +92,9 @@ fi
 # check that #currentImages == #blessedImages (will continue anyways)
 if [ ! "$totalCurrentImages" -eq "$totalBlessedImages" ]
 then
-  echo "Warning: Number of current images ($totalCurrentImages) is not the same as blessed images ($totalBlessedImages). Continuing anyways.\n"
+  echo "Warning: Number of current images ($totalCurrentImages) is not the same as blessed images ($totalBlessedImages). Continuing anyways."
 else
-  echo "Found $totalCurrentImages current and $totalBlessedImages blessed png files (not tested if valid). Continuing.\n"
+  echo "Found $totalCurrentImages current and $totalBlessedImages blessed png files (not tested if valid). Continuing."
 fi
 # ----------------- end of sanity checks -----------------
 
