@@ -292,25 +292,25 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (modifier.getCategory() === "Clef" && modifier.getPosition() === VF.StaveModifier.Position.END) {
                     if ((modifier as any).type === vfclef.type) { // any = VF.Clef
                         const transparentStyle: string = "#12345600";
-                        const originalStyle: any = (modifier as any).getStyle();
+                        const originalStyle: any = modifier.getStyle();
                         if (originalStyle) {
                             (modifier as any).originalStrokeStyle = originalStyle.strokeStyle;
                             (modifier as any).originalFillStyle = originalStyle.fillStyle;
                         }
-                        (modifier as any).setStyle({strokeStyle: transparentStyle, fillStyle: transparentStyle});
+                        modifier.setStyle({strokeStyle: transparentStyle, fillStyle: transparentStyle});
                     }
                 }
             } else {
                 // reset invisible style
                 const originalStrokeStyle: any = (modifier as any).originalStrokeStyle;
                 const originalFillStyle: any = (modifier as any).originalFillStyle;
-                if ((modifier as any).getStyle()) {
+                if (modifier.getStyle()) {
                     if (originalStrokeStyle && originalFillStyle) {
-                        ((modifier as any).getStyle() as any).strokeStyle = originalStrokeStyle;
-                        ((modifier as any).getStyle() as any).fillStyle = originalFillStyle;
+                        modifier.getStyle().strokeStyle = originalStrokeStyle;
+                        modifier.getStyle().fillStyle = originalFillStyle;
                     } else {
-                        ((modifier as any).getStyle() as any).strokeStyle = null;
-                        ((modifier as any).getStyle() as any).fillStyle = null;
+                        modifier.getStyle().strokeStyle = null;
+                        modifier.getStyle().fillStyle = null;
                     }
                 }
             }
