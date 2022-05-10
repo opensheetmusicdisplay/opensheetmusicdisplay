@@ -975,9 +975,9 @@ export class VexFlowConverter {
     /**
      * Converts a lineType to a VexFlow StaveConnector type
      * @param lineType
-     * @returns {any}
+     * @returns {VF.StaveConnector.type}
      */
-    public static line(lineType: SystemLinesEnum, linePosition: SystemLinePosition): any {
+    public static line(lineType: SystemLinesEnum, linePosition: SystemLinePosition): VF.StaveConnector.type {
         switch (lineType) {
             case SystemLinesEnum.SingleThin:
                 if (linePosition === SystemLinePosition.MeasureBegin) {
