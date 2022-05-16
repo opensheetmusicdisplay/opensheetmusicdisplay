@@ -567,6 +567,8 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             Dot.buildAndAttach([vfnote], {all: true});
         }
+
+        vfnote.render_options.draw = firstNote.PrintObject;
         return vfnote;
     }
 
