@@ -57,17 +57,17 @@ if (imageFormat !== "svg") {
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 
 async function init () {
-    console.log("[OSMD.generateImages] init");
+    debug("init");
 
     const osmdTestingMode = mode.includes("osmdtesting"); // can also be --debugosmdtesting
     const osmdTestingSingleMode = mode.includes("osmdtestingsingle");
     const DEBUG = mode.startsWith("--debug");
     // const debugSleepTime = Number.parseInt(process.env.GENERATE_DEBUG_SLEEP_TIME) || 0; // 5000 works for me [sschmidTU]
     if (DEBUG) {
-        // console.log(' (note that --debug slows down the script by about 0.3s per file, through logging)')
+        // debug(' (note that --debug slows down the script by about 0.3s per file, through logging)')
         const debugSleepTimeMs = Number.parseInt(debugSleepTimeString, 10);
         if (debugSleepTimeMs > 0) {
-            console.log("debug sleep time: " + debugSleepTimeString);
+            debug("debug sleep time: " + debugSleepTimeString);
             await sleep(Number.parseInt(debugSleepTimeMs, 10));
             // [VSCode] apparently this is necessary for the debugger to attach itself in time before the program closes.
             // sometimes this is not enough, so you may have to try multiple times or increase the sleep timer. Unfortunately debugging nodejs isn't easy.
@@ -133,7 +133,7 @@ async function init () {
         };
     } catch {
         if (skyBottomLinePreference === "--webgl") {
-            console.log("WebGL image generation was requested but gl is not installed; using non-WebGL generation.");
+            debug("WebGL image generation was requested but gl is not installed; using non-WebGL generation.");
         }
     }
 
@@ -205,7 +205,7 @@ async function init () {
         }
         // eslint-disable-next-line no-useless-escape
         if (sampleFilename.match("^.*(\.xml)|(\.musicxml)|(\.mxl)$")) {
-            // console.log('found musicxml/mxl: ' + sampleFilename)
+            // debug('found musicxml/mxl: ' + sampleFilename)
             samplesToProcess.push(sampleFilename);
         } else {
             debug("discarded file/directory: " + sampleFilename, DEBUG);
@@ -248,9 +248,9 @@ async function init () {
 
     if (DEBUG) {
         osmdInstance.setLogLevel("debug");
-        // console.log(`osmd PageFormat: ${osmdInstance.EngravingRules.PageFormat.width}x${osmdInstance.EngravingRules.PageFormat.height}`)
-        console.log(`osmd PageFormat idString: ${osmdInstance.EngravingRules.PageFormat.idString}`);
-        console.log("PageHeight: " + osmdInstance.EngravingRules.PageHeight);
+        // debug(`osmd PageFormat: ${osmdInstance.EngravingRules.PageFormat.width}x${osmdInstance.EngravingRules.PageFormat.height}`)
+        debug(`osmd PageFormat idString: ${osmdInstance.EngravingRules.PageFormat.idString}`);
+        debug("PageHeight: " + osmdInstance.EngravingRules.PageHeight);
     } else {
         osmdInstance.setLogLevel("info"); // doesn't seem to work, log.debug still logs
     }
@@ -270,7 +270,7 @@ async function init () {
         }
     }
 
-    console.log("[OSMD.generateImages] done, exiting.");
+    debug("done, exiting.");
 }
 
 // eslint-disable-next-line
@@ -306,8 +306,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     } else {
         loadParameter = loadParameter.toString();
     }
-    // console.log('loadParameter: ' + loadParameter)
-    // console.log('typeof loadParameter: ' + typeof loadParameter)
+    // debug('loadParameter: ' + loadParameter)
+    // debug('typeof loadParameter: ' + typeof loadParameter)
 
     // set sample-specific options for OSMD visual regression testing
     let includeSkyBottomLine = false;
@@ -359,7 +359,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         debug("loading sample " + sampleFilename, DEBUG);
         await osmdInstance.load(loadParameter, sampleFilename); // if using load.then() without await, memory will not be freed up between renders
     } catch (ex) {
-        console.log("couldn't load sample " + sampleFilename + ", skipping. Error: \n" + ex);
+        debug("couldn't load sample " + sampleFilename + ", skipping. Error: \n" + ex);
         return;
     }
     debug("xml loaded", DEBUG);
@@ -367,7 +367,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         osmdInstance.render();
         // there were reports that await could help here, but render isn't a synchronous function, and it seems to work. see #932
     } catch (ex) {
-        console.log("renderError: " + ex);
+        debug("renderError: " + ex);
     }
     debug("rendered", DEBUG);
 
@@ -382,7 +382,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
                 break;
             }
             if (!canvasImage.toDataURL) {
-                console.log(`error: could not get canvas image for page ${pageNumber} for file: ${sampleFilename}`);
+                debug(`error: could not get canvas image for page ${pageNumber} for file: ${sampleFilename}`);
                 break;
             }
             dataUrls.push(canvasImage.toDataURL());
@@ -407,7 +407,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         if (imageFormat === "png") {
             const dataUrl = dataUrls[pageIndex];
             if (!dataUrl || !dataUrl.split) {
-                console.log(`error: could not get dataUrl (imageData) for page ${pageIndex + 1} of sample: ${sampleFilename}`);
+                debug(`error: could not get dataUrl (imageData) for page ${pageIndex + 1} of sample: ${sampleFilename}`);
                 continue;
             }
             const imageData = dataUrl.split(";base64,").pop();
@@ -418,7 +418,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         } else if (imageFormat === "svg") {
             const markup = markupStrings[pageIndex];
             if (!markup) {
-                console.log(`error: could not get markup (SVG data) for page ${pageIndex + 1} of sample: ${sampleFilename}`);
+                debug(`error: could not get markup (SVG data) for page ${pageIndex + 1} of sample: ${sampleFilename}`);
                 continue;
             }
 
@@ -435,19 +435,19 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         //             maxRssFilename = pageFilename
         //         }
         //     }
-        //     console.log(entry[0] + ': ' + entry[1] / (1024 * 1024) + 'mb')
+        //     debug(entry[0] + ': ' + entry[1] / (1024 * 1024) + 'mb')
         // }
-        // console.log('maxRss: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
+        // debug('maxRss: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
     }
-    // console.log('maxRss total: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
+    // debug('maxRss total: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
 
     // await sleep(5000)
     // }) // end read file
 }
 
-function debug (msg, debugEnabled) {
+function debug (msg, debugEnabled = true) {
     if (debugEnabled) {
-        console.log(msg);
+        console.log("[generateImages] " + msg);
     }
 }
 
