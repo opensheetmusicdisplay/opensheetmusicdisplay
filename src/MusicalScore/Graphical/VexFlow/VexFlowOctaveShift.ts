@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { OctaveShift, OctaveEnum } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { BoundingBox } from "../BoundingBox";
@@ -17,7 +16,7 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
     /** Defines the note where the octave shift ends */
     public endNote: VF.StemmableNote;
     /** Top or bottom of the staffline */
-    private position: VF.TextBracket.Positions;
+    private position: number;
     /** Supscript is a smaller text after the regular text (e.g. va after 8) */
     private supscript: string;
     /** Main text element */

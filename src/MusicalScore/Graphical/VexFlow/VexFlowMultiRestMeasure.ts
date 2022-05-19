@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
@@ -37,6 +36,7 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
 
         this.resetLayout();
 
+        // @ts-ignore
         this.multiRestElement = new VF.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
             // number_line: 3
         });
@@ -46,7 +46,7 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
      * Draw this measure on a VexFlow CanvasContext
      * @param ctx
      */
-    public draw(ctx: Vex.IRenderContext): void {
+    public draw(ctx: VF.RenderContext): void {
         // Draw stave lines
         this.stave.setContext(ctx).draw();
 

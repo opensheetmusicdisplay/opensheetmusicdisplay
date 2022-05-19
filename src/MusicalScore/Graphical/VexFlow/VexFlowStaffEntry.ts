@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowMeasure } from "./VexFlowMeasure";

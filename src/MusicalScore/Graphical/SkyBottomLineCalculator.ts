@@ -148,7 +148,7 @@ export class SkyBottomLineCalculator {
             // imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order
             // RGBA is 32 bit word with 8 bits red, 8 bits green, 8 bits blue and 8 bit alpha. Alpha should be 0 for all background colors.
             // Since we are only interested in black or white we can take 32bit words at once
-            const imageData: any = ctx.getImageData(0, 0, width, height);
+            const imageData: any = tmpCanvas.CanvasRenderingCtx.getImageData(0, 0, width, height);
             const rgbaLength: number = 4;
             const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * samplingUnit), 1);
             const tmpSkyLine: number[] = new Array(measureArrayLength);

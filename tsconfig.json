@@ -1,14 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    //"strict": true,
+    "target": "es6",
+    "module": "esNext",
     "esModuleInterop": true,
-    "module": "commonjs",
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "outDir": "build/dist",
     "declaration": true,
     "sourceMap": true,
     "typeRoots": ["./node_modules/@types"],
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "allowUmdGlobalAccess": true,
+    "paths": {
+      "vexflow": ["./node_modules/vexflow/entry/vexflow-gonville.ts"]
+    }
   },
   "exclude": [
     "node_modules",

@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -12,7 +11,7 @@ import { GraphicalNote } from "../GraphicalNote";
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     private mVexFlowStaveNote: VF.StemmableNote;
 
-    constructor(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry) {
+    constructor(parentVoiceEntry?: VoiceEntry, parentStaffEntry?: GraphicalStaffEntry) {
         super(parentVoiceEntry, parentStaffEntry);
     }
 
@@ -115,8 +114,8 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             }
 
             if (vfStaveNote) {
-                if (vfStaveNote.note_heads) { // see VexFlowConverter, needs Vexflow PR
-                    const notehead: any = vfStaveNote.note_heads[i];
+                if (vfStaveNote.noteHeads) { // see VexFlowConverter, needs Vexflow PR
+                    const notehead: any = vfStaveNote.noteHeads[i];
                     if (notehead) {
                         notehead.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
                     }

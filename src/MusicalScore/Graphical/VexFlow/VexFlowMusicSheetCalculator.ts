@@ -21,8 +21,7 @@ import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import log from "loglevel";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
@@ -74,9 +73,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
     //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
     if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "gonville") {
-      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+      VF.Flow.setMusicFont("Gonville", "Custom");
     } else if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "petaluma") {
-      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Petaluma, (Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura];
+      VF.Flow.setMusicFont("Gonville", "Custom");
     }
     // else keep new vexflow default Bravura (more cursive, bold)
   }
@@ -780,6 +779,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     vfStave.setTempo(
       {
           bpm: metronomeExpression.TempoInBpm,
+          // @ts-ignore
           dots: metronomeExpression.dotted,
           duration: vexflowDuration
       },
@@ -817,7 +817,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // const section: VF.StaveSection = new VF.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
     // (vfStave as any).modifiers.push(section);
     const fontSize: number = this.rules.RehearsalMarkFontSize;
-    (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
+    (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize, false); // fontSize is an extra argument from VexFlowPatch
   }
 
   /**
@@ -1011,7 +1011,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endXOffset;
     vfOctaveShift.PositionAndShape.Size.width = startX - stopX;
     const textBracket: VF.TextBracket = vfOctaveShift.getTextBracket();
-    const fontSize: number = (textBracket as any).font.size / 10;
+    const fontSize: number = textBracket.fontSizeInPixels / 10;
 
     if ((<any>textBracket).position === VF.TextBracket.Positions.TOP) {
       const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));

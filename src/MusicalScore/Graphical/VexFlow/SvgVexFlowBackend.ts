@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 
 import {VexFlowBackend} from "./VexFlowBackend";
 import {VexFlowConverter} from "./VexFlowConverter";
@@ -21,7 +20,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.rules = rules;
     }
 
-    public getVexflowBackendType(): VF.Renderer.Backends {
+    public getVexflowBackendType(): VF.RendererBackends {
         return VF.Renderer.Backends.SVG;
     }
 
@@ -42,6 +41,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";
         container.appendChild(this.inner);
+        // @ts-ignore
         this.renderer = new VF.Renderer(this.canvas, this.getVexflowBackendType());
         this.ctx = <VF.SVGContext>this.renderer.getContext();
         this.ctx.svg.id = "osmdSvgPage" + this.graphicalMusicPage.PageNumber;

@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import { Staff } from "../../VoiceData/Staff";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -66,7 +65,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             this.vfVoices[voice.VoiceId] = new VF.Voice({
                         beat_value: this.parentSourceMeasure.Duration.Denominator,
                         num_beats: this.parentSourceMeasure.Duration.Numerator,
-                        resolution: VF.RESOLUTION,
+                        resolution: VF.Flow.RESOLUTION,
                     }).setMode(VF.Voice.Mode.SOFT);
 
             const restFilledEntries: GraphicalVoiceEntry[] =  this.getRestFilledVexFlowStaveNotesPerVoice(voice);
@@ -96,7 +95,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                     // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
                     // see VoiceGenerator. Doesn't matter for Vexflow for now though
                     if (voiceEntry.notes && voiceEntry.notes.length > 1) {
-                        const type: VF.Stroke.Type = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
+                        const type: number = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
                         const stroke: VF.Stroke = new VF.Stroke(type, {
                             all_voices: this.rules.ArpeggiosGoAcrossVoices
                             // default: false. This causes arpeggios to always go across all voices, which is often unwanted.

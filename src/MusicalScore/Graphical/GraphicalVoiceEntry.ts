@@ -10,7 +10,7 @@ import { EngravingRules } from "./EngravingRules";
  * The graphical counterpart of a [[VoiceEntry]].
  */
 export class GraphicalVoiceEntry extends GraphicalObject {
-    constructor(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry) {
+    constructor(parentVoiceEntry?: VoiceEntry, parentStaffEntry?: GraphicalStaffEntry) {
         super();
         this.parentVoiceEntry = parentVoiceEntry;
         this.parentStaffEntry = parentStaffEntry;
@@ -20,13 +20,13 @@ export class GraphicalVoiceEntry extends GraphicalObject {
                         parentStaffEntry.parentMeasure.parentSourceMeasure.Rules : new EngravingRules();
     }
 
-    public parentVoiceEntry: VoiceEntry;
-    public parentStaffEntry: GraphicalStaffEntry;
+    public parentVoiceEntry?: VoiceEntry;
+    public parentStaffEntry?: GraphicalStaffEntry;
     public notes: GraphicalNote[];
     /** Contains octave shifts affecting this voice entry, caused by octave brackets. */
-    public octaveShiftValue: OctaveEnum;
+    public octaveShiftValue?: OctaveEnum;
     protected rules: EngravingRules;
-    public GraceSlash: boolean;
+    public GraceSlash?: boolean;
 
     /** Sort this entry's notes by pitch.
      * Notes need to be sorted for Vexflow StaveNote creation.
