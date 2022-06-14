@@ -689,6 +689,9 @@ export class GraphicalMusicSheet {
                 if (!gse.relInMeasureTimestamp) {
                     continue;
                 }
+                if (!gse.parentMeasure) {
+                    continue; // ignore entries in e.g. Multiple Rest Measures
+                }
                 const deltaNew: number = this.CalculateDistance(gse.PositionAndShape.AbsolutePosition, clickPosition);
                 const deltaOld: number = this.CalculateDistance(closest.PositionAndShape.AbsolutePosition, clickPosition);
                 if (deltaNew < deltaOld) {
