@@ -683,14 +683,14 @@ export class GraphicalMusicSheet {
         let closest: GraphicalStaffEntry = undefined;
         for (let idx: number = 0, len: number = foundEntries.length; idx < len; ++idx) {
             const gse: GraphicalStaffEntry = foundEntries[idx];
+            if (!gse.parentMeasure) {
+                continue; // ignore entries in e.g. Multiple Rest Measures
+            }
             if (closest === undefined) {
                 closest = gse;
             } else {
                 if (!gse.relInMeasureTimestamp) {
                     continue;
-                }
-                if (!gse.parentMeasure) {
-                    continue; // ignore entries in e.g. Multiple Rest Measures
                 }
                 const deltaNew: number = this.CalculateDistance(gse.PositionAndShape.AbsolutePosition, clickPosition);
                 const deltaOld: number = this.CalculateDistance(closest.PositionAndShape.AbsolutePosition, clickPosition);
