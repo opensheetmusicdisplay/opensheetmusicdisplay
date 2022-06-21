@@ -2131,7 +2131,8 @@ export abstract class MusicSheetCalculator {
                                 if (note.NoteTie) {
                                     const tie: Tie = note.NoteTie;
                                     if (note === note.NoteTie.Notes.last()) {
-                                        continue; // nothing to do on last note. don't create last tie twice.
+                                        // For GENIT Apps - noPair tie
+                                        // continue; // nothing to do on last note. don't create last tie twice.
                                     }
                                     if (startStaffEntry) {
                                         for (const gTie of startStaffEntry.GraphicalTies) {
@@ -2162,15 +2163,15 @@ export abstract class MusicSheetCalculator {
         let startNote: GraphicalNote = undefined;
         let endGse: GraphicalStaffEntry = undefined;
         let endNote: GraphicalNote = undefined;
-        for (let i: number = 1; i < tie.Notes.length; i++) {
-            startNote = startGse.findTieGraphicalNoteFromNote(tie.Notes[i - 1]);
+        // For GENIT Apps - noPair tie
+        const noPair: boolean = tie.Notes.length <= 1;
+        for (let i: number = noPair ? 0 : 1; i < tie.Notes.length; i++) {
+            startNote = startGse.findTieGraphicalNoteFromNote(tie.Notes[noPair ? 0 : i - 1]);
             endGse = this.graphicalMusicSheet.GetGraphicalFromSourceStaffEntry(tie.Notes[i].ParentStaffEntry);
-            if (!endGse) {
-                continue;
-            }
-            endNote = endGse.findTieGraphicalNoteFromNote(tie.Notes[i]);
-            if (startNote !== undefined && endNote !== undefined && endGse) {
-                if (!startNote.sourceNote.PrintObject || !endNote.sourceNote.PrintObject) {
+            endNote = endGse.findTieGraphicalNoteFromNote(tie.Notes[noPair ? 0 : i]);
+
+            if (noPair || startNote !== undefined && endNote !== undefined && endGse) {
+                if (!noPair && !startNote.sourceNote.PrintObject || !endNote.sourceNote.PrintObject) {
                     continue;
                 }
                 const graphicalTie: GraphicalTie = this.createGraphicalTie(tie, startGse, endGse, startNote, endNote);
@@ -2767,6 +2768,7 @@ export abstract class MusicSheetCalculator {
                                 const tieIsAtSystemBreak: boolean = (
                                     graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine !==
                                     graphicalTie.EndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine
+                                    || !graphicalTie.Tie.firstNote || graphicalTie.Tie.Notes.length <= 1 // For GENIT Apps - noPair tie
                                 );
                                 this.layoutGraphicalTie(graphicalTie, tieIsAtSystemBreak, measure.ParentStaff.isTab);
                             }
