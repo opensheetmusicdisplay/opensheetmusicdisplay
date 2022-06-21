@@ -616,7 +616,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
-      if (vfStartNote) { // first_note or last_note must be not null in Vexflow
+      if (tie.Tie.firstNote) { // first_note or last_note must be not null in Vexflow
         const vfTie1: VF.StaveTie = new VF.StaveTie({
           first_indices: [startNoteIndexInTie],
           first_note: vfStartNote
@@ -624,8 +624,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
       }
-
-      if (vfEndNote) {
+      if (!tie.Tie.firstNote || (vfEndNote && tie.Tie.Notes.length >= 2)) {
         const vfTie2: VF.StaveTie = new VF.StaveTie({
           last_indices: [endNoteIndexInTie],
           last_note: vfEndNote

@@ -10,8 +10,10 @@ import { TransposeCalculator } from "../src/Plugins/Transpose/TransposeCalculato
   var openSheetMusicDisplay;
   var sampleFolder = "",
     samples = {
+      "Slur end": "slur_end.musicxml",
+      "Slur start": "slur_start.musicxml",
       "Almost Like Being Love": "Almost_Like_Being_In_Love.xml",
-      "Girl From Ipanema": "Girl_From_Ipanema.xml",
+      "Girl From Ipanema": "Girl_From_Ipanema.musicxml",
       "Beethoven, L.v. - An die ferne Geliebte":
         "Beethoven_AnDieFerneGeliebte.xml",
       "Clementi, M. - Sonatina Op.36 No.1 Pt.1":

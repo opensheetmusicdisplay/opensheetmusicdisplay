@@ -967,12 +967,19 @@ export class VoiceGenerator {
               tie.TieNumber = newTieNumber;
               tie.TieDirection = tieDirection;
             } else if (type === "stop") {
-              const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
-              const tie: Tie = this.openTieDict[tieNumber];
-              if (tie) {
-                tie.AddNote(this.currentNote);
-                delete this.openTieDict[tieNumber];
+              let tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
+              let tie: Tie = this.openTieDict[tieNumber];
+              // For GENIT Apps - noPair tie
+              if(!tie){
+                tie = new Tie(undefined, tieType);
+                const newTieNumber: number = this.getNextAvailableNumberForTie();
+                this.openTieDict[newTieNumber] = tie;
+                tie.TieNumber = newTieNumber;
+                tie.TieDirection = tieDirection;
+                tieNumber = newTieNumber;
               }
+              tie.AddNote(this.currentNote);
+              delete this.openTieDict[tieNumber];
             }
           } catch (err) {
             const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/TieError", "Error while reading tie.");
