@@ -35,12 +35,15 @@ export class StaveSection extends StaveModifier {
     ctx.setFont(this.font.family, this.font.size, this.font.weight);
     const text_measurements = ctx.measureText('' + this.section);
     const text_width = text_measurements.width;
-    const text_height = text_measurements.height;
+    let text_height = text_measurements.height;
+    if (!text_height) {
+      text_height = text_measurements.emHeightAscent; // node canvas / generateImages fix
+    }
     let width = text_width + 6;  // add left & right padding
     if (width < 18) width = 18;
     const height = text_height + this.font.size / 10; // font.size / 10: padding
     //  Seems to be a good default y
-    const y = stave.getYForTopText(3) + 16 - (height * 1.15) + this.shift_y;
+    const y = stave.getYForTopText(3) + 19 - (height * 1.15) + this.shift_y;
     let x = this.x + shift_x;
     ctx.beginPath();
     ctx.lineWidth = 2;
