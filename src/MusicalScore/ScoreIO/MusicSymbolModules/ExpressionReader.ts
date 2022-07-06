@@ -92,36 +92,38 @@ export class ExpressionReader {
         }
         if (this.placement === PlacementEnum.NotYetDefined) {
             try {
-                const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
-                if (directionTypeNode) {
-                    const dynamicsNode: IXmlElement = directionTypeNode.element("dynamics");
-                    if (dynamicsNode) {
-                        const defAttr: IXmlAttribute = dynamicsNode.attribute("default-y");
-                        if (defAttr) {
-                            this.readExpressionPlacement(defAttr, "read dynamics y pos");
+                const directionTypeNodes: IXmlElement[] = xmlNode.elements("direction-type");
+                for (const directionTypeNode of directionTypeNodes) {
+                    if (directionTypeNode) {
+                        const dynamicsNode: IXmlElement = directionTypeNode.element("dynamics");
+                        if (dynamicsNode) {
+                            const defAttr: IXmlAttribute = dynamicsNode.attribute("default-y");
+                            if (defAttr) {
+                                this.readExpressionPlacement(defAttr, "read dynamics y pos");
+                            }
                         }
-                    }
-                    const wedgeNode: IXmlElement = directionTypeNode.element("wedge");
-                    if (wedgeNode) {
-                        const defAttr: IXmlAttribute = wedgeNode.attribute("default-y");
-                        if (defAttr) {
-                            this.readExpressionPlacement(defAttr, "read wedge y pos");
+                        const wedgeNode: IXmlElement = directionTypeNode.element("wedge");
+                        if (wedgeNode) {
+                            const defAttr: IXmlAttribute = wedgeNode.attribute("default-y");
+                            if (defAttr) {
+                                this.readExpressionPlacement(defAttr, "read wedge y pos");
+                            }
                         }
-                    }
-                    const wordsNode: IXmlElement = directionTypeNode.element("words");
-                    if (wordsNode) {
-                        const defAttr: IXmlAttribute = wordsNode.attribute("default-y");
-                        if (defAttr) {
-                            this.readExpressionPlacement(defAttr, "read words y pos");
+                        const wordsNode: IXmlElement = directionTypeNode.element("words");
+                        if (wordsNode) {
+                            const defAttr: IXmlAttribute = wordsNode.attribute("default-y");
+                            if (defAttr) {
+                                this.readExpressionPlacement(defAttr, "read words y pos");
+                            }
                         }
-                    }
-                    const rehearsalNode: IXmlElement = directionTypeNode.element("rehearsal");
-                    if (rehearsalNode) {
-                        const defAttr: IXmlAttribute = rehearsalNode.attribute("default-y");
-                        if (defAttr) {
-                            this.readExpressionPlacement(defAttr, "read rehearsal pos");
+                        const rehearsalNode: IXmlElement = directionTypeNode.element("rehearsal");
+                        if (rehearsalNode) {
+                            const defAttr: IXmlAttribute = rehearsalNode.attribute("default-y");
+                            if (defAttr) {
+                                this.readExpressionPlacement(defAttr, "read rehearsal pos");
+                            }
                         }
-                    }
+                }
                 }
             } catch (ex) {
                 const errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/ExpressionPlacementError",
