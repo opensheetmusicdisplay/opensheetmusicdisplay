@@ -37,7 +37,7 @@ export class StaveSection extends StaveModifier {
     const text_width = text_measurements.width;
     let text_height = text_measurements.height;
     if (!text_height) {
-      text_height = text_measurements.emHeightAscent; // node canvas / generateImages fix
+      text_height = text_measurements.emHeightAscent + 2; // node canvas / generateImages fix
     }
     let width = text_width + 6;  // add left & right padding
     if (width < 18) width = 18;
