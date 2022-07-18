@@ -74,6 +74,7 @@ function createContexts(voices, ContextType, addToContext) {
   // as an integer tick value.
   const totalTicks = voices[0].getTotalTicks();
   const resolutionMultiplier = voices.reduce((resolutionMultiplier, voice) => {
+    // VexFlowPatch: this error is unnecessary, and prevents the fix to the layouting in #1187.
     // if (!voice.getTotalTicks().equals(totalTicks)) {
     //   throw new Vex.RERR(
     //     'TickMismatch', 'Voices should have same total note duration in ticks.'
