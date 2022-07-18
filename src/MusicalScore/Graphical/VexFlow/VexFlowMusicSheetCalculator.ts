@@ -172,8 +172,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const voices: VF.Voice[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
-          voices.push(mvoices[voiceID]);
-          allVoices.push(mvoices[voiceID]);
+          const mvoice: any = mvoices[voiceID];
+          if (measure.hasOnlyRests && !mvoice.ticksUsed.equals(mvoice.totalTicks)) {
+            mvoice.ticksUsed = mvoice.totalTicks;
+          }
+          voices.push(mvoice);
+          allVoices.push(mvoice);
         }
       }
 
