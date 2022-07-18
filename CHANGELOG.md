@@ -1,3 +1,14 @@
+## [1.5.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.0...1.5.1) (2022-07-18)
+
+
+### Bug Fixes
+
+* **generateImages:** Fix rehearsal marks not having a box around them due to node canvas restriction. ([48799ba](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/48799baf9f12ef6214caa33b6528a47ca1ca4227))
+* **Layout:** Fix 12/8 rhythm with rest measures overflowing notes, other rest measure issues ([#1187](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1187), merge [#1188](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1188)) ([b524d77](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b524d77e63fd81b398463db4ab20e50f1de134e8))
+* **Rehearsal Mark:** Position correctly when EngravingRules.RehearsalMarkFontSize is increased ([#1176](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1176)) ([d32bc1a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d32bc1a437e700be32b61b40cb45807161908620))
+
+
+
 # [1.5.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.4.5...1.5.0) (2022-04-22)
 
 
