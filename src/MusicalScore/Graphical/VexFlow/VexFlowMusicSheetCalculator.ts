@@ -174,7 +174,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (mvoices.hasOwnProperty(voiceID)) {
           const mvoice: any = mvoices[voiceID];
           if (measure.hasOnlyRests && !mvoice.ticksUsed.equals(mvoice.totalTicks)) {
+            // fix layouting issues with whole measure rests in one staff and notes in other. especially in 12/8 rthythm (#1187)
             mvoice.ticksUsed = mvoice.totalTicks;
+            // Vexflow 1.2.93: needs VexFlowPatch for formatter.js (see #1187)
           }
           voices.push(mvoice);
           allVoices.push(mvoice);
