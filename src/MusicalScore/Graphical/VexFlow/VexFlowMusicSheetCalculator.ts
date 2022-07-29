@@ -198,17 +198,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const staffEntryFactor: number = 0.3;
 
     if (allVoices.length > 0) {
-      // minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
-      // * this.rules.VoiceSpacingMultiplierVexflow
-      // + this.rules.VoiceSpacingAddendVexflow
-      // + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
-
-      // For GENIT Apps - measure width evenly
-      minStaffEntriesWidth =
-        unitInPixels * this.rules.VoiceSpacingMultiplierVexflow +
-        this.rules.VoiceSpacingAddendVexflow +
-        maxStaffEntries * staffEntryFactor;
-
+      minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
+      * this.rules.VoiceSpacingMultiplierVexflow
+      + this.rules.VoiceSpacingAddendVexflow
+      + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
       if (parentSourceMeasure?.ImplicitMeasure) {
         // shrink width in the ratio that the pickup measure is shorter compared to a full measure('s time signature):
         minStaffEntriesWidth = parentSourceMeasure.Duration.RealValue / parentSourceMeasure.ActiveTimeSignature.RealValue * minStaffEntriesWidth;
@@ -519,6 +512,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   public calculateMeasureWidthFromStaffEntries(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
+    // For GENIT Apps - measure width evenly
+    return 1;
+    /*
     let elongationFactorForMeasureWidth: number = 1;
 
     for (const measure of measuresVertical) {
@@ -541,6 +537,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const newMinimumStaffEntriesWidth: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
 
     return newMinimumStaffEntriesWidth;
+    */
   }
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
