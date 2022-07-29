@@ -198,10 +198,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const staffEntryFactor: number = 0.3;
 
     if (allVoices.length > 0) {
-      minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
-      * this.rules.VoiceSpacingMultiplierVexflow
-      + this.rules.VoiceSpacingAddendVexflow
-      + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
+      // minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
+      // * this.rules.VoiceSpacingMultiplierVexflow
+      // + this.rules.VoiceSpacingAddendVexflow
+      // + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
+
+      // For GENIT Apps - measure width evenly
+      minStaffEntriesWidth =
+        unitInPixels * this.rules.VoiceSpacingMultiplierVexflow +
+        this.rules.VoiceSpacingAddendVexflow +
+        maxStaffEntries * staffEntryFactor;
+
       if (parentSourceMeasure?.ImplicitMeasure) {
         // shrink width in the ratio that the pickup measure is shorter compared to a full measure('s time signature):
         minStaffEntriesWidth = parentSourceMeasure.Duration.RealValue / parentSourceMeasure.ActiveTimeSignature.RealValue * minStaffEntriesWidth;
