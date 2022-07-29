@@ -10,7 +10,7 @@ import { TransposeCalculator } from "../src/Plugins/Transpose/TransposeCalculato
   var openSheetMusicDisplay;
   var sampleFolder = "",
     samples = {
-      "シンデレラボーイ":"シンデレラボーイ-10010278.musicxml",
+      シンデレラボーイ: "シンデレラボーイ-10010278.musicxml",
       "Slur end": "slur_end.musicxml",
       "Slur start": "slur_start.musicxml",
       "Almost Like Being Love": "Almost_Like_Being_In_Love.xml",
@@ -512,17 +512,18 @@ import { TransposeCalculator } from "../src/Plugins/Transpose/TransposeCalculato
     // Create OSMD object and canvas
     openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
       backend: "svg",
-      drawTitle: true,
-      newSystemFromXML: true,
+      drawTitle: false,
       drawPartNames: false,
+      drawComposer: false,
+      drawLyricist: false,
+      drawLyrics: false,
+
+      newSystemFromXML: true,
       spacingFactorSoftmax: 100,
       stretchLastSystemLine: true,
       setWantedStemDirectionByXml: false,
       drawMeasureNumbersOnlyAtSystemStart: true,
       autoGenerateMutipleRestMeasuresFromRestMeasures: false,
-      drawComposer: false,
-      drawLyricist: false,
-      drawLyrics: false,
     });
 
     openSheetMusicDisplay.EngravingRules.PageLeftMargin = 1;
