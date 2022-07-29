@@ -10,6 +10,7 @@ import { TransposeCalculator } from "../src/Plugins/Transpose/TransposeCalculato
   var openSheetMusicDisplay;
   var sampleFolder = "",
     samples = {
+      "シンデレラボーイ":"シンデレラボーイ-10010278.musicxml",
       "Slur end": "slur_end.musicxml",
       "Slur start": "slur_start.musicxml",
       "Almost Like Being Love": "Almost_Like_Being_In_Love.xml",
