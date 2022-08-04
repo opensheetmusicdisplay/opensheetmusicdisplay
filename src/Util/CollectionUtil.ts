@@ -95,7 +95,7 @@ export class CollectionUtil {
             if (mid === lastMidChecked) {
                 break;
                 // this fixes a rare infinite loop when no matching element can be found,
-                //   e.g. with very small fraction difference in AbsoluteTimestamp like 511/1024 instead of 1/2
+                //   e.g. with very small fraction difference in AbsoluteTimestamp like 511/1024 instead of 1/2 (#1201)
             }
             const c: number = cmp(array[mid], element);
             if (c === 0) {
