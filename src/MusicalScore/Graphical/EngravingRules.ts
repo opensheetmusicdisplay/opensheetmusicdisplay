@@ -151,6 +151,9 @@ export class EngravingRules {
     public TripletsBracketed: boolean;
     public TupletNumberLabelHeight: number;
     public TupletNumberYOffset: number;
+    public TupletNumberLimitConsecutiveRepetitions: boolean;
+    public TupletNumberMaxConsecutiveRepetitions: number;
+    public TupletNumberAlwaysDisableAfterFirstMax: boolean;
     public LabelMarginBorderFactor: number;
     public TupletVerticalLineLength: number;
     public TupletNumbersInTabs: boolean;
@@ -515,6 +518,9 @@ export class EngravingRules {
         this.TripletsBracketed = false; // special setting for triplets, overrides tuplet setting (for triplets only)
         this.TupletNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.TupletNumberYOffset = 0.5;
+        this.TupletNumberLimitConsecutiveRepetitions = true;
+        this.TupletNumberMaxConsecutiveRepetitions = 2;
+        this.TupletNumberAlwaysDisableAfterFirstMax = true;
         this.LabelMarginBorderFactor = 0.1;
         this.TupletVerticalLineLength = 0.5;
         this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
