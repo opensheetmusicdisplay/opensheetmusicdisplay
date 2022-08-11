@@ -616,8 +616,20 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // Draw tuplets
             for (const voiceID in this.vftuplets) {
                 if (this.vftuplets.hasOwnProperty(voiceID)) {
-                    for (const tuplet of this.vftuplets[voiceID]) {
-                        tuplet.setContext(ctx).draw();
+                    for (let i: number = 0; i < this.tuplets[voiceID].length; i++) {
+                        const tuplet: Tuplet = this.tuplets[voiceID][i][0];
+                        const vftuplet: VF.Tuplet = this.vftuplets[voiceID][i];
+                        if (!tuplet.RenderTupletNumber) {
+                            // (vftuplet as any).numerator_glyphs_stored = [...(vftuplet as any).numerator_glyphs];
+                            // (vftuplet as any).numerator_glyphs = [];
+                            (vftuplet as any).RenderTupletNumber = false;
+                        } else {
+                            // issue with restoring glyphs (version without vexflowpatch): need to deep copy array, otherwise the reference is overwritten
+                            // (vftuplet as any).numerator_glyphs = [...(vftuplet as any).numerator_glyphs_stored];
+                            // (vftuplet as any).numerator_glyphs_stored = undefined;
+                            (vftuplet as any).RenderTupletNumber = true;
+                        }
+                        vftuplet.setContext(ctx).draw();
                     }
                 }
             }
@@ -1122,14 +1134,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
                       if (tuplet.tupletLabelNumberPlacement === PlacementEnum.Below) {
                           location = VF.Tuplet.LOCATION_BOTTOM;
                       }
-                      vftuplets.push(new VF.Tuplet( tupletStaveNotes,
-                                                          {
-                                                            bracketed: bracketed,
-                                                            location: location,
-                                                            notes_occupied: notesOccupied,
-                                                            num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
-                                                            ratioed: this.rules.TupletsRatioed,
-                                                          }));
+                      const vftuplet: VF.Tuplet = new VF.Tuplet(tupletStaveNotes,
+                        {
+                          bracketed: bracketed,
+                          location: location,
+                          notes_occupied: notesOccupied,
+                          num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
+                          ratioed: this.rules.TupletsRatioed,
+                        });
+                      vftuplets.push(vftuplet);
                     } else {
                         log.debug("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");
                     }

@@ -1055,6 +1055,67 @@ export abstract class MusicSheetCalculator {
     }
 
     protected calculateTupletNumbers(): void {
+        if (!this.rules.TupletNumberLimitConsecutiveRepetitions) {
+            return;
+        }
+        let currentTupletNumber: number = -1;
+        let consecutiveTupletCount: number = 0;
+        let currentTuplet: Tuplet = undefined;
+        let skipTuplet: Tuplet = undefined; // if set, ignore (further) handling of this tuplet
+        const disabledPerVoice: Object = {};
+        for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
+            for (const voice of instrument.Voices) {
+                disabledPerVoice[voice.VoiceId] = {};
+                for (const ve of voice.VoiceEntries) {
+                    if (ve.Notes.length > 0) {
+                        const firstNote: Note = ve.Notes[0];
+                        if (!firstNote.NoteTuplet) {
+                            currentTupletNumber = -1;
+                            consecutiveTupletCount = 0;
+                            currentTuplet = undefined;
+                            continue;
+                        }
+                        if (firstNote.NoteTuplet === skipTuplet) {
+                            continue;
+                        }
+                        if (firstNote.NoteTuplet !== currentTuplet) {
+                            if (disabledPerVoice[voice.VoiceId][firstNote.NoteTuplet.TupletLabelNumber]) {
+                                if (disabledPerVoice[voice.VoiceId][firstNote.NoteTuplet.TupletLabelNumber][firstNote.TypeLength.RealValue]) {
+                                    firstNote.NoteTuplet.RenderTupletNumber = false;
+                                    skipTuplet = firstNote.NoteTuplet;
+                                    continue;
+                                }
+                            }
+                        }
+                        if (firstNote.NoteTuplet.TupletLabelNumber !== currentTupletNumber) {
+                            currentTupletNumber = firstNote.NoteTuplet.TupletLabelNumber;
+                            consecutiveTupletCount = 0;
+                        }
+                        currentTuplet = firstNote.NoteTuplet;
+                        consecutiveTupletCount++;
+                        if (consecutiveTupletCount <= this.rules.TupletNumberMaxConsecutiveRepetitions) {
+                            firstNote.NoteTuplet.RenderTupletNumber = true; // need to re-activate after re-render when it was set to false
+                        }
+                        if (consecutiveTupletCount === this.rules.TupletNumberMaxConsecutiveRepetitions && this.rules.TupletNumberAlwaysDisableAfterFirstMax) {
+                            if (!disabledPerVoice[voice.VoiceId][currentTupletNumber]) {
+                                disabledPerVoice[voice.VoiceId][currentTupletNumber] = {};
+                            }
+                            disabledPerVoice[voice.VoiceId][currentTupletNumber][firstNote.TypeLength.RealValue] = true;
+                        }
+                        if (consecutiveTupletCount > this.rules.TupletNumberMaxConsecutiveRepetitions) {
+                            firstNote.NoteTuplet.RenderTupletNumber = false;
+                            if (this.rules.TupletNumberAlwaysDisableAfterFirstMax) {
+                                if (!disabledPerVoice[voice.VoiceId][currentTupletNumber]) {
+                                    disabledPerVoice[voice.VoiceId][currentTupletNumber] = {};
+                                }
+                                disabledPerVoice[voice.VoiceId][currentTupletNumber][firstNote.TypeLength.RealValue] = true;
+                            }
+                        }
+                        skipTuplet = currentTuplet;
+                    }
+                }
+            }
+        }
         return;
     }
 

@@ -63,11 +63,14 @@ able to add extra attributes (like svg node id) to a stroke (e.g. stem)
 tabnote.js (merged Vexflow 3.x):
 Add a context group for each tabnote, so that it can be found in the SVG DOM ("vf-tabnote")
 
+timesignature.js (fixed vexflow 4):
+open group to get SVG group+class for key signature
+
 tremolo.js (fixed vexflow 4):
 Add extra_stroke_scale, y_spacing_scale
 
-timesignature.js (fixed vexflow 4):
-open group to get SVG group+class for key signature
+tuplet.js (vexflow 4: need to check if this option available):
+Add option tuplet.RenderTupletNumber
 
 Currently, we are using Vexflow 1.2.93, because of some formatter advantages
 compared to Vexflow 3.x versions, see this issue:
