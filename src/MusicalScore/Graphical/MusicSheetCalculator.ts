@@ -1080,9 +1080,11 @@ export abstract class MusicSheetCalculator {
                         }
                         if (firstNote.NoteTuplet !== currentTuplet) {
                             if (disabledPerVoice[voice.VoiceId][firstNote.NoteTuplet.TupletLabelNumber]) {
-                                firstNote.NoteTuplet.RenderTupletNumber = false;
-                                skipTuplet = firstNote.NoteTuplet;
-                                continue;
+                                if (disabledPerVoice[voice.VoiceId][firstNote.NoteTuplet.TupletLabelNumber][firstNote.TypeLength.RealValue]) {
+                                    firstNote.NoteTuplet.RenderTupletNumber = false;
+                                    skipTuplet = firstNote.NoteTuplet;
+                                    continue;
+                                }
                             }
                         }
                         if (firstNote.NoteTuplet.TupletLabelNumber !== currentTupletNumber) {
@@ -1095,12 +1097,18 @@ export abstract class MusicSheetCalculator {
                             firstNote.NoteTuplet.RenderTupletNumber = true; // need to re-activate after re-render when it was set to false
                         }
                         if (consecutiveTupletCount === this.rules.TupletNumberMaxConsecutiveRepetitions && this.rules.TupletNumberAlwaysDisableAfterFirstMax) {
-                            disabledPerVoice[voice.VoiceId][currentTupletNumber] = true;
+                            if (!disabledPerVoice[voice.VoiceId][currentTupletNumber]) {
+                                disabledPerVoice[voice.VoiceId][currentTupletNumber] = {};
+                            }
+                            disabledPerVoice[voice.VoiceId][currentTupletNumber][firstNote.TypeLength.RealValue] = true;
                         }
                         if (consecutiveTupletCount > this.rules.TupletNumberMaxConsecutiveRepetitions) {
                             firstNote.NoteTuplet.RenderTupletNumber = false;
                             if (this.rules.TupletNumberAlwaysDisableAfterFirstMax) {
-                                disabledPerVoice[voice.VoiceId][currentTupletNumber] = true;
+                                if (!disabledPerVoice[voice.VoiceId][currentTupletNumber]) {
+                                    disabledPerVoice[voice.VoiceId][currentTupletNumber] = {};
+                                }
+                                disabledPerVoice[voice.VoiceId][currentTupletNumber][firstNote.TypeLength.RealValue] = true;
                             }
                         }
                         skipTuplet = currentTuplet;
