@@ -1207,7 +1207,7 @@ export abstract class MusicSheetCalculator {
             beginOfNextNote, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0);
         const wedgePadding: number = this.rules.SoftAccentWedgePadding;
         const staffEntryWidth: number = container.getFirstNonNullStaffEntry().PositionAndShape.Size.width; // staff entry widths for whole notes is too long
-        const sizeFactor: number = 0.6;
+        const sizeFactor: number = this.rules.SoftAccentSizeFactor;
         //const standardWidth: number = 2;
 
         //If the next note position is not on the next staffline
