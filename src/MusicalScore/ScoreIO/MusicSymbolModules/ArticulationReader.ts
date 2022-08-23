@@ -99,12 +99,17 @@ export class ArticulationReader {
               }
             }
             if (articulationEnum === ArticulationEnum.softaccent) {
+              const staffId: number = currentVoiceEntry.ParentSourceStaffEntry.ParentStaff.Id - 1;
               if (placement === PlacementEnum.NotYetDefined) {
                 placement = PlacementEnum.Above;
+                if (staffId > 0) {
+                  placement = PlacementEnum.Below;
+                }
+                // TODO place according to whether the corresponding note is higher (-> above) or lower (-> below)
+                //   than the middle note line. Though this could be tricky at this stage of parsing.
               }
               const sourceMeasure: SourceMeasure = currentVoiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure;
               const multi: MultiExpression = new MultiExpression(sourceMeasure, currentVoiceEntry.Timestamp);
-              const staffId: number = currentVoiceEntry.ParentSourceStaffEntry.ParentStaff.Id - 1;
               multi.StartingContinuousDynamic = new ContinuousDynamicExpression(
                 ContDynamicEnum.crescendo,
                 placement,
