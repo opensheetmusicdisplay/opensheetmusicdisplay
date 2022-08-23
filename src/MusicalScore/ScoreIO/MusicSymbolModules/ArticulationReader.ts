@@ -8,6 +8,9 @@ import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import { Articulation } from "../../VoiceData/Articulation";
 import { Note } from "../../VoiceData/Note";
 import { EngravingRules } from "../../Graphical/EngravingRules";
+import { MultiExpression } from "../../VoiceData/Expressions";
+import { SourceMeasure } from "../../VoiceData";
+import { ContDynamicEnum, ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions";
 export class ArticulationReader {
   private rules: EngravingRules;
 
@@ -94,6 +97,34 @@ export class ArticulationReader {
               } else if (marcatoType === "down") {
                 newArticulation.articulationEnum = ArticulationEnum.marcatodown;
               }
+            }
+            if (articulationEnum === ArticulationEnum.softaccent) {
+              if (placement === PlacementEnum.NotYetDefined) {
+                placement = PlacementEnum.Above;
+              }
+              const sourceMeasure: SourceMeasure = currentVoiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure;
+              const multi: MultiExpression = new MultiExpression(sourceMeasure, currentVoiceEntry.Timestamp);
+              const staffId: number = currentVoiceEntry.ParentSourceStaffEntry.ParentStaff.Id - 1;
+              multi.StartingContinuousDynamic = new ContinuousDynamicExpression(
+                ContDynamicEnum.crescendo,
+                placement,
+                staffId,
+                sourceMeasure,
+                -1
+              );
+              multi.StartingContinuousDynamic.IsStartOfSoftAccent = true;
+              multi.StartingContinuousDynamic.StartMultiExpression = multi;
+              multi.StartingContinuousDynamic.EndMultiExpression = multi;
+              multi.EndingContinuousDynamic = new ContinuousDynamicExpression(
+                ContDynamicEnum.diminuendo,
+                placement,
+                staffId,
+                sourceMeasure,
+                -1
+              );
+              multi.EndingContinuousDynamic.StartMultiExpression = multi;
+              multi.EndingContinuousDynamic.EndMultiExpression = multi;
+              sourceMeasure.StaffLinkedExpressions[staffId].push(multi);
             }
 
             // don't add the same articulation twice

@@ -176,6 +176,7 @@ export class VoiceEntry {
         switch (articulation) {
             case ArticulationEnum.accent:
             case ArticulationEnum.strongaccent:
+            case ArticulationEnum.softaccent:
             case ArticulationEnum.invertedstrongaccent:
             case ArticulationEnum.staccato:
             case ArticulationEnum.staccatissimo:
@@ -398,6 +399,7 @@ export class VoiceEntry {
 export enum ArticulationEnum {
     accent,
     strongaccent,
+    softaccent,
     marcatoup,
     marcatodown,
     invertedstrongaccent,
