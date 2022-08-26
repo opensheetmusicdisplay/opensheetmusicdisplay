@@ -8,8 +8,8 @@ import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import { Articulation } from "../../VoiceData/Articulation";
 import { Note } from "../../VoiceData/Note";
 import { EngravingRules } from "../../Graphical/EngravingRules";
-import { MultiExpression } from "../../VoiceData/Expressions";
-import { SourceMeasure } from "../../VoiceData";
+import { MultiExpression } from "../../VoiceData/Expressions/MultiExpression";
+import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 import { ContDynamicEnum, ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions";
 export class ArticulationReader {
   private rules: EngravingRules;
