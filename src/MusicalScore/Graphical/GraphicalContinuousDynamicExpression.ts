@@ -23,6 +23,8 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
     private lines: GraphicalLine[] = [];
     private startMeasure: GraphicalMeasure;
     private endMeasure: GraphicalMeasure;
+    //public StartIsEnd: boolean;
+    public IsSoftAccent: boolean;
 
     /**
      * Create a new instance of the GraphicalContinuousDynamicExpression
@@ -67,7 +69,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         const skyBottomLineCalculator: SkyBottomLineCalculator = this.parentStaffLine.SkyBottomLineCalculator;
         const left: number = this.IsVerbal ? this.label.PositionAndShape.RelativePosition.x + this.label.PositionAndShape.BorderMarginLeft : 0;
         const right: number = this.IsVerbal ? this.label.PositionAndShape.RelativePosition.x + this.label.PositionAndShape.BorderMarginRight : 0;
-        if (!this.IsVerbal && this.lines.length < 2) {
+        if (!this.IsSoftAccent && !this.IsVerbal && this.lines.length < 2) {
             log.warn("Not enough lines for SkyBottomLine calculation");
         }
         if (!this.IsVerbal) {
@@ -80,7 +82,11 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         }
         switch (this.Placement) {
             case PlacementEnum.Above:
-                if (!this.IsVerbal) {
+                if (this.IsSoftAccent) {
+                    skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
+                    skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[2].End, this.lines[2].Start);
+                    skyBottomLineCalculator.updateSkyLineWithLine(this.lines[0].End, this.lines[2].End, this.lines[0].End.y);
+                } else if (!this.IsVerbal) {
                     if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
                         skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
                     } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
@@ -269,8 +275,10 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         // TODO is the center position correct? it wasn't set before, important for AlignmentManager.alignDynamicExpressions()
         // console.log(`relative y, center y: ${this.PositionAndShape.RelativePosition.y},${this.PositionAndShape.Center.y})`);
 
-
-        if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+        if (this.IsSoftAccent) {
+            this.PositionAndShape.BorderMarginLeft = 0;
+            this.PositionAndShape.BorderMarginRight = this.lines[3].Start.x - this.lines[0].Start.x;
+        } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
             this.PositionAndShape.BorderMarginLeft = 0;
             this.PositionAndShape.BorderMarginRight = this.lines[0].End.x - this.lines[0].Start.x;
         } else {

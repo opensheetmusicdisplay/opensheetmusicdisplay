@@ -31,6 +31,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
     private endVolume: number;
     private staffNumber: number;
     private label: string;
+    public IsStartOfSoftAccent: boolean;
 
     public get DynamicType(): ContDynamicEnum {
         return this.dynamicType;
