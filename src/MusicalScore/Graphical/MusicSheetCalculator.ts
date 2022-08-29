@@ -1065,6 +1065,7 @@ export abstract class MusicSheetCalculator {
         const disabledPerVoice: Object = {};
         for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
             for (const voice of instrument.Voices) {
+                consecutiveTupletCount = 0; // reset for next voice
                 disabledPerVoice[voice.VoiceId] = {};
                 for (const ve of voice.VoiceEntries) {
                     if (ve.Notes.length > 0) {
@@ -1078,9 +1079,16 @@ export abstract class MusicSheetCalculator {
                         if (firstNote.NoteTuplet === skipTuplet) {
                             continue;
                         }
+                        let typeLength: Fraction = firstNote.TypeLength;
+                        if (!typeLength) {
+                            // shouldn't happen, now that rest notes have TypeLength set too, see VoiceGenerator.addRestNote(), addSingleNote()
+                            //   see test_tuplets_starting_with_rests_layout.mxl (first measure bass)
+                            log.warn("note missing TypeLength");
+                            typeLength = firstNote.NoteTuplet.Fractions[0];
+                        }
                         if (firstNote.NoteTuplet !== currentTuplet) {
                             if (disabledPerVoice[voice.VoiceId][firstNote.NoteTuplet.TupletLabelNumber]) {
-                                if (disabledPerVoice[voice.VoiceId][firstNote.NoteTuplet.TupletLabelNumber][firstNote.TypeLength.RealValue]) {
+                                if (disabledPerVoice[voice.VoiceId][firstNote.NoteTuplet.TupletLabelNumber][typeLength.RealValue]) {
                                     firstNote.NoteTuplet.RenderTupletNumber = false;
                                     skipTuplet = firstNote.NoteTuplet;
                                     continue;
@@ -1100,7 +1108,7 @@ export abstract class MusicSheetCalculator {
                             if (!disabledPerVoice[voice.VoiceId][currentTupletNumber]) {
                                 disabledPerVoice[voice.VoiceId][currentTupletNumber] = {};
                             }
-                            disabledPerVoice[voice.VoiceId][currentTupletNumber][firstNote.TypeLength.RealValue] = true;
+                            disabledPerVoice[voice.VoiceId][currentTupletNumber][typeLength.RealValue] = true;
                         }
                         if (consecutiveTupletCount > this.rules.TupletNumberMaxConsecutiveRepetitions) {
                             firstNote.NoteTuplet.RenderTupletNumber = false;
@@ -1108,7 +1116,7 @@ export abstract class MusicSheetCalculator {
                                 if (!disabledPerVoice[voice.VoiceId][currentTupletNumber]) {
                                     disabledPerVoice[voice.VoiceId][currentTupletNumber] = {};
                                 }
-                                disabledPerVoice[voice.VoiceId][currentTupletNumber][firstNote.TypeLength.RealValue] = true;
+                                disabledPerVoice[voice.VoiceId][currentTupletNumber][typeLength.RealValue] = true;
                             }
                         }
                         skipTuplet = currentTuplet;
