@@ -1,3 +1,18 @@
+## [1.5.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.1...1.5.2) (2022-08-29)
+
+
+### Bug Fixes
+
+* **binarySearch:** Fix rare infinite loop in CollectionUtil.binarySearch ([#1201](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1201), merge [#1202](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1202)) ([552b23f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/552b23f53034dfd606b9fa24075182213ef36d90))
+
+
+### Features
+
+* **Accents:** Support soft-accent as crescendo+decrescendo wedge on one note/entry ([#1214](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1214), merge [#1215](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1215)) ([db340ac](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/db340acb44a9f70f13791e9ddc8f34f650bcf18c))
+* **Tuplets:** Add EngravingRules.TupletNumberLimitConsecutiveRepetitions (default true) etc. (breaking change) [#1207](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1207), merge [#1208](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1208) ([0744bcd](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0744bcdd4e983767f13911cebaade4b3db6bb405))
+
+
+
 ## [1.5.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.0...1.5.1) (2022-07-18)
 
 
