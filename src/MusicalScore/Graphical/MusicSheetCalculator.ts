@@ -576,7 +576,7 @@ export abstract class MusicSheetCalculator {
 
                     // check BottomLine in this range and take the maximum between the two values
                     const bottomLineMax: number = skyBottomLineCalculator.getBottomLineMaxInRange(minMarginLeft, maxMarginRight);
-                    lyricsStartYPosition = Math.max(lyricsStartYPosition, bottomLineMax);
+                    lyricsStartYPosition = Math.max(lyricsStartYPosition, bottomLineMax + this.rules.LyricsYMarginToBottomLine);
                 }
             }
         }
