@@ -23,8 +23,9 @@ export class GraceNoteGroup extends Modifier {
 
   // Arrange groups inside a `ModifierContext`
   static format(gracenote_groups, state) {
-    const group_spacing_stave = 0;
+    const group_spacing_stave = 0; // overwritten later in `spacing` (vexflowpatch)
     const group_spacing_tab = 0;
+    // vexflow calls these spacing, though they seem more like margins to be precise. -> EngravingRules.GraceNoteGroupXMargin
 
     if (!gracenote_groups || gracenote_groups.length === 0) return false;
 
@@ -36,7 +37,11 @@ export class GraceNoteGroup extends Modifier {
       const gracenote_group = gracenote_groups[i];
       const note = gracenote_group.getNote();
       const is_stavenote = (note.getCategory() === StaveNote.CATEGORY);
-      const spacing = (is_stavenote ? group_spacing_stave : group_spacing_tab);
+      let spacing = (is_stavenote ? group_spacing_stave : group_spacing_tab);
+      // vexflowpatch: allow spacing to be set externally (e.g. to 0)
+      if (is_stavenote && gracenote_group.spacing !== null && gracenote_group.spacing !== undefined) {
+        spacing = gracenote_group.spacing;
+      }
 
       if (is_stavenote && note !== prev_note) {
         // Iterate through all notes to get the displaced pixels
