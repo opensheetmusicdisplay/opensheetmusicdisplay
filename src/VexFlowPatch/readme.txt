@@ -21,6 +21,10 @@ formatter.js (custom addition, unnecessary in vexflow 4):
 comment out unnecessary error thrown, which prevents the fix to
 layouting improvements with whole measure rests and e.g. 12/8 rhythm in #1187.
 
+gracenotegroup.js (custom addition, needs check if necessary in vexflow 4):
+check for gracenotegroup.spacing set, to allow e.g. spacing = 0 by default.
+(with previous default 4, spacing is way too large unnecessarily, in most cases)
+
 keysignature.js (merged vexflow 4):
 open group to get SVG group+class for key signature
 
