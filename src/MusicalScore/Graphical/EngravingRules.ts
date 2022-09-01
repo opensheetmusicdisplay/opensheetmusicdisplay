@@ -173,6 +173,7 @@ export class EngravingRules {
     public LyricsAlignmentStandard: TextAlignmentEnum;
     public LyricsHeight: number;
     public LyricsYOffsetToStaffHeight: number;
+    public LyricsYMarginToBottomLine: number;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
     public BetweenSyllableMaximumDistance: number;
@@ -566,6 +567,7 @@ export class EngravingRules {
         this.LyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
         this.LyricsHeight = 2.0; // actually size of lyrics
         this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
+        this.LyricsYMarginToBottomLine = 0.2;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
