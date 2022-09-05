@@ -1,3 +1,18 @@
+## [1.5.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.2...1.5.3) (2022-09-05)
+
+
+### Bug Fixes
+
+* **Tuplets:** Fix rest notes not having TypeLength set. TupletNumberLimitConsecutiveRepetitions: Fix tuplet count not reset for next voice (rare issue) ([#1207](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1207)) ([8d55514](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8d555141ee9f12fb27486620bdacecf3da713bee))
+
+
+### Features
+
+* **GraceNotes:** Reduce unnecessary margin/spacing to main note ([#1221](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1221)). Add EngravingRules.GraceNoteGroupXMargin (default 0) ([332d625](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/332d62555abc049a97abcc81b09317a3c32becec))
+* **Lyrics:** Add EngravingRules.LyricsYMarginToBottomLine ([#389](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/389)). New default 0.2 prevents overlap of stems with lyrics. ([fd6868d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/fd6868d008f5c234196f28c717edd9e9fc3d76fb))
+
+
+
 ## [1.5.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.1...1.5.2) (2022-08-29)
 
 
