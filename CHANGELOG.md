@@ -3,7 +3,7 @@
 
 ### Bug Fixes
 
-* **Tuplets:** Fix rest notes not having TypeLength set. TupletNumberLimitConsecutiveRepetitions: Fix tuplet count not reset for next voice (rare issue) ([#1207](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1207)) ([8d55514](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8d555141ee9f12fb27486620bdacecf3da713bee))
+* **Tuplets:** Fix rest notes not having TypeLength set. EngravingRules.TupletNumberLimitConsecutiveRepetitions: Fix tuplet count not reset for next voice (rare issue) ([#1207](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1207)) ([8d55514](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8d555141ee9f12fb27486620bdacecf3da713bee))
 
 
 ### Features
