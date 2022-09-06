@@ -749,12 +749,12 @@ export class EngravingRules {
      */
     public applyDefaultColorMusic(color: string): void {
         this.DefaultColorMusic = color;
-        this.DefaultColorNotehead = this.DefaultColorMusic;
-        this.DefaultColorRest = this.DefaultColorNotehead;
-        this.DefaultColorStem = this.DefaultColorNotehead;
-        this.DefaultColorLabel = this.DefaultColorNotehead;
-        this.DefaultColorTitle = this.DefaultColorNotehead;
-        this.LedgerLineColorDefault = this.DefaultColorNotehead;
+        this.DefaultColorNotehead = color;
+        this.DefaultColorRest = color;
+        this.DefaultColorStem = color;
+        this.DefaultColorLabel = color;
+        this.DefaultColorTitle = color;
+        this.LedgerLineColorDefault = color;
     }
 
     public addGraphicalNoteToNoteMap(note: Note, graphicalNote: GraphicalNote): void {
