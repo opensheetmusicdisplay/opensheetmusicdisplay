@@ -97,9 +97,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!verticalMeasureList || !verticalMeasureList[0]) {
         continue;
       }
-      const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
+      const firstVisibleMeasure: VexFlowMeasure = verticalMeasureList.find(measure => measure?.isVisible()) as VexFlowMeasure;
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
-      firstMeasure.format();
+      firstVisibleMeasure.format();
       for (const measure of verticalMeasureList) {
         for (const staffEntry of measure.staffEntries) {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
