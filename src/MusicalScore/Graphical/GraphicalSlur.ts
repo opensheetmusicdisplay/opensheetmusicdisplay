@@ -13,6 +13,9 @@ import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { Fraction } from "../../Common/DataObjects/Fraction";
 import { StemDirectionType } from "../VoiceData/VoiceEntry";
+import { VexFlowGraphicalNote } from "./VexFlow";
+import Vex from "vexflow";
+import VF = Vex.Flow;
 
 export class GraphicalSlur extends GraphicalCurve {
     // private intersection: PointF2D;
@@ -480,8 +483,20 @@ export class GraphicalSlur extends GraphicalCurve {
 
             if (this.placement === PlacementEnum.Above) {
                 startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
+                // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
+                //     if (articulation.placement === PlacementEnum.Above) {
+                //         startY -= 1;
+                //         break;
+                //     }
+                // }
             } else {
                 startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
+                // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
+                //     if (articulation.placement === PlacementEnum.Below) {
+                //         startY += 1;
+                //         break;
+                //     }
+                // }
             }
 
             // If the stem points towards the starting point of the slur, shift the slur by a small amount to start (approximately) at the x-position
@@ -517,10 +532,37 @@ export class GraphicalSlur extends GraphicalCurve {
             }
 
             const slurEndVE: GraphicalVoiceEntry = slurEndNote.parentVoiceEntry;
+
+            // check for articulation -> shift end y (slur further outward)
+            //   this should not be necessary for the start note, and for accents (>) it's even counter productive there
+            //   TODO alternatively, we could fix the bounding box of the note to include the ornament, but that seems tricky
+            let articulationPlacement: PlacementEnum; // whether there's an articulation and where
+            for (const articulation of slurEndVE.parentVoiceEntry.Articulations) {
+                if (articulation.placement === PlacementEnum.NotYetDefined) {
+                    for (const modifier of ((slurEndNote as VexFlowGraphicalNote).vfnote[0] as any).modifiers) {
+                        if (modifier.getCategory() === VF.Articulation.CATEGORY) {
+                            if (modifier.position === VF.Modifier.Position.ABOVE) {
+                                articulation.placement = PlacementEnum.Above;
+                                articulationPlacement = PlacementEnum.Above;
+                            } else if (modifier.position === VF.Modifier.Position.BELOW) {
+                                articulation.placement = PlacementEnum.Below;
+                                articulationPlacement = PlacementEnum.Below;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
             if (this.placement === PlacementEnum.Above) {
                 endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
+                if (articulationPlacement === PlacementEnum.Above) {
+                    endY -= this.rules.SlurEndArticulationYOffset;
+                }
             } else {
                 endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
+                if (articulationPlacement === PlacementEnum.Below) {
+                    endY += this.rules.SlurEndArticulationYOffset;
+                }
             }
 
             // If the stem points towards the endpoint of the slur, shift the slur by a small amount to start (approximately) at the x-position
