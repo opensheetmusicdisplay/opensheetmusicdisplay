@@ -1,3 +1,14 @@
+## [1.5.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.3...1.5.4) (2022-09-12)
+
+
+### Bug Fixes
+
+* **Layout:** Fix hiding first instrument causing shift of lyrics, dynamics, etc ([#1222](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1222)) ([280075c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/280075c9bcdf0478205593ca96705ff836647ff5)), closes [#1223](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1223)
+* **Slurs:** Fix overlap of slurs with accents on slur start note (part of [#1224](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1224)) ([229f0dd](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/229f0dddb8dee52e298dc17dda71bd57b007d2f2)), closes [#1226](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1226)
+* **Slurs:** Fix slurs overlapping with articulations like staccato on slur end note (part of [#1224](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1224)) ([336b0ad](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/336b0add8f98caf4c9f38355388191c0dd9724b3)), closes [#1225](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1225)
+
+
+
 ## [1.5.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.2...1.5.3) (2022-09-05)
 
 
