@@ -30,7 +30,7 @@ import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
-import { Articulation } from "../../VoiceData/Articulation";
+import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -568,13 +568,13 @@ export class VexFlowConverter {
         return vfnote;
     }
 
-    public static generateArticulations(vfnote: VF.StemmableNote, articulations: Articulation[],
+    public static generateArticulations(vfnote: VF.StemmableNote, gNote: GraphicalNote,
                                         rules: EngravingRules): void {
         if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
         }
 
-        for (const articulation of articulations) {
+        for (const articulation of gNote.sourceNote.ParentVoiceEntry.Articulations) {
             let vfArtPosition: number = VF.Modifier.Position.ABOVE;
 
             if (vfnote.getStemDirection() === VF.Stem.UP) {
@@ -592,18 +592,30 @@ export class VexFlowConverter {
             switch (articulationEnum) {
                 case ArticulationEnum.accent: {
                     vfArt = new VF.Articulation("a>");
+                    const slurs: Slur[] = gNote.sourceNote.NoteSlurs;
+                    for (const slur of slurs) {
+                        if (slur.StartNote === gNote.sourceNote) { // && slur.PlacementXml === articulation.placement
+                            if (slur.PlacementXml === PlacementEnum.Above) {
+                                vfArt.setYShift(-rules.SlurStartArticulationYOffsetOfArticulation * 10);
+                            } else if (slur.PlacementXml === PlacementEnum.Below) {
+                                vfArt.setYShift(rules.SlurStartArticulationYOffsetOfArticulation * 10);
+                            }
+                        }
+                    }
                     break;
                 }
                 case ArticulationEnum.downbow: {
                     vfArt = new VF.Articulation("am");
                     if (articulation.placement === undefined) { // downbow/upbow should be above by default
                         vfArtPosition = VF.Modifier.Position.ABOVE;
+                        articulation.placement = PlacementEnum.Above;
                     }
                     break;
                 }
                 case ArticulationEnum.fermata: {
                     vfArt = new VF.Articulation("a@a");
                     vfArtPosition = VF.Modifier.Position.ABOVE;
+                    articulation.placement = PlacementEnum.Above;
                     break;
                 }
                 case ArticulationEnum.marcatodown: {
@@ -617,6 +629,7 @@ export class VexFlowConverter {
                 case ArticulationEnum.invertedfermata: {
                     vfArt = new VF.Articulation("a@u");
                     vfArtPosition = VF.Modifier.Position.BELOW;
+                    articulation.placement = PlacementEnum.Below;
                     break;
                 }
                 case ArticulationEnum.lefthandpizzicato: {
@@ -647,6 +660,7 @@ export class VexFlowConverter {
                     vfArt = new VF.Articulation("a|");
                     if (articulation.placement === undefined) { // downbow/upbow should be above by default
                         vfArtPosition = VF.Modifier.Position.ABOVE;
+                        articulation.placement = PlacementEnum.Above;
                     }
                     break;
                 }

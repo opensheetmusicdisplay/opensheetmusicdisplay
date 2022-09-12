@@ -10,6 +10,9 @@ They are copied by the npm prebuild script to ../../node_modules/vexflow/src/ be
 Each .js has comments like "// VexFlowPatch: [explanation]" to indicate what was changed.
 (a diff can be created from the base vexflow version)
 
+articulation.js (custom addition):
+respect modifier.y_shift (y_shift affects y position of rendering)
+
 beam.js (custom addition):
 add flat_beams, flat_beam_offset, flat_beam_offset_per_beam render_option (fixed in vexflow 4)
 able to add svg node id+class to beam (not yet in vexflow 4)

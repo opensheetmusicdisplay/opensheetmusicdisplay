@@ -198,6 +198,7 @@ export class EngravingRules {
     public TieHeightInterpolationD: number;
     public SlurNoteHeadYOffset: number;
     public SlurEndArticulationYOffset: number;
+    public SlurStartArticulationYOffsetOfArticulation: number;
     public SlurStemXOffset: number;
     public SlurSlopeMaxAngle: number;
     public SlurTangentMinAngle: number;
@@ -547,6 +548,7 @@ export class EngravingRules {
         this.TieHeightInterpolationD = 0.136;
         this.SlurNoteHeadYOffset = 0.5;
         this.SlurEndArticulationYOffset = 0.8;
+        this.SlurStartArticulationYOffsetOfArticulation = 0.5;
         this.SlurStemXOffset = 0.3;
         this.SlurSlopeMaxAngle = 15.0;
         this.SlurTangentMinAngle = 30.0;
