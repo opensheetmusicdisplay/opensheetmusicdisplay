@@ -428,8 +428,16 @@ export class StaveNote extends StemmableNote {
 
     // Save prior noteHead styles & reapply them after making new noteheads.
     const noteHeadStyles = this.note_heads.map(noteHead => noteHead.getStyle());
+    // VexFlowPatch: save and restore noteheads (e.g. slash noteheads)
+    const note_types = [];
+    this.note_heads.forEach(head => note_types.push(head.note_type));
     this.buildNoteHeads();
-    this.note_heads.forEach((noteHead, index) => noteHead.setStyle(noteHeadStyles[index]));
+    this.note_heads.forEach((noteHead, index) => {
+      noteHead.setStyle(noteHeadStyles[index]);
+      if (note_types[index]) {
+        noteHead.note_type = note_types[index];
+      }
+    });
 
     if (this.stave) {
       this.note_heads.forEach(head => head.setStave(this.stave));
