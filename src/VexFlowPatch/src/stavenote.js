@@ -434,7 +434,9 @@ export class StaveNote extends StemmableNote {
     this.buildNoteHeads();
     this.note_heads.forEach((noteHead, index) => {
       noteHead.setStyle(noteHeadStyles[index]);
-      noteHead.note_type = note_types[index];
+      if (note_types[index]) {
+        noteHead.note_type = note_types[index];
+      }
     });
 
     if (this.stave) {
