@@ -1,3 +1,13 @@
+## [1.5.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.4...1.5.5) (2022-09-15)
+
+
+### Bug Fixes
+
+* **Drums:** Fix Slash notehead overwriting other noteheads in chord/VoiceEntry ([#1228](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1228)) ([66390b1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/66390b1391dd57b66b14dbdeee72b475d99ed26f)), closes [#1229](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1229)
+* **Measure Numbers:** Fix EngravingRules.RenderMeasureNumbersOnlyAtSystemStart not showing measure number 1 after pickup measure ([2e7011f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2e7011fd07ba11fed6b65b8c684cbb693f335afe))
+
+
+
 ## [1.5.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.3...1.5.4) (2022-09-12)
 
 
