@@ -427,9 +427,11 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             duration += "d";
         }
-        if (slashNoteHead) {
-            duration += "s"; // we have to specify a slash note head like this in Vexflow
-        }
+        // if (slashNoteHead) {
+            // old way of doing this. problem: if there are multiple note heads, all of them will be slash note head
+            //   if done like this. -> see note_type = "s" below
+        //     duration += "s"; // we have to specify a slash note head like this in Vexflow
+        // }
         if (isRest) {
             // "r" has to be put after the "d"s for rest notes.
             duration += "r";
@@ -465,7 +467,7 @@ export class VexFlowConverter {
         for (let n: number = 0; n < notes.length; n++) {
             const note: VexFlowGraphicalNote = notes[n] as VexFlowGraphicalNote;
             if (note.sourceNote.Notehead?.Shape === NoteHeadShape.SLASH) {
-                (vfnote as any).note_heads[n].note_type = "s";
+                (vfnote as any).note_heads[n].note_type = "s"; // slash notehead
             }
         }
 
