@@ -41,6 +41,7 @@ Fix stem/flag formatting. Instead of shifting notes by default, update the stem/
   Only offset if a note is the same voice, same note.
   (not yet in vexflow 4, PR 1263 open)
 able to add svg node id+class to stem (merged vexflow 4.x)
+Save and restore noteheads (e.g. slash noteheads) in reset()
 
 staverepetition.js (fixed vexflow 4):
 add TO_CODA enum to type() and draw()

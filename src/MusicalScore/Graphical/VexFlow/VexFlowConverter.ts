@@ -268,7 +268,6 @@ export class VexFlowConverter {
         let numDots: number = baseNote.numberOfDots;
         let alignCenter: boolean = false;
         let xShift: number = 0;
-        let slashNoteHead: boolean = false;
         let isRest: boolean = false;
         let restYPitch: Pitch;
         for (const note of notes) {
@@ -416,14 +415,6 @@ export class VexFlowConverter {
                 break;
             }
 
-            if (note.sourceNote.Notehead) {
-                if (note.sourceNote.Notehead.Shape === NoteHeadShape.SLASH) {
-                    slashNoteHead = true;
-                    // if we have slash heads and other heads in the voice entry, this will create the same head for all.
-                    // same problem with numDots. The slash case should be extremely rare though.
-                }
-            }
-
             const pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             keys.push(pitch[0]);
             accidentals.push(pitch[1]);
@@ -470,6 +461,12 @@ export class VexFlowConverter {
         const lineShift: number = gve.notes[0].lineShift;
         if (lineShift !== 0) {
             vfnote.getKeyProps()[0].line += lineShift;
+        }
+        for (let n: number = 0; n < notes.length; n++) {
+            const note: VexFlowGraphicalNote = notes[n] as VexFlowGraphicalNote;
+            if (note.sourceNote.Notehead?.Shape === NoteHeadShape.SLASH) {
+                (vfnote as any).note_heads[n].note_type = "s";
+            }
         }
 
         // Annotate GraphicalNote with which line of the staff it appears on
