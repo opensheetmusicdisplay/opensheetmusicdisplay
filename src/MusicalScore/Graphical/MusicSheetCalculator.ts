@@ -3026,6 +3026,7 @@ export abstract class MusicSheetCalculator {
      */
     private calculateSingleDashForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): void {
         const label: Label = new Label("-");
+        label.colorDefault = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         const dash: GraphicalLabel = new GraphicalLabel(
             label, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
         dash.setLabelPositionAndShapeBorders();
@@ -3130,6 +3131,7 @@ export abstract class MusicSheetCalculator {
         const lineStart: PointF2D = new PointF2D(startX, y);
         const lineEnd: PointF2D = new PointF2D(endX, y);
         const graphicalLine: GraphicalLine = new GraphicalLine(lineStart, lineEnd, this.rules.LyricUnderscoreLineWidth);
+        graphicalLine.colorHex = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         staffLine.LyricLines.push(graphicalLine);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
             this.staffLinesWithLyricWords.push(staffLine);
@@ -3146,6 +3148,7 @@ export abstract class MusicSheetCalculator {
      */
     private calculateRightAndLeftDashesForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): number {
         const leftLabel: Label = new Label("-");
+        leftLabel.colorDefault = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         const leftDash: GraphicalLabel = new GraphicalLabel(
             leftLabel, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
         leftDash.setLabelPositionAndShapeBorders();

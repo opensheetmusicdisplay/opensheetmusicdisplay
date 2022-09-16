@@ -287,6 +287,7 @@ export class EngravingRules {
     public DefaultColorRest: string;
     public DefaultColorStem: string;
     public DefaultColorLabel: string;
+    public DefaultColorLyrics: string;
     public DefaultColorChordSymbol: string;
     public DefaultColorTitle: string;
     public DefaultColorCursor: string;
@@ -757,6 +758,7 @@ export class EngravingRules {
         this.DefaultColorRest = color;
         this.DefaultColorStem = color;
         this.DefaultColorLabel = color;
+        this.DefaultColorLyrics = color;
         this.DefaultColorTitle = color;
         this.LedgerLineColorDefault = color;
     }
