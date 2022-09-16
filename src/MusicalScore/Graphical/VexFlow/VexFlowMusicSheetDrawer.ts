@@ -355,6 +355,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 const vexFlowOctaveShift: VexFlowOctaveShift = graphicalOctaveShift as VexFlowOctaveShift;
                 const ctx: Vex.IRenderContext = this.backend.getContext();
                 const textBracket: VF.TextBracket = vexFlowOctaveShift.getTextBracket();
+                if (this.rules.DefaultColorMusic) {
+                    (textBracket as any).render_options.color = this.rules.DefaultColorMusic;
+                }
                 textBracket.setContext(ctx);
                 try {
                     textBracket.draw();
@@ -410,7 +413,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                                                      graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.Start.y);
                 const end: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.End.x,
                                                    graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.End.y);
-                this.drawLine(start, end, "black", line.Width);
+                this.drawLine(start, end, line.colorHex, line.Width);
             }
         }
     }
