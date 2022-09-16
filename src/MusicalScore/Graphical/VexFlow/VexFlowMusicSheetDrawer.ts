@@ -199,7 +199,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     /** Draws a line in the current backend. Only usable while pages are drawn sequentially, because backend reference is updated in that process.
      *  To add your own lines after rendering, use DrawOverlayLine.
      */
-    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): Node {
+    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#000000FF", lineWidth: number = 0.2): Node {
         // TODO maybe the backend should be given as an argument here as well, otherwise this can't be used after rendering of multiple pages is done.
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
@@ -413,7 +413,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                                                      graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.Start.y);
                 const end: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.End.x,
                                                    graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.End.y);
-                this.drawLine(start, end, line.colorHex, line.Width);
+                this.drawLine(start, end, line.colorHex ?? "#000000", line.Width);
+                // the null check for colorHex is not strictly necessary anymore, but the previous default color was red.
             }
         }
     }
