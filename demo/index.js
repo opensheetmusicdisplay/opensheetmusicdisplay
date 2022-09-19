@@ -519,7 +519,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             if (createNewOsmd) {
                 // clears the canvas element
                 canvas.innerHTML = "";
-                openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value });
+                //openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value }); // resets EngravingRules
+                openSheetMusicDisplay.setOptions({backend: value});
                 openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to get more detailed control flow information
             } else {
                 // alternative, doesn't work yet, see setOptions():
