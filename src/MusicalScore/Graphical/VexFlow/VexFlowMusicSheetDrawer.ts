@@ -333,6 +333,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private drawLyrics(lyricEntries: GraphicalLyricEntry[], layer: number): void {
         lyricEntries.forEach(lyricsEntry => {
             const label: GraphicalLabel = lyricsEntry.GraphicalLabel;
+            label.Label.colorDefault = this.rules.DefaultColorLyrics;
             label.SVGNode = this.drawLabel(label, layer);
         });
     }
