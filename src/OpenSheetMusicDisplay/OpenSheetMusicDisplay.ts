@@ -360,6 +360,11 @@ export class OpenSheetMusicDisplay {
         if (!this.rules) {
             this.rules = new EngravingRules();
         }
+        if (options.drawingParameters) {
+            this.drawingParameters.DrawingParametersEnum =
+                (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
+                // see DrawingParameters.ts: set DrawingParametersEnum, and DrawingParameters.ts:setForCompactTightMode()
+        }
         if (!this.drawingParameters) {
             this.drawingParameters = new DrawingParameters(DrawingParametersEnum.default, this.rules);
         }
@@ -371,11 +376,6 @@ export class OpenSheetMusicDisplay {
         this.OnXMLRead = function(xml): string {return xml;};
         if (options.onXMLRead) {
             this.OnXMLRead = options.onXMLRead;
-        }
-        if (options.drawingParameters) {
-            this.drawingParameters.DrawingParametersEnum =
-                (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
-                // see DrawingParameters.ts: set DrawingParametersEnum, and DrawingParameters.ts:setForCompactTightMode()
         }
 
         const backendNotInitialized: boolean = !this.drawer || !this.drawer.Backends || this.drawer.Backends.length < 1;
