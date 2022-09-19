@@ -44,6 +44,9 @@ export class DrawingParameters {
 
     constructor(drawingParameters: DrawingParametersEnum = DrawingParametersEnum.default, rules?: EngravingRules) {
         this.rules = rules;
+        if (!this.rules) {
+            this.rules = new EngravingRules();
+        }
         this.DrawingParametersEnum = drawingParameters;
     }
 
