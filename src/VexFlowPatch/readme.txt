@@ -67,6 +67,7 @@ Add manual flag rendering variable so we can choose not to render flags if notes
 
 svgcontext.js (custom addition, probably not necessary for vexflow 4):
 able to add extra attributes (like svg node id) to a stroke (e.g. stem)
+fix rect() always using black color, ignoring attributes.stroke (ctx strokeStlye) -> fix defaultColorMusic ignored
 
 tabnote.js (merged Vexflow 3.x):
 Add a context group for each tabnote, so that it can be found in the SVG DOM ("vf-tabnote")
