@@ -360,13 +360,17 @@ export class OpenSheetMusicDisplay {
         if (!this.rules) {
             this.rules = new EngravingRules();
         }
-        if (options.drawingParameters) {
-            this.drawingParameters.DrawingParametersEnum =
-                (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
-                // see DrawingParameters.ts: set DrawingParametersEnum, and DrawingParameters.ts:setForCompactTightMode()
-        }
-        if (!this.drawingParameters) {
+        if (!this.drawingParameters && !options.drawingParameters) {
             this.drawingParameters = new DrawingParameters(DrawingParametersEnum.default, this.rules);
+            // if "default", will be created below
+        } else if (options.drawingParameters) {
+            if (!this.drawingParameters) {
+                this.drawingParameters = new DrawingParameters(DrawingParametersEnum[options.drawingParameters], this.rules);
+            } else {
+                this.drawingParameters.DrawingParametersEnum =
+                    (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
+                    // see DrawingParameters.ts: set DrawingParametersEnum, and DrawingParameters.ts:setForCompactTightMode()
+            }
         }
         if (options === undefined || options === null) {
             log.warn("warning: osmd.setOptions() called without an options parameter, has no effect."
