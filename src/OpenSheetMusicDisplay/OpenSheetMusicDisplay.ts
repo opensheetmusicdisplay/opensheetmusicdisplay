@@ -361,8 +361,7 @@ export class OpenSheetMusicDisplay {
             this.rules = new EngravingRules();
         }
         if (!this.drawingParameters) {
-            this.drawingParameters = new DrawingParameters();
-            this.drawingParameters.Rules = this.rules;
+            this.drawingParameters = new DrawingParameters(DrawingParametersEnum.default, this.rules);
         }
         if (options === undefined || options === null) {
             log.warn("warning: osmd.setOptions() called without an options parameter, has no effect."

@@ -796,7 +796,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const vfghosts: VF.GhostNote[] = VexFlowConverter.GhostNotes(duration);
         const ghostGves: VexFlowVoiceEntry[] = [];
         for (const vfghost of vfghosts) {
-            const ghostGve: VexFlowVoiceEntry = new VexFlowVoiceEntry(undefined, undefined);
+            const ghostGve: VexFlowVoiceEntry = new VexFlowVoiceEntry(undefined, undefined, this.rules);
             ghostGve.vfStaveNote = vfghost;
             ghostGves.push(ghostGve);
         }
