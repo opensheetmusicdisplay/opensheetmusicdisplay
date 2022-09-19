@@ -51,6 +51,7 @@ fix y-shift
 stavesection.js (half-fixed vexflow 4.x, collision, box not removable):
 stavesection.draw():
 adjust rectangle positioning, make height depend on text height
+fix rehearsal marks not rendered with canvas backend in browser
 
 stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
