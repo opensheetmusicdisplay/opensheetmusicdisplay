@@ -322,8 +322,10 @@ export class OpenSheetMusicDisplay {
                 // TODO optional: reduce zoom to fit the score within the limit.
             }
 
-            backend.resize(width, height);
+            backend.resize(width, height); // this resets strokeStyle for Canvas
             backend.clear(); // set bgcolor if defined (this.rules.PageBackgroundColor, see OSMDOptions)
+            backend.getContext().setFillStyle(this.rules.DefaultColorMusic);
+            backend.getContext().setStrokeStyle(this.rules.DefaultColorMusic); // needs to be set after resize()
             this.drawer.Backends.push(backend);
             this.graphic.drawer = this.drawer;
         }
@@ -823,8 +825,9 @@ export class OpenSheetMusicDisplay {
         }
         backend.graphicalMusicPage = page; // the page the backend renders on. needed to identify DOM element to extract image/SVG
         backend.initialize(this.container, this.zoom);
-        backend.getContext().setFillStyle(this.rules.DefaultColorMusic);
-        backend.getContext().setStrokeStyle(this.rules.DefaultColorMusic);
+        //backend.getContext().setFillStyle(this.rules.DefaultColorMusic);
+        //backend.getContext().setStrokeStyle(this.rules.DefaultColorMusic);
+        // color needs to be set after resize() for CanvasBackend
         return backend;
     }
 
