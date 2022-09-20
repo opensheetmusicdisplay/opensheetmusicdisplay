@@ -125,7 +125,7 @@ export class ExpressionReader {
                 }
             } catch (ex) {
                 const errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/ExpressionPlacementError",
-                                                                          "Invalid expression placement -> set to default.");
+                                                                          "Invalid expression placement. Set to default.");
                 log.debug("ExpressionReader.readExpressionParameters", errorMsg, ex);
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 this.placement = PlacementEnum.Below;
@@ -265,7 +265,7 @@ export class ExpressionReader {
                 octaveStaffNumber = parseInt(staffNode.value, 10);
             } catch (ex) {
                 const errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/OctaveShiftStaffError",
-                                                                          "Invalid octave shift staff number -> set to default");
+                                                                          "Invalid octave shift staff number. Set to default");
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 octaveStaffNumber = 1;
                 log.debug("ExpressionReader.addOctaveShift", errorMsg, ex);

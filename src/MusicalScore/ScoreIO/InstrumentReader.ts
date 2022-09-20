@@ -839,7 +839,7 @@ export class InstrumentReader {
           } catch (ex) {
             errorMsg = ITextTranslation.translateText(
               "ReaderErrorMessages/ClefLineError",
-              "Invalid clef line given -> using default clef line."
+              "Invalid clef line. Using default."
             );
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             line = 2;
@@ -854,7 +854,7 @@ export class InstrumentReader {
             if (!ClefInstruction.isSupportedClef(clefEnum)) {
               errorMsg = ITextTranslation.translateText(
                 "ReaderErrorMessages/ClefError",
-                "Unsupported clef found -> using default clef."
+                "Unsupported clef. Using default."
               );
               this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
               clefEnum = ClefEnum.G;
@@ -866,7 +866,7 @@ export class InstrumentReader {
           } catch (e) {
             errorMsg = ITextTranslation.translateText(
               "ReaderErrorMessages/ClefError",
-              "Invalid clef found -> using default clef."
+              "Invalid clef. Using default."
             );
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             clefEnum = ClefEnum.G;
@@ -882,7 +882,7 @@ export class InstrumentReader {
           } catch (e) {
             errorMsg = ITextTranslation.translateText(
               "ReaderErrorMessages/ClefOctaveError",
-              "Invalid clef octave found -> using default clef octave."
+              "Invalid clef octave. Using default."
             );
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             clefOctaveOffset = 0;
@@ -899,7 +899,7 @@ export class InstrumentReader {
           } catch (err) {
             errorMsg = ITextTranslation.translateText(
               "ReaderErrorMessages/ClefError",
-              "Invalid clef found -> using default clef."
+              "Invalid clef. Using default."
             );
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             staffNumber = 1;
@@ -920,7 +920,7 @@ export class InstrumentReader {
         } catch (ex) {
           errorMsg = ITextTranslation.translateText(
             "ReaderErrorMessages/KeyError",
-            "Invalid key found -> set to default."
+            "Invalid key. Set to default."
           );
           this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           key = 0;
@@ -939,7 +939,7 @@ export class InstrumentReader {
         } catch (ex) {
           errorMsg = ITextTranslation.translateText(
             "ReaderErrorMessages/KeyError",
-            "Invalid key found -> set to default."
+            "Invalid key/mode. Set to default."
           );
           this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           keyEnum = KeyEnum.major;
@@ -1017,7 +1017,7 @@ export class InstrumentReader {
             denom = parseInt(attrNode.element("time").element("beat-type").value, 10);
           }
         } catch (ex) {
-          errorMsg = ITextTranslation.translateText("ReaderErrorMessages/RhythmError", "Invalid rhythm found -> set to default.");
+          errorMsg = ITextTranslation.translateText("ReaderErrorMessages/RhythmError", "Invalid rhythm. Set to default.");
           this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           num = 4;
           denom = 4;
@@ -1307,7 +1307,7 @@ export class InstrumentReader {
          directionStaffNumber = parseInt(staffNode.value, 10);
        } catch (ex) {
          const errorMsg: string = ITextTranslation.translateText(
-           "ReaderErrorMessages/ExpressionStaffError", "Invalid Expression staff number -> set to default."
+           "ReaderErrorMessages/ExpressionStaffError", "Invalid Expression staff number. Set to default."
          );
          this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
          directionStaffNumber = 1;
