@@ -210,7 +210,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         //   without this the pickup measures were always too long.
 
         // add more than the original staffEntries scaling again: (removing it above makes it too short)
-        if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
+        if (true || maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
           minStaffEntriesWidth += maxStaffEntriesPlusAccidentals * staffEntryFactor * 1.5; // don't scale this for implicit measures
           // in fact overscale it, this needs a lot of space the more staffEntries (and modifiers like accidentals) there are
         }
