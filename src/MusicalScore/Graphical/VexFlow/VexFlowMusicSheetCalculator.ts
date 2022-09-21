@@ -58,6 +58,7 @@ import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions";
 import { GraphicalChordSymbolContainer } from "../GraphicalChordSymbolContainer";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
+import { SystemLinesEnum } from "../SystemLinesEnum";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -209,8 +210,23 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // it seems like this should be respected by staffEntries.length and preCaculateMinTotalWidth, but apparently not,
         //   without this the pickup measures were always too long.
 
+        let barlineSpacing: number = 0;
+        const measureListIndex: number = parentSourceMeasure.measureListIndex;
+        if (measureListIndex > 1) {
+          // only give this implicit measure more space if the previous one had a thick barline (e.g. repeat end)
+          for (const gMeasure of this.graphicalMusicSheet.MeasureList[measureListIndex - 1]) {
+            const endingBarStyleEnum: SystemLinesEnum = gMeasure?.parentSourceMeasure.endingBarStyleEnum;
+            if (endingBarStyleEnum === SystemLinesEnum.ThinBold ||
+                endingBarStyleEnum === SystemLinesEnum.DotsThinBold
+            ) {
+              barlineSpacing = 1.5;
+              break;
+            }
+          }
+        }
+        minStaffEntriesWidth += barlineSpacing;
         // add more than the original staffEntries scaling again: (removing it above makes it too short)
-        if (true || maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
+        if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
           minStaffEntriesWidth += maxStaffEntriesPlusAccidentals * staffEntryFactor * 1.5; // don't scale this for implicit measures
           // in fact overscale it, this needs a lot of space the more staffEntries (and modifiers like accidentals) there are
         }
