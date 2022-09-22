@@ -1,3 +1,23 @@
+## [1.5.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.5...1.5.6) (2022-09-22)
+
+
+### Bug Fixes
+
+* **Canvas:** Fix rehearsal marks not rendered in browser with Canvas backend ([a4d5a3b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a4d5a3bc53e77729797216b8c4d6731df5d11bdf))
+* **DefaultColorLyrics:** Fix not applied on re-render ([aa1945a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/aa1945aef72009d6d4ee21e33f1de41f757a4333))
+* **DefaultColorMusic:** Fix CanvasBackend overwriting and not using DefaultColorMusic ([#1218](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1218)) ([285878e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/285878eb5611121df0408845ea0ac1e0af35940a))
+* **DefaultColorMusic:** Fix EngravingRules.DefaultColorMusic not applying to octave brackets, crescendo/decrescendo wedges ([#1218](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1218)) ([145e715](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/145e71515e13cd77794d5f5bae2ee8c3b577e066))
+* **DefaultColorMusic:** Fix rehearsal marks ignoring defaultColorMusic ([#1218](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1218)) (svgcontext.rect ignoring stroke) ([2702667](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2702667a6318d841e3988e9b48a53a4b9a0ed298))
+* **EngravingRules:** Fix GraphicalVoiceEntries creating their own EngravingRules. Reduce EngravingRules creations also via DrawingParameters. ([1a96112](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1a96112163943ffc3203a817ddbfe97532daabda))
+* **Spacing:** Fix implicit measure spacing after repeat ([#1236](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1236)). Add EngravingRules.PickupMeasureRepetitionSpacing ([3da2244](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3da2244d07fa7e34072668462fb69314e3b75014)), closes [#1234](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1234)
+
+
+### Features
+
+* **DefaultColorLyrics:** Add EngravingRules.DefaultColorLyrics, independent from DefaultColorMusic ([#1218](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1218)) ([3445343](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/34453436fdf9be305ba7fb94ff2f898aa391ab55))
+
+
+
 ## [1.5.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.4...1.5.5) (2022-09-15)
 
 
