@@ -1165,7 +1165,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                     const graceNoteGroup: VF.GraceNoteGroup = new VF.GraceNoteGroup(graceNotes, graceSlur);
                     (graceNoteGroup as any).spacing = this.rules.GraceNoteGroupXMargin * 10;
-                    ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(0, graceNoteGroup);
+                    ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(graceNoteGroup, 0);
                     graceGVoiceEntriesBefore = [];
                 }
             }
@@ -1204,7 +1204,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             this.vfVoices[voice.VoiceId] = new VF.Voice({
                         beat_value: this.parentSourceMeasure.ActiveTimeSignature.Denominator,
                         num_beats: this.parentSourceMeasure.ActiveTimeSignature.Numerator,
-                        resolution: VF.RESOLUTION,
+                        resolution: VF.Flow.RESOLUTION,
                     }).setMode(VF.Voice.Mode.SOFT);
 
             const restFilledEntries: GraphicalVoiceEntry[] = this.getRestFilledVexFlowStaveNotesPerVoice(voice);
