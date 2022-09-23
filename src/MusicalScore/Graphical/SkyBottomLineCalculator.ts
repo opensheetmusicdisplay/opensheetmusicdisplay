@@ -203,6 +203,14 @@ export class SkyBottomLineCalculator {
         this.updateLines(results);
     }
 
+    public updateSkyLineWithLine(start: PointF2D, end: PointF2D, value: number): void {
+        const startIndex: number = Math.floor(start.x * this.SamplingUnit);
+        const endIndex: number = Math.ceil(end.x * this.SamplingUnit);
+        for (let i: number = startIndex + 1; i < Math.min(endIndex, this.SkyLine.length); i++) {
+            this.SkyLine[i] = value;
+        }
+    }
+
     /**
      * This method updates the SkyLine for a given Wedge.
      * @param start Start point of the wedge (the point where both lines meet)

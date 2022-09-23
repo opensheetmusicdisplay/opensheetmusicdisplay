@@ -99,6 +99,7 @@ export class EngravingRules {
     public SetWantedStemDirectionByXml: boolean;
     public GraceNoteScalingFactor: number;
     public GraceNoteXOffset: number;
+    public GraceNoteGroupXMargin: number;
     public WedgeOpeningLength: number;
     public WedgeMeasureEndOpeningLength: number;
     public WedgeMeasureBeginOpeningLength: number;
@@ -109,6 +110,8 @@ export class EngravingRules {
     public DistanceOffsetBetweenTwoHorizontallyCrossedWedges: number;
     public WedgeMinLength: number;
     public WedgeEndDistanceBetweenTimestampsFactor: number;
+    public SoftAccentWedgePadding: number;
+    public SoftAccentSizeFactor: number;
     public DistanceBetweenAdjacentDynamics: number;
     public TempoChangeMeasureValidity: number;
     public TempoContinousFactor: number;
@@ -151,6 +154,9 @@ export class EngravingRules {
     public TripletsBracketed: boolean;
     public TupletNumberLabelHeight: number;
     public TupletNumberYOffset: number;
+    public TupletNumberLimitConsecutiveRepetitions: boolean;
+    public TupletNumberMaxConsecutiveRepetitions: number;
+    public TupletNumberAlwaysDisableAfterFirstMax: boolean;
     public LabelMarginBorderFactor: number;
     public TupletVerticalLineLength: number;
     public TupletNumbersInTabs: boolean;
@@ -168,6 +174,7 @@ export class EngravingRules {
     public LyricsAlignmentStandard: TextAlignmentEnum;
     public LyricsHeight: number;
     public LyricsYOffsetToStaffHeight: number;
+    public LyricsYMarginToBottomLine: number;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
     public BetweenSyllableMaximumDistance: number;
@@ -190,6 +197,8 @@ export class EngravingRules {
     public TieHeightInterpolationK: number;
     public TieHeightInterpolationD: number;
     public SlurNoteHeadYOffset: number;
+    public SlurEndArticulationYOffset: number;
+    public SlurStartArticulationYOffsetOfArticulation: number;
     public SlurStemXOffset: number;
     public SlurSlopeMaxAngle: number;
     public SlurTangentMinAngle: number;
@@ -241,6 +250,10 @@ export class EngravingRules {
     public VoiceSpacingMultiplierVexflow: number;
     public VoiceSpacingAddendVexflow: number;
     public PickupMeasureWidthMultiplier: number;
+    /** The spacing between a repetition that is followed by an implicit/pickup/incomplete measure.
+     *  (E.g. in a 4/4 time signature, a measure that repeats after the 3rd beat, continuing with a pickup measure)
+     */
+    public PickupMeasureRepetitionSpacing: number;
     public DisplacedNoteMargin: number;
     public MinNoteDistance: number;
     public SubMeasureXSpacingThreshold: number;
@@ -278,6 +291,7 @@ export class EngravingRules {
     public DefaultColorRest: string;
     public DefaultColorStem: string;
     public DefaultColorLabel: string;
+    public DefaultColorLyrics: string;
     public DefaultColorChordSymbol: string;
     public DefaultColorTitle: string;
     public DefaultColorCursor: string;
@@ -461,6 +475,8 @@ export class EngravingRules {
         // GraceNote Variables
         this.GraceNoteScalingFactor = 0.6;
         this.GraceNoteXOffset = 0.2;
+        this.GraceNoteGroupXMargin = 0.0; // More than 0 leads to too much space in most cases.
+        //  see test_end_clef_measure. only potential 'tight' case: test_graceslash_simple
 
         // Wedge Variables
         this.WedgeOpeningLength = 1.2;
@@ -473,6 +489,8 @@ export class EngravingRules {
         this.DistanceOffsetBetweenTwoHorizontallyCrossedWedges = 0.3;
         this.WedgeMinLength = 2.0;
         this.WedgeEndDistanceBetweenTimestampsFactor = 1.75;
+        this.SoftAccentWedgePadding = 0.4;
+        this.SoftAccentSizeFactor = 0.6;
         this.DistanceBetweenAdjacentDynamics = 0.75;
 
         // Tempo Variables
@@ -515,6 +533,9 @@ export class EngravingRules {
         this.TripletsBracketed = false; // special setting for triplets, overrides tuplet setting (for triplets only)
         this.TupletNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.TupletNumberYOffset = 0.5;
+        this.TupletNumberLimitConsecutiveRepetitions = true;
+        this.TupletNumberMaxConsecutiveRepetitions = 2;
+        this.TupletNumberAlwaysDisableAfterFirstMax = true;
         this.LabelMarginBorderFactor = 0.1;
         this.TupletVerticalLineLength = 0.5;
         this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
@@ -531,6 +552,8 @@ export class EngravingRules {
         this.TieHeightInterpolationK = 0.0288;
         this.TieHeightInterpolationD = 0.136;
         this.SlurNoteHeadYOffset = 0.5;
+        this.SlurEndArticulationYOffset = 0.8;
+        this.SlurStartArticulationYOffsetOfArticulation = 0.5;
         this.SlurStemXOffset = 0.3;
         this.SlurSlopeMaxAngle = 15.0;
         this.SlurTangentMinAngle = 30.0;
@@ -556,6 +579,7 @@ export class EngravingRules {
         this.LyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
         this.LyricsHeight = 2.0; // actually size of lyrics
         this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
+        this.LyricsYMarginToBottomLine = 0.2;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
@@ -610,6 +634,7 @@ export class EngravingRules {
         this.VoiceSpacingMultiplierVexflow = 0.85;
         this.VoiceSpacingAddendVexflow = 3.0;
         this.PickupMeasureWidthMultiplier = 1.0;
+        this.PickupMeasureRepetitionSpacing = 0.8;
         this.DisplacedNoteMargin = 0.1;
         this.MinNoteDistance = 2.0;
         this.SubMeasureXSpacingThreshold = 35;
@@ -734,12 +759,13 @@ export class EngravingRules {
      */
     public applyDefaultColorMusic(color: string): void {
         this.DefaultColorMusic = color;
-        this.DefaultColorNotehead = this.DefaultColorMusic;
-        this.DefaultColorRest = this.DefaultColorNotehead;
-        this.DefaultColorStem = this.DefaultColorNotehead;
-        this.DefaultColorLabel = this.DefaultColorNotehead;
-        this.DefaultColorTitle = this.DefaultColorNotehead;
-        this.LedgerLineColorDefault = this.DefaultColorNotehead;
+        this.DefaultColorNotehead = color;
+        this.DefaultColorRest = color;
+        this.DefaultColorStem = color;
+        this.DefaultColorLabel = color;
+        this.DefaultColorLyrics = color;
+        this.DefaultColorTitle = color;
+        this.LedgerLineColorDefault = color;
     }
 
     public addGraphicalNoteToNoteMap(note: Note, graphicalNote: GraphicalNote): void {

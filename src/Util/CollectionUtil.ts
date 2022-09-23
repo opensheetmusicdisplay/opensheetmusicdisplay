@@ -89,8 +89,14 @@ export class CollectionUtil {
                                   startIndex: number = 0,
                                   endIndex: number = array.length - 1): number {
         let mid: number = 1;
+        let lastMidChecked: number = -1;
         while (startIndex <= endIndex) {
             mid = Math.floor((startIndex + endIndex) / 2);
+            if (mid === lastMidChecked) {
+                break;
+                // this fixes a rare infinite loop when no matching element can be found,
+                //   e.g. with very small fraction difference in AbsoluteTimestamp like 511/1024 instead of 1/2 (#1201)
+            }
             const c: number = cmp(array[mid], element);
             if (c === 0) {
                 return mid;
@@ -101,6 +107,7 @@ export class CollectionUtil {
             if (0 < c) {
                 endIndex = mid;
             }
+            lastMidChecked = mid;
         }
 
         return -mid;

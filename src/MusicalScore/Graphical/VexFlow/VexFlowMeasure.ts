@@ -579,8 +579,20 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // Draw tuplets
             for (const voiceID in this.vftuplets) {
                 if (this.vftuplets.hasOwnProperty(voiceID)) {
-                    for (const tuplet of this.vftuplets[voiceID]) {
-                        tuplet.setContext(ctx).draw();
+                    for (let i: number = 0; i < this.tuplets[voiceID].length; i++) {
+                        const tuplet: Tuplet = this.tuplets[voiceID][i][0];
+                        const vftuplet: VF.Tuplet = this.vftuplets[voiceID][i];
+                        if (!tuplet.RenderTupletNumber) {
+                            // (vftuplet as any).numerator_glyphs_stored = [...(vftuplet as any).numerator_glyphs];
+                            // (vftuplet as any).numerator_glyphs = [];
+                            (vftuplet as any).RenderTupletNumber = false;
+                        } else {
+                            // issue with restoring glyphs (version without vexflowpatch): need to deep copy array, otherwise the reference is overwritten
+                            // (vftuplet as any).numerator_glyphs = [...(vftuplet as any).numerator_glyphs_stored];
+                            // (vftuplet as any).numerator_glyphs_stored = undefined;
+                            (vftuplet as any).RenderTupletNumber = true;
+                        }
+                        vftuplet.setContext(ctx).draw();
                     }
                 }
             }
@@ -747,7 +759,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const vfghosts: VF.GhostNote[] = VexFlowConverter.GhostNotes(duration);
         const ghostGves: VexFlowVoiceEntry[] = [];
         for (const vfghost of vfghosts) {
-            const ghostGve: VexFlowVoiceEntry = new VexFlowVoiceEntry(undefined, undefined);
+            const ghostGve: VexFlowVoiceEntry = new VexFlowVoiceEntry(undefined, undefined, this.rules);
             ghostGve.vfStaveNote = vfghost;
             ghostGves.push(ghostGve);
         }
@@ -1085,14 +1097,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
                       if (tuplet.tupletLabelNumberPlacement === PlacementEnum.Below) {
                           location = VF.Tuplet.LOCATION_BOTTOM;
                       }
-                      vftuplets.push(new VF.Tuplet( tupletStaveNotes,
-                                                          {
-                                                            bracketed: bracketed,
-                                                            location: location,
-                                                            notes_occupied: notesOccupied,
-                                                            num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
-                                                            ratioed: this.rules.TupletsRatioed,
-                                                          }));
+                      const vftuplet: VF.Tuplet = new VF.Tuplet(tupletStaveNotes,
+                        {
+                          bracketed: bracketed,
+                          location: location,
+                          notes_occupied: notesOccupied,
+                          num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
+                          ratioed: this.rules.TupletsRatioed,
+                        });
+                      vftuplets.push(vftuplet);
                     } else {
                         log.debug("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");
                     }
@@ -1151,7 +1164,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         graceNotes.push(vfStaveNote);
                     }
                     const graceNoteGroup: VF.GraceNoteGroup = new VF.GraceNoteGroup(graceNotes, graceSlur);
-                    ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(graceNoteGroup);
+                    (graceNoteGroup as any).spacing = this.rules.GraceNoteGroupXMargin * 10;
+                    ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(0, graceNoteGroup);
                     graceGVoiceEntriesBefore = [];
                 }
             }
@@ -1188,9 +1202,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             // add a vexFlow voice for this voice:
             this.vfVoices[voice.VoiceId] = new VF.Voice({
-                        beat_value: this.parentSourceMeasure.Duration.Denominator,
-                        num_beats: this.parentSourceMeasure.Duration.Numerator,
-                        resolution: VF.Flow.RESOLUTION,
+                        beat_value: this.parentSourceMeasure.ActiveTimeSignature.Denominator,
+                        num_beats: this.parentSourceMeasure.ActiveTimeSignature.Numerator,
+                        resolution: VF.RESOLUTION,
                     }).setMode(VF.Voice.Mode.SOFT);
 
             const restFilledEntries: GraphicalVoiceEntry[] = this.getRestFilledVexFlowStaveNotesPerVoice(voice);
@@ -1317,7 +1331,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const graphicalVoiceEntries: GraphicalVoiceEntry[] = graphicalStaffEntry.graphicalVoiceEntries;
             for (const gve of graphicalVoiceEntries) {
                 const vfStaveNote: StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
-                VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0].sourceNote.ParentVoiceEntry.Articulations, this.rules);
+                VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0], this.rules);
             }
         }
     }

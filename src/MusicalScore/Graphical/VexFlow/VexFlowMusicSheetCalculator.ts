@@ -57,6 +57,7 @@ import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions";
 import { GraphicalChordSymbolContainer } from "../GraphicalChordSymbolContainer";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
+import { SystemLinesEnum } from "../SystemLinesEnum";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -96,9 +97,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!verticalMeasureList || !verticalMeasureList[0]) {
         continue;
       }
-      const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
+      const firstVisibleMeasure: VexFlowMeasure = verticalMeasureList.find(measure => measure?.isVisible()) as VexFlowMeasure;
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
-      firstMeasure.format();
+      firstVisibleMeasure.format();
       for (const measure of verticalMeasureList) {
         for (const staffEntry of measure.staffEntries) {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
@@ -171,8 +172,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const voices: VF.Voice[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
-          voices.push(mvoices[voiceID]);
-          allVoices.push(mvoices[voiceID]);
+          const mvoice: any = mvoices[voiceID];
+          if (measure.hasOnlyRests && !mvoice.ticksUsed.equals(mvoice.totalTicks)) {
+            // fix layouting issues with whole measure rests in one staff and notes in other. especially in 12/8 rthythm (#1187)
+            mvoice.ticksUsed = mvoice.totalTicks;
+            // Vexflow 1.2.93: needs VexFlowPatch for formatter.js (see #1187)
+          }
+          voices.push(mvoice);
+          allVoices.push(mvoice);
         }
       }
 
@@ -202,6 +209,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // it seems like this should be respected by staffEntries.length and preCaculateMinTotalWidth, but apparently not,
         //   without this the pickup measures were always too long.
 
+        let barlineSpacing: number = 0;
+        const measureListIndex: number = parentSourceMeasure.measureListIndex;
+        if (measureListIndex > 1) {
+          // only give this implicit measure more space if the previous one had a thick barline (e.g. repeat end)
+          for (const gMeasure of this.graphicalMusicSheet.MeasureList[measureListIndex - 1]) {
+            const endingBarStyleEnum: SystemLinesEnum = gMeasure?.parentSourceMeasure.endingBarStyleEnum;
+            if (endingBarStyleEnum === SystemLinesEnum.ThinBold ||
+                endingBarStyleEnum === SystemLinesEnum.DotsThinBold
+            ) {
+              barlineSpacing = this.rules.PickupMeasureRepetitionSpacing;
+              break;
+            }
+          }
+        }
+        minStaffEntriesWidth += barlineSpacing;
         // add more than the original staffEntries scaling again: (removing it above makes it too short)
         if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
           minStaffEntriesWidth += maxStaffEntriesPlusAccidentals * staffEntryFactor * 1.5; // don't scale this for implicit measures
@@ -725,6 +747,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         staffLine,
         startMeasure.parentSourceMeasure);
       graphicalContinuousDynamic.StartMeasure = startMeasure;
+      graphicalContinuousDynamic.IsSoftAccent = multiExpression.StartingContinuousDynamic.IsStartOfSoftAccent;
+      //graphicalContinuousDynamic.StartIsEnd = multiExpression.StartingContinuousDynamic.EndMultiExpression === multiExpression;
 
       if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {
         try {

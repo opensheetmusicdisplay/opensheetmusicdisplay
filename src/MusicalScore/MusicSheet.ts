@@ -42,12 +42,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.MusicPartManager = new MusicPartManager(this);
         this.hasBPMInfo = false;
     }
-    public static defaultTitle: string = "[no title given]";
+    public static defaultTitle: string = "defaultTitle";
 
     public userStartTempoInBPM: number;
     public pageWidth: number;
 
-    private idString: string = "random idString, not initialized";
+    private idString: string = "uninitialized";
     private sourceMeasures: SourceMeasure[] = [];
     private repetitions: Repetition[] = [];
     private dynListStaves: DynamicsContainer[][] = [];

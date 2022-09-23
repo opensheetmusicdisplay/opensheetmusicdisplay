@@ -125,7 +125,7 @@ export class VoiceGenerator {
 
     try {
       this.currentNote = restNote
-        ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, normalNotes, printObject, isCueNote, noteheadColorXml)
+        ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, typeDuration, normalNotes, printObject, isCueNote, noteheadColorXml)
         : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, octavePlusOne,
                              printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
       this.currentNote.DotsXml = dotsXml;
@@ -522,7 +522,7 @@ export class VoiceGenerator {
    * @param divisions
    * @returns {Note}
    */
-  private addRestNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType,
+  private addRestNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType, typeDuration: Fraction,
                       normalNotes: number, printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
     const displayStepElement: IXmlElement = node.element("display-step");
@@ -537,6 +537,8 @@ export class VoiceGenerator {
     }
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, this.currentMeasure, true);
     this.addNoteInfo(restNote, noteTypeXml, printObject, isCueNote, normalNotes, displayStep, displayOctave, noteheadColorXml, noteheadColorXml);
+    restNote.TypeLength = typeDuration; // needed for tuplet note type information
+    //  (e.g. quarter rest - but length different due to tuplet). see MusicSheetCalculator.calculateTupletNumbers()
     this.currentVoiceEntry.Notes.push(restNote);
     if (this.openBeams.length > 0) {
       this.openBeams.last().ExtendedNoteList.push(restNote);
