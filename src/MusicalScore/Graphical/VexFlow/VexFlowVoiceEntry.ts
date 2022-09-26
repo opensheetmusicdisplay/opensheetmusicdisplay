@@ -7,12 +7,13 @@ import { NoteEnum } from "../../../Common/DataObjects/Pitch";
 import { Note } from "../../VoiceData/Note";
 import { ColoringModes } from "./../DrawingParameters";
 import { GraphicalNote } from "../GraphicalNote";
+import { EngravingRules } from "../EngravingRules";
 
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     private mVexFlowStaveNote: VF.StemmableNote;
 
-    constructor(parentVoiceEntry?: VoiceEntry, parentStaffEntry?: GraphicalStaffEntry) {
-        super(parentVoiceEntry, parentStaffEntry);
+    constructor(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry, rules?: EngravingRules) {
+        super(parentVoiceEntry, parentStaffEntry, rules);
     }
 
     public applyBordersFromVexflow(): void {

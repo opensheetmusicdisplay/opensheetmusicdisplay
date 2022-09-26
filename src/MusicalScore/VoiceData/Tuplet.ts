@@ -15,6 +15,7 @@ export class Tuplet {
     private tupletLabelNumber: number;
     public PlacementFromXml: boolean = false;
     public tupletLabelNumberPlacement: PlacementEnum;
+    public RenderTupletNumber: boolean = true;
     /** Notes contained in the tuplet, per VoiceEntry (list of VoiceEntries, which has a list of notes). */
     private notes: Note[][] = []; // TODO should probably be VoiceEntry[], not Note[][].
     private fractions: Fraction[] = [];
