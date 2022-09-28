@@ -1,3 +1,13 @@
+## [1.5.7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.6...1.5.7) (2022-09-28)
+
+
+### Features
+
+* **Options:** Add EngravingRules.TempoYSpacing ([#1243](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1243)) to be able to set spacing/padding for tempo (e.g. beginning "Allegro") ([194e765](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/194e7653e127137f582d82a4892b9205cddb0a53))
+* **Performance:** Marginal speedup potential for getImageData by using willReadFrequently attribute for CanvasContext. Fix Chrome warning ([#1242](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1242)) ([c60c0d6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c60c0d6394bbb4da8cc69de25438e8ef367f4ff1)), closes [#1241](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1241)
+
+
+
 ## [1.5.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.5...1.5.6) (2022-09-22)
 
 
