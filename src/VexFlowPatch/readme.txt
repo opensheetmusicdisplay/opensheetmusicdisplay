@@ -31,6 +31,10 @@ check for gracenotegroup.spacing set, to allow e.g. spacing = 0 by default.
 keysignature.js (merged vexflow 4):
 open group to get SVG group+class for key signature
 
+renderer.js (vexflow4: need to check if possible):
+CanvasContext: getContext(): use willReadFrequently option for marginal performance potential,
+and for preventing chrome warning (#1242)
+
 stave.js (merged/fixed vexflow 4):
 prevent a bug where a modifier width is NaN, leading to a VexFlow error (fixed vexflow 4)
 stave.setSection(section, y, xOffset = 0, fontSize = 12):
