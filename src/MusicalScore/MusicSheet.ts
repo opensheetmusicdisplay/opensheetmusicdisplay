@@ -477,6 +477,11 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public get Transpose(): number {
         return this.transpose;
     }
+    /** Sets the number of halftones for transposition.
+     * E.g. +1 halftone will transpose Eb major to E major.
+     * also see Instrument.Transpose (e.g. osmd.Sheet.Instruments[0].Transpose will additionally transpose this instrument only)
+     * osmd.TransposeCaculator needs to be defined/created for this to take effect. (just set it with new TransposeCalculator())
+     */
     public set Transpose(value: number) {
         this.transpose = value;
     }
