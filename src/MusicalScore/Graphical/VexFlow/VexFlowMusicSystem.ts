@@ -25,6 +25,7 @@ export class VexFlowMusicSystem extends MusicSystem {
         const width: number = this.calcBracketsWidth();
         this.boundingBox.BorderLeft = -width;
         this.boundingBox.BorderMarginLeft = -width;
+        //this.boundingBox.BorderRight = this.rules.SystemRightMargin;
         this.boundingBox.XBordersHaveBeenSet = true;
 
         const topSkyBottomLineCalculator: SkyBottomLineCalculator = this.staffLines[0].SkyBottomLineCalculator;

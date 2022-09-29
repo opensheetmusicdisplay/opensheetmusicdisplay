@@ -928,13 +928,14 @@ export abstract class MusicSheetCalculator {
                 musicSystem.PositionAndShape.RelativePosition =
                     new PointF2D(musicSystem.PositionAndShape.RelativePosition.x, musicSystem.PositionAndShape.RelativePosition.y - distance);
             }
-            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                    const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                    staffLine.addActivitySymbolClickArea();
-                }
-            }
+            // add ActivitySymbolClickArea - currently unused, extends boundingbox of MusicSystem unnecessarily -> PageRightMargin 0 impossible
+            // for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
+            //     const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+            //     for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
+            //         const staffLine: StaffLine = musicSystem.StaffLines[idx3];
+            //         staffLine.addActivitySymbolClickArea();
+            //     }
+            // }
 
             // calculate TopBottom Borders for all elements recursively
             //   necessary for composer label (page labels) for high notes in first system
@@ -2107,6 +2108,7 @@ export abstract class MusicSheetCalculator {
     protected calculatePageLabels(page: GraphicalMusicPage): void {
         if (this.rules.RenderSingleHorizontalStaffline) {
             page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width;
+            //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
             page.PositionAndShape.calculateBoundingBox();
             this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width;
         }
