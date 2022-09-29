@@ -354,8 +354,6 @@ export class EngravingRules {
     // this is basically a WeakMap, except we save the id in the Note instead of using a WeakMap.
     public NoteToGraphicalNoteMapObjectCount: number = 0;
 
-    public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
-
     /** The skyline and bottom-line batch calculation algorithm to use.
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
      */
@@ -705,8 +703,6 @@ export class EngravingRules {
         this.NewPageAtXMLNewPageAttribute = false;
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
-
-        EngravingRules.FixStafflineBoundingBox = false; // TODO temporary workaround
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"

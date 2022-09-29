@@ -282,7 +282,8 @@ export class OpenSheetMusicDisplay {
         // Set page width
         let width: number = this.container.offsetWidth;
         if (this.rules.RenderSingleHorizontalStaffline) {
-            width = this.graphic.MusicPages[0].PositionAndShape.Size.width * 10 * this.zoom;
+            width = (this.EngravingRules.PageLeftMargin + this.graphic.MusicPages[0].PositionAndShape.Size.width + this.EngravingRules.PageRightMargin)
+                * 10 * this.zoom;
             // this.container.style.width = width + "px";
             // console.log("width: " + width)
         }
