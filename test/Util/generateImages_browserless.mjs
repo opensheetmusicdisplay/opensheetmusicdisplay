@@ -2,7 +2,7 @@ import Blob from "cross-blob";
 import FS from "fs";
 import jsdom from "jsdom";
 //import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
-import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
+//import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
 /*
   Render each OSMD sample, grab the generated images, and
   dump them into a local directory as PNG or SVG files.
@@ -24,6 +24,8 @@ import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to 
   see the semi-obsolete generateDiffImagesPuppeteerLocalhost.js
 */
 
+let OSMD;
+
 function sleep (ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
@@ -44,6 +46,7 @@ if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageF
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
 }
+
 let pageFormat;
 
 if (!mode) {
@@ -58,6 +61,9 @@ if (imageFormat !== "svg") {
 
 async function init () {
     debug("init");
+
+    const { default: osmdImport } = await import(osmdBuildDir + "/opensheetmusicdisplay.min.js");
+    OSMD = osmdImport;
 
     const osmdTestingMode = mode.includes("osmdtesting"); // can also be --debugosmdtesting
     const osmdTestingSingleMode = mode.includes("osmdtestingsingle");
