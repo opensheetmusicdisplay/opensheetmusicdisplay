@@ -22,6 +22,7 @@
     "start:local": "webpack-dev-server --progress --config webpack.local.js",
     "generatePNG": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./export png 0 0 allSmall --osmdtesting",
     "generateSVG": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./export/svg svg 0 0 allSmall --osmdtesting",
+    "generatePNG:mygroove": "node ./test/Util/generateImages_browserless.mjs ../../build ./export/input ./export/output png 0 0",
     "generatePNG:debug": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./export png 0 0 allSmall --debugosmdtesting",
     "generatePNG:single": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./export png 0 0 ^Beethoven",
     "generatePNG:legacyslow": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data ./export png 0 0 all",

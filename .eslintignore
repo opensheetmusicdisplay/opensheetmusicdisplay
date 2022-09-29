@@ -4,3 +4,4 @@ build
 bin
 demo
 src/VexFlowPatch
+test/Util/generateImages_browserless.mjs

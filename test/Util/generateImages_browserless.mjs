@@ -226,10 +226,18 @@ async function init () {
     const osmdInstance = new OSMD.OpenSheetMusicDisplay(div, {
         autoResize: false,
         backend: backend,
-        pageBackgroundColor: "#FFFFFF",
-        pageFormat: pageFormat
-        // defaultFontFamily: 'Arial',
-        // drawTitle: false
+        pageFormat: pageFormat, // reset by drawingparameters default,
+        renderSingleHorizontalStaffline: true,
+        pageBackgroundColor: "#00000000",
+        defaultColorMusic: "#A7A09E",
+        colorStemsLikeNoteheads: true,
+        drawCredits: false,
+        drawTitle: false,
+        drawSubtitle: false,
+        drawComposer: false,
+        drawLyricist: false,
+        drawMetronomeMarks: false,
+        drawPartNames: false,
     });
     // for more options check OSMDOptions.ts
 
