@@ -311,8 +311,9 @@ export class OpenSheetMusicDisplay {
                 height = page.PositionAndShape.Size.height;
                 height += this.rules.PageBottomMargin;
                 height += this.rules.CompactMode ? this.rules.PageTopMarginNarrow : this.rules.PageTopMargin;
-                if (this.rules.PageBottomMargin === 0 && backend.getOSMDBackendType() === BackendType.Canvas) {
-                    height += 0.1; // Canvas bug: cuts off bottom pixel. Doesn't happen with SVG.
+                if (backend.getOSMDBackendType() === BackendType.Canvas) {
+                    height += 0.1; // Canvas bug: cuts off bottom pixel with PageBottomMargin = 0. Doesn't happen with SVG.
+                    //  we could only add 0.1 if PageBottomMargin === 0, but that would mean a margin of 0.1 has no effect compared to 0.
                 }
                 if (this.rules.RenderTitle) {
                     height += this.rules.TitleTopDistance;
