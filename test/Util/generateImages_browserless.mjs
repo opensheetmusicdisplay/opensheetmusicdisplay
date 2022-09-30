@@ -320,6 +320,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const defaultOrCompactTightMode = sampleFilename.startsWith("OSMD_Function_Test_Container_height") ? "compacttight" : "default";
         const isTestFlatBeams = sampleFilename.startsWith("test_drum_tuplet_beams");
         const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
+        const isTestPageBottomMargin0 = sampleFilename.includes("PageBottomMargin0");
+        osmdInstance.EngravingRules.loadDefaultValues();
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
         } else {
@@ -352,6 +354,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             osmdInstance.EngravingRules.FlatBeamOffsetPerBeam = 10;
         } else {
             osmdInstance.EngravingRules.FlatBeams = false;
+        }
+        if (isTestPageBottomMargin0) {
+            osmdInstance.EngravingRules.PageBottomMargin = 0;
         }
     }
 

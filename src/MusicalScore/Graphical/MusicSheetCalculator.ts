@@ -2120,7 +2120,7 @@ export abstract class MusicSheetCalculator {
             firstSystemAbsoluteTopMargin = firstMusicSystem.PositionAndShape.RelativePosition.y + firstMusicSystem.PositionAndShape.BorderTop;
         }
         //const firstStaffLine: StaffLine = this.graphicalMusicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
-        if (this.graphicalMusicSheet.Title) {
+        if (this.graphicalMusicSheet.Title && this.rules.RenderTitle) {
             const title: GraphicalLabel = this.graphicalMusicSheet.Title;
             title.PositionAndShape.Parent = page.PositionAndShape;
             //title.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
@@ -2131,7 +2131,7 @@ export abstract class MusicSheetCalculator {
             title.PositionAndShape.RelativePosition = relative;
             page.Labels.push(title);
         }
-        if (this.graphicalMusicSheet.Subtitle) {
+        if (this.graphicalMusicSheet.Subtitle && this.rules.RenderTitle && this.rules.RenderSubtitle) {
             const subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
             //subtitle.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
             subtitle.PositionAndShape.Parent = page.PositionAndShape;
@@ -2148,7 +2148,7 @@ export abstract class MusicSheetCalculator {
         //   we don't need a skybottomcalculator currently, labels are put above system skyline anyways.
         const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
         let composerRelativeY: number;
-        if (composer) {
+        if (composer && this.rules.RenderComposer) {
             composer.PositionAndShape.Parent = page.PositionAndShape; // if using pageWidth. (which can currently be too wide) TODO fix pageWidth (#578)
             //composer.PositionAndShape.Parent = topStaffline.PositionAndShape; // if using firstStaffLine...width.
             //      y-collision problems, harder to y-align with lyrics
@@ -2190,7 +2190,7 @@ export abstract class MusicSheetCalculator {
             page.Labels.push(composer);
         }
         const lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
-        if (lyricist) {
+        if (lyricist && this.rules.RenderLyricist) {
             lyricist.PositionAndShape.Parent = page.PositionAndShape;
             lyricist.setLabelPositionAndShapeBorders();
             const relative: PointF2D = new PointF2D();

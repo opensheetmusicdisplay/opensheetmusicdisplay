@@ -547,6 +547,11 @@ export abstract class MusicSheetDrawer {
             } else if (type === "VexFlowContinuousDynamicExpression") {
                 typeMatch = startBox.DataObject instanceof VexFlowContinuousDynamicExpression;
             }
+            // else if (type === "MusicSystem") {
+            //     typeMatch = startBox.DataObject instanceof MusicSystem;
+            // } else if (type === "GraphicalMusicPage") {
+            //     typeMatch = startBox.DataObject instanceof GraphicalMusicPage;
+            // }
         }
         if (typeMatch || dataObjectString === type) {
             this.drawBoundingBox(startBox, undefined, true, dataObjectString, layer);
