@@ -210,6 +210,7 @@ export class EngravingRules {
     public SlurHeightFlattenLongSlursCutoffWidth: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
     public SlurMaximumYControlPointDistance: number;
+    public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
     public MoodTextHeight: number;
@@ -589,6 +590,7 @@ export class EngravingRules {
         this.MaximumLyricsElongationFactor = 2.5;
 
         // expressions variables
+        this.TempoYSpacing = 0.0;
         this.InstantaneousTempoTextHeight = 2.3;
         this.ContinuousDynamicTextHeight = 2.3;
         this.MoodTextHeight = 2.3;

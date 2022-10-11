@@ -474,6 +474,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             // tripletsBracketed: true,
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });
+        openSheetMusicDisplay.TransposeCalculator = new TransposeCalculator(); // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
         //openSheetMusicDisplay.DrawSkyLine = true;
         //openSheetMusicDisplay.DrawBottomLine = true;
         //openSheetMusicDisplay.setDrawBoundingBox("GraphicalLabel", false);
@@ -530,8 +531,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             // selectSampleOnChange();
         });
         if(transposeBtn && transpose){
-            openSheetMusicDisplay.TransposeCalculator = new TransposeCalculator();
-
             transposeBtn.onclick = function(){
                 var transposeValue = parseInt(transpose.value);
                 openSheetMusicDisplay.Sheet.Transpose = transposeValue;
