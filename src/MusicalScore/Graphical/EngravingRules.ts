@@ -348,6 +348,10 @@ export class EngravingRules {
     public RenderSingleHorizontalStaffline: boolean;
     public RestoreCursorAfterRerender: boolean;
     public StretchLastSystemLine: boolean;
+    /** Ignore brackets - e.g. `( )` - that were supposed to be around a note,
+     * but were inserted as a words element in the MusicXML, which can't be matched to the note anymore,
+     * and would otherwise just be placed somewhere else. See OSMD Issue 1251. */
+    public IgnoreBracketsWords: boolean;
     public SpacingBetweenTextLines: number;
 
     public NoteToGraphicalNoteMap: Dictionary<number, GraphicalNote>;
@@ -703,6 +707,7 @@ export class EngravingRules {
         this.NewPageAtXMLNewPageAttribute = false;
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
+        this.IgnoreBracketsWords = true;
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
