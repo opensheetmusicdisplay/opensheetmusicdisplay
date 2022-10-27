@@ -33,6 +33,8 @@ export class ExpressionReader {
     private openContinuousTempoExpression: ContinuousTempoExpression;
     private activeInstantaneousDynamic: InstantaneousDynamicExpression;
     private openOctaveShift: OctaveShift;
+    private lastWedge: ContinuousDynamicExpression;
+    private WedgeYPosXml: number;
     constructor(musicSheet: MusicSheet, instrument: Instrument, staffNumber: number) {
         this.musicSheet = musicSheet;
         this.staffNumber = staffNumber;
@@ -72,6 +74,21 @@ export class ExpressionReader {
             } else { this.directionTimestamp = Fraction.createFromFraction(offsetFraction); }
         }
 
+        // read default-y for wedge node
+        let newWedgeYPos: number;
+        const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
+        let wedgeNode: IXmlElement;
+        if (directionTypeNode) {
+            wedgeNode = directionTypeNode.element("wedge");
+            if (wedgeNode) {
+                const yPosAttr: IXmlAttribute = wedgeNode.attribute("default-y");
+                if (yPosAttr) {
+                    newWedgeYPos = this.readPosition(yPosAttr);
+                }
+            }
+        }
+        this.WedgeYPosXml = newWedgeYPos;
+
         const placeAttr: IXmlAttribute = xmlNode.attribute("placement");
         if (placeAttr) {
             try {
@@ -88,11 +105,9 @@ export class ExpressionReader {
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 this.placement = PlacementEnum.Below;
             }
-
         }
         if (this.placement === PlacementEnum.NotYetDefined) {
             try {
-                const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
                 if (directionTypeNode) {
                     const dynamicsNode: IXmlElement = directionTypeNode.element("dynamics");
                     if (dynamicsNode) {
@@ -101,7 +116,6 @@ export class ExpressionReader {
                             this.readExpressionPlacement(defAttr, "read dynamics y pos");
                         }
                     }
-                    const wedgeNode: IXmlElement = directionTypeNode.element("wedge");
                     if (wedgeNode) {
                         const defAttr: IXmlAttribute = wedgeNode.attribute("default-y");
                         if (defAttr) {
@@ -343,18 +357,30 @@ export class ExpressionReader {
             return PlacementEnum.NotYetDefined;
         }
     }
-    private readExpressionPlacement(defAttr: IXmlAttribute, catchLogMessage: string): void {
+    private readExpressionPlacement(yPosAttr: IXmlAttribute, catchLogMessage: string): void {
         try {
-            const y: number = parseInt(defAttr.value, 10);
+            const y: number = this.readPosition(yPosAttr);
             if (y < 0) {
                 this.placement = PlacementEnum.Below;
             } else if (y > 0) {
                 this.placement = PlacementEnum.Above;
-                 }
+            }
         } catch (ex) {
             log.debug("ExpressionReader.readExpressionParameters", catchLogMessage, ex);
         }
-
+    }
+    private readPosition(posAttr: IXmlAttribute): number {
+        try {
+            const xOrY: number = parseInt(posAttr.value, 10);
+            if (xOrY < 0) {
+                this.placement = PlacementEnum.Below;
+            } else if (xOrY > 0) {
+                this.placement = PlacementEnum.Above;
+            }
+            return xOrY;
+        } catch (ex) {
+            log.debug("ExpressionReader.readExpressionParameters", ex);
+        }
     }
     private interpretInstantaneousDynamics(dynamicsNode: IXmlElement,
                                            currentMeasure: SourceMeasure,
@@ -449,9 +475,25 @@ export class ExpressionReader {
             this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
         }
         const wedgeNumberXml: number = this.readNumber(wedgeNode);
+
+        const typeAttributeString: string = wedgeNode.attribute("type")?.value?.toLowerCase();
+
+        // check for duplicate
+        if (this.lastWedge && this.lastWedge.parentMeasure.MeasureNumberXML === currentMeasure.MeasureNumberXML &&
+                this.lastWedge.StaffNumber === this.staffNumber &&
+                this.placement === this.lastWedge.Placement &&
+                this.WedgeYPosXml !== undefined &&
+                this.lastWedge.YPosXml === this.WedgeYPosXml &&
+                this.lastWedge.StartMultiExpression.Timestamp.Equals(this.directionTimestamp) &&
+                this.lastWedge.DynamicType === ContDynamicEnum[typeAttributeString]
+
+        ) {
+            // duplicate, ignore
+            return;
+        }
         //Ending needs to use previous fraction, not current.
         //If current is used, when there is a system break it will mess up
-        if (wedgeNode.attribute("type")?.value?.toLowerCase() === "stop") {
+        if (typeAttributeString === "stop") {
             this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml, inSourceMeasureCurrentFraction);
         } else {
             this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml);
@@ -503,6 +545,8 @@ export class ExpressionReader {
                             this.staffNumber,
                             currentMeasure,
                             numberXml);
+                    this.lastWedge = continuousDynamicExpression;
+                    this.lastWedge.YPosXml = this.WedgeYPosXml;
                     this.openContinuousDynamicExpressions.push(continuousDynamicExpression);
                     let multiExpression: MultiExpression = this.getMultiExpression;
                     if (!multiExpression) {
