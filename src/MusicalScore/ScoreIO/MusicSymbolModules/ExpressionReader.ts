@@ -477,7 +477,9 @@ export class ExpressionReader {
         if (this.lastWedge && this.lastWedge.parentMeasure.MeasureNumberXML === currentMeasure.MeasureNumberXML &&
                 this.lastWedge.StaffNumber === this.staffNumber &&
                 this.placement === this.lastWedge.Placement &&
-                this.lastWedge.YPosXml === this.WedgeYPosXml
+                this.WedgeYPosXml !== undefined &&
+                this.lastWedge.YPosXml === this.WedgeYPosXml &&
+                this.lastWedge.StartMultiExpression.Timestamp === this.directionTimestamp
         ) {
             // duplicate, ignore
             return;
