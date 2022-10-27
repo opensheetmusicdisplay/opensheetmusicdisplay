@@ -482,7 +482,7 @@ export class ExpressionReader {
                 this.placement === this.lastWedge.Placement &&
                 this.WedgeYPosXml !== undefined &&
                 this.lastWedge.YPosXml === this.WedgeYPosXml &&
-                this.lastWedge.StartMultiExpression.Timestamp === this.directionTimestamp
+                this.lastWedge.StartMultiExpression.Timestamp.Equals(this.directionTimestamp)
         ) {
             // duplicate, ignore
             return;
