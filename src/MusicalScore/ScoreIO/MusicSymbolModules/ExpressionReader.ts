@@ -77,11 +77,14 @@ export class ExpressionReader {
         // read default-y for wedge node
         let newWedgeYPos: number;
         const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
-        const wedgeNode: IXmlElement = directionTypeNode.element("wedge");
-        if (wedgeNode) {
-            const yPosAttr: IXmlAttribute = wedgeNode.attribute("default-y");
-            if (yPosAttr) {
-                newWedgeYPos = this.readPosition(yPosAttr);
+        let wedgeNode: IXmlElement;
+        if (directionTypeNode) {
+            wedgeNode = directionTypeNode.element("wedge");
+            if (wedgeNode) {
+                const yPosAttr: IXmlAttribute = wedgeNode.attribute("default-y");
+                if (yPosAttr) {
+                    newWedgeYPos = this.readPosition(yPosAttr);
+                }
             }
         }
         this.WedgeYPosXml = newWedgeYPos;
