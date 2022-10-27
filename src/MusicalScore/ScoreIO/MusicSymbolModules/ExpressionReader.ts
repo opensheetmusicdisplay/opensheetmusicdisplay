@@ -476,20 +476,24 @@ export class ExpressionReader {
         }
         const wedgeNumberXml: number = this.readNumber(wedgeNode);
 
+        const typeAttributeString: string = wedgeNode.attribute("type")?.value?.toLowerCase();
+
         // check for duplicate
         if (this.lastWedge && this.lastWedge.parentMeasure.MeasureNumberXML === currentMeasure.MeasureNumberXML &&
                 this.lastWedge.StaffNumber === this.staffNumber &&
                 this.placement === this.lastWedge.Placement &&
                 this.WedgeYPosXml !== undefined &&
                 this.lastWedge.YPosXml === this.WedgeYPosXml &&
-                this.lastWedge.StartMultiExpression.Timestamp.Equals(this.directionTimestamp)
+                this.lastWedge.StartMultiExpression.Timestamp.Equals(this.directionTimestamp) &&
+                this.lastWedge.DynamicType === ContDynamicEnum[typeAttributeString]
+
         ) {
             // duplicate, ignore
             return;
         }
         //Ending needs to use previous fraction, not current.
         //If current is used, when there is a system break it will mess up
-        if (wedgeNode.attribute("type")?.value?.toLowerCase() === "stop") {
+        if (typeAttributeString === "stop") {
             this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml, inSourceMeasureCurrentFraction);
         } else {
             this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml);
