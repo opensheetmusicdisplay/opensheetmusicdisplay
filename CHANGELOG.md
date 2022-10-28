@@ -1,3 +1,16 @@
+# [1.6.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.8...1.6.0) (2022-10-28)
+
+
+### Bug Fixes
+
+* **Brackets text:** Ignore [ ] square brackets (originally around notes) too with EngravingRules.IgnoreBracketsWords ([#1251](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1251)) ([e5b9047](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e5b90474ca0cafd13703f54b3c1f5a465451116f))
+* **Marcato:** Always place above staff ([#1261](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1261)), in line with Gould - Behind Bars ([0e7421d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0e7421d8de6c9081819d9eaae18a72a76b836009))
+* **Ties:** Set downward tie direction for downward ties split over two systems in vexflow ([#1262](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1262)) ([5a155ef](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5a155efbbfeab6d5aa55e450d0eba490e3d09d53))
+* **Ties:** Use downward arc for ties in secondary voices ([#1262](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1262)) ([01398b9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/01398b90c67c399b4053960092e3f41bbaa375cb))
+* **Wedges:** Ignore duplicate wedges given in MusicXML (e.g. crescendo) ([#1259](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1259), PR [#1260](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1260)) ([7f235fe](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7f235feb4367168f1b8b446daa3af2e61b92d9ca))
+
+
+
 ## [1.5.8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.7...1.5.8) (2022-10-14)
 
 
