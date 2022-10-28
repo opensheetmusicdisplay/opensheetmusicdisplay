@@ -628,6 +628,18 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.marcatoup: {
                     vfArt = new VF.Articulation("a^");
+                    // according to Gould - Behind Bars, Marcato should always be above the staff, regardless of stem direction.
+                    vfArtPosition = VF.Modifier.Position.ABOVE;
+                    // alternative: place close to note (below staff if below 3rd line). looks strange though, see test_marcato_position
+                    // if (rules.PositionMarcatoCloseToNote) {
+                    //     const noteLine: number = vfnote.getLineNumber();
+                    //     if (noteLine > 3) {
+                    //         vfArtPosition = VF.Modifier.Position.ABOVE;
+                    //     } else {
+                    //         vfArtPosition = VF.Modifier.Position.BELOW;
+                    //     }
+                    //     //console.log("measure " + gNote.parentVoiceEntry.parentStaffEntry.parentMeasure.MeasureNumber + ", line " + noteLine);
+                    // }
                     break;
                 }
                 case ArticulationEnum.invertedfermata: {

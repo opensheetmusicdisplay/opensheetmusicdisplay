@@ -352,6 +352,7 @@ export class EngravingRules {
      * but were inserted as a words element in the MusicXML, which can't be matched to the note anymore,
      * and would otherwise just be placed somewhere else. See OSMD Issue 1251. */
     public IgnoreBracketsWords: boolean;
+    // public PositionMarcatoCloseToNote: boolean;
     public SpacingBetweenTextLines: number;
 
     public NoteToGraphicalNoteMap: Dictionary<number, GraphicalNote>;
@@ -708,6 +709,7 @@ export class EngravingRules {
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
         this.IgnoreBracketsWords = true;
+        // this.PositionMarcatoCloseToNote = true;
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
