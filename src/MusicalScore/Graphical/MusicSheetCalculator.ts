@@ -2290,6 +2290,17 @@ export abstract class MusicSheetCalculator {
             return;
         }
         const ties: Tie[] = staffEntry.ties;
+        if (ties.length === 1) {
+            const tie: Tie = ties[0];
+            if (tie.TieDirection === PlacementEnum.NotYetDefined) {
+                const voiceId: number = tie.Notes[0].ParentVoiceEntry.ParentVoice.VoiceId;
+                // put ties of second voices (e.g. 2 for right hand, 6 left hand) below by default
+                //   TODO could be more precise but also more complex by checking lower notes, other notes, etc.
+                if (voiceId === 2 || voiceId === 6) {
+                    tie.TieDirection = PlacementEnum.Below;
+                }
+            }
+        }
         if (ties.length > 1) {
             let highestNote: Note = undefined;
             for (const gseTie of ties) {
