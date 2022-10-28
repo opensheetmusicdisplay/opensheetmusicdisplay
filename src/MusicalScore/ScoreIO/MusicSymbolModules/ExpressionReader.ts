@@ -440,7 +440,9 @@ export class ExpressionReader {
     }
     private interpretWords(wordsNode: IXmlElement, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction): void {
         const text: string = wordsNode.value;
-        if (currentMeasure.Rules.IgnoreBracketsWords && /^\(\s*\)$/.test(text)) { // regex: brackets with arbitrary white space in-between
+        if (currentMeasure.Rules.IgnoreBracketsWords && (
+            /^\(\s*\)$/.test(text) || /^\[\s*\]$/.test(text) // (*) and [*]
+        )) { // regex: brackets with arbitrary white space in-between
             return;
         }
         let fontStyle: FontStyles;
