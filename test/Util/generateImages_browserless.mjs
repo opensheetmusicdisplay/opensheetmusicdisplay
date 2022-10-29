@@ -35,7 +35,7 @@ function sleep (ms) {
 // global variables
 //   (without these being global, we'd have to pass many of these values to the generateSampleImage function)
 // eslint-disable-next-line prefer-const
-let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 12);
+let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, pageZoom, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 13);
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
         // eslint-disable-next-line max-len
@@ -86,6 +86,7 @@ async function init () {
     pageFormat = "Endless";
     pageWidth = Number.parseInt(pageWidth, 10);
     pageHeight = Number.parseInt(pageHeight, 10);
+    pageZoom = Number.parseInt(pageZoom, 10);
     const endlessPage = !(pageHeight > 0 && pageWidth > 0);
     if (!endlessPage) {
         pageFormat = `${pageWidth}x${pageHeight}`;
@@ -237,6 +238,7 @@ async function init () {
         pageBackgroundColor: "#00000000",
         defaultColorMusic: "#A7A09E",
         colorStemsLikeNoteheads: true,
+        defaultFontFamily: 'trebuchet ms',
         drawCredits: false,
         drawTitle: false,
         drawSubtitle: false,
@@ -244,7 +246,15 @@ async function init () {
         drawLyricist: false,
         drawMetronomeMarks: false,
         drawPartNames: false,
+        drawMeasureNumbers: false,
+        measureNumberInterval: 1
     });
+
+    osmdInstance.EngravingRules.PageTopMargin = 0;
+    osmdInstance.EngravingRules.PageBottomMargin = 0;
+    osmdInstance.EngravingRules.PageLeftMargin = 1.5;
+    osmdInstance.EngravingRules.PageRightMargin = 1;
+    osmdInstance.zoom = 2.0
     // for more options check OSMDOptions.ts
 
     // you can set finer-grained rendering/engraving settings in EngravingRules:
@@ -383,6 +393,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     }
     debug("xml loaded", DEBUG);
     try {
+        osmdInstance.zoom = pageZoom;
         osmdInstance.render();
         // there were reports that await could help here, but render isn't a synchronous function, and it seems to work. see #932
     } catch (ex) {
