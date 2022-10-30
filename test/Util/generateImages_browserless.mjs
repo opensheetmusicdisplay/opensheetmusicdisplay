@@ -1,6 +1,7 @@
 import Blob from "cross-blob";
 import FS from "fs";
 import jsdom from "jsdom";
+import path from "path";
 //import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
 //import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
 /*
@@ -431,8 +432,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const pageNumberingString = `${pageIndex + 1}`;
         const skybottomlineString = includeSkyBottomLine ? "skybottomline_" : "";
         const graphicalNoteBboxesString = drawBoundingBoxString ? "bbox" + drawBoundingBoxString + "_" : "";
+        const sampleFilenameWithoutExt = path.parse(sampleFilename).name;
         // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-        const pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${graphicalNoteBboxesString}${pageNumberingString}.${imageFormat}`;
+        const pageFilename = `${imageDir}/${sampleFilenameWithoutExt}_${skybottomlineString}${graphicalNoteBboxesString}${pageNumberingString}.${imageFormat}`;
 
         if (imageFormat === "png") {
             const dataUrl = dataUrls[pageIndex];
