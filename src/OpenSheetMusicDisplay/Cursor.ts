@@ -80,6 +80,7 @@ export class Cursor {
   public hidden: boolean = true;
   public currentPageNumber: number = 1;
   private cursorOptions: CursorOptions;
+  private skipInvisibleNotes: boolean = true;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
@@ -361,5 +362,14 @@ export class Cursor {
       }
     }
     return 1;
+  }
+
+  public get SkipInvisibleNotes(): boolean {
+    return this.skipInvisibleNotes;
+  }
+
+  public set SkipInvisibleNotes(value: boolean) {
+    this.skipInvisibleNotes = value;
+    this.iterator.SkipInvisibleNotes = value;
   }
 }

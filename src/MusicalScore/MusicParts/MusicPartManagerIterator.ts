@@ -78,6 +78,7 @@ export class MusicPartManagerIterator {
     private currentBpm: number;
     private activeDynamicExpressions: AbstractExpression[] = [];
     private activeTempoExpression: MultiTempoExpression;
+    public SkipInvisibleNotes: boolean = true;
 
     public get EndReached(): boolean {
         return this.endReached;
@@ -553,6 +554,16 @@ export class MusicPartManagerIterator {
     }
     private getVisibleEntries(entry: VoiceEntry, visibleEntries: VoiceEntry[]): void {
         if (entry.ParentVoice.Visible) {
+            let anyNoteVisible: boolean = false;
+            for (const note of entry.Notes) {
+                if (note.PrintObject) {
+                    anyNoteVisible = true;
+                    break;
+                }
+            }
+            if (!anyNoteVisible && this.SkipInvisibleNotes) {
+                return;
+            }
             visibleEntries.push(entry);
         }
     }
