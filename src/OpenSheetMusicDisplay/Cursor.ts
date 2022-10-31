@@ -123,6 +123,8 @@ export class Cursor {
     }
 
     this.iterator = this.manager.getIterator();
+    // remember SkipInvisibleNotes setting, which otherwise gets reset to default value
+    this.iterator.SkipInvisibleNotes = this.skipInvisibleNotes;
   }
 
   private getStaffEntryFromVoiceEntry(voiceEntry: VoiceEntry): VexFlowStaffEntry {
