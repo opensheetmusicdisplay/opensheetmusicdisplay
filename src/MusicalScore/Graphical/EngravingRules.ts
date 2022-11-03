@@ -130,7 +130,10 @@ export class EngravingRules {
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
     public ChordAccidentalTexts: Dictionary<AccidentalEnum, string>;
     public CustomChords: CustomChord[];
+    /** Not always a symbol, can also be text (RepetitionInstruction). Keeping the name for backwards compatibility. */
     public RepetitionSymbolsYOffset: number;
+    /** Adds a percent of the stave's width (e.g. 0.4 = 40%) to the x position of end instructions like Fine or D.C. al fine */
+    public RepetitionEndInstructionXShiftAsPercentOfStaveWidth: number;
     public RehearsalMarkXOffset: number;
     public RehearsalMarkXOffsetDefault: number;
     public RehearsalMarkXOffsetSystemStartMeasure: number;
@@ -521,6 +524,7 @@ export class EngravingRules {
         this.CustomChords = [];
         this.resetChordNames();
         this.RepetitionSymbolsYOffset = 0;
+        this.RepetitionEndInstructionXShiftAsPercentOfStaveWidth = 0.4; // 40%
         this.RehearsalMarkXOffsetDefault = 10; // avoid collision with metronome number
         this.RehearsalMarkXOffset = 0; // user defined
         this.RehearsalMarkXOffsetSystemStartMeasure = -20; // good test: Haydn Concertante
