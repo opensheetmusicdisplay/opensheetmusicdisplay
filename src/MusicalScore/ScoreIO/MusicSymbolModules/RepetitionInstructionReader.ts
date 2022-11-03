@@ -143,7 +143,7 @@ export class RepetitionInstructionReader {
         // if (relativeMeasurePosition < 0.5) {
         //   measureIndex--;
         // }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegnoAlCoda);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapoAlCoda);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
