@@ -138,15 +138,17 @@ export class Repetition extends StaveModifier {
         this.symbol_type === Repetition.type.FINE
       ) {
         text_x += extraShiftX;
-      } else if (
-        this.symbol_type === Repetition.type.DS_AL_CODA ||
-        this.symbol_type === Repetition.type.DC_AL_CODA ||
-        this.symbol_type === Repetition.type.TO_CODA
-      ) {
-        // somehow DS_AL_CODA is already further right by default
-        text_x += extraShiftX * 0.4;
-        symbol_x += extraShiftX * 0.4;
       }
+      // else if (
+      //   this.symbol_type === Repetition.type.DS_AL_CODA ||
+      //   this.symbol_type === Repetition.type.DC_AL_CODA ||
+      //   this.symbol_type === Repetition.type.TO_CODA
+      // ) {
+      //   // somehow DS_AL_CODA is already further right by default
+      //   //   TODO can cause collisions
+      //   text_x += extraShiftX * 0.4;
+      //   symbol_x += extraShiftX * 0.4;
+      // }
     }
     // earlier, we applied this to most elements individually, not necessary:
     // } else if (this.symbol_type === Repetition.type.TO_CODA) {
