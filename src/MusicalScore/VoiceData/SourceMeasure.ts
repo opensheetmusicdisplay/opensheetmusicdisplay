@@ -83,7 +83,7 @@ export class SourceMeasure {
     private staffLinkedExpressions: MultiExpression[][] = [];
     private tempoExpressions: MultiTempoExpression[] = [];
     public rehearsalExpression: RehearsalExpression;
-    private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
+    public verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
     private implicitMeasure: boolean;
     private hasEndLine: boolean;
     public hasEndClef: boolean;

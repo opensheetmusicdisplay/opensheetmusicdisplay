@@ -258,6 +258,14 @@ export class Cursor {
   }
 
   /**
+   * Go to previous entry
+   */
+   public previous(): void {
+    this.iterator.moveToPreviousVisibleVoiceEntry(false);
+    this.update();
+  }
+
+  /**
    * Go to next entry
    */
   public next(): void {

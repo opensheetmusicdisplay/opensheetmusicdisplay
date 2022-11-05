@@ -9,7 +9,7 @@ export class Fraction {
   private numerator: number = 0;
   private denominator: number = 1;
   private wholeValue: number = 0;
-  private realValue: number;
+  public realValue: number;
 
   /**
    * Returns the maximum of two fractions (does not clone)
