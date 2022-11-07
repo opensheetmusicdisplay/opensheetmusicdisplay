@@ -13,7 +13,7 @@ export class VerticalSourceStaffEntryContainer {
         this.parentMeasure = parentMeasure;
     }
 
-    public timestamp: Fraction;
+    private timestamp: Fraction;
     private staffEntries: SourceStaffEntry[] = [];
     private comments: Comment[] = [];
     private parentMeasure: SourceMeasure;

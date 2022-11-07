@@ -485,6 +485,11 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         window.addEventListener("keydown", function (e) {
             var event = window.event ? window.event : e;
+            // left arrow key
+            if (event.keyCode === 37) {
+                openSheetMusicDisplay.cursor.previous();
+            }
+            // right arrow key
             if (event.keyCode === 39) {
                 openSheetMusicDisplay.cursor.next();
             }

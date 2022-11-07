@@ -248,7 +248,7 @@ export class MusicPartManagerIterator {
         if (this.currentVoiceEntries) {
             this.currentVoiceEntries = [];
         }
-        if (this.currentTimeStamp.realValue < this.musicSheet.SourceMeasures.length) {
+        if (this.currentTimeStamp.RealValue < this.musicSheet.SourceMeasures.length) {
             this.recursiveMoveBack();
             return;
         }
@@ -265,7 +265,7 @@ export class MusicPartManagerIterator {
     public moveToNext(): void {
         this.forwardJumpOccurred = this.backJumpOccurred = false;
         if (this.endReached) { return; }
-        if (this.frontReached) { this.frontReached = false }
+        if (this.frontReached) { this.frontReached = false; }
         if (this.currentVoiceEntries) {
             this.currentVoiceEntries = [];
         }
@@ -525,25 +525,25 @@ export class MusicPartManagerIterator {
 
     private recursiveMoveBack(): void {
        if (this.currentVoiceEntryIndex > 0 ) {
-        this.currentVoiceEntryIndex--;
-            const currentContainer = this.currentMeasure.VerticalSourceStaffEntryContainers[this.currentVoiceEntryIndex];
+            this.currentVoiceEntryIndex--;
+            const currentContainer: VerticalSourceStaffEntryContainer = this.currentMeasure.VerticalSourceStaffEntryContainers[this.currentVoiceEntryIndex];
             this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
             this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
-            this.currentTimeStamp =Fraction.plus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
+            this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
             this.activateCurrentDynamicOrTempoInstructions();
             return;
         }
         else if (this.currentVoiceEntryIndex === 0  && this.currentMeasureIndex !== 0) {
-            let m = this.musicSheet.SourceMeasures[this.currentMeasureIndex-1]
+            const m: SourceMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex-1];
             this.currentMeasureIndex--;
             this.currentMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex];
-            const currentContainer = m.verticalSourceStaffEntryContainers[m.verticalSourceStaffEntryContainers.length-1];
+            const currentContainer: VerticalSourceStaffEntryContainer = m.VerticalSourceStaffEntryContainers[m.VerticalSourceStaffEntryContainers.length-1];
             this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
             this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
-            this.currentVoiceEntryIndex = m.verticalSourceStaffEntryContainers.length-1
-            this.currentTimeStamp =currentContainer.timestamp// Fraction_1.
+            this.currentVoiceEntryIndex = m.VerticalSourceStaffEntryContainers.length-1;
+            this.currentTimeStamp = currentContainer.Timestamp;
             this.activateCurrentDynamicOrTempoInstructions();
-            return
+            return;
         }
         // we reached the beginning
         this.frontReached = true;
