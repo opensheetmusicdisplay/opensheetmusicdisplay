@@ -248,9 +248,12 @@ async function init () {
         drawMetronomeMarks: false,
         drawPartNames: false,
         drawMeasureNumbers: false,
-        measureNumberInterval: 1
+        measureNumberInterval: 1,
+        preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
+        skyBottomLineBatchCriteria: 0, // use batch algorithm only
     });
 
+    osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
     osmdInstance.EngravingRules.PageTopMargin = 0;
     osmdInstance.EngravingRules.PageBottomMargin = 0;
     osmdInstance.EngravingRules.PageLeftMargin = 1.5;
