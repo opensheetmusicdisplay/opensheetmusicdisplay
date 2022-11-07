@@ -391,7 +391,7 @@ export class ExpressionReader {
                 this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
             }
             const numberXml: number = this.readNumber(dynamicsNode); // probably never given, just to comply with createExpressionIfNeeded()
-            let expressionText: string = dynamicsNode.elements()[0].name;
+            let expressionText: string = dynamicsNode.elements()[0]?.name; // elements can in rare cases still be empty even though hasElements=true, see #1269
             if (expressionText === "other-dynamics") {
                 expressionText = dynamicsNode.elements()[0].value;
             }
