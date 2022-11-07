@@ -87,6 +87,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         zoomOuts,
         zoomDivs,
         custom,
+        previousCursorBtn,
         nextCursorBtn,
         resetCursorBtn,
         followCursorCheckbox,
@@ -232,6 +233,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         }
         //canvas.id = 'osmdCanvasDiv';
         //canvas.style.overflowX = 'auto'; // enable horizontal scrolling
+        previousCursorBtn = document.getElementById("previous-cursor-btn");
         nextCursorBtn = document.getElementById("next-cursor-btn");
         resetCursorBtn = document.getElementById("reset-cursor-btn");
         followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
@@ -483,9 +485,17 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         window.addEventListener("keydown", function (e) {
             var event = window.event ? window.event : e;
+            // left arrow key
+            if (event.keyCode === 37) {
+                openSheetMusicDisplay.cursor.previous();
+            }
+            // right arrow key
             if (event.keyCode === 39) {
                 openSheetMusicDisplay.cursor.next();
             }
+        });
+        previousCursorBtn.addEventListener("click", function () {
+            openSheetMusicDisplay.cursor.previous();
         });
         nextCursorBtn.addEventListener("click", function () {
             openSheetMusicDisplay.cursor.next();
