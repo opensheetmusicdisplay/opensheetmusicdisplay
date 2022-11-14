@@ -494,7 +494,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 openSheetMusicDisplay.cursor.next();
             }
         });
-        previousCursorBtn.addEventListener("click", function () {
+        previousCursorBtn?.addEventListener("click", function () {
             openSheetMusicDisplay.cursor.previous();
         });
         nextCursorBtn.addEventListener("click", function () {
