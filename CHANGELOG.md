@@ -1,3 +1,21 @@
+## [1.6.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.6.0...1.6.1) (2022-11-14)
+
+
+### Bug Fixes
+
+* **Cursor: cursor.next():** Skip positions that only contain invisible notes ([#1264](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1264)) ([9805f09](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9805f095c87045d5c647cc83c981dbd635d79a96))
+* **Error:** Fix error when dynamics node has no elements, leading to an empty measure ([#1269](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1269)) ([5f98841](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5f98841ba650b24e231edf04763e64f291436f2c))
+* **Repetitions:** Fix D.C. Al Coda read as DalSegnoAlCoda ([#920](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/920)) ([8ab2a00](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8ab2a0070be0d0895729795d7ff52cd100d468c4))
+* **Repetitions:** Fix repetition symbols like D.C. or Coda too far left ([#920](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/920), PR [#1265](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1265)). Add EngravingRules.RepetitionEndInstructionXShiftAsPercentOfStaveWidth ([4ff0226](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4ff0226885a8dce89472d817ebae24fe90e2c896))
+* **Slur:** Fix double slur with different placement ignored as "duplicate" ([#1275](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1275)) ([fa14941](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/fa1494191ed57627393a9795669edbe6b026bc82))
+
+
+### Features
+
+* **Cursor:** Add cursor.previous(), moving back to previous note, counterpart to next() ([#1266](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1266)) ([ddb0189](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ddb0189dc26a0b9835121870077871cc391b389b))
+
+
+
 # [1.6.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.5.8...1.6.0) (2022-10-28)
 
 
