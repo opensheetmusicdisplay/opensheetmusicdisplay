@@ -111,6 +111,9 @@ export class VoiceEntry {
     public get Articulations(): Articulation[] {
         return this.articulations;
     }
+    public set Articulations(value: Articulation[]) {
+        this.articulations = value;
+    }
     public get TechnicalInstructions(): TechnicalInstruction[] {
         return this.technicalInstructions;
     }
