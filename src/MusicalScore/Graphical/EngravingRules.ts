@@ -597,7 +597,7 @@ export class EngravingRules {
         this.MaximumLyricsElongationFactor = 2.5;
 
         // expressions variables
-        this.TempoYSpacing = 0.0;
+        this.TempoYSpacing = 0.5; // note this is correlated with MetronomeMarkYShift: one-sided change can cause collisions
         this.InstantaneousTempoTextHeight = 2.3;
         this.ContinuousDynamicTextHeight = 2.3;
         this.MoodTextHeight = 2.3;
@@ -651,7 +651,7 @@ export class EngravingRules {
         this.WholeRestXShiftVexflow = -1.5; // VexFlow draws rest notes too far to the right
         this.MetronomeMarksDrawn = true;
         this.MetronomeMarkXShift = -6; // our unit, is taken * unitInPixels
-        this.MetronomeMarkYShift = -0.5;
+        this.MetronomeMarkYShift = -1.0; // note this is correlated with TempoYSpacing: one-sided change can cause collisions
         this.SoftmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
         // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
         // if too low, smaller notes aren't positioned correctly.
