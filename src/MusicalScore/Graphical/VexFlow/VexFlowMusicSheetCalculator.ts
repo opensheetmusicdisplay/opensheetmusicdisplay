@@ -1031,8 +1031,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (startStaffEntry === endStaffEntry) {
       endXOffset *= 2;
     }
-    const startX: number = startStaffEntry.PositionAndShape.AbsolutePosition.x - startXOffset;
-    const stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endXOffset;
+    let startX: number = startStaffEntry.PositionAndShape.AbsolutePosition.x - startXOffset;
+    let stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endXOffset;
+    if (startX > stopX) {
+      // very rare case of the start staffentry being before end staffentry. would lead to error in skybottomline. See #1281
+      // reverse startX and endX
+      const oldStartX: number = startX;
+      startX = stopX;
+      stopX = oldStartX;
+    }
+
     vfOctaveShift.PositionAndShape.Size.width = startX - stopX;
     const textBracket: VF.TextBracket = vfOctaveShift.getTextBracket();
     const fontSize: number = (textBracket as any).font.size / 10;
