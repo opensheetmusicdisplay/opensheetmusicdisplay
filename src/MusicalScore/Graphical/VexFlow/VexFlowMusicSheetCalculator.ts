@@ -1034,6 +1034,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let startX: number = startStaffEntry.PositionAndShape.AbsolutePosition.x - startXOffset;
     let stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endXOffset;
     if (startX > stopX) {
+      // very rare case of the start staffentry being before end staffentry. would lead to error in skybottomline. See #1281
+      // reverse startX and endX
       const oldStartX: number = startX;
       startX = stopX;
       stopX = oldStartX;
