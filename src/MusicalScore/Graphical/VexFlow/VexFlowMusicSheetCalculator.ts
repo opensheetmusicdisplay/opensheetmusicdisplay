@@ -1160,7 +1160,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[]): void {
-    voiceEntry.LyricsEntries.forEach((key: number, lyricsEntry: LyricsEntry) => {
+    voiceEntry.LyricsEntries.forEach((key: string, lyricsEntry: LyricsEntry) => {
       const graphicalLyricEntry: GraphicalLyricEntry = new GraphicalLyricEntry(lyricsEntry,
                                                                                graphicalStaffEntry,
                                                                                this.rules.LyricsHeight,

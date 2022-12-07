@@ -70,6 +70,7 @@ import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSM
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
 import { GraphicalChordSymbolContainer } from ".";
+import { LyricsEntry } from "../VoiceData/Lyrics";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -546,9 +547,10 @@ export abstract class MusicSheetCalculator {
      * @param staffLine
      * @param lyricVersesNumber
      */
-    protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): GraphicalStaffEntry[] {
+    protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: string[]): GraphicalStaffEntry[] {
         let numberOfVerses: number = 0;
         let lyricsStartYPosition: number = this.rules.StaffHeight; // Add offset to prevent collision
+        const relevantVerseNumbers: Map<string, boolean> = new Map<string, boolean>();
         const lyricsStaffEntriesList: GraphicalStaffEntry[] = [];
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
@@ -560,7 +562,15 @@ export abstract class MusicSheetCalculator {
             const len2: number = measure.staffEntries.length;
             for (let idx2: number = 0; idx2 < len2; ++idx2) {
                 const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
-                if (staffEntry.LyricsEntries.length > 0) {
+
+                // Collect relevant verse numbers
+                const len3: number = staffEntry.LyricsEntries.length;
+                for (let idx3: number = 0; idx3 < len3; ++idx3) {
+                    const lyricsEntry: LyricsEntry = staffEntry.LyricsEntries[idx3].LyricsEntry;
+                    relevantVerseNumbers[lyricsEntry.VerseNumber] = lyricsEntry.IsChorus;
+                }
+
+                if (len3 > 0) {
                     lyricsStaffEntriesList.push(staffEntry);
                     numberOfVerses = Math.max(numberOfVerses, staffEntry.LyricsEntries.length);
 
@@ -589,6 +599,19 @@ export abstract class MusicSheetCalculator {
         // iterate again through the Staffentries with LyricEntries
         len = lyricsStaffEntriesList.length;
         for (const staffEntry of lyricsStaffEntriesList) {
+
+            // Filter verse numbers
+            const filteredLyricVersesNumber: string[] = [];
+            let isChorus: boolean = true;
+            for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
+                isChorus &&= staffEntry.LyricsEntries[i].LyricsEntry.IsChorus;
+            }
+            for (const lyricVerseNumber of lyricVersesNumber){
+                if (relevantVerseNumbers[lyricVerseNumber] === isChorus) {
+                    filteredLyricVersesNumber.push(lyricVerseNumber);
+                }
+            }
+
             // set LyricEntryLabel RelativePosition
             for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
                 const lyricEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[i];
@@ -596,8 +619,8 @@ export abstract class MusicSheetCalculator {
 
                 // read the verseNumber and get index of this number in the sorted LyricVerseNumbersList of Instrument
                 // eg verseNumbers: 2,3,4,6 => 1,2,3,4
-                const verseNumber: number = lyricEntry.LyricsEntry.VerseNumber;
-                const sortedLyricVerseNumberIndex: number = lyricVersesNumber.indexOf(verseNumber);
+                const verseNumber: string = lyricEntry.LyricsEntry.VerseNumber;
+                const sortedLyricVerseNumberIndex: number = filteredLyricVersesNumber.indexOf(verseNumber);
                 const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight + this.rules.VerticalBetweenLyricsDistance +
                     this.rules.LyricsYOffsetToStaffHeight;
 
@@ -608,6 +631,7 @@ export abstract class MusicSheetCalculator {
                 }
                 const previousRelativeX: number = lyricsEntryLabel.PositionAndShape.RelativePosition.x;
                 lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(previousRelativeX, position);
+                lyricsEntryLabel.Label.fontStyle = lyricEntry.LyricsEntry.FontStyle;
                 maxPosition = Math.max(maxPosition, position);
             }
         }
