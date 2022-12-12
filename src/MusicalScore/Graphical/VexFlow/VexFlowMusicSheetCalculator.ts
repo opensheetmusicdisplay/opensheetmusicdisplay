@@ -231,7 +231,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           // in fact overscale it, this needs a lot of space the more staffEntries (and modifiers like accidentals) there are
         } else if (measureListIndex > 1 && maxStaffEntries === 1) {
           // do this also for measures not after repetitions:
-          minStaffEntriesWidth += this.rules.PickupMeasureRepetitionSpacingSingleNoteAddend;
+          minStaffEntriesWidth += this.rules.PickupMeasureSpacingSingleNoteAddend;
         }
         minStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
       }
