@@ -32,6 +32,9 @@ check for gracenotegroup.spacing set, to allow e.g. spacing = 0 by default.
 keysignature.js (merged vexflow 4):
 open group to get SVG group+class for key signature
 
+pedalmarking.js (custom addition):
+Add rendering options for pedals that break across systems.
+
 renderer.js (vexflow4: need to check if possible):
 CanvasContext: getContext(): use willReadFrequently option for marginal performance potential,
 and for preventing chrome warning (#1242)
