@@ -220,9 +220,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 endingBarStyleEnum === SystemLinesEnum.DotsThinBold
             ) {
               barlineSpacing = this.rules.PickupMeasureRepetitionSpacing;
-              if (maxStaffEntries === 1) {
-                barlineSpacing += this.rules.PickupMeasureRepetitionSpacingSingleNoteAddend;
-              }
               break;
             }
           }
@@ -232,6 +229,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
           minStaffEntriesWidth += maxStaffEntriesPlusAccidentals * staffEntryFactor * 1.5; // don't scale this for implicit measures
           // in fact overscale it, this needs a lot of space the more staffEntries (and modifiers like accidentals) there are
+        } else if (measureListIndex > 1 && maxStaffEntries === 1) {
+          // do this also for measures not after repetitions:
+          minStaffEntriesWidth += this.rules.PickupMeasureRepetitionSpacingSingleNoteAddend;
         }
         minStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
       }
