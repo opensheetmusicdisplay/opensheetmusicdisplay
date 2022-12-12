@@ -14,6 +14,7 @@ import { Flow } from './tables';
 import { Modifier } from './modifier';
 import { Glyph } from './glyph';
 import { Stem } from './stem';
+import { TickContext } from './tickcontext';
 
 // To enable logging for this class. Set `Vex.Flow.Articulation.DEBUG` to `true`.
 function L(...args) { if (Articulation.DEBUG) Vex.L('Vex.Flow.Articulation', args); }
@@ -236,7 +237,12 @@ export class Articulation extends Modifier {
       font_scale: 38,
     };
 
+    //VexFlowPatch
+    this.breathMarkDistance = 0.8; // % distance to next note or end of stave (0.8 = 80%)
     this.articulation = Flow.articulationCodes(this.type);
+    if (this.type === 'abr') { // breath mark. we could put this in tables.js:articulationCodes()
+      this.articulation = { code: 'v6c', between_lines: false }; // v6c: breathmarkcomma
+    }
     if (!this.articulation) {
       throw new Vex.RERR('ArgumentError', `Articulation not found: ${this.type}`);
     }
@@ -270,7 +276,26 @@ export class Articulation extends Modifier {
     const isTab = note.getCategory() === 'tabnotes';
 
     // Articulations are centered over/under the note head.
-    const { x } = note.getModifierStartXY(position, index);
+    let { x } = note.getModifierStartXY(position, index);
+    // VexFlowPatch: breath mark support
+    if (this.type === 'abr') { // breath mark
+      let delayXShift = 0;
+      // delay code similar to ornament.js delayed variable handling
+      const noteTickContext = note.getTickContext();
+      const nextContext = TickContext.getNextContext(noteTickContext);
+      const noteX = note.getTickContext().getX();
+      if (nextContext) {
+          delayXShift = (nextContext.getX() - noteX) * this.breathMarkDistance;
+      } else {
+          const stave = note.getStave();
+          delayXShift = (stave.getX() + stave.getWidth() - noteX) * this.breathMarkDistance;
+      }
+      x += delayXShift;
+    }
+    const x_shift = this.getXShift();
+    if (x_shift) {
+      x += x_shift; // VexFlowPatch: support x_shift for breath_mark
+    }
     const shouldSitOutsideStaff = !canSitBetweenLines || isTab;
 
     const initialOffset = getInitialOffset(note, position);

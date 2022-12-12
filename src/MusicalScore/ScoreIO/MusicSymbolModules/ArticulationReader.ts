@@ -90,7 +90,12 @@ export class ArticulationReader {
                 currentVoiceEntry.Articulations.splice(0, 0, newArticulation); // TODO can't this overwrite another articulation?
               }
             }
-            if (name === "strongaccent") { // see name.replace("-", "") above
+            else if (name === "breathmark") { // breath-mark
+              if (placement === PlacementEnum.NotYetDefined) {
+                newArticulation.placement = PlacementEnum.Above;
+              }
+            }
+            else if (name === "strongaccent") { // see name.replace("-", "") above
               const marcatoType: string = childNode?.attribute("type")?.value;
               if (marcatoType === "up") {
                 newArticulation.articulationEnum = ArticulationEnum.marcatoup;
@@ -98,7 +103,7 @@ export class ArticulationReader {
                 newArticulation.articulationEnum = ArticulationEnum.marcatodown;
               }
             }
-            if (articulationEnum === ArticulationEnum.softaccent) {
+            else if (articulationEnum === ArticulationEnum.softaccent) {
               const staffId: number = currentVoiceEntry.ParentSourceStaffEntry.ParentStaff.Id - 1;
               if (placement === PlacementEnum.NotYetDefined) {
                 placement = PlacementEnum.Above;

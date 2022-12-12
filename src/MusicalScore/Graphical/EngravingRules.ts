@@ -329,6 +329,8 @@ export class EngravingRules {
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
     public ArticulationPlacementFromXML: boolean;
+    /** Percent distance of breath marks to next note or end of staff, e.g. 0.8 = 80%. */
+    public BreathMarkDistance: number;
     /** Where to draw fingerings (Above, Below, AboveOrBelow, Left, Right, or Auto).
      * Default AboveOrBelow. Auto experimental. */
     public FingeringPosition: PlacementEnum;
@@ -697,6 +699,7 @@ export class EngravingRules {
         this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
         this.ArticulationPlacementFromXML = true;
+        this.BreathMarkDistance = 0.8;
         this.FingeringPosition = PlacementEnum.AboveOrBelow; // AboveOrBelow = correct bounding boxes
         this.FingeringPositionFromXML = true;
         this.FingeringPositionGrace = PlacementEnum.Left;
