@@ -608,6 +608,14 @@ export class VexFlowConverter {
                     }
                     break;
                 }
+                case ArticulationEnum.breathmark: {
+                    vfArt = new VF.Articulation("abr");
+                    if (articulation.placement === PlacementEnum.Above) {
+                        vfArtPosition = VF.Modifier.Position.ABOVE;
+                    }
+                    (vfArt as any).breathMarkDistance = rules.BreathMarkDistance; // default 0.8 = 80% towards next note or staff end
+                    break;
+                }
                 case ArticulationEnum.downbow: {
                     vfArt = new VF.Articulation("am");
                     if (articulation.placement === undefined) { // downbow/upbow should be above by default

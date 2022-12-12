@@ -12,6 +12,7 @@ Each .js has comments like "// VexFlowPatch: [explanation]" to indicate what was
 
 articulation.js (custom addition):
 respect modifier.y_shift (y_shift affects y position of rendering)
+breath mark support
 
 beam.js (custom addition):
 add flat_beams, flat_beam_offset, flat_beam_offset_per_beam render_option (fixed in vexflow 4)
