@@ -538,6 +538,12 @@ export class InstrumentReader {
                );
                expressionReader.addOctaveShift(xmlNode, this.currentMeasure, previousFraction.clone());
              }
+             if (directionTypeNode.element("pedal")) {
+              expressionReader.readExpressionParameters(
+                xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, true
+              );
+              expressionReader.addPedalMarking(xmlNode, this.currentMeasure, previousFraction.clone());
+             }
              expressionReader.readExpressionParameters(
                xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, false
              );

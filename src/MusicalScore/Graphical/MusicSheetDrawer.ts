@@ -388,6 +388,8 @@ export abstract class MusicSheetDrawer {
         }
         this.drawOctaveShifts(staffLine);
 
+        this.drawPedals(staffLine);
+
         this.drawExpressions(staffLine);
 
         if (this.skyLineVisible) {
@@ -446,6 +448,8 @@ export abstract class MusicSheetDrawer {
     protected drawOctaveShifts(staffLine: StaffLine): void {
         return;
     }
+
+    protected abstract drawPedals(staffLine: StaffLine): void;
 
     protected drawStaffLines(staffLine: StaffLine): void {
         if (staffLine.StaffLines) {

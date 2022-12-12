@@ -661,6 +661,16 @@ export abstract class MusicSheetCalculator {
     }
 
     /**
+     * Calculate a single Pedal for a [[MultiExpression]].
+     * @param sourceMeasure
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
+    protected abstract calculateSinglePedal(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
+        measureIndex: number, staffIndex: number): void;
+
+    /**
      * Calculate all the textual [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
      * @param repetitionInstruction
      * @param measureIndex
@@ -869,6 +879,10 @@ export abstract class MusicSheetCalculator {
             this.calculateExpressionAlignements();
             // calculate all OctaveShifts
             this.calculateOctaveShifts();
+            if (this.rules.RenderPedals) {
+                // calculate all Pedal Expressions
+                this.calculatePedals();
+            }
             // calcualte RepetitionInstructions (Dal Segno, Coda, etc)
             this.calculateWordRepetitionInstructions();
         }
@@ -3228,6 +3242,24 @@ export abstract class MusicSheetCalculator {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
                         if ((sourceMeasure.StaffLinkedExpressions[j][k].OctaveShiftStart)) {
                             this.calculateSingleOctaveShift(sourceMeasure, sourceMeasure.StaffLinkedExpressions[j][k], i, j);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private calculatePedals(): void {
+        for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
+            const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+            for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
+                if (!this.graphicalMusicSheet.MeasureList[i] || !this.graphicalMusicSheet.MeasureList[i][j]) {
+                    continue;
+                }
+                if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.ParentInstrument.Visible) {
+                    for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
+                        if ((sourceMeasure.StaffLinkedExpressions[j][k].PedalStart)) {
+                            this.calculateSinglePedal(sourceMeasure, sourceMeasure.StaffLinkedExpressions[j][k], i, j);
                         }
                     }
                 }
