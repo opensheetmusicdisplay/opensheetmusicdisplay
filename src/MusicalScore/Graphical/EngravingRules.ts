@@ -258,6 +258,8 @@ export class EngravingRules {
      *  (E.g. in a 4/4 time signature, a measure that repeats after the 3rd beat, continuing with a pickup measure)
      */
     public PickupMeasureRepetitionSpacing: number;
+    /** Multiplier for PickupMeasureRepetitionSpacing if there is only one note in the pickup measure. This usually needs a lot more space. */
+    public PickupMeasureRepetitionSpacingSingleNoteAddend: number;
     public DisplacedNoteMargin: number;
     public MinNoteDistance: number;
     public SubMeasureXSpacingThreshold: number;
@@ -646,6 +648,7 @@ export class EngravingRules {
         this.VoiceSpacingAddendVexflow = 3.0;
         this.PickupMeasureWidthMultiplier = 1.0;
         this.PickupMeasureRepetitionSpacing = 0.8;
+        this.PickupMeasureRepetitionSpacingSingleNoteAddend = 1.6;
         this.DisplacedNoteMargin = 0.1;
         this.MinNoteDistance = 2.0;
         this.SubMeasureXSpacingThreshold = 35;

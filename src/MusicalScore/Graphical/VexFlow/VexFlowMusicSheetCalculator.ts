@@ -220,6 +220,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 endingBarStyleEnum === SystemLinesEnum.DotsThinBold
             ) {
               barlineSpacing = this.rules.PickupMeasureRepetitionSpacing;
+              if (maxStaffEntries === 1) {
+                barlineSpacing += this.rules.PickupMeasureRepetitionSpacingSingleNoteAddend;
+              }
               break;
             }
           }
