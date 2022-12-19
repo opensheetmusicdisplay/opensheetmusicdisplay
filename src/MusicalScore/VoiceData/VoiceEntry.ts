@@ -56,7 +56,7 @@ export class VoiceEntry {
     private graceSlur: boolean; // TODO grace slur system could be refined to be non-binary
     private articulations: Articulation[] = [];
     private technicalInstructions: TechnicalInstruction[] = [];
-    private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
+    private lyricsEntries: Dictionary<string, LyricsEntry> = new Dictionary<string, LyricsEntry>();
     /** The Arpeggio consisting of this VoiceEntry's notes. Undefined if no arpeggio exists. */
     private arpeggio: Arpeggio;
     private ornamentContainer: OrnamentContainer;
@@ -117,7 +117,7 @@ export class VoiceEntry {
     public get TechnicalInstructions(): TechnicalInstruction[] {
         return this.technicalInstructions;
     }
-    public get LyricsEntries(): Dictionary<number, LyricsEntry> {
+    public get LyricsEntries(): Dictionary<string, LyricsEntry> {
         return this.lyricsEntries;
     }
     public get Arpeggio(): Arpeggio {
@@ -230,9 +230,9 @@ export class VoiceEntry {
         }
         return false;
     }
-    public getVerseNumberForLyricEntry(lyricsEntry: LyricsEntry): number {
-        let verseNumber: number = 1;
-        this.lyricsEntries.forEach((key: number, value: LyricsEntry): void => {
+    public getVerseNumberForLyricEntry(lyricsEntry: LyricsEntry): string {
+        let verseNumber: string = "1";
+        this.lyricsEntries.forEach((key: string, value: LyricsEntry): void => {
             if (lyricsEntry === value) {
                 verseNumber = key;
             }
