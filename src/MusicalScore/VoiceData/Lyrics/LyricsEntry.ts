@@ -1,6 +1,6 @@
 import {LyricWord} from "./LyricsWord";
 import {VoiceEntry} from "../VoiceEntry";
-import { FontStyles } from "../../../Common";
+import { FontStyles } from "../../../Common/Enums/FontStyles";
 
 export class LyricsEntry {
     constructor(text: string, verseNumber: string, word: LyricWord, parent: VoiceEntry, syllableNumber: number = -1) {

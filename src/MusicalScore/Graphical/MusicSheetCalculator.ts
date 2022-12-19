@@ -70,7 +70,7 @@ import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSM
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
 import { GraphicalChordSymbolContainer } from ".";
-import { LyricsEntry } from "../VoiceData/Lyrics";
+import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
