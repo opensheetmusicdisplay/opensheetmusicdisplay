@@ -1,4 +1,3 @@
-import { Instrument } from "../Instrument";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { Voice } from "../VoiceData/Voice";
 import { MusicSheet } from "../MusicSheet";
@@ -31,21 +30,28 @@ import { Arpeggio, ArpeggioType } from "../VoiceData/Arpeggio";
 import { NoteType, NoteTypeHandler } from "../VoiceData/NoteType";
 import { TabNote } from "../VoiceData/TabNote";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import { ReaderPluginManager } from "./ReaderPluginManager";
+import { Instrument } from "../Instrument";
 
 export class VoiceGenerator {
-  constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
-    this.musicSheet = instrument.GetMusicSheet;
+  constructor(pluginManager: ReaderPluginManager, staff: Staff, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
+    this.staff = staff;
+    this.instrument = staff.ParentInstrument;
+    this.musicSheet = this.instrument.GetMusicSheet;
     this.slurReader = slurReader;
+    this.pluginManager = pluginManager;
     if (mainVoice) {
-      this.voice = new LinkedVoice(instrument, voiceId, mainVoice);
+      this.voice = new LinkedVoice(this.instrument, voiceId, mainVoice);
     } else {
-      this.voice = new Voice(instrument, voiceId);
+      this.voice = new Voice(this.instrument, voiceId);
     }
-    instrument.Voices.push(this.voice);
+    this.instrument.Voices.push(this.voice); // apparently necessary for cursor.next(), for "cursor with hidden instrument" test
+    this.staff.Voices.push(this.voice);
     this.lyricsReader = new LyricsReader(this.musicSheet);
-    this.articulationReader = new ArticulationReader();
+    this.articulationReader = new ArticulationReader(this.musicSheet.Rules);
   }
 
+  public pluginManager: ReaderPluginManager; // currently only used in audio player
   private slurReader: SlurReader;
   private lyricsReader: LyricsReader;
   private articulationReader: ArticulationReader;
@@ -55,12 +61,14 @@ export class VoiceGenerator {
   private currentNote: Note;
   private currentMeasure: SourceMeasure;
   private currentStaffEntry: SourceStaffEntry;
+  private staff: Staff;
+  private instrument: Instrument;
   // private lastBeamTag: string = "";
   private openBeams: Beam[] = []; // works like a stack, with push and pop
   private beamNumberOffset: number = 0;
-  private openTieDict: { [_: number]: Tie; } = {};
+  private get openTieDict(): { [_: number]: Tie } { return this.staff.openTieDict; }
   private currentOctaveShift: number = 0;
-  private tupletDict: { [_: number]: Tuplet; } = {};
+  private tupletDict: { [_: number]: Tuplet } = {};
   private openTupletNumber: number = 0;
 
   public get GetVoice(): Voice {
@@ -101,24 +109,26 @@ export class VoiceGenerator {
    * @param measureStartAbsoluteTimestamp
    * @param maxTieNoteFraction
    * @param chord
-   * @param guitarPro
+   * @param octavePlusOne Software like Guitar Pro gives one octave too low, so we need to add one
    * @param printObject whether the note should be rendered (true) or invisible (false)
    * @returns {Note}
    */
   public read(noteNode: IXmlElement, noteDuration: Fraction, typeDuration: Fraction, noteTypeXml: NoteType, normalNotes: number, restNote: boolean,
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
-              measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean,
+              measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, octavePlusOne: boolean,
               printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
-              stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
+              stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean,
+              dotsXml: number): Note {
     this.currentStaffEntry = parentStaffEntry;
     this.currentMeasure = parentMeasure;
     //log.debug("read called:", restNote);
 
     try {
       this.currentNote = restNote
-        ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, printObject, isCueNote, noteheadColorXml)
-        : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, guitarPro,
+        ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, typeDuration, normalNotes, printObject, isCueNote, noteheadColorXml)
+        : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, octavePlusOne,
                              printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
+      this.currentNote.DotsXml = dotsXml;
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
       if (this.lyricsReader !== undefined && lyricElements) {
@@ -147,7 +157,7 @@ export class VoiceGenerator {
         }
         // check for Arpeggios
         const arpeggioNode: IXmlElement = notationNode.element("arpeggiate");
-        if (arpeggioNode !== undefined && !this.currentVoiceEntry.IsGrace) {
+        if (arpeggioNode !== undefined) {
           let currentArpeggio: Arpeggio;
           if (this.currentVoiceEntry.Arpeggio) { // add note to existing Arpeggio
             currentArpeggio = this.currentVoiceEntry.Arpeggio;
@@ -169,7 +179,7 @@ export class VoiceGenerator {
             if (!arpeggioAlreadyExists) {
                 let arpeggioType: ArpeggioType = ArpeggioType.ARPEGGIO_DIRECTIONLESS;
                 const directionAttr: Attr = arpeggioNode.attribute("direction");
-                if (directionAttr !== null) {
+                if (directionAttr) {
                   switch (directionAttr.value) {
                     case "up":
                       arpeggioType = ArpeggioType.ROLL_UP;
@@ -212,15 +222,16 @@ export class VoiceGenerator {
         }
 
         // remove open ties, if there is already a gap between the last tie note and now.
-        const openTieDict: { [_: number]: Tie; } = this.openTieDict;
-        for (const key in openTieDict) {
-          if (openTieDict.hasOwnProperty(key)) {
-            const tie: Tie = openTieDict[key];
-            if (Fraction.plus(tie.StartNote.ParentStaffEntry.Timestamp, tie.Duration).lt(this.currentStaffEntry.Timestamp)) {
-              delete openTieDict[key];
-            }
-          }
-        }
+        // TODO this deletes valid ties, see #1097
+        // const openTieDict: { [_: number]: Tie } = this.openTieDict;
+        // for (const key in openTieDict) {
+        //   if (openTieDict.hasOwnProperty(key)) {
+        //     const tie: Tie = openTieDict[key];
+        //     if (Fraction.plus(tie.StartNote.ParentStaffEntry.Timestamp, tie.Duration).lt(this.currentStaffEntry.Timestamp)) {
+        //       delete openTieDict[key];
+        //     }
+        //   }
+        // }
       }
       // time-modification yields tuplet in currentNote
       // mustn't execute method, if this is the Note where the Tuplet has been created
@@ -228,10 +239,12 @@ export class VoiceGenerator {
         this.handleTimeModificationNode(noteNode);
       }
     } catch (err) {
+      log.warn(err);
       const errorMsg: string = ITextTranslation.translateText(
         "ReaderErrorMessages/NoteError", "Ignored erroneous Note."
       );
       this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+      this.musicSheet.SheetErrors.pushMeasureError(err);
     }
 
     return this.currentNote;
@@ -313,18 +326,21 @@ export class VoiceGenerator {
    * @param noteDuration
    * @param divisions
    * @param chord
-   * @param guitarPro
+   * @param octavePlusOne Software like Guitar Pro gives one octave too low, so we need to add one
    * @returns {Note}
    */
   private addSingleNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType, typeDuration: Fraction,
-                        normalNotes: number, chord: boolean, guitarPro: boolean,
+                        normalNotes: number, chord: boolean, octavePlusOne: boolean,
                         printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
                         stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
+    let accidentalValue: string;
     let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
     let noteStep: NoteEnum = NoteEnum.C;
+    let displayStepUnpitched: NoteEnum = NoteEnum.C;
     let noteOctave: number = 0;
+    let displayOctaveUnpitched: number = 0;
     let playbackInstrumentId: string = undefined;
     let noteheadShapeXml: string = undefined;
     let noteheadFilledXml: boolean = undefined; // if undefined, the final filled parameter will be calculated from duration
@@ -376,21 +392,45 @@ export class VoiceGenerator {
 
           }
         } else if (noteElement.name === "accidental") {
-          const accidentalValue: string = noteElement.value;
+          accidentalValue = noteElement.value;
           if (accidentalValue === "natural") {
             noteAccidental = AccidentalEnum.NATURAL;
+            // following accidentals: ambiguous in alter value
+          } else if (accidentalValue === "slash-flat") {
+            noteAccidental = AccidentalEnum.SLASHFLAT;
+          } else if (accidentalValue === "slash-quarter-sharp") {
+            noteAccidental = AccidentalEnum.SLASHQUARTERSHARP;
+          } else if (accidentalValue === "slash-sharp") {
+            noteAccidental = AccidentalEnum.SLASHSHARP;
+          } else if (accidentalValue === "double-slash-flat") {
+            noteAccidental = AccidentalEnum.DOUBLESLASHFLAT;
+          } else if (accidentalValue === "sori") {
+            noteAccidental = AccidentalEnum.SORI;
+          } else if (accidentalValue === "koron") {
+            noteAccidental = AccidentalEnum.KORON;
           }
         } else if (noteElement.name === "unpitched") {
-          const displayStep: IXmlElement = noteElement.element("display-step");
-          if (displayStep) {
-            noteStep = NoteEnum[displayStep.value.toUpperCase()];
-          }
+          const displayStepElement: IXmlElement = noteElement.element("display-step");
           const octave: IXmlElement = noteElement.element("display-octave");
           if (octave) {
             noteOctave = parseInt(octave.value, 10);
-            if (guitarPro) {
+            displayOctaveUnpitched = noteOctave - 3;
+            if (octavePlusOne) {
               noteOctave += 1;
             }
+            if (this.instrument.Staves[0].StafflineCount === 1) {
+              displayOctaveUnpitched += 1;
+            }
+          }
+          if (displayStepElement) {
+            noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
+            let octaveShift: number = 0;
+            let noteValueShift: number = this.musicSheet.Rules.PercussionXMLDisplayStepNoteValueShift;
+            if (this.instrument.Staves[0].StafflineCount === 1) {
+              noteValueShift -= 3; // for percussion one line scores, we need to set the notes 3 lines lower
+            }
+            [displayStepUnpitched, octaveShift] = Pitch.lineShiftFromNoteEnum(noteStep, noteValueShift);
+            displayOctaveUnpitched += octaveShift;
           }
         } else if (noteElement.name === "instrument") {
           if (noteElement.firstAttribute) {
@@ -398,7 +438,7 @@ export class VoiceGenerator {
           }
         } else if (noteElement.name === "notehead") {
           noteheadShapeXml = noteElement.value;
-          if (noteElement.attribute("filled") !== null) {
+          if (noteElement.attribute("filled")) {
             noteheadFilledXml = noteElement.attribute("filled").value === "yes";
           }
         }
@@ -408,7 +448,7 @@ export class VoiceGenerator {
     }
 
     noteOctave -= Pitch.OctaveXmlDifference;
-    const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAccidental);
+    const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAccidental, accidentalValue);
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     let note: Note = undefined;
     let stringNumber: number = -1;
@@ -449,20 +489,20 @@ export class VoiceGenerator {
                          stringNumber, fretNumber, bends, vibratoStrokes);
     }
 
+    this.addNoteInfo(note, noteTypeXml, printObject, isCueNote, normalNotes,
+                     displayStepUnpitched, displayOctaveUnpitched,
+                     noteheadColorXml, noteheadColorXml);
     note.TypeLength = typeDuration;
-    note.NoteTypeXml = noteTypeXml;
-    note.NormalNotes = normalNotes;
-    note.PrintObject = printObject;
-    note.IsCueNote = isCueNote;
     note.IsGraceNote = isGraceNote;
     note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
     note.TremoloStrokes = tremoloStrokes; // could be a Tremolo object in future if we have more data to manage like two-note tremolo
+    note.PlaybackInstrumentId = playbackInstrumentId;
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
-    note.NoteheadColorXml = noteheadColorXml; // color set in Xml, shouldn't be changed.
-    note.NoteheadColor = noteheadColorXml; // color currently used
-    note.PlaybackInstrumentId = playbackInstrumentId;
+    if (stemDirectionXml === StemDirectionType.None) {
+      stemColorXml = "#00000000";  // just setting this to transparent for now
+    }
     this.currentVoiceEntry.Notes.push(note);
     this.currentVoiceEntry.StemDirectionXml = stemDirectionXml;
     if (stemColorXml) {
@@ -482,28 +522,47 @@ export class VoiceGenerator {
    * @param divisions
    * @returns {Note}
    */
-  private addRestNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType,
-                      printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
+  private addRestNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType, typeDuration: Fraction,
+                      normalNotes: number, printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
-    const displayStep: IXmlElement = node.element("display-step");
-    const octave: IXmlElement = node.element("display-octave");
+    const displayStepElement: IXmlElement = node.element("display-step");
+    const octaveElement: IXmlElement = node.element("display-octave");
+    let displayStep: NoteEnum;
+    let displayOctave: number;
     let pitch: Pitch = undefined;
-    if (displayStep && octave) {
-        const noteStep: NoteEnum = NoteEnum[displayStep.value.toUpperCase()];
-        pitch = new Pitch(noteStep, parseInt(octave.value, 10), AccidentalEnum.NONE);
+    if (displayStepElement && octaveElement) {
+        displayStep = NoteEnum[displayStepElement.value.toUpperCase()];
+        displayOctave = parseInt(octaveElement.value, 10);
+        pitch = new Pitch(displayStep, displayOctave, AccidentalEnum.NONE);
     }
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, this.currentMeasure, true);
-    restNote.NoteTypeXml = noteTypeXml;
-    restNote.PrintObject = printObject;
-    restNote.IsCueNote = isCueNote;
-    restNote.NoteheadColorXml = noteheadColorXml;
-    restNote.NoteheadColor = noteheadColorXml;
+    this.addNoteInfo(restNote, noteTypeXml, printObject, isCueNote, normalNotes, displayStep, displayOctave, noteheadColorXml, noteheadColorXml);
+    restNote.TypeLength = typeDuration; // needed for tuplet note type information
+    //  (e.g. quarter rest - but length different due to tuplet). see MusicSheetCalculator.calculateTupletNumbers()
     this.currentVoiceEntry.Notes.push(restNote);
     if (this.openBeams.length > 0) {
       this.openBeams.last().ExtendedNoteList.push(restNote);
     }
     return restNote;
   }
+
+  // common for "normal" notes and rest notes
+  private addNoteInfo(note: Note, noteTypeXml: NoteType, printObject: boolean, isCueNote: boolean, normalNotes: number,
+                      displayStep: NoteEnum, displayOctave: number,
+                      noteheadColorXml: string, noteheadColor: string): void {
+      // common for normal notes and rest note
+      note.NoteTypeXml = noteTypeXml;
+      note.PrintObject = printObject;
+      note.IsCueNote = isCueNote;
+      note.NormalNotes = normalNotes; // how many rhythmical notes the notes replace (e.g. for tuplets), see xml "actual-notes" and "normal-notes"
+      note.displayStepUnpitched = displayStep;
+      note.displayOctaveUnpitched = displayOctave;
+      note.NoteheadColorXml = noteheadColorXml; // color set in Xml, shouldn't be changed.
+      note.NoteheadColor = noteheadColorXml; // color currently used
+      // add TypeLength for rest notes like with Note?
+      // add IsGraceNote for rest notes like with Notes?
+      // add PlaybackInstrumentId for rest notes?
+    }
 
   /**
    * Handle the currentVoiceBeam.
@@ -537,7 +596,7 @@ export class VoiceGenerator {
         }
         let sameVoiceEntry: boolean = false;
         if (!(beamNumber > 0 && beamNumber <= this.openBeams.length) || !this.openBeams[beamNumber - 1]) {
-          console.log("invalid beamnumber"); // this shouldn't happen, probably error in this method
+          log.debug("[OSMD] invalid beamnumber"); // this shouldn't happen, probably error in this method
           return;
         }
         for (let idx: number = 0, len: number = this.openBeams[beamNumber - 1].Notes.length; idx < len; ++idx) {
@@ -575,6 +634,11 @@ export class VoiceGenerator {
    */
   private handleOpenBeam(): void {
     const openBeam: Beam = this.openBeams.last();
+    if (openBeam.Notes.length === 0) {
+      // TODO why is there such a beam? sample: test_percussion_display_step_from_xml
+      this.endBeam(); // otherwise beamLastNote.ParentStaffEntry will throw an undefined error
+      return;
+    }
     if (openBeam.Notes.length === 1) {
       const beamNote: Note = openBeam.Notes[0];
       beamNote.NoteBeam = undefined;
@@ -634,8 +698,7 @@ export class VoiceGenerator {
           if (bracketAttr && bracketAttr.value === "yes") {
             bracketed = true;
           }
-          const placementAttr: Attr = tupletNode.attribute("placement");
-          const placementBelow: boolean = placementAttr && placementAttr.value === "below";
+
           const type: Attr = tupletNode.attribute("type");
           if (type && type.value === "start") {
             let tupletNumber: number = 1;
@@ -655,7 +718,17 @@ export class VoiceGenerator {
 
             }
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
-            tuplet.tupletLabelNumberPlacement = placementBelow ? PlacementEnum.Below : PlacementEnum.Above;
+            //Default to above
+            tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+            //If we ever encounter a placement attribute for this tuplet, should override.
+            //Even previous placement attributes for the tuplet
+            const placementAttr: Attr = tupletNode.attribute("placement");
+            if (placementAttr) {
+              if (placementAttr.value === "below") {
+                tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+              }
+              tuplet.PlacementFromXml = true;
+            }
             if (this.tupletDict[tupletNumber]) {
               delete this.tupletDict[tupletNumber];
               if (Object.keys(this.tupletDict).length === 0) {
@@ -678,9 +751,39 @@ export class VoiceGenerator {
             }
             const tuplet: Tuplet = this.tupletDict[tupletNumber];
             if (tuplet) {
+              const placementAttr: Attr = tupletNode.attribute("placement");
+              if (placementAttr) {
+                if (placementAttr.value === "below") {
+                  tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+                }  else {
+                  tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+                }
+                tuplet.PlacementFromXml = true;
+              }
               const subnotelist: Note[] = [];
               subnotelist.push(this.currentNote);
               tuplet.Notes.push(subnotelist);
+              //If our placement hasn't been from XML, check all the notes in the tuplet
+              //Search for the first non-rest and use it's stem direction
+              if (!tuplet.PlacementFromXml) {
+                let foundNonRest: boolean = false;
+                for (const subList of tuplet.Notes) {
+                  for (const note of subList) {
+                    if (!note.isRest()) {
+                      if(note.StemDirectionXml === StemDirectionType.Down) {
+                        tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+                      } else {
+                        tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+                      }
+                      foundNonRest = true;
+                      break;
+                    }
+                  }
+                  if (foundNonRest) {
+                    break;
+                  }
+                }
+              }
               tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
               this.currentNote.NoteTuplet = tuplet;
               delete this.tupletDict[tupletNumber];
@@ -707,9 +810,6 @@ export class VoiceGenerator {
         if (bracketAttr && bracketAttr.value === "yes") {
           bracketed = true;
         }
-        const placementAttr: Attr = n.attribute("placement");
-        const placementBelow: boolean = placementAttr && placementAttr.value === "below";
-
         if (type === "start") {
           let tupletLabelNumber: number = 0;
           let timeModNode: IXmlElement = node.element("time-modification");
@@ -734,7 +834,20 @@ export class VoiceGenerator {
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
           if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
-            tuplet.tupletLabelNumberPlacement = placementBelow ? PlacementEnum.Below : PlacementEnum.Above;
+            //Default to above
+            tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+          }
+          //If we ever encounter a placement attribute for this tuplet, should override.
+          //Even previous placement attributes for the tuplet
+          const placementAttr: Attr = n.attribute("placement");
+          if (placementAttr) {
+            if (placementAttr.value === "below") {
+              tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+            } else {
+              //Just in case
+              tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+            }
+            tuplet.PlacementFromXml = true;
           }
           const subnotelist: Note[] = [];
           subnotelist.push(this.currentNote);
@@ -748,9 +861,39 @@ export class VoiceGenerator {
           }
           const tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
           if (tuplet) {
+            const placementAttr: Attr = n.attribute("placement");
+            if (placementAttr) {
+              if (placementAttr.value === "below") {
+                tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+              } else {
+                tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+              }
+              tuplet.PlacementFromXml = true;
+            }
             const subnotelist: Note[] = [];
             subnotelist.push(this.currentNote);
             tuplet.Notes.push(subnotelist);
+            //If our placement hasn't been from XML, check all the notes in the tuplet
+            //Search for the first non-rest and use it's stem direction
+            if (!tuplet.PlacementFromXml) {
+              let foundNonRest: boolean = false;
+              for (const subList of tuplet.Notes) {
+                for (const note of subList) {
+                  if (!note.isRest()) {
+                    if(note.StemDirectionXml === StemDirectionType.Down) {
+                      tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+                    } else {
+                      tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+                    }
+                    foundNonRest = true;
+                    break;
+                  }
+                }
+                if (foundNonRest) {
+                  break;
+                }
+              }
+            }
             tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
             this.currentNote.NoteTuplet = tuplet;
             if (Object.keys(this.tupletDict).length === 0) {
@@ -811,6 +954,8 @@ export class VoiceGenerator {
       if (tieNodeList.length === 1) {
         const tieNode: IXmlElement = tieNodeList[0];
         if (tieNode !== undefined && tieNode.attributes()) {
+          const tieDirection: PlacementEnum = this.getTieDirection(tieNode);
+
           const type: string = tieNode.attribute("type").value;
           try {
             if (type === "start") {
@@ -821,6 +966,8 @@ export class VoiceGenerator {
               const newTieNumber: number = this.getNextAvailableNumberForTie();
               const tie: Tie = new Tie(this.currentNote, tieType);
               this.openTieDict[newTieNumber] = tie;
+              tie.TieNumber = newTieNumber;
+              tie.TieDirection = tieDirection;
             } else if (type === "stop") {
               const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
               const tie: Tie = this.openTieDict[tieNumber];
@@ -835,14 +982,44 @@ export class VoiceGenerator {
           }
 
         }
-      } else if (tieNodeList.length === 2) {
+      } else if (tieNodeList.length === 2) { // stop+start
         const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
         if (tieNumber >= 0) {
           const tie: Tie = this.openTieDict[tieNumber];
           tie.AddNote(this.currentNote);
+          for (const tieNode of tieNodeList) {
+            const type: string = tieNode.attribute("type").value;
+            if (type === "start") {
+              const placement: PlacementEnum = this.getTieDirection(tieNode);
+              tie.NoteIndexToTieDirection[tie.Notes.length - 1] = placement;
+            }
+          }
         }
       }
     }
+  }
+
+  private getTieDirection(tieNode: IXmlElement): PlacementEnum {
+    let tieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
+    // read tie direction/placement from XML
+    const placementAttr: IXmlAttribute = tieNode.attribute("placement");
+    if (placementAttr) {
+      if (placementAttr.value === "above") {
+        tieDirection = PlacementEnum.Above;
+      } else if (placementAttr.value === "below") {
+        tieDirection = PlacementEnum.Below;
+      }
+    }
+    // tie direction can also be given like this:
+    const orientationAttr: IXmlAttribute = tieNode.attribute("orientation");
+    if (orientationAttr) {
+      if (orientationAttr.value === "over") {
+        tieDirection = PlacementEnum.Above;
+      } else if (orientationAttr.value === "under") {
+        tieDirection = PlacementEnum.Below;
+      }
+    }
+    return tieDirection;
   }
 
   /**
@@ -869,7 +1046,7 @@ export class VoiceGenerator {
    * @returns {number}
    */
   private findCurrentNoteInTieDict(candidateNote: Note): number {
-    const openTieDict: { [_: number]: Tie; } = this.openTieDict;
+    const openTieDict: { [_: number]: Tie } = this.openTieDict;
     for (const key in openTieDict) {
       if (openTieDict.hasOwnProperty(key)) {
         const tie: Tie = openTieDict[key];
@@ -877,8 +1054,8 @@ export class VoiceGenerator {
         const tieCandidateNote: TabNote = candidateNote as TabNote;
         if (tie.Pitch.FundamentalNote === candidateNote.Pitch.FundamentalNote && tie.Pitch.Octave === candidateNote.Pitch.Octave) {
           return parseInt(key, 10);
-        } else if (tieTabNote.StringNumber !== undefined) {
-          if (tieTabNote.StringNumber === tieCandidateNote.StringNumber) {
+        } else if (tieTabNote.StringNumberTab !== undefined) {
+          if (tieTabNote.StringNumberTab === tieCandidateNote.StringNumberTab) {
             return parseInt(key, 10);
           }
         }

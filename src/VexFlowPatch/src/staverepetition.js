@@ -49,7 +49,7 @@ export class Repetition extends StaveModifier {
 
   draw(stave, x) {
     this.setRendered();
-    
+
     switch (this.symbol_type) {
       case Repetition.type.CODA_RIGHT:
         this.drawCodaFixed(stave, x + stave.width);
@@ -84,6 +84,7 @@ export class Repetition extends StaveModifier {
       case Repetition.type.FINE:
         this.drawSymbolText(stave, x, 'Fine', false);
         break;
+      // VexFlowPatch: added TO_CODA type, handling
       case Repetition.type.TO_CODA:
         this.drawSymbolText(stave, x, 'To', true);
         break;
@@ -116,21 +117,59 @@ export class Repetition extends StaveModifier {
     let symbol_x = x + this.x_shift;
     if (this.symbol_type === Repetition.type.CODA_LEFT) {
       // Offset Coda text to right of stave beginning
-      text_x = this.x + stave.options.vertical_bar_width;
-      symbol_x = text_x + ctx.measureText(text).width + 12;
-    } else if (this.symbol_type === Repetition.type.TO_CODA) {
-      text_x = x + this.x + stave.options.vertical_bar_width;
-      symbol_x = text_x + ctx.measureText(text).width + 12;
-    } else if (this.symbol_type === Repetition.type.DS_AL_CODA) {
-      this.x_shift = -(text_x + ctx.measureText(text).width + 12 + stave.options.vertical_bar_width + 12);
-      // DS_AL_CODA draws in the next measure without this x_shift, not sure why for this symbol specifically.
-      text_x = this.x + this.x_shift + stave.options.vertical_bar_width;
+      // text_x = this.x + stave.options.vertical_bar_width;
+      text_x = this.x + this.x_shift;
       symbol_x = text_x + ctx.measureText(text).width + 12;
     } else {
-      // Offset Signo text to left stave end
-      symbol_x = this.x + x + stave.width - 5 + this.x_shift;
-      text_x = symbol_x - + ctx.measureText(text).width - 12;
+      // VexFlowPatch: fix placement, like for DS_AL_CODA
+      this.x_shift = -(text_x + ctx.measureText(text).width + 12 + stave.options.vertical_bar_width + 12);
+      // TO_CODA and DS_AL_CODA draw in the next measure without this x_shift, not sure why not for other symbols.
+      text_x = this.x + this.x_shift + stave.options.vertical_bar_width;
+      symbol_x = text_x + ctx.measureText(text).width + 12;
     }
+    if (this.xShiftAsPercentOfStaveWidth) {
+      const extraShiftX = stave.width * this.xShiftAsPercentOfStaveWidth;
+      if (
+        this.symbol_type === Repetition.type.DC_AL_FINE ||
+        this.symbol_type === Repetition.type.FINE ||
+        this.symbol_type === Repetition.type.DC ||
+        this.symbol_type === Repetition.type.DS_AL_FINE ||
+        this.symbol_type === Repetition.type.DS ||
+        this.symbol_type === Repetition.type.FINE
+      ) {
+        text_x += extraShiftX;
+      }
+      // else if (
+      //   this.symbol_type === Repetition.type.DS_AL_CODA ||
+      //   this.symbol_type === Repetition.type.DC_AL_CODA ||
+      //   this.symbol_type === Repetition.type.TO_CODA
+      // ) {
+      //   // somehow DS_AL_CODA is already further right by default
+      //   //   TODO can cause collisions
+      //   text_x += extraShiftX * 0.4;
+      //   symbol_x += extraShiftX * 0.4;
+      // }
+    }
+    // earlier, we applied this to most elements individually, not necessary:
+    // } else if (this.symbol_type === Repetition.type.TO_CODA) {
+    //   // text_x = x + this.x + this.x_shift + stave.options.vertical_bar_width;
+    //   // symbol_x = text_x + ctx.measureText(text).width + 12;
+
+    //   // VexFlowPatch: fix placement, like for DS_AL_CODA
+    //   this.x_shift = -(text_x + ctx.measureText(text).width + 12 + stave.options.vertical_bar_width + 12);
+    //   // TO_CODA and DS_AL_CODA draw in the next measure without this x_shift, not sure why not for other symbols.
+    //   text_x = this.x + this.x_shift + stave.options.vertical_bar_width;
+    //   symbol_x = text_x + ctx.measureText(text).width + 12;
+    // } else if (this.symbol_type === Repetition.type.DS_AL_CODA) {
+    //   this.x_shift = -(text_x + ctx.measureText(text).width + 12 + stave.options.vertical_bar_width + 12);
+    //   // TO_CODA and DS_AL_CODA draw in the next measure without this x_shift, not sure why not for other symbols.
+    //   text_x = this.x + this.x_shift + stave.options.vertical_bar_width;
+    //   symbol_x = text_x + ctx.measureText(text).width + 12;
+    // } else {
+    //   // Offset Signo text to left stave end
+    //   symbol_x = this.x + x + stave.width - 5 + this.x_shift;
+    //   text_x = symbol_x - + ctx.measureText(text).width - 12;
+    // }
 
     const y = stave.getYForTopText(stave.options.num_lines) + this.y_shift + 25;
     if (draw_coda) {

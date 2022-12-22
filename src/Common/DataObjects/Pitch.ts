@@ -12,7 +12,7 @@ export enum NoteEnum {
 /** Describes Accidental types.
  * Do not use the number values of these enum members directly for calculation anymore.
  * To use these for pitch calculation, use pitch.AccidentalHalfTones()
- *  or Pitch.HalfTonesFromAccidental(accidentalEnum).
+ * or Pitch.HalfTonesFromAccidental(accidentalEnum).
  */
 export enum AccidentalEnum {
     SHARP,
@@ -25,6 +25,14 @@ export enum AccidentalEnum {
     TRIPLEFLAT,
     QUARTERTONESHARP,
     QUARTERTONEFLAT,
+    SLASHFLAT,
+    THREEQUARTERSSHARP,
+    THREEQUARTERSFLAT,
+    SLASHQUARTERSHARP,
+    SLASHSHARP,
+    DOUBLESLASHFLAT,
+    SORI,
+    KORON
 }
 
 // This class represents a musical note. The middle A (440 Hz) lies in the octave with the value 1.
@@ -42,6 +50,7 @@ export class Pitch {
     private octave: number;
     private fundamentalNote: NoteEnum;
     private accidental: AccidentalEnum = AccidentalEnum.NONE;
+    private accidentalXml: string;
     private frequency: number;
     private halfTone: number;
 
@@ -66,19 +75,42 @@ export class Pitch {
         }
     }
 
+    /** Changes a note x lines/steps up (+) or down (-) from a NoteEnum on a staffline/keyboard (white keys).
+     * E.g. Two lines down (-2) from a D is a B.
+     * Two lines up from an A is a C.
+     *   (e.g. in the treble/violin clef, going one line up: E -> F (semitone), F -> G (2 semitones)).
+     * Returns new NoteEnum and the octave shift (e.g. -1 = new octave is one octave down). */
+    public static lineShiftFromNoteEnum(noteEnum: NoteEnum, lines: number): [NoteEnum, number] {
+        if (lines === 0) {
+            return [noteEnum, 0];
+        }
+        const enums: NoteEnum[] = Pitch.pitchEnumValues;
+        const originalIndex: number = enums.indexOf(noteEnum);
+        let octaveShift: number = 0;
+        let newIndex: number = (originalIndex + lines) % enums.length; // modulo only handles positive overflow
+        if (originalIndex + lines > enums.length - 1) {
+            octaveShift = 1;
+        }
+        if (newIndex < 0) {
+            newIndex = enums.length + newIndex; // handle underflow, e.g. - 1: enums.length + (-1) = last element
+            octaveShift = -1;
+        }
+        return [enums[newIndex], octaveShift];
+    }
+
     /**
      * @param the input pitch
      * @param the number of halftones to transpose with
      * @returns ret[0] = the transposed fundamental.
-     *          ret[1] = the octave shift (not the new octave!)
+     * ret[1] = the octave shift (not the new octave!)
      * @constructor
      */
-    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { halftone: number; overflow: number; } {
+    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { halftone: number, overflow: number } {
         const newHalfTone: number = <number>pitch.fundamentalNote + pitch.AccidentalHalfTones + transpose;
         return Pitch.WrapAroundCheck(newHalfTone, 12);
     }
 
-    public static WrapAroundCheck(value: number, limit: number): { halftone: number; overflow: number; } {
+    public static WrapAroundCheck(value: number, limit: number): { halftone: number, overflow: number } {
         let overflow: number = 0;
 
         while (value < 0) {
@@ -161,10 +193,11 @@ export class Pitch {
         return fundamentalNote;
     }
 
-    constructor(fundamentalNote: NoteEnum, octave: number, accidental: AccidentalEnum) {
+    constructor(fundamentalNote: NoteEnum, octave: number, accidental: AccidentalEnum, accidentalXml: string = undefined) {
         this.fundamentalNote = fundamentalNote;
         this.octave = octave;
         this.accidental = accidental;
+        this.accidentalXml = accidentalXml;
         this.halfTone = <number>(fundamentalNote) + (octave + Pitch.octXmlDiff) * 12 +
             Pitch.HalfTonesFromAccidental(accidental);
         this.frequency = Pitch.calcFrequency(this);
@@ -190,14 +223,30 @@ export class Pitch {
                 return 2;
             case AccidentalEnum.DOUBLEFLAT:
                 return -2;
-            case AccidentalEnum.QUARTERTONESHARP:
-                return 0.5;
-            case AccidentalEnum.QUARTERTONEFLAT:
-                return -0.5;
             case AccidentalEnum.TRIPLESHARP: // very rare, in some classical pieces
                 return 3;
             case AccidentalEnum.TRIPLEFLAT:
                 return -3;
+            case AccidentalEnum.QUARTERTONESHARP:
+                return 0.5;
+            case AccidentalEnum.QUARTERTONEFLAT:
+                return -0.5;
+            case AccidentalEnum.SLASHFLAT:
+                return -0.51; // TODO currently necessary for quarter tone flat rendering after slash flat
+            case AccidentalEnum.THREEQUARTERSSHARP:
+                return 1.5;
+            case AccidentalEnum.THREEQUARTERSFLAT:
+                return -1.5;
+            case AccidentalEnum.SLASHQUARTERSHARP:
+                return 0.0013; // tmp for identification
+            case AccidentalEnum.SLASHSHARP:
+                return 0.0014; // tmp for identification
+            case AccidentalEnum.DOUBLESLASHFLAT:
+                return -0.0015; // tmp for identification
+            case AccidentalEnum.SORI:
+                return 0.0016; // tmp for identification
+            case AccidentalEnum.KORON:
+                return 0.0017; // tmp for identification
             default:
                 throw new Error("Unhandled AccidentalEnum value");
                 // return 0;
@@ -217,14 +266,18 @@ export class Pitch {
                 return AccidentalEnum.DOUBLESHARP;
             case -2:
                 return AccidentalEnum.DOUBLEFLAT;
-            case 0.5:
-                return AccidentalEnum.QUARTERTONESHARP;
-            case -0.5:
-                return AccidentalEnum.QUARTERTONEFLAT;
             case 3:
                 return AccidentalEnum.TRIPLESHARP;
             case -3:
                 return AccidentalEnum.TRIPLEFLAT;
+            case 0.5:
+                return AccidentalEnum.QUARTERTONESHARP;
+            case -0.5:
+                return AccidentalEnum.QUARTERTONEFLAT;
+            case 1.5:
+                return AccidentalEnum.THREEQUARTERSSHARP;
+            case -1.5:
+                return AccidentalEnum.THREEQUARTERSFLAT;
             default:
                 if (halfTones > 0 && halfTones < 1) {
                     return AccidentalEnum.QUARTERTONESHARP;
@@ -258,7 +311,7 @@ export class Pitch {
                 acc = "##";
                 break;
             case AccidentalEnum.TRIPLESHARP:
-                acc = "++";
+                acc = "###";
                 break;
             case AccidentalEnum.DOUBLEFLAT:
                 acc = "bb";
@@ -271,6 +324,30 @@ export class Pitch {
                 break;
             case AccidentalEnum.QUARTERTONEFLAT:
                 acc = "d";
+                break;
+            case AccidentalEnum.SLASHFLAT:
+                acc = "bs";
+                break;
+            case AccidentalEnum.THREEQUARTERSSHARP:
+                acc = "++";
+                break;
+            case AccidentalEnum.THREEQUARTERSFLAT:
+                acc = "db";
+                break;
+            case AccidentalEnum.SLASHQUARTERSHARP:
+                acc = "+-";
+                break;
+            case AccidentalEnum.SLASHSHARP:
+                acc = "++-";
+                break;
+            case AccidentalEnum.DOUBLESLASHFLAT:
+                acc = "bss";
+                break;
+            case AccidentalEnum.SORI:
+                acc = "o";
+                break;
+            case AccidentalEnum.KORON:
+                acc = "k";
                 break;
             default:
         }
@@ -291,6 +368,10 @@ export class Pitch {
 
     public get Accidental(): AccidentalEnum {
         return this.accidental;
+    }
+
+    public get AccidentalXml(): string {
+        return this.accidentalXml;
     }
 
     public get Frequency(): number {

@@ -24,7 +24,6 @@ export enum NoteType {
 }
 
 export class NoteTypeHandler {
-    // tslint:disable-next-line: variable-name
     public static NoteTypeXmlValues: string[] = ["", "1024th", "512th", "256th", "128th", "64th", "32nd", "16th",
         "eigth", "quarter", "half", "whole", "breve", "long", "maxima"];
     // alternative to array: use switch/case

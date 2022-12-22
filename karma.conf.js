@@ -25,6 +25,9 @@ module.exports = function (config) {
                 pattern: 'test/data/*.xml',
                 included: true
             }, {
+                pattern: 'test/data/*.musicxml',
+                included: true
+            }, {
                 pattern: 'test/data/*.mxl.base64',
                 included: true
             }, {
@@ -39,6 +42,7 @@ module.exports = function (config) {
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
             'test/data/*.xml': ['xml2js'],
+            'test/data/*.musicxml': ['xml2js'],
             'test/data/*.mxl.base64': ['base64-to-js'],
             // add webpack as preprocessor
             'test/**/*.ts': ['webpack']
@@ -86,7 +90,7 @@ module.exports = function (config) {
         client: {
             captureConsole: true,
             mocha: {
-                timeout: process.env.timeout || 6000
+                timeout: process.env.timeout || 20000
             }
         },
 

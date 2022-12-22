@@ -1,6 +1,7 @@
+import { AClassHierarchyTrackable } from "../Interfaces/AClassHierarchyTrackable";
 import {BoundingBox} from "./BoundingBox";
 
-export class GraphicalObject {
+export class GraphicalObject extends AClassHierarchyTrackable {
 
     protected boundingBox: BoundingBox;
 

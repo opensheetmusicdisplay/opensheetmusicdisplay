@@ -6,7 +6,7 @@ import {ITextTranslation} from "../../Interfaces/ITextTranslation";
 import {MusicSheet} from "../../MusicSheet";
 
 export class LyricsReader {
-    private openLyricWords: { [_: number]: LyricWord; } = {};
+    private openLyricWords: { [_: number]: LyricWord } = {};
     private currentLyricWord: LyricWord;
     private musicSheet: MusicSheet;
 
@@ -31,7 +31,14 @@ export class LyricsReader {
                             syllabic = lyricNode.element("syllabic").value;
                         }
                         if (textNode) {
-                            const text: string = textNode.value;
+                            let text: string = "";
+                            const textAndElisionNodes: IXmlElement[] = lyricNode.elements();
+                            for (const node of textAndElisionNodes) {
+                                if (node.name === "text" || node.name === "elision") {
+                                    text += node.value;
+                                }
+                            }
+                            text = text.replace("  ", " "); // filter multiple spaces from concatenating e.g. text "a " with elision " "
                             // <elision> separates Multiple syllabels on a single LyricNote
                             // "-" text indicating separated syllabel should be ignored
                             // we calculate the Dash element much later
@@ -64,28 +71,9 @@ export class LyricsReader {
                                     syllabic = "middle";
                                 }
                             }
-                            let currentLyricVerseNumber: number = 1;
-                            let errorNumberParse1: boolean = false;
+                            let currentLyricVerseNumber: string = "1";
                             if (lyricNode.attributes() !== undefined && lyricNode.attribute("number")) {
-                                try {
-                                    currentLyricVerseNumber = parseInt(lyricNode.attribute("number").value, 10); // usually doesn't throw error, but returns NaN
-                                } catch (err) {
-                                    errorNumberParse1 = true;
-                                }
-                                errorNumberParse1 = errorNumberParse1 || isNaN(currentLyricVerseNumber);
-                                if (errorNumberParse1) {
-                                    try { // Sibelius format: "part1verse1"
-                                        const result: string[] = lyricNode.attribute("number").value.toLowerCase().split("verse");
-                                        if (result.length > 1) {
-                                            currentLyricVerseNumber = parseInt(result[1], 10);
-                                        }
-                                    } catch (err) {
-                                        const errorMsg: string =
-                                        ITextTranslation.translateText("ReaderErrorMessages/LyricVerseNumberError", "Invalid lyric verse number");
-                                        this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                                        continue;
-                                    }
-                                }
+                                currentLyricVerseNumber = lyricNode.attribute("number").value;
                             }
                             let lyricsEntry: LyricsEntry = undefined;
                             if (syllabic === "single" || syllabic === "end") {
@@ -127,10 +115,11 @@ export class LyricsReader {
                                     currentVoiceEntry.LyricsEntries.setValue(currentLyricVerseNumber, lyricsEntry);
                                     if (currentVoiceEntry.ParentSourceStaffEntry?.VerticalContainerParent?.ParentMeasure) {
                                         currentVoiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.hasLyrics = true;
+                                        // currentVoiceEntry.ParentSourceStaffEntry.ParentStaff.hasLyrics = true; // TODO enable, though rarely lyrics on rests
                                     }
                                 }
                                 // save in currentInstrument the verseNumber (only once)
-                                if (!currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers[currentLyricVerseNumber]) {
+                                if (!currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers.includes(currentLyricVerseNumber)) {
                                     currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers.push(currentLyricVerseNumber);
                                 }
                             }
@@ -142,9 +131,6 @@ export class LyricsReader {
                     continue;
                 }
             }
-            // Squash to unique numbers
-            currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers =
-            currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers.filter((lvn, index, self) => self.indexOf(lvn) === index);
         }
     }
 }

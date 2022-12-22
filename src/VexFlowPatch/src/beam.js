@@ -751,7 +751,7 @@ export class Beam extends Element {
           }
         } else {
           // No beam started yet. Start a new one.
-          current_beam = { start: stem_x, end: null };
+          current_beam = { start: stem_x, end: null, start_note: note };
           beam_started = true;
 
           if (beam_alone) {
@@ -806,7 +806,9 @@ export class Beam extends Element {
   drawStems() {
     this.notes.forEach(note => {
       if (note.getStem()) {
+        this.context.openGroup('stem', note.getAttribute('id') + '-stem');
         note.getStem().setContext(this.context).draw();
+        this.context.closeGroup();
       }
     }, this);
   }
@@ -822,19 +824,30 @@ export class Beam extends Element {
     const firstStemX = firstNote.getStemX();
     const beamThickness = this.render_options.beam_width * this.stem_direction;
 
+    const beamsPerStartNote = {};
+    for (const note of this.notes) {
+      beamsPerStartNote[note.getAttribute("id")] = 0;
+    }
+    
     // Draw the beams.
     for (let i = 0; i < valid_beam_durations.length; ++i) {
       const duration = valid_beam_durations[i];
       const beamLines = this.getBeamLines(duration);
-
+      
       for (let j = 0; j < beamLines.length; ++j) {
         const beam_line = beamLines[j];
         const startBeamX = beam_line.start;
+
+        const startNoteId = beam_line.start_note.getAttribute("id");
+        const beamNumber = beamsPerStartNote[startNoteId];
+        beamsPerStartNote[startNoteId]++;
 
         const startBeamY = this.getSlopeY(startBeamX, firstStemX, beamY, this.slope);
         const lastBeamX = beam_line.end;
         const lastBeamY = this.getSlopeY(lastBeamX, firstStemX, beamY, this.slope);
 
+        const noteSVGId = startNoteId;
+        this.context.openGroup('beam', `${noteSVGId}-beam${beamNumber}`);
         this.context.beginPath();
         this.context.moveTo(startBeamX, startBeamY);
         this.context.lineTo(startBeamX, startBeamY + beamThickness);
@@ -842,6 +855,7 @@ export class Beam extends Element {
         this.context.lineTo(lastBeamX + 1, lastBeamY);
         this.context.closePath();
         this.context.fill();
+        this.context.closeGroup();
       }
 
       beamY += beamThickness * 1.5;

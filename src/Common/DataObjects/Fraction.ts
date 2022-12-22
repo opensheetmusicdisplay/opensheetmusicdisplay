@@ -81,7 +81,7 @@ export class Fraction {
    * @param denominator
    * @param wholeValue - the integer number, needed for values greater than 1
    * @param simplify - If simplify is true, then the fraction is simplified
-   *      to make both the numerator and denominator coprime, and less than maximumAllowedNumber.
+   * to make both the numerator and denominator coprime, and less than maximumAllowedNumber.
    */
   constructor(numerator: number = 0, denominator: number = 1, wholeValue: number = 0, simplify: boolean = true) {
     this.numerator = numerator;
@@ -151,6 +151,17 @@ export class Fraction {
    */
   public GetExpandedNumerator(): number {
     return this.wholeValue * this.denominator + this.numerator;
+  }
+
+  public calculateNumberOfNeededDots(): number {
+    let num: number = 1;
+    let product: number = 2;
+    const expandedNumerator: number = this.GetExpandedNumerator();
+    while (product < expandedNumerator) {
+      num++;
+      product = Math.pow(2, num);
+    }
+    return Math.min(3, num - 1);
   }
 
   public IsNegative(): boolean {

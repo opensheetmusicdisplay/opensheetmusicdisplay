@@ -6,6 +6,7 @@ import {InvalidEnumArgumentException} from "../../Exceptions";
 import log from "loglevel";
 import { SourceMeasure } from "../SourceMeasure";
 import { Dictionary } from "typescript-collections";
+import { Fraction } from "../../../Common/DataObjects/Fraction";
 
 export class InstantaneousDynamicExpression extends AbstractExpression {
     public static staticConstructor(): void {
@@ -51,6 +52,7 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     private soundDynamic: number;
     private staffNumber: number;
     private length: number;
+    public InMeasureTimestamp: Fraction;
 
     public get ParentMultiExpression(): MultiExpression {
         return this.multiExpression;

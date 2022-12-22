@@ -42,12 +42,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.MusicPartManager = new MusicPartManager(this);
         this.hasBPMInfo = false;
     }
-    public static defaultTitle: string = "[no title given]";
+    public static defaultTitle: string = "defaultTitle";
 
     public userStartTempoInBPM: number;
     public pageWidth: number;
 
-    private idString: string = "random idString, not initialized";
+    private idString: string = "uninitialized";
     private sourceMeasures: SourceMeasure[] = [];
     private repetitions: Repetition[] = [];
     private dynListStaves: DynamicsContainer[][] = [];
@@ -447,7 +447,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         }
         return this.userStartTempoInBPM;
     }
-    public get Errors(): { [n: number]: string[]; } {
+    public get Errors(): { [n: number]: string[] } {
         return this.musicSheetErrors.measureErrors;
     }
     public get FirstMeasureNumber(): number {
@@ -477,6 +477,11 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public get Transpose(): number {
         return this.transpose;
     }
+    /** Sets the number of halftones for transposition.
+     * E.g. +1 halftone will transpose Eb major to E major.
+     * also see Instrument.Transpose (e.g. osmd.Sheet.Instruments[0].Transpose will additionally transpose this instrument only)
+     * osmd.TransposeCaculator needs to be defined/created for this to take effect. (just set it with new TransposeCalculator())
+     */
     public set Transpose(value: number) {
         this.transpose = value;
     }

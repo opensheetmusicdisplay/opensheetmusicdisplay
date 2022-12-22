@@ -25,6 +25,9 @@ import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
+// eslint-disable-next-line
+import { VexFlowContinuousDynamicExpression, VexFlowGraphicalNote, VexFlowInstrumentBracket, VexFlowMeasure, VexFlowStaffEntry, VexFlowStaffLine, VexFlowVoiceEntry } from "./VexFlow";
+import { StaffLineActivitySymbol } from "./StaffLineActivitySymbol";
 // import { FontStyles } from "../../Common/Enums/FontStyles";
 
 /**
@@ -43,7 +46,7 @@ export abstract class MusicSheetDrawer {
     public drawingParameters: DrawingParameters;
     public splitScreenLineColor: number;
     public midiPlaybackAvailable: boolean;
-    public drawableBoundingBoxElement: string = process.env.DRAW_BOUNDING_BOX_ELEMENT;
+    public drawableBoundingBoxElement: string = "None"; // process.env.DRAW_BOUNDING_BOX_ELEMENT;
 
     public skyLineVisible: boolean = false;
     public bottomLineVisible: boolean = false;
@@ -101,7 +104,7 @@ export abstract class MusicSheetDrawer {
     public drawLineAsHorizontalRectangle(line: GraphicalLine, layer: number): void {
         let rectangle: RectangleF2D = new RectangleF2D(line.Start.x, line.End.y - line.Width / 2, line.End.x - line.Start.x, line.Width);
         rectangle = this.applyScreenTransformationForRect(rectangle);
-        this.renderRectangle(rectangle, layer, line.styleId);
+        this.renderRectangle(rectangle, layer, line.styleId, line.colorHex);
     }
 
     public drawLineAsVerticalRectangle(line: GraphicalLine, layer: number): void {
@@ -141,13 +144,13 @@ export abstract class MusicSheetDrawer {
         throw new Error("not implemented");
     }
 
-    public drawLabel(graphicalLabel: GraphicalLabel, layer: number): void {
+    public drawLabel(graphicalLabel: GraphicalLabel, layer: number): Node {
         if (!this.isVisible(graphicalLabel.PositionAndShape)) {
-            return;
+            return undefined;
         }
         const label: Label = graphicalLabel.Label;
         if (label.text.trim() === "") {
-            return;
+            return undefined;
         }
         const screenPosition: PointF2D = this.applyScreenTransformation(graphicalLabel.PositionAndShape.AbsolutePosition);
         const fontHeightInPixel: number = this.calculatePixelDistance(label.fontHeight);
@@ -193,7 +196,7 @@ export abstract class MusicSheetDrawer {
                 throw new ArgumentOutOfRangeException("");
         }
 
-        this.renderLabel(graphicalLabel, layer, bitmapWidth, bitmapHeight, fontHeightInPixel, screenPosition);
+        return this.renderLabel(graphicalLabel, layer, bitmapWidth, bitmapHeight, fontHeightInPixel, screenPosition);
     }
 
     protected applyScreenTransformation(point: PointF2D): PointF2D {
@@ -216,7 +219,7 @@ export abstract class MusicSheetDrawer {
         // empty
     }
 
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, alpha: number = 1): void {
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string = undefined, alpha: number = 1): Node {
         throw new Error("not implemented");
     }
 
@@ -233,7 +236,7 @@ export abstract class MusicSheetDrawer {
     }
 
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
-                          bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
+                          bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): Node {
         throw new Error("not implemented");
     }
 
@@ -323,18 +326,34 @@ export abstract class MusicSheetDrawer {
         }
         if (musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0]) {
             for (const label of musicSystem.Labels) {
-                this.drawLabel(label, <number>GraphicalLayers.Notes);
+                label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
             }
         }
+
+        const instruments: Instrument[] = this.graphicalMusicSheet.ParentMusicSheet.Instruments;
+        const instrumentsVisible: number = instruments.filter((instrument) => instrument.Visible).length;
         for (const bracket of musicSystem.InstrumentBrackets) {
             this.drawInstrumentBrace(bracket, musicSystem);
         }
-        for (const bracket of musicSystem.GroupBrackets) {
-            this.drawGroupBracket(bracket, musicSystem);
+
+        if (instruments.length > 0) {
+            // TODO instead of this check we could save what instruments are in the group bracket,
+            //   and only draw it if all these instruments are visible.
+            //   Currently the instruments/stafflines aren't saved in the bracket however.
+            if (instrumentsVisible > 1) {
+                for (const bracket of musicSystem.GroupBrackets) {
+                    this.drawGroupBracket(bracket, musicSystem);
+                }
+            } else {
+                for (const bracket of musicSystem.GroupBrackets) {
+                    (bracket as VexFlowInstrumentBracket).Visible = false; //.setType(VF.StaveConnector.type.NONE);
+                }
+            }
         }
+
         if (!this.leadSheet) {
             for (const measureNumberLabel of musicSystem.MeasureNumberLabels) {
-                this.drawLabel(measureNumberLabel, <number>GraphicalLayers.Notes);
+                measureNumberLabel.SVGNode = this.drawLabel(measureNumberLabel, <number>GraphicalLayers.Notes);
             }
         }
         for (const staffLine of musicSystem.StaffLines) {
@@ -369,6 +388,8 @@ export abstract class MusicSheetDrawer {
         }
         this.drawOctaveShifts(staffLine);
 
+        this.drawPedals(staffLine);
+
         this.drawExpressions(staffLine);
 
         if (this.skyLineVisible) {
@@ -389,7 +410,7 @@ export abstract class MusicSheetDrawer {
             lyricLine.End.y += staffLine.PositionAndShape.AbsolutePosition.y;
             lyricLine.Start.x += staffLine.PositionAndShape.AbsolutePosition.x;
             lyricLine.End.x += staffLine.PositionAndShape.AbsolutePosition.x;
-            this.drawGraphicalLine(lyricLine, this.rules.LyricUnderscoreLineWidth);
+            this.drawGraphicalLine(lyricLine, this.rules.LyricUnderscoreLineWidth, lyricLine.colorHex);
         });
     }
 
@@ -397,17 +418,18 @@ export abstract class MusicSheetDrawer {
         // implemented by subclass (VexFlowMusicSheetDrawer)
     }
 
-    protected drawGraphicalLine(graphicalLine: GraphicalLine, lineWidth: number, colorOrStyle: string = "black"): void {
+    protected drawGraphicalLine(graphicalLine: GraphicalLine, lineWidth: number, colorOrStyle: string = "black"): Node {
         /* TODO similar checks as in drawLabel
         if (!this.isVisible(new BoundingBox(graphicalLine.Start,)) {
             return;
         }
         */
-        this.drawLine(graphicalLine.Start, graphicalLine.End, colorOrStyle, lineWidth);
+        return this.drawLine(graphicalLine.Start, graphicalLine.End, colorOrStyle, lineWidth);
     }
 
-    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number): void {
+    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number): Node {
         // implemented by subclass (VexFlowMusicSheetDrawer)
+        return undefined;
     }
 
     /**
@@ -416,7 +438,7 @@ export abstract class MusicSheetDrawer {
      * @param layer Number of the layer that the lyrics should be drawn in
      */
     protected drawDashes(lyricsDashes: GraphicalLabel[]): void {
-        lyricsDashes.forEach(dash => this.drawLabel(dash, <number>GraphicalLayers.Notes));
+        lyricsDashes.forEach(dash => dash.SVGNode = this.drawLabel(dash, <number>GraphicalLayers.Notes));
     }
 
     // protected drawSlur(slur: GraphicalSlur, abs: PointF2D): void {
@@ -426,6 +448,8 @@ export abstract class MusicSheetDrawer {
     protected drawOctaveShifts(staffLine: StaffLine): void {
         return;
     }
+
+    protected abstract drawPedals(staffLine: StaffLine): void;
 
     protected drawStaffLines(staffLine: StaffLine): void {
         if (staffLine.StaffLines) {
@@ -486,7 +510,7 @@ export abstract class MusicSheetDrawer {
         }
         if (page === page.Parent.MusicPages[0]) {
             for (const label of page.Labels) {
-                this.drawLabel(label, <number>GraphicalLayers.Notes);
+                label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
             }
         }
         // Draw bounding boxes for debug purposes. This has to be at the end because only
@@ -503,34 +527,77 @@ export abstract class MusicSheetDrawer {
      * @param type Type of element to show bounding boxes for as string.
      */
     private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = "all"): void {
-        const dataObjectString: string = (startBox.DataObject.constructor as any).name;
-        if (dataObjectString === type || type === "all") {
-            let tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x + startBox.BorderMarginLeft,
-                                                         startBox.AbsolutePosition.y + startBox.BorderMarginTop,
-                                                         startBox.BorderMarginRight - startBox.BorderMarginLeft,
-                                                         startBox.BorderMarginBottom - startBox.BorderMarginTop);
-            this.drawLineAsHorizontalRectangle(new GraphicalLine(
-                                                             new PointF2D(startBox.AbsolutePosition.x - 1, startBox.AbsolutePosition.y),
-                                                             new PointF2D(startBox.AbsolutePosition.x + 1, startBox.AbsolutePosition.y),
-                                                             0.1,
-                                                             OutlineAndFillStyleEnum.BaseWritingColor),
-                                               layer - 1);
-
-            this.drawLineAsVerticalRectangle(new GraphicalLine(
-                                                                 new PointF2D(startBox.AbsolutePosition.x, startBox.AbsolutePosition.y - 1),
-                                                                 new PointF2D(startBox.AbsolutePosition.x, startBox.AbsolutePosition.y + 1),
-                                                                 0.1,
-                                                                 OutlineAndFillStyleEnum.BaseWritingColor),
-                                             layer - 1);
-
-            tmpRect = this.applyScreenTransformationForRect(tmpRect);
-            this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
-            const label: Label = new Label(dataObjectString);
-            this.renderLabel(new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules),
-                             layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
+        const dataObjectString: string = (startBox.DataObject.constructor as any).name; // only works with non-minified build or sourcemap
+        let typeMatch: boolean = false;
+        if (type === "all") {
+            typeMatch = true;
+        } else {
+            if (type === "VexFlowStaffEntry") {
+                typeMatch = startBox.DataObject instanceof VexFlowStaffEntry;
+            } else if (type === "VexFlowMeasure") {
+                typeMatch = startBox.DataObject instanceof VexFlowMeasure;
+            } else if (type === "VexFlowGraphicalNote") {
+                typeMatch = startBox.DataObject instanceof VexFlowGraphicalNote;
+            } else if (type === "VexFlowVoiceEntry") {
+                typeMatch = startBox.DataObject instanceof VexFlowVoiceEntry;
+            } else if (type === "GraphicalLabel") {
+                typeMatch = startBox.DataObject instanceof GraphicalLabel;
+            } else if (type === "VexFlowStaffLine") {
+                typeMatch = startBox.DataObject instanceof VexFlowStaffLine;
+            } else if (type === "SystemLine") {
+                typeMatch = startBox.DataObject instanceof SystemLine;
+            } else if (type === "StaffLineActivitySymbol") {
+                typeMatch = startBox.DataObject instanceof StaffLineActivitySymbol;
+            } else if (type === "VexFlowContinuousDynamicExpression") {
+                typeMatch = startBox.DataObject instanceof VexFlowContinuousDynamicExpression;
+            }
+            // else if (type === "MusicSystem") {
+            //     typeMatch = startBox.DataObject instanceof MusicSystem;
+            // } else if (type === "GraphicalMusicPage") {
+            //     typeMatch = startBox.DataObject instanceof GraphicalMusicPage;
+            // }
+        }
+        if (typeMatch || dataObjectString === type) {
+            this.drawBoundingBox(startBox, undefined, true, dataObjectString, layer);
         }
         layer++;
         startBox.ChildElements.forEach(bb => this.drawBoundingBoxes(bb, layer, type));
+    }
+
+    public drawBoundingBox(bbox: BoundingBox,
+        color: string = undefined, drawCross: boolean = false, labelText: string = undefined, layer: number = 0
+    ): Node {
+        let tmpRect: RectangleF2D = new RectangleF2D(bbox.AbsolutePosition.x + bbox.BorderMarginLeft,
+            bbox.AbsolutePosition.y + bbox.BorderMarginTop,
+            bbox.BorderMarginRight - bbox.BorderMarginLeft,
+            bbox.BorderMarginBottom - bbox.BorderMarginTop);
+        if (drawCross) {
+            this.drawLineAsHorizontalRectangle(new GraphicalLine(
+                new PointF2D(bbox.AbsolutePosition.x - 1, bbox.AbsolutePosition.y),
+                new PointF2D(bbox.AbsolutePosition.x + 1, bbox.AbsolutePosition.y),
+                0.1,
+                OutlineAndFillStyleEnum.BaseWritingColor,
+                color),
+                layer - 1);
+
+            this.drawLineAsVerticalRectangle(new GraphicalLine(
+                new PointF2D(bbox.AbsolutePosition.x, bbox.AbsolutePosition.y - 1),
+                new PointF2D(bbox.AbsolutePosition.x, bbox.AbsolutePosition.y + 1),
+                0.1,
+                OutlineAndFillStyleEnum.BaseWritingColor,
+                color),
+                layer - 1);
+        }
+
+        tmpRect = this.applyScreenTransformationForRect(tmpRect);
+        const rectNode: Node = this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, color, 0.5);
+        if (labelText) {
+            const label: Label = new Label(labelText);
+            this.renderLabel(new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules),
+                layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
+            // theoretically we should return the nodes from renderLabel here as well, so they can also be removed later
+        }
+        return rectNode;
     }
 
     private drawMarkedAreas(system: MusicSystem): void {
@@ -540,13 +607,13 @@ export abstract class MusicSheetDrawer {
                     this.drawRectangle(markedArea.systemRectangle, <number>GraphicalLayers.Background);
                 }
                 if (markedArea.settings) {
-                    this.drawLabel(markedArea.settings, <number>GraphicalLayers.Comment);
+                    markedArea.settings.SVGNode = this.drawLabel(markedArea.settings, <number>GraphicalLayers.Comment);
                 }
                 if (markedArea.labelRectangle) {
                     this.drawRectangle(markedArea.labelRectangle, <number>GraphicalLayers.Background);
                 }
                 if (markedArea.label) {
-                    this.drawLabel(markedArea.label, <number>GraphicalLayers.Comment);
+                    markedArea.label.SVGNode = this.drawLabel(markedArea.label, <number>GraphicalLayers.Comment);
                 }
             }
         }
@@ -556,10 +623,10 @@ export abstract class MusicSheetDrawer {
         for (const comment of system.GraphicalComments) {
             if (comment) {
                 if (comment.settings) {
-                    this.drawLabel(comment.settings, <number>GraphicalLayers.Comment);
+                    comment.settings.SVGNode = this.drawLabel(comment.settings, <number>GraphicalLayers.Comment);
                 }
                 if (comment.label) {
-                    this.drawLabel(comment.label, <number>GraphicalLayers.Comment);
+                    comment.label.SVGNode = this.drawLabel(comment.label, <number>GraphicalLayers.Comment);
                 }
             }
         }

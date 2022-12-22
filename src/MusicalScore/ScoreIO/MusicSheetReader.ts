@@ -22,6 +22,7 @@ import {IAfterSheetReadingModule} from "../Interfaces/IAfterSheetReadingModule";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {RepetitionCalculator} from "./MusicSymbolModules/RepetitionCalculator";
 import {EngravingRules} from "../Graphical/EngravingRules";
+import { ReaderPluginManager } from "./ReaderPluginManager";
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
@@ -44,7 +45,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private currentMeasure: SourceMeasure;
     private previousMeasure: SourceMeasure;
     private currentFraction: Fraction;
+    private pluginManager: ReaderPluginManager = new ReaderPluginManager();
     public rules: EngravingRules;
+
+    public get PluginManager(): ReaderPluginManager {
+        return this.pluginManager;
+    }
 
     public get CompleteNumberOfStaves(): number {
         return this.completeNumberOfStaves;
@@ -134,7 +140,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.initializeReading(partList, partInst, instrumentReaders);
         let couldReadMeasure: boolean = true;
         this.currentFraction = new Fraction(0, 1);
-        let guitarPro: boolean = false;
+        let octavePlusOneEncoding: boolean = false; // GuitarPro and Sibelius give octaves -1 apparently
         let encoding: IXmlElement = root.element("identification");
         if (encoding) {
             encoding = encoding.element("encoding");
@@ -142,8 +148,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (encoding) {
             encoding = encoding.element("software");
         }
-        if (encoding !== undefined && encoding.value === "Guitar Pro 5") {
-            guitarPro = true;
+        if (encoding !== undefined && (encoding.value === "Guitar Pro 5")) { //|| encoding.value.startsWith("Sibelius")
+            octavePlusOneEncoding = true;
         }
 
         while (couldReadMeasure) {
@@ -154,7 +160,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             this.currentMeasure = new SourceMeasure(this.completeNumberOfStaves, this.musicSheet.Rules);
             for (const instrumentReader of instrumentReaders) {
                 try {
-                    couldReadMeasure = couldReadMeasure && instrumentReader.readNextXmlMeasure(this.currentMeasure, this.currentFraction, guitarPro);
+                    couldReadMeasure = couldReadMeasure && instrumentReader.readNextXmlMeasure(
+                        this.currentMeasure, this.currentFraction, octavePlusOneEncoding);
                 } catch (e) {
                     const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/InstrumentError", "Error while reading instruments.");
                     throw new MusicSheetReadingException(errorMsg, e);
@@ -195,7 +202,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     }
 
     private initializeReading(partList: IXmlElement[], partInst: IXmlElement[], instrumentReaders: InstrumentReader[]): void {
-        const instrumentDict: { [_: string]: Instrument; } = this.createInstrumentGroups(partList);
+        const instrumentDict: { [_: string]: Instrument } = this.createInstrumentGroups(partList);
         this.completeNumberOfStaves = this.getCompleteNumberOfStavesFromXml(partInst);
         if (partInst.length !== 0) {
             this.repetitionInstructionReader.MusicSheet = this.musicSheet;
@@ -222,7 +229,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 }
 
                 currentInstrument.createStaves(instrumentNumberOfStaves);
-                instrumentReaders.push(new InstrumentReader(this.repetitionInstructionReader, xmlMeasureList, currentInstrument));
+                instrumentReaders.push(new InstrumentReader(this.pluginManager, this.repetitionInstructionReader, xmlMeasureList, currentInstrument));
                 if (this.repetitionInstructionReader) {
                     this.repetitionInstructionReader.xmlMeasureList[counter] = xmlMeasureList;
                 }
@@ -372,6 +379,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             sourceMeasureCounter++;
         }
         this.currentMeasure.Duration = maxInstrumentDuration; // can be 1/1 in a 4/4 time signature
+        // if (this.currentMeasure.Duration.Numerator === 0) {
+        //     this.currentMeasure.Duration = activeRhythm; // might be related to #1073
+        // }
         this.currentMeasure.ActiveTimeSignature = activeRhythm;
         this.currentMeasure.MeasureNumber = sourceMeasureCounter;
         for (let i: number = 0; i < instrumentsDurations.length; i++) {
@@ -571,15 +581,18 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     }
                     const creditJustify: string = creditChild.attribute("justify")?.value;
                     const creditY: string = creditChild.attribute("default-y")?.value;
+                    // eslint-disable-next-line no-null/no-null
                     const creditYGiven: boolean = creditY !== undefined && creditY !== null;
                     const creditYInfo: number = creditYGiven ? parseFloat(creditY) : Number.MIN_VALUE;
                     if (creditYGiven && creditYInfo > systemYCoordinates) {
                         if (!this.musicSheet.Title) {
-                            const creditSize: string = creditChild.attribute("font-size").value;
-                            const titleCreditSizeInt: number = parseFloat(creditSize);
-                            if (largestTitleCreditSize < titleCreditSizeInt) {
-                                largestTitleCreditSize = titleCreditSizeInt;
-                                finalTitle = creditChild.value;
+                            const creditSize: string = creditChild.attribute("font-size")?.value;
+                            if (creditSize) {
+                                const titleCreditSizeInt: number = parseFloat(creditSize);
+                                if (largestTitleCreditSize < titleCreditSizeInt) {
+                                    largestTitleCreditSize = titleCreditSizeInt;
+                                    finalTitle = creditChild.value;
+                                }
                             }
                         }
                         if (!this.musicSheet.Subtitle) {
@@ -711,9 +724,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
      * @param entryList
      * @returns {{}}
      */
-    private createInstrumentGroups(entryList: IXmlElement[]): { [_: string]: Instrument; } {
+    private createInstrumentGroups(entryList: IXmlElement[]): { [_: string]: Instrument } {
         let instrumentId: number = 0;
-        const instrumentDict: { [_: string]: Instrument; } = {};
+        const instrumentDict: { [_: string]: Instrument } = {};
         let currentGroup: InstrumentalGroup;
         try {
             const entryArray: IXmlElement[] = entryList;

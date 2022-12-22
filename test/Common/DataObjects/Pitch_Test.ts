@@ -3,12 +3,12 @@ import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects
 describe("Pitch Unit Tests:", () => {
     describe("transpose Pitch", () => {
         const pitch: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.NONE);
-        const transposedFundamentalAndOctave: {halftone: number; overflow: number; } =
+        const transposedFundamentalAndOctave: {halftone: number, overflow: number } =
           Pitch.CalculateTransposedHalfTone(pitch, 12);
-        const higherTransposedFundamentalAndOctave: {halftone: number; overflow: number; } =
+        const higherTransposedFundamentalAndOctave: {halftone: number, overflow: number } =
           Pitch.CalculateTransposedHalfTone(pitch, 26);
 
-        it("should be 1 octave higher and same fundamental", (done: MochaDone) => {
+        it("should be 1 octave higher and same fundamental", (done: Mocha.Done) => {
             chai.expect(transposedFundamentalAndOctave.overflow).to.equal(1);
             chai.expect(transposedFundamentalAndOctave.halftone).to.equal(pitch.FundamentalNote);
             chai.expect(higherTransposedFundamentalAndOctave.overflow).to.equal(2);
@@ -26,7 +26,7 @@ describe("Pitch Unit Tests:", () => {
         const frequency2: number = Pitch.calcFrequency(Pitch.calcFractionalKey(pitch2.Frequency));
         const frequency3: number = Pitch.calcFrequency(Pitch.calcFractionalKey(pitch3.Frequency));
 
-        it("should be 440Hz", (done: MochaDone) => {
+        it("should be 440Hz", (done: Mocha.Done) => {
             chai.expect(pitch1.Frequency).to.equal(440);
             chai.expect(pitch2.Frequency).to.equal(440);
             chai.expect(pitch3.Frequency).to.equal(440);
@@ -51,7 +51,7 @@ describe("Pitch Unit Tests:", () => {
         const key4: number = Pitch.calcFractionalKey(pitch4.Frequency);
         const key5: number = Pitch.calcFractionalKey(pitch5.Frequency);
 
-        it("pitch key should equal midi key", (done: MochaDone) => {
+        it("pitch key should equal midi key", (done: Mocha.Done) => {
             chai.expect(Math.round(key1)).to.equal(109);
             chai.expect(Math.round(key2)).to.equal(59);
             chai.expect(Math.round(key3)).to.equal(87);
@@ -80,7 +80,7 @@ describe("Pitch Unit Tests:", () => {
 
                 it( "calcedPitch equals original, " +
                     `note: ${pitch.FundamentalNote}, octave: ${pitch.Octave}, accidental; ${pitch.Accidental}`,
-                    (done: MochaDone) => {
+                    (done: Mocha.Done) => {
                         // compare the frequencies here -> only AccidentalEnum None and Sharp will lead to same note, octave and accidental
                         chai.expect(pitch.Frequency).to.equal(calcedPitch.Frequency);
                         done();
@@ -109,7 +109,7 @@ describe("Pitch Unit Tests:", () => {
 
                 it( "calcedPitch equals original, " +
                     `note: ${pitch.FundamentalNote}, octave: ${pitch.Octave}, accidental; ${pitch.Accidental}`,
-                    (done: MochaDone) => {
+                    (done: Mocha.Done) => {
                         chai.expect(pitch.getHalfTone()).to.equal(calcedPitch.getHalfTone());
                         done();
                     });

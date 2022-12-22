@@ -17,6 +17,9 @@ import {GraphicalStaffEntryLink} from "./GraphicalStaffEntryLink";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { MusicSheetCalculator } from "./MusicSheetCalculator";
+import { Tie } from "../VoiceData/Tie";
+import { GraphicalLabel } from "./GraphicalLabel";
+import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 
 /**
  * The graphical counterpart of a [[SourceStaffEntry]].
@@ -37,6 +40,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         if (sourceStaffEntry) {
             this.relInMeasureTimestamp = sourceStaffEntry.Timestamp;
         }
+        this.FingeringEntries = [];
     }
 
     public graphicalChordContainers: GraphicalChordSymbolContainer[] = [];
@@ -50,10 +54,13 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public staffEntryParent: GraphicalStaffEntry;
     public parentVerticalContainer: VerticalGraphicalStaffEntryContainer;
     public tabStaffEntry: GraphicalStaffEntry = undefined;
+    public MaxAccidentals: number = 0;
 
     private graphicalInstructions: AbstractGraphicalInstruction[] = [];
+    public ties: Tie[] = [];
     private graphicalTies: GraphicalTie[] = [];
     private lyricsEntries: GraphicalLyricEntry[] = [];
+    public FingeringEntries: GraphicalLabel[];
 
     public get GraphicalInstructions(): AbstractGraphicalInstruction[] {
         return this.graphicalInstructions;
@@ -308,5 +315,42 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             }
         }
         return hasOnlyRests;
+    }
+
+    public getSkylineMin(): number {
+        const skybottomcalculator: SkyBottomLineCalculator = this.parentMeasure?.ParentStaffLine.SkyBottomLineCalculator;
+        if (!skybottomcalculator) {
+            return undefined;
+        }
+        const [start, end] = this.getAbsoluteStartAndEnd();
+        return skybottomcalculator.getSkyLineMinInRange(start, end);
+    }
+
+    /** Highest Y around the staff entry and notes in OSMD units (pixels / 10). Note that negative y is up. */
+    public getHighestYAtEntry(): number {
+        const baseY: number = this.parentMeasure.ParentStaffLine.PositionAndShape.AbsolutePosition.y;
+        return baseY + this.getSkylineMin();
+    }
+
+    /** Lowest Y around the staff entry and notes in OSMD units (pixels / 10). Note that positive y is down. */
+    public getLowestYAtEntry(): number {
+        const baseY: number = this.parentMeasure.ParentStaffLine.PositionAndShape.AbsolutePosition.y;
+        return baseY + this.getBottomlineMax();
+    }
+
+    public getBottomlineMax(): number {
+        const skybottomcalculator: SkyBottomLineCalculator = this.parentMeasure?.ParentStaffLine.SkyBottomLineCalculator;
+        if (!skybottomcalculator) {
+            return undefined;
+        }
+        const [start, end] = this.getAbsoluteStartAndEnd();
+        return skybottomcalculator.getBottomLineMaxInRange(start, end);
+    }
+
+    public getAbsoluteStartAndEnd(): [number, number] {
+        let start: number = this.PositionAndShape.AbsolutePosition.x;
+        start -= this.parentMeasure.ParentStaffLine.PositionAndShape.AbsolutePosition.x;
+        const end: number = start + this.PositionAndShape.Size.width;
+        return [start, end];
     }
 }

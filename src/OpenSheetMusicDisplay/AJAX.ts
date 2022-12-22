@@ -20,7 +20,7 @@ export class AJAX {
         }
         xhttp.timeout = timeout;
         return new Promise((resolve: (value: string) => void, reject: (error: any) => void) => {
-            xhttp.onreadystatechange = () => {
+            xhttp.onreadystatechange = (): void => {
                 if (xhttp.readyState === XMLHttpRequest.DONE) {
                     if (xhttp.status === 200) {
                         resolve(xhttp.responseText);
@@ -32,7 +32,7 @@ export class AJAX {
                     }
                 }
             };
-            xhttp.ontimeout = (e) => {
+            xhttp.ontimeout = (e): void => {
                 // For IE and node
                 reject(new Error("Server request Timeout"));
             };

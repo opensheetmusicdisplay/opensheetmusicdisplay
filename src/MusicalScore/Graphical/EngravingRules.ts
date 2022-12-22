@@ -3,13 +3,26 @@ import { PagePlacementEnum } from "./GraphicalMusicPage";
 import log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-import { AutoBeamOptions, AlignRestOption, FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
+import {
+    AutoBeamOptions,
+    AlignRestOption,
+    FillEmptyMeasuresWithWholeRests,
+    SkyBottomLineBatchCalculatorBackendType
+} from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
-import { NoteEnum } from "../../Common/DataObjects/Pitch";
-import { ChordSymbolEnum } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
+import { NoteEnum, AccidentalEnum } from "../../Common/DataObjects/Pitch";
+import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
+import { GraphicalNote } from "./GraphicalNote";
+import { Note } from "../VoiceData/Note";
 
+/** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
+ *  Not all of these options are meant to be modified by users of the library,
+ *  full support is only given for [[IOSMDOptions]].
+ *  Nevertheless, there are many useful options here,
+ *  like Render* to (not) render certain elements (e.g. osmd.rules.RenderRehearsalMarks = false)
+ */
 export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
     public static unit: number = 1.0;
@@ -48,6 +61,7 @@ export class EngravingRules {
     public AutoBeamNotes: boolean;
     /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
     public AutoBeamOptions: AutoBeamOptions;
+    public AutoBeamTabs: boolean;
     public BeamWidth: number;
     public BeamSpaceWidth: number;
     public BeamForwardLength: number;
@@ -56,8 +70,12 @@ export class EngravingRules {
     public FlatBeamOffsetPerBeam: number;
     public ClefLeftMargin: number;
     public ClefRightMargin: number;
+    /** How many unique note positions a percussion score needs to have to not be rendered on one line. */
     public PercussionOneLineCutoff: number;
     public PercussionForceVoicesOneLineCutoff: number;
+    public PercussionUseXMLDisplayStep: boolean;
+    public PercussionXMLDisplayStepNoteValueShift: number;
+    public PercussionOneLineXMLDisplayStepOctaveOffset: number;
     public BetweenKeySymbolsDistance: number;
     public KeyRightMargin: number;
     public RhythmRightMargin: number;
@@ -81,6 +99,7 @@ export class EngravingRules {
     public SetWantedStemDirectionByXml: boolean;
     public GraceNoteScalingFactor: number;
     public GraceNoteXOffset: number;
+    public GraceNoteGroupXMargin: number;
     public WedgeOpeningLength: number;
     public WedgeMeasureEndOpeningLength: number;
     public WedgeMeasureBeginOpeningLength: number;
@@ -90,6 +109,9 @@ export class EngravingRules {
     public WedgeVerticalMargin: number;
     public DistanceOffsetBetweenTwoHorizontallyCrossedWedges: number;
     public WedgeMinLength: number;
+    public WedgeEndDistanceBetweenTimestampsFactor: number;
+    public SoftAccentWedgePadding: number;
+    public SoftAccentSizeFactor: number;
     public DistanceBetweenAdjacentDynamics: number;
     public TempoChangeMeasureValidity: number;
     public TempoContinousFactor: number;
@@ -97,10 +119,27 @@ export class EngravingRules {
     public BetweenDotsDistance: number;
     public OrnamentAccidentalScalingFactor: number;
     public ChordSymbolTextHeight: number;
+    public ChordSymbolTextAlignment: TextAlignmentEnum;
+    public ChordSymbolRelativeXOffset: number;
     public ChordSymbolXSpacing: number;
+    public ChordOverlapAllowedIntoNextMeasure: number;
     public ChordSymbolYOffset: number;
+    public ChordSymbolYPadding: number;
+    public ChordSymbolYAlignment: boolean;
+    public ChordSymbolYAlignmentScope: string;
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
+    public ChordAccidentalTexts: Dictionary<AccidentalEnum, string>;
+    public CustomChords: CustomChord[];
+    /** Not always a symbol, can also be text (RepetitionInstruction). Keeping the name for backwards compatibility. */
     public RepetitionSymbolsYOffset: number;
+    /** Adds a percent of the stave's width (e.g. 0.4 = 40%) to the x position of end instructions like Fine or D.C. al fine */
+    public RepetitionEndInstructionXShiftAsPercentOfStaveWidth: number;
+    public RehearsalMarkXOffset: number;
+    public RehearsalMarkXOffsetDefault: number;
+    public RehearsalMarkXOffsetSystemStartMeasure: number;
+    public RehearsalMarkYOffset: number;
+    public RehearsalMarkYOffsetDefault: number;
+    public RehearsalMarkFontSize: number;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
     public MeasureNumberLabelXOffset: number;
@@ -118,6 +157,9 @@ export class EngravingRules {
     public TripletsBracketed: boolean;
     public TupletNumberLabelHeight: number;
     public TupletNumberYOffset: number;
+    public TupletNumberLimitConsecutiveRepetitions: boolean;
+    public TupletNumberMaxConsecutiveRepetitions: number;
+    public TupletNumberAlwaysDisableAfterFirstMax: boolean;
     public LabelMarginBorderFactor: number;
     public TupletVerticalLineLength: number;
     public TupletNumbersInTabs: boolean;
@@ -135,6 +177,7 @@ export class EngravingRules {
     public LyricsAlignmentStandard: TextAlignmentEnum;
     public LyricsHeight: number;
     public LyricsYOffsetToStaffHeight: number;
+    public LyricsYMarginToBottomLine: number;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
     public BetweenSyllableMaximumDistance: number;
@@ -157,11 +200,20 @@ export class EngravingRules {
     public TieHeightInterpolationK: number;
     public TieHeightInterpolationD: number;
     public SlurNoteHeadYOffset: number;
+    public SlurEndArticulationYOffset: number;
+    public SlurStartArticulationYOffsetOfArticulation: number;
     public SlurStemXOffset: number;
     public SlurSlopeMaxAngle: number;
     public SlurTangentMinAngle: number;
     public SlurTangentMaxAngle: number;
+    public SlurHeightFactor: number;
+    public SlurHeightFlattenLongSlursFactorByWidth: number;
+    public SlurHeightFlattenLongSlursFactorByAngle: number;
+    public SlurHeightFlattenLongSlursCutoffAngle: number;
+    public SlurHeightFlattenLongSlursCutoffWidth: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
+    public SlurMaximumYControlPointDistance: number;
+    public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
     public MoodTextHeight: number;
@@ -186,6 +238,7 @@ export class EngravingRules {
     public MultipleRestMeasureDefaultWidth: number;
     public DistanceBetweenVerticalSystemLines: number;
     public DistanceBetweenDotAndLine: number;
+    public RepeatEndStartPadding: number;
     public OctaveShiftLineWidth: number;
     public OctaveShiftVerticalLineLength: number;
     public GraceLineWidth: number;
@@ -193,8 +246,20 @@ export class EngravingRules {
     public MinSkyBottomDistBetweenStaves: number;
     public MinimumCrossedBeamDifferenceMargin: number;
 
+    /** Maximum width of sheet / HTMLElement containing the score. Canvas is limited to 32767 in current browsers, though SVG isn't.
+     *  Setting this to > 32767 will break the canvas backend (no problem if you only use SVG).
+     */
+    public SheetMaximumWidth: number;
+
     public VoiceSpacingMultiplierVexflow: number;
     public VoiceSpacingAddendVexflow: number;
+    public PickupMeasureWidthMultiplier: number;
+    /** The spacing between a repetition that is followed by an implicit/pickup/incomplete measure.
+     *  (E.g. in a 4/4 time signature, a measure that repeats after the 3rd beat, continuing with a pickup measure)
+     */
+    public PickupMeasureRepetitionSpacing: number;
+    /** Multiplier for PickupMeasureRepetitionSpacing if there is only one note in the pickup measure. This usually needs a lot more space. */
+    public PickupMeasureSpacingSingleNoteAddend: number;
     public DisplacedNoteMargin: number;
     public MinNoteDistance: number;
     public SubMeasureXSpacingThreshold: number;
@@ -204,13 +269,18 @@ export class EngravingRules {
     public MetronomeMarkXShift: number;
     public MetronomeMarkYShift: number;
     public SoftmaxFactorVexFlow: number;
+    /** Stagger (x-shift) whole notes that are the same note, but in different voices (show 2 instead of 1). */
+    public StaggerSameWholeNotes: boolean;
     public MaxInstructionsConstValue: number;
     public NoteDistances: number[] = [1.0, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 4.0];
     public NoteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
-    public DurationDistanceDict: {[_: number]: number; } = {};
-    public DurationScalingDistanceDict: {[_: number]: number; } = {};
+    public DurationDistanceDict: {[_: number]: number } = {};
+    public DurationScalingDistanceDict: {[_: number]: number } = {};
 
-    public AlignRests: number; // 0 = false, 1 = true, 2 = auto
+    /** Whether to align rests. 0 = Never, 1 = Always, 2 = Auto.
+     * Currently not recommended because rests are now positioned to avoid collisions with notes. */
+    public AlignRests: AlignRestOption; // 0 = false, 1 = true, 2 = auto
+    public RestCollisionYPadding: number;
     public FillEmptyMeasuresWithWholeRest: FillEmptyMeasuresWithWholeRests | number;
     public ArpeggiosGoAcrossVoices: boolean;
     public RenderArpeggios: boolean;
@@ -221,11 +291,16 @@ export class EngravingRules {
     public ColorFlags: boolean;
     public ColorBeams: boolean;
     public ColoringSetCurrent: Dictionary<NoteEnum|number, string>;
+    /** Default color for all musical elements including key signature etc. Default undefined. */
+    public DefaultColorMusic: string;
     public DefaultColorNotehead: string;
     public DefaultColorRest: string;
     public DefaultColorStem: string;
     public DefaultColorLabel: string;
+    public DefaultColorLyrics: string;
+    public DefaultColorChordSymbol: string;
     public DefaultColorTitle: string;
+    public DefaultColorCursor: string;
     public DefaultFontFamily: string;
     public DefaultFontStyle: FontStyles;
     public DefaultVexFlowNoteFont: string;
@@ -246,17 +321,34 @@ export class EngravingRules {
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
     public UseXMLMeasureNumbers: boolean;
     public RenderLyrics: boolean;
+    public RenderChordSymbols: boolean;
     public RenderMultipleRestMeasures: boolean;
     public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
+    public RenderRehearsalMarks: boolean;
+    public RenderClefsAtBeginningOfStaffline: boolean;
+    public RenderKeySignatures: boolean;
     public RenderTimeSignatures: boolean;
+    public RenderPedals: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
     public ArticulationPlacementFromXML: boolean;
-    /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
+    /** Percent distance of breath marks to next note or end of staff, e.g. 0.8 = 80%. */
+    public BreathMarkDistance: number;
+    /** Where to draw fingerings (Above, Below, AboveOrBelow, Left, Right, or Auto).
+     * Default AboveOrBelow. Auto experimental. */
     public FingeringPosition: PlacementEnum;
+    public FingeringPositionFromXML: boolean;
+    public FingeringPositionGrace: PlacementEnum;
     public FingeringInsideStafflines: boolean;
     public FingeringLabelFontHeight: number;
     public FingeringOffsetX: number;
+    public FingeringOffsetY: number;
+    public FingeringPaddingY: number;
+    public FingeringTextSize: number;
+    /** Whether to render string numbers in classical scores, i.e. not the string numbers in tabs, but e.g. for violin. */
+    public RenderStringNumbersClassical: boolean;
+    /** This is not for tabs, but for classical scores, especially violin. */
+    public StringNumberOffsetY: number;
     public NewSystemAtXMLNewSystemAttribute: boolean;
     public NewPageAtXMLNewPageAttribute: boolean;
     public PageFormat: PageFormat;
@@ -264,9 +356,36 @@ export class EngravingRules {
     public RenderSingleHorizontalStaffline: boolean;
     public RestoreCursorAfterRerender: boolean;
     public StretchLastSystemLine: boolean;
+    /** Ignore brackets - e.g. `( )` - that were supposed to be around a note,
+     * but were inserted as a words element in the MusicXML, which can't be matched to the note anymore,
+     * and would otherwise just be placed somewhere else. See OSMD Issue 1251. */
+    public IgnoreBracketsWords: boolean;
+    // public PositionMarcatoCloseToNote: boolean;
     public SpacingBetweenTextLines: number;
 
-    public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
+    public NoteToGraphicalNoteMap: Dictionary<number, GraphicalNote>;
+    // this is basically a WeakMap, except we save the id in the Note instead of using a WeakMap.
+    public NoteToGraphicalNoteMapObjectCount: number = 0;
+
+    /** The skyline and bottom-line batch calculation algorithm to use.
+     *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
+     */
+    public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
+    /** Whether to consider using WebGL in Firefox in EngravingRules.setPreferredSkyBottomLineBackendAutomatically() */
+    public DisableWebGLInFirefox: boolean;
+    /** Whether to consider using WebGL in Safari/iOS in EngravingRules.setPreferredSkyBottomLineBackendAutomatically() */
+    public DisableWebGLInSafariAndIOS: boolean;
+
+    /** The minimum number of measures in the sheet where the skyline and bottom-line batch calculation is enabled.
+     *  Batch is faster for medium to large size scores, but slower for very short scores.
+     */
+    public SkyBottomLineBatchMinMeasures: number;
+    /** The minimum number of measures in the sheet where WebGL will be used. WebGL is slower for short scores, but much faster for large ones.
+     * Note that WebGL is currently never used in Safari and Firefox, because it's always slower there.
+     */
+    public SkyBottomLineWebGLMinMeasures: number;
+    /** Whether to always set preferred backend (WebGL or Plain) automatically, depending on browser and number of measures. */
+    public AlwaysSetPreferredSkyBottomLineBackendAutomatically: boolean;
 
     constructor() {
         this.loadDefaultValues();
@@ -319,6 +438,7 @@ export class EngravingRules {
             beam_rests: false,
             maintain_stem_directions: false
         };
+        this.AutoBeamTabs = false;
 
         // Beam Sizing Variables
         this.BeamWidth = EngravingRules.unit / 2.0;
@@ -332,8 +452,11 @@ export class EngravingRules {
         // Beam Sizing Variables
         this.ClefLeftMargin = 0.5;
         this.ClefRightMargin = 0.75;
-        this.PercussionOneLineCutoff = 3;
+        this.PercussionOneLineCutoff = 3; // percussion parts with <3 unique note positions rendered on one line
         this.PercussionForceVoicesOneLineCutoff = 1;
+        this.PercussionUseXMLDisplayStep = true;
+        this.PercussionXMLDisplayStepNoteValueShift = 0;
+        this.PercussionOneLineXMLDisplayStepOctaveOffset = 0;
         this.BetweenKeySymbolsDistance = 0.2;
         this.KeyRightMargin = 0.75;
         this.RhythmRightMargin = 1.25;
@@ -364,6 +487,8 @@ export class EngravingRules {
         // GraceNote Variables
         this.GraceNoteScalingFactor = 0.6;
         this.GraceNoteXOffset = 0.2;
+        this.GraceNoteGroupXMargin = 0.0; // More than 0 leads to too much space in most cases.
+        //  see test_end_clef_measure. only potential 'tight' case: test_graceslash_simple
 
         // Wedge Variables
         this.WedgeOpeningLength = 1.2;
@@ -375,6 +500,9 @@ export class EngravingRules {
         this.WedgeVerticalMargin = 0.5;
         this.DistanceOffsetBetweenTwoHorizontallyCrossedWedges = 0.3;
         this.WedgeMinLength = 2.0;
+        this.WedgeEndDistanceBetweenTimestampsFactor = 1.75;
+        this.SoftAccentWedgePadding = 0.4;
+        this.SoftAccentSizeFactor = 0.6;
         this.DistanceBetweenAdjacentDynamics = 0.75;
 
         // Tempo Variables
@@ -386,11 +514,28 @@ export class EngravingRules {
         this.BetweenDotsDistance = 0.8;
         this.OrnamentAccidentalScalingFactor = 0.65;
         this.ChordSymbolTextHeight = 2.0;
+        this.ChordSymbolTextAlignment = TextAlignmentEnum.LeftBottom;
+        this.ChordSymbolRelativeXOffset = -1.0;
         this.ChordSymbolXSpacing = 1.0;
-        this.ChordSymbolYOffset = 2.0;
+        this.ChordOverlapAllowedIntoNextMeasure = 0;
+        this.ChordSymbolYOffset = 0.1;
+        this.ChordSymbolYPadding = 0.0;
+        this.ChordSymbolYAlignment = true;
+        this.ChordSymbolYAlignmentScope = "staffline"; // "measure" or "staffline"
+        this.ChordAccidentalTexts = new Dictionary<AccidentalEnum, string>();
+        this.resetChordAccidentalTexts(this.ChordAccidentalTexts, false);
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();
         this.resetChordSymbolLabelTexts(this.ChordSymbolLabelTexts);
+        this.CustomChords = [];
+        this.resetChordNames();
         this.RepetitionSymbolsYOffset = 0;
+        this.RepetitionEndInstructionXShiftAsPercentOfStaveWidth = 0.4; // 40%
+        this.RehearsalMarkXOffsetDefault = 10; // avoid collision with metronome number
+        this.RehearsalMarkXOffset = 0; // user defined
+        this.RehearsalMarkXOffsetSystemStartMeasure = -20; // good test: Haydn Concertante
+        this.RehearsalMarkYOffsetDefault = -15;
+        this.RehearsalMarkYOffset = 0; // user defined
+        this.RehearsalMarkFontSize = 10; // vexflow default: 12, too big with chord symbols
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.MeasureNumberLabelHeight = 1.5 * EngravingRules.unit;
@@ -401,6 +546,9 @@ export class EngravingRules {
         this.TripletsBracketed = false; // special setting for triplets, overrides tuplet setting (for triplets only)
         this.TupletNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.TupletNumberYOffset = 0.5;
+        this.TupletNumberLimitConsecutiveRepetitions = true;
+        this.TupletNumberMaxConsecutiveRepetitions = 2;
+        this.TupletNumberAlwaysDisableAfterFirstMax = true;
         this.LabelMarginBorderFactor = 0.1;
         this.TupletVerticalLineLength = 0.5;
         this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
@@ -417,11 +565,20 @@ export class EngravingRules {
         this.TieHeightInterpolationK = 0.0288;
         this.TieHeightInterpolationD = 0.136;
         this.SlurNoteHeadYOffset = 0.5;
+        this.SlurEndArticulationYOffset = 0.8;
+        this.SlurStartArticulationYOffsetOfArticulation = 0.5;
         this.SlurStemXOffset = 0.3;
         this.SlurSlopeMaxAngle = 15.0;
         this.SlurTangentMinAngle = 30.0;
         this.SlurTangentMaxAngle = 80.0;
+        this.SlurHeightFactor = 1; // 1 = 100% (standard height). 2 = 100% flattening of all slurs.
+        this.SlurHeightFlattenLongSlursFactorByWidth = 0.24; // additional flattening for long slurs the longer they are.
+        this.SlurHeightFlattenLongSlursFactorByAngle = 0.36; // when one of these factors is high, increasing the other has a very strong effect.
+        this.SlurHeightFlattenLongSlursCutoffAngle = 47;
+        this.SlurHeightFlattenLongSlursCutoffWidth = 16; // 15 ~ slur between measure's first notes in 4/4. 14 -> problem with test_slurs_highNotes
         this.SlursStartingAtSameStaffEntryYOffset = 0.8;
+        //Maximum y difference between control points. Forces slurs to have less 'weight' either way in the x direction
+        this.SlurMaximumYControlPointDistance = undefined;
 
         // Repetitions
         this.RepetitionEndingLabelHeight = 2.0;
@@ -435,6 +592,7 @@ export class EngravingRules {
         this.LyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
         this.LyricsHeight = 2.0; // actually size of lyrics
         this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
+        this.LyricsYMarginToBottomLine = 0.2;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
@@ -444,6 +602,7 @@ export class EngravingRules {
         this.MaximumLyricsElongationFactor = 2.5;
 
         // expressions variables
+        this.TempoYSpacing = 0.5; // note this is correlated with MetronomeMarkYShift: one-sided change can cause collisions
         this.InstantaneousTempoTextHeight = 2.3;
         this.ContinuousDynamicTextHeight = 2.3;
         this.MoodTextHeight = 2.3;
@@ -469,9 +628,10 @@ export class EngravingRules {
         this.SystemThinLineWidth = 0.12;
         this.SystemBoldLineWidth = EngravingRules.unit / 2.0;
         this.SystemRepetitionEndingLineWidth = 0.12;
-        this.SystemDotWidth = EngravingRules.unit / 5.0;
+        this.SystemDotWidth = EngravingRules.unit / 2.0;
         this.DistanceBetweenVerticalSystemLines = 0.35;
         this.DistanceBetweenDotAndLine = 0.7;
+        this.RepeatEndStartPadding = 2.0; // set to 0.0 to restore old padding/width with :||: measures
         this.OctaveShiftLineWidth = 0.12;
         this.OctaveShiftVerticalLineLength = EngravingRules.unit;
         this.GraceLineWidth = this.StaffLineWidth * this.GraceNoteScalingFactor;
@@ -481,9 +641,15 @@ export class EngravingRules {
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;
 
+        // Canvas is limited to 32767 in most browsers, though SVG isn't.
+        this.SheetMaximumWidth = 32767;
+
         // xSpacing Variables
         this.VoiceSpacingMultiplierVexflow = 0.85;
         this.VoiceSpacingAddendVexflow = 3.0;
+        this.PickupMeasureWidthMultiplier = 1.0;
+        this.PickupMeasureRepetitionSpacing = 0.8;
+        this.PickupMeasureSpacingSingleNoteAddend = 1.6;
         this.DisplacedNoteMargin = 0.1;
         this.MinNoteDistance = 2.0;
         this.SubMeasureXSpacingThreshold = 35;
@@ -491,13 +657,15 @@ export class EngravingRules {
         this.WholeRestXShiftVexflow = -1.5; // VexFlow draws rest notes too far to the right
         this.MetronomeMarksDrawn = true;
         this.MetronomeMarkXShift = -6; // our unit, is taken * unitInPixels
-        this.MetronomeMarkYShift = -0.5;
+        this.MetronomeMarkYShift = -1.0; // note this is correlated with TempoYSpacing: one-sided change can cause collisions
         this.SoftmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
         // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
         // if too low, smaller notes aren't positioned correctly.
+        this.StaggerSameWholeNotes = true;
 
         // Render options (whether to render specific or invisible elements)
         this.AlignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
+        this.RestCollisionYPadding = 0.0; // 1.0 = half distance between staff lines (e.g. E to F). will be rounded to whole numbers.
         this.FillEmptyMeasuresWithWholeRest = FillEmptyMeasuresWithWholeRests.No;
         this.ArpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
         this.RenderArpeggios = true;
@@ -507,11 +675,8 @@ export class EngravingRules {
         this.ColorStemsLikeNoteheads = false;
         this.ColorBeams = true;
         this.ColorFlags = true;
-        this.DefaultColorNotehead = "#000000"; // black. undefined is only black if a note's color hasn't been changed before.
-        this.DefaultColorRest = this.DefaultColorNotehead;
-        this.DefaultColorStem = this.DefaultColorNotehead;
-        this.DefaultColorLabel = this.DefaultColorNotehead;
-        this.DefaultColorTitle = this.DefaultColorNotehead;
+        this.applyDefaultColorMusic("#000000"); // black. undefined is only black if a note's color hasn't been changed before.
+        this.DefaultColorCursor = "#33e02f"; // green
         this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.DefaultFontStyle = FontStyles.Regular;
         this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
@@ -530,25 +695,48 @@ export class EngravingRules {
         this.RenderMeasureNumbersOnlyAtSystemStart = false;
         this.UseXMLMeasureNumbers = true;
         this.RenderLyrics = true;
+        this.RenderChordSymbols = true;
         this.RenderMultipleRestMeasures = true;
         this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;
+        this.RenderRehearsalMarks = true;
+        this.RenderClefsAtBeginningOfStaffline = true;
+        this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
+        this.RenderPedals = true;
         this.ArticulationPlacementFromXML = true;
-        this.FingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
+        this.BreathMarkDistance = 0.8;
+        this.FingeringPosition = PlacementEnum.AboveOrBelow; // AboveOrBelow = correct bounding boxes
+        this.FingeringPositionFromXML = true;
+        this.FingeringPositionGrace = PlacementEnum.Left;
         this.FingeringInsideStafflines = false;
         this.FingeringLabelFontHeight = 1.7;
         this.FingeringOffsetX = 0.0;
+        this.FingeringOffsetY = 0.0;
+        this.FingeringPaddingY = -0.2;
+        this.FingeringTextSize = 1.5;
+        this.RenderStringNumbersClassical = true;
+        this.StringNumberOffsetY = 0.0;
         this.NewSystemAtXMLNewSystemAttribute = false;
         this.NewPageAtXMLNewPageAttribute = false;
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
-
-        EngravingRules.FixStafflineBoundingBox = false; // TODO temporary workaround
+        this.IgnoreBracketsWords = true;
+        // this.PositionMarcatoCloseToNote = true;
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
         this.RenderSingleHorizontalStaffline = false;
         this.SpacingBetweenTextLines = 0;
+
+        this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
+        this.NoteToGraphicalNoteMapObjectCount = 0;
+
+        this.SkyBottomLineBatchMinMeasures = 5;
+        this.SkyBottomLineWebGLMinMeasures = 80;
+        this.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
+        this.DisableWebGLInFirefox = true;
+        this.DisableWebGLInSafariAndIOS = true;
+        this.setPreferredSkyBottomLineBackendAutomatically();
 
         // this.populateDictionaries(); // these values aren't used currently
         try {
@@ -563,6 +751,66 @@ export class EngravingRules {
         }
     }
 
+    public setPreferredSkyBottomLineBackendAutomatically(numberOfGraphicalMeasures: number = -1): void {
+        const vendor: string = globalThis.navigator?.vendor ?? "";
+        const userAgent: string = globalThis.navigator?.userAgent ?? "";
+        let alwaysUsePlain: boolean = false;
+        if (this.DisableWebGLInSafariAndIOS && (/apple/i).test(vendor)) { // doesn't apply to Chrome on MacOS
+            alwaysUsePlain = true;
+        } else if (this.DisableWebGLInFirefox && userAgent.includes("Firefox")) {
+            alwaysUsePlain = true;
+        }
+        // In Safari (/iOS) and Firefox, the plain version is always faster (currently, Safari 15).
+        //   WebGL is faster for large scores in Chrome and Edge (both Chromium based). See #1158
+        this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
+        if (!alwaysUsePlain) {
+            if (numberOfGraphicalMeasures >= this.SkyBottomLineWebGLMinMeasures) {
+                this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.WebGL;
+            }
+        }
+    }
+
+    /** Makes it so that all musical elements (including key/time signature)
+     *  are colored with the given color by default,
+     *  unless an element has a different color set (e.g. VoiceEntry.StemColor).
+     */
+    public applyDefaultColorMusic(color: string): void {
+        this.DefaultColorMusic = color;
+        this.DefaultColorNotehead = color;
+        this.DefaultColorRest = color;
+        this.DefaultColorStem = color;
+        this.DefaultColorLabel = color;
+        this.DefaultColorLyrics = color;
+        this.DefaultColorTitle = color;
+        this.LedgerLineColorDefault = color;
+    }
+
+    public addGraphicalNoteToNoteMap(note: Note, graphicalNote: GraphicalNote): void {
+        note.NoteToGraphicalNoteObjectId = this.NoteToGraphicalNoteMapObjectCount;
+        this.NoteToGraphicalNoteMap.setValue(note.NoteToGraphicalNoteObjectId, graphicalNote);
+        this.NoteToGraphicalNoteMapObjectCount++;
+    }
+
+    /** Returns the GraphicalNote corresponding to (its) note. Also used by Cursor.GNotesUnderCursor().
+     *  We don't want to save a GraphicalNote reference in Note, see Note.NoteToGraphicalNoteObjectId.
+     */
+    public GNote(note: Note): GraphicalNote {
+        return GraphicalNote.FromNote(note, this);
+    }
+
+    /** This should be done before a new sheet is loaded, not each re-render (otherwise the map would end empty). */
+    public clearMusicSheetObjects(): void {
+        this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
+        this.NoteToGraphicalNoteMapObjectCount = 0;
+    }
+
+    public resetChordAccidentalTexts(chordAccidentalTexts: Dictionary<AccidentalEnum, string>, useChordAccidentalsUnicode: boolean): void {
+        chordAccidentalTexts.setValue(AccidentalEnum.SHARP, useChordAccidentalsUnicode ? "♯" : "#");
+        chordAccidentalTexts.setValue(AccidentalEnum.FLAT, useChordAccidentalsUnicode ? "♭" : "b");
+        chordAccidentalTexts.setValue(AccidentalEnum.DOUBLEFLAT, useChordAccidentalsUnicode ? "𝄫" : "bb");
+        chordAccidentalTexts.setValue(AccidentalEnum.DOUBLESHARP, useChordAccidentalsUnicode ? "𝄪" : "x");
+    }
+
     public setChordSymbolLabelText(key: ChordSymbolEnum, value: string): void {
         this.ChordSymbolLabelTexts.setValue(key, value);
     }
@@ -575,7 +823,7 @@ export class EngravingRules {
         chordtexts.setValue(ChordSymbolEnum.minorseventh, "m7");
         chordtexts.setValue(ChordSymbolEnum.diminishedseventh, "dim7");
         chordtexts.setValue(ChordSymbolEnum.augmentedseventh, "aug7");
-        chordtexts.setValue(ChordSymbolEnum.halfdiminished, "m7b5");
+        chordtexts.setValue(ChordSymbolEnum.halfdiminished, `m7${this.ChordAccidentalTexts.getValue(AccidentalEnum.FLAT)}5`);
         chordtexts.setValue(ChordSymbolEnum.majorminor, "m(maj7)");
         chordtexts.setValue(ChordSymbolEnum.majorsixth, "maj6");
         chordtexts.setValue(ChordSymbolEnum.minorsixth, "m6");
@@ -591,8 +839,60 @@ export class EngravingRules {
         chordtexts.setValue(ChordSymbolEnum.suspendedsecond, "sus2");
         chordtexts.setValue(ChordSymbolEnum.suspendedfourth, "sus4");
         chordtexts.setValue(ChordSymbolEnum.power, "5");
+        chordtexts.setValue(ChordSymbolEnum.none, "N.C.");
 
         return chordtexts;
+    }
+
+    public addChordName(
+        altName: string,
+        chordKindText: string,
+        adds: string[],
+        alts: string[],
+        subs: string[],
+    ): void {
+        if (ChordSymbolEnum[chordKindText] !== undefined) {
+            const degrees: DegreesInfo = {
+                adds,
+                alts,
+                subs,
+            };
+            this.CustomChords.push(CustomChord.createCustomChord(altName, ChordSymbolEnum[chordKindText], degrees));
+        }
+    }
+
+    public renameChord(altName: string, newAltName: string): void {
+        CustomChord.renameCustomChord(altName, newAltName, this.CustomChords);
+    }
+
+    public resetChordNames(): void {
+        const sharp: string = this.ChordAccidentalTexts.getValue(AccidentalEnum.SHARP);
+        const flat: string = this.ChordAccidentalTexts.getValue(AccidentalEnum.FLAT);
+        // addChordName(alternateName, chordKindText, adds, alters, subtracts)
+        this.addChordName("alt", "major", [`${sharp}5`, `${flat}9`, `${sharp}9`], [`${flat}5`], []);
+        this.addChordName("7alt", "dominant", [`${sharp}5`, `${flat}9`, `${sharp}9`], [`${flat}5`], []);
+        this.addChordName("7sus4", "dominant", ["4"], [], ["3"]);
+        this.addChordName("7sus4", "suspendedfourth", ["7"], [], []);
+        this.addChordName("9sus4", "dominantninth", ["4"], [], ["3"]);
+        this.addChordName("9sus4", "suspendedfourth", ["9"], [], []);
+        this.addChordName("11sus4", "dominant11th", ["4"], [], ["3"]);
+        this.addChordName("11sus4", "suspendedfourth", ["11"], [], []);
+        this.addChordName("13sus4", "dominant13th", ["4"], [], ["3"]);
+        this.addChordName("13sus4", "suspendedfourth", ["13"], [], []);
+        this.addChordName("7sus2", "dominant", ["2"], [], ["3"]);
+        this.addChordName("7sus2", "suspendedsecond", ["7"], [], []);
+        this.addChordName(`m7${flat}5`, "minorseventh", [], [`${flat}5`], []);
+        this.addChordName("9sus2", "dominantninth", ["2"], [], ["3"]);
+        this.addChordName("9sus2", "suspendedsecond", ["9"], [], []);
+        this.addChordName("11sus2", "dominant11th", ["2"], [], ["3"]);
+        this.addChordName("11sus2", "suspendedsecond", ["11"], [], []);
+        this.addChordName("13sus2", "dominant13th", ["2"], [], ["3"]);
+        this.addChordName("13sus2", "suspendedsecond", ["13"], [], []);
+        this.addChordName("m(maj9)", "majorminor", ["9"], [], []);
+        this.addChordName("m(maj11)", "majorminor", ["11"], [], []);
+        this.addChordName("m(maj13)", "majorminor", ["13"], [], []);
+        this.addChordName("69", "majorsixth", ["9"], [], []);
+        this.addChordName("mi69", "minorsixth", ["9"], [], []);
     }
 
     /**

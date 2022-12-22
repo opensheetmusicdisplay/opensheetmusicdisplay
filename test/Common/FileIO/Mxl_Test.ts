@@ -1,12 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { IXmlElement } from "../../../src/Common/FileIO/Xml";
 import { TestUtils } from "../../Util/TestUtils";
 import { MXLHelper } from "../../../src/Common/FileIO/Mxl";
 
-/* tslint:disable:no-unused-expression */
 describe("MXL Tests", () => {
   // Generates a test for a mxl file name
   function testFile(scoreName: string): void {
-    it(`reads ${scoreName}`, (done: MochaDone) => {
+    it(`reads ${scoreName}`, (done: Mocha.Done) => {
       // Load the xml file content
       const mxl: string = TestUtils.getMXL(scoreName);
       chai.expect(mxl).to.not.be.undefined;
@@ -35,7 +35,7 @@ describe("MXL Tests", () => {
   }
 
   // Test failure
-  it("Corrupted file", (done: MochaDone) => {
+  it("Corrupted file", (done: Mocha.Done) => {
     MXLHelper.MXLtoIXmlElement("").then(
       (score: IXmlElement) => {
         chai.expect(score).to.not.be.undefined;

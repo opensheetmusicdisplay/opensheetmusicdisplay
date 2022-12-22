@@ -13,15 +13,19 @@ import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
 import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
 import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
+import { CursorOptions } from "./OSMDOptions";
+import { BoundingBox } from "../MusicalScore/Graphical/BoundingBox";
+import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
 
 /**
  * A cursor which can iterate through the music sheet.
  */
 export class Cursor {
-  constructor(container: HTMLElement, openSheetMusicDisplay: OpenSheetMusicDisplay) {
+  constructor(container: HTMLElement, openSheetMusicDisplay: OpenSheetMusicDisplay, cursorOptions: CursorOptions) {
     this.container = container;
     this.openSheetMusicDisplay = openSheetMusicDisplay;
     this.rules = this.openSheetMusicDisplay.EngravingRules;
+    this.cursorOptions = cursorOptions;
 
     // set cursor id
     // TODO add this for the OSMD object as well and refactor this into a util method?
@@ -36,9 +40,25 @@ export class Cursor {
     const curs: HTMLElement = document.createElement("img");
     curs.id = this.cursorElementId;
     curs.style.position = "absolute";
-    curs.style.zIndex = "-1";
+    if (this.cursorOptions.follow === true) {
+      this.wantedZIndex = "-1";
+      curs.style.zIndex = this.wantedZIndex;
+    } else {
+      this.wantedZIndex = "-2";
+      curs.style.zIndex = this.wantedZIndex;
+    }
     this.cursorElement = <HTMLImageElement>curs;
     this.container.appendChild(curs);
+  }
+
+  public adjustToBackgroundColor(): void {
+    let zIndex: string;
+    if (!this.rules.PageBackgroundColor) {
+          zIndex = this.wantedZIndex;
+    } else {
+      zIndex = "1";
+    }
+    this.cursorElement.style.zIndex = zIndex;
   }
 
   private container: HTMLElement;
@@ -48,6 +68,10 @@ export class Cursor {
    * but different between different OSMD objects on the same page.
    */
   public cursorElementId: string;
+  /** The desired zIndex (layer) of the cursor when no background color is set.
+   *  When a background color is set, using a negative zIndex would make the cursor invisible.
+   */
+  public wantedZIndex: string;
   private openSheetMusicDisplay: OpenSheetMusicDisplay;
   private rules: EngravingRules;
   private manager: MusicPartManager;
@@ -55,6 +79,8 @@ export class Cursor {
   private graphic: GraphicalMusicSheet;
   public hidden: boolean = true;
   public currentPageNumber: number = 1;
+  private cursorOptions: CursorOptions;
+  private skipInvisibleNotes: boolean = true;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
@@ -70,8 +96,9 @@ export class Cursor {
    */
   public show(): void {
     this.hidden = false;
-    this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
+    //this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
     this.update();
+    this.adjustToBackgroundColor();
   }
 
   public resetIterator(): void {
@@ -96,6 +123,8 @@ export class Cursor {
     }
 
     this.iterator = this.manager.getIterator();
+    // remember SkipInvisibleNotes setting, which otherwise gets reset to default value
+    this.iterator.SkipInvisibleNotes = this.skipInvisibleNotes;
   }
 
   private getStaffEntryFromVoiceEntry(voiceEntry: VoiceEntry): VexFlowStaffEntry {
@@ -150,33 +179,71 @@ export class Cursor {
     }
 
     // y is common for both multirest and non-multirest, given the MusicSystem
-    y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
+    y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0]?.PositionAndShape.RelativePosition.y ?? 0;
+    let endY: number = musicSystem.PositionAndShape.AbsolutePosition.y;
     const bottomStaffline: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
-    const endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
-    bottomStaffline.PositionAndShape.RelativePosition.y + bottomStaffline.StaffHeight;
+    if (bottomStaffline) { // can be undefined if drawFromMeasureNumber changed after cursor was shown
+      endY += bottomStaffline.PositionAndShape.RelativePosition.y + bottomStaffline.StaffHeight;
+    }
     height = endY - y;
 
     // Update the graphical cursor
-    // The following is the legacy cursor rendered on the canvas:
-    // // let cursor: GraphicalLine = new GraphicalLine(new PointF2D(x, y), new PointF2D(x, y + height), 3, OutlineAndFillStyleEnum.PlaybackCursor);
+    const measurePositionAndShape: BoundingBox = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0).PositionAndShape;
+    this.updateWidthAndStyle(measurePositionAndShape, x, y, height);
 
-    // This the current HTML Cursor:
-    const cursorElement: HTMLImageElement = this.cursorElement;
-    cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-    cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-    cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
-    const newWidth: number = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
-    if (newWidth !== cursorElement.width) {
-      cursorElement.width = newWidth;
-      this.updateStyle(newWidth);
-    }
-    if (this.openSheetMusicDisplay.FollowCursor) {
-      const diff: number = this.cursorElement.getBoundingClientRect().top;
-      this.cursorElement.scrollIntoView({behavior: diff < 1000 ? "smooth" : "auto", block: "center"});
+    if (this.openSheetMusicDisplay.FollowCursor && this.cursorOptions.follow) {
+      if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
+        const diff: number = this.cursorElement.getBoundingClientRect().top;
+        this.cursorElement.scrollIntoView({behavior: diff < 1000 ? "smooth" : "auto", block: "center"});
+      } else {
+        this.cursorElement.scrollIntoView({behavior: "smooth", inline: "center"});
+      }
     }
     // Show cursor
     // // Old cursor: this.graphic.Cursors.push(cursor);
     this.cursorElement.style.display = "";
+  }
+
+  public updateWidthAndStyle(measurePositionAndShape: BoundingBox, x: number, y: number, height: number): void {
+    const cursorElement: HTMLImageElement = this.cursorElement;
+    let newWidth: number = 0;
+    switch (this.cursorOptions.type) {
+      case 1:
+        cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newWidth = 5 * this.openSheetMusicDisplay.zoom;
+        break;
+      case 2:
+        cursorElement.style.top = ((y-2.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.style.left = (x * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.height = (1.5 * 10.0 * this.openSheetMusicDisplay.zoom);
+        newWidth = 5 * this.openSheetMusicDisplay.zoom;
+        break;
+      case 3:
+        cursorElement.style.top = measurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
+        cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
+        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newWidth = measurePositionAndShape.Size.width * 10 * this.openSheetMusicDisplay.zoom;
+        break;
+      case 4:
+        cursorElement.style.top = measurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
+        cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
+        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newWidth = (x-measurePositionAndShape.AbsolutePosition.x) * 10 * this.openSheetMusicDisplay.zoom;
+        break;
+        default:
+        cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newWidth = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
+        break;
+    }
+
+    if (newWidth !== cursorElement.width) {
+      cursorElement.width = newWidth;
+      this.updateStyle(newWidth, this.cursorOptions);
+    }
   }
 
   /**
@@ -194,10 +261,18 @@ export class Cursor {
   }
 
   /**
+   * Go to previous entry
+   */
+   public previous(): void {
+    this.iterator.moveToPreviousVisibleVoiceEntry(false);
+    this.update();
+  }
+
+  /**
    * Go to next entry
    */
   public next(): void {
-    this.iterator.moveToNext();
+    this.iterator.moveToNextVisibleVoiceEntry(false); // moveToNext() would not skip notes in hidden (visible = false) parts
     this.update();
   }
 
@@ -210,20 +285,33 @@ export class Cursor {
     this.update();
   }
 
-  private updateStyle(width: number, color: string = "#33e02f"): void {
+  private updateStyle(width: number, cursorOptions: CursorOptions = undefined): void {
+    if (cursorOptions !== undefined) {
+      this.cursorOptions = cursorOptions;
+    }
     // Create a dummy canvas to generate the gradient for the cursor
     // FIXME This approach needs to be improved
     const c: HTMLCanvasElement = document.createElement("canvas");
     c.width = this.cursorElement.width;
     c.height = 1;
     const ctx: CanvasRenderingContext2D = c.getContext("2d");
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = this.cursorOptions.alpha;
     // Generate the gradient
     const gradient: CanvasGradient = ctx.createLinearGradient(0, 0, this.cursorElement.width, 0);
-    gradient.addColorStop(0, "white"); // it was: "transparent"
-    gradient.addColorStop(0.2, color);
-    gradient.addColorStop(0.8, color);
-    gradient.addColorStop(1, "white"); // it was: "transparent"
+    switch (this.cursorOptions.type) {
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+        gradient.addColorStop(1, this.cursorOptions.color);
+        break;
+      default:
+        gradient.addColorStop(0, "white"); // it was: "transparent"
+        gradient.addColorStop(0.2, this.cursorOptions.color);
+        gradient.addColorStop(0.8, this.cursorOptions.color);
+        gradient.addColorStop(1, "white"); // it was: "transparent"
+      break;
+    }
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, 1);
     // Set the actual image
@@ -252,6 +340,15 @@ export class Cursor {
     return notes;
   }
 
+  public GNotesUnderCursor(instrument?: Instrument): GraphicalNote[] {
+    const voiceEntries: VoiceEntry[]  = this.VoicesUnderCursor(instrument);
+    const notes: GraphicalNote[] = [];
+    voiceEntries.forEach(voiceEntry => {
+      notes.push(...voiceEntry.Notes.map(note => this.rules.GNote(note)));
+    });
+    return notes;
+  }
+
   /** Check if there was a change in current page, and attach cursor element to the corresponding HTMLElement (div).
    *  This is only necessary if using PageFormat (multiple pages).
    */
@@ -275,5 +372,22 @@ export class Cursor {
       }
     }
     return 1;
+  }
+
+  public get SkipInvisibleNotes(): boolean {
+    return this.skipInvisibleNotes;
+  }
+
+  public set SkipInvisibleNotes(value: boolean) {
+    this.skipInvisibleNotes = value;
+    this.iterator.SkipInvisibleNotes = value;
+  }
+
+  public get CursorOptions(): CursorOptions {
+    return this.cursorOptions;
+  }
+
+  public set CursorOptions(value: CursorOptions) {
+    this.cursorOptions = value;
   }
 }

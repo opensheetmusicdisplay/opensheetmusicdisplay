@@ -12,21 +12,31 @@ declare global {
 }
 
 if (!Array.prototype.last) {
-    Array.prototype.last = function<T>(): T {
-        return this[this.length - 1];
-    };
+    // using Object.defineProperty instead of assigning Array.prototype.x directly prevents prototype pollution, see #980
+    Object.defineProperty(Array.prototype, "last", {
+        enumerable: false,
+        value: function<T>(): T {
+            return this[this.length - 1];
+        }
+    });
 }
 
 if (!Array.prototype.clear) {
-    Array.prototype.clear = function<T>(): void {
-        this.length = 0;
-    };
+    Object.defineProperty(Array.prototype, "clear", {
+        enumerable: false,
+        value: function<T>(): void {
+            this.length = 0;
+        }
+    });
 }
 
 if (!Array.prototype.contains) {
-    Array.prototype.contains = function<T>(elem: T): boolean {
-        return this.indexOf(elem) !== -1;
-    };
+    Object.defineProperty(Array.prototype, "contains", {
+        enumerable: false,
+        value: function<T>(elem: T): boolean {
+            return this.indexOf(elem) !== -1;
+        }
+    });
 }
 
 /**
@@ -40,7 +50,6 @@ export class CollectionUtil {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -80,8 +89,14 @@ export class CollectionUtil {
                                   startIndex: number = 0,
                                   endIndex: number = array.length - 1): number {
         let mid: number = 1;
-        while (startIndex < endIndex) {
+        let lastMidChecked: number = -1;
+        while (startIndex <= endIndex) {
             mid = Math.floor((startIndex + endIndex) / 2);
+            if (mid === lastMidChecked) {
+                break;
+                // this fixes a rare infinite loop when no matching element can be found,
+                //   e.g. with very small fraction difference in AbsoluteTimestamp like 511/1024 instead of 1/2 (#1201)
+            }
             const c: number = cmp(array[mid], element);
             if (c === 0) {
                 return mid;
@@ -92,6 +107,7 @@ export class CollectionUtil {
             if (0 < c) {
                 endIndex = mid;
             }
+            lastMidChecked = mid;
         }
 
         return -mid;

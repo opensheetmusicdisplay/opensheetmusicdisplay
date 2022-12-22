@@ -1,14 +1,14 @@
 import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
 import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
-import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min';
-import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
-// import { Fraction } from '../src/Common/DataObjects/Fraction';
+import * as jsPDF  from '../node_modules/jspdf/dist/jspdf.es.min';
+import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.umd.min';
+import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculator';
 
 /*jslint browser:true */
 (function () {
     "use strict";
     var openSheetMusicDisplay;
-    var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
+    var sampleFolder = "",
         samples = {
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
@@ -32,6 +32,9 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             "OSMD Function Test - Auto-/Custom-Coloring": "OSMD_function_test_auto-custom-coloring-entchen.musicxml",
             "OSMD Function Test - Bar lines": "OSMD_function_test_bar_lines.musicxml",
             "OSMD Function Test - Chord Symbols": "OSMD_function_test_chord_symbols.musicxml",
+            "OSMD Function Test - Chord Spacing": "OSMD_function_test_chord_spacing.mxl",
+            "OSMD Function Test - Chord Symbols - Various Chords": "OSMD_function_test_chord_tests_various.musicxml",
+            "OSMD Function Test - Chord Symbols - BrookeWestSample": "BrookeWestSample.mxl",
             "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
             "OSMD Function Test - Container height (compacttight mode)": "OSMD_Function_Test_Container_height.musicxml",
             "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
@@ -44,6 +47,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             "OSMD Function Test - Invisible Notes": "OSMD_function_test_invisible_notes.musicxml",
             "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
+            "OSMD Function Test - Pedals": "OSMD_Function_Test_Pedals.musicxml",
             "OSMD Function Test - Selecting Measures To Draw": "OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml",
             "OSMD Function Test - System and Page Breaks": "OSMD_Function_Test_System_and_Page_Breaks_4_pages.mxl",
             "OSMD Function Test - Tabulature": "OSMD_Function_Test_Tabulature_hayden_study_1.mxl",
@@ -51,9 +55,12 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             "OSMD Function Test - Tabulature All Effects": "OSMD_Function_Test_Tablature_Alleffects.musicxml",
             "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
             "OSMD Function Test - Labels": "OSMD_Function_Test_Labels.musicxml",
-            "OSMD Function Test - High Slur Test": "Slurtest_highNotes.musicxml",
+            "OSMD Function Test - High Slur Test": "test_slurs_highNotes.musicxml",
             "OSMD Function Test - Auto Multirest Measures Single Staff": "Test_Auto_Multirest_1.musicxml",
             "OSMD Function Test - Auto Multirest Measures Multiple Staves": "Test_Auto_Multirest_2.musicxml",
+            "OSMD Function Test - String number collisions": "test_string_number_collisions.musicxml",
+            "OSMD Function Test - Repeat Stave Connectors": "OSMD_function_Test_Repeat.musicxml",
+            "OSMD Function Test - Voice Alignment": "OSMD_Function_Test_Voice_Alignment.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
             "Actor, L. - Prelude (Large Sample, loading time)": "ActorPreludeSample.xml",
             "Actor, L. - Prelude (Large, No Print Part Names)": "ActorPreludeSample_PartName.xml",
@@ -81,6 +88,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
         zoomOuts,
         zoomDivs,
         custom,
+        previousCursorBtn,
         nextCursorBtn,
         resetCursorBtn,
         followCursorCheckbox,
@@ -91,7 +99,9 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
         debugReRenderBtn,
         debugClearBtn,
         selectPageSizes,
-        printPdfBtns;
+        printPdfBtns,
+        transpose,
+        transposeBtn;
     
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -118,9 +128,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
     var showHeader = true;
     var showDebugControls = false;
 
-    if (process.env.OSMD_DEMO_TITLE) {
-        document.title = process.env.OSMD_DEMO_TITLE;
-    }
+    document.title = "OpenSheetMusicDisplay Demo";
 
     // Initialization code
     function init() {
@@ -226,6 +234,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
         }
         //canvas.id = 'osmdCanvasDiv';
         //canvas.style.overflowX = 'auto'; // enable horizontal scrolling
+        previousCursorBtn = document.getElementById("previous-cursor-btn");
         nextCursorBtn = document.getElementById("next-cursor-btn");
         resetCursorBtn = document.getElementById("reset-cursor-btn");
         followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
@@ -241,14 +250,15 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
         printPdfBtns = [];
         printPdfBtns.push(document.getElementById("print-pdf-btn"));
         printPdfBtns.push(document.getElementById("print-pdf-btn-optional"));
+        transpose = document.getElementById('transpose');
+        transposeBtn = document.getElementById('transpose-btn');
 
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
-        var devDemoRunning = process.env.OSMD_DEBUG_CONTROLS;
-        showDebugControls = paramDebugControls === '1' || (devDemoRunning && paramDebugControls !== '0')
+        showDebugControls = paramDebugControls !== '0';
         if (showDebugControls) {
             var elementsToEnable = [
-                selectSample, selectBounding, selectPageSize, backendSelect, backendSelectDiv, divControls
+                selectSample, selectBounding, selectPageSizes[0], backendSelect, backendSelectDiv, divControls
             ];
             for (var i=0; i<elementsToEnable.length; i++) {
                 if (elementsToEnable[i]) { // make sure this element is not null/exists in the index.html, e.g. github.io demo has different index.html
@@ -428,13 +438,15 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             autoResize: true,
             backend: backendType,
             //backend: "canvas",
+            //cursorsOptions: [{type: 3, color: "#2bb8cd", alpha: 0.6, follow: true}], // highlight current measure instead of just a small vertical bar over approximate notes
             disableCursor: false,
             drawingParameters: compactMode ? "compact" : "default", // try compact (instead of default)
             drawPartNames: true, // try false
             // drawTitle: false,
             // drawSubtitle: false,
             drawFingerings: true,
-            fingeringPosition: "left", // left is default. try right. experimental: auto, above, below.
+            //fingeringPosition: "left", // Above/Below is default. try left or right. experimental: above, below.
+            //fingeringPositionFromXML: false, // do this if you want them always left, for example.
             // fingeringInsideStafflines: "true", // default: false. true draws fingerings directly above/below notes
             setWantedStemDirectionByXml: true, // try false, which was previously the default behavior
             // drawUpToMeasureNumber: 3, // draws only up to measure 3, meaning it draws measure 1 to 3 of the piece.
@@ -465,14 +477,26 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             // tripletsBracketed: true,
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });
+        openSheetMusicDisplay.TransposeCalculator = new TransposeCalculator(); // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
+        //openSheetMusicDisplay.DrawSkyLine = true;
+        //openSheetMusicDisplay.DrawBottomLine = true;
+        //openSheetMusicDisplay.setDrawBoundingBox("GraphicalLabel", false);
         openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to see more detailed control flow information in console
         document.body.appendChild(canvas);
 
         window.addEventListener("keydown", function (e) {
             var event = window.event ? window.event : e;
+            // left arrow key
+            if (event.keyCode === 37) {
+                openSheetMusicDisplay.cursor.previous();
+            }
+            // right arrow key
             if (event.keyCode === 39) {
                 openSheetMusicDisplay.cursor.next();
             }
+        });
+        previousCursorBtn?.addEventListener("click", function () {
+            openSheetMusicDisplay.cursor.previous();
         });
         nextCursorBtn.addEventListener("click", function () {
             openSheetMusicDisplay.cursor.next();
@@ -507,7 +531,8 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             if (createNewOsmd) {
                 // clears the canvas element
                 canvas.innerHTML = "";
-                openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value });
+                //openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value }); // resets EngravingRules
+                openSheetMusicDisplay.setOptions({backend: value});
                 openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to get more detailed control flow information
             } else {
                 // alternative, doesn't work yet, see setOptions():
@@ -516,6 +541,14 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             console.log("[OSMD] selectSampleOnChange addEventListener change");
             // selectSampleOnChange();
         });
+        if(transposeBtn && transpose){
+            transposeBtn.onclick = function(){
+                var transposeValue = parseInt(transpose.value);
+                openSheetMusicDisplay.Sheet.Transpose = transposeValue;
+                openSheetMusicDisplay.updateGraphic();
+                rerender();
+            }
+        }
 
         // TODO after selectSampleOnChange, the resize handler triggers immediately,
         //   so we render twice at the start of the demo.
@@ -606,6 +639,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
                 // This gives you access to the osmd object in the console. Do not use in production code
                 window.osmd = openSheetMusicDisplay;
                 openSheetMusicDisplay.zoom = zoom;
+                //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
                 return openSheetMusicDisplay.render();
             },
             function (e) {
@@ -715,7 +749,6 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 
     function errorLoadingOrRenderingSheet(e, loadingOrRenderingString) {
         var errorString = "Error " + loadingOrRenderingString + " sheet: " + e;
-        // if (process.env.DEBUG) { // people may not set a debug environment variable for the demo.
         // Always giving a StackTrace might give us more and better error reports.
         // TODO for a release, StackTrace control could be reenabled
         errorString += "\n" + "StackTrace: \n" + e.stack;
@@ -806,7 +839,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
      * Creates a Pdf of the currently rendered MusicXML
      * @param pdfName if no name is given, the composer and title of the piece will be used
      */
-    function createPdf(pdfName) {
+    async function createPdf(pdfName) {
         if (openSheetMusicDisplay.backendType !== BackendType.SVG) {
             console.log("[OSMD] createPdf(): Warning: createPDF is only supported for SVG background for now, not for Canvas." +
                 " Please use osmd.setOptions({backendType: SVG}).");
@@ -832,24 +865,33 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 
         const orientation = pageHeight > pageWidth ? "p" : "l";
         // create a new jsPDF instance
-        const pdf = new jsPDF(orientation, "mm", [pageWidth, pageHeight]);
-        const scale = pageWidth / svgElement.clientWidth;
+        const pdf = new jsPDF.jsPDF({
+            orientation: orientation,
+            unit: "mm",
+            format: [pageWidth, pageHeight]
+        });
+        //const scale = pageWidth / svgElement.clientWidth;
         for (let idx = 0, len = backends.length; idx < len; ++idx) {
             if (idx > 0) {
                 pdf.addPage();
             }
             svgElement = backends[idx].getSvgElement();
-
-            // render the svg element
-            svg2pdf(svgElement, pdf, {
-                scale: scale,
-                xOffset: 0,
-                yOffset: 0
-            });
+            
+            if (!pdf.svg && !svg2pdf) { // this line also serves to make the svg2pdf not unused, though it's still necessary
+                // we need svg2pdf to have pdf.svg defined
+                console.log("svg2pdf missing, necessary for jspdf.svg().");
+                return;
+            }
+            await pdf.svg(svgElement, {
+                x: 0,
+                y: 0,
+                width: pageWidth,
+                height: pageHeight,
+            })
         }
 
-        // simply save the created pdf
-        pdf.save(pdfName);
+        pdf.save(pdfName); // save/download the created pdf
+        //pdf.output("pdfobjectnewwindow", {filename: "osmd_createPDF.pdf"}); // open PDF in new tab/window
 
         // note that using jspdf with svg2pdf creates unnecessary console warnings "AcroForm-Classes are not populated into global-namespace..."
         // this will hopefully be fixed with a new jspdf release, see https://github.com/yWorks/jsPDF/pull/32

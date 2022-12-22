@@ -3,8 +3,7 @@ import {ArgumentOutOfRangeException} from "../Exceptions";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
 import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";
-import { StaffLineActivitySymbol } from "./StaffLineActivitySymbol";
-import { EngravingRules } from "./EngravingRules";
+import { GraphicalObject } from "./GraphicalObject";
 
 /**
  * A bounding box delimits an area on the 2D plane.
@@ -377,12 +376,7 @@ export class BoundingBox {
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
             const childElement: BoundingBox = this.ChildElements[idx];
             minTop = Math.min(minTop, childElement.relativePosition.y + childElement.borderTop);
-            if (!EngravingRules.FixStafflineBoundingBox || !(childElement.dataObject instanceof StaffLineActivitySymbol)) {
-                maxBottom = Math.max(maxBottom, childElement.relativePosition.y + childElement.borderBottom);
-                // TODO there's a problem with the bottom bounding box of many stafflines, often caused by StaffLineActivitySymbol,
-                // often leading to the page SVG canvas being unnecessarily long in y-direction. This seems to be remedied by this workaround.
-                // see #643
-            }
+            maxBottom = Math.max(maxBottom, childElement.relativePosition.y + childElement.borderBottom);
             minMarginTop = Math.min(minMarginTop, childElement.relativePosition.y + childElement.borderMarginTop);
             maxMarginBottom = Math.max(maxMarginBottom, childElement.relativePosition.y + childElement.borderMarginBottom);
         }
@@ -572,23 +566,31 @@ export class BoundingBox {
         return undefined;
     }
 
-    public getObjectsInRegion<T>(region: BoundingBox, liesInside: boolean = true): T[] {
-        if (<T>this.dataObject) {
+    //Generics don't work like this in TS. Casting doesn't filter out objects.
+    //instanceof doesn't work either with generic types. Hopefully instanceof becomes available at some point, for now we have to do annoyingly
+    //specific implementations after calling this to filter the objects.
+    public getObjectsInRegion<T extends GraphicalObject>(region: BoundingBox, liesInside: boolean = true,
+                                                         className: string = GraphicalObject.name): T[] {
+        let result: T[] = [];
+        for (const child of this.childElements) {
+            result = result.concat(child.getObjectsInRegion<T>(region, liesInside, className));
+        }
+
+        //if (!result || result.length === 0) {
+        // audioplayer: this.dataObject as T
+        if (this.dataObject && (this.dataObject as T).isInstanceOfClass(className)) {
             if (liesInside) {
                 if (region.liesInsideBorders(this)) {
-                    return [this.dataObject as T];
+                    result.push(this.dataObject as T);
                 }
             } else {
                 if (region.collisionDetection(this)) {
-                    return [this.dataObject as T];
+                    result.push(this.dataObject as T);
                 }
             }
             // FIXME Andrea: add here "return []"?
         }
-        const result: T[] = [];
-        for (const child of this.childElements) {
-            result.concat(child.getObjectsInRegion<T>(region, liesInside));
-        }
+        //}
         return result;
         //return this.childElements.SelectMany(psi => psi.getObjectsInRegion<T>(region, liesInside));
     }

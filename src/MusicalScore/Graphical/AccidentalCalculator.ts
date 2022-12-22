@@ -32,6 +32,7 @@ export class AccidentalCalculator {
      */
     public doCalculationsAtEndOfMeasure(): void {
         this.currentInMeasureNoteAlterationsDict.clear();
+        this.currentAlterationsComparedToKeyInstructionList.clear();
         for (const key of this.keySignatureNoteAlterationsDict.keys()) {
             this.currentInMeasureNoteAlterationsDict.setValue(key, this.keySignatureNoteAlterationsDict.getValue(key));
         }
@@ -87,6 +88,9 @@ export class AccidentalCalculator {
                         pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL);
                     }
                 }
+                if (this.isAlterAmbiguousAccidental(pitch.Accidental) && ! pitch.AccidentalXml) {
+                    return; // only display accidental if it was given as an accidental in the XML
+                }
                 MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
             }
         } else { // pitchkey not in measure dict:
@@ -95,6 +99,9 @@ export class AccidentalCalculator {
                     this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
                 }
                 this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.AccidentalHalfTones);
+                if (this.isAlterAmbiguousAccidental(pitch.Accidental) && ! pitch.AccidentalXml) {
+                    return;
+                }
                 MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
             } else {
                 if (isInCurrentAlterationsToKeyList) {
@@ -105,6 +112,10 @@ export class AccidentalCalculator {
                 }
             }
         }
+    }
+
+    private isAlterAmbiguousAccidental(accidental: AccidentalEnum): boolean {
+        return accidental === AccidentalEnum.SLASHFLAT || accidental === AccidentalEnum.QUARTERTONEFLAT;
     }
 
     private reactOnKeyInstructionChange(): void {

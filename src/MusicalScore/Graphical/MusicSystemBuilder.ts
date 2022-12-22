@@ -84,6 +84,7 @@ export class MusicSystemBuilder {
             const sourceMeasureEndsPart: boolean = sourceMeasure.HasEndLine;
             const sourceMeasureBreaksSystem: boolean = sourceMeasureEndsPart && this.rules.NewPartAndSystemAfterFinalBarline;
             const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
+            sourceMeasure.IsSystemStartMeasure = isSystemStartMeasure;
             const isFirstSourceMeasure: boolean = sourceMeasure === this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
             let currentMeasureBeginInstructionsWidth: number = this.rules.MeasureLeftMargin;
             let currentMeasureEndInstructionsWidth: number = 0;
@@ -245,8 +246,8 @@ export class MusicSystemBuilder {
         if (systemMeasures.length >= 1) {
             const measures: GraphicalMeasure[] =
                 this.currentSystemParams.currentSystem.GraphicalMeasures[this.currentSystemParams.currentSystem.GraphicalMeasures.length - 1];
-            const measureParams: MeasureBuildParameters = systemMeasures[systemMeasures.length - 1];
             let diff: number = 0.0;
+            const measureParams: MeasureBuildParameters = systemMeasures[systemMeasures.length - 1];
             if (measureParams.endLine === SystemLinesEnum.DotsBoldBoldDots) {
                 measureParams.endLine = SystemLinesEnum.DotsThinBold;
                 diff = measures[0].getLineWidth(SystemLinesEnum.DotsBoldBoldDots) / 2 - measures[0].getLineWidth(SystemLinesEnum.DotsThinBold);
@@ -411,16 +412,21 @@ export class MusicSystemBuilder {
     }
 
     protected transposeKeyInstruction(keyInstruction: KeyInstruction, graphicalMeasure: GraphicalMeasure): KeyInstruction {
-        if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== 0
+        const transposeHalftones: number = graphicalMeasure.getTransposedHalftones();
+        if (transposeHalftones !== keyInstruction.isTransposedBy
             && graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
             && MusicSheetCalculator.transposeCalculator !== undefined
         ) {
             MusicSheetCalculator.transposeCalculator.transposeKey(
                 keyInstruction,
-                this.graphicalMusicSheet.ParentMusicSheet.Transpose
+                transposeHalftones
             );
         }
         return keyInstruction;
+        // TODO we probably need to call initializeActiveInstructions() after this has been executed
+        //   (though we need to call it from where this is called)
+        //   since the accidentals are messed up after changing from transpose to 1 then to 0 again,
+        //   probably because this.activeKeys doesn't get updated. or maybe the issue is somewhere else
     }
 
     /**
@@ -467,7 +473,7 @@ export class MusicSystemBuilder {
             const measure: GraphicalMeasure = measures[idx];
             const staffIndex: number = this.visibleStaffIndices[idx];
             const endInstructionsStaffEntry: SourceStaffEntry = sourceMeasure.LastInstructionsStaffEntries[staffIndex];
-            const endInstructionLengthX: number = this.addInstructionsAtMeasureEnd(endInstructionsStaffEntry, measure);
+            const endInstructionLengthX: number = this.addInstructionsAtMeasureEnd(endInstructionsStaffEntry, measure, measures);
             totalEndInstructionLengthX = Math.max(totalEndInstructionLengthX, endInstructionLengthX);
         }
         return totalEndInstructionLengthX;
@@ -496,7 +502,7 @@ export class MusicSystemBuilder {
                 currentClef = this.activeClefs[visibleStaffIdx];
             }
             if (!currentKey) {
-                currentKey = this.activeKeys[visibleStaffIdx];
+                currentKey = KeyInstruction.copy(this.activeKeys[visibleStaffIdx]);
             }
             if (isFirstSourceMeasure && !currentRhythm) {
                 currentRhythm = this.activeRhythm[visibleStaffIdx];
@@ -520,16 +526,19 @@ export class MusicSystemBuilder {
         if (currentRhythm !== undefined && currentRhythm.PrintObject && this.rules.RenderTimeSignatures) {
             let printRhythm: boolean = true;
             // check for previous pickup measure
-            const pickupMeasureNumber: number = measure.MeasureNumber - 1;
-            if (measure.MeasureNumber - 1 >= 0) {
-                const previousMeasure: SourceMeasure = this.measureList[pickupMeasureNumber][0]?.parentSourceMeasure;
+            // TODO this does not need to be a pickup measure, see #1069
+            const pickupMeasureIndex: number = measure.MeasureNumber - 1;
+            const measureIndex: number = pickupMeasureIndex - this.rules.MinMeasureToDrawIndex;
+            if (measure.MeasureNumber - 1 >= 0 && this.measureList[measureIndex]) {
+                const previousMeasureList: GraphicalMeasure[] = this.measureList[measureIndex];
+                const previousMeasure: SourceMeasure = previousMeasureList[0]?.parentSourceMeasure;
                 if (previousMeasure?.ImplicitMeasure && previousMeasure?.RhythmPrinted) {
                     printRhythm = false;
                 }
             }
             if (printRhythm) {
                 measure.addRhythmAtBegin(currentRhythm);
-                measure.parentSourceMeasure.RhythmPrinted = true;
+                measure.parentSourceMeasure.RhythmPrinted = currentRhythm;
                 rhythmAdded = true;
             }
         }
@@ -542,7 +551,8 @@ export class MusicSystemBuilder {
         return instructionsLengthX;
     }
 
-    protected addInstructionsAtMeasureEnd(lastEntry: SourceStaffEntry, measure: GraphicalMeasure): number {
+    protected addInstructionsAtMeasureEnd(lastEntry: SourceStaffEntry, measure: GraphicalMeasure,
+        measures: GraphicalMeasure[]): number {
         if (!lastEntry || !lastEntry.Instructions || lastEntry.Instructions.length === 0) {
             return 0;
         }
@@ -551,6 +561,11 @@ export class MusicSystemBuilder {
             if (abstractNotationInstruction instanceof ClefInstruction) {
                 const activeClef: ClefInstruction = <ClefInstruction>abstractNotationInstruction;
                 measure.addClefAtEnd(activeClef);
+                for (const otherVerticalMeasure of measures) {
+                    if (otherVerticalMeasure !== measure) {
+                        otherVerticalMeasure.addClefAtEnd(activeClef, false);
+                    }
+                }
             }
         }
         return this.rules.MeasureRightMargin + measure.endInstructionsWidth;
@@ -892,9 +907,8 @@ export class MusicSystemBuilder {
         if (Math.abs(systemVarWidth - 0) < 0.00001 || Math.abs(systemFixWidth - 0) < 0.00001) {
             return 1.0;
         }
-        let systemEndX: number;
         const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
-        systemEndX = currentSystem.StaffLines[0].PositionAndShape.Size.width;
+        const systemEndX: number = currentSystem.StaffLines[0].PositionAndShape.Size.width;
         const scalingFactor: number = (systemEndX - systemFixWidth) / systemVarWidth;
         return scalingFactor;
     }

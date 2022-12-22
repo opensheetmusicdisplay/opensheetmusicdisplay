@@ -7,14 +7,23 @@ import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import { Articulation } from "../../VoiceData/Articulation";
 import { Note } from "../../VoiceData/Note";
+import { EngravingRules } from "../../Graphical/EngravingRules";
+import { MultiExpression } from "../../VoiceData/Expressions/MultiExpression";
+import { SourceMeasure } from "../../VoiceData/SourceMeasure";
+import { ContDynamicEnum, ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions";
 export class ArticulationReader {
+  private rules: EngravingRules;
+
+  constructor(rules: EngravingRules) {
+    this.rules = rules;
+  }
 
   private getAccEnumFromString(input: string): AccidentalEnum {
     switch (input) {
       case "sharp":
         return AccidentalEnum.SHARP;
       case "flat":
-          return AccidentalEnum.FLAT;
+        return AccidentalEnum.FLAT;
       case "natural":
         return AccidentalEnum.NATURAL;
       case "double-sharp":
@@ -23,14 +32,28 @@ export class ArticulationReader {
       case "double-flat":
       case "flat-flat":
         return AccidentalEnum.DOUBLEFLAT;
+      case "triple-sharp":
+        return AccidentalEnum.TRIPLESHARP;
+      case "triple-flat":
+        return AccidentalEnum.TRIPLEFLAT;
       case "quarter-sharp":
         return AccidentalEnum.QUARTERTONESHARP;
       case "quarter-flat":
         return AccidentalEnum.QUARTERTONEFLAT;
-      case "triple-sharp":
-          return AccidentalEnum.TRIPLESHARP;
-      case "triple-flat":
-        return AccidentalEnum.TRIPLEFLAT;
+      case "three-quarters-sharp":
+        return AccidentalEnum.THREEQUARTERSSHARP;
+      case "three-quarters-flat":
+        return AccidentalEnum.THREEQUARTERSFLAT;
+      case "slash-quarter-sharp":
+        return AccidentalEnum.SLASHQUARTERSHARP;
+      case "slash-sharp":
+        return AccidentalEnum.SLASHSHARP;
+      case "double-slash-flat":
+        return AccidentalEnum.DOUBLESLASHFLAT;
+      case "sori":
+        return AccidentalEnum.SORI;
+      case "koron":
+        return AccidentalEnum.KORON;
       default:
         return AccidentalEnum.NONE;
     }
@@ -52,8 +75,11 @@ export class ArticulationReader {
           name = name.replace("-", "");
           const articulationEnum: ArticulationEnum = ArticulationEnum[name];
           if (VoiceEntry.isSupportedArticulation(articulationEnum)) {
-            let placement: PlacementEnum = PlacementEnum.Above;
-            if (childNode.attribute("placement")?.value === "below") {
+            let placement: PlacementEnum = PlacementEnum.NotYetDefined;
+            const placementValue: string = childNode.attribute("placement")?.value;
+            if (placementValue === "above") {
+              placement = PlacementEnum.Above;
+            } else if (placementValue === "below") {
               placement = PlacementEnum.Below;
             }
             const newArticulation: Articulation = new Articulation(articulationEnum, placement);
@@ -64,13 +90,51 @@ export class ArticulationReader {
                 currentVoiceEntry.Articulations.splice(0, 0, newArticulation); // TODO can't this overwrite another articulation?
               }
             }
-            if (name === "strongaccent") { // see name.replace("-", "") above
+            else if (name === "breathmark") { // breath-mark
+              if (placement === PlacementEnum.NotYetDefined) {
+                newArticulation.placement = PlacementEnum.Above;
+              }
+            }
+            else if (name === "strongaccent") { // see name.replace("-", "") above
               const marcatoType: string = childNode?.attribute("type")?.value;
               if (marcatoType === "up") {
                 newArticulation.articulationEnum = ArticulationEnum.marcatoup;
               } else if (marcatoType === "down") {
                 newArticulation.articulationEnum = ArticulationEnum.marcatodown;
               }
+            }
+            else if (articulationEnum === ArticulationEnum.softaccent) {
+              const staffId: number = currentVoiceEntry.ParentSourceStaffEntry.ParentStaff.Id - 1;
+              if (placement === PlacementEnum.NotYetDefined) {
+                placement = PlacementEnum.Above;
+                if (staffId > 0) {
+                  placement = PlacementEnum.Below;
+                }
+                // TODO place according to whether the corresponding note is higher (-> above) or lower (-> below)
+                //   than the middle note line. Though this could be tricky at this stage of parsing.
+              }
+              const sourceMeasure: SourceMeasure = currentVoiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure;
+              const multi: MultiExpression = new MultiExpression(sourceMeasure, currentVoiceEntry.Timestamp);
+              multi.StartingContinuousDynamic = new ContinuousDynamicExpression(
+                ContDynamicEnum.crescendo,
+                placement,
+                staffId,
+                sourceMeasure,
+                -1
+              );
+              multi.StartingContinuousDynamic.IsStartOfSoftAccent = true;
+              multi.StartingContinuousDynamic.StartMultiExpression = multi;
+              multi.StartingContinuousDynamic.EndMultiExpression = multi;
+              multi.EndingContinuousDynamic = new ContinuousDynamicExpression(
+                ContDynamicEnum.diminuendo,
+                placement,
+                staffId,
+                sourceMeasure,
+                -1
+              );
+              multi.EndingContinuousDynamic.StartMultiExpression = multi;
+              multi.EndingContinuousDynamic.EndMultiExpression = multi;
+              sourceMeasure.StaffLinkedExpressions[staffId].push(multi);
             }
 
             // don't add the same articulation twice
@@ -110,10 +174,10 @@ export class ArticulationReader {
 
   /**
    * This method add a technical Articulation to the currentVoiceEntry.
-   * @param xmlNode
+   * @param technicalNode
    * @param currentVoiceEntry
    */
-  public addTechnicalArticulations(xmlNode: IXmlElement, currentVoiceEntry: VoiceEntry, currentNote: Note): void {
+  public addTechnicalArticulations(technicalNode: IXmlElement, currentVoiceEntry: VoiceEntry, currentNote: Note): void {
     interface XMLElementToArticulationEnum {
       [xmlElement: string]: ArticulationEnum;
     }
@@ -132,7 +196,7 @@ export class ArticulationReader {
         continue;
       }
       const articulationEnum: ArticulationEnum = xmlElementToArticulationEnum[xmlArticulation];
-      const node: IXmlElement = xmlNode.element(xmlArticulation);
+      const node: IXmlElement = technicalNode.element(xmlArticulation);
       if (node) {
         let placement: PlacementEnum; // set undefined by default, to not restrict placement
         if (node.attribute("placement")?.value === "above") {
@@ -148,34 +212,52 @@ export class ArticulationReader {
       }
     }
 
-    const nodeFingering: IXmlElement = xmlNode.element("fingering");
+    const nodeFingering: IXmlElement = technicalNode.element("fingering");
     if (nodeFingering) {
-      const currentTechnicalInstruction: TechnicalInstruction = new TechnicalInstruction();
+      const currentTechnicalInstruction: TechnicalInstruction = this.createTechnicalInstruction(nodeFingering, currentNote);
       currentTechnicalInstruction.type = TechnicalInstructionType.Fingering;
-      currentTechnicalInstruction.value = nodeFingering.value;
-      currentTechnicalInstruction.placement = PlacementEnum.NotYetDefined;
-      const placement: Attr = nodeFingering.attribute("placement");
-      if (placement !== undefined && placement !== null) {
-        switch (placement.value) {
-          case "above":
-            currentTechnicalInstruction.placement = PlacementEnum.Above;
-            break;
-          case "below":
-            currentTechnicalInstruction.placement = PlacementEnum.Below;
-            break;
-          case "left": // not valid in MusicXML 3.1
-            currentTechnicalInstruction.placement = PlacementEnum.Left;
-            break;
-          case "right": // not valid in MusicXML 3.1
-            currentTechnicalInstruction.placement = PlacementEnum.Right;
-            break;
-          default:
-            currentTechnicalInstruction.placement = PlacementEnum.NotYetDefined;
-        }
-      }
-      currentTechnicalInstruction.sourceNote = currentNote;
       currentNote.Fingering = currentTechnicalInstruction;
       currentVoiceEntry.TechnicalInstructions.push(currentTechnicalInstruction);
+    }
+    const nodeString: IXmlElement = technicalNode.element("string");
+    if (nodeString) {
+      const currentTechnicalInstruction: TechnicalInstruction = this.createTechnicalInstruction(nodeString, currentNote);
+      currentTechnicalInstruction.type = TechnicalInstructionType.String;
+      currentNote.StringInstruction = currentTechnicalInstruction;
+      currentVoiceEntry.TechnicalInstructions.push(currentTechnicalInstruction);
+    }
+  }
+
+  private createTechnicalInstruction(stringOrFingeringNode: IXmlElement, note: Note): TechnicalInstruction {
+    const technicalInstruction: TechnicalInstruction = new TechnicalInstruction();
+    technicalInstruction.sourceNote = note;
+    technicalInstruction.value = stringOrFingeringNode.value;
+    const placement: Attr = stringOrFingeringNode.attribute("placement");
+    if (this.rules.FingeringPositionFromXML) {
+      technicalInstruction.placement = this.getPlacement(placement);
+    }
+    return technicalInstruction;
+  }
+
+  private getPlacement(placementAttr: Attr, defaultPlacement: PlacementEnum = PlacementEnum.NotYetDefined): PlacementEnum {
+    if (defaultPlacement !== PlacementEnum.NotYetDefined) { // usually from EngravingRules
+      return defaultPlacement;
+    }
+    if (placementAttr) {
+      switch (placementAttr.value) {
+        case "above":
+          return PlacementEnum.Above;
+        case "below":
+          return PlacementEnum.Below;
+        case "left": // not valid in MusicXML 3.1
+          return PlacementEnum.Left;
+        case "right": // not valid in MusicXML 3.1
+          return PlacementEnum.Right;
+        default:
+          return PlacementEnum.NotYetDefined;
+      }
+    } else {
+      return PlacementEnum.NotYetDefined;
     }
   }
 

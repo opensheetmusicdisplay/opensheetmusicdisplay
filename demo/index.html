@@ -48,12 +48,20 @@
                 </div>
             </div>
             <div class="ui vertical buttons">
+                <div class="ui animated fade button" id="previous-cursor-btn">
+                    <div class="visible content">Previous</div>
+                    <div class="hidden content">
+                        <i class="arrow left icon"></i>
+                    </div>
+                </div>
                 <div class="ui animated fade button" id="next-cursor-btn">
                     <div class="visible content">Next</div>
                     <div class="hidden content">
                         <i class="arrow right icon"></i>
                     </div>
                 </div>
+            </div>
+            <div class="ui vertical buttons">
                 <div class="ui animated fade button" id="reset-cursor-btn">
                     <div class="visible content">Reset</div>
                     <div class="hidden content">
@@ -139,7 +147,14 @@
             <option value="Letter P">Letter Portrait</option>
             <option value="Letter L">Letter Landscape</option>
         </select>
-        <div class="ui button" id="print-pdf-btn">Print to Pdf</div>
+        <div class="ui button" id="print-pdf-btn">Create PDF</div>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Transpose by Semitone(s):</h3>
+        <div class="ui action input">
+            <input type="number" id="transpose" value="0"/>
+            <button class="ui button" id="transpose-btn">Transpose</button>
+        </div>
     </div>
 </div>
 <div id="optionalControls" style="opacity: 0.0; width: 95%; display: block">
@@ -156,7 +171,7 @@
             <h4 id="zoom-str-optional">???</h4>
         </div>
         <div class="column" id="print-pdf-btn-optional-column" style="opacity: 0.0; max-width: 25%;">
-            <div class="ui button" id="print-pdf-btn-optional">Print to Pdf</div>
+            <div class="ui button" id="print-pdf-btn-optional">Create PDF</div>
         </div>
         <div class="column" id="selectPageSize-optional-column" style="opacity: 0.0; min-width: 35%">
             <div class="ui two column grid container">

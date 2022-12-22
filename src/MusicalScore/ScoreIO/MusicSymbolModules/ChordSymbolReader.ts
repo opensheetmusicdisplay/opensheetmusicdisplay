@@ -39,7 +39,7 @@ export class ChordSymbolReader {
         let rootAlteration: AccidentalEnum = AccidentalEnum.NONE;
         if (rootAlter) {
             try {
-                rootAlteration = Pitch.AccidentalFromHalfTones(parseInt(rootAlter.value, undefined));
+                rootAlteration = Pitch.AccidentalFromHalfTones(parseInt(rootAlter.value, 10));
             } catch (ex) {
                 const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
                                                                         "Invalid chord symbol");
@@ -94,7 +94,7 @@ export class ChordSymbolReader {
             let bassAlteration: AccidentalEnum = AccidentalEnum.NONE;
             if (bassAlter) {
                 try {
-                    bassAlteration = Pitch.AccidentalFromHalfTones(parseInt(bassAlter.value, undefined));
+                    bassAlteration = Pitch.AccidentalFromHalfTones(parseInt(bassAlter.value, 10));
                 } catch (ex) {
                     const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
                                                                             "Invalid chord symbol");
@@ -105,52 +105,56 @@ export class ChordSymbolReader {
             bassPitch = new Pitch(bassNote, 1, bassAlteration);
         }
 
-        // degree is optional
-        let degree: Degree = undefined;
-        const degreeNode: IXmlElement = xmlNode.element("degree");
-        if (degreeNode) {
-            const degreeValue: IXmlElement = degreeNode.element("degree-value");
-            const degreeAlter: IXmlElement = degreeNode.element("degree-alter");
-            const degreeType: IXmlElement = degreeNode.element("degree-type");
-            if (!degreeValue || !degreeAlter || !degreeType) {
-              return undefined;
-            }
+        // degrees are optional
+        const degrees: Degree[] = [];
+        const degreeNodes: IXmlElement[] = xmlNode.elements("degree");
+        for (const degreeNode of degreeNodes) {
+            if (degreeNode) {
+                const degreeValue: IXmlElement = degreeNode.element("degree-value");
+                const degreeAlter: IXmlElement = degreeNode.element("degree-alter");
+                const degreeType: IXmlElement = degreeNode.element("degree-type");
+                if (!degreeValue || !degreeAlter || !degreeType) {
+                    return undefined;
+                }
 
-            let value: number;
-            try {
-                value = parseInt(degreeValue.value.trim(), undefined);
-            } catch (ex) {
-                const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
-                                                                        "Invalid chord symbol");
-                musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
-                return undefined;
-            }
+                let value: number;
+                try {
+                    value = parseInt(degreeValue.value.trim(), 10);
+                } catch (ex) {
+                    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
+                                                                            "Invalid chord symbol");
+                    musicSheet.SheetErrors.pushMeasureError(errorMsg);
+                    log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
+                    return undefined;
+                }
 
-            let alter: AccidentalEnum;
-            try {
-                alter = Pitch.AccidentalFromHalfTones(parseInt(degreeAlter.value, undefined));
-            } catch (ex) {
-                const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
-                                                                        "Invalid chord symbol");
-                musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
-                return undefined;
-            }
+                let alter: AccidentalEnum;
+                try {
+                    alter = Pitch.AccidentalFromHalfTones(parseInt(degreeAlter.value, 10));
+                } catch (ex) {
+                    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
+                                                                            "Invalid chord symbol");
+                    musicSheet.SheetErrors.pushMeasureError(errorMsg);
+                    log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
+                    return undefined;
+                }
 
-            let text: ChordDegreeText;
-            try {
-                text = ChordDegreeText[degreeType.value.trim().toLowerCase()];
-            } catch (ex) {
-                const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
-                                                                        "Invalid chord symbol");
-                musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
-                return undefined;
-            }
+                let text: ChordDegreeText;
+                try {
+                    text = ChordDegreeText[degreeType.value.trim().toLowerCase()];
+                } catch (ex) {
+                    const errorMsg: string = ITextTranslation.translateText(
+                        "ReaderErrorMessages/ChordSymbolError",
+                        "Invalid chord symbol"
+                    );
+                    musicSheet.SheetErrors.pushMeasureError(errorMsg);
+                    log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
+                    return undefined;
+                }
 
-            degree = new Degree(value, alter, text);
+                degrees.push(new Degree(value, alter, text));
+            }
         }
-        return new ChordSymbolContainer(rootPitch, chordKind, bassPitch, degree, musicSheet.Rules);
+        return new ChordSymbolContainer(rootPitch, chordKind, bassPitch, degrees, musicSheet.Rules);
     }
 }

@@ -8,6 +8,7 @@ export class OctaveShift {
 
     private octaveValue: OctaveEnum;
     private staffNumber: number;
+    public numberXml: number = 1;
     private startMultiExpression: MultiExpression;
     private endMultiExpression: MultiExpression;
 
@@ -57,6 +58,9 @@ export class OctaveShift {
      * @returns New pitch with corrected octave shift
      */
     public static getPitchFromOctaveShift(pitch: Pitch, octaveShiftValue: OctaveEnum): Pitch {
+        if (!pitch) {
+            return undefined;
+        }
         let result: number = pitch.Octave;
         switch (octaveShiftValue) {
             case OctaveEnum.VA8:

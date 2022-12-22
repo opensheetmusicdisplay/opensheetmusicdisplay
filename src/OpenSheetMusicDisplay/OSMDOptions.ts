@@ -1,16 +1,32 @@
 import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
 import { FontStyles } from "../Common/Enums/FontStyles";
 
+export enum CursorType {
+    Standard = 0,
+    ThinLeft = 1,
+    ShortThinTopLeft = 2,
+    CurrentArea = 3,
+    CurrentAreaLeft = 4,
+}
+
 /** Possible options for the OpenSheetMusicDisplay constructor and osmd.setOptions(). None are mandatory.
  *  Note that after using setOptions(), you have to call osmd.render() again to make changes visible.
  *  Example: osmd.setOptions({defaultColorRest: "#AAAAAA", drawSubtitle: false}); osmd.render();
+ *
+ *  Note that some additional, usually more small scale options are available in EngravingRules,
+ *  though not all of them are meant to be manipulated.
+ *  The OSMDOptions are the main options we support.
  */
 export interface IOSMDOptions {
     /** Whether to let Vexflow align rests to preceding or following notes (Vexflow option). Default false (0).
      * This can naturally reduce collisions of rest notes with other notes.
-     * Auto mode (2) only aligns rests when there are multiple voices in a measure, and at least once at the same x-coordinate.
-     * Auto is the recommended setting, and would be default, if it couldn't in rare cases deteriorate rest placement for existing users.
-     * The on mode (1) always aligns rests, also changing their position when there is no simultaneous note at the same x-coordinate, which is nonstandard.
+     * Auto mode (2) only aligns rests when there are multiple voices in a measure,
+     * and at least once at the same x-coordinate.
+     * Auto is the recommended setting, and would be default,
+     * if it couldn't in rare cases deteriorate rest placement for existing users.
+     * The on mode (1) always aligns rests,
+     * also changing their position when there is no simultaneous note at the same x-coordinate,
+     * which is nonstandard.
      */
     alignRests?: AlignRestOption | number;
     /** Whether to automatically create beams for notes that don't have beams set in XML. */
@@ -31,10 +47,14 @@ export interface IOSMDOptions {
     coloringEnabled?: boolean;
     /** Whether to color the stems of notes the same as their noteheads. Default false. */
     colorStemsLikeNoteheads?: boolean;
+    /** Dark mode (black background, white notes). Simply sets defaultColorMusic and EngravingRules.PageBackgroundColor. */
+    darkMode?: boolean;
+    /** Default color for all musical elements including key signature etc. Can be used for dark mode etc. Default undefined. */
+    defaultColorMusic?: string;
     /** Default color for a note head (without stem). Default black (undefined).
      * Only considered before loading a sample, not before render.
      * To change the color after loading a sample and before render, use note(.sourceNote).NoteheadColor.
-     * The format is Vexflow format, either "#rrggbb" or "#rrggbbtt" where <tt> is transparency. All hex values.
+     * The format is Vexflow format, either "#rrggbb" or "#rrggbboo" where <oo> is opacity (00 = transparent). All hex values.
      * E.g., a half-transparent red would be "#FF000080", invisible/transparent would be "#00000000" or "#12345600".
      */
     defaultColorNotehead?: string;
@@ -47,8 +67,10 @@ export interface IOSMDOptions {
     /** Default color for labels in the title. Overrides defaultColorLabel for title labels like composer. Default black (undefined). */
     defaultColorTitle?: string;
     /** Default font used for text and labels, e.g. title or lyrics. Default Times New Roman
-     * Note that OSMD originally always used Times New Roman, so things like layout and spacing may still be optimized for it.
-     * Valid options are CSS font families available in the browser used for rendering, e.g. Times New Roman, Helvetica.
+     * Note that OSMD originally always used Times New Roman,
+     * so things like layout and spacing may still be optimized for it.
+     * Valid options are CSS font families available in the browser used for rendering,
+     * e.g. Times New Roman, Helvetica.
      */
     defaultFontFamily?: string;
     /** Default font style, e.g. FontStyles.Bold (1). Default Regular (0). */
@@ -82,7 +104,8 @@ export interface IOSMDOptions {
     /** Whether to draw part (instrument) name abbreviations each system after the first. Only draws if drawPartNames. Default true. */
     drawPartAbbreviations?: boolean;
     /** Whether to draw measure numbers (labels). Default true.
-     * Draws a measure number label at first measure, system start measure, and every [measureNumberInterval] measures.
+     * Draws a measure number label at first measure, system start measure,
+     * and every [measureNumberInterval] measures.
      * See the [measureNumberInterval] option, default is 2.
      */
     drawMeasureNumbers?: boolean;
@@ -96,8 +119,8 @@ export interface IOSMDOptions {
     useXMLMeasureNumbers?: boolean;
     /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
     drawFingerings?: boolean;
-    /** Where to draw fingerings (left, right, above, below, or auto).
-     * Default left. Auto, above, below experimental (potential collisions because bounding box not correct)
+    /** Where to draw fingerings (above, below, aboveorbelow, left, right, or auto).
+     * Default AboveOrBelow. Auto experimental
      */
     fingeringPosition?: string;
     /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
@@ -108,13 +131,13 @@ export interface IOSMDOptions {
     drawLyrics?: boolean;
     /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
     drawSlurs?: boolean;
-    /** Only draw measure n to m, where m is the number specified. */
+    /** Only draw measure n to m, where m is the number specified. (for n, see drawFromMeasureNumber) */
     drawUpToMeasureNumber?: number;
     /** Only draw the first n systems, where n is the number specified. */
     drawUpToSystemNumber?: number;
     /** Only draw the first n pages, where n is the number specified. */
     drawUpToPageNumber?: number;
-    /** Only draw measure n to m, where n is the number you specify. */
+    /** Only draw measure n to m, where n is the number you specify. (for m, see drawUpToMeasureNumber) */
     drawFromMeasureNumber?: number;
     /** Whether to fill measures that don't have notes given in the XML with whole rests (visible = 1, invisible = 2, for layouting). Default No (0). */
     fillEmptyMeasuresWithWholeRest?: FillEmptyMeasuresWithWholeRests | number;
@@ -131,15 +154,18 @@ export interface IOSMDOptions {
      * (Bracketing all triplets can be cluttering)
      */
     tripletsBracketed?: boolean;
-    /**  See OpenSheetMusicDisplay.PageFormatStandards for standard options like "A4 P" or "Endless". Default Endless.
-     *   Uses OpenSheetMusicDisplay.StringToPageFormat(). Unfortunately it would be error-prone to set a PageFormat type directly.
+    /** See OpenSheetMusicDisplay.PageFormatStandards for standard options like "A4 P" or "Endless".
+     *  Default Endless.
+     *  Uses OpenSheetMusicDisplay.StringToPageFormat().
+     *  Unfortunately it would be error-prone to set a PageFormat type directly.
      */
     pageFormat?: string;
     /** A custom page/canvas background color. Default undefined/transparent.
      *  Example: "#FFFFFF" = white. "#12345600" = transparent.
-     *  This can be useful when you want to export an image with e.g. white background color instead of transparent,
-     *  from a CanvasBackend.
-     *  Note: Using a background color will prevent the cursor from being visible for now (will be fixed at some point).
+     *  This can be useful when you want to export an image with e.g. white background color
+     * instead of transparent, from a CanvasBackend.
+     *  Note: Using a background color will prevent the cursor from being visible for now
+     * (will be fixed at some point).
      */
     pageBackgroundColor?: string;
     /** This makes OSMD render on one single horizontal (staff-)line.
@@ -153,10 +179,13 @@ export interface IOSMDOptions {
      */
     newSystemFromXML?: boolean;
     /** Whether to begin a new page ("page break") when given in XML ('new-page="yes"').
-     *  Default false, because OSMD does its own layout that will do page breaks interactively (when given a PageFormat)
-     *  at different measures. So this option may result in a page break after a single measure on a page.
+     *  Default false, because OSMD does its own layout that will do page breaks interactively
+     * (when given a PageFormat) at different measures.
+     * So this option may result in a page break after a single measure on a page.
      */
     newPageFromXML?: boolean;
+    /** A custom function that is executed when the xml is read, modifies it, and returns a new xml string that OSMD then parses. */
+    onXMLRead?(xml: string): string;
     /** The cutoff number for rendering percussion clef stafflines as a single line. Default is 4.
      *  This is number of instruments specified, e.g. a drumset:
      *     <score-part id="P1">
@@ -222,6 +251,18 @@ export interface IOSMDOptions {
      * This works across instruments- If all instruments have subsequent measures with nothing but rests, multirest measures are generated
      */
     autoGenerateMutipleRestMeasuresFromRestMeasures?: boolean;
+    /**
+     * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used.
+     */
+    cursorsOptions?: CursorOptions[];
+    /**
+     * Defines which skyline and bottom-line batch calculation algorithm to use.
+     */
+    preferredSkyBottomLineBatchCalculatorBackend?: SkyBottomLineBatchCalculatorBackendType;
+    /**
+     * Defines the minimum number of measures in the entire sheet music where the skyline and bottom-line batch calculation is enabled.
+     */
+    skyBottomLineBatchMinMeasures?: number;
 }
 
 export enum AlignRestOption {
@@ -239,6 +280,11 @@ export enum FillEmptyMeasuresWithWholeRests {
 export enum BackendType {
     SVG = 0,
     Canvas = 1
+}
+
+export enum SkyBottomLineBatchCalculatorBackendType {
+    Plain = 0,
+    WebGL = 1,
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */
@@ -275,4 +321,28 @@ export interface AutoBeamOptions {
      * E.g. [[3,4],[1,4]] will beam the first 3 quarters of a measure, then the last quarter.
      */
     groups?: [number[]];
+}
+
+export interface CursorOptions {
+    /**
+     * Type of cursor:
+     * 0: Standard highlighting current notes
+     * 1: Thin line left to the current notes
+     * 2: Short thin line on top of stave and left to the current notes
+     * 3: Current measure
+     * 4: Current measure to left of current notes
+     */
+    type: CursorType;
+    /**
+     * Color to draw the cursor
+     */
+    color: string;
+    /**
+     * alpha value to be used with color (0.0 transparent, 0.5 medium, 1.0 opaque).
+     */
+    alpha: number;
+    /**
+     * If true, this cursor will be followed.
+     */
+    follow: boolean;
 }

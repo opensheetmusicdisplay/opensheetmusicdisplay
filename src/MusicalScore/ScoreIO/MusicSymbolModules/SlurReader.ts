@@ -8,7 +8,7 @@ import { PlacementEnum } from "../../VoiceData/Expressions";
 
 export class SlurReader {
     private musicSheet: MusicSheet;
-    private openSlurDict: { [_: number]: Slur; } = {};
+    private openSlurDict: { [_: number]: Slur } = {};
     constructor(musicSheet: MusicSheet) {
         this.musicSheet = musicSheet;
     }
@@ -37,6 +37,14 @@ export class SlurReader {
                                 slurPlacementXml = PlacementEnum.Below;
                             }
                         }
+                        const orientationAttr: Attr = slurNode.attribute("orientation"); // alternative for placement, used by Sibelius
+                        if (orientationAttr && orientationAttr.value) {
+                            if (orientationAttr.value === "over") {
+                                slurPlacementXml = PlacementEnum.Above;
+                            } else if (orientationAttr.value === "under") {
+                                slurPlacementXml = PlacementEnum.Below;
+                            }
+                        }
                         if (type === "start") {
                             let slur: Slur = this.openSlurDict[slurNumber];
                             if (!slur) {
@@ -50,7 +58,7 @@ export class SlurReader {
                             if (slur) {
                                 slur.EndNote = currentNote;
                                 // check if not already a slur with same notes has been given:
-                                if (!currentNote.checkForDoubleSlur(slur)) {
+                                if (!currentNote.isDuplicateSlur(slur)) {
                                     // if not, link slur to notes:
                                     currentNote.NoteSlurs.push(slur);
                                     const slurStartNote: Note = slur.StartNote;
