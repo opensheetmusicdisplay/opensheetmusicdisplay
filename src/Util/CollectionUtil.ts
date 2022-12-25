@@ -15,6 +15,7 @@ if (!Array.prototype.last) {
     // using Object.defineProperty instead of assigning Array.prototype.x directly prevents prototype pollution, see #980
     Object.defineProperty(Array.prototype, "last", {
         enumerable: false,
+        writable: true,
         value: function<T>(): T {
             return this[this.length - 1];
         }
@@ -24,6 +25,7 @@ if (!Array.prototype.last) {
 if (!Array.prototype.clear) {
     Object.defineProperty(Array.prototype, "clear", {
         enumerable: false,
+        writable: true,
         value: function<T>(): void {
             this.length = 0;
         }
@@ -33,6 +35,7 @@ if (!Array.prototype.clear) {
 if (!Array.prototype.contains) {
     Object.defineProperty(Array.prototype, "contains", {
         enumerable: false,
+        writable: true,
         value: function<T>(elem: T): boolean {
             return this.indexOf(elem) !== -1;
         }

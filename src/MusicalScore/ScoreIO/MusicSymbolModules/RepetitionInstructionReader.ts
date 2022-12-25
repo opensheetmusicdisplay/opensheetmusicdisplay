@@ -143,7 +143,7 @@ export class RepetitionInstructionReader {
         // if (relativeMeasurePosition < 0.5) {
         //   measureIndex--;
         // }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegnoAlCoda);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapoAlCoda);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
@@ -252,11 +252,12 @@ export class RepetitionInstructionReader {
               instruction.type = RepetitionInstructionEnum.None;
             }
           }
-          if (codaCount === 0 && toCodaCount === 0) {
-            instruction.type = RepetitionInstructionEnum.ToCoda;
-            instruction.alignment = AlignmentType.End;
-            instruction.measureIndex--;
-          }
+          // TODO this prevents a piece consisting of a single coda sign showing coda (will show To Coda)
+          // if (codaCount === 0 && toCodaCount === 0) {
+          //   instruction.type = RepetitionInstructionEnum.ToCoda;
+          //   instruction.alignment = AlignmentType.End;
+          //   instruction.measureIndex--;
+          // }
           break;
         case RepetitionInstructionEnum.Segno:
           if (segnoCount - dalSegnaCount > 0) { // two segnos in a row

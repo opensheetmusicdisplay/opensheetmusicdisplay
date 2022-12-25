@@ -415,7 +415,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
             break;
         }
         if (instruction) {
-            this.stave.setRepetitionType(instruction, xShift);
+            const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
+            (repetition as any).xShiftAsPercentOfStaveWidth = this.rules.RepetitionEndInstructionXShiftAsPercentOfStaveWidth;
+            this.stave.addModifier(repetition, position);
             return;
         }
 
@@ -639,7 +641,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     // if (note.isRest()) // TODO somehow there are never rest notes in ve.Notes
                     // TODO also, grace notes are not included here, need to be fixed as well. (and a few triple beamed notes in Bach Air)
                     let relPosY: number = 0;
-                    if (gNote.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
+                    if (gNote.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up && gNote.vfnote[0].getDuration() !== "w") {
                         relPosY += 3.5; // about 3.5 lines too high. this seems to be related to the default stem height, not actual stem height.
                         // alternate calculation using actual stem height: somehow wildly varying.
                         // if (ve.Notes.length > 1) {
@@ -1545,6 +1547,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public addStaveTie(stavetie: VF.StaveTie, graphicalTie: GraphicalTie): void {
         this.vfTies.push(stavetie);
         graphicalTie.vfTie = stavetie;
+        if (graphicalTie.Tie.TieDirection === PlacementEnum.Below) {
+            (stavetie as any).setDirection(1);
+        }
     }
 }
 

@@ -58,7 +58,7 @@ export class SlurReader {
                             if (slur) {
                                 slur.EndNote = currentNote;
                                 // check if not already a slur with same notes has been given:
-                                if (!currentNote.checkForDoubleSlur(slur)) {
+                                if (!currentNote.isDuplicateSlur(slur)) {
                                     // if not, link slur to notes:
                                     currentNote.NoteSlurs.push(slur);
                                     const slurStartNote: Note = slur.StartNote;

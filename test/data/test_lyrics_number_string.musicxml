@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <work>
+    <work-title>test_lyrics_number_string_space</work-title>
+  </work>
+  <identification>
+    <encoding>
+      <software>Dorico 4.2.0.1092</software>
+      <encoding-date>2022-11-09</encoding-date>
+    </encoding>
+  </identification>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voice</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <key number="1">
+          <fifths>0</fifths>
+          <mode>none</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <staves>1</staves>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        <staff>1</staff>
+        <lyric number="1" placement="below">
+          <syllabic>single</syllabic>
+          <text>This</text>
+        </lyric>
+        <lyric number="1translation" placement="below">
+          <syllabic>single</syllabic>
+          <text>Das</text>
+        </lyric>
+        <lyric number="2" placement="below">
+          <syllabic>single</syllabic>
+          <text>This</text>
+        </lyric>
+        <lyric number="2translation" placement="below">
+          <syllabic>single</syllabic>
+          <text>Das</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        <staff>1</staff>
+        <lyric number="1" placement="below">
+          <syllabic>single</syllabic>
+          <text>is</text>
+        </lyric>
+        <lyric number="1translation" placement="below">
+          <syllabic>single</syllabic>
+          <text>ist</text>
+        </lyric>
+        <lyric number="2" placement="below">
+          <syllabic>single</syllabic>
+          <text>is</text>
+        </lyric>
+        <lyric number="2translation" placement="below">
+          <syllabic>single</syllabic>
+          <text>ist</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        <staff>1</staff>
+        <lyric number="1" placement="below">
+          <syllabic>single</syllabic>
+          <text>verse</text>
+        </lyric>
+        <lyric number="1translation" placement="below">
+          <syllabic>single</syllabic>
+          <text>Vers</text>
+        </lyric>
+        <lyric number="2" placement="below">
+          <syllabic>single</syllabic>
+          <text>verse</text>
+        </lyric>
+        <lyric number="2translation" placement="below">
+          <syllabic>single</syllabic>
+          <text>Vers</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        <staff>1</staff>
+        <lyric number="1" placement="below">
+          <syllabic>single</syllabic>
+          <text>one.</text>
+        </lyric>
+        <lyric number="1translation" placement="below">
+          <syllabic>single</syllabic>
+          <text>eins.</text>
+        </lyric>
+        <lyric number="2" placement="below">
+          <syllabic>single</syllabic>
+          <text>two.</text>
+        </lyric>
+        <lyric number="2translation" placement="below">
+          <syllabic>single</syllabic>
+          <text>zwei.</text>
+        </lyric>
+      </note>
+    </measure>
+    <measure number="2">
+      <attributes>
+        <divisions>4</divisions>
+      </attributes>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        <staff>1</staff>
+        <lyric number="chorus" placement="below">
+          <syllabic>single</syllabic>
+          <text>That’s</text>
+        </lyric>
+        <lyric number="chorustranslation" placement="below">
+          <syllabic>single</syllabic>
+          <text>Und</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        <staff>1</staff>
+        <lyric number="chorus" placement="below">
+          <syllabic>single</syllabic>
+          <text>the</text>
+        </lyric>
+        <lyric number="chorustranslation" placement="below">
+          <syllabic>single</syllabic>
+          <text>der</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <staff>1</staff>
+        <lyric number="chorus" placement="below">
+          <syllabic>begin</syllabic>
+          <text>re</text>
+        </lyric>
+        <lyric number="chorustranslation" placement="below">
+          <syllabic>begin</syllabic>
+          <text>Ref</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <staff>1</staff>
+        <lyric number="chorus" placement="below">
+          <syllabic>end</syllabic>
+          <text>frain.</text>
+        </lyric>
+        <lyric number="chorustranslation" placement="below">
+          <syllabic>end</syllabic>
+          <text>rain.</text>
+        </lyric>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+      </barline>
+    </measure>
+  </part>
+</score-partwise>

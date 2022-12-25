@@ -47,6 +47,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             "OSMD Function Test - Invisible Notes": "OSMD_function_test_invisible_notes.musicxml",
             "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
+            "OSMD Function Test - Pedals": "OSMD_Function_Test_Pedals.musicxml",
             "OSMD Function Test - Selecting Measures To Draw": "OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml",
             "OSMD Function Test - System and Page Breaks": "OSMD_Function_Test_System_and_Page_Breaks_4_pages.mxl",
             "OSMD Function Test - Tabulature": "OSMD_Function_Test_Tabulature_hayden_study_1.mxl",
@@ -87,6 +88,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         zoomOuts,
         zoomDivs,
         custom,
+        previousCursorBtn,
         nextCursorBtn,
         resetCursorBtn,
         followCursorCheckbox,
@@ -232,6 +234,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         }
         //canvas.id = 'osmdCanvasDiv';
         //canvas.style.overflowX = 'auto'; // enable horizontal scrolling
+        previousCursorBtn = document.getElementById("previous-cursor-btn");
         nextCursorBtn = document.getElementById("next-cursor-btn");
         resetCursorBtn = document.getElementById("reset-cursor-btn");
         followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
@@ -483,9 +486,17 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         window.addEventListener("keydown", function (e) {
             var event = window.event ? window.event : e;
+            // left arrow key
+            if (event.keyCode === 37) {
+                openSheetMusicDisplay.cursor.previous();
+            }
+            // right arrow key
             if (event.keyCode === 39) {
                 openSheetMusicDisplay.cursor.next();
             }
+        });
+        previousCursorBtn?.addEventListener("click", function () {
+            openSheetMusicDisplay.cursor.previous();
         });
         nextCursorBtn.addEventListener("click", function () {
             openSheetMusicDisplay.cursor.next();
