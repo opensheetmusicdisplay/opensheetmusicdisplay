@@ -1184,7 +1184,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         endBbox = vfPedal.endMeasure.PositionAndShape;
       }
       //Just for shorthand. Easier readability below
-      const PEDAL_STYLES_ENUM: any = Vex.Flow.PedalMarking.Styles;
+      const PEDAL_STYLES_ENUM: any = VF.PedalMarking.type;
       const pedalMarking: any = vfPedal.getPedalMarking();
       //VF adds 3 lines to whatever the pedal line is set to.
       //VF also measures from the bottom line, whereas our bottom line is from the top staff line
@@ -1252,7 +1252,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
         }
         //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-        const vfClefBefore: Vex.Flow.ClefNote = (endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
+        const vfClefBefore: VF.ClefNote = (endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
         if (vfClefBefore) {
           const clefWidth: number = vfClefBefore.getWidth() / 10;
           stopX += clefWidth;
@@ -1315,7 +1315,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               }
             }
             //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-            const vfOtherClefBefore: Vex.Flow.ClefNote = (vfOtherPedal.endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
+            const vfOtherClefBefore: VF.ClefNote = (vfOtherPedal.endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
             if (vfOtherClefBefore) {
               const otherClefWidth: number = vfOtherClefBefore.getWidth() / 10;
               otherPedalStopX += otherClefWidth;

@@ -415,9 +415,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             break;
         }
         if (instruction) {
-            const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
-            (repetition as any).xShiftAsPercentOfStaveWidth = this.rules.RepetitionEndInstructionXShiftAsPercentOfStaveWidth;
-            this.stave.addModifier(repetition, position);
+            this.stave.setRepetitionType(instruction, xShift);
             return;
         }
 

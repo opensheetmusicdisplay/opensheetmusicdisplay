@@ -374,8 +374,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalPedal of staffLine.Pedals) {
             if (graphicalPedal) {
                 const vexFlowPedal: VexFlowPedal = graphicalPedal as VexFlowPedal;
-                const ctx: Vex.IRenderContext = this.backend.getContext();
-                const pedalMarking: Vex.Flow.PedalMarking = vexFlowPedal.getPedalMarking();
+                const ctx: VF.RenderContext = this.backend.getContext();
+                const pedalMarking: VF.PedalMarking = vexFlowPedal.getPedalMarking();
                 (pedalMarking as any).render_options.color = this.rules.DefaultColorMusic;
                 pedalMarking.setContext(ctx);
                 pedalMarking.draw();
