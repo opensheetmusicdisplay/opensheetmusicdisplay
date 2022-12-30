@@ -1,3 +1,13 @@
+## [1.7.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.7.0...1.7.1) (2022-12-30)
+
+
+### Bug Fixes
+
+* **Build:** Make Array prototype changes writeable to prevent conflicts with other libraries ([#980](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/980), [#1288](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1288), PR [#1289](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1289)) ([f69d532](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f69d5320757998f7602cfa17b55071c4b5ea6277))
+* **Lyrics:** Fix non-numeric lyric number handling, unnecessary space for unused lyric lines (PR [#1284](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1284), [#1271](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1271), [#1272](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1272)) ([fac88af](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/fac88af498039763d1c843292d2c42bcf259792e))
+
+
+
 # [1.7.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.6.1...1.7.0) (2022-12-12)
 
 
