@@ -29,7 +29,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "1.5.6-dev"; // getter: this.Version
+    protected version: string = "1.7.0-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -282,7 +282,8 @@ export class OpenSheetMusicDisplay {
         // Set page width
         let width: number = this.container.offsetWidth;
         if (this.rules.RenderSingleHorizontalStaffline) {
-            width = this.graphic.MusicPages[0].PositionAndShape.Size.width * 10 * this.zoom;
+            width = (this.EngravingRules.PageLeftMargin + this.graphic.MusicPages[0].PositionAndShape.Size.width + this.EngravingRules.PageRightMargin)
+                * 10 * this.zoom;
             // this.container.style.width = width + "px";
             // console.log("width: " + width)
         }
@@ -309,7 +310,17 @@ export class OpenSheetMusicDisplay {
             } else {
                 height = page.PositionAndShape.Size.height;
                 height += this.rules.PageBottomMargin;
-                height += this.rules.CompactMode ? this.rules.PageTopMarginNarrow : this.rules.PageTopMargin;
+                if (backend.getOSMDBackendType() === BackendType.Canvas) {
+                    height += 0.1; // Canvas bug: cuts off bottom pixel with PageBottomMargin = 0. Doesn't happen with SVG.
+                    //  we could only add 0.1 if PageBottomMargin === 0, but that would mean a margin of 0.1 has no effect compared to 0.
+                }
+                //height += this.rules.CompactMode ? this.rules.PageTopMarginNarrow : this.rules.PageTopMargin;
+                // adding the PageTopMargin with a composer label leads to the margin also added to the bottom of the page
+                height += page.PositionAndShape.BorderTop;
+                // try to respect elements like composer cut off: this gets messy.
+                // if (page.PositionAndShape.BorderTop < 0 && this.rules.PageTopMargin === 0) {
+                //     height += page.PositionAndShape.BorderTop + this.rules.PageTopMargin;
+                // }
                 if (this.rules.RenderTitle) {
                     height += this.rules.TitleTopDistance;
                 }

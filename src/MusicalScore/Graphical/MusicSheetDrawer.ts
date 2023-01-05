@@ -388,6 +388,8 @@ export abstract class MusicSheetDrawer {
         }
         this.drawOctaveShifts(staffLine);
 
+        this.drawPedals(staffLine);
+
         this.drawExpressions(staffLine);
 
         if (this.skyLineVisible) {
@@ -446,6 +448,8 @@ export abstract class MusicSheetDrawer {
     protected drawOctaveShifts(staffLine: StaffLine): void {
         return;
     }
+
+    protected abstract drawPedals(staffLine: StaffLine): void;
 
     protected drawStaffLines(staffLine: StaffLine): void {
         if (staffLine.StaffLines) {
@@ -547,6 +551,11 @@ export abstract class MusicSheetDrawer {
             } else if (type === "VexFlowContinuousDynamicExpression") {
                 typeMatch = startBox.DataObject instanceof VexFlowContinuousDynamicExpression;
             }
+            // else if (type === "MusicSystem") {
+            //     typeMatch = startBox.DataObject instanceof MusicSystem;
+            // } else if (type === "GraphicalMusicPage") {
+            //     typeMatch = startBox.DataObject instanceof GraphicalMusicPage;
+            // }
         }
         if (typeMatch || dataObjectString === type) {
             this.drawBoundingBox(startBox, undefined, true, dataObjectString, layer);

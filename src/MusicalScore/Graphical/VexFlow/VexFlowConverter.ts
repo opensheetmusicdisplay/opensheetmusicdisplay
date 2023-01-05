@@ -612,6 +612,14 @@ export class VexFlowConverter {
                     }
                     break;
                 }
+                case ArticulationEnum.breathmark: {
+                    vfArt = new VF.Articulation("abr");
+                    if (articulation.placement === PlacementEnum.Above) {
+                        vfArtPosition = VF.Modifier.Position.ABOVE;
+                    }
+                    (vfArt as any).breathMarkDistance = rules.BreathMarkDistance; // default 0.8 = 80% towards next note or staff end
+                    break;
+                }
                 case ArticulationEnum.downbow: {
                     vfArt = new VF.Articulation("am");
                     if (articulation.placement === undefined) { // downbow/upbow should be above by default
@@ -632,9 +640,32 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.marcatoup: {
                     vfArt = new VF.Articulation("a^");
+                    // according to Gould - Behind Bars, Marcato should always be above the staff, regardless of stem direction.
+                    vfArtPosition = VF.Modifier.Position.ABOVE;
+                    // alternative: place close to note (below staff if below 3rd line). looks strange though, see test_marcato_position
+                    // if (rules.PositionMarcatoCloseToNote) {
+                    //     const noteLine: number = vfnote.getLineNumber();
+                    //     if (noteLine > 3) {
+                    //         vfArtPosition = VF.Modifier.Position.ABOVE;
+                    //     } else {
+                    //         vfArtPosition = VF.Modifier.Position.BELOW;
+                    //     }
+                    //     //console.log("measure " + gNote.parentVoiceEntry.parentStaffEntry.parentMeasure.MeasureNumber + ", line " + noteLine);
+                    // }
                     break;
                 }
                 case ArticulationEnum.invertedfermata: {
+                    const pve: VoiceEntry = gNote.sourceNote.ParentVoiceEntry;
+                    const sourceNote: Note = gNote.sourceNote;
+                    // find inverted fermata, push it to last voice entry in staffentry list,
+                    //   so that it doesn't overlap notes (gets displayed right below higher note)
+                    //   TODO this could maybe be moved elsewhere or done more elegantly,
+                    //     but on the other hand here it only gets checked if we have an inverted fermata anyways, seems efficient.
+                    if (pve !== sourceNote.ParentVoiceEntry.ParentSourceStaffEntry.VoiceEntries.last()) {
+                        pve.Articulations = pve.Articulations.slice(pve.Articulations.indexOf(articulation));
+                        pve.ParentSourceStaffEntry.VoiceEntries.last().Articulations.push(articulation);
+                        continue;
+                    }
                     vfArt = new VF.Articulation("a@u");
                     vfArtPosition = VF.Modifier.Position.BELOW;
                     articulation.placement = PlacementEnum.Below;
