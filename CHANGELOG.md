@@ -1,3 +1,13 @@
+## [1.7.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.7.1...1.7.2) (2023-01-18)
+
+
+### Bug Fixes
+
+* **Clefs:** Fix Clef at measure end in wrong measure if backup nodes used ([#1294](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1294), PR [#1295](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1295)) (e.g. Sibelius) ([9a6aa3f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9a6aa3feb39b9629ba57c87f48ba03a7958bce97))
+* **Build:** Fix umlauts in key identifiers error [(#1293)](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1293)
+
+
+
 ## [1.7.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.7.0...1.7.1) (2022-12-30)
 
 
