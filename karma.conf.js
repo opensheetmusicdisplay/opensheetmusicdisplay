@@ -22,6 +22,13 @@ module.exports = function (config) {
                 pattern: 'test/**/*.ts',
                 included: true
             }, {
+                // exclude Sibelius files, Karma somehow fails to parse them (e.g. test_clef_measure_end_backup_nodes_Sibelius),
+                //   leading to test failure, no tests being executed
+                pattern: 'test/data/*Sibelius*',
+                included: false,
+                watched: false,
+                served: true
+            }, {
                 pattern: 'test/data/*.xml',
                 included: true
             }, {

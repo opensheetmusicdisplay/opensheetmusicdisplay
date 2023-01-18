@@ -455,7 +455,7 @@ export class InstrumentReader {
             this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveAbstractInstructionList(this.instrument.Staves.length, true);
           }
-          if (this.isAttributesNodeAtEndOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
+          if (this.isAttributesNodeAtEndOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode, currentFraction)) {
             this.saveClefInstructionAtEndOfMeasure();
           }
           const staffDetailsNodes: IXmlElement[] = xmlNode.elements("staff-details"); // there can be multiple, even if redundant. see #1041
@@ -778,7 +778,14 @@ export class InstrumentReader {
    * @param attributesNode
    * @returns {boolean}
    */
-  private isAttributesNodeAtEndOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
+  private isAttributesNodeAtEndOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement, currentFraction: Fraction): boolean {
+    if (currentFraction.Equals(this.ActiveRhythm?.Rhythm)) {
+      return true;
+      // when the MusicXML uses a lot of <backup> nodes (e.g. Sibelius), we sometimes only detect measure end like this, not like below.
+      //   because below code assumes the attributes node is the last one in the measure, just by order in the XML,
+      //   (at least that there are no note nodes after the attributes node)
+      //   but with backup nodes, there can be note nodes after it that are at an earlier timestamp.
+    }
     const childs: IXmlElement[] = parentNode.elements().slice(); // slice=arrayCopy
     let attributesNodeIndex: number = 0;
     for (let i: number = 0; i < childs.length; i++) {
