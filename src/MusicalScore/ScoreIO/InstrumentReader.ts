@@ -779,7 +779,7 @@ export class InstrumentReader {
    * @returns {boolean}
    */
   private isAttributesNodeAtEndOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement, currentFraction: Fraction): boolean {
-    if (currentFraction.Equals(this.ActiveRhythm.Rhythm)) {
+    if (currentFraction.Equals(this.ActiveRhythm?.Rhythm)) {
       return true;
       // when the MusicXML uses a lot of <backup> nodes (e.g. Sibelius), we sometimes only detect measure end like this, not like below.
       //   because below code assumes the attributes node is the last one in the measure, just by order in the XML,
