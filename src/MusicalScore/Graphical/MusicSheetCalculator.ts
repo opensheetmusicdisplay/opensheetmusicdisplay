@@ -1102,6 +1102,7 @@ export abstract class MusicSheetCalculator {
             return;
         }
         let currentTupletNumber: number = -1;
+        let currentTypeLength: Fraction = undefined;
         let consecutiveTupletCount: number = 0;
         let currentTuplet: Tuplet = undefined;
         let skipTuplet: Tuplet = undefined; // if set, ignore (further) handling of this tuplet
@@ -1117,6 +1118,7 @@ export abstract class MusicSheetCalculator {
                             currentTupletNumber = -1;
                             consecutiveTupletCount = 0;
                             currentTuplet = undefined;
+                            currentTypeLength = undefined;
                             continue;
                         }
                         if (firstNote.NoteTuplet === skipTuplet) {
@@ -1138,8 +1140,10 @@ export abstract class MusicSheetCalculator {
                                 }
                             }
                         }
-                        if (firstNote.NoteTuplet.TupletLabelNumber !== currentTupletNumber) {
+                        if (firstNote.NoteTuplet.TupletLabelNumber !== currentTupletNumber ||
+                            !typeLength.Equals(currentTypeLength)) {
                             currentTupletNumber = firstNote.NoteTuplet.TupletLabelNumber;
+                            currentTypeLength = typeLength;
                             consecutiveTupletCount = 0;
                         }
                         currentTuplet = firstNote.NoteTuplet;
