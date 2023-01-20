@@ -659,7 +659,7 @@ export class GraphicalSlur extends GraphicalCurve {
         //     return;
         // }
 
-        if (this.rules.SlurPlacementFromXML) {
+        if (this.rules.SlurPlacementFromXML && this.slur.PlacementXml !== PlacementEnum.NotYetDefined) {
             this.placement = this.slur.PlacementXml;
             return;
         }
