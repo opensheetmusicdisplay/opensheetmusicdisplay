@@ -1151,12 +1151,6 @@ export abstract class MusicSheetCalculator {
                         if (consecutiveTupletCount <= this.rules.TupletNumberMaxConsecutiveRepetitions) {
                             firstNote.NoteTuplet.RenderTupletNumber = true; // need to re-activate after re-render when it was set to false
                         }
-                        if (consecutiveTupletCount === this.rules.TupletNumberMaxConsecutiveRepetitions && this.rules.TupletNumberAlwaysDisableAfterFirstMax) {
-                            if (!disabledPerVoice[voice.VoiceId][currentTupletNumber]) {
-                                disabledPerVoice[voice.VoiceId][currentTupletNumber] = {};
-                            }
-                            disabledPerVoice[voice.VoiceId][currentTupletNumber][typeLength.RealValue] = true;
-                        }
                         if (consecutiveTupletCount > this.rules.TupletNumberMaxConsecutiveRepetitions) {
                             firstNote.NoteTuplet.RenderTupletNumber = false;
                             if (this.rules.TupletNumberAlwaysDisableAfterFirstMax) {
