@@ -8,6 +8,8 @@ declare global {
         clear(): void;
         /** Returns true if the element is found in the array */
         contains(elem: T): boolean;
+        /** Returns a flattened array (ES2019 function). Type definition is a bit of a headache. */
+        flat(): any;
     }
 }
 
@@ -38,6 +40,23 @@ if (!Array.prototype.contains) {
         writable: true,
         value: function<T>(elem: T): boolean {
             return this.indexOf(elem) !== -1;
+        }
+    });
+}
+
+if (!Array.prototype.flat) {
+    Object.defineProperty(Array.prototype, "flat", {
+        enumerable: false,
+        writable: true,
+        value: function<T>(): any {
+            const flatten: any = array => {
+                return array.reduce(
+                    (flattened, elem) =>
+                        flattened.concat(Array.isArray(elem) ? flatten(elem) : elem),
+                    []
+                );
+            };
+            return flatten(this);
         }
     });
 }

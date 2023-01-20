@@ -752,8 +752,12 @@ export class EngravingRules {
     }
 
     public setPreferredSkyBottomLineBackendAutomatically(numberOfGraphicalMeasures: number = -1): void {
-        const vendor: string = globalThis.navigator?.vendor ?? "";
-        const userAgent: string = globalThis.navigator?.userAgent ?? "";
+        let vendor: string = "";
+        let userAgent: string = "";
+        if (globalThis) {
+            vendor = globalThis.navigator?.vendor ?? "";
+            userAgent = globalThis.navigator?.userAgent ?? "";
+        }
         let alwaysUsePlain: boolean = false;
         if (this.DisableWebGLInSafariAndIOS && (/apple/i).test(vendor)) { // doesn't apply to Chrome on MacOS
             alwaysUsePlain = true;
