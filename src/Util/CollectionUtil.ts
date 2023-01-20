@@ -8,8 +8,6 @@ declare global {
         clear(): void;
         /** Returns true if the element is found in the array */
         contains(elem: T): boolean;
-        /** Returns a flattened array (ES2019 function). Type definition is a bit of a headache. */
-        flat(): any;
     }
 }
 
@@ -44,23 +42,6 @@ if (!Array.prototype.contains) {
     });
 }
 
-if (!Array.prototype.flat) {
-    Object.defineProperty(Array.prototype, "flat", {
-        enumerable: false,
-        writable: true,
-        value: function<T>(): any {
-            const flatten: any = array => {
-                return array.reduce(
-                    (flattened, elem) =>
-                        flattened.concat(Array.isArray(elem) ? flatten(elem) : elem),
-                    []
-                );
-            };
-            return flatten(this);
-        }
-    });
-}
-
 /**
  * This class implements static methods to perform useful operations on lists, dictionaries, ...
  */
@@ -77,6 +58,13 @@ export class CollectionUtil {
 
     public static last(array: any[]): any {
         return array[array.length - 1];
+    }
+
+    /** Array.flat(), introduced in ES2019, polyfilled here to stick with ES2017 target in tsconfig.json.
+     *  Performance tests: https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1299#issuecomment-1399062038
+     */
+    public static flat(array: any[]): any {
+        return [].concat(...array);
     }
 
     /**
