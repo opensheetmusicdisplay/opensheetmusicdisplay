@@ -314,6 +314,18 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             ).catch(done);
         });
 
+        describe("next() and previous()", () => {
+            it("is able to advance past end and beginning of sheet", () => {
+                opensheetmusicdisplay.cursors[0].previous(); // do previous from first timestamp in sheet ("beyond beginning")
+                for (let i: number = 1; i <= 260; i++) {
+                    opensheetmusicdisplay.cursors[0].next(); // go past end of sheet: after 258 times in Clementi 36/1/1, the last timestamp is reached
+                }
+                // try to go back again after going beyond end of sheet
+                opensheetmusicdisplay.cursors[0].previous();
+                opensheetmusicdisplay.cursors[0].previous();
+            });
+        });
+
         describe("get AllVoicesUnderCursor", () => {
             it("retrieves all voices under cursor", () => {
                 const voiceEntries: VoiceEntry[] = opensheetmusicdisplay.cursors[0].VoicesUnderCursor();
