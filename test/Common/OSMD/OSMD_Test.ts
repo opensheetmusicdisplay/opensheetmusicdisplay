@@ -2,7 +2,7 @@ import chai = require("chai");
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../Util/TestUtils";
 import { VoiceEntry, Instrument, Note, Staff, Voice, GraphicalStaffEntry, GraphicalNote,
-            Fraction, Pitch, AccidentalEnum, DrawingParametersEnum, IOSMDOptions } from "../../../src";
+            Fraction, Pitch, AccidentalEnum, DrawingParametersEnum, IOSMDOptions, Cursor } from "../../../src";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -316,13 +316,17 @@ describe("OpenSheetMusicDisplay Main Export", () => {
 
         describe("next() and previous()", () => {
             it("is able to advance past end and beginning of sheet", () => {
-                opensheetmusicdisplay.cursors[0].previous(); // do previous from first timestamp in sheet ("beyond beginning")
+                const cursor: Cursor = opensheetmusicdisplay.cursors[0];
+                cursor.previous(); // do previous from first timestamp in sheet ("beyond beginning")
+                chai.expect(cursor.Iterator.currentTimeStamp.RealValue).to.equal(0);
                 for (let i: number = 1; i <= 260; i++) {
-                    opensheetmusicdisplay.cursors[0].next(); // go past end of sheet: after 258 times in Clementi 36/1/1, the last timestamp is reached
+                    cursor.next(); // go past end of sheet: after 258 times in Clementi 36/1/1, the last timestamp is reached
                 }
+                chai.expect(cursor.Iterator.EndReached).to.equal(true);
                 // try to go back again after going beyond end of sheet
-                opensheetmusicdisplay.cursors[0].previous();
-                opensheetmusicdisplay.cursors[0].previous();
+                cursor.previous();
+                cursor.previous();
+                chai.expect(cursor.Iterator.EndReached).to.equal(false);
             });
         });
 
