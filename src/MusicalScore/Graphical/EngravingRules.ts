@@ -752,8 +752,12 @@ export class EngravingRules {
     }
 
     public setPreferredSkyBottomLineBackendAutomatically(numberOfGraphicalMeasures: number = -1): void {
-        const vendor: string = globalThis.navigator?.vendor ?? "";
-        const userAgent: string = globalThis.navigator?.userAgent ?? "";
+        let vendor: string = "";
+        let userAgent: string = "";
+        if (typeof globalThis === "object") { // it looks like globalThis can be undefined and cause build issues in es2017 (e.g. Android API 28), see #1299
+            vendor = globalThis.navigator?.vendor ?? "";
+            userAgent = globalThis.navigator?.userAgent ?? "";
+        }
         let alwaysUsePlain: boolean = false;
         if (this.DisableWebGLInSafariAndIOS && (/apple/i).test(vendor)) { // doesn't apply to Chrome on MacOS
             alwaysUsePlain = true;

@@ -60,6 +60,13 @@ export class CollectionUtil {
         return array[array.length - 1];
     }
 
+    /** Array.flat(), introduced in ES2019, polyfilled here to stick with ES2017 target in tsconfig.json.
+     *  Performance tests: https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1299#issuecomment-1399062038
+     */
+    public static flat(array: any[]): any {
+        return [].concat(...array);
+    }
+
     /**
      * Iterates through a dictionary and calls iterationFunction.
      * If iterationFunction returns true the key gets stored.

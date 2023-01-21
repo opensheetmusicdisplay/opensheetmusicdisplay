@@ -63,6 +63,7 @@ import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
 import { VexFlowPedal } from "./VexFlowPedal";
 import { MusicSymbol } from "../MusicSymbol";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
+import { CollectionUtil } from "../../../Util/CollectionUtil";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -1415,7 +1416,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected calculateSkyBottomLines(): void {
-    const staffLines: StaffLine[] = this.musicSystems.map(musicSystem => musicSystem.StaffLines).flat();
+    const staffLines: StaffLine[] = CollectionUtil.flat(this.musicSystems.map(musicSystem => musicSystem.StaffLines));
     //const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
     let numMeasures: number = 0; // number of graphical measures that are rendered
     for (const staffline of staffLines) {
