@@ -8,6 +8,7 @@ import { StaffLine } from "./StaffLine";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import { WebGLSkyBottomLineBatchCalculatorBackend } from "./WebGLSkyBottomLineBatchCalculatorBackend";
 import log from "loglevel";
+import { CollectionUtil } from "../../Util/CollectionUtil";
 
 interface IBatchEntry {
     skyBottomLineCalculator: SkyBottomLineCalculator;
@@ -46,7 +47,7 @@ export class SkyBottomLineBatchCalculator {
 
         this.batches = new Map<EngravingRules, IBatch>();
         for (const [rules, batchEntryArray] of batchEntryArrayList.entries()) {
-            const measures: VexFlowMeasure[] = batchEntryArray.map(entry => entry.measures).flat();
+            const measures: VexFlowMeasure[] = CollectionUtil.flat(batchEntryArray.map(entry => entry.measures));
             const backend: SkyBottomLineBatchCalculatorBackend = ((): SkyBottomLineBatchCalculatorBackend => {
                 if (preferredBackend === SkyBottomLineBatchCalculatorBackendType.Plain) {
                     return new PlainSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
