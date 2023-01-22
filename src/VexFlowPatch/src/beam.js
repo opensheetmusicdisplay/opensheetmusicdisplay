@@ -892,7 +892,7 @@ export class Beam extends Element {
       this.postFormat();
     }
 
-    this.drawStems();
+    // this.drawStems();
     this.applyStyle();
     this.drawBeamLines();
     this.restoreStyle();

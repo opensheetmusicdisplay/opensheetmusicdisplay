@@ -101,8 +101,14 @@ export class SVGContext {
     if (cls) group.setAttribute('class', Vex.Prefix(cls));
     if (id) group.setAttribute('id', Vex.Prefix(id));
 
-    if (attrs && attrs.pointerBBox) {
-      group.setAttribute('pointer-events', 'bounding-box');
+    if (attrs) {
+      for (const attr of Object.entries(attrs)) {
+        if (attr[0] === "pointerBBox") {
+          group.setAttribute("pointer-events", "bounding-box");
+        } else {
+          group.setAttribute(attr[0], attr[1]);
+        }
+      }
     }
     return group;
   }

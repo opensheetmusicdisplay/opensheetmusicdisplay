@@ -439,7 +439,7 @@ export class TabNote extends StemmableNote {
       const tab_x = x + (note_glyph_width / 2) - (glyph.getWidth() / 2);
 
       // FIXME: Magic numbers.
-      ctx.clearRect(tab_x - 2, y - 3, glyph.getWidth() + 4, 6);
+      // ctx.clearRect(tab_x - 2, y - 3, glyph.getWidth() + 4, 6);
 
       if (glyph.code) {
         Glyph.renderGlyph(ctx, tab_x, y,
@@ -471,7 +471,7 @@ export class TabNote extends StemmableNote {
     const render_stem = this.beam == null && this.render_options.draw_stem;
 
     // VexFlowPatch: open group for tabnote, so that the SVG DOM has a named element for tabnote, like stavenote
-    this.context.openGroup('tabnote', null, { pointerBBox: true });
+    this.context.openGroup('tabnote', null, { xPos: this.getAbsoluteX().toString() });
     this.drawPositions();
     this.drawStemThrough();
 

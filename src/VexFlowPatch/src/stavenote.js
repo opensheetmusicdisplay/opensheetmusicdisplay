@@ -1211,7 +1211,7 @@ export class StaveNote extends StemmableNote {
     }
 
     const xBegin = this.getNoteHeadBeginX();
-    const shouldRenderStem = this.hasStem() && !this.beam;
+    const shouldRenderStem = this.hasStem();// && !this.beam;
 
     // Format note head x positions
     this.note_heads.forEach(notehead => notehead.setX(xBegin));
@@ -1229,7 +1229,23 @@ export class StaveNote extends StemmableNote {
 
     // Apply the overall style -- may be contradicted by local settings:
     this.applyStyle();
-    this.setAttribute('el', this.context.openGroup('stavenote', this.getAttribute('id')));
+
+    // console.log(this.keys);
+
+    this.setAttribute(
+      'el',
+      this.context.openGroup(
+        'mg-stavenote',
+        this.getAttribute('id'),
+        {
+          noteType: this.isRest() === true ? "rest" : "note",
+          xPos: xBegin.toString(),
+          yPos: this.getNoteHeadBounds().y_bottom,
+          keys: this.keys.join(","),
+        }
+      )
+    );
+
     this.context.openGroup('note', null, { pointerBBox: true });
     if (shouldRenderStem) this.drawStem();
     this.drawNoteHeads();

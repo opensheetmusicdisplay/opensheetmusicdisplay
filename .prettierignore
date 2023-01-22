@@ -1,1 +1,2 @@
 test/Util/generateImages_browserless.mjs
+src/VexFlowPatch/src/*
