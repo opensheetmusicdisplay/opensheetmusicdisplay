@@ -12,6 +12,7 @@ Each .js has comments like "// VexFlowPatch: [explanation]" to indicate what was
 
 articulation.js (custom addition):
 respect modifier.y_shift (y_shift affects y position of rendering)
+breath mark support
 
 beam.js (custom addition):
 add flat_beams, flat_beam_offset, flat_beam_offset_per_beam render_option (fixed in vexflow 4)
@@ -30,6 +31,9 @@ check for gracenotegroup.spacing set, to allow e.g. spacing = 0 by default.
 
 keysignature.js (merged vexflow 4):
 open group to get SVG group+class for key signature
+
+pedalmarking.js (custom addition):
+Add rendering options for pedals that break across systems.
 
 renderer.js (vexflow4: need to check if possible):
 CanvasContext: getContext(): use willReadFrequently option for marginal performance potential,

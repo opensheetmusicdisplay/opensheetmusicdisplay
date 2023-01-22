@@ -117,7 +117,8 @@ export class Repetition extends StaveModifier {
     let symbol_x = x + this.x_shift;
     if (this.symbol_type === Repetition.type.CODA_LEFT) {
       // Offset Coda text to right of stave beginning
-      text_x = this.x + stave.options.vertical_bar_width;
+      // text_x = this.x + stave.options.vertical_bar_width;
+      text_x = this.x + this.x_shift;
       symbol_x = text_x + ctx.measureText(text).width + 12;
     } else {
       // VexFlowPatch: fix placement, like for DS_AL_CODA
@@ -125,6 +126,29 @@ export class Repetition extends StaveModifier {
       // TO_CODA and DS_AL_CODA draw in the next measure without this x_shift, not sure why not for other symbols.
       text_x = this.x + this.x_shift + stave.options.vertical_bar_width;
       symbol_x = text_x + ctx.measureText(text).width + 12;
+    }
+    if (this.xShiftAsPercentOfStaveWidth) {
+      const extraShiftX = stave.width * this.xShiftAsPercentOfStaveWidth;
+      if (
+        this.symbol_type === Repetition.type.DC_AL_FINE ||
+        this.symbol_type === Repetition.type.FINE ||
+        this.symbol_type === Repetition.type.DC ||
+        this.symbol_type === Repetition.type.DS_AL_FINE ||
+        this.symbol_type === Repetition.type.DS ||
+        this.symbol_type === Repetition.type.FINE
+      ) {
+        text_x += extraShiftX;
+      }
+      // else if (
+      //   this.symbol_type === Repetition.type.DS_AL_CODA ||
+      //   this.symbol_type === Repetition.type.DC_AL_CODA ||
+      //   this.symbol_type === Repetition.type.TO_CODA
+      // ) {
+      //   // somehow DS_AL_CODA is already further right by default
+      //   //   TODO can cause collisions
+      //   text_x += extraShiftX * 0.4;
+      //   symbol_x += extraShiftX * 0.4;
+      // }
     }
     // earlier, we applied this to most elements individually, not necessary:
     // } else if (this.symbol_type === Repetition.type.TO_CODA) {

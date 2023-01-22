@@ -83,5 +83,8 @@ export enum MusicSymbol {
     MIC,
     SNAP_PIZZICATO,
     NATURAL_HARMONIC,
-    EditPen
+    EditPen,
+    PEDAL_BRACKET,
+    PEDAL_MIXED,
+    PEDAL_SYMBOL
 }

@@ -32,7 +32,7 @@ export class Instrument extends InstrumentalGroup {
     private hasChordSymbols: boolean = false;
     private playbackTranspose: number;
 
-    private lyricVersesNumbers: number[] = [];
+    private lyricVersesNumbers: string[] = [];
     private subInstruments: SubInstrument[] = [];
     private partAbbreviation: string;
 
@@ -57,10 +57,10 @@ export class Instrument extends InstrumentalGroup {
     public set HasChordSymbols(value: boolean) {
         this.hasChordSymbols = value;
     }
-    public get LyricVersesNumbers(): number[] {
+    public get LyricVersesNumbers(): string[] {
         return this.lyricVersesNumbers;
     }
-    public set LyricVersesNumbers(value: number[]) {
+    public set LyricVersesNumbers(value: string[]) {
         this.lyricVersesNumbers = value;
     }
     public get Name(): string {

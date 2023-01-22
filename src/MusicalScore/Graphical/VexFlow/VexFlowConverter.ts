@@ -608,6 +608,14 @@ export class VexFlowConverter {
                     }
                     break;
                 }
+                case ArticulationEnum.breathmark: {
+                    vfArt = new VF.Articulation("abr");
+                    if (articulation.placement === PlacementEnum.Above) {
+                        vfArtPosition = VF.Modifier.Position.ABOVE;
+                    }
+                    (vfArt as any).breathMarkDistance = rules.BreathMarkDistance; // default 0.8 = 80% towards next note or staff end
+                    break;
+                }
                 case ArticulationEnum.downbow: {
                     vfArt = new VF.Articulation("am");
                     if (articulation.placement === undefined) { // downbow/upbow should be above by default
@@ -643,6 +651,17 @@ export class VexFlowConverter {
                     break;
                 }
                 case ArticulationEnum.invertedfermata: {
+                    const pve: VoiceEntry = gNote.sourceNote.ParentVoiceEntry;
+                    const sourceNote: Note = gNote.sourceNote;
+                    // find inverted fermata, push it to last voice entry in staffentry list,
+                    //   so that it doesn't overlap notes (gets displayed right below higher note)
+                    //   TODO this could maybe be moved elsewhere or done more elegantly,
+                    //     but on the other hand here it only gets checked if we have an inverted fermata anyways, seems efficient.
+                    if (pve !== sourceNote.ParentVoiceEntry.ParentSourceStaffEntry.VoiceEntries.last()) {
+                        pve.Articulations = pve.Articulations.slice(pve.Articulations.indexOf(articulation));
+                        pve.ParentSourceStaffEntry.VoiceEntries.last().Articulations.push(articulation);
+                        continue;
+                    }
                     vfArt = new VF.Articulation("a@u");
                     vfArtPosition = VF.Modifier.Position.BELOW;
                     articulation.placement = PlacementEnum.Below;

@@ -71,28 +71,9 @@ export class LyricsReader {
                                     syllabic = "middle";
                                 }
                             }
-                            let currentLyricVerseNumber: number = 1;
-                            let errorNumberParse1: boolean = false;
+                            let currentLyricVerseNumber: string = "1";
                             if (lyricNode.attributes() !== undefined && lyricNode.attribute("number")) {
-                                try {
-                                    currentLyricVerseNumber = parseInt(lyricNode.attribute("number").value, 10); // usually doesn't throw error, but returns NaN
-                                } catch (err) {
-                                    errorNumberParse1 = true;
-                                }
-                                errorNumberParse1 = errorNumberParse1 || isNaN(currentLyricVerseNumber);
-                                if (errorNumberParse1) {
-                                    try { // Sibelius format: "part1verse1"
-                                        const result: string[] = lyricNode.attribute("number").value.toLowerCase().split("verse");
-                                        if (result.length > 1) {
-                                            currentLyricVerseNumber = parseInt(result[1], 10);
-                                        }
-                                    } catch (err) {
-                                        const errorMsg: string =
-                                        ITextTranslation.translateText("ReaderErrorMessages/LyricVerseNumberError", "Invalid lyric verse number");
-                                        this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                                        continue;
-                                    }
-                                }
+                                currentLyricVerseNumber = lyricNode.attribute("number").value;
                             }
                             let lyricsEntry: LyricsEntry = undefined;
                             if (syllabic === "single" || syllabic === "end") {
@@ -138,7 +119,7 @@ export class LyricsReader {
                                     }
                                 }
                                 // save in currentInstrument the verseNumber (only once)
-                                if (!currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers[currentLyricVerseNumber]) {
+                                if (!currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers.includes(currentLyricVerseNumber)) {
                                     currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers.push(currentLyricVerseNumber);
                                 }
                             }
@@ -150,9 +131,6 @@ export class LyricsReader {
                     continue;
                 }
             }
-            // Squash to unique numbers
-            currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers =
-            currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers.filter((lvn, index, self) => self.indexOf(lvn) === index);
         }
     }
 }

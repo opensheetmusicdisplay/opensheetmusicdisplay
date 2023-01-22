@@ -70,6 +70,7 @@ import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSM
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
 import { GraphicalChordSymbolContainer } from ".";
+import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -546,9 +547,10 @@ export abstract class MusicSheetCalculator {
      * @param staffLine
      * @param lyricVersesNumber
      */
-    protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): GraphicalStaffEntry[] {
+    protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: string[]): GraphicalStaffEntry[] {
         let numberOfVerses: number = 0;
         let lyricsStartYPosition: number = this.rules.StaffHeight; // Add offset to prevent collision
+        const relevantVerseNumbers: Map<string, boolean> = new Map<string, boolean>();
         const lyricsStaffEntriesList: GraphicalStaffEntry[] = [];
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
@@ -560,7 +562,15 @@ export abstract class MusicSheetCalculator {
             const len2: number = measure.staffEntries.length;
             for (let idx2: number = 0; idx2 < len2; ++idx2) {
                 const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
-                if (staffEntry.LyricsEntries.length > 0) {
+
+                // Collect relevant verse numbers
+                const len3: number = staffEntry.LyricsEntries.length;
+                for (let idx3: number = 0; idx3 < len3; ++idx3) {
+                    const lyricsEntry: LyricsEntry = staffEntry.LyricsEntries[idx3].LyricsEntry;
+                    relevantVerseNumbers[lyricsEntry.VerseNumber] = lyricsEntry.IsChorus;
+                }
+
+                if (len3 > 0) {
                     lyricsStaffEntriesList.push(staffEntry);
                     numberOfVerses = Math.max(numberOfVerses, staffEntry.LyricsEntries.length);
 
@@ -589,6 +599,19 @@ export abstract class MusicSheetCalculator {
         // iterate again through the Staffentries with LyricEntries
         len = lyricsStaffEntriesList.length;
         for (const staffEntry of lyricsStaffEntriesList) {
+
+            // Filter verse numbers
+            const filteredLyricVersesNumber: string[] = [];
+            let isChorus: boolean = true;
+            for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
+                isChorus &&= staffEntry.LyricsEntries[i].LyricsEntry.IsChorus;
+            }
+            for (const lyricVerseNumber of lyricVersesNumber){
+                if (relevantVerseNumbers[lyricVerseNumber] === isChorus) {
+                    filteredLyricVersesNumber.push(lyricVerseNumber);
+                }
+            }
+
             // set LyricEntryLabel RelativePosition
             for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
                 const lyricEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[i];
@@ -596,8 +619,8 @@ export abstract class MusicSheetCalculator {
 
                 // read the verseNumber and get index of this number in the sorted LyricVerseNumbersList of Instrument
                 // eg verseNumbers: 2,3,4,6 => 1,2,3,4
-                const verseNumber: number = lyricEntry.LyricsEntry.VerseNumber;
-                const sortedLyricVerseNumberIndex: number = lyricVersesNumber.indexOf(verseNumber);
+                const verseNumber: string = lyricEntry.LyricsEntry.VerseNumber;
+                const sortedLyricVerseNumberIndex: number = filteredLyricVersesNumber.indexOf(verseNumber);
                 const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight + this.rules.VerticalBetweenLyricsDistance +
                     this.rules.LyricsYOffsetToStaffHeight;
 
@@ -608,6 +631,7 @@ export abstract class MusicSheetCalculator {
                 }
                 const previousRelativeX: number = lyricsEntryLabel.PositionAndShape.RelativePosition.x;
                 lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(previousRelativeX, position);
+                lyricsEntryLabel.Label.fontStyle = lyricEntry.LyricsEntry.FontStyle;
                 maxPosition = Math.max(maxPosition, position);
             }
         }
@@ -659,6 +683,16 @@ export abstract class MusicSheetCalculator {
                                          measureIndex: number, staffIndex: number): void {
         throw new Error(this.abstractNotImplementedErrorMessage);
     }
+
+    /**
+     * Calculate a single Pedal for a [[MultiExpression]].
+     * @param sourceMeasure
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
+    protected abstract calculateSinglePedal(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
+        measureIndex: number, staffIndex: number): void;
 
     /**
      * Calculate all the textual [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
@@ -869,6 +903,10 @@ export abstract class MusicSheetCalculator {
             this.calculateExpressionAlignements();
             // calculate all OctaveShifts
             this.calculateOctaveShifts();
+            if (this.rules.RenderPedals) {
+                // calculate all Pedal Expressions
+                this.calculatePedals();
+            }
             // calcualte RepetitionInstructions (Dal Segno, Coda, etc)
             this.calculateWordRepetitionInstructions();
         }
@@ -1064,6 +1102,7 @@ export abstract class MusicSheetCalculator {
             return;
         }
         let currentTupletNumber: number = -1;
+        let currentTypeLength: Fraction = undefined;
         let consecutiveTupletCount: number = 0;
         let currentTuplet: Tuplet = undefined;
         let skipTuplet: Tuplet = undefined; // if set, ignore (further) handling of this tuplet
@@ -1079,6 +1118,7 @@ export abstract class MusicSheetCalculator {
                             currentTupletNumber = -1;
                             consecutiveTupletCount = 0;
                             currentTuplet = undefined;
+                            currentTypeLength = undefined;
                             continue;
                         }
                         if (firstNote.NoteTuplet === skipTuplet) {
@@ -1100,20 +1140,16 @@ export abstract class MusicSheetCalculator {
                                 }
                             }
                         }
-                        if (firstNote.NoteTuplet.TupletLabelNumber !== currentTupletNumber) {
+                        if (firstNote.NoteTuplet.TupletLabelNumber !== currentTupletNumber ||
+                            !typeLength.Equals(currentTypeLength)) {
                             currentTupletNumber = firstNote.NoteTuplet.TupletLabelNumber;
+                            currentTypeLength = typeLength;
                             consecutiveTupletCount = 0;
                         }
                         currentTuplet = firstNote.NoteTuplet;
                         consecutiveTupletCount++;
                         if (consecutiveTupletCount <= this.rules.TupletNumberMaxConsecutiveRepetitions) {
                             firstNote.NoteTuplet.RenderTupletNumber = true; // need to re-activate after re-render when it was set to false
-                        }
-                        if (consecutiveTupletCount === this.rules.TupletNumberMaxConsecutiveRepetitions && this.rules.TupletNumberAlwaysDisableAfterFirstMax) {
-                            if (!disabledPerVoice[voice.VoiceId][currentTupletNumber]) {
-                                disabledPerVoice[voice.VoiceId][currentTupletNumber] = {};
-                            }
-                            disabledPerVoice[voice.VoiceId][currentTupletNumber][typeLength.RealValue] = true;
                         }
                         if (consecutiveTupletCount > this.rules.TupletNumberMaxConsecutiveRepetitions) {
                             firstNote.NoteTuplet.RenderTupletNumber = false;
@@ -3228,6 +3264,24 @@ export abstract class MusicSheetCalculator {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
                         if ((sourceMeasure.StaffLinkedExpressions[j][k].OctaveShiftStart)) {
                             this.calculateSingleOctaveShift(sourceMeasure, sourceMeasure.StaffLinkedExpressions[j][k], i, j);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private calculatePedals(): void {
+        for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
+            const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+            for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
+                if (!this.graphicalMusicSheet.MeasureList[i] || !this.graphicalMusicSheet.MeasureList[i][j]) {
+                    continue;
+                }
+                if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.ParentInstrument.Visible) {
+                    for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
+                        if ((sourceMeasure.StaffLinkedExpressions[j][k].PedalStart)) {
+                            this.calculateSinglePedal(sourceMeasure, sourceMeasure.StaffLinkedExpressions[j][k], i, j);
                         }
                     }
                 }

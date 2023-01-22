@@ -18,6 +18,7 @@ import {ITextTranslation} from "../../Interfaces/ITextTranslation";
 import log from "loglevel";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
+import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;
@@ -35,6 +36,7 @@ export class ExpressionReader {
     private openOctaveShift: OctaveShift;
     private lastWedge: ContinuousDynamicExpression;
     private WedgeYPosXml: number;
+    private openPedal: Pedal;
     constructor(musicSheet: MusicSheet, instrument: Instrument, staffNumber: number) {
         this.musicSheet = musicSheet;
         this.staffNumber = staffNumber;
@@ -341,6 +343,81 @@ export class ExpressionReader {
             }
         }
     }
+    public addPedalMarking(directionNode: IXmlElement, currentMeasure: SourceMeasure, endTimestamp: Fraction): void {
+        const directionTypeNode: IXmlElement = directionNode.element("direction-type");
+        if (directionTypeNode) {
+            const pedalNode: IXmlElement = directionTypeNode.element("pedal");
+            if (pedalNode !== undefined && pedalNode.hasAttributes) {
+                let sign: boolean = false, line: boolean = false;
+                try {
+                    if (pedalNode.attribute("line")?.value === "yes") {
+                        line = true;
+                    } else if (pedalNode.attribute("line")?.value === "no"){
+                        line = false;
+                        //No line implies sign
+                        sign = true;
+                    } else if (pedalNode.attribute("sign")?.value === "yes") {
+                        sign = true;
+                    } else { //if (pedalNode.attribute("sign")?.value === "no"){
+                        // only assume sign if explicitly given in one way or another
+                        sign = false;
+                        line = true;
+                    }
+                    switch (pedalNode.attribute("type").value) {
+                        case "start":
+                            //ignore duplicate tags (causes issues when pedals aren't terminated)
+                            // if (!this.openPedal || !this.openPedal.ParentStartMultiExpression.AbsoluteTimestamp.Equals(endTimestamp)) {
+                            //     this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+                            // }
+                            // instead, just end open pedal if there already was one, and create new one
+                            if (this.openPedal && this.openPedal.IsLine) {
+                                // if we don't check IsLine, the Ped. at the end of Dichterliebe overlaps with a *
+                                this.endOpenPedal(currentMeasure);
+                            }
+                            this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+                            this.openPedal = new Pedal(line, sign);
+                            this.getMultiExpression.PedalStart = this.openPedal;
+                            this.openPedal.ParentStartMultiExpression = this.getMultiExpression;
+                        break;
+                        case "stop":
+                            if (this.openPedal) {
+                                this.endOpenPedal(currentMeasure);
+                            }
+                        break;
+                        case "change":
+                            //Ignore non-line pedals
+                            if (this.openPedal && this.openPedal.IsLine) {
+                                this.openPedal.ChangeEnd = true;
+                                this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+                                this.getMultiExpression.PedalEnd = this.openPedal;
+                                this.openPedal.ParentEndMultiExpression = this.getMultiExpression;
+
+                                this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+                                this.openPedal = new Pedal(line, sign);
+                                this.openPedal.ChangeBegin = true;
+                                this.getMultiExpression.PedalStart = this.openPedal;
+                                this.openPedal.ParentStartMultiExpression = this.getMultiExpression;
+                            }
+                        break;
+                        case "continue":
+                        break;
+                        default:
+                        break;
+                    }
+                } catch (ex) {
+                    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/PedalError", "Error while reading pedal.");
+                    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+                    log.debug("ExpressionReader.addPedalMarking", errorMsg, ex);
+                }
+            }
+        }
+    }
+    private endOpenPedal(currentMeasure: SourceMeasure): void {
+        this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+        this.getMultiExpression.PedalEnd = this.openPedal;
+        this.openPedal.ParentEndMultiExpression = this.getMultiExpression;
+        this.openPedal = undefined;
+    }
     private initialize(): void {
         this.placement = PlacementEnum.NotYetDefined;
         this.soundTempo = 0;
@@ -391,7 +468,7 @@ export class ExpressionReader {
                 this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
             }
             const numberXml: number = this.readNumber(dynamicsNode); // probably never given, just to comply with createExpressionIfNeeded()
-            let expressionText: string = dynamicsNode.elements()[0].name;
+            let expressionText: string = dynamicsNode.elements()[0]?.name; // elements can in rare cases still be empty even though hasElements=true, see #1269
             if (expressionText === "other-dynamics") {
                 expressionText = dynamicsNode.elements()[0].value;
             }

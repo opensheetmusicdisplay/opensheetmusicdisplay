@@ -29,6 +29,7 @@ import { DrawingParameters } from "../DrawingParameters";
 import { GraphicalMusicPage } from "../GraphicalMusicPage";
 import { GraphicalMusicSheet } from "../GraphicalMusicSheet";
 import { GraphicalUnknownExpression } from "../GraphicalUnknownExpression";
+import { VexFlowPedal } from "./VexFlowPedal";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -365,6 +366,19 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 } catch (ex) {
                     log.warn(ex);
                 }
+            }
+        }
+    }
+
+    protected drawPedals(staffLine: StaffLine): void {
+        for (const graphicalPedal of staffLine.Pedals) {
+            if (graphicalPedal) {
+                const vexFlowPedal: VexFlowPedal = graphicalPedal as VexFlowPedal;
+                const ctx: Vex.IRenderContext = this.backend.getContext();
+                const pedalMarking: Vex.Flow.PedalMarking = vexFlowPedal.getPedalMarking();
+                (pedalMarking as any).render_options.color = this.rules.DefaultColorMusic;
+                pedalMarking.setContext(ctx);
+                pedalMarking.draw();
             }
         }
     }

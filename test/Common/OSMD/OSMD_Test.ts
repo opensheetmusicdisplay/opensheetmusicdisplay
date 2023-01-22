@@ -2,7 +2,7 @@ import chai = require("chai");
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../Util/TestUtils";
 import { VoiceEntry, Instrument, Note, Staff, Voice, GraphicalStaffEntry, GraphicalNote,
-            Fraction, Pitch, AccidentalEnum, DrawingParametersEnum, IOSMDOptions } from "../../../src";
+            Fraction, Pitch, AccidentalEnum, DrawingParametersEnum, IOSMDOptions, Cursor } from "../../../src";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -312,6 +312,22 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                 },
                 done
             ).catch(done);
+        });
+
+        describe("next() and previous()", () => {
+            it("is able to advance past end and beginning of sheet", () => {
+                const cursor: Cursor = opensheetmusicdisplay.cursors[0];
+                cursor.previous(); // do previous from first timestamp in sheet ("beyond beginning")
+                chai.expect(cursor.Iterator.currentTimeStamp.RealValue).to.equal(0);
+                for (let i: number = 1; i <= 260; i++) {
+                    cursor.next(); // go past end of sheet: after 258 times in Clementi 36/1/1, the last timestamp is reached
+                }
+                chai.expect(cursor.Iterator.EndReached).to.equal(true);
+                // try to go back again after going beyond end of sheet
+                cursor.previous();
+                cursor.previous();
+                chai.expect(cursor.Iterator.EndReached).to.equal(false);
+            });
         });
 
         describe("get AllVoicesUnderCursor", () => {
