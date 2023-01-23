@@ -1,3 +1,22 @@
+## [1.7.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.7.2...1.7.3) (2023-01-23)
+
+
+### Bug Fixes
+
+* **Build:** Fix ES2017/Android API 28 incompatibility by not using Array.flat() from ES2019 ([#1299](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1299), PR [#1301](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1301)) ([cea8bf8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cea8bf86c301ee795bf3c61c2eee6007c3a96217))
+* **Cursor:** Fix cursor not appearing on show() if previous() was executed when at the start of the sheet, going beyond the beginning ([#1303](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1303)) ([a1bfecf](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a1bfecf2e84e2134be103949d27967c8da0f75cb))
+* **Cursor:** Fix cursor.previous() infinite loop after advancing past the end of the sheet ([#1302](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1302)) ([601fc64](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/601fc6445907d28a76624e31801579aaf5d23f74))
+* **Cursor:** Fix next() skipping first position in score after going beyond beginning of score (e.g. cursor.previous() after cursor.reset()) ([#1304](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1304)) ([6b31846](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6b3184612eff800962b125c9738b38fb0c19a43b))
+* **Pedal:** Fix Pedal ending at end of measure instead of before last note ([#1291(https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1291), [PR #1305](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1305)) ([09dc868](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/09dc8681373f1cb4b35b423120793a1d452a9a70))
+* **Slurs:** Fix bad slur placement when SlurPlacementFromXML is used (default), but XML doesn't provide placement values ([#1298](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1298)) ([d854976](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d854976000ba3929b64b08a63c1c05d6de796850))
+* **Tuplets:** Fix consecutive tuplet label number disabling not respecting note length ([#1207](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1207), PR [#1300](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1300)) ([eb69f32](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/eb69f32ce6f0ac325a016952d6dd338eea622bbf))
+
+
+### Features
+
+* **Pedal:** Start at beginning of stave (after modifiers) if start note is whole measure rest (and e.g. measures above it have non-rest notes) ([#1306](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1306), PR [#1307](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1307)) ([92eb9b6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/92eb9b6b28d2ebf754db3c95ee950b00123dab42))
+
+
 ## [1.7.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.7.1...1.7.2) (2023-01-18)
 
 
