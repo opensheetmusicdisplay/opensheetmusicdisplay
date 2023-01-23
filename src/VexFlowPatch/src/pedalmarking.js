@@ -171,6 +171,9 @@ export class PedalMarking extends Element {
       if (note) {
         //default to note head begin
         x = note.getNoteHeadBeginX();
+        if (this.BeginsStave) {
+          x = note.getStave().getNoteStartX();
+        }
       } else {
         x = this.endStave.end_x + this.endStaveAddedWidth;
       }

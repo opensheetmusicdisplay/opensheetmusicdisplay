@@ -14,6 +14,7 @@ export class Pedal {
     public ChangeEnd: boolean = false;
     public ChangeBegin: boolean = false;
     public EndsStave: boolean = false;
+    public BeginsStave: boolean = false;
 
     public get IsLine(): boolean {
         return this.line;
