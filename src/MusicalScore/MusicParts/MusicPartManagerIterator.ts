@@ -245,7 +245,9 @@ export class MusicPartManagerIterator {
     // move to previous
     public moveToPrevious(): void {
         // this.forwardJumpOccurred = this.backJumpOccurred = false;
-        if (this.frontReached) { return; }
+        if (this.frontReached) {
+            return;
+        }
         if (this.currentVoiceEntries) {
             this.currentVoiceEntries = [];
         }
@@ -263,7 +265,10 @@ export class MusicPartManagerIterator {
     public moveToNext(): void {
         this.forwardJumpOccurred = this.backJumpOccurred = false;
         if (this.endReached) { return; }
-        if (this.frontReached) { this.frontReached = false; }
+        if (this.frontReached) {
+            this.frontReached = false;
+            this.currentVoiceEntryIndex = -1;
+        }
         if (this.currentVoiceEntries) {
             this.currentVoiceEntries = [];
         }
@@ -557,6 +562,7 @@ export class MusicPartManagerIterator {
         }
         // we reached the beginning
         this.frontReached = true;
+        this.currentTimeStamp = new Fraction(-1, 1);
     }
 
     private recursiveMove(): void {
