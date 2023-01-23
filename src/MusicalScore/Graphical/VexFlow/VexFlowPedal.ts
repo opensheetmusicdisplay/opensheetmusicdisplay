@@ -129,9 +129,12 @@ export class VexFlowPedal extends GraphicalPedal {
         pedalMarking.setLine(this.line);
         pedalMarking.setCustomText(this.DepressText, this.ReleaseText);
         //If our end note is at the end of a stave, set that value
-        if(this.endVfVoiceEntry?.parentStaffEntry === this.endVfVoiceEntry?.parentStaffEntry?.parentMeasure?.staffEntries.last() ||
-        !this.endVfVoiceEntry){
-                (pedalMarking as any).EndsStave = true;
+        if(!this.endVfVoiceEntry
+            // || this.endVfVoiceEntry?.parentStaffEntry === this.endVfVoiceEntry?.parentStaffEntry?.parentMeasure?.staffEntries.last()
+            //   the above condition prevents the ability to stop BEFORE the last staff entry.
+            //   see test_pedal_stop_before_last_staffentry and OSMD Function test - Color, compare with Beethoven - Geliebte (pedal symbols vs lines)
+        ){
+            (pedalMarking as any).EndsStave = true;
         }
         (pedalMarking as any).ChangeBegin = this.ChangeBegin;
         (pedalMarking as any).ChangeEnd = this.ChangeEnd;
