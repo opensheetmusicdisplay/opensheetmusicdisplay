@@ -144,7 +144,7 @@ export class VexFlowPedal extends GraphicalPedal {
     }
 
     public setEndsStave(endMeasure: GraphicalMeasure, endTimeStamp: Fraction): void {
-        if (endTimeStamp.gte(endMeasure.parentSourceMeasure.Duration)) {
+        if (endTimeStamp?.gte(endMeasure.parentSourceMeasure.Duration)) {
             this.getPedal.EndsStave = true;
         }
     }
