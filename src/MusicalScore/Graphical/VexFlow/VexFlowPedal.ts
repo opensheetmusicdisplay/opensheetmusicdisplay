@@ -14,7 +14,10 @@ import { Fraction } from "../../../Common/DataObjects/Fraction";
 export class VexFlowPedal extends GraphicalPedal {
     /** Defines the note where the pedal starts */
     public startNote: Vex.Flow.StemmableNote;
-    /** Defines the note where the pedal ends */
+    /** Defines the note where the pedal ends.
+     *  (for pedal lines, visually, the pedal end is BEFORE the note, as in Vexflow,
+     *  UNLESS pedal.EndsStave is set, in which case it ends at the end (furthest x) of the stave.
+     */
     public endNote: Vex.Flow.StemmableNote;
     private vfStyle: Vex.Flow.PedalMarking.Styles = Vex.Flow.PedalMarking.Styles.BRACKET;
     public DepressText: string;
