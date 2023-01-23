@@ -143,7 +143,15 @@ export class Cursor {
     const iterator: MusicPartManagerIterator = this.iterator;
     // TODO when measure draw range (drawUpToMeasureNumber) was changed, next/update can fail to move cursor. but of course it can be reset before.
 
-    const voiceEntries: VoiceEntry[] = iterator.CurrentVisibleVoiceEntries();
+    let voiceEntries: VoiceEntry[] = iterator.CurrentVisibleVoiceEntries();
+    if (iterator.FrontReached && voiceEntries.length === 0) {
+      // workaround: show position 0 instead of nothing when going before start of sheet.
+      //   The current cursor behavior before start of the sheet is not well defined, or at least a matter of preference.
+      //   There are reasonable alternatives, like highlighting the beginning (first vertical line or clef) of the measure.
+      iterator.moveToNext();
+      voiceEntries = iterator.CurrentVisibleVoiceEntries();
+      iterator.moveToPrevious();
+    }
     if (iterator.EndReached || !iterator.CurrentVoiceEntries || voiceEntries.length === 0) {
       return;
     }
@@ -353,7 +361,10 @@ export class Cursor {
    *  This is only necessary if using PageFormat (multiple pages).
    */
   public updateCurrentPage(): number {
-    const timestamp: Fraction = this.iterator.currentTimeStamp;
+    let timestamp: Fraction = this.iterator.currentTimeStamp;
+    if (timestamp.RealValue < 0) {
+      timestamp = new Fraction(0, 0);
+    }
     for (const page of this.graphic.MusicPages) {
       const lastSystemTimestamp: Fraction = page.MusicSystems.last().GetSystemsLastTimeStamp();
       if (lastSystemTimestamp.gt(timestamp)) {
