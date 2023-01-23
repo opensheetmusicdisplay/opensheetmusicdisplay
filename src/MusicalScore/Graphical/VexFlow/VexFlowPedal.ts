@@ -138,6 +138,9 @@ export class VexFlowPedal extends GraphicalPedal {
         ){
             (pedalMarking as any).EndsStave = true;
         }
+        if (this.getPedal.BeginsStave) {
+            (pedalMarking as any).BeginsStave = true;
+        }
         (pedalMarking as any).ChangeBegin = this.ChangeBegin;
         (pedalMarking as any).ChangeEnd = this.ChangeEnd;
         return pedalMarking;
@@ -146,6 +149,12 @@ export class VexFlowPedal extends GraphicalPedal {
     public setEndsStave(endMeasure: GraphicalMeasure, endTimeStamp: Fraction): void {
         if (endTimeStamp?.gte(endMeasure.parentSourceMeasure.Duration)) {
             this.getPedal.EndsStave = true;
+        }
+    }
+
+    public setBeginsStave(isRest: boolean, startTimeStamp: Fraction): void {
+        if (isRest && startTimeStamp.RealValue === 0) {
+            this.getPedal.BeginsStave = true;
         }
     }
 }

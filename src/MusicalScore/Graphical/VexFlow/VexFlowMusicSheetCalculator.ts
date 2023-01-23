@@ -1089,6 +1089,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!graphicalPedal.setStartNote(startStaffEntry)){
         return;
       }
+      graphicalPedal.setBeginsStave(graphicalPedal.startNote.isRest(), startTimeStamp);
 
       if (endStaffLine !== startStaffLine) {
         if(graphicalPedal.pedalSymbol === MusicSymbol.PEDAL_SYMBOL){
