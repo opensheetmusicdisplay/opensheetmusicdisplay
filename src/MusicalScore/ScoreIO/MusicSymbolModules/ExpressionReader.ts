@@ -381,7 +381,7 @@ export class ExpressionReader {
                         break;
                         case "stop":
                             if (this.openPedal) {
-                                this.endOpenPedal(currentMeasure);
+                                this.endOpenPedal(currentMeasure, endTimestamp);
                             }
                         break;
                         case "change":
@@ -412,8 +412,9 @@ export class ExpressionReader {
             }
         }
     }
-    private endOpenPedal(currentMeasure: SourceMeasure): void {
-        this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+    private endOpenPedal(currentMeasure: SourceMeasure, endTimeStamp?: Fraction): void {
+        this.createNewMultiExpressionIfNeeded(currentMeasure, -1, endTimeStamp);
+        // unfortunately currentMeasure.Duration doesn't exist here yet, so we can't check pedal.EndsStave
         this.getMultiExpression.PedalEnd = this.openPedal;
         this.openPedal.ParentEndMultiExpression = this.getMultiExpression;
         this.openPedal = undefined;

@@ -542,7 +542,8 @@ export class InstrumentReader {
               expressionReader.readExpressionParameters(
                 xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, true
               );
-              expressionReader.addPedalMarking(xmlNode, this.currentMeasure, previousFraction.clone());
+              expressionReader.addPedalMarking(xmlNode, this.currentMeasure, currentFraction.clone());
+              // pedal end in OSMD and Vexflow means end BEFORE timestamp, so currentFraction instead of previousFraction needs to be used.
              }
              expressionReader.readExpressionParameters(
                xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, false
