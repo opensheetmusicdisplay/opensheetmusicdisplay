@@ -1075,6 +1075,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       // calculate GraphicalPedal and RelativePositions
       const graphicalPedal: VexFlowPedal = new VexFlowPedal(pedal, startStaffLine.PositionAndShape, false, openEnd);
+      graphicalPedal.setEndsStave(endMeasure, endTimeStamp); // unfortunately this can't already be checked in ExpressionReader
       // calculate RelativePosition
       let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
       if (!startStaffEntry) { // fix for rendering range set
@@ -1100,6 +1101,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           const nextPedalFirstMeasure: GraphicalMeasure = endStaffLine.Measures[0];
           // pedal starts on the first measure
           const nextPedal: VexFlowPedal = new VexFlowPedal(pedal, nextPedalFirstMeasure.PositionAndShape);
+          graphicalPedal.setEndsStave(endMeasure, endTimeStamp);
           const firstNote: GraphicalStaffEntry = nextPedalFirstMeasure.staffEntries[0];
           if(!nextPedal.setStartNote(firstNote)){
             return;
@@ -1138,6 +1140,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               currentCount++;
               // pedal starts on the first measure
               const nextPedal: VexFlowPedal = new VexFlowPedal(pedal, nextPedalFirstMeasure.PositionAndShape, true, nextOpenEnd);
+              graphicalPedal.setEndsStave(endMeasure, endTimeStamp);
               nextPedal.ChangeBegin = false;
               if(nextChangeEndFromParent){
                 nextPedal.ChangeEnd = pedal.ChangeEnd;
@@ -1151,7 +1154,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               //If the end measure's staffline is the ending staffline, this endMeasure is the end of the pedal
               if (endMeasure.ParentStaffLine === nextPedalStaffline) {
                 nextPedalLastMeasure = endMeasure;
+                nextPedal.setEndMeasure(endMeasure);
                 lastNote = endStaffEntry;
+              } else {
+                nextPedal.setEndMeasure(nextPedalStaffline.Measures.last());
               }
               if(!nextPedal.setStartNote(firstNote)){
                 break;

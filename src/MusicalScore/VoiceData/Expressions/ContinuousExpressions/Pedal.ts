@@ -13,6 +13,7 @@ export class Pedal {
     public ParentEndMultiExpression: MultiExpression;
     public ChangeEnd: boolean = false;
     public ChangeBegin: boolean = false;
+    public EndsStave: boolean = false;
 
     public get IsLine(): boolean {
         return this.line;

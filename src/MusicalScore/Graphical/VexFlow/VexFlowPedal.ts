@@ -7,6 +7,7 @@ import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
 import { MusicSymbol } from "../MusicSymbol";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
+import { Fraction } from "../../../Common/DataObjects/Fraction";
 /**
  * The vexflow adaptation of a pedal marking
  */
@@ -129,8 +130,9 @@ export class VexFlowPedal extends GraphicalPedal {
         pedalMarking.setLine(this.line);
         pedalMarking.setCustomText(this.DepressText, this.ReleaseText);
         //If our end note is at the end of a stave, set that value
-        if(!this.endVfVoiceEntry
-            // || this.endVfVoiceEntry?.parentStaffEntry === this.endVfVoiceEntry?.parentStaffEntry?.parentMeasure?.staffEntries.last()
+        if(!this.endVfVoiceEntry ||
+            this.getPedal.EndsStave
+            //|| this.endVfVoiceEntry?.parentStaffEntry === this.endVfVoiceEntry?.parentStaffEntry?.parentMeasure?.staffEntries.last()
             //   the above condition prevents the ability to stop BEFORE the last staff entry.
             //   see test_pedal_stop_before_last_staffentry and OSMD Function test - Color, compare with Beethoven - Geliebte (pedal symbols vs lines)
         ){
@@ -139,5 +141,11 @@ export class VexFlowPedal extends GraphicalPedal {
         (pedalMarking as any).ChangeBegin = this.ChangeBegin;
         (pedalMarking as any).ChangeEnd = this.ChangeEnd;
         return pedalMarking;
+    }
+
+    public setEndsStave(endMeasure: GraphicalMeasure, endTimeStamp: Fraction): void {
+        if (endTimeStamp?.gte(endMeasure.parentSourceMeasure.Duration)) {
+            this.getPedal.EndsStave = true;
+        }
     }
 }
