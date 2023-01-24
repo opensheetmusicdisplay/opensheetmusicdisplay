@@ -551,7 +551,7 @@ export class MusicPartManagerIterator {
             this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
             this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
             this.currentVoiceEntryIndex = m.VerticalSourceStaffEntryContainers.length-1;
-            this.currentTimeStamp = currentContainer.Timestamp;
+            this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, currentContainer.Timestamp);
             this.activateCurrentDynamicOrTempoInstructions();
             // re-check endReached
             const selectionEnd: Fraction = this.musicSheet.SelectionEnd;
