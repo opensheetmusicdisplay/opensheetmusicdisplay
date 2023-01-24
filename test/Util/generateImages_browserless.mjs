@@ -50,9 +50,6 @@ let pageFormat;
 if (!mode) {
     mode = "";
 }
-if (imageFormat !== "svg") {
-    imageFormat = "png";
-}
 
 // let OSMD; // can only be required once window was simulated
 // eslint-disable-next-line @typescript-eslint/no-var-requires
