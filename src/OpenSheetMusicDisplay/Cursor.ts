@@ -145,24 +145,28 @@ export class Cursor {
 
     let voiceEntries: VoiceEntry[] = iterator.CurrentVisibleVoiceEntries();
     let currentMeasureIndex: number = iterator.CurrentMeasureIndex;
+    let x: number = 0, y: number = 0, height: number = 0;
+    let musicSystem: MusicSystem;
     if (iterator.FrontReached && voiceEntries.length === 0) {
       // workaround: show position 0 instead of nothing when going before start of sheet.
       //   The current cursor behavior before start of the sheet is not well defined, or at least a matter of preference.
       //   There are reasonable alternatives, like highlighting the beginning (first vertical line or clef) of the measure.
       iterator.moveToNext();
       voiceEntries = iterator.CurrentVisibleVoiceEntries();
+      const firstMeasure: GraphicalMeasure = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0);
+      x = firstMeasure.PositionAndShape.AbsolutePosition.x;
+      musicSystem = firstMeasure.ParentMusicSystem;
       iterator.moveToPrevious();
-    }
-    if (iterator.EndReached || !iterator.CurrentVoiceEntries || voiceEntries.length === 0) {
+    } else if (iterator.EndReached || !iterator.CurrentVoiceEntries || voiceEntries.length === 0) {
       // workaround: show last position instead of nothing
       iterator.moveToPrevious();
       voiceEntries = iterator.CurrentVisibleVoiceEntries();
       currentMeasureIndex = iterator.CurrentMeasureIndex;
+      const lastMeasure: GraphicalMeasure = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0);
+      x = lastMeasure.PositionAndShape.AbsolutePosition.x + lastMeasure.PositionAndShape.Size.width;
+      musicSystem = lastMeasure.ParentMusicSystem;
       iterator.moveToNext();
-    }
-    let x: number = 0, y: number = 0, height: number = 0;
-    let musicSystem: MusicSystem;
-    if (iterator.CurrentMeasure.isReducedToMultiRest) {
+    } else if (iterator.CurrentMeasure.isReducedToMultiRest) {
       const multiRestGMeasure: GraphicalMeasure = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0);
       const totalRestMeasures: number = multiRestGMeasure.parentSourceMeasure.multipleRestMeasures;
       const currentRestMeasureNumber: number = iterator.CurrentMeasure.multipleRestMeasureNumber;
