@@ -176,20 +176,20 @@ export class Cursor {
 
       musicSystem = multiRestGMeasure.ParentMusicSystem;
     } else {
-        // get all staff entries inside the current voice entry
-        const gseArr: VexFlowStaffEntry[] = voiceEntries.map(ve => this.getStaffEntryFromVoiceEntry(ve));
-        // sort them by x position and take the leftmost entry
-        const gse: VexFlowStaffEntry =
-              gseArr.sort((a, b) => a?.PositionAndShape?.AbsolutePosition?.x <= b?.PositionAndShape?.AbsolutePosition?.x ? -1 : 1 )[0];
-        x = gse.PositionAndShape.AbsolutePosition.x;
-        musicSystem = gse.parentMeasure.ParentMusicSystem;
+      // get all staff entries inside the current voice entry
+      const gseArr: VexFlowStaffEntry[] = voiceEntries.map(ve => this.getStaffEntryFromVoiceEntry(ve));
+      // sort them by x position and take the leftmost entry
+      const gse: VexFlowStaffEntry =
+            gseArr.sort((a, b) => a?.PositionAndShape?.AbsolutePosition?.x <= b?.PositionAndShape?.AbsolutePosition?.x ? -1 : 1 )[0];
+      x = gse.PositionAndShape.AbsolutePosition.x;
+      musicSystem = gse.parentMeasure.ParentMusicSystem;
 
-        // debug: change color of notes under cursor (needs re-render)
-        // for (const gve of gse.graphicalVoiceEntries) {
-        //   for (const note of gve.notes) {
-        //     note.sourceNote.NoteheadColor = "#0000FF";
-        //   }
-        // }
+      // debug: change color of notes under cursor (needs re-render)
+      // for (const gve of gse.graphicalVoiceEntries) {
+      //   for (const note of gve.notes) {
+      //     note.sourceNote.NoteheadColor = "#0000FF";
+      //   }
+      // }
     }
     if (!musicSystem) {
       return;
