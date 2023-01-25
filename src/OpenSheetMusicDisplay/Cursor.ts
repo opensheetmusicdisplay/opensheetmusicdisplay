@@ -148,9 +148,8 @@ export class Cursor {
     let x: number = 0, y: number = 0, height: number = 0;
     let musicSystem: MusicSystem;
     if (iterator.FrontReached && voiceEntries.length === 0) {
-      // workaround: show position 0 instead of nothing when going before start of sheet.
-      //   The current cursor behavior before start of the sheet is not well defined, or at least a matter of preference.
-      //   There are reasonable alternatives, like highlighting the beginning (first vertical line or clef) of the measure.
+      // show beginning of first measure (of stafflines, to create a visual difference to the first note position)
+      //   this position is technically before the sheet/first note - e.g. cursor.Iterator.CurrentTimestamp.RealValue = -1
       iterator.moveToNext();
       voiceEntries = iterator.CurrentVisibleVoiceEntries();
       const firstMeasure: GraphicalMeasure = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0);
@@ -158,7 +157,8 @@ export class Cursor {
       musicSystem = firstMeasure.ParentMusicSystem;
       iterator.moveToPrevious();
     } else if (iterator.EndReached || !iterator.CurrentVoiceEntries || voiceEntries.length === 0) {
-      // workaround: show last position instead of nothing
+      // show end of last measure (of stafflines, to create a visual difference to the first note position)
+      //   this position is technically after the sheet/last note - e.g. cursor.Iterator.CurrentTimestamp.RealValue = 99999
       iterator.moveToPrevious();
       voiceEntries = iterator.CurrentVisibleVoiceEntries();
       currentMeasureIndex = iterator.CurrentMeasureIndex;
