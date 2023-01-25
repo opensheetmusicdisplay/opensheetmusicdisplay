@@ -144,6 +144,7 @@ export class Cursor {
     // TODO when measure draw range (drawUpToMeasureNumber) was changed, next/update can fail to move cursor. but of course it can be reset before.
 
     let voiceEntries: VoiceEntry[] = iterator.CurrentVisibleVoiceEntries();
+    let currentMeasureIndex: number = iterator.CurrentMeasureIndex;
     if (iterator.FrontReached && voiceEntries.length === 0) {
       // workaround: show position 0 instead of nothing when going before start of sheet.
       //   The current cursor behavior before start of the sheet is not well defined, or at least a matter of preference.
@@ -153,7 +154,11 @@ export class Cursor {
       iterator.moveToPrevious();
     }
     if (iterator.EndReached || !iterator.CurrentVoiceEntries || voiceEntries.length === 0) {
-      return;
+      // workaround: show last position instead of nothing
+      iterator.moveToPrevious();
+      voiceEntries = iterator.CurrentVisibleVoiceEntries();
+      currentMeasureIndex = iterator.CurrentMeasureIndex;
+      iterator.moveToNext();
     }
     let x: number = 0, y: number = 0, height: number = 0;
     let musicSystem: MusicSystem;
@@ -196,7 +201,7 @@ export class Cursor {
     height = endY - y;
 
     // Update the graphical cursor
-    const measurePositionAndShape: BoundingBox = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0).PositionAndShape;
+    const measurePositionAndShape: BoundingBox = this.graphic.findGraphicalMeasure(currentMeasureIndex, 0).PositionAndShape;
     this.updateWidthAndStyle(measurePositionAndShape, x, y, height);
 
     if (this.openSheetMusicDisplay.FollowCursor && this.cursorOptions.follow) {
