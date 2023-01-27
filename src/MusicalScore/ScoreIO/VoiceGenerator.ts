@@ -533,7 +533,7 @@ export class VoiceGenerator {
     if (displayStepElement && octaveElement) {
         displayStep = NoteEnum[displayStepElement.value.toUpperCase()];
         displayOctave = parseInt(octaveElement.value, 10);
-        pitch = new Pitch(displayStep, displayOctave, AccidentalEnum.NONE);
+        pitch = new Pitch(displayStep, displayOctave, AccidentalEnum.NONE, undefined, true);
     }
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, this.currentMeasure, true);
     this.addNoteInfo(restNote, noteTypeXml, printObject, isCueNote, normalNotes, displayStep, displayOctave, noteheadColorXml, noteheadColorXml);
