@@ -152,9 +152,9 @@ export class Cursor {
       //   this position is technically before the sheet/first note - e.g. cursor.Iterator.CurrentTimestamp.RealValue = -1
       iterator.moveToNext();
       voiceEntries = iterator.CurrentVisibleVoiceEntries();
-      const firstMeasure: GraphicalMeasure = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0);
-      x = firstMeasure.PositionAndShape.AbsolutePosition.x;
-      musicSystem = firstMeasure.ParentMusicSystem;
+      const firstVisibleMeasure: GraphicalMeasure = this.findVisibleGraphicalMeasure(iterator.CurrentMeasureIndex);
+      x = firstVisibleMeasure.PositionAndShape.AbsolutePosition.x;
+      musicSystem = firstVisibleMeasure.ParentMusicSystem;
       iterator.moveToPrevious();
     } else if (iterator.EndReached || !iterator.CurrentVoiceEntries || voiceEntries.length === 0) {
       // show end of last measure (of stafflines, to create a visual difference to the first note position)
@@ -162,12 +162,13 @@ export class Cursor {
       iterator.moveToPrevious();
       voiceEntries = iterator.CurrentVisibleVoiceEntries();
       currentMeasureIndex = iterator.CurrentMeasureIndex;
-      const lastMeasure: GraphicalMeasure = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0);
-      x = lastMeasure.PositionAndShape.AbsolutePosition.x + lastMeasure.PositionAndShape.Size.width;
-      musicSystem = lastMeasure.ParentMusicSystem;
+      const lastVisibleMeasure: GraphicalMeasure = this.findVisibleGraphicalMeasure(iterator.CurrentMeasureIndex);
+      x = lastVisibleMeasure.PositionAndShape.AbsolutePosition.x + lastVisibleMeasure.PositionAndShape.Size.width;
+      musicSystem = lastVisibleMeasure.ParentMusicSystem;
       iterator.moveToNext();
     } else if (iterator.CurrentMeasure.isReducedToMultiRest) {
-      const multiRestGMeasure: GraphicalMeasure = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0);
+      // multiple measure rests aren't used when one
+      const multiRestGMeasure: GraphicalMeasure = this.findVisibleGraphicalMeasure(iterator.CurrentMeasureIndex);
       const totalRestMeasures: number = multiRestGMeasure.parentSourceMeasure.multipleRestMeasures;
       const currentRestMeasureNumber: number = iterator.CurrentMeasure.multipleRestMeasureNumber;
       const progressRatio: number = currentRestMeasureNumber / (totalRestMeasures + 1);
@@ -196,7 +197,8 @@ export class Cursor {
     }
 
     // y is common for both multirest and non-multirest, given the MusicSystem
-    y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0]?.PositionAndShape.RelativePosition.y ?? 0;
+    //   note: StaffLines[0] is guaranteed to exist in this.findVisibleGraphicalMeasure
+    y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
     let endY: number = musicSystem.PositionAndShape.AbsolutePosition.y;
     const bottomStaffline: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
     if (bottomStaffline) { // can be undefined if drawFromMeasureNumber changed after cursor was shown
@@ -219,6 +221,15 @@ export class Cursor {
     // Show cursor
     // // Old cursor: this.graphic.Cursors.push(cursor);
     this.cursorElement.style.display = "";
+  }
+
+  private findVisibleGraphicalMeasure(measureIndex: number): GraphicalMeasure {
+    for (let i: number = 1; i < this.graphic.NumberOfStaves; i++) {
+      const measure: GraphicalMeasure = this.graphic.findGraphicalMeasure(this.iterator.CurrentMeasureIndex, i);
+      if (measure.ParentMusicSystem.StaffLines.length > 0) {
+        return measure;
+      }
+    }
   }
 
   public updateWidthAndStyle(measurePositionAndShape: BoundingBox, x: number, y: number, height: number): void {
