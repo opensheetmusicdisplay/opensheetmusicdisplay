@@ -147,6 +147,13 @@ export class Cursor {
     let currentMeasureIndex: number = iterator.CurrentMeasureIndex;
     let x: number = 0, y: number = 0, height: number = 0;
     let musicSystem: MusicSystem;
+    if (voiceEntries.length === 0 && !iterator.FrontReached && !iterator.EndReached) {
+      // e.g. when the note at the current position is in an instrument that's now invisible, and there's no other note at this position, vertically
+      iterator.moveToPrevious();
+      voiceEntries = iterator.CurrentVisibleVoiceEntries();
+      iterator.moveToNext();
+      // after this, the else condition below should trigger, positioning the cursor at the left-most note. See #1312
+    }
     if (iterator.FrontReached && voiceEntries.length === 0) {
       // show beginning of first measure (of stafflines, to create a visual difference to the first note position)
       //   this position is technically before the sheet/first note - e.g. cursor.Iterator.CurrentTimestamp.RealValue = -1
@@ -160,7 +167,7 @@ export class Cursor {
       // show end of last measure (of stafflines, to create a visual difference to the first note position)
       //   this position is technically after the sheet/last note - e.g. cursor.Iterator.CurrentTimestamp.RealValue = 99999
       iterator.moveToPrevious();
-      voiceEntries = iterator.CurrentVisibleVoiceEntries();
+    voiceEntries = iterator.CurrentVisibleVoiceEntries();
       currentMeasureIndex = iterator.CurrentMeasureIndex;
       const lastVisibleMeasure: GraphicalMeasure = this.findVisibleGraphicalMeasure(iterator.CurrentMeasureIndex);
       x = lastVisibleMeasure.PositionAndShape.AbsolutePosition.x + lastVisibleMeasure.PositionAndShape.Size.width;
