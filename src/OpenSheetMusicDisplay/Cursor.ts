@@ -226,7 +226,7 @@ export class Cursor {
   private findVisibleGraphicalMeasure(measureIndex: number): GraphicalMeasure {
     for (let i: number = 1; i < this.graphic.NumberOfStaves; i++) {
       const measure: GraphicalMeasure = this.graphic.findGraphicalMeasure(this.iterator.CurrentMeasureIndex, i);
-      if (measure.ParentMusicSystem.StaffLines.length > 0) {
+      if (measure?.ParentStaff.ParentInstrument.Visible) {
         return measure;
       }
     }
