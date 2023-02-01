@@ -144,10 +144,14 @@ export class VoiceGenerator {
         }
         // read slurs
         const slurElements: IXmlElement[] = notationNode.elements("slur");
+        const slideElements: IXmlElement[] = notationNode.elements("slide");
         if (this.slurReader !== undefined &&
-            slurElements.length > 0 &&
+            (slurElements.length > 0 || slideElements.length > 0) &&
             !this.currentNote.ParentVoiceEntry.IsGrace) {
           this.slurReader.addSlur(slurElements, this.currentNote);
+          if (slideElements.length > 0) {
+            this.slurReader.addSlur(slideElements, this.currentNote);
+          }
         }
         // read Tuplets
         const tupletElements: IXmlElement[] = notationNode.elements("tuplet");
@@ -203,11 +207,12 @@ export class VoiceGenerator {
         if (tiedNodeList.length > 0) {
           this.addTie(tiedNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.SIMPLE);
         }
-        //check for slides, they are the same as Ties but with a different connection
-        const slideNodeList: IXmlElement[] = notationNode.elements("slide");
-        if (slideNodeList.length > 0) {
-          this.addTie(slideNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.SLIDE);
-        }
+        //"check for slides, they are the same as Ties but with a different connection"
+        //  correction: slide can have a different end note (e.g. guitar) -> should be handled as slur
+        // const slideNodeList: IXmlElement[] = notationNode.elements("slide");
+        // if (slideNodeList.length > 0) {
+        //   this.addTie(slideNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.SLIDE);
+        // }
         //check for guitar specific symbols:
         const technicalNode: IXmlElement = notationNode.element("technical");
         if (technicalNode) {

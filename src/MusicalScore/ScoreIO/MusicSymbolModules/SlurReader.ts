@@ -5,6 +5,8 @@ import { Note } from "../../VoiceData/Note";
 import log from "loglevel";
 import { ITextTranslation } from "../../Interfaces/ITextTranslation";
 import { PlacementEnum } from "../../VoiceData/Expressions";
+import { Tie } from "../../VoiceData";
+import { TieTypes } from "../../../Common/Enums/TieTypes";
 
 export class SlurReader {
     private musicSheet: MusicSheet;
@@ -56,15 +58,25 @@ export class SlurReader {
                         } else if (type === "stop") {
                             const slur: Slur = this.openSlurDict[slurNumber];
                             if (slur) {
-                                slur.EndNote = currentNote;
-                                // check if not already a slur with same notes has been given:
-                                if (!currentNote.isDuplicateSlur(slur)) {
-                                    // if not, link slur to notes:
-                                    currentNote.NoteSlurs.push(slur);
-                                    const slurStartNote: Note = slur.StartNote;
-                                    slurStartNote.NoteSlurs.push(slur);
+                                const nodeName: string = slurNode.name;
+                                if (nodeName === "slide") {
+                                    const startNote: Note = slur.StartNote;
+                                    const newTie: Tie = new Tie(startNote, TieTypes.SLIDE);
+                                    newTie.AddNote(currentNote);
+                                    currentNote.NoteTie.TieDirection = slur.PlacementXml;
+                                    currentNote.NoteTie = newTie;
+                                    delete this.openSlurDict[slurNumber];
+                                } else {
+                                    slur.EndNote = currentNote;
+                                    // check if not already a slur with same notes has been given:
+                                    if (!currentNote.isDuplicateSlur(slur)) {
+                                        // if not, link slur to notes:
+                                        currentNote.NoteSlurs.push(slur);
+                                        const slurStartNote: Note = slur.StartNote;
+                                        slurStartNote.NoteSlurs.push(slur);
+                                    }
+                                    delete this.openSlurDict[slurNumber];
                                 }
-                                delete this.openSlurDict[slurNumber];
                             }
                         }
                     }

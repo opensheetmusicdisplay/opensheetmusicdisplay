@@ -116,10 +116,16 @@ export class StaveTie extends Element {
       this.setAttribute('el', ctx.openGroup('stavetie', id));
       ctx.beginPath();
       ctx.moveTo(params.first_x_px + first_x_shift, first_y_px);
-      ctx.quadraticCurveTo(cp_x, top_cp_y, params.last_x_px + last_x_shift, last_y_px);
-      ctx.quadraticCurveTo(cp_x, bottom_cp_y, params.first_x_px + first_x_shift, first_y_px);
-      ctx.closePath();
-      ctx.fill();
+      if (this.StraightLine) {
+        ctx.lineTo(params.last_x_px, last_y_px);
+        ctx.closePath();
+        ctx.stroke();
+      } else {
+        ctx.quadraticCurveTo(cp_x, top_cp_y, params.last_x_px + last_x_shift, last_y_px);
+        ctx.quadraticCurveTo(cp_x, bottom_cp_y, params.first_x_px + first_x_shift, first_y_px);
+        ctx.closePath();
+        ctx.fill();
+      }
       ctx.closeGroup();
     }
   }
@@ -155,6 +161,17 @@ export class StaveTie extends Element {
       first_x_px = first_note.getTieRightX() + this.render_options.tie_spacing;
       stem_direction = first_note.getStemDirection();
       first_ys = first_note.getYs();
+
+      // VexFlowPatch: StraightLine: start at y-center of notehead
+      const noteheads = first_note.note_heads;
+      if (this.StraightLine && noteheads) {
+        const notehead = first_note.note_heads[0];
+        const sign = stem_direction;
+        //const bbox = notehead.getBoundingBox();
+        //const middleY = notehead.bbox.y + bbox.h / 2;
+        const middleY = first_ys[0] + sign * notehead.stave.getSpacingBetweenLines() / 2;
+        first_ys[0] = middleY;
+      }
     } else {
       first_x_px = last_note.getStave().getTieStartX();
       first_ys = last_note.getYs();
@@ -165,6 +182,23 @@ export class StaveTie extends Element {
       last_x_px = last_note.getTieLeftX() + this.render_options.tie_spacing;
       stem_direction = last_note.getStemDirection();
       last_ys = last_note.getYs();
+
+      if (this.StraightLine && this.render_options.tie_right_spacing) {
+        last_x_px += this.render_options.tie_right_spacing;
+      }
+
+      // VexFlowPatch: StraightLine: start at y-center of notehead
+      const noteheads = last_note.note_heads;
+      if (this.StraightLine && noteheads) {
+        const notehead = last_note.note_heads[0];
+        const sign = -1 * stem_direction;
+        //const bbox = notehead.getBoundingBox();
+        //const middleY = notehead.bbox.y + bbox.h / 2;
+        const middleY = last_ys[0] + sign * notehead.stave.getSpacingBetweenLines() / 2;
+        //  note: above has double the y-shift as for startNote (/2 instead of /4),
+        //    because otherwise it's still not the middle of the note. Not sure why different for last note.
+        last_ys[0] = middleY;
+      }
     } else {
       last_x_px = first_note.getStave().getTieEndX();
       last_ys = first_note.getYs();
