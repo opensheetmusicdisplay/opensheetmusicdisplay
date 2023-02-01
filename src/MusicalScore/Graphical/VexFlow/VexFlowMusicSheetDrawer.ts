@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import Vex, { IRenderContext } from "vexflow";
 import VF = Vex.Flow;
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
@@ -30,6 +30,8 @@ import { GraphicalMusicPage } from "../GraphicalMusicPage";
 import { GraphicalMusicSheet } from "../GraphicalMusicSheet";
 import { GraphicalUnknownExpression } from "../GraphicalUnknownExpression";
 import { VexFlowPedal } from "./VexFlowPedal";
+import { GraphicalGlissando } from "../GraphicalGlissando";
+import { VexFlowGlissando } from "./VexFlowGlissando";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -117,6 +119,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (this.rules.RenderSlurs) {
             this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
         }
+        this.drawGlissandi(staffLine as VexFlowStaffLine, absolutePos);
     }
 
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
@@ -126,6 +129,27 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 continue;
             }
             this.drawSlur(graphicalSlur, absolutePos);
+        }
+    }
+
+    private drawGlissandi(vfStaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
+        for (const gGliss of vfStaffLine.GraphicalGlissandi) {
+            this.drawGlissando(gGliss, absolutePos);
+        }
+    }
+
+    private drawGlissando(gGliss: GraphicalGlissando, abs: PointF2D): void {
+        if (gGliss.Line) {
+            const newStart: PointF2D = new PointF2D(gGliss.Line.Start.x + abs.x, gGliss.Line.Start.y + abs.y);
+            const newEnd: PointF2D = new PointF2D(gGliss.Line.End.x + abs.x, gGliss.Line.End.y + abs.y);
+            this.drawLine(newStart, newEnd);
+        } else {
+            const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;
+            if (vfTie) {
+                const context: IRenderContext = this.backend.getContext();
+                vfTie.setContext(context);
+                vfTie.draw();
+            }
         }
     }
 

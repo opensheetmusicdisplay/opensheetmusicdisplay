@@ -6,17 +6,16 @@ export class Glissando {
 
     constructor(note: Note) {
         this.AddNote(note);
+        this.StartNote = note;
     }
 
     private notes: Note[] = [];
+    public StartNote: Note;
+    public EndNote: Note;
     public XMLNumber: number = 1;
 
     public get Notes(): Note[] {
         return this.notes;
-    }
-
-    public get StartNote(): Note {
-        return this.notes[0];
     }
 
     public get Duration(): Fraction {

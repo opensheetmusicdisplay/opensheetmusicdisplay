@@ -62,6 +62,7 @@ export class SlurReader {
                                     const startNote: Note = slur.StartNote;
                                     const newGlissando: Glissando = new Glissando(startNote);
                                     newGlissando.AddNote(currentNote);
+                                    newGlissando.EndNote = currentNote;
                                     currentNote.NoteGlissando = newGlissando;
                                     delete this.openSlurDict[slurNumber];
                                 } else {
