@@ -5,8 +5,7 @@ import { Note } from "../../VoiceData/Note";
 import log from "loglevel";
 import { ITextTranslation } from "../../Interfaces/ITextTranslation";
 import { PlacementEnum } from "../../VoiceData/Expressions";
-import { Tie } from "../../VoiceData";
-import { TieTypes } from "../../../Common/Enums/TieTypes";
+import { Glissando } from "../../VoiceData/Glissando";
 
 export class SlurReader {
     private musicSheet: MusicSheet;
@@ -61,10 +60,9 @@ export class SlurReader {
                                 const nodeName: string = slurNode.name;
                                 if (nodeName === "slide") {
                                     const startNote: Note = slur.StartNote;
-                                    const newTie: Tie = new Tie(startNote, TieTypes.SLIDE);
-                                    newTie.AddNote(currentNote);
-                                    currentNote.NoteTie.TieDirection = slur.PlacementXml;
-                                    currentNote.NoteTie = newTie;
+                                    const newGlissando: Glissando = new Glissando(startNote);
+                                    newGlissando.AddNote(currentNote);
+                                    currentNote.NoteGlissando = newGlissando;
                                     delete this.openSlurDict[slurNumber];
                                 } else {
                                     slur.EndNote = currentNote;
