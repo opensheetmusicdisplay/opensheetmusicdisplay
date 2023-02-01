@@ -64,7 +64,6 @@ import { VexFlowPedal } from "./VexFlowPedal";
 import { MusicSymbol } from "../MusicSymbol";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { CollectionUtil } from "../../../Util/CollectionUtil";
-import { TieTypes } from "../../../Common/Enums/TieTypes";
 import { GraphicalGlissando } from "../GraphicalGlissando";
 import { Glissando } from "../../VoiceData/Glissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
@@ -655,9 +654,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           first_indices: [startNoteIndexInTie],
           first_note: vfStartNote
         });
-        if (tie.Tie.Type === TieTypes.SLIDE) {
-          (vfTie1 as any).StraightLine = true;
-        }
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
       }
@@ -667,9 +663,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           last_indices: [endNoteIndexInTie],
           last_note: vfEndNote
         });
-        if (tie.Tie.Type === TieTypes.SLIDE) {
-          (vfTie2 as any).StraightLine = true;
-        }
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure2.addStaveTie(vfTie2, tie);
       }
@@ -714,10 +707,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             last_indices: [endNoteIndexInTie],
             last_note: vfEndNote
           });
-          if (tie.Tie.Type === TieTypes.SLIDE) {
-            (vfTie as any).StraightLine = true;
-            (vfTie as any).render_options.tie_right_spacing = -5; // shift end of line to the left, to not touch note
-          }
           const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote.sourceNote);
           if (tieDirection === PlacementEnum.Below) {
             vfTie.setDirection(1); // + is down in vexflow

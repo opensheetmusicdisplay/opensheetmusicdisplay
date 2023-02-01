@@ -64,6 +64,7 @@ export class SlurReader {
                                     newGlissando.AddNote(currentNote);
                                     newGlissando.EndNote = currentNote;
                                     currentNote.NoteGlissando = newGlissando;
+                                    // TODO use its own dict, openSlideDict? Can this cause problems if slur and slide have the same number?
                                     delete this.openSlurDict[slurNumber];
                                 } else {
                                     slur.EndNote = currentNote;
