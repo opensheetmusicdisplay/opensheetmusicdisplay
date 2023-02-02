@@ -189,8 +189,10 @@ export class Cursor {
       // sort them by x position and take the leftmost entry
       const gse: VexFlowStaffEntry =
             gseArr.sort((a, b) => a?.PositionAndShape?.AbsolutePosition?.x <= b?.PositionAndShape?.AbsolutePosition?.x ? -1 : 1 )[0];
-      x = gse.PositionAndShape.AbsolutePosition.x;
-      musicSystem = gse.parentMeasure.ParentMusicSystem;
+      if (gse) {
+        x = gse.PositionAndShape.AbsolutePosition.x;
+        musicSystem = gse.parentMeasure.ParentMusicSystem;
+      }
 
       // debug: change color of notes under cursor (needs re-render)
       // for (const gve of gse.graphicalVoiceEntries) {
