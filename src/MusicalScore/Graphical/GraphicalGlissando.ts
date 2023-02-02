@@ -58,7 +58,7 @@ export class GraphicalGlissando {
             endX = glissEndNote.PositionAndShape.RelativePosition.x + glissEndNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
                 + glissEndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x
                 - 0.5 - rules.GlissandoNoteOffset; // -0.5: width of notehead. glissEndNote.x seems to be center of notehead.
-            if (startX > endX) { // e.g. when beginInstructionsWidth too big at start of staffline
+            if (startX > endX) { // e.g. when beginInstructionsWidth too big at start of staffline, bigger than note startX
                 startX = endX - rules.GlissandoStafflineStartMinimumWidth;
             }
             //const glissEndVe: GraphicalVoiceEntry = glissEndNote.parentVoiceEntry;
