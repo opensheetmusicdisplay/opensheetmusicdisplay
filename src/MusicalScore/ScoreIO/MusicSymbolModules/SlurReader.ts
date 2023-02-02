@@ -58,7 +58,7 @@ export class SlurReader {
                             const slur: Slur = this.openSlurDict[slurNumber];
                             if (slur) {
                                 const nodeName: string = slurNode.name;
-                                if (nodeName === "slide") {
+                                if (nodeName === "slide" || nodeName === "glissando") {
                                     const startNote: Note = slur.StartNote;
                                     const newGlissando: Glissando = new Glissando(startNote);
                                     newGlissando.AddNote(currentNote);

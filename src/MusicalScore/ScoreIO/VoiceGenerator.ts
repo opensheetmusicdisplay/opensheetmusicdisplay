@@ -145,12 +145,16 @@ export class VoiceGenerator {
         // read slurs
         const slurElements: IXmlElement[] = notationNode.elements("slur");
         const slideElements: IXmlElement[] = notationNode.elements("slide");
+        const glissElements: IXmlElement[] = notationNode.elements("glissando");
         if (this.slurReader !== undefined &&
             (slurElements.length > 0 || slideElements.length > 0) &&
             !this.currentNote.ParentVoiceEntry.IsGrace) {
           this.slurReader.addSlur(slurElements, this.currentNote);
           if (slideElements.length > 0) {
             this.slurReader.addSlur(slideElements, this.currentNote);
+          }
+          if (glissElements.length > 0) {
+            this.slurReader.addSlur(glissElements, this.currentNote);
           }
         }
         // read Tuplets
