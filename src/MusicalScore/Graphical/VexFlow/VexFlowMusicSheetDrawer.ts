@@ -119,7 +119,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (this.rules.RenderSlurs) {
             this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
         }
-        this.drawGlissandi(staffLine as VexFlowStaffLine, absolutePos);
+        if (this.rules.RenderGlissandi) {
+            this.drawGlissandi(staffLine as VexFlowStaffLine, absolutePos);
+        }
     }
 
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
