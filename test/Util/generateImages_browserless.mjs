@@ -251,13 +251,15 @@ async function init () {
         measureNumberInterval: 1,
         preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
         skyBottomLineBatchCriteria: 0, // use batch algorithm only
+        
     });
 
     osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
-    osmdInstance.EngravingRules.PageTopMargin = 0;
-    osmdInstance.EngravingRules.PageBottomMargin = 0;
-    osmdInstance.EngravingRules.PageLeftMargin = 1.5;
-    osmdInstance.EngravingRules.PageRightMargin = 1;
+    osmdInstance.EngravingRules.PageTopMargin = 4;
+    osmdInstance.EngravingRules.PageBottomMargin = 4;
+    osmdInstance.EngravingRules.PageLeftMargin = 4;
+    osmdInstance.EngravingRules.PageRightMargin = 4;
+    osmdInstance.EngravingRules.AutoGenerateMutipleRestMeasuresFromRestMeasures = false;
     osmdInstance.zoom = 2.0
     // for more options check OSMDOptions.ts
 
@@ -437,7 +439,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const graphicalNoteBboxesString = drawBoundingBoxString ? "bbox" + drawBoundingBoxString + "_" : "";
         const sampleFilenameWithoutExt = path.parse(sampleFilename).name;
         // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-        const pageFilename = `${imageDir}/${sampleFilenameWithoutExt}_${skybottomlineString}${graphicalNoteBboxesString}${pageNumberingString}.${imageFormat}`;
+        const pageFilename = `${imageDir}/${sampleFilenameWithoutExt}.${imageFormat}`;
 
         if (imageFormat === "png") {
             const dataUrl = dataUrls[pageIndex];

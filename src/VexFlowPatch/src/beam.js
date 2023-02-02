@@ -884,9 +884,13 @@ export class Beam extends Element {
 
   // Render the beam to the canvas context
   draw() {
+
     this.checkContext();
     this.setRendered();
     if (this.unbeamable) return;
+
+    const notes = this.getNotes();
+    if (notes && notes.some(n => n.getAttribute("type") === "TabNote")) return;
 
     if (!this.postFormatted) {
       this.postFormat();

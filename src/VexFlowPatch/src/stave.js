@@ -569,7 +569,7 @@ export class Stave extends Element {
     const x = this.x;
     let y;
 
-    this.context.openGroup("mg-stave", undefined, { xStart: this.x.toString(), xEnd: (x + width).toString() });
+    this.context.openGroup("mg-stave", undefined, { xStart: this.x.toString(), xEnd: (x + width).toString(), measureNumber: this.measure.toString() });
     // Render lines
     for (let line = 0; line < num_lines; line++) {
       y = this.getYForLine(line);
