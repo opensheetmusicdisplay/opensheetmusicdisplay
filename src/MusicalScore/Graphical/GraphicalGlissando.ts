@@ -12,6 +12,8 @@ export class GraphicalGlissando {
     public Line: GraphicalLine;
     public staffEntries: GraphicalStaffEntry[];
     public StaffLine: StaffLine;
+    public Width: number;
+    public Color: string; // default: undefined = black. vexflow format (e.g. #12345600, 00 is alpha)
 
     constructor(glissando: Glissando) {
         this.Glissando = glissando;
@@ -80,7 +82,9 @@ export class GraphicalGlissando {
 
         const start: PointF2D = new PointF2D(startX, startY);
         const end: PointF2D = new PointF2D(endX, endY);
-        const width: number = undefined; // TODO create EngravingRule?
-        this.Line = new GraphicalLine(start, end, width);
+        if (this.Width === undefined) {
+            this.Width = rules.GlissandoDefaultWidth;
+        }
+        this.Line = new GraphicalLine(start, end, this.Width);
     }
 }
