@@ -188,6 +188,7 @@ export class ArticulationReader {
       "snap-pizzicato": ArticulationEnum.snappizzicato,
       "stopped": ArticulationEnum.lefthandpizzicato,
       "up-bow": ArticulationEnum.upbow,
+      "harmonic": ArticulationEnum.naturalharmonic, // e.g. open hi-hat
       // fingering is special case
     };
 
