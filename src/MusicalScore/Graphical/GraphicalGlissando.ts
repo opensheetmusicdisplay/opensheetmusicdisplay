@@ -37,6 +37,10 @@ export class GraphicalGlissando {
         //     slurEndNote = endStaffEntry.findGraphicalNoteFromGraceNote(this.Glissando.EndNote);
         // }
 
+        if (!glissStartNote && !glissEndNote) {
+            return; // otherwise causes error. TODO investigate, shouldn't happen. (M4_G_L19)
+        }
+
         const staffLine: StaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
 
         let startX: number;
@@ -71,6 +75,10 @@ export class GraphicalGlissando {
             //endY = glissEndVe.PositionAndShape.RelativePosition.y + glissEndVe.PositionAndShape.BorderTop;
             endY = glissEndNote.PositionAndShape.AbsolutePosition.y;
         } else {
+            if (staffLine.Measures.last().parentSourceMeasure.HasEndLine) {
+                return;
+                // TODO inquire how this can happen: start of glissando at end of last measure. maybe faulty xml? or about slur/slide indices?
+            }
             endX = staffLine.PositionAndShape.Size.width;
             if (endX - startX > rules.GlissandoStafflineEndOffset) {
                 startX = endX - rules.GlissandoStafflineEndOffset;
