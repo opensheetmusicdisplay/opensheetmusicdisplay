@@ -149,7 +149,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             const newEnd: PointF2D = new PointF2D(gGliss.Line.End.x + abs.x, gGliss.Line.End.y);
             // note that we do not add abs.y, because GraphicalGlissando.calculateLine() uses AbsolutePosition for y,
             //   because unfortunately RelativePosition seems imprecise.
-            this.drawLine(newStart, newEnd);
+            this.drawLine(newStart, newEnd, gGliss.Color, gGliss.Width);
         } else {
             const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;
             if (vfTie) {
