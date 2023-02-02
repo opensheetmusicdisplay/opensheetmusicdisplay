@@ -7,13 +7,17 @@ import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
 import { MusicSymbol } from "../MusicSymbol";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
+import { Fraction } from "../../../Common/DataObjects/Fraction";
 /**
  * The vexflow adaptation of a pedal marking
  */
 export class VexFlowPedal extends GraphicalPedal {
     /** Defines the note where the pedal starts */
     public startNote: Vex.Flow.StemmableNote;
-    /** Defines the note where the pedal ends */
+    /** Defines the note where the pedal ends.
+     *  (for pedal lines, visually, the pedal end is BEFORE the note, as in Vexflow,
+     *  UNLESS pedal.EndsStave is set, in which case it ends at the end (furthest x) of the stave.
+     */
     public endNote: Vex.Flow.StemmableNote;
     private vfStyle: Vex.Flow.PedalMarking.Styles = Vex.Flow.PedalMarking.Styles.BRACKET;
     public DepressText: string;
@@ -129,12 +133,31 @@ export class VexFlowPedal extends GraphicalPedal {
         pedalMarking.setLine(this.line);
         pedalMarking.setCustomText(this.DepressText, this.ReleaseText);
         //If our end note is at the end of a stave, set that value
-        if(this.endVfVoiceEntry?.parentStaffEntry === this.endVfVoiceEntry?.parentStaffEntry?.parentMeasure?.staffEntries.last() ||
-        !this.endVfVoiceEntry){
-                (pedalMarking as any).EndsStave = true;
+        if(!this.endVfVoiceEntry ||
+            this.getPedal.EndsStave
+            //|| this.endVfVoiceEntry?.parentStaffEntry === this.endVfVoiceEntry?.parentStaffEntry?.parentMeasure?.staffEntries.last()
+            //   the above condition prevents the ability to stop BEFORE the last staff entry.
+            //   see test_pedal_stop_before_last_staffentry and OSMD Function test - Color, compare with Beethoven - Geliebte (pedal symbols vs lines)
+        ){
+            (pedalMarking as any).EndsStave = true;
+        }
+        if (this.getPedal.BeginsStave) {
+            (pedalMarking as any).BeginsStave = true;
         }
         (pedalMarking as any).ChangeBegin = this.ChangeBegin;
         (pedalMarking as any).ChangeEnd = this.ChangeEnd;
         return pedalMarking;
+    }
+
+    public setEndsStave(endMeasure: GraphicalMeasure, endTimeStamp: Fraction): void {
+        if (endTimeStamp?.gte(endMeasure.parentSourceMeasure.Duration)) {
+            this.getPedal.EndsStave = true;
+        }
+    }
+
+    public setBeginsStave(isRest: boolean, startTimeStamp: Fraction): void {
+        if (isRest && startTimeStamp.RealValue === 0) {
+            this.getPedal.BeginsStave = true;
+        }
     }
 }

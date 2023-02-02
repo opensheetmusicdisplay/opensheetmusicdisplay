@@ -26,6 +26,7 @@ export class Tremolo extends Modifier {
 
     this.y_spacing_scale = 1;
     this.extra_stroke_scale = 1;
+    this.y_offset_for_beam = 5;
   }
 
   getCategory() { return Tremolo.CATEGORY; }
@@ -51,6 +52,9 @@ export class Tremolo extends Modifier {
       y += Tremolo.YOFFSETSTEMDOWN * scale;
     } else {
       y += Tremolo.YOFFSETSTEMUP * scale;
+    }
+    if (this.note.beam) {
+      y += this.y_offset_for_beam * stemDirection;
     }
 
     this.font = {

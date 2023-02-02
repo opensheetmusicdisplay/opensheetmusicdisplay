@@ -13,6 +13,7 @@ import {Arpeggio} from "./Arpeggio";
 import {NoteType} from "./NoteType";
 import { SourceMeasure } from "./SourceMeasure";
 import { TechnicalInstruction } from "./Instructions";
+import { Glissando } from "../../MusicalScore/VoiceData/Glissando";
 
 /**
  * Represents a single pitch with a duration (length)
@@ -64,6 +65,7 @@ export class Note {
     private beam: Beam;
     private tuplet: Tuplet;
     private tie: Tie;
+    private glissando: Glissando;
     private slurs: Slur[] = [];
     private playbackInstrumentId: string = undefined;
     private notehead: Notehead = undefined;
@@ -167,6 +169,12 @@ export class Note {
     }
     public set NoteTuplet(value: Tuplet) {
         this.tuplet = value;
+    }
+    public get NoteGlissando(): Glissando {
+        return this.glissando;
+    }
+    public set NoteGlissando(value: Glissando) {
+        this.glissando = value;
     }
     public get NoteTie(): Tie {
         return this.tie;

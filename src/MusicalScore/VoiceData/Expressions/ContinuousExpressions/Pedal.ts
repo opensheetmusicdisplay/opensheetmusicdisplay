@@ -13,6 +13,10 @@ export class Pedal {
     public ParentEndMultiExpression: MultiExpression;
     public ChangeEnd: boolean = false;
     public ChangeBegin: boolean = false;
+    /** Whether the pedal ends at the stave end (and not before the endNote) */
+    public EndsStave: boolean = false;
+    /** Whether the pedal begins at the stave beginning (and not before the startNote - e.g. for whole measure rest) */
+    public BeginsStave: boolean = false;
 
     public get IsLine(): boolean {
         return this.line;

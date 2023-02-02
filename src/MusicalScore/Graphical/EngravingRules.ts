@@ -213,6 +213,11 @@ export class EngravingRules {
     public SlurHeightFlattenLongSlursCutoffWidth: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
     public SlurMaximumYControlPointDistance: number;
+    public GlissandoNoteOffset: number;
+    public GlissandoStafflineStartMinimumWidth: number;
+    public GlissandoStafflineStartYDistanceToNote: number;
+    public GlissandoStafflineEndOffset: number;
+    public GlissandoDefaultWidth: number;
     public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
@@ -285,6 +290,7 @@ export class EngravingRules {
     public ArpeggiosGoAcrossVoices: boolean;
     public RenderArpeggios: boolean;
     public RenderSlurs: boolean;
+    public RenderGlissandi: boolean;
     public ColoringMode: ColoringMode;
     public ColoringEnabled: boolean;
     public ColorStemsLikeNoteheads: boolean;
@@ -580,6 +586,13 @@ export class EngravingRules {
         //Maximum y difference between control points. Forces slurs to have less 'weight' either way in the x direction
         this.SlurMaximumYControlPointDistance = undefined;
 
+        // Glissandi
+        this.GlissandoNoteOffset = 0.5;
+        this.GlissandoStafflineStartMinimumWidth = 1;
+        this.GlissandoStafflineStartYDistanceToNote = 0.8; // just crossing the line above/below end note. should be similar to tab slide angle.
+        this.GlissandoStafflineEndOffset = 1;
+        this.GlissandoDefaultWidth = 0.1;
+
         // Repetitions
         this.RepetitionEndingLabelHeight = 2.0;
         this.RepetitionEndingLabelXOffset = 0.5;
@@ -670,6 +683,7 @@ export class EngravingRules {
         this.ArpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
         this.RenderArpeggios = true;
         this.RenderSlurs = true;
+        this.RenderGlissandi = true;
         this.ColoringMode = ColoringMode.XML;
         this.ColoringEnabled = true;
         this.ColorStemsLikeNoteheads = false;

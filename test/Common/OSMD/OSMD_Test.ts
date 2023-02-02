@@ -317,8 +317,13 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         describe("next() and previous()", () => {
             it("is able to advance past end and beginning of sheet", () => {
                 const cursor: Cursor = opensheetmusicdisplay.cursors[0];
+                chai.expect(cursor.NotesUnderCursor().length).to.greaterThanOrEqual(1);
                 cursor.previous(); // do previous from first timestamp in sheet ("beyond beginning")
+                chai.expect(cursor.NotesUnderCursor().length).to.equal(0);
+                cursor.next();
+                chai.expect(cursor.NotesUnderCursor().length).to.greaterThanOrEqual(1);
                 chai.expect(cursor.Iterator.currentTimeStamp.RealValue).to.equal(0);
+                // go past end of sheet
                 for (let i: number = 1; i <= 260; i++) {
                     cursor.next(); // go past end of sheet: after 258 times in Clementi 36/1/1, the last timestamp is reached
                 }

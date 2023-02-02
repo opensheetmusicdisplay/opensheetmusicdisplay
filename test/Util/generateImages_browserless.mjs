@@ -37,13 +37,14 @@ function sleep (ms) {
 //   (without these being global, we'd have to pass many of these values to the generateSampleImage function)
 // eslint-disable-next-line prefer-const
 let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, pageZoom, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 13);
+imageFormat = imageFormat?.toLowerCase();
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
         // eslint-disable-next-line max-len
         "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]");
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)');
-    console.log("example: node test/Util/generateImages_browserless.mjs ../../build ./test/data/ ./export png 210 297 allSmall --debug 5000");
+    console.log("example: node test/Util/generateImages_browserless.mjs ../../build ./test/data/ ./export png");
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
 }
@@ -52,9 +53,6 @@ let pageFormat;
 
 if (!mode) {
     mode = "";
-}
-if (imageFormat !== "svg") {
-    imageFormat = "png";
 }
 
 // let OSMD; // can only be required once window was simulated

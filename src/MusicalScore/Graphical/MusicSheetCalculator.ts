@@ -880,6 +880,7 @@ export abstract class MusicSheetCalculator {
         if (!this.leadSheet && this.rules.RenderSlurs) {
             this.calculateSlurs();
         }
+        this.calculateGlissandi();
         //Calculate measure number skyline AFTER slurs
         if (this.rules.RenderMeasureNumbers) {
             for (let idx: number = 0, len: number = this.musicSystems.length; idx < len; ++idx) {
@@ -1169,6 +1170,10 @@ export abstract class MusicSheetCalculator {
     }
 
     protected calculateSlurs(): void {
+        return;
+    }
+
+    protected calculateGlissandi(): void {
         return;
     }
 

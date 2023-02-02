@@ -245,7 +245,9 @@ export class MusicPartManagerIterator {
     // move to previous
     public moveToPrevious(): void {
         // this.forwardJumpOccurred = this.backJumpOccurred = false;
-        if (this.frontReached) { return; }
+        if (this.frontReached) {
+            return;
+        }
         if (this.currentVoiceEntries) {
             this.currentVoiceEntries = [];
         }
@@ -263,7 +265,10 @@ export class MusicPartManagerIterator {
     public moveToNext(): void {
         this.forwardJumpOccurred = this.backJumpOccurred = false;
         if (this.endReached) { return; }
-        if (this.frontReached) { this.frontReached = false; }
+        if (this.frontReached) {
+            this.frontReached = false;
+            this.currentVoiceEntryIndex = -1;
+        }
         if (this.currentVoiceEntries) {
             this.currentVoiceEntries = [];
         }
@@ -546,7 +551,7 @@ export class MusicPartManagerIterator {
             this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
             this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
             this.currentVoiceEntryIndex = m.VerticalSourceStaffEntryContainers.length-1;
-            this.currentTimeStamp = currentContainer.Timestamp;
+            this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, currentContainer.Timestamp);
             this.activateCurrentDynamicOrTempoInstructions();
             // re-check endReached
             const selectionEnd: Fraction = this.musicSheet.SelectionEnd;
@@ -557,6 +562,7 @@ export class MusicPartManagerIterator {
         }
         // we reached the beginning
         this.frontReached = true;
+        this.currentTimeStamp = new Fraction(-1, 1);
     }
 
     private recursiveMove(): void {
