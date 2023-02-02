@@ -212,7 +212,7 @@ export class VoiceGenerator {
           this.addTie(tiedNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.SIMPLE);
         }
         //"check for slides, they are the same as Ties but with a different connection"
-        //  correction: slide can have a different end note (e.g. guitar) -> should be handled as slur
+        //  correction: slide can have a different end note (e.g. guitar) -> should be handled like slur rather than tie
         // const slideNodeList: IXmlElement[] = notationNode.elements("slide");
         // if (slideNodeList.length > 0) {
         //   this.addTie(slideNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.SLIDE);

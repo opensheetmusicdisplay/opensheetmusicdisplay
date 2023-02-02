@@ -59,6 +59,9 @@ export class SlurReader {
                             if (slur) {
                                 const nodeName: string = slurNode.name;
                                 if (nodeName === "slide" || nodeName === "glissando") {
+                                    // TODO for now, we abuse the SlurReader to also process slides and glissandi, to avoid a lot of duplicate code.
+                                    //   though we might want to separate the code a bit, at least use its own openGlissDict instead of openSlurDict.
+                                    //   also see variable glissElements later on
                                     const startNote: Note = slur.StartNote;
                                     const newGlissando: Glissando = new Glissando(startNote);
                                     newGlissando.AddNote(currentNote);

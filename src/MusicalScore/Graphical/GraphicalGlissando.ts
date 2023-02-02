@@ -1,5 +1,5 @@
-import { PointF2D } from "../../Common";
-import { Glissando } from "../VoiceData";
+import { PointF2D } from "../../Common/DataObjects/PointF2D";
+import { Glissando } from "../VoiceData/Glissando";
 import { ColDirEnum } from "./BoundingBox";
 import { EngravingRules } from "./EngravingRules";
 import { GraphicalLine } from "./GraphicalLine";
