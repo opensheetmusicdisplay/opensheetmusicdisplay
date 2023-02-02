@@ -64,6 +64,9 @@ import { VexFlowPedal } from "./VexFlowPedal";
 import { MusicSymbol } from "../MusicSymbol";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { CollectionUtil } from "../../../Util/CollectionUtil";
+import { GraphicalGlissando } from "../GraphicalGlissando";
+import { Glissando } from "../../VoiceData/Glissando";
+import { VexFlowGlissando } from "./VexFlowGlissando";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -1590,6 +1593,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     return -1;
   }
+  public indexOfGraphicalGlissFromGliss(gGlissandi: GraphicalGlissando[], glissando: Glissando): number {
+    for (let glissIndex: number = 0; glissIndex < gGlissandi.length; glissIndex++) {
+      if (gGlissandi[glissIndex].Glissando === glissando) {
+        return glissIndex;
+      }
+    }
+    return -1;
+  }
   /* VexFlow Version - for later use
   public findIndexVFSlurFromSlur(vfSlurs: VexFlowSlur[], slur: Slur): number {
         for (let slurIndex: number = 0; slurIndex < vfSlurs.length; slurIndex++) {
@@ -1721,17 +1732,144 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // order slurs that were saved to the Staffline
     for (const musicSystem of this.musicSystems) {
-          for (const staffLine of musicSystem.StaffLines) {
-            // Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
-            const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
-            for (const gSlur of sortedGSlurs) {
-                // crossed slurs will be handled later:
-                if (gSlur.slur.isCrossed()) {
-                    continue;
-                }
-                gSlur.calculateCurve(this.rules);
+      for (const staffLine of musicSystem.StaffLines) {
+        // Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
+        const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
+        for (const gSlur of sortedGSlurs) {
+            // crossed slurs will be handled later:
+            if (gSlur.slur.isCrossed()) {
+                continue;
             }
+            gSlur.calculateCurve(this.rules);
+        }
+      }
+    }
+  }
+
+  public calculateGlissandi(): void {
+    const openGlissDict: { [staffId: number]: GraphicalGlissando[] } = {};
+    for (const graphicalMeasure of this.graphicalMusicSheet.MeasureList[0]) { //let i: number = 0; i < this.graphicalMusicSheet.MeasureList[0].length; i++) {
+      openGlissDict[graphicalMeasure.ParentStaff.idInMusicSheet] = [];
+    }
+
+    for (const musicSystem of this.musicSystems) {
+        for (const staffLine of musicSystem.StaffLines) {
+          // if a glissando reaches out of the last musicsystem, we have to create another glissando reaching into this musicsystem
+          // (one gliss needs 2 graphical gliss)
+          // const isTab: boolean = staffLine.ParentStaff.isTab;
+          const openGlissandi: GraphicalGlissando[] = openGlissDict[staffLine.ParentStaff.idInMusicSheet];
+          for (let glissIndex: number = 0; glissIndex < openGlissandi.length; glissIndex++) {
+            const oldGliss: GraphicalGlissando = openGlissandi[glissIndex];
+            const newGliss: GraphicalGlissando = new VexFlowGlissando(oldGliss.Glissando);
+            staffLine.addGlissandoToStaffline(newGliss);
+            openGlissandi[glissIndex] = newGliss;
+          }
+
+          // add reference of gliss array to the VexFlowStaffline class
+          for (const graphicalMeasure of staffLine.Measures) {
+            for (const graphicalStaffEntry of graphicalMeasure.staffEntries) {
+              // loop over "normal" notes (= no gracenotes)
+              for (const graphicalVoiceEntry of graphicalStaffEntry.graphicalVoiceEntries) {
+                for (const graphicalNote of graphicalVoiceEntry.notes) {
+                  const gliss: Glissando = graphicalNote.sourceNote.NoteGlissando;
+                  // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
+                  if (!gliss?.EndNote || !gliss?.StartNote) {
+                    continue;
+                  }
+                  // add new VexFlowGlissando to List
+                  if (gliss.StartNote === graphicalNote.sourceNote) {
+                    // Add a Graphical Glissando to the staffline, if the recent note is the Startnote of a slur
+                    const gGliss: GraphicalGlissando = new VexFlowGlissando(gliss);
+                    openGlissandi.push(gGliss);
+                    //gGliss.staffEntries.push(graphicalStaffEntry);
+                    staffLine.addGlissandoToStaffline(gGliss);
+                  }
+                  if (gliss.EndNote === graphicalNote.sourceNote) {
+                    // Remove the gliss from the staffline if the note is the Endnote of a gliss
+                    const index: number = this.indexOfGraphicalGlissFromGliss(openGlissandi, gliss);
+                    if (index >= 0) {
+                      // save Voice Entry in gliss and then remove it from array of open glissandi
+                      const gGliss: GraphicalGlissando = openGlissandi[index];
+                      if (gGliss.staffEntries.indexOf(graphicalStaffEntry) === -1) {
+                        gGliss.staffEntries.push(graphicalStaffEntry);
+                      }
+                      openGlissandi.splice(index, 1);
+                    }
+                  }
+                }
+              }
+
+              // probably unnecessary, as a gliss only has 2 staffentries
+              //add the present Staffentry to all open slurs that don't contain this Staffentry already
+              for (const gGliss of openGlissandi) {
+                if (gGliss.staffEntries.indexOf(graphicalStaffEntry) === -1) {
+                  gGliss.staffEntries.push(graphicalStaffEntry);
+                }
+              }
+            } // loop over StaffEntries
+          } // loop over Measures
+        } // loop over StaffLines
+      } // loop over MusicSystems
+
+      for (const musicSystem of this.musicSystems) {
+        for (const staffLine of musicSystem.StaffLines) {
+        // order glissandi that were saved to the Staffline
+        // TODO? Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
+        //const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
+        for (const gGliss of staffLine.GraphicalGlissandi) {
+          const isTab: boolean = staffLine.ParentStaff.isTab;
+          if (isTab) {
+            const startNote: TabNote = <TabNote> gGliss.Glissando.StartNote;
+            const endNote: TabNote = <TabNote> gGliss.Glissando.EndNote;
+            const vfStartNote: VexFlowGraphicalNote = gGliss.staffEntries[0].findGraphicalNoteFromNote(startNote) as VexFlowGraphicalNote;
+            const vfEndNote: VexFlowGraphicalNote = gGliss.staffEntries.last().findGraphicalNoteFromNote(endNote) as VexFlowGraphicalNote;
+
+            let slideDirection: number = 1;
+            if (startNote.FretNumber > endNote.FretNumber) {
+              slideDirection = -1;
+            }
+            let first_indices: number[] = undefined;
+            let last_indices: number[] = undefined;
+            let startStemmableNote: VF.StemmableNote  = undefined;
+            // let startNoteIndexInTie: number = 0;
+            if (vfStartNote && vfStartNote.vfnote && vfStartNote.vfnote.length >= 2) {
+              startStemmableNote = vfStartNote.vfnote[0]; // otherwise needs to be undefined in TabSlide constructor!
+              first_indices = [0];
+              // startNoteIndexInTie = vfStartNote.vfnote[1];
+            }
+            let endStemmableNote: VF.StemmableNote  = undefined;
+            // let endNoteIndexInTie: number = 0;
+            if (vfEndNote && vfEndNote.vfnote && vfEndNote.vfnote.length >= 2) {
+              endStemmableNote = vfEndNote.vfnote[0];
+              last_indices = [0];
+              // endNoteIndexInTie = vfEndNote.vfnote[1];
+            }
+            const vfTie: VF.TabSlide = new VF.TabSlide(
+              {
+                first_indices: first_indices,
+                first_note: startStemmableNote,
+                last_indices: last_indices,
+                last_note: endStemmableNote,
+              },
+              slideDirection
+            );
+
+            const startMeasure: VexFlowMeasure = (vfStartNote?.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            if (startMeasure) {
+              startMeasure.vfTies.push(vfTie);
+              (gGliss as VexFlowGlissando).vfTie = vfTie;
+            }
+            const endMeasure: VexFlowMeasure = (vfEndNote?.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            if (endMeasure) {
+              endMeasure.vfTies.push(vfTie);
+              (gGliss as VexFlowGlissando).vfTie = vfTie;
+            }
+          } else {
+            //gGliss.calculateLine(this.rules);
           }
         }
       }
+    }
   }
+}
+
