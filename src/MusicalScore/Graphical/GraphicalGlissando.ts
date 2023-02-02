@@ -50,6 +50,7 @@ export class GraphicalGlissando {
             //startY = glissStartVE.PositionAndShape.RelativePosition.y + glissStartVE.PositionAndShape.BorderTop / 2;
             // startY = glissStartNote.PositionAndShape.RelativePosition.y - glissStartNote.PositionAndShape.Size.height / 2;
             startY = glissStartNote.PositionAndShape.AbsolutePosition.y;
+            // unfortunately we need to take the AbsolutePosition, as the RelativePosition is imprecise (to the notehead). Maybe that could be fixed.
         } else {
             startX = endStaffEntry.parentMeasure.beginInstructionsWidth - 0.4;
             // startY: above/below note
@@ -69,6 +70,12 @@ export class GraphicalGlissando {
             endY = glissEndNote.PositionAndShape.AbsolutePosition.y;
         } else {
             endX = staffLine.PositionAndShape.Size.width;
+            if (endX - startX > rules.GlissandoStafflineEndOffset) {
+                startX = endX - rules.GlissandoStafflineEndOffset;
+            } // else: don't try to set a potentially bigger offset for a note very close to the staffline end
+            // endY: above/below note
+            const sign: number = this.Glissando.Direction === ColDirEnum.Down ? 1 : -1;
+            endY = glissStartNote.PositionAndShape.AbsolutePosition.y + sign * rules.GlissandoStafflineStartYDistanceToNote;
         }
 
         const start: PointF2D = new PointF2D(startX, startY);

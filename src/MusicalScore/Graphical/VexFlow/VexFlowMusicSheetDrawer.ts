@@ -139,9 +139,14 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     private drawGlissando(gGliss: GraphicalGlissando, abs: PointF2D): void {
+        if (!gGliss.StaffLine.ParentStaff.isTab) {
+            gGliss.calculateLine(this.rules);
+        }
         if (gGliss.Line) {
-            const newStart: PointF2D = new PointF2D(gGliss.Line.Start.x + abs.x, gGliss.Line.Start.y + abs.y);
-            const newEnd: PointF2D = new PointF2D(gGliss.Line.End.x + abs.x, gGliss.Line.End.y + abs.y);
+            const newStart: PointF2D = new PointF2D(gGliss.Line.Start.x + abs.x, gGliss.Line.Start.y);
+            const newEnd: PointF2D = new PointF2D(gGliss.Line.End.x + abs.x, gGliss.Line.End.y);
+            // note that we do not add abs.y, because GraphicalGlissando.calculateLine() uses AbsolutePosition for y,
+            //   because unfortunately RelativePosition seems imprecise.
             this.drawLine(newStart, newEnd);
         } else {
             const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;

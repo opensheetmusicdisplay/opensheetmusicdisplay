@@ -1865,7 +1865,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               (gGliss as VexFlowGlissando).vfTie = vfTie;
             }
           } else {
-            gGliss.calculateLine(this.rules);
+            //gGliss.calculateLine(this.rules);
           }
         }
       }
