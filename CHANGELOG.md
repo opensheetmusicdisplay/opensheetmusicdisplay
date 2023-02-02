@@ -16,7 +16,7 @@
 * **Cursor:** If going beyond confines of sheet (previous() at first note, or next() at last note), show cursor visually at start/end of measure ([#1308](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1308)), creating a visual difference to first/last note positions ([d091cd9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d091cd93fbbf6afb6b348263ec7f06f1e21e0d8b))
 * **Glissando:** Implement glissando and slide MusicXML elements. Fix tab slides too long. Add EngravingRules.RenderGlissandi. ([#1318](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1318), PR [#1319](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1319), [#344](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/344)) ([460e920](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/460e9206c4fe54d9c14d668cae3cd2316de2d616))
 * **Glissando:** Add EngravingRules.GlissandoDefaultWidth. Add GraphicalGlissando.Color ([#1318](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1318)) ([b1e67d5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b1e67d5cdfc1b0f5d5f52477a0d18311de0f02f8))
-* **Tabs:** Add Id to tabnotes in SVG/DOM
+* **Tabs:** Add Id to tabnotes in SVG/DOM ([460e920/tabnote.js](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/460e9206c4fe54d9c14d668cae3cd2316de2d616#diff-2b9a72ab4b12049a4a7e5ed69ee664c00c847f19e2dff94447e56c2452d685e0))
 
 
 ## [1.7.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.7.2...1.7.3) (2023-01-23)
