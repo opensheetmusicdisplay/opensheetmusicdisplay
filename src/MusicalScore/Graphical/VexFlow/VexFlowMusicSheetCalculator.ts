@@ -1767,7 +1767,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
           // add reference of gliss array to the VexFlowStaffline class
           for (const graphicalMeasure of staffLine.Measures) {
-            (graphicalMeasure as VexFlowMeasure).vfTies = [];
             for (const graphicalStaffEntry of graphicalMeasure.staffEntries) {
               // loop over "normal" notes (= no gracenotes)
               for (const graphicalVoiceEntry of graphicalStaffEntry.graphicalVoiceEntries) {
