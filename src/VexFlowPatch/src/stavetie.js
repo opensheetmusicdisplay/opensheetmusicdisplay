@@ -155,7 +155,6 @@ export class StaveTie extends Element {
       first_x_px = first_note.getTieRightX() + this.render_options.tie_spacing;
       stem_direction = first_note.getStemDirection();
       first_ys = first_note.getYs();
-
     } else {
       first_x_px = last_note.getStave().getTieStartX();
       first_ys = last_note.getYs();
@@ -166,7 +165,6 @@ export class StaveTie extends Element {
       last_x_px = last_note.getTieLeftX() + this.render_options.tie_spacing;
       stem_direction = last_note.getStemDirection();
       last_ys = last_note.getYs();
-
     } else {
       last_x_px = first_note.getStave().getTieEndX();
       last_ys = first_note.getYs();
