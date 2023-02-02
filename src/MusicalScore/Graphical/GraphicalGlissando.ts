@@ -52,7 +52,10 @@ export class GraphicalGlissando {
             startY = glissStartNote.PositionAndShape.AbsolutePosition.y;
         } else {
             startX = endStaffEntry.parentMeasure.beginInstructionsWidth - 0.4;
-            startY = this.Glissando.Direction === ColDirEnum.Down ? 0 : 4; // 0: top line of staff. 4: bottom line of (5-line) staff.
+            // startY: above/below note
+            const sign: number = this.Glissando.Direction === ColDirEnum.Down ? -1 : 1;
+            startY = glissEndNote.PositionAndShape.AbsolutePosition.y + sign * rules.GlissandoStafflineStartYDistanceToNote;
+            // default: one line above/below end note. could also be 0.5 lines like for tab slide
         }
         if (glissEndNote && endStaffEntry.parentMeasure.ParentStaffLine === this.StaffLine) {
             endX = glissEndNote.PositionAndShape.RelativePosition.x + glissEndNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x

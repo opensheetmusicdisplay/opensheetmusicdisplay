@@ -215,6 +215,7 @@ export class EngravingRules {
     public SlurMaximumYControlPointDistance: number;
     public GlissandoNoteOffset: number;
     public GlissandoStafflineStartMinimumWidth: number;
+    public GlissandoStafflineStartYDistanceToNote: number;
     public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
@@ -584,7 +585,8 @@ export class EngravingRules {
 
         // Glissandi
         this.GlissandoNoteOffset = 0.5;
-        this.GlissandoStafflineStartMinimumWidth = 0.4;
+        this.GlissandoStafflineStartMinimumWidth = 1;
+        this.GlissandoStafflineStartYDistanceToNote = 0.8; // just crossing the line above/below end note. should be similar to tab slide angle.
 
         // Repetitions
         this.RepetitionEndingLabelHeight = 2.0;
