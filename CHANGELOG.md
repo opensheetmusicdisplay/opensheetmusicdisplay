@@ -1,3 +1,24 @@
+## [1.7.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.7.3...1.7.4) (2023-02-02)
+
+
+### Bug Fixes
+
+* **Articulation:** Support "harmonic" technical notation (naturalharmonic), e.g. drums open hi-hat ([8dcaa08](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8dcaa081606e34153028aaa1a8957a01a2eca7fd))
+* **Cursor:** Fix cursor.previous() not setting Iterator.currentTimestamp correctly when going back from full measure note ([#1309](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1309)) ([66f0e1c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/66f0e1c398ba20d5962ca70ab6f93b90d4e0a026))
+* **Cursor:** Fix EndReached position display when first instrument is hidden ([#1310](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1310)) ([e52385f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e52385f115dc0114a760b8c6a9f121d08fa65ffc))
+* **Cursor:** If instrument at current position is now invisible, show the previous position instead of nothing ([#1312](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1312)) ([4dd73f5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4dd73f5a48a5c8524ce99bd17f92339917788611))
+* **Cursor:** Show last position in score if hiding cursor, moving past end of sheet, then showing, instead of showing nothing ([#1308](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1308)) ([d899128](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d899128fce288c3e0b8189ec311a07ec3b7a8e54))
+* **Tremolo:** Offset tremolo strokes if note has a beam ([e30fcbc](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e30fcbc9d63c1cbae68aaf945e265af4ae353f0a))
+
+
+### Features
+
+* **Cursor:** If going beyond confines of sheet (previous() at first note, or next() at last note), show cursor visually at start/end of measure ([#1308](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1308)), creating a visual difference to first/last note positions ([d091cd9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d091cd93fbbf6afb6b348263ec7f06f1e21e0d8b))
+* **Glissando:** Implement glissando and slide MusicXML elements. Fix tab slides too long. Add EngravingRules.RenderGlissandi. ([#1318](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1318), PR [#1319](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1319), [#344](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/344)) ([460e920](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/460e9206c4fe54d9c14d668cae3cd2316de2d616))
+* **Glissando:** Add EngravingRules.GlissandoDefaultWidth. Add GraphicalGlissando.Color ([#1318](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1318)) ([b1e67d5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b1e67d5cdfc1b0f5d5f52477a0d18311de0f02f8))
+**Tabs:** Add Id to tabnotes in SVG/DOM
+
+
 ## [1.7.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.7.2...1.7.3) (2023-01-23)
 
 
