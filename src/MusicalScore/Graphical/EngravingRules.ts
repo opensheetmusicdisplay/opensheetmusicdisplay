@@ -213,6 +213,8 @@ export class EngravingRules {
     public SlurHeightFlattenLongSlursCutoffWidth: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
     public SlurMaximumYControlPointDistance: number;
+    public GlissandoNoteOffset: number;
+    public GlissandoStafflineStartMinimumWidth: number;
     public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
@@ -579,6 +581,10 @@ export class EngravingRules {
         this.SlursStartingAtSameStaffEntryYOffset = 0.8;
         //Maximum y difference between control points. Forces slurs to have less 'weight' either way in the x direction
         this.SlurMaximumYControlPointDistance = undefined;
+
+        // Glissandi
+        this.GlissandoNoteOffset = 0.5;
+        this.GlissandoStafflineStartMinimumWidth = 0.4;
 
         // Repetitions
         this.RepetitionEndingLabelHeight = 2.0;

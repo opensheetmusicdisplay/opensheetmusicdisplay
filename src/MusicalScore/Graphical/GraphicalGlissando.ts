@@ -1,16 +1,17 @@
 import { PointF2D } from "../../Common";
 import { Glissando } from "../VoiceData";
+import { ColDirEnum } from "./BoundingBox";
 import { EngravingRules } from "./EngravingRules";
 import { GraphicalLine } from "./GraphicalLine";
 import { GraphicalNote } from "./GraphicalNote";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
-import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { StaffLine } from "./StaffLine";
 
 export class GraphicalGlissando {
     public Glissando: Glissando;
     public Line: GraphicalLine;
     public staffEntries: GraphicalStaffEntry[];
+    public StaffLine: StaffLine;
 
     constructor(glissando: Glissando) {
         this.Glissando = glissando;
@@ -40,20 +41,29 @@ export class GraphicalGlissando {
         let endX: number;
         let startY: number;
         let endY: number;
-        if (glissStartNote) {
+        if (glissStartNote && startStaffEntry.parentMeasure.ParentStaffLine === this.StaffLine) {
             // must be relative to StaffLine
             startX = glissStartNote.PositionAndShape.RelativePosition.x + glissStartNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
-                    + glissStartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-            const glissStartVE: GraphicalVoiceEntry = glissStartNote.parentVoiceEntry;
-            startY = glissStartVE.PositionAndShape.RelativePosition.y + glissStartVE.PositionAndShape.BorderTop / 2;
+                    + glissStartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x
+                    + rules.GlissandoNoteOffset;
+            //const glissStartVE: GraphicalVoiceEntry = glissStartNote.parentVoiceEntry;
+            //startY = glissStartVE.PositionAndShape.RelativePosition.y + glissStartVE.PositionAndShape.BorderTop / 2;
+            // startY = glissStartNote.PositionAndShape.RelativePosition.y - glissStartNote.PositionAndShape.Size.height / 2;
+            startY = glissStartNote.PositionAndShape.AbsolutePosition.y;
         } else {
-            startX = 0;
+            startX = endStaffEntry.parentMeasure.beginInstructionsWidth - 0.4;
+            startY = this.Glissando.Direction === ColDirEnum.Down ? 0 : 4; // 0: top line of staff. 4: bottom line of (5-line) staff.
         }
-        if (glissEndNote) {
+        if (glissEndNote && endStaffEntry.parentMeasure.ParentStaffLine === this.StaffLine) {
             endX = glissEndNote.PositionAndShape.RelativePosition.x + glissEndNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
-                + glissEndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-            const glissEndVe: GraphicalVoiceEntry = glissEndNote.parentVoiceEntry;
-            endY = glissEndVe.PositionAndShape.RelativePosition.y + glissEndVe.PositionAndShape.BorderTop;
+                + glissEndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x
+                - 0.5 - rules.GlissandoNoteOffset; // -0.5: width of notehead. glissEndNote.x seems to be center of notehead.
+            if (startX > endX) { // e.g. when beginInstructionsWidth too big at start of staffline
+                startX = endX - rules.GlissandoStafflineStartMinimumWidth;
+            }
+            //const glissEndVe: GraphicalVoiceEntry = glissEndNote.parentVoiceEntry;
+            //endY = glissEndVe.PositionAndShape.RelativePosition.y + glissEndVe.PositionAndShape.BorderTop;
+            endY = glissEndNote.PositionAndShape.AbsolutePosition.y;
         } else {
             endX = staffLine.PositionAndShape.Size.width;
         }

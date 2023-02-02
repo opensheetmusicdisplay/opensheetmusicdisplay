@@ -204,6 +204,7 @@ export abstract class StaffLine extends GraphicalObject {
 
     public addGlissandoToStaffline(gGlissando: GraphicalGlissando): void {
         this.graphicalGlissandi.push(gGlissando);
+        gGlissando.StaffLine = this;
     }
 
     public addActivitySymbolClickArea(): void {
