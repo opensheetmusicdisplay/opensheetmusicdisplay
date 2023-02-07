@@ -110,6 +110,35 @@ export class JianpuMeasure extends VexFlowMeasure {
                     gLabel.setLabelPositionAndShapeBorders();
                     gLabel.PositionAndShape.calculateBoundingBox();
                     se.JianpuNoteLabels.push(gLabel);
+
+                    const jianpuDotValue: number = note.sourceNote.Pitch.Octave - 1;
+                    const textHeight: number = 2;
+                    if (jianpuDotValue > 0) {
+                        const dotLabel: Label = new Label("•".repeat(jianpuDotValue), TextAlignmentEnum.CenterBottom);
+                        const gDotLabel: GraphicalLabel = new GraphicalLabel(dotLabel, textHeight, dotLabel.textAlignment, this.rules);
+                        gDotLabel.PositionAndShape.Parent = gLabel.PositionAndShape;
+                        gDotLabel.PositionAndShape.RelativePosition.x = 0.1;
+                        gDotLabel.PositionAndShape.RelativePosition.y = -1 * gLabel.PositionAndShape.Size.height;
+                        gDotLabel.setLabelPositionAndShapeBorders();
+                        if (jianpuDotValue > 1) {
+                            gDotLabel.PositionAndShape.RelativePosition.x -= gDotLabel.TextLines[0].width / 4;
+                        }
+                        gDotLabel.PositionAndShape.calculateBoundingBox();
+                        se.JianpuNoteLabels.push(gDotLabel);
+                    } else if (jianpuDotValue < 0) {
+                        const dotsBelow: number = -jianpuDotValue;
+                        const dotLabel: Label = new Label("•".repeat(dotsBelow), TextAlignmentEnum.CenterBottom);
+                        const gDotLabel: GraphicalLabel = new GraphicalLabel(dotLabel, 2, dotLabel.textAlignment, this.rules);
+                        gDotLabel.PositionAndShape.Parent = gLabel.PositionAndShape;
+                        gDotLabel.PositionAndShape.RelativePosition.x = 0.1;
+                        gDotLabel.PositionAndShape.RelativePosition.y = gLabel.PositionAndShape.Size.height;
+                        gDotLabel.setLabelPositionAndShapeBorders();
+                        if (dotsBelow > 1) {
+                            gDotLabel.PositionAndShape.RelativePosition.x -= gDotLabel.TextLines[0].width / 4;
+                        }
+                        gDotLabel.PositionAndShape.calculateBoundingBox();
+                        se.JianpuNoteLabels.push(gDotLabel);
+                    }
                 }
             }
         }
