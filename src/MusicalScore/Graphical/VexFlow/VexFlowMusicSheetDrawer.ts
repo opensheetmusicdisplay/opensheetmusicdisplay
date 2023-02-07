@@ -355,6 +355,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes);
             }
         }
+        for (const jianpuLabel of staffEntry.JianpuNoteLabels) {
+            this.drawLabel(jianpuLabel, <number>GraphicalLayers.Notes);
+        }
     }
 
     /**

@@ -30,6 +30,7 @@ import { VexFlowTabMeasure } from "./VexFlowTabMeasure";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
 import { VexFlowMultiRestMeasure } from "./VexFlowMultiRestMeasure";
+import { JianpuMeasure } from "../Jianpu/JianpuMeasure";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -60,7 +61,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff, isTabMeasure: boolean = false): GraphicalMeasure {
-        return new VexFlowMeasure(staff, sourceMeasure, undefined);
+        // TODO only use Jianpu on Jianpu staff. see createTabStaffMeasure()
+        return new JianpuMeasure(staff, sourceMeasure, undefined);
     }
 
     /**
@@ -89,7 +91,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure {
-        const extraGraphicalMeasure: GraphicalMeasure = new VexFlowMeasure(staffLine.ParentStaff, undefined, staffLine);
+        // TODO only use Jianpu on Jianpu staff. see createTabStaffMeasure()
+        const extraGraphicalMeasure: GraphicalMeasure = new JianpuMeasure(staffLine.ParentStaff, undefined, staffLine);
         extraGraphicalMeasure.IsExtraGraphicalMeasure = true; // this also means that MeasureNumber < 0 because unchanged
         extraGraphicalMeasure.ExtraGraphicalMeasurePreviousMeasure = staffLine.Measures.last();
         return extraGraphicalMeasure;

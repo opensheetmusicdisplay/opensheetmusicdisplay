@@ -107,6 +107,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         continue;
       }
       const firstVisibleMeasure: VexFlowMeasure = verticalMeasureList.find(measure => measure?.isVisible()) as VexFlowMeasure;
+      // TODO seems unnecessary. see MusicSystemBuilder -> FormatJianpuClef
+      // if (firstVisibleMeasure.IsJianpuMeasure) {
+      //   if (!firstVisibleMeasure.FormatJianpuClef && !firstVisibleMeasure.FormatJianpuTimeSignature) {
+      //     firstVisibleMeasure.beginInstructionsWidth = 0;
+      //   }
+      // }
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
       firstVisibleMeasure.format();
       for (const measure of verticalMeasureList) {
@@ -348,6 +354,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       // all voices that belong to one stave are collectively added to create a common context in VexFlow.
       formatter.joinVoices(voices);
+
+      measure.calculateYLayout(); // for Jianpu
     }
 
     // calculateMeasureWidthFromLyrics() will be called from MusicSheetCalculator after this

@@ -73,6 +73,12 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public IsExtraGraphicalMeasure: boolean;
     public ExtraGraphicalMeasurePreviousMeasure: GraphicalMeasure;
     public ShowTimeSignature: boolean = true;
+    public ActiveKeyInstruction: KeyInstruction;
+    public IsJianpuMeasure: boolean = false;
+    /** For JianpuMeasures: Whether to format as if a clef was there, to sync x-position with non-jianpu measures. */
+    public FormatJianpuClef: boolean = false;
+    /** For JianpuMeasures: Whether to format as if a time signature was there, to sync x-position with non-jianpu measures. */
+    public FormatJianpuTimeSignature: boolean = false;
 
     public get ParentStaff(): Staff {
         return this.parentStaff;
@@ -390,6 +396,10 @@ export abstract class GraphicalMeasure extends GraphicalObject {
         //     transposeHalftones = this.parentStaff.ParentInstrument.Transpose;
         // }
         return transposeHalftones;
+    }
+
+    public calculateYLayout(): void {
+        // see JianpuMeasure
     }
 }
 

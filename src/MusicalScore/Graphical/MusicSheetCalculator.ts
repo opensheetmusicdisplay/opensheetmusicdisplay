@@ -279,6 +279,7 @@ export abstract class MusicSheetCalculator {
         // calculate SheetLabelBoundingBoxes
         this.calculateSheetLabelBoundingBoxes();
         this.calculateXLayout(this.graphicalMusicSheet, this.maxInstrNameLabelLength());
+        this.calculateYLayout(this.graphicalMusicSheet); // for Jianpu
 
         // create List<MusicPage>
         this.graphicalMusicSheet.MusicPages.length = 0;
@@ -316,6 +317,10 @@ export abstract class MusicSheetCalculator {
             }
         }
         // this.graphicalMusicSheet.MinAllowedSystemWidth = minLength; // currently unused
+    }
+
+    public calculateYLayout(gSheet: GraphicalMusicSheet): void {
+        // implemented in JianpuMusicSheetCalculator
     }
 
     public calculateMeasureWidthFromStaffEntries(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
@@ -2470,6 +2475,7 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
+        measure.ActiveKeyInstruction = accidentalCalculator.ActiveKeyInstruction;
         // check for octave shifts
         const octaveShifts: MultiExpression[] = [];
         for (let idx: number = 0, len: number = sourceMeasure.StaffLinkedExpressions[staffIndex].length; idx < len; ++idx) {

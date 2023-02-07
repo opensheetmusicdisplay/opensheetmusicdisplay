@@ -481,6 +481,11 @@ export class MusicSystemBuilder {
 
     protected AddInstructionsAtMeasureBegin(firstEntry: SourceStaffEntry, measure: GraphicalMeasure,
                                             visibleStaffIdx: number, isFirstSourceMeasure: boolean, isSystemStartMeasure: boolean): number {
+        if (measure.IsJianpuMeasure) {
+            if (!measure.FormatJianpuClef && !measure.FormatJianpuTimeSignature) {
+                return 0;
+            }
+        }
         let instructionsLengthX: number = 0;
         let currentClef: ClefInstruction = undefined;
         let currentKey: KeyInstruction = undefined;

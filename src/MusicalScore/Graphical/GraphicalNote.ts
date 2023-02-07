@@ -10,6 +10,7 @@ import {BoundingBox} from "./BoundingBox";
 import {GraphicalVoiceEntry} from "./GraphicalVoiceEntry";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import { EngravingRules } from "./EngravingRules";
+import { GraphicalLabel } from "./GraphicalLabel";
 
 /**
  * The graphical counterpart of a [[Note]]
@@ -41,6 +42,8 @@ export class GraphicalNote extends GraphicalObject {
     public baseFingeringXOffset: number;
     public baseStringNumberXOffset: number;
     public lineShift: number = 0;
+    public JianpuHeight: number = 0;
+    public JianpuLabel: GraphicalLabel;
 
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         let transposedPitch: Pitch = this.sourceNote.Pitch;
