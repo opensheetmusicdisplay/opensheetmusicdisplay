@@ -8,6 +8,7 @@ import { Staff } from "../../VoiceData/Staff";
 import { GraphicalLabel } from "../GraphicalLabel";
 import { StaffLine } from "../StaffLine";
 import { VexFlowMeasure } from "../VexFlow/VexFlowMeasure";
+import { Note } from "../../VoiceData/Note";
 
 export class JianpuMeasure extends VexFlowMeasure {
     /** Whether to draw the outer lines of the staffline (2 of 5), e.g. for the Skybottomline to work. */
@@ -100,7 +101,7 @@ export class JianpuMeasure extends VexFlowMeasure {
                     note.JianpuHeight = veHeight;
                     veHeight += 2;
 
-                    const jianpuNumber: number = this.getJianpuNumber(note.sourceNote.Pitch.FundamentalNote, this.ActiveKeyInstruction.Key);
+                    const jianpuNumber: number = this.getJianpuNumber(note.sourceNote, this.ActiveKeyInstruction.Key);
                     const label: Label = new Label(jianpuNumber.toString(), TextAlignmentEnum.CenterBottom);
                     const gLabel: GraphicalLabel = new GraphicalLabel(label, 2, label.textAlignment, this.rules);
                     note.JianpuLabel = gLabel;
@@ -111,6 +112,9 @@ export class JianpuMeasure extends VexFlowMeasure {
                     gLabel.PositionAndShape.calculateBoundingBox();
                     se.JianpuNoteLabels.push(gLabel);
 
+                    if (note.sourceNote.isRest()) {
+                        continue; // no octave dots for rest notes
+                    }
                     const jianpuDotValue: number = note.sourceNote.Pitch.Octave - 1;
                     const textHeight: number = 2;
                     if (jianpuDotValue > 0 || jianpuDotValue < 0) {
@@ -148,7 +152,11 @@ export class JianpuMeasure extends VexFlowMeasure {
         }
     }
 
-    private getJianpuNumber(noteKey: NoteEnum, keySignatureKey: NoteEnum): number {
+    private getJianpuNumber(note: Note, keySignatureKey: NoteEnum): number {
+        if (note.isRest()) {
+            return 0;
+        }
+        const noteKey: number = note.Pitch.FundamentalNote;
         let scaleNumber: number = this.keyToScaleNumber(noteKey);
         // move back one number for every key past C
         scaleNumber -= (this.keyToScaleNumber(keySignatureKey) - 1);
