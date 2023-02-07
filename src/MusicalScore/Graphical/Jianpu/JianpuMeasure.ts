@@ -10,6 +10,9 @@ import { StaffLine } from "../StaffLine";
 import { VexFlowMeasure } from "../VexFlow/VexFlowMeasure";
 
 export class JianpuMeasure extends VexFlowMeasure {
+    /** Whether to draw the outer lines of the staffline (2 of 5), e.g. for the Skybottomline to work. */
+    public DrawOuterStafflines: boolean = false;
+
     constructor(staff: Staff = undefined, parentSourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
         super(staff, parentSourceMeasure, staffLine);
         this.IsJianpuMeasure = true;
@@ -18,8 +21,12 @@ export class JianpuMeasure extends VexFlowMeasure {
     public draw(ctx: Vex.IRenderContext): void {
         //this.stave.setEndBarType(VF.Barline.type.END);
         this.stave.setContext(ctx);
-        for (const config of this.stave.options.line_config) {
-            config.visible = false;
+        //this.stave.setBegBarType(VF.Barline.type.NONE);
+        const virtualStafflines: number = this.stave.options.line_config.length;
+        for (let i: number = 0; i < virtualStafflines; i++) {
+            if (!this.DrawOuterStafflines || (i > 0 && i < virtualStafflines)) {
+                this.stave.options.line_config[i].visible = false;
+            }
         }
         const modifiers: VF.StaveModifier[] = this.stave.getModifiers();
         for (let i: number = 0; i < modifiers.length; i++) {
@@ -76,7 +83,7 @@ export class JianpuMeasure extends VexFlowMeasure {
                     if (false) {
                         console.log(note);
                     }
-                    
+
                     // console.log("active key: ");
                     // console.dir(this.ActiveKeyInstruction);
                 }

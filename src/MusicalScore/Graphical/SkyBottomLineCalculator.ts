@@ -7,6 +7,7 @@ import log from "loglevel";
 import { BoundingBox } from "./BoundingBox";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
+import { JianpuMeasure } from "./Jianpu/JianpuMeasure";
 /**
  * This class calculates and holds the skyline and bottom line information.
  * It also has functions to update areas of the two lines if new elements are
@@ -138,11 +139,20 @@ export class SkyBottomLineCalculator {
             vsStaff.setWidth(width);
             measure.format();
             vsStaff.setWidth(oldMeasureWidth);
+            if (measure instanceof JianpuMeasure) {
+                measure.DrawOuterStafflines = true;
+                // draw outer lines of staff (of 5), so that the skyline and bottom line have any black pixels to hit.
+                //   otherwise, there may be absolutely no black pixels to find, so the skyline would max out
+                //   alternative: set tmpSkyLine[0] = 99; tmpBottomLine[0] = 140; below, but that's magic number hacking.
+            }
             try {
                 measure.draw(ctx);
                 // Vexflow errors can happen here, then our complete rendering loop would halt without catching errors.
             } catch (ex) {
                 log.warn("SkyBottomLineCalculator.calculateLines.draw", ex);
+            }
+            if (measure instanceof JianpuMeasure) {
+                measure.DrawOuterStafflines = false; // deactivate this, otherwise it would be permanent afterwards
             }
 
             // imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order
@@ -153,7 +163,12 @@ export class SkyBottomLineCalculator {
             const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * samplingUnit), 1);
             const tmpSkyLine: number[] = new Array(measureArrayLength);
             const tmpBottomLine: number[] = new Array(measureArrayLength);
-            for (let x: number = 0; x < width; x++) {
+            let scanWidth: number = width;
+            if (measure.IsJianpuMeasure && measure === this.StaffLineParent.Measures.last()) {
+                scanWidth = Math.ceil(scanWidth * 0.95);
+                // bottomline for Jianpu measures somehow spikes downwards after the last measure end -> ignore end
+            }
+            for (let x: number = 0; x < scanWidth; x++) {
                 // SkyLine
                 for (let y: number = 0; y < height; y++) {
                     const yOffset: number = y * width * rgbaLength;

@@ -134,6 +134,9 @@ export abstract class MusicSystem extends GraphicalObject {
         if (this.staffLines.length > 1) {
             bottom = this.staffLines[this.staffLines.length - 1].Measures[0];
         }
+        if (top.IsJianpuMeasure && (!bottom || bottom.IsJianpuMeasure)) {
+            //return; // TODO doesn't seem necessary anymore after the skyline/bottomline fix for Jianpu
+        }
         const leftSystemLine: SystemLine = this.createSystemLine(xPosition, lineWidth, SystemLinesEnum.SingleThin,
                                                                  SystemLinePosition.MeasureBegin, this, top, bottom);
         this.SystemLines.push(leftSystemLine);
