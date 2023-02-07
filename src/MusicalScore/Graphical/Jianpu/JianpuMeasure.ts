@@ -113,31 +113,35 @@ export class JianpuMeasure extends VexFlowMeasure {
 
                     const jianpuDotValue: number = note.sourceNote.Pitch.Octave - 1;
                     const textHeight: number = 2;
-                    if (jianpuDotValue > 0) {
-                        const dotLabel: Label = new Label("•".repeat(jianpuDotValue), TextAlignmentEnum.CenterBottom);
+                    if (jianpuDotValue > 0 || jianpuDotValue < 0) {
+                        const totalDots: number = Math.abs(jianpuDotValue);
+                        const sign: number = Math.sign(jianpuDotValue); // shift upwards for above, downwards for below
+                        const dotLabel: Label = new Label("•", TextAlignmentEnum.CenterBottom);
                         const gDotLabel: GraphicalLabel = new GraphicalLabel(dotLabel, textHeight, dotLabel.textAlignment, this.rules);
                         gDotLabel.PositionAndShape.Parent = gLabel.PositionAndShape;
                         gDotLabel.PositionAndShape.RelativePosition.x = 0.1;
-                        gDotLabel.PositionAndShape.RelativePosition.y = -1 * gLabel.PositionAndShape.Size.height;
+                        gDotLabel.PositionAndShape.RelativePosition.y = -sign * gLabel.PositionAndShape.Size.height; // minus is up
+                        //gDotLabel.PositionAndShape.BorderMarginTop = 0.1;
                         gDotLabel.setLabelPositionAndShapeBorders();
-                        if (jianpuDotValue > 1) {
-                            gDotLabel.PositionAndShape.RelativePosition.x -= gDotLabel.TextLines[0].width / 4;
-                        }
                         gDotLabel.PositionAndShape.calculateBoundingBox();
+                        let previousLabel: GraphicalLabel = gDotLabel;
                         se.JianpuNoteLabels.push(gDotLabel);
-                    } else if (jianpuDotValue < 0) {
-                        const dotsBelow: number = -jianpuDotValue;
-                        const dotLabel: Label = new Label("•".repeat(dotsBelow), TextAlignmentEnum.CenterBottom);
-                        const gDotLabel: GraphicalLabel = new GraphicalLabel(dotLabel, 2, dotLabel.textAlignment, this.rules);
-                        gDotLabel.PositionAndShape.Parent = gLabel.PositionAndShape;
-                        gDotLabel.PositionAndShape.RelativePosition.x = 0.1;
-                        gDotLabel.PositionAndShape.RelativePosition.y = gLabel.PositionAndShape.Size.height;
-                        gDotLabel.setLabelPositionAndShapeBorders();
-                        if (dotsBelow > 1) {
-                            gDotLabel.PositionAndShape.RelativePosition.x -= gDotLabel.TextLines[0].width / 4;
+                        for (let i: number = 2; i <= totalDots; i++) {
+                            const stackedDotLabel: Label = new Label("•", TextAlignmentEnum.CenterBottom);
+                            const stackedGDotLabel: GraphicalLabel = new GraphicalLabel(stackedDotLabel, textHeight, stackedDotLabel.textAlignment, this.rules);
+                            stackedGDotLabel.PositionAndShape.Parent = previousLabel.PositionAndShape;
+                            stackedGDotLabel.PositionAndShape.RelativePosition.x = 0;
+                            previousLabel.PositionAndShape.Size.height *= 0.4; // TODO somehow the bounding boxes are way too large for the dots
+                            stackedGDotLabel.PositionAndShape.RelativePosition.y = -sign * previousLabel.PositionAndShape.Size.height;
+                            //stackedGDotLabel.PositionAndShape.BorderMarginTop = 0.1;
+                            //stackedGDotLabel.PositionAndShape.BorderMarginBottom = 0.1;
+                            stackedGDotLabel.setLabelPositionAndShapeBorders();
+                            stackedGDotLabel.PositionAndShape.calculateBoundingBox();
+                            previousLabel = stackedGDotLabel;
+                            se.JianpuNoteLabels.push(stackedGDotLabel);
                         }
-                        gDotLabel.PositionAndShape.calculateBoundingBox();
-                        se.JianpuNoteLabels.push(gDotLabel);
+                        previousLabel.PositionAndShape.Size.height *= 0.5;
+                        // TODO octave below: last octave dot bounding box too small (though probably no problem)
                     }
                 }
             }
