@@ -241,6 +241,8 @@ export class EngravingRules {
     public SystemRepetitionEndingLineWidth: number;
     public SystemDotWidth: number;
     public MultipleRestMeasureDefaultWidth: number;
+    public FixedMeasureWidth: boolean;
+    public FixedMeasureWidthFixedValue: number;
     public DistanceBetweenVerticalSystemLines: number;
     public DistanceBetweenDotAndLine: number;
     public RepeatEndStartPadding: number;
@@ -650,6 +652,8 @@ export class EngravingRules {
         this.GraceLineWidth = this.StaffLineWidth * this.GraceNoteScalingFactor;
 
         this.MultipleRestMeasureDefaultWidth = 4;
+        this.FixedMeasureWidth = true;
+        this.FixedMeasureWidthFixedValue = undefined; // only set to a number x if the width should be always x
 
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;
