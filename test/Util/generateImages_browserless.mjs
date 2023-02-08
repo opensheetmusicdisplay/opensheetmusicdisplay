@@ -319,7 +319,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isTestFlatBeams = sampleFilename.startsWith("test_drum_tuplet_beams");
         const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
         const isTestPageBottomMargin0 = sampleFilename.includes("PageBottomMargin0");
-        osmdInstance.EngravingRules.loadDefaultValues();
+        osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
         } else {
@@ -340,6 +340,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             pageFormat: pageFormat, // reset by drawingparameters default,
             ...makeSkyBottomLineOptions()
         });
+        // note that loadDefaultValues() may be executed in setOptions with drawingParameters default
+        //osmdInstance.EngravingRules.RenderSingleHorizontalStaffline = true; // to use this option here, place it after setOptions(), see above
         osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false; // this would override the command line options (--plain etc)
         includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
         osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
