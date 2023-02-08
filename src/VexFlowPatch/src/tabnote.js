@@ -436,12 +436,15 @@ export class TabNote extends StemmableNote {
 
       let currentGlyphWidth = glyph.getWidth();
       if (currentGlyphWidth === 0 && glyph.text?.toString()?.length) {
-        // workaround for generateImages script -> SVG export
+        // VexflowPatch: workaround for generateImages script -> SVG export
         currentGlyphWidth = glyph.text.toString().length * 7;
       }
-      //console.log("currentGlyphWidth: " + currentGlyphWidth);
       // Center the fret text beneath the notation note head
-      const note_glyph_width = this.glyph.getWidth();
+      let note_glyph_width = this.glyph.getWidth();
+      if (note_glyph_width === 0) {
+        // VexflowPatch: correct positioning after VexflowPatch change above
+        note_glyph_width = currentGlyphWidth;
+      }
       const tab_x = x + (note_glyph_width / 2) - (currentGlyphWidth / 2);
 
       // FIXME: Magic numbers.
