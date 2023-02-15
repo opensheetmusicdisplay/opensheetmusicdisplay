@@ -73,6 +73,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public IsExtraGraphicalMeasure: boolean;
     public ExtraGraphicalMeasurePreviousMeasure: GraphicalMeasure;
     public ShowTimeSignature: boolean = true;
+    public ShowKeySignature: boolean = true;
 
     public get ParentStaff(): Staff {
         return this.parentStaff;
