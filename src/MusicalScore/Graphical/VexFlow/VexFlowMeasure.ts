@@ -250,7 +250,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (!this.rules.RenderKeySignatures || !this.ShowKeySignature) {
             return;
         }
-        if (this.parentSourceMeasure.isReducedToMultiRest && !this.rules.MultipleRestMeasureAddKeySignature) {
+        if (this.parentSourceMeasure?.isReducedToMultiRest && !this.rules.MultipleRestMeasureAddKeySignature) {
             return;
         }
         this.stave.setKeySignature(
