@@ -180,7 +180,13 @@ export abstract class MusicSheetCalculator {
                 // console.log(`skipping ${measuresToSkip} measures for measure #${sourceMeasure.MeasureNumber}.`);
                 idx += measuresToSkip;
                 for (let idx2: number = 1; idx2 <= measuresToSkip; idx2++) {
-                    const nextSourceMeasure: SourceMeasure = musicSheet.SourceMeasures[sourceMeasure.MeasureNumber - 1 + idx2];
+                    const nextMeasureIndex: number = musicSheet.SourceMeasures.indexOf(sourceMeasure) + idx2;
+                    // note that if there are pickup measures in the sheet, the measure index is not MeasureNumber - 1.
+                    //   (if first measure in the sheet is a pickup measure, its index and measure number will be 0)
+                    if (nextMeasureIndex >= musicSheet.SourceMeasures.length) {
+                        break; // shouldn't happen, but for safety.
+                    }
+                    const nextSourceMeasure: SourceMeasure = musicSheet.SourceMeasures[nextMeasureIndex];
                     // TODO handle the case that a measure after the first multiple rest measure can't be reduced
                     nextSourceMeasure.multipleRestMeasureNumber = idx2 + 1;
                     nextSourceMeasure.isReducedToMultiRest = true;
