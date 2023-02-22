@@ -32,6 +32,7 @@ import { GraphicalUnknownExpression } from "../GraphicalUnknownExpression";
 import { VexFlowPedal } from "./VexFlowPedal";
 import { GraphicalGlissando } from "../GraphicalGlissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
+import { GraphicalLine } from "../GraphicalLine";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -357,6 +358,14 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
         for (const jianpuLabel of staffEntry.JianpuNoteLabels) {
             this.drawLabel(jianpuLabel, <number>GraphicalLayers.Notes);
+        }
+        for (const jianpuLine of staffEntry.JianpuNoteLines) {
+            // similar to drawGlissando: absolute position is unfortunately only really available here, not in JianpuMeasure(.calculateYLayout)
+            const stafflinePos: PointF2D = staffEntry.PositionAndShape.AbsolutePosition;
+            const absoluteStart: PointF2D = new PointF2D(stafflinePos.x + jianpuLine.Start.x, stafflinePos.y + jianpuLine.Start.y);
+            const absoluteEnd: PointF2D = new PointF2D(stafflinePos.x + jianpuLine.End.x, stafflinePos.y + jianpuLine.End.y);
+            const absoluteLine: GraphicalLine = new GraphicalLine(absoluteStart, absoluteEnd, jianpuLine.Width);
+            this.drawGraphicalLine(absoluteLine, jianpuLine.Width);
         }
     }
 

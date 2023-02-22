@@ -1,6 +1,6 @@
 import Vex from "vexflow";
 import VF = Vex.Flow;
-import { NoteEnum } from "../../../Common";
+import { NoteEnum, PointF2D } from "../../../Common";
 import { TextAlignmentEnum } from "../../../Common/Enums/TextAlignment";
 import { Label } from "../../Label";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
@@ -9,6 +9,8 @@ import { GraphicalLabel } from "../GraphicalLabel";
 import { StaffLine } from "../StaffLine";
 import { VexFlowMeasure } from "../VexFlow/VexFlowMeasure";
 import { Note } from "../../VoiceData/Note";
+import { GraphicalLine } from "../GraphicalLine";
+import { NoteType } from "../../VoiceData/NoteType";
 
 export class JianpuMeasure extends VexFlowMeasure {
     /** Whether to draw the outer lines of the staffline (2 of 5), e.g. for the Skybottomline to work. */
@@ -95,11 +97,14 @@ export class JianpuMeasure extends VexFlowMeasure {
     private createLabels(): void {
         for (const se of this.staffEntries) {
             let veHeight: number = 1;
+            se.JianpuNoteLines = []; // reset, e.g. to avoid doubling after re-render
+            se.JianpuNoteLabels = []; // reset, e.g. to avoid doubling after re-render
             for (const ve of se.graphicalVoiceEntries) {
                 for (const note of ve.notes) {
                     note.JianpuHeight = veHeight;
                     veHeight += 2;
 
+                    // create Jianpu number label
                     const jianpuNumber: number = this.getJianpuNumber(note.sourceNote, this.ActiveKeyInstruction.Key);
                     const label: Label = new Label(jianpuNumber.toString(), TextAlignmentEnum.CenterBottom);
                     const gLabel: GraphicalLabel = new GraphicalLabel(label, 2, label.textAlignment, this.rules);
@@ -110,6 +115,39 @@ export class JianpuMeasure extends VexFlowMeasure {
                     gLabel.setLabelPositionAndShapeBorders();
                     gLabel.PositionAndShape.calculateBoundingBox();
                     se.JianpuNoteLabels.push(gLabel);
+
+                    // create "underscores" (notelength indicator <= 8th)
+                    note.JianpuLines = []; // reset
+                    const noteType: NoteType = note.sourceNote.NoteTypeXml;
+                    let underlineAddedHeight: number = 0;
+                    if (noteType > NoteType.UNDEFINED && noteType <= NoteType.EIGHTH) {
+                        const numberOfUnderlines: number = NoteType.EIGHTH - noteType + 1;
+                        for (let i: number = 1; i <= numberOfUnderlines; i++) {
+                            // const startX: number = note.JianpuLabel.PositionAndShape.AbsolutePosition.x; // doesn't exist yet?
+                            // const startY: number = note.JianpuLabel.PositionAndShape.AbsolutePosition.y + veHeight;
+                            // somehow the staffentry relativeposition is not correct here yet -> added in VexFlowMusicSheetDrawer.drawStaffEntry()
+                            //   compare with glissStartNote.PositionAndShape etc handling in GraphicalGlissando
+                            // const startX: number = note.PositionAndShape.RelativePosition.x
+                            //   + note.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
+                            //   + note.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x
+                            //   + this.rules.JianpuNoteLengthLinesXOffset;
+                            const startX: number = this.rules.JianpuUnderlineXOffset;
+                            //   + note.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine.PositionAndShape.RelativePosition.x
+                            const startY: number = veHeight;
+
+                            const startPoint: PointF2D = new PointF2D(startX, startY);
+                            const endPoint: PointF2D = new PointF2D(startX + 1, startY);
+                            const line: GraphicalLine = new GraphicalLine(startPoint, endPoint, this.rules.JianpuUnderlineWidth);
+                            note.JianpuLines.push(line);
+                            se.JianpuNoteLines.push(line);
+                            // we could also create labels instead of lines ("_"), but would be harder to control positioning, bounding box, width, length, etc.
+
+                            veHeight += this.rules.JianpuUnderlineYDistance;
+                            underlineAddedHeight += this.rules.JianpuUnderlineYDistance;
+                        }
+                        veHeight -= this.rules.JianpuUnderlineYDistance; // remove last offset of for loop that wasn't used
+                        //underlineAddedHeight -= this.rules.JianpuUnderlineYDistance;
+                    }
 
                     if (note.sourceNote.isRest()) {
                         continue; // no octave dots for rest notes
@@ -123,12 +161,13 @@ export class JianpuMeasure extends VexFlowMeasure {
                         const gDotLabel: GraphicalLabel = new GraphicalLabel(dotLabel, textHeight, dotLabel.textAlignment, this.rules);
                         gDotLabel.PositionAndShape.Parent = gLabel.PositionAndShape;
                         gDotLabel.PositionAndShape.RelativePosition.x = 0.1;
-                        gDotLabel.PositionAndShape.RelativePosition.y = -sign * gLabel.PositionAndShape.Size.height; // minus is up
+                        gDotLabel.PositionAndShape.RelativePosition.y = -sign * // minus is up
+                            (gLabel.PositionAndShape.Size.height + this.rules.JianpuOctaveDotYOffset + underlineAddedHeight);
                         //gDotLabel.PositionAndShape.BorderMarginTop = 0.1;
                         gDotLabel.setLabelPositionAndShapeBorders();
                         gDotLabel.PositionAndShape.calculateBoundingBox();
-                        let previousLabel: GraphicalLabel = gDotLabel;
                         se.JianpuNoteLabels.push(gDotLabel);
+                        let previousLabel: GraphicalLabel = gDotLabel;
                         for (let i: number = 2; i <= totalDots; i++) {
                             const stackedDotLabel: Label = new Label("•", TextAlignmentEnum.CenterBottom);
                             const stackedGDotLabel: GraphicalLabel = new GraphicalLabel(stackedDotLabel, textHeight, stackedDotLabel.textAlignment, this.rules);

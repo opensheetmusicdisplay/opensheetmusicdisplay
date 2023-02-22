@@ -11,6 +11,7 @@ import {GraphicalVoiceEntry} from "./GraphicalVoiceEntry";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import { EngravingRules } from "./EngravingRules";
 import { GraphicalLabel } from "./GraphicalLabel";
+import { GraphicalLine } from "./GraphicalLine";
 
 /**
  * The graphical counterpart of a [[Note]]
@@ -42,8 +43,10 @@ export class GraphicalNote extends GraphicalObject {
     public baseFingeringXOffset: number;
     public baseStringNumberXOffset: number;
     public lineShift: number = 0;
+    /** Height of this note's Jianpu Label (RelativePosition.y) (higher for following notes in chord) */
     public JianpuHeight: number = 0;
     public JianpuLabel: GraphicalLabel;
+    public JianpuLines: GraphicalLine[] = [];
 
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         let transposedPitch: Pitch = this.sourceNote.Pitch;

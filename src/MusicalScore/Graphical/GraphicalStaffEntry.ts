@@ -20,6 +20,7 @@ import { MusicSheetCalculator } from "./MusicSheetCalculator";
 import { Tie } from "../VoiceData/Tie";
 import { GraphicalLabel } from "./GraphicalLabel";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
+import { GraphicalLine } from "./GraphicalLine";
 
 /**
  * The graphical counterpart of a [[SourceStaffEntry]].
@@ -62,6 +63,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     private lyricsEntries: GraphicalLyricEntry[] = [];
     public FingeringEntries: GraphicalLabel[];
     public JianpuNoteLabels: GraphicalLabel[] = [];
+    public JianpuNoteLines: GraphicalLine[] = [];
 
     public get GraphicalInstructions(): AbstractGraphicalInstruction[] {
         return this.graphicalInstructions;

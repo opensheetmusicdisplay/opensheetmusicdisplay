@@ -373,6 +373,15 @@ export class EngravingRules {
     // this is basically a WeakMap, except we save the id in the Note instead of using a WeakMap.
     public NoteToGraphicalNoteMapObjectCount: number = 0;
 
+    // Jianpu / numbered notation
+    /** X offset of underlines under Jianpu note numbers for note length <= 8th */
+    public JianpuUnderlineXOffset: number;
+    public JianpuUnderlineWidth: number;
+    /** Distance between two underlines under Jianpu notes (e.g. 16th notes = 2 underlines with this distance between them) */
+    public JianpuUnderlineYDistance: number;
+    /** Offset of octave dots over/under jianpu number. If under, comes below underlines for note length (e.g. 16th = 2 underlines). */
+    public JianpuOctaveDotYOffset: number;
+
     /** The skyline and bottom-line batch calculation algorithm to use.
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
      */
@@ -744,6 +753,11 @@ export class EngravingRules {
 
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
         this.NoteToGraphicalNoteMapObjectCount = 0;
+
+        this.JianpuUnderlineXOffset = -0.5;
+        this.JianpuUnderlineWidth = 0.1;
+        this.JianpuUnderlineYDistance = this.JianpuUnderlineWidth * 2.5; // this should be the general formula, but user might increase it.
+        this.JianpuOctaveDotYOffset = -0.6; // the jianpu number label bbox is a bit too large, so we reduce the margin here
 
         this.SkyBottomLineBatchMinMeasures = 5;
         this.SkyBottomLineWebGLMinMeasures = 80;
