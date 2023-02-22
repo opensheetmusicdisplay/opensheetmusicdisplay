@@ -93,7 +93,6 @@ export class JianpuMeasure extends VexFlowMeasure {
     }
 
     private createLabels(): void {
-        this.rules.RenderMeasureNumbers = false; // TODO wrong placement
         for (const se of this.staffEntries) {
             let veHeight: number = 1;
             for (const ve of se.graphicalVoiceEntries) {
