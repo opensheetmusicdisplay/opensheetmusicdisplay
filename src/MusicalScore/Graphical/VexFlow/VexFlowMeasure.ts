@@ -877,7 +877,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     let beamHasQuarterNoteOrLonger: boolean = false;
                     for (const note of beam[0].Notes) {
                         if (note.Length.RealValue >= new Fraction(1, 4).RealValue
-                            // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eigth)
+                            // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eighth)
                             && (!note.TypeLength || note.TypeLength.RealValue > 0.125)) {
                             beamHasQuarterNoteOrLonger = true;
                             break;
@@ -1015,7 +1015,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (noteTuplet) {
                     // check if there are quarter notes or longer in the tuplet, then don't beam.
                     // (TODO: check for consecutiveBeamableNotes inside tuplets like for non-tuplet notes above
-                    //   e.g quarter eigth eighth -> beam the two eigth notes)
+                    //   e.g quarter eighth -> beam the two eighth notes)
                     let tupletContainsUnbeamableNote: boolean = false;
                     for (const notes of noteTuplet.Notes) {
                         for (const note of notes) {

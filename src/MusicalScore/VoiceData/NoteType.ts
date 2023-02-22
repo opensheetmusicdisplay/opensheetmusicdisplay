@@ -14,7 +14,7 @@ export enum NoteType {
     _64th,
     _32nd,
     _16th,
-    EIGTH,
+    EIGHTH,
     QUARTER,
     HALF,
     WHOLE,
@@ -25,7 +25,8 @@ export enum NoteType {
 
 export class NoteTypeHandler {
     public static NoteTypeXmlValues: string[] = ["", "1024th", "512th", "256th", "128th", "64th", "32nd", "16th",
-        "eigth", "quarter", "half", "whole", "breve", "long", "maxima"];
+        "eighth", "quarter", "half", "whole", "breve", "long", "maxima"];
+    // note that "eigth" is an incorrect spelling of "eighth". It's not even mentioned in the dictionary.
     // alternative to array: use switch/case
 
 

@@ -381,7 +381,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           minSpacing = this.rules.BetweenSyllableMinimumDistance;
           if (TextAlignment.IsCenterAligned(alignment)) {
             minSpacing += 1.0; // TODO check for previous lyric alignment too. though center is not standard
-            // without this, there's not enough space for dashes between long syllables on eigth notes
+            // without this, there's not enough space for dashes between long syllables on eighth notes
           }
         }
         const syllables: LyricsEntry[] = container.ParentLyricWord.GetLyricWord.Syllables;
@@ -451,7 +451,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           if ((lastNoteDuration.Denominator) > 4) {
             elongationFactorNeededForLastContainer *= 1.1; // from 1.2 upwards, this unnecessarily bloats shorter measures
             // spacing in Vexflow depends on note duration, our minSpacing is calibrated for quarter notes
-            // if we double the measure length, the distance between eigth notes only gets half of the added length
+            // if we double the measure length, the distance between eighth notes only gets half of the added length
             // compared to a quarter note.
           }
         }
