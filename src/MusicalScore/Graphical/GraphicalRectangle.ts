@@ -7,7 +7,7 @@ export class GraphicalRectangle extends GraphicalObject {
 
     constructor(upperLeftPoint: PointF2D, lowerRightPoint: PointF2D, parent: BoundingBox, style: OutlineAndFillStyleEnum) {
         super();
-        this.boundingBox = new BoundingBox(parent);
+        this.boundingBox = new BoundingBox(this, parent);
         this.boundingBox.RelativePosition = upperLeftPoint;
         this.boundingBox.BorderRight = lowerRightPoint.x - upperLeftPoint.x;
         this.boundingBox.BorderBottom = lowerRightPoint.y - upperLeftPoint.y;
