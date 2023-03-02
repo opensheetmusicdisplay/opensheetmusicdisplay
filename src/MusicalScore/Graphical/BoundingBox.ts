@@ -4,6 +4,7 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
 import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";
 import { GraphicalObject } from "./GraphicalObject";
+import { GraphicalLabel } from "./GraphicalLabel";
 
 /**
  * A bounding box delimits an area on the 2D plane.
@@ -302,7 +303,12 @@ export class BoundingBox {
         }
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
             const childElement: BoundingBox = this.ChildElements[idx];
-            childElement.calculateBoundingBox();
+            if (childElement.dataObject instanceof GraphicalLabel) {
+                (childElement.dataObject as GraphicalLabel).setLabelPositionAndShapeBorders();
+                // calculateBoundingBox() gets the wrong borders and size.height for GraphicalLabels
+            } else {
+                childElement.calculateBoundingBox();
+            }
         }
 
         // initialize with max/min values
