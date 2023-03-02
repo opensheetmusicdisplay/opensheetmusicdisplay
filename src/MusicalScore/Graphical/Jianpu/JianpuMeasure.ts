@@ -1,6 +1,7 @@
 import Vex from "vexflow";
 import VF = Vex.Flow;
-import { NoteEnum, PointF2D } from "../../../Common";
+import { NoteEnum } from "../../../Common/DataObjects/Pitch";
+import { PointF2D } from "../../../Common/DataObjects/PointF2D";
 import { TextAlignmentEnum } from "../../../Common/Enums/TextAlignment";
 import { Label } from "../../Label";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";

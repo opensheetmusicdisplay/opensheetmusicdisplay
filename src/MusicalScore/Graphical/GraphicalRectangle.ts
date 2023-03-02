@@ -2,7 +2,7 @@ import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import {BoundingBox} from "./BoundingBox";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalObject} from "./GraphicalObject";
-import { RectangleF2D } from "../../Common";
+import { RectangleF2D } from "../../Common/DataObjects/RectangleF2D";
 
 export class GraphicalRectangle extends GraphicalObject {
     public UpperLeftPoint: PointF2D;
