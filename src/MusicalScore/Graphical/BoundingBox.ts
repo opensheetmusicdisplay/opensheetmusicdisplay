@@ -304,7 +304,12 @@ export class BoundingBox {
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
             const childElement: BoundingBox = this.ChildElements[idx];
             if (childElement.dataObject instanceof GraphicalLabel) {
-                (childElement.dataObject as GraphicalLabel).setLabelPositionAndShapeBorders();
+                const gLabel: GraphicalLabel = childElement.dataObject as GraphicalLabel;
+                gLabel.setLabelPositionAndShapeBorders();
+                for (const subChildElement of gLabel.PositionAndShape.ChildElements) {
+                    subChildElement.calculateBoundingBox();
+                    // this is experimental and probably doesn't solve the gLabel bbox issue
+                }
                 // calculateBoundingBox() gets the wrong borders and size.height for GraphicalLabels
             } else {
                 childElement.calculateBoundingBox();

@@ -667,7 +667,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     // correct position / bounding box (note.setIndex() needs to have been called)
     public correctNotePositions(): void {
-        if (this.isTabMeasure) {
+        if (this.isTabMeasure || this.IsJianpuMeasure) {
             return;
         }
         for (const voice of this.getVoicesWithinMeasure()) {

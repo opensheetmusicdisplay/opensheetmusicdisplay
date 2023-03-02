@@ -9,8 +9,12 @@ import { GraphicalLabel } from "../GraphicalLabel";
 import { StaffLine } from "../StaffLine";
 import { VexFlowMeasure } from "../VexFlow/VexFlowMeasure";
 import { Note } from "../../VoiceData/Note";
-import { GraphicalLine } from "../GraphicalLine";
 import { NoteType } from "../../VoiceData/NoteType";
+import { GraphicalRectangle } from "../GraphicalRectangle";
+import { OutlineAndFillStyleEnum } from "../DrawingEnums";
+import { BoundingBox } from "../BoundingBox";
+import { GraphicalNote } from "../GraphicalNote";
+import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 
 export class JianpuMeasure extends VexFlowMeasure {
     /** Whether to draw the outer lines of the staffline (2 of 5), e.g. for the Skybottomline to work. */
@@ -96,30 +100,43 @@ export class JianpuMeasure extends VexFlowMeasure {
 
     private createLabels(): void {
         for (const se of this.staffEntries) {
-            let veHeight: number = 1;
+            se.PositionAndShape.RelativePosition.y = 3; // vertical shift of all of the labels in the measure
             se.JianpuNoteLines = []; // reset, e.g. to avoid doubling after re-render
             se.JianpuNoteLabels = []; // reset, e.g. to avoid doubling after re-render
+            let previousProcessedVoiceEntry: GraphicalVoiceEntry;
             for (const ve of se.graphicalVoiceEntries) {
+                if (previousProcessedVoiceEntry) {
+                    ve.PositionAndShape.RelativePosition.y = previousProcessedVoiceEntry.PositionAndShape.Size.height;
+                } else {
+                    ve.PositionAndShape.RelativePosition.y = 0;
+                }
+                let lastBbox: BoundingBox;
+                let previousProcessedNote: GraphicalNote;
                 for (const note of ve.notes) {
-                    note.JianpuHeight = veHeight;
-                    veHeight += 2;
+                    note.JianpuLabel = null;
+                    note.JianpuLines = [];
+                    note.JianpuRectangles = [];
+
+                    if (previousProcessedNote) {
+                        note.PositionAndShape.RelativePosition.y = previousProcessedNote.PositionAndShape.Size.height;
+                    }
 
                     // create Jianpu number label
                     const jianpuNumber: number = this.getJianpuNumber(note.sourceNote, this.ActiveKeyInstruction.Key);
-                    const label: Label = new Label(jianpuNumber.toString(), TextAlignmentEnum.CenterBottom);
-                    const gLabel: GraphicalLabel = new GraphicalLabel(label, 2, label.textAlignment, this.rules);
-                    note.JianpuLabel = gLabel;
-                    gLabel.PositionAndShape.Parent = se.PositionAndShape;
-                    gLabel.PositionAndShape.RelativePosition.x = 0;
-                    gLabel.PositionAndShape.RelativePosition.y = veHeight;
-                    gLabel.setLabelPositionAndShapeBorders();
-                    gLabel.PositionAndShape.calculateBoundingBox();
-                    se.JianpuNoteLabels.push(gLabel);
+                    const noteLabel: Label = new Label(jianpuNumber.toString(), TextAlignmentEnum.CenterBottom);
+                    const noteGLabel: GraphicalLabel = new GraphicalLabel(noteLabel, 2, noteLabel.textAlignment, this.rules);
+                    note.JianpuLabel = noteGLabel;
+                    noteGLabel.PositionAndShape.Parent = ve.PositionAndShape;
+                    noteGLabel.PositionAndShape.RelativePosition.x = 0;
+                    noteGLabel.PositionAndShape.RelativePosition.y = 0;
+                    noteGLabel.setLabelPositionAndShapeBorders();
+                    //noteGLabel.PositionAndShape.calculateBoundingBox();
+                    se.JianpuNoteLabels.push(noteGLabel);
+                    lastBbox = noteGLabel.PositionAndShape;
 
                     // create "underscores" (notelength indicator <= 8th)
                     note.JianpuLines = []; // reset
                     const noteType: NoteType = note.sourceNote.NoteTypeXml;
-                    let underlineAddedHeight: number = 0;
                     if (noteType > NoteType.UNDEFINED && noteType <= NoteType.EIGHTH) {
                         const numberOfUnderlines: number = NoteType.EIGHTH - noteType + 1;
                         for (let i: number = 1; i <= numberOfUnderlines; i++) {
@@ -131,25 +148,28 @@ export class JianpuMeasure extends VexFlowMeasure {
                             //   + note.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
                             //   + note.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x
                             //   + this.rules.JianpuNoteLengthLinesXOffset;
-                            const startX: number = this.rules.JianpuUnderlineXOffset;
+                            const startX: number = 0;
                             //   + note.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine.PositionAndShape.RelativePosition.x
-                            const startY: number = veHeight;
+                            const startY: number = 0; // offset to note
 
                             const startPoint: PointF2D = new PointF2D(startX, startY);
-                            const endPoint: PointF2D = new PointF2D(startX + 1, startY);
-                            const line: GraphicalLine = new GraphicalLine(startPoint, endPoint, this.rules.JianpuUnderlineWidth);
-                            note.JianpuLines.push(line);
-                            se.JianpuNoteLines.push(line);
-                            // we could also create labels instead of lines ("_"), but would be harder to control positioning, bounding box, width, length, etc.
-
-                            veHeight += this.rules.JianpuUnderlineYDistance;
-                            underlineAddedHeight += this.rules.JianpuUnderlineYDistance;
+                            //const endPoint: PointF2D = new PointF2D(startX + 1, startY); // for GraphicalLine
+                            const endPoint: PointF2D = new PointF2D(startX + 1, startY + this.rules.JianpuUnderlineWidth / 2);
+                            const rectangle: GraphicalRectangle = new GraphicalRectangle(
+                                startPoint, endPoint, lastBbox, OutlineAndFillStyleEnum.BaseWritingColor);
+                            if (lastBbox.DataObject === noteGLabel) {
+                                rectangle.PositionAndShape.RelativePosition.x = this.rules.JianpuUnderlineXOffset;
+                            }
+                            rectangle.PositionAndShape.RelativePosition.y = this.rules.JianpuUnderlineWidth * 2.5;
+                            //const line: GraphicalLine = new GraphicalLine(startPoint, endPoint, this.rules.JianpuUnderlineWidth);
+                            note.JianpuRectangles.push(rectangle);
+                            se.JianpuNoteRectangles.push(rectangle);
+                            lastBbox = rectangle.PositionAndShape;
                         }
-                        veHeight -= this.rules.JianpuUnderlineYDistance; // remove last offset of for loop that wasn't used
-                        //underlineAddedHeight -= this.rules.JianpuUnderlineYDistance;
                     }
 
                     if (note.sourceNote.isRest()) {
+                        previousProcessedNote = note;
                         continue; // no octave dots for rest notes
                     }
                     const jianpuDotValue: number = note.sourceNote.Pitch.Octave - 1;
@@ -159,34 +179,55 @@ export class JianpuMeasure extends VexFlowMeasure {
                         const sign: number = Math.sign(jianpuDotValue); // shift upwards for above, downwards for below
                         const dotLabel: Label = new Label("•", TextAlignmentEnum.CenterBottom);
                         const gDotLabel: GraphicalLabel = new GraphicalLabel(dotLabel, textHeight, dotLabel.textAlignment, this.rules);
-                        gDotLabel.PositionAndShape.Parent = gLabel.PositionAndShape;
-                        gDotLabel.PositionAndShape.RelativePosition.x = 0.1;
-                        gDotLabel.PositionAndShape.RelativePosition.y = -sign * // minus is up
-                            (gLabel.PositionAndShape.Size.height + this.rules.JianpuOctaveDotYOffset + underlineAddedHeight);
+                        gDotLabel.PositionAndShape.Parent = lastBbox;
+                        // TODO probably a bad idea to stack bboxes like this, glabels shouldn't have sub-bboxes
+                        //   instead, attach it to note/voice entry and respect the label's bbox in the relativeposition
+                        gDotLabel.setLabelPositionAndShapeBorders();
+                        //gDotLabel.PositionAndShape.calculateBoundingBox();
+                        if (lastBbox.DataObject === noteGLabel) {
+                            gDotLabel.PositionAndShape.RelativePosition.x = 0.1;
+                            gDotLabel.PositionAndShape.RelativePosition.y = sign *
+                                (noteGLabel.PositionAndShape.Size.height + this.rules.JianpuOctaveDotYOffset);
+                        } else {
+                            gDotLabel.PositionAndShape.RelativePosition.x = 0.5; // half the underline length
+                            gDotLabel.PositionAndShape.RelativePosition.y = sign * (gDotLabel.PositionAndShape.Size.height + 0.2);
+                        }
                         //gDotLabel.PositionAndShape.BorderMarginTop = 0.1;
                         gDotLabel.setLabelPositionAndShapeBorders();
-                        gDotLabel.PositionAndShape.calculateBoundingBox();
+                        //gDotLabel.PositionAndShape.calculateBoundingBox();
+                        lastBbox = gDotLabel.PositionAndShape;
                         se.JianpuNoteLabels.push(gDotLabel);
                         let previousLabel: GraphicalLabel = gDotLabel;
                         for (let i: number = 2; i <= totalDots; i++) {
                             const stackedDotLabel: Label = new Label("•", TextAlignmentEnum.CenterBottom);
                             const stackedGDotLabel: GraphicalLabel = new GraphicalLabel(stackedDotLabel, textHeight, stackedDotLabel.textAlignment, this.rules);
-                            stackedGDotLabel.PositionAndShape.Parent = previousLabel.PositionAndShape;
+                            stackedGDotLabel.PositionAndShape.Parent = lastBbox;
                             stackedGDotLabel.PositionAndShape.RelativePosition.x = 0;
                             previousLabel.PositionAndShape.Size.height *= 0.4; // TODO somehow the bounding boxes are way too large for the dots
-                            stackedGDotLabel.PositionAndShape.RelativePosition.y = -sign * previousLabel.PositionAndShape.Size.height;
+                            stackedGDotLabel.PositionAndShape.RelativePosition.y = sign * 0.5;
                             //stackedGDotLabel.PositionAndShape.BorderMarginTop = 0.1;
                             //stackedGDotLabel.PositionAndShape.BorderMarginBottom = 0.1;
                             stackedGDotLabel.setLabelPositionAndShapeBorders();
-                            stackedGDotLabel.PositionAndShape.calculateBoundingBox();
+                            //stackedGDotLabel.PositionAndShape.calculateBoundingBox();
                             previousLabel = stackedGDotLabel;
                             se.JianpuNoteLabels.push(stackedGDotLabel);
                         }
                         previousLabel.PositionAndShape.Size.height *= 0.5;
                         // TODO octave below: last octave dot bounding box too small (though probably no problem)
                     }
+                    previousProcessedNote = note;
+                    const childIndex: number = ve.PositionAndShape.ChildElements.indexOf(note.PositionAndShape);
+                    if (childIndex >= 0) {
+                        ve.PositionAndShape.ChildElements.splice(childIndex, 1);
+                    }
+                    // note.PositionAndShape.calculateBoundingBox();
                 }
+                previousProcessedVoiceEntry = ve;
+                ve.PositionAndShape.calculateBoundingBox();
+                // TODO somehow we sometimes need to render twice to get the correct positioning
+                //   probably because of the graphical label having children element bounding boxes
             }
+            // se.PositionAndShape.calculateBoundingBox();
         }
     }
 
@@ -226,4 +267,8 @@ export class JianpuMeasure extends VexFlowMeasure {
                 return 1;
         }
     }
+
+    // public override correctNotePositions(): void {
+    //     // do nothing. don't take VexFlowGraphicalNote positions.
+    // }
 }

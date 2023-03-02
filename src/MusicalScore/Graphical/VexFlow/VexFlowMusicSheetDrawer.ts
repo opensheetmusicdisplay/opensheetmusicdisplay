@@ -8,7 +8,7 @@ import { GraphicalLabel } from "../GraphicalLabel";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
 import { MusicSystem } from "../MusicSystem";
 import { GraphicalObject } from "../GraphicalObject";
-import { GraphicalLayers } from "../DrawingEnums";
+import { GraphicalLayers, OutlineAndFillStyleEnum } from "../DrawingEnums";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowBackend } from "./VexFlowBackend";
 import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
@@ -33,6 +33,7 @@ import { VexFlowPedal } from "./VexFlowPedal";
 import { GraphicalGlissando } from "../GraphicalGlissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
 import { GraphicalLine } from "../GraphicalLine";
+import { GraphicalRectangle } from "../GraphicalRectangle";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -366,6 +367,18 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             const absoluteEnd: PointF2D = new PointF2D(stafflinePos.x + jianpuLine.End.x, stafflinePos.y + jianpuLine.End.y);
             const absoluteLine: GraphicalLine = new GraphicalLine(absoluteStart, absoluteEnd, jianpuLine.Width);
             this.drawGraphicalLine(absoluteLine, jianpuLine.Width);
+        }
+        for (const jianpuRectangle of staffEntry.JianpuNoteRectangles) {
+            const absoluteStart: PointF2D = new PointF2D(
+                jianpuRectangle.PositionAndShape.AbsolutePosition.x,
+                jianpuRectangle.PositionAndShape.AbsolutePosition.y);
+            const absoluteEnd: PointF2D = new PointF2D(
+                jianpuRectangle.PositionAndShape.AbsolutePosition.x + jianpuRectangle.LowerRightPoint.x,
+                jianpuRectangle.PositionAndShape.AbsolutePosition.y + jianpuRectangle.LowerRightPoint.y);
+
+            const absoluteRect: GraphicalRectangle = new GraphicalRectangle(absoluteStart, absoluteEnd, null, OutlineAndFillStyleEnum.BaseWritingColor);
+            const rectangleF2D: RectangleF2D = this.applyScreenTransformationForRect(absoluteRect.RectangleF2D);
+            this.renderRectangle(rectangleF2D, 0, OutlineAndFillStyleEnum.BaseWritingColor, this.rules.DefaultColorMusic, 1);
         }
     }
 

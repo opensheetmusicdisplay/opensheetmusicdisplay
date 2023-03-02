@@ -21,6 +21,7 @@ import { Tie } from "../VoiceData/Tie";
 import { GraphicalLabel } from "./GraphicalLabel";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { GraphicalLine } from "./GraphicalLine";
+import { GraphicalRectangle } from "./GraphicalRectangle";
 
 /**
  * The graphical counterpart of a [[SourceStaffEntry]].
@@ -64,6 +65,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public FingeringEntries: GraphicalLabel[];
     public JianpuNoteLabels: GraphicalLabel[] = [];
     public JianpuNoteLines: GraphicalLine[] = [];
+    public JianpuNoteRectangles: GraphicalRectangle[] = [];
 
     public get GraphicalInstructions(): AbstractGraphicalInstruction[] {
         return this.graphicalInstructions;
