@@ -12,6 +12,7 @@ import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import { EngravingRules } from "./EngravingRules";
 import { GraphicalLabel } from "./GraphicalLabel";
 import { GraphicalLine } from "./GraphicalLine";
+import { GraphicalRectangle } from "./GraphicalRectangle";
 
 /**
  * The graphical counterpart of a [[Note]]
@@ -47,6 +48,7 @@ export class GraphicalNote extends GraphicalObject {
     public JianpuHeight: number = 0;
     public JianpuLabel: GraphicalLabel;
     public JianpuLines: GraphicalLine[] = [];
+    public JianpuRectangles: GraphicalRectangle[] = [];
 
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         let transposedPitch: Pitch = this.sourceNote.Pitch;
