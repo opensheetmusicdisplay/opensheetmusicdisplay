@@ -226,8 +226,6 @@ export class JianpuMeasure extends VexFlowMeasure {
                 }
                 previousProcessedVoiceEntry = ve;
                 ve.PositionAndShape.calculateBoundingBox();
-                // TODO somehow we sometimes need to render twice to get the correct positioning
-                //   probably because of the graphical label having children element bounding boxes
             }
             // se.PositionAndShape.calculateBoundingBox();
         }
