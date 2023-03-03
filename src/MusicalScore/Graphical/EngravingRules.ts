@@ -381,6 +381,8 @@ export class EngravingRules {
     public JianpuUnderlineYDistance: number;
     /** Offset of octave dots over/under jianpu number. If under, comes below underlines for note length (e.g. 16th = 2 underlines). */
     public JianpuOctaveDotYOffset: number;
+    /** Minimum vertical margin to next vertical Jianpu note */
+    public JianpuNoteYMarginMinimum: number;
 
     /** The skyline and bottom-line batch calculation algorithm to use.
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
@@ -757,7 +759,8 @@ export class EngravingRules {
         this.JianpuUnderlineXOffset = -0.5;
         this.JianpuUnderlineWidth = 0.1;
         this.JianpuUnderlineYDistance = this.JianpuUnderlineWidth * 2.5; // this should be the general formula, but user might increase it.
-        this.JianpuOctaveDotYOffset = -0.6; // the jianpu number label bbox is a bit too large, so we reduce the margin here
+        this.JianpuOctaveDotYOffset = -0.8; // the jianpu number label bbox is a bit too large, so we reduce the margin here
+        this.JianpuNoteYMarginMinimum = 1;
 
         this.SkyBottomLineBatchMinMeasures = 5;
         this.SkyBottomLineWebGLMinMeasures = 80;
