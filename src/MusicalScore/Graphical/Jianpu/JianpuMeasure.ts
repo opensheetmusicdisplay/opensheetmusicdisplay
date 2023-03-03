@@ -155,13 +155,9 @@ export class JianpuMeasure extends VexFlowMeasure {
                             const rectangle: GraphicalRectangle = new GraphicalRectangle(
                                 startPoint, endPoint, ve.PositionAndShape, OutlineAndFillStyleEnum.BaseWritingColor);
                             rectangle.PositionAndShape.RelativePosition.x = this.rules.JianpuUnderlineXOffset;
-                            if (lastBbox.DataObject === noteGLabel) {
-                                rectangle.PositionAndShape.RelativePosition.y = addedYPositionBelow; // 0, on purpose. 0 is under the note
-                                addedYPositionBelow += rectangle.PositionAndShape.BorderBottom + this.rules.JianpuUnderlineWidth * 2.5; // + margin
-                            } else {
-                                rectangle.PositionAndShape.RelativePosition.y = addedYPositionBelow;
-                                addedYPositionBelow += rectangle.PositionAndShape.BorderBottom + this.rules.JianpuUnderlineWidth * 2.5; // + margin;
-                            }
+                            // if (lastBbox.DataObject === noteGLabel) { // irrelevant for now
+                            rectangle.PositionAndShape.RelativePosition.y = addedYPositionBelow; // 0, on purpose. 0 is under the note
+                            addedYPositionBelow += rectangle.PositionAndShape.BorderBottom + this.rules.JianpuUnderlineWidth * 2.5; // + margin
                             //const line: GraphicalLine = new GraphicalLine(startPoint, endPoint, this.rules.JianpuUnderlineWidth);
                             note.JianpuRectangles.push(rectangle);
                             se.JianpuNoteRectangles.push(rectangle);
