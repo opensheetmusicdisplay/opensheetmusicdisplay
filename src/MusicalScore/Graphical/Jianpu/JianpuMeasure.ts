@@ -78,28 +78,12 @@ export class JianpuMeasure extends VexFlowMeasure {
 
     public override calculateYLayout(): void {
         this.createJianpuNotes();
-        this.createLabels();
         if (!this.FormatJianpuClef && !this.FormatJianpuTimeSignature) {
             this.beginInstructionsWidth = 0;
         }
     }
 
     private createJianpuNotes(): void {
-        for (const se of this.staffEntries) {
-            for (const ve of se.graphicalVoiceEntries) {
-                for (const note of ve.notes) {
-                    if (false) {
-                        console.log(note);
-                    }
-
-                    // console.log("active key: ");
-                    // console.dir(this.ActiveKeyInstruction);
-                }
-            }
-        }
-    }
-
-    private createLabels(): void {
         for (const se of this.staffEntries) {
             const verticalShiftStaffentry: number = 3;
             //let verticalShiftStaffentry: number = 3 - (se.graphicalVoiceEntries.length - 1);
