@@ -85,10 +85,6 @@ export class JianpuMeasure extends VexFlowMeasure {
 
     private createJianpuNotes(): void {
         for (const se of this.staffEntries) {
-            const verticalShiftStaffentry: number = 3;
-            //let verticalShiftStaffentry: number = 3 - (se.graphicalVoiceEntries.length - 1);
-            se.PositionAndShape.RelativePosition.y = verticalShiftStaffentry; // vertical shift of all of the labels in the measure
-            // currently, for 2 simultaneous notes, the bottom one is always in the middle of the staff
             se.JianpuNoteLines = []; // reset, e.g. to avoid doubling after re-render
             se.JianpuNoteLabels = []; // reset, e.g. to avoid doubling after re-render
             se.JianpuNoteRectangles = [];
@@ -96,9 +92,15 @@ export class JianpuMeasure extends VexFlowMeasure {
             let previousProcessedVoiceEntry: GraphicalVoiceEntry;
             let nextNoteMargin: number = 0;
             let numberOfNotesInStaffEntry: number = 0;
+            let extraVeNotesTotal: number = 0; // extra notes past one per voice entry
             for (const ve of se.graphicalVoiceEntries) {
                 numberOfNotesInStaffEntry += ve.notes.length;
+                extraVeNotesTotal += Math.max(0, ve.notes.length - 1); // for all notes in addition to the first, add surplus (yShift).
             }
+            const verticalShiftStaffentry: number = 3 - extraVeNotesTotal; // for a 3 note chord, shift by -2 compared to only one not per voice entry
+            //let verticalShiftStaffentry: number = 3 - (se.graphicalVoiceEntries.length - 1);
+            se.PositionAndShape.RelativePosition.y = verticalShiftStaffentry; // vertical shift of all of the labels in the measure
+            // currently, for 2 simultaneous notes, the bottom one is always in the middle of the staff
             const fontSizeShrinkFactor: number = Math.pow(0.8, -1 + numberOfNotesInStaffEntry); // 100% for 1 note, *x% for each additional note
             const fontSize: number = 2 * fontSizeShrinkFactor;
             for (const ve of se.graphicalVoiceEntries) {
@@ -115,7 +117,8 @@ export class JianpuMeasure extends VexFlowMeasure {
                 }
                 let lastBbox: BoundingBox;
                 let previousProcessedNote: GraphicalNote;
-                for (const note of ve.notes) {
+                for (let noteIndex: number = ve.notes.length - 1; noteIndex >= 0; noteIndex--) {
+                    const note: GraphicalNote = ve.notes[noteIndex];
                     note.JianpuLabel = null;
                     note.JianpuLines = [];
                     note.JianpuRectangles = [];
@@ -222,6 +225,7 @@ export class JianpuMeasure extends VexFlowMeasure {
                     if (childIndex >= 0) {
                         ve.PositionAndShape.ChildElements.splice(childIndex, 1);
                     }
+                    ve.PositionAndShape.calculateBoundingBox(); // necessary to get a margin between multiple notes in one voice entry
                     // note.PositionAndShape.calculateBoundingBox();
                 }
                 previousProcessedVoiceEntry = ve;
