@@ -16,7 +16,6 @@ import {ClefEnum} from "../VoiceData/Instructions/ClefInstruction";
 import {RhythmSymbolEnum} from "../VoiceData/Instructions/RhythmInstruction";
 import {KeyEnum} from "../VoiceData/Instructions/KeyInstruction";
 import {IXmlAttribute} from "../../Common/FileIO/Xml";
-import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
 import log from "loglevel";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {ChordSymbolReader} from "./MusicSymbolModules/ChordSymbolReader";
@@ -93,7 +92,6 @@ export class InstrumentReader {
   private activeClefsHaveBeenInitialized: boolean[];
   private activeKeyHasBeenInitialized: boolean = false;
   private abstractInstructions: [number, AbstractNotationInstruction, Fraction][] = [];
-  private openChordSymbolContainers: ChordSymbolContainer[] = [];
   private expressionReaders: ExpressionReader[];
   private currentVoiceGenerator: VoiceGenerator;
   //private openSlurDict: { [n: number]: Slur; } = {};
@@ -163,7 +161,90 @@ export class InstrumentReader {
           if (newPageAttr?.value === "yes") {
             currentMeasure.printNewPageXml = true;
           }
-        } else if (xmlNode.name === "note") {
+        }
+        else if (xmlNode.name === "attributes") {
+          const divisionsNode: IXmlElement = xmlNode.element("divisions");
+          if (divisionsNode) {
+            this.divisions = parseInt(divisionsNode.value, 10);
+            if (isNaN(this.divisions)) {
+              const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError",
+                  "Invalid divisions value at Instrument: ");
+              log.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
+              this.divisions = this.readDivisionsFromNotes();
+              if (this.divisions > 0) {
+                this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);
+              } else {
+                divisionsException = true;
+                throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
+              }
+            }
+          }
+          if (
+              !xmlNode.element("divisions") &&
+              this.divisions === 0 &&
+              this.currentXmlMeasureIndex === 0
+          ) {
+            const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ");
+            this.divisions = this.readDivisionsFromNotes();
+            if (this.divisions > 0) {
+              this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);
+            } else {
+              divisionsException = true;
+              throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
+            }
+          }
+          this.addAbstractInstruction(xmlNode, octavePlusOne, previousNode, currentFraction.clone());
+          if (currentFraction.Equals(new Fraction(0, 1)) &&
+              this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
+            this.saveAbstractInstructionList(this.instrument.Staves.length, true);
+          }
+          if (this.isAttributesNodeAtEndOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode, currentFraction)) {
+            this.saveClefInstructionAtEndOfMeasure();
+          }
+          const staffDetailsNodes: IXmlElement[] = xmlNode.elements("staff-details"); // there can be multiple, even if redundant. see #1041
+          for (const staffDetailsNode of staffDetailsNodes) {
+            const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
+            if (staffLinesNode) {
+              let staffNumber: number = 1;
+              const staffNumberAttr: Attr = staffDetailsNode.attribute("number");
+              if (staffNumberAttr) {
+                staffNumber = parseInt(staffNumberAttr.value, 10);
+              }
+              this.instrument.Staves[staffNumber - 1].StafflineCount = parseInt(staffLinesNode.value, 10);
+            }
+          }
+          // check multi measure rest
+          const measureStyle: IXmlElement = xmlNode.element("measure-style");
+          if (measureStyle) {
+            const multipleRest: IXmlElement = measureStyle.element("multiple-rest");
+            if (multipleRest) {
+              // TODO: save multirest per staff info a dictionary, to display a partial multirest if multirest values across staffs differ.
+              //   this makes the code bulkier though, and for now we only draw multirests if the staffs have the same multirest lengths.
+              // if (!currentMeasure.multipleRestMeasuresPerStaff) {
+              //   currentMeasure.multipleRestMeasuresPerStaff = new Dictionary<number, number>();
+              // }
+              const multipleRestValueXml: string = multipleRest.value;
+              let multipleRestNumber: number = 0;
+              try {
+                multipleRestNumber = Number.parseInt(multipleRestValueXml, 10);
+                if (currentMeasure.multipleRestMeasures !== undefined && multipleRestNumber !== currentMeasure.multipleRestMeasures) {
+                  // different multi-rest values in same measure for different staffs
+                  currentMeasure.multipleRestMeasures = 0; // for now, ignore multirest here. TODO: take minimum
+                  // currentMeasure.multipleRestMeasuresPerStaff.setValue(this.currentStaff?.Id, multipleRestNumber);
+                  //   issue: currentStaff can be undefined for first measure
+                } else {
+                  currentMeasure.multipleRestMeasures = multipleRestNumber;
+                  this.currentMultirestStartMeasure = currentMeasure;
+                  this.followingMultirestMeasures = multipleRestNumber + 1; // will be decremented at the start of the loop
+                }
+              } catch (e) {
+                console.log("multirest parse error: " + e);
+              }
+            }
+          }
+
+        }
+        else if (xmlNode.name === "note") {
           let printObject: boolean = true;
           if (xmlNode.attribute("print-object")?.value === "no") {
               printObject = false; // note will not be rendered, but still parsed for Playback etc.
@@ -171,16 +252,7 @@ export class InstrumentReader {
               //   if (xmlNode.attribute("print-spacing").value === "yes" {
               //     // TODO give spacing for invisible notes even when not displayed. might be hard with Vexflow formatting
           }
-          let noteStaff: number = 1;
-          if (this.instrument.Staves.length > 1) {
-            if (xmlNode.element("staff")) {
-              noteStaff = parseInt(xmlNode.element("staff").value, 10);
-              if (isNaN(noteStaff)) {
-                log.debug("InstrumentReader.readNextXmlMeasure.get staff number");
-                noteStaff = 1;
-              }
-            }
-          }
+          const noteStaff: number = this.getNoteStaff(xmlNode);
 
           this.currentStaff = this.instrument.Staves[noteStaff - 1];
           const isChord: boolean = xmlNode.element("chord") !== undefined;
@@ -251,49 +323,10 @@ export class InstrumentReader {
           }
 
           // check for cue note
-          let isCueNote: boolean = false;
-          const cueNode: IXmlElement = xmlNode.element("cue");
-          if (cueNode) {
-            isCueNote = true;
-          }
-          // alternative: check for <type size="cue">
-          const typeNode: IXmlElement = xmlNode.element("type");
-          let noteTypeXml: NoteType = NoteType.UNDEFINED;
-          if (typeNode) {
-            const sizeAttr: Attr = typeNode.attribute("size");
-            if (sizeAttr?.value === "cue") {
-              isCueNote = true;
-            }
-            noteTypeXml = NoteTypeHandler.StringToNoteType(typeNode.value);
-          }
+          const [isCueNote, noteTypeXml] = this.getCueNoteAndNoteTypeXml(xmlNode);
 
           // check stem element
-          let stemDirectionXml: StemDirectionType = StemDirectionType.Undefined;
-          let stemColorXml: string;
-          const stemNode: IXmlElement = xmlNode.element("stem");
-          if (stemNode) {
-            switch (stemNode.value) {
-              case "down":
-                stemDirectionXml = StemDirectionType.Down;
-                break;
-              case "up":
-                stemDirectionXml = StemDirectionType.Up;
-                break;
-              case "double":
-                stemDirectionXml = StemDirectionType.Double;
-                break;
-              case "none":
-                stemDirectionXml = StemDirectionType.None;
-                break;
-              default:
-                stemDirectionXml = StemDirectionType.Undefined;
-            }
-
-            const stemColorAttr: Attr = stemNode.attribute("color");
-            if (stemColorAttr) { // can be null, maybe also undefined
-              stemColorXml = this.parseXmlColor(stemColorAttr.value);
-            }
-          }
+          const [stemDirectionXml, stemColorXml, noteheadColorXml] = this.getStemDirectionAndColors(xmlNode);
 
           // check Tremolo
           let tremoloStrokes: number = 0;
@@ -301,53 +334,12 @@ export class InstrumentReader {
           if (notationsNode) {
             const ornamentsNode: IXmlElement = notationsNode.element("ornaments");
             if (ornamentsNode) {
-              const tremoloNode: IXmlElement = ornamentsNode.element("tremolo");
-              if (tremoloNode) {
-                const tremoloType: Attr = tremoloNode.attribute("type");
-                if (tremoloType && tremoloType.value === "single") {
-                  const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
-                  if (tremoloStrokesGiven > 0) {
-                    tremoloStrokes = tremoloStrokesGiven;
-                  }
-                }
-                // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
-              }
-              const vibratoNode: IXmlElement = ornamentsNode.element("wavy-line");
-              if (vibratoNode !== undefined) {
-                const vibratoType: Attr = vibratoNode.attribute("type");
-                if (vibratoType && vibratoType.value === "start") {
-                  vibratoStrokes = true;
-                }
-              }
+              tremoloStrokes = this.getTremoloStrokes(ornamentsNode);
+              vibratoStrokes = this.getVibratoStrokes(ornamentsNode);
             }
           }
 
-          // check notehead/color
-          let noteheadColorXml: string;
-          const noteheadNode: IXmlElement = xmlNode.element("notehead");
-          if (noteheadNode) {
-            const colorAttr: Attr = noteheadNode.attribute("color");
-            if (colorAttr) {
-              noteheadColorXml = this.parseXmlColor(colorAttr.value);
-            }
-          }
-
-          let noteColorXml: string;
-          const noteColorAttr: Attr = xmlNode.attribute("color");
-          if (noteColorAttr) { // can be undefined
-            noteColorXml = this.parseXmlColor(noteColorAttr.value);
-            if (!noteheadColorXml) {
-              noteheadColorXml = noteColorXml;
-            }
-            if (!stemColorXml) {
-              stemColorXml = noteColorXml;
-            }
-          }
-
-          let musicTimestamp: Fraction = currentFraction.clone();
-          if (isChord) {
-            musicTimestamp = previousFraction.clone();
-          }
+          const musicTimestamp: Fraction = isChord ? previousFraction.clone() : currentFraction.clone();
           this.currentStaffEntry = this.currentMeasure.findOrCreateStaffEntry(
             musicTimestamp,
             this.inSourceMeasureInstrumentIndex + noteStaff - 1,
@@ -383,11 +375,20 @@ export class InstrumentReader {
             this.currentStaffEntry.Timestamp.Equals(new Fraction(0, 1)) && !this.currentStaffEntry.hasNotes()
           );
           this.saveAbstractInstructionList(this.instrument.Staves.length, beginOfMeasure);
-          if (this.openChordSymbolContainers.length !== 0) {
-            this.currentStaffEntry.ChordContainers = this.openChordSymbolContainers;
-            // TODO handle multiple chords on one note/staffentry
-            this.openChordSymbolContainers = [];
-          }
+          //TODO: this if block handles harmony/chords on the next note/staffentry element, so it assumes that a
+          //harmony is given before the staff entry, but when a harmony is given after a staff entry element with a backup node
+          //it is put on the next note/staffentry and the last chord item is never parsed at all.
+          //this means
+          //Ik moet eerst beter begrijpen wanneer currentStaffEntry geset wordt.
+          // if (this.openChordSymbolContainers.length !== 0) {
+          //   console.log("hier is iets gevonden in de chordsymbol container");
+          //   this.currentStaffEntry.ChordContainers = this.openChordSymbolContainers;
+          //   console.log("currentStaffENtry.ChordContainers:");
+          //   console.debug(this.currentStaffEntry);
+          //   console.debug(currentFraction);
+          //   // TODO handle multiple chords on one note/staffentry
+          //   this.openChordSymbolContainers = [];
+          // }
           if (this.activeRhythm) {
             // (*) this.musicSheet.SheetPlaybackSetting.Rhythm = this.activeRhythm.Rhythm;
           }
@@ -417,91 +418,14 @@ export class InstrumentReader {
             }
           }
           lastNoteWasGrace = isGraceNote;
-        } else if (xmlNode.name === "attributes") {
-          const divisionsNode: IXmlElement = xmlNode.element("divisions");
-          if (divisionsNode) {
-            this.divisions = parseInt(divisionsNode.value, 10);
-            if (isNaN(this.divisions)) {
-              const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError",
-                                                                      "Invalid divisions value at Instrument: ");
-              log.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
-              this.divisions = this.readDivisionsFromNotes();
-              if (this.divisions > 0) {
-                this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);
-              } else {
-                divisionsException = true;
-                throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
-              }
-            }
-          }
-          if (
-            !xmlNode.element("divisions") &&
-            this.divisions === 0 &&
-            this.currentXmlMeasureIndex === 0
-          ) {
-            const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ");
-            this.divisions = this.readDivisionsFromNotes();
-            if (this.divisions > 0) {
-              this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);
-            } else {
-              divisionsException = true;
-              throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
-            }
-          }
-          this.addAbstractInstruction(xmlNode, octavePlusOne, previousNode, currentFraction.clone());
-          if (currentFraction.Equals(new Fraction(0, 1)) &&
-            this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
-            this.saveAbstractInstructionList(this.instrument.Staves.length, true);
-          }
-          if (this.isAttributesNodeAtEndOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode, currentFraction)) {
-            this.saveClefInstructionAtEndOfMeasure();
-          }
-          const staffDetailsNodes: IXmlElement[] = xmlNode.elements("staff-details"); // there can be multiple, even if redundant. see #1041
-          for (const staffDetailsNode of staffDetailsNodes) {
-            const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
-            if (staffLinesNode) {
-              let staffNumber: number = 1;
-              const staffNumberAttr: Attr = staffDetailsNode.attribute("number");
-              if (staffNumberAttr) {
-                staffNumber = parseInt(staffNumberAttr.value, 10);
-              }
-              this.instrument.Staves[staffNumber - 1].StafflineCount = parseInt(staffLinesNode.value, 10);
-            }
-          }
-          // check multi measure rest
-          const measureStyle: IXmlElement = xmlNode.element("measure-style");
-          if (measureStyle) {
-            const multipleRest: IXmlElement = measureStyle.element("multiple-rest");
-            if (multipleRest) {
-              // TODO: save multirest per staff info a dictionary, to display a partial multirest if multirest values across staffs differ.
-              //   this makes the code bulkier though, and for now we only draw multirests if the staffs have the same multirest lengths.
-              // if (!currentMeasure.multipleRestMeasuresPerStaff) {
-              //   currentMeasure.multipleRestMeasuresPerStaff = new Dictionary<number, number>();
-              // }
-              const multipleRestValueXml: string = multipleRest.value;
-              let multipleRestNumber: number = 0;
-              try {
-                multipleRestNumber = Number.parseInt(multipleRestValueXml, 10);
-                if (currentMeasure.multipleRestMeasures !== undefined && multipleRestNumber !== currentMeasure.multipleRestMeasures) {
-                  // different multi-rest values in same measure for different staffs
-                  currentMeasure.multipleRestMeasures = 0; // for now, ignore multirest here. TODO: take minimum
-                  // currentMeasure.multipleRestMeasuresPerStaff.setValue(this.currentStaff?.Id, multipleRestNumber);
-                  //   issue: currentStaff can be undefined for first measure
-                } else {
-                  currentMeasure.multipleRestMeasures = multipleRestNumber;
-                  this.currentMultirestStartMeasure = currentMeasure;
-                  this.followingMultirestMeasures = multipleRestNumber + 1; // will be decremented at the start of the loop
-                }
-              } catch (e) {
-                console.log("multirest parse error: " + e);
-              }
-            }
-          }
-
-        } else if (xmlNode.name === "forward") {
+        }
+        else if (xmlNode.name === "forward") {
           const forFraction: number = parseInt(xmlNode.element("duration").value, 10);
           currentFraction.Add(new Fraction(forFraction, 4 * this.divisions));
-        } else if (xmlNode.name === "backup") {
+        }
+        else if (xmlNode.name === "backup") {
+          console.log("backup node gevonden:");
+          //console.debug(xmlNode);
           const backFraction: number = parseInt(xmlNode.element("duration").value, 10);
           currentFraction.Sub(new Fraction(backFraction, 4 * this.divisions));
           if (currentFraction.IsNegative()) {
@@ -511,7 +435,10 @@ export class InstrumentReader {
           if (previousFraction.IsNegative()) {
             previousFraction = new Fraction(0, 1);
           }
-        } else if (xmlNode.name === "direction") {
+
+
+        }
+        else if (xmlNode.name === "direction") {
           const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
           // (*) MetronomeReader.readMetronomeInstructions(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
           let relativePositionInMeasure: number = Math.min(1, currentFraction.RealValue);
@@ -549,7 +476,8 @@ export class InstrumentReader {
              expressionReader.read(xmlNode, this.currentMeasure, currentFraction, previousFraction.clone());
            }
           }
-        } else if (xmlNode.name === "barline") {
+        }
+        else if (xmlNode.name === "barline") {
           if (this.repetitionInstructionReader) {
            const measureEndsSystem: boolean = this.repetitionInstructionReader.handleLineRepetitionInstructions(xmlNode);
            if (measureEndsSystem) {
@@ -567,7 +495,8 @@ export class InstrumentReader {
             }
           }
           // TODO do we need to process bars with left location too?
-        } else if (xmlNode.name === "sound") {
+        }
+        else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
           try {
             if (xmlNode.attribute("tempo")) { // can be null, not just undefined!
@@ -583,9 +512,16 @@ export class InstrumentReader {
           } catch (e) {
             log.debug("InstrumentReader.readTempoInstruction", e);
           }
-        } else if (xmlNode.name === "harmony") {
+        }
+        else if (xmlNode.name === "harmony") {
+          const noteStaff: number = this.getNoteStaff(xmlNode);
+          this.currentStaff = this.instrument.Staves[noteStaff - 1];
           // new chord, could be second chord on same staffentry/note
-          this.openChordSymbolContainers.push(ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey));
+          const musicTimestamp: Fraction = currentFraction.clone();
+          this.currentStaffEntry = this.currentMeasure.findOrCreateStaffEntry(
+              musicTimestamp, this.inSourceMeasureInstrumentIndex + noteStaff - 1, this.currentStaff).staffEntry;
+          this.currentStaffEntry.ChordContainers.push(ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey));
+
         }
       }
       for (const j in this.voiceGeneratorsDict) {
@@ -631,6 +567,32 @@ export class InstrumentReader {
     this.previousMeasure = this.currentMeasure;
     this.currentXmlMeasureIndex += 1;
     return true;
+  }
+
+  private getStemDirectionAndColors(xmlNode: IXmlElement): [StemDirectionType, string, string] {
+    let stemDirectionXml: StemDirectionType = StemDirectionType.Undefined;
+    let stemColorXml: string;
+    const stemNode: IXmlElement = xmlNode.element("stem");
+    if (stemNode) {
+      stemDirectionXml = this.getStemDirectionType(stemNode);
+
+      const stemColorAttr: Attr = stemNode.attribute("color");
+      if (stemColorAttr) { // can be null, maybe also undefined
+        stemColorXml = this.parseXmlColor(stemColorAttr.value);
+      }
+    }
+
+    // check notehead/color
+    let noteheadColorXml: string = this.getNoteHeadColorXml(xmlNode);
+    const noteColorXml: string = this.getNoteColorXml(xmlNode);
+
+    if (noteColorXml && !noteheadColorXml) {
+      noteheadColorXml = noteColorXml;
+    }
+    if (noteColorXml && !stemColorXml) {
+      stemColorXml = noteColorXml;
+    }
+    return [stemDirectionXml, stemColorXml, noteheadColorXml];
   }
 
   /** Parse a color in XML format. Can be #ARGB or #RGB format, colors as byte hex values.
@@ -1422,5 +1384,100 @@ export class InstrumentReader {
       }
     }
     return divisionsFromNote;
+  }
+
+  private getCueNoteAndNoteTypeXml(xmlNode: IXmlElement): [boolean, NoteType] {
+    const cueNode: IXmlElement = xmlNode.element("cue");
+    let isCueNote: boolean = false;
+    if (cueNode) {
+      isCueNote = true;
+    }
+
+    const typeNode: IXmlElement = xmlNode.element("type");
+    let noteTypeXml: NoteType = NoteType.UNDEFINED;
+    if (typeNode) {
+      const sizeAttr: Attr = typeNode.attribute("size");
+      if (sizeAttr?.value === "cue") {
+        isCueNote = true;
+      }
+      noteTypeXml = NoteTypeHandler.StringToNoteType(typeNode.value);
+    }
+    return [isCueNote, noteTypeXml];
+  }
+
+
+
+  private getStemDirectionType(stemNode: IXmlElement): StemDirectionType {
+    switch (stemNode.value) {
+      case "down":
+        return StemDirectionType.Down;
+      case "up":
+        return StemDirectionType.Up;
+      case "double":
+        return StemDirectionType.Double;
+      case "none":
+        return StemDirectionType.None;
+      default:
+        return StemDirectionType.Undefined;
+    }
+  }
+
+  private getNoteHeadColorXml(xmlNode: IXmlElement): string | null {
+    const noteheadNode: IXmlElement = xmlNode.element("notehead");
+    if (noteheadNode) {
+      const colorAttr: Attr = noteheadNode.attribute("color");
+      if (colorAttr) {
+        return this.parseXmlColor(colorAttr.value);
+      }
+    }
+    return null;
+  }
+
+  private getNoteColorXml(xmlNode: IXmlElement): string | null {
+    const noteColorAttr: Attr = xmlNode.attribute("color");
+    if (noteColorAttr) { // can be undefined
+      return this.parseXmlColor(noteColorAttr.value);
+    }
+    return null;
+  }
+
+  private getTremoloStrokes(ornamentsNode: IXmlElement): number {
+    const tremoloNode: IXmlElement = ornamentsNode.element("tremolo");
+    if (tremoloNode) {
+      const tremoloType: Attr = tremoloNode.attribute("type");
+      if (tremoloType && tremoloType.value === "single") {
+        const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+        if (tremoloStrokesGiven > 0) {
+          return tremoloStrokesGiven;
+        }
+      }
+      // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
+    }
+    return 0;
+  }
+
+  private getVibratoStrokes(ornamentsNode: IXmlElement): boolean {
+    const vibratoNode: IXmlElement = ornamentsNode.element("wavy-line");
+    if (vibratoNode !== undefined) {
+      const vibratoType: Attr = vibratoNode.attribute("type");
+      if (vibratoType && vibratoType.value === "start") {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private getNoteStaff(xmlNode: IXmlElement): number {
+    let noteStaff: number = 1;
+    if (this.instrument.Staves.length > 1) {
+      if (xmlNode.element("staff")) {
+        noteStaff = parseInt(xmlNode.element("staff").value, 10);
+        if (isNaN(noteStaff)) {
+          log.debug("InstrumentReader.readNextXmlMeasure.get staff number");
+          noteStaff = 1;
+        }
+      }
+    }
+    return noteStaff;
   }
 }
