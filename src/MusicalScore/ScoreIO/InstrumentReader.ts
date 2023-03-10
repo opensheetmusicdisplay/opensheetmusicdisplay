@@ -379,13 +379,8 @@ export class InstrumentReader {
           //harmony is given before the staff entry, but when a harmony is given after a staff entry element with a backup node
           //it is put on the next note/staffentry and the last chord item is never parsed at all.
           //this means
-          //Ik moet eerst beter begrijpen wanneer currentStaffEntry geset wordt.
           // if (this.openChordSymbolContainers.length !== 0) {
-          //   console.log("hier is iets gevonden in de chordsymbol container");
           //   this.currentStaffEntry.ChordContainers = this.openChordSymbolContainers;
-          //   console.log("currentStaffENtry.ChordContainers:");
-          //   console.debug(this.currentStaffEntry);
-          //   console.debug(currentFraction);
           //   // TODO handle multiple chords on one note/staffentry
           //   this.openChordSymbolContainers = [];
           // }
@@ -424,8 +419,6 @@ export class InstrumentReader {
           currentFraction.Add(new Fraction(forFraction, 4 * this.divisions));
         }
         else if (xmlNode.name === "backup") {
-          console.log("backup node gevonden:");
-          //console.debug(xmlNode);
           const backFraction: number = parseInt(xmlNode.element("duration").value, 10);
           currentFraction.Sub(new Fraction(backFraction, 4 * this.divisions));
           if (currentFraction.IsNegative()) {
