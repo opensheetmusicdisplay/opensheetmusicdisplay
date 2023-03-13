@@ -92,6 +92,7 @@ export class InstrumentReader {
   private activeClefsHaveBeenInitialized: boolean[];
   private activeKeyHasBeenInitialized: boolean = false;
   private abstractInstructions: [number, AbstractNotationInstruction, Fraction][] = [];
+  //TODO: remove line below if it is not needed anymore?
   //private openChordSymbolContainers: ChordSymbolContainer[] = [];
   private expressionReaders: ExpressionReader[];
   private currentVoiceGenerator: VoiceGenerator;
