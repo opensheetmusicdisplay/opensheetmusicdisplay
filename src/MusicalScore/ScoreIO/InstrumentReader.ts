@@ -247,7 +247,6 @@ export class InstrumentReader {
               graceSlur = true;
               // grace slurs could be non-binary, but VexFlow.GraceNoteGroup modifier system is currently only boolean for slurs.
             }
-
           }
 
           // check for cue note
