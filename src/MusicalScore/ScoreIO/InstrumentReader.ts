@@ -41,11 +41,6 @@ import { ReaderPluginManager } from "./ReaderPluginManager";
 //  public static readMetronomeInstructions(xmlNode: IXmlElement, musicSheet: MusicSheet, currentXmlMeasureIndex: number): void { }
 //  public static readTempoInstruction(soundNode: IXmlElement, musicSheet: MusicSheet, currentXmlMeasureIndex: number): void { }
 //}
-//
-//class ChordSymbolReader {
-//  public static readChordSymbol(xmlNode:IXmlElement, musicSheet:MusicSheet, activeKey:any): void {
-//  }
-//}
 
 
 /**
