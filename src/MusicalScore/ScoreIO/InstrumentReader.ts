@@ -92,6 +92,7 @@ export class InstrumentReader {
   private activeClefsHaveBeenInitialized: boolean[];
   private activeKeyHasBeenInitialized: boolean = false;
   private abstractInstructions: [number, AbstractNotationInstruction, Fraction][] = [];
+  //private openChordSymbolContainers: ChordSymbolContainer[] = [];
   private expressionReaders: ExpressionReader[];
   private currentVoiceGenerator: VoiceGenerator;
   //private openSlurDict: { [n: number]: Slur; } = {};
@@ -161,8 +162,7 @@ export class InstrumentReader {
           if (newPageAttr?.value === "yes") {
             currentMeasure.printNewPageXml = true;
           }
-        }
-        else if (xmlNode.name === "attributes") {
+        }else if (xmlNode.name === "attributes") {
           const divisionsNode: IXmlElement = xmlNode.element("divisions");
           if (divisionsNode) {
             this.divisions = parseInt(divisionsNode.value, 10);
@@ -243,8 +243,7 @@ export class InstrumentReader {
             }
           }
 
-        }
-        else if (xmlNode.name === "note") {
+        } else if (xmlNode.name === "note") {
           let printObject: boolean = true;
           if (xmlNode.attribute("print-object")?.value === "no") {
               printObject = false; // note will not be rendered, but still parsed for Playback etc.
@@ -375,10 +374,9 @@ export class InstrumentReader {
             this.currentStaffEntry.Timestamp.Equals(new Fraction(0, 1)) && !this.currentStaffEntry.hasNotes()
           );
           this.saveAbstractInstructionList(this.instrument.Staves.length, beginOfMeasure);
-          //TODO: this if block handles harmony/chords on the next note/staffentry element, so it assumes that a
+          //this if block handles harmony/chords on the next note/staffentry element, so it assumes that a
           //harmony is given before the staff entry, but when a harmony is given after a staff entry element with a backup node
           //it is put on the next note/staffentry and the last chord item is never parsed at all.
-          //this means
           // if (this.openChordSymbolContainers.length !== 0) {
           //   this.currentStaffEntry.ChordContainers = this.openChordSymbolContainers;
           //   // TODO handle multiple chords on one note/staffentry
@@ -413,12 +411,10 @@ export class InstrumentReader {
             }
           }
           lastNoteWasGrace = isGraceNote;
-        }
-        else if (xmlNode.name === "forward") {
+        } else if (xmlNode.name === "forward") {
           const forFraction: number = parseInt(xmlNode.element("duration").value, 10);
           currentFraction.Add(new Fraction(forFraction, 4 * this.divisions));
-        }
-        else if (xmlNode.name === "backup") {
+        } else if (xmlNode.name === "backup") {
           const backFraction: number = parseInt(xmlNode.element("duration").value, 10);
           currentFraction.Sub(new Fraction(backFraction, 4 * this.divisions));
           if (currentFraction.IsNegative()) {
@@ -428,10 +424,7 @@ export class InstrumentReader {
           if (previousFraction.IsNegative()) {
             previousFraction = new Fraction(0, 1);
           }
-
-
-        }
-        else if (xmlNode.name === "direction") {
+        } else if (xmlNode.name === "direction") {
           const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
           // (*) MetronomeReader.readMetronomeInstructions(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
           let relativePositionInMeasure: number = Math.min(1, currentFraction.RealValue);
@@ -469,8 +462,7 @@ export class InstrumentReader {
              expressionReader.read(xmlNode, this.currentMeasure, currentFraction, previousFraction.clone());
            }
           }
-        }
-        else if (xmlNode.name === "barline") {
+        } else if (xmlNode.name === "barline") {
           if (this.repetitionInstructionReader) {
            const measureEndsSystem: boolean = this.repetitionInstructionReader.handleLineRepetitionInstructions(xmlNode);
            if (measureEndsSystem) {
@@ -488,8 +480,7 @@ export class InstrumentReader {
             }
           }
           // TODO do we need to process bars with left location too?
-        }
-        else if (xmlNode.name === "sound") {
+        } else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
           try {
             if (xmlNode.attribute("tempo")) { // can be null, not just undefined!
@@ -505,8 +496,7 @@ export class InstrumentReader {
           } catch (e) {
             log.debug("InstrumentReader.readTempoInstruction", e);
           }
-        }
-        else if (xmlNode.name === "harmony") {
+        } else if (xmlNode.name === "harmony") {
           const noteStaff: number = this.getNoteStaff(xmlNode);
           this.currentStaff = this.instrument.Staves[noteStaff - 1];
           // new chord, could be second chord on same staffentry/note
@@ -514,7 +504,6 @@ export class InstrumentReader {
           this.currentStaffEntry = this.currentMeasure.findOrCreateStaffEntry(
               musicTimestamp, this.inSourceMeasureInstrumentIndex + noteStaff - 1, this.currentStaff).staffEntry;
           this.currentStaffEntry.ChordContainers.push(ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey));
-
         }
       }
       for (const j in this.voiceGeneratorsDict) {
@@ -1397,8 +1386,6 @@ export class InstrumentReader {
     }
     return [isCueNote, noteTypeXml];
   }
-
-
 
   private getStemDirectionType(stemNode: IXmlElement): StemDirectionType {
     switch (stemNode.value) {
