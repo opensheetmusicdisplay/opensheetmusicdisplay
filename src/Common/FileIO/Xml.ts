@@ -124,7 +124,7 @@ export class IXmlElement {
                             const childNode: Node = childNodes[j];
                             firstNode.appendChild(childNode.cloneNode(true));
                         }
-                    }else{
+                    } else {
                         firstNode = otherNode;
                     }
                 }
