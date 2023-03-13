@@ -225,7 +225,7 @@ export class InstrumentReader {
           const restNote: boolean = xmlNode.element("rest") !== undefined;
           //log.info("New note found!", noteDivisions, noteDuration.toString(), restNote);
 
-          const notationsNode: IXmlElement = xmlNode.element("notations"); // used for multiple checks further on
+          const notationsNode: IXmlElement = xmlNode.combinedElement("notations"); // select all notation nodes
 
           const isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
           let graceNoteSlash: boolean = false;
@@ -243,12 +243,9 @@ export class InstrumentReader {
 
             noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
 
-            const notationNode: IXmlElement = xmlNode.element("notations");
-            if (notationNode) {
-              if (notationNode.element("slur")) {
-                graceSlur = true;
-                // grace slurs could be non-binary, but VexFlow.GraceNoteGroup modifier system is currently only boolean for slurs.
-              }
+            if (notationsNode && notationsNode.element("slur")) {
+              graceSlur = true;
+              // grace slurs could be non-binary, but VexFlow.GraceNoteGroup modifier system is currently only boolean for slurs.
             }
           }
 
