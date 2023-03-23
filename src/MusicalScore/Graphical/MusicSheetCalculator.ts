@@ -71,6 +71,7 @@ import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
 import { GraphicalChordSymbolContainer } from ".";
 import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
+import { Voice } from "../VoiceData/Voice";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -2603,8 +2604,19 @@ export abstract class MusicSheetCalculator {
                                                           measure.parentSourceMeasure.AbsoluteTimestamp,
                                                           measure.parentSourceMeasure.CompleteNumberOfStaves),
                     staff);
+                if (staff.Voices.length === 0) {
+                    const newVoice: Voice = new Voice(measure.ParentStaff.ParentInstrument, -1);
+                    // this is problematic because we don't know the MusicXML voice ids and how many voices with which ids will be created after this.
+                    //   but it should only happen when the first measure of the piece is empty.
+                    staff.Voices.push(newVoice);
+                }
                 const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
-                const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined, sourceMeasure);
+                let duration: Fraction = sourceMeasure.Duration;
+                if (duration.RealValue === 0) {
+                    duration = sourceMeasure.ActiveTimeSignature.clone();
+                }
+                const note: Note = new Note(voiceEntry, sourceStaffEntry, duration, undefined, sourceMeasure, true);
+                note.IsWholeMeasureRest = true; // there may be a more elegant solution
                 note.PrintObject = this.rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
                   // don't display whole rest that wasn't given in XML, only for layout/voice completion
                 voiceEntry.Notes.push(note);
@@ -2617,7 +2629,8 @@ export abstract class MusicSheetCalculator {
                     note,
                     gve,
                     new ClefInstruction(),
-                    OctaveEnum.NONE, undefined);
+                    OctaveEnum.NONE,
+                    this.rules);
                 MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
                 gve.notes.push(graphicalNote);
             }
