@@ -2767,9 +2767,9 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    private getPlacement(measure: GraphicalMeasure): PlacementEnum {
+    private getFingeringPlacement(measure: GraphicalMeasure): PlacementEnum {
         let placement: PlacementEnum = this.rules.FingeringPosition;
-        if(placement === PlacementEnum.AboveOrBelow || placement === PlacementEnum.NotYetDefined){
+        if (placement === PlacementEnum.NotYetDefined || placement === PlacementEnum.AboveOrBelow) {
             placement = measure.isUpperStaffOfInstrument() ? PlacementEnum.Above : PlacementEnum.Below;
         }
         return placement;
@@ -2783,7 +2783,7 @@ export abstract class MusicSheetCalculator {
         for (const system of this.musicSystems) {
             for (const line of system.StaffLines) {
                 for (const measure of line.Measures) {
-                    const placement: PlacementEnum = this.getPlacement(measure);
+                    const placement: PlacementEnum = this.getFingeringPlacement(measure);
                     for (const gse of measure.staffEntries) {
                         gse.FingeringEntries = [];
                         const skybottomcalculator: SkyBottomLineCalculator = line.SkyBottomLineCalculator;
