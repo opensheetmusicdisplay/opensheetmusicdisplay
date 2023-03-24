@@ -158,7 +158,7 @@ export class InstrumentReader {
           if (newPageAttr?.value === "yes") {
             currentMeasure.printNewPageXml = true;
           }
-        }else if (xmlNode.name === "attributes") {
+        } else if (xmlNode.name === "attributes") {
           const divisionsNode: IXmlElement = xmlNode.element("divisions");
           if (divisionsNode) {
             this.divisions = parseInt(divisionsNode.value, 10);
@@ -370,9 +370,10 @@ export class InstrumentReader {
             this.currentStaffEntry.Timestamp.Equals(new Fraction(0, 1)) && !this.currentStaffEntry.hasNotes()
           );
           this.saveAbstractInstructionList(this.instrument.Staves.length, beginOfMeasure);
-          //this if block handles harmony/chords on the next note/staffentry element, so it assumes that a
-          //harmony is given before the staff entry, but when a harmony is given after a staff entry element with a backup node
-          //it is put on the next note/staffentry and the last chord item is never parsed at all.
+          // this if block handles harmony/chords on the next note/staffentry element, so it assumes that a
+          //   harmony is given before the staff entry, but when a harmony is given after a staff entry element with a backup node,
+          //   it is put on the next note/staffentry and the last chord item is never parsed at all.
+          //   see PR #1342
           // if (this.openChordSymbolContainers.length !== 0) {
           //   this.currentStaffEntry.ChordContainers = this.openChordSymbolContainers;
           //   // TODO handle multiple chords on one note/staffentry
