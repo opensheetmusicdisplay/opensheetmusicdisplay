@@ -628,7 +628,7 @@ export class OpenSheetMusicDisplay {
         if (options.coloringMode === ColoringModes.CustomColorSet) {
             if (!options.coloringSetCustom || options.coloringSetCustom.length !== 8) {
                 throw new Error("Invalid amount of colors: With coloringModes.customColorSet, " +
-                    "you have to provide a coloringSetCustom parameter with 8 strings (C to B, rest note).");
+                    "you have to provide a coloringSetCustom parameter (array) with 8 strings (C to B, rest note).");
             }
             // validate strings input
             for (const colorString of options.coloringSetCustom) {
