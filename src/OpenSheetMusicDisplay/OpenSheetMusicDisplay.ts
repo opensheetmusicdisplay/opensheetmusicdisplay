@@ -623,7 +623,7 @@ export class OpenSheetMusicDisplay {
             this.rules.ColoringMode = ColoringModes.XML;
             return;
         }
-        const noteIndices: NoteEnum[] = [NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B, -1];
+        const noteIndices: NoteEnum[] = [NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B];
         let colorSetString: string[];
         if (options.coloringMode === ColoringModes.CustomColorSet) {
             if (!options.coloringSetCustom || options.coloringSetCustom.length !== 8) {
