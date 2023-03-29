@@ -67,6 +67,7 @@ import { CollectionUtil } from "../../../Util/CollectionUtil";
 import { GraphicalGlissando } from "../GraphicalGlissando";
 import { Glissando } from "../../VoiceData/Glissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
+import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -1454,6 +1455,30 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     } else {
       for (const staffLine of staffLines) {
         staffLine.SkyBottomLineCalculator.calculateLines();
+      }
+    }
+    this.calculateJianpuSkyBottomLines(staffLines);
+  }
+
+  private calculateJianpuSkyBottomLines(staffLines: StaffLine[]): void {
+    for (const staffline of staffLines) {
+      if (!staffline.ParentStaff.isJianpuStaff) {
+        continue;
+      }
+      for (const measure of staffline.Measures) {
+        for (const se of measure.staffEntries) {
+          const skyBottomLineCalculator: SkyBottomLineCalculator = measure.ParentStaffLine.SkyBottomLineCalculator;
+          const left: number = se.PositionAndShape.AbsolutePosition.x + se.PositionAndShape.BorderMarginLeft;
+          const right: number = se.PositionAndShape.AbsolutePosition.x + se.PositionAndShape.BorderMarginRight;
+          const yValueTop: number = se.PositionAndShape.AbsolutePosition.y + se.PositionAndShape.BorderMarginTop;
+          if (yValueTop < 0) {
+            skyBottomLineCalculator.updateSkyLineInRange(left, right, yValueTop);
+            // only update if yValueTop < 0, otherwise it overwrites the previous minimum.
+            //   more specifically, it makes the skyline lower than the virtual upper staffline, creating unevenness
+          }
+          const yValueBottom: number = se.PositionAndShape.AbsolutePosition.y + se.PositionAndShape.BorderMarginBottom;
+          skyBottomLineCalculator.updateBottomLineInRange(left, right, yValueBottom);
+        }
       }
     }
   }
