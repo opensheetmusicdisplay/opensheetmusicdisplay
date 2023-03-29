@@ -2453,7 +2453,9 @@ export abstract class MusicSheetCalculator {
                                    staffEntryLinks: StaffEntryLink[]): GraphicalMeasure {
         const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.getStaffFromIndex(staffIndex);
         let measure: GraphicalMeasure = undefined;
-        if (activeClefs[staffIndex].ClefType === ClefEnum.TAB) {
+        if (staff.isJianpuStaff) {
+            measure = MusicSheetCalculator.symbolFactory.createJianpuMeasure(sourceMeasure, staff);
+        } else if (activeClefs[staffIndex].ClefType === ClefEnum.TAB) {
             staff.isTab = true;
             measure = MusicSheetCalculator.symbolFactory.createTabStaffMeasure(sourceMeasure, staff);
         } else if (sourceMeasure.multipleRestMeasures && this.rules.RenderMultipleRestMeasures) {

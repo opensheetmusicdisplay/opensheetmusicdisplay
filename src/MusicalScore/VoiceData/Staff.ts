@@ -9,12 +9,15 @@ export class Staff {
         this.id = instrumentStaffId;
         this.audible = true;
         this.following = true;
+        this.isJianpuStaff = true; // TODO combined test: = this.parentInstrument.Id === 2;
+        // TODO set to false / set dynamically
     }
 
     public idInMusicSheet: number;
     public audible: boolean;
     public following: boolean;
     public isTab: boolean = false;
+    public isJianpuStaff: boolean = false;
 
     private parentInstrument: Instrument;
     private voices: Voice[] = [];

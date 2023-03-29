@@ -61,7 +61,10 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff, isTabMeasure: boolean = false): GraphicalMeasure {
-        // TODO only use Jianpu on Jianpu staff. see createTabStaffMeasure()
+        return new VexFlowMeasure(staff, sourceMeasure, undefined);
+    }
+
+    public createJianpuMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure {
         return new JianpuMeasure(staff, sourceMeasure, undefined);
     }
 

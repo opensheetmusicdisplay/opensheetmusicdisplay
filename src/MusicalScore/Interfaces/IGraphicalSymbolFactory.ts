@@ -25,6 +25,8 @@ export interface IGraphicalSymbolFactory {
 
     createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
 
+    createJianpuMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
+
     createMultiRestMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
 
     createTabStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
