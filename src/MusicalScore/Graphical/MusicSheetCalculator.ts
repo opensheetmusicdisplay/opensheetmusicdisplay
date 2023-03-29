@@ -848,7 +848,7 @@ export abstract class MusicSheetCalculator {
         }
 
 
-        // build the MusicSystems
+        // build the MusicSystems (and StaffLines)
         const musicSystemBuilder: MusicSystemBuilder = new MusicSystemBuilder();
         musicSystemBuilder.initialize(this.graphicalMusicSheet, visibleMeasureList, numberOfStaffLines);
         this.musicSystems = musicSystemBuilder.buildMusicSystems();
