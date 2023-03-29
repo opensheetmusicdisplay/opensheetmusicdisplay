@@ -10,6 +10,18 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var openSheetMusicDisplay;
     var sampleFolder = "",
         samples = {
+            "test_jianpu_2dots_simple.musicxml": "test_jianpu_2dots_simple.musicxml",
+            "test_jianpu_dots_3_below_and_above_two_measures.musicxml": "test_jianpu_dots_3_below_and_above_two_measures.musicxml",
+            "test_jianpu_dots_below_above_simple.musicxml": "test_jianpu_dots_below_above_simple.musicxml",
+            "test_jianpu_eighth.musicxml": "test_jianpu_eighth.musicxml",
+            "test_jianpu_eighth_to_32nd.musicxml": "test_jianpu_eighth_to_32nd.musicxml",
+            "test_jianpu_eighth_to_32nd_plus_octavedot.musicxml": "test_jianpu_eighth_to_32nd_plus_octavedot.musicxml",
+            "test_jianpu_multinote_voiceentry_chord_c_major.musicxml": "test_jianpu_multinote_voiceentry_chord_c_major.musicxml",
+            "test_jianpu_rest_simple.musicxml": "test_jianpu_rest_simple.musicxml",
+            "test_jianpu_scale_3measures.musicxml": "test_jianpu_scale_3measures.musicxml",
+            "test_jianpu_simple.musicxml": "test_jianpu_simple.musicxml",
+            "test_jianpu_voices_2measures.musicxml": "test_jianpu_voices_2measures.musicxml",
+            "test_jianpu_voices_2measures_simple.musicxml": "test_jianpu_voices_2measures_simple.musicxml",
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
