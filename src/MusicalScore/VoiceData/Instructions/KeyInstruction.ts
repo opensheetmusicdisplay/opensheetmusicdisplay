@@ -113,6 +113,39 @@ export class KeyInstruction extends AbstractNotationInstruction {
     public OperatorNotEqual(key2: KeyInstruction): boolean {
         return !(this.OperatorEquals(key2));
     }
+
+    public get KeyNoteEnum(): NoteEnum {
+        switch (this.Key) {
+            case 0:
+                return NoteEnum.C;
+            case 1:
+                return NoteEnum.G;
+            case 2:
+                return NoteEnum.D;
+            case 3:
+                return NoteEnum.A;
+            case 4:
+                return NoteEnum.E;
+            case 5:
+                return NoteEnum.B;
+            case 6:
+                return NoteEnum.F; // F#, whose fundamental note is F
+            case -1:
+                return NoteEnum.F;
+            case -2:
+                return NoteEnum.B;
+            case -3:
+                return NoteEnum.E;
+            case -4:
+                return NoteEnum.A;
+            case -5:
+                return NoteEnum.D;
+            case -6:
+                return NoteEnum.G; // Gb
+            default: // shouldn't happen
+                return NoteEnum.C;
+        }
+    }
 }
 
 export class NoteEnumToHalfToneLink {

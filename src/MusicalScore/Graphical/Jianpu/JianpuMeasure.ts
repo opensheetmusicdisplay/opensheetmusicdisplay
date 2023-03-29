@@ -124,7 +124,7 @@ export class JianpuMeasure extends VexFlowMeasure {
                     note.JianpuRectangles = [];
 
                     // create Jianpu number label
-                    const jianpuNumber: number = this.getJianpuNumber(note.sourceNote, this.ActiveKeyInstruction.Key);
+                    const jianpuNumber: number = this.getJianpuNumber(note.sourceNote, this.ActiveKeyInstruction.KeyNoteEnum);
                     const noteLabel: Label = new Label(jianpuNumber.toString(), TextAlignmentEnum.CenterBottom);
                     const noteGLabel: GraphicalLabel = new GraphicalLabel(noteLabel, fontSize, noteLabel.textAlignment, this.rules);
                     note.JianpuLabel = noteGLabel;
@@ -267,8 +267,8 @@ export class JianpuMeasure extends VexFlowMeasure {
             case NoteEnum.B:
                 return 7;
             default:
-                console.log("error TODO");
-                return 1;
+                console.log("error: invalid key (Jianpu keyToNumber)");
+                return 0;
         }
     }
 
