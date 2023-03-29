@@ -125,6 +125,7 @@ export class JianpuMeasure extends VexFlowMeasure {
 
                     // create Jianpu number label
                     const jianpuNumber: number = this.getJianpuNumber(note.sourceNote, this.ActiveKeyInstruction.KeyNoteEnum);
+                    // TODO: respect in-measure key changes
                     const noteLabel: Label = new Label(jianpuNumber.toString(), TextAlignmentEnum.CenterBottom);
                     const noteGLabel: GraphicalLabel = new GraphicalLabel(noteLabel, fontSize, noteLabel.textAlignment, this.rules);
                     note.JianpuLabel = noteGLabel;
