@@ -10,6 +10,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var openSheetMusicDisplay;
     var sampleFolder = "",
         samples = {
+            // temporarily add jianpu samples to the top on jianpu branch
             "test_jianpu_2dots_simple.musicxml": "test_jianpu_2dots_simple.musicxml",
             "test_jianpu_dots_3_below_and_above_two_measures.musicxml": "test_jianpu_dots_3_below_and_above_two_measures.musicxml",
             "test_jianpu_dots_below_above_simple.musicxml": "test_jianpu_dots_below_above_simple.musicxml",
