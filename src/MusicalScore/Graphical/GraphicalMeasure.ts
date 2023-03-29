@@ -73,6 +73,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public IsExtraGraphicalMeasure: boolean;
     public ExtraGraphicalMeasurePreviousMeasure: GraphicalMeasure;
     public ShowTimeSignature: boolean = true;
+    public ShowKeySignature: boolean = true;
     public ActiveKeyInstruction: KeyInstruction;
     public IsJianpuMeasure: boolean = false;
     /** For JianpuMeasures: Whether to format as if a clef was there, to sync x-position with non-jianpu measures. */

@@ -51,6 +51,7 @@ export class Note {
     /** The amount of notes the tuplet of this note (if there is one) replaces. */
     private normalNotes: number;
     private isRestFlag: boolean;
+    public IsWholeMeasureRest: boolean;
     /**
      * The untransposed (!!!) source data.
      */
