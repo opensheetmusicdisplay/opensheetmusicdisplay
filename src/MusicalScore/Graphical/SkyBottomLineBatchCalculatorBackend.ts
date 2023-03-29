@@ -5,6 +5,7 @@ import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import log from "loglevel";
+import { JianpuMeasure } from "./Jianpu/JianpuMeasure";
 
 /**
  * SkyBottomLineBatchCalculatorBackend renders measures in a borderless table.
@@ -164,6 +165,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                 currentWidth = Math.floor(currentWidth);
 
                 // must calculate first AbsolutePositions
+                // if (!measure.IsJianpuMeasure) { // TODO do we need to deactivate this? probably not.
                 measure.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
 
                 const x: number = 0;
@@ -182,6 +184,12 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                 measure.format();
                 vsStaff.setWidth(oldMeasureWidth);
 
+                if (measure.IsJianpuMeasure) {
+                    (measure as JianpuMeasure).DrawOuterStafflines = true;
+                    // temporarily draw the outer lines of the staff so that the skyline finds some pixels
+                    //   and is at least around the height where the outer stafflines would be in a normal score
+                }
+
                 try {
                     context.translate(u * elementWidth, v * elementHeight);
                     measure.draw(vexFlowContext);
@@ -189,6 +197,10 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                     // Vexflow errors can happen here, then our complete rendering loop would halt without catching errors.
                 } catch (ex) {
                     log.warn("SkyBottomLineBatchCalculatorBackend.calculateLines.draw", ex);
+                }
+
+                if (measure.IsJianpuMeasure) {
+                    (measure as JianpuMeasure).DrawOuterStafflines = false; // deactivate after it was activated temporarily
                 }
             }
 

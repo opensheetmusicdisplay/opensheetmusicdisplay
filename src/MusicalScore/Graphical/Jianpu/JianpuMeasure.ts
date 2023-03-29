@@ -32,8 +32,10 @@ export class JianpuMeasure extends VexFlowMeasure {
         //this.stave.setBegBarType(VF.Barline.type.NONE);
         const virtualStafflines: number = this.stave.options.line_config.length;
         for (let i: number = 0; i < virtualStafflines; i++) {
-            if (!this.DrawOuterStafflines || (i > 0 && i < virtualStafflines)) {
+            if (!this.DrawOuterStafflines || (i > 0 && i < virtualStafflines - 1)) {
                 this.stave.options.line_config[i].visible = false;
+                // if DrawOuterStafflines, then only the first and last line are visible, not those in-between
+                //   (if !DrawOuterStafflines, all lines are invisible)
             }
         }
         const modifiers: VF.StaveModifier[] = this.stave.getModifiers();
