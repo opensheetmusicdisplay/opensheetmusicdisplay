@@ -11,6 +11,7 @@ describe("VexFlow GraphicalNote", () => {
         // sample should start with a beamed 8th note, and be simple.
         const div: HTMLElement = TestUtils.getDivElement(document);
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        osmd.EngravingRules.JianpuAlwaysUsed = false; // this test is made for non-Jianpu scores, doesn't work with Jianpu
         // we need this way of creating the score to get the SVG elements, doesn't work with creating MusicSheet by hand
         osmd.load(score).then(
             (_: {}) => {

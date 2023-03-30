@@ -375,6 +375,8 @@ export class EngravingRules {
     public NoteToGraphicalNoteMapObjectCount: number = 0;
 
     // Jianpu / numbered notation
+    /** Whether to always use Jianpu for every staff/instrument. May be just a temporary option for testing. */
+    public JianpuAlwaysUsed: boolean;
     /** X offset of underlines under Jianpu note numbers for note length <= 8th */
     public JianpuUnderlineXOffset: number;
     public JianpuUnderlineWidth: number;
@@ -758,6 +760,7 @@ export class EngravingRules {
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
         this.NoteToGraphicalNoteMapObjectCount = 0;
 
+        this.JianpuAlwaysUsed = true; // TODO temporary for feat/jianpu branch. To test classical+Jianpu combined, set this to false (see Staff.ts).
         this.JianpuUnderlineXOffset = -0.5;
         this.JianpuUnderlineWidth = 0.1;
         this.JianpuUnderlineYDistance = this.JianpuUnderlineWidth * 2.5; // this should be the general formula, but user might increase it.

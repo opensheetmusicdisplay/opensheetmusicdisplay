@@ -229,6 +229,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 }
 
                 currentInstrument.createStaves(instrumentNumberOfStaves);
+                // TODO this may be a temporary setting for the feat/jianpu branch
+                if (this.rules.JianpuAlwaysUsed) {
+                    for (const staff of currentInstrument.Staves) {
+                        staff.isJianpuStaff = true;
+                    }
+                }
                 instrumentReaders.push(new InstrumentReader(this.pluginManager, this.repetitionInstructionReader, xmlMeasureList, currentInstrument));
                 if (this.repetitionInstructionReader) {
                     this.repetitionInstructionReader.xmlMeasureList[counter] = xmlMeasureList;

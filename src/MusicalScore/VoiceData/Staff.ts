@@ -9,7 +9,7 @@ export class Staff {
         this.id = instrumentStaffId;
         this.audible = true;
         this.following = true;
-        this.isJianpuStaff = true; // TODO combined test: = this.parentInstrument.Id === 2;
+        this.isJianpuStaff = false; // TODO combined test: = this.parentInstrument.Id === 2;
         // TODO set to false / set dynamically
     }
 
