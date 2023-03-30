@@ -357,6 +357,10 @@ export class EngravingRules {
     /** This is not for tabs, but for classical scores, especially violin. */
     public StringNumberOffsetY: number;
     public NewSystemAtXMLNewSystemAttribute: boolean;
+    /** Whether to begin a new system when a page break is given in XML ('new-page="yes"'), but newPageFromXML is false.
+     *  Default false, because it can lead to nonsensical system breaks after a single measure,
+     *  as OSMD does a different layout than the original music program exported from.
+     * */
     public NewSystemAtXMLNewPageAttribute: boolean;
     public NewPageAtXMLNewPageAttribute: boolean;
     public PageFormat: PageFormat;
