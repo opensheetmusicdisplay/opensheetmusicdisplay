@@ -9,6 +9,8 @@ import {SourceMeasure} from "../../../../src/MusicalScore/VoiceData/SourceMeasur
 import {SourceStaffEntry} from "../../../../src/MusicalScore/VoiceData/SourceStaffEntry";
 import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 import {EngravingRules} from "../../../../src/MusicalScore/Graphical/EngravingRules";
+import { Staff } from "../../../../src/MusicalScore/VoiceData/Staff";
+import { Instrument } from "../../../../src/MusicalScore/Instrument";
 
 describe("VexFlow Measure", () => {
 
@@ -30,8 +32,15 @@ describe("VexFlow Measure", () => {
    it("Can have a single empty Measure", (done: Mocha.Done) => {
       const sheet: MusicSheet = new MusicSheet();
       sheet.Rules = new EngravingRules();
+
+      // create staff. note that this may not be clean usage, just the bare minimum to pass the test.
+      //   without a staff, MusicSheetCalculator.createGraphicalMeasure() might error.
+      const instrument: Instrument = new Instrument(0, "0", sheet, undefined);
+      const staff: Staff = new Staff(instrument, instrument.Id);
+      sheet.Staves.push(staff);
+
       const measure: SourceMeasure = new SourceMeasure(1, sheet.Rules);
-      measure.FirstInstructionsStaffEntries[0] = new SourceStaffEntry(undefined, undefined);
+      measure.FirstInstructionsStaffEntries[0] = new SourceStaffEntry(undefined, staff);
       sheet.addMeasure(measure);
       const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator(sheet.Rules);
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
