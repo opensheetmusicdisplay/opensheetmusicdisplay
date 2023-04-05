@@ -87,7 +87,8 @@ export class JianpuMeasure extends VexFlowMeasure {
     }
 
     private createJianpuNotes(): void {
-        for (const se of this.staffEntries) {
+        for (let seIndex: number = 0; seIndex < this.staffEntries.length; seIndex++) {
+            const se: GraphicalStaffEntry = this.staffEntries[seIndex];
             se.JianpuNoteLines = []; // reset, e.g. to avoid doubling after re-render
             se.JianpuNoteLabels = []; // reset, e.g. to avoid doubling after re-render
             se.JianpuNoteRectangles = [];
@@ -125,6 +126,11 @@ export class JianpuMeasure extends VexFlowMeasure {
                     note.JianpuLabel = null;
                     note.JianpuLines = [];
                     note.JianpuRectangles = [];
+
+                    if (seIndex === 0 && se.graphicalVoiceEntries.length === 0 && ve.notes.length === 0) {
+                        // single whole rest measure: move start of note to 0, so that dashes fit
+                        se.PositionAndShape.RelativePosition.x = 0;
+                    }
 
                     // create Jianpu number label
                     const jianpuNumber: number = this.getJianpuNumber(note.sourceNote, this.ActiveKeyInstruction.KeyNoteEnum);
@@ -251,6 +257,10 @@ export class JianpuMeasure extends VexFlowMeasure {
                     if (note.sourceNote.Length.RealValue < 0.5) {
                         continue; // dashes only for half note or longer
                     }
+                    let numberOfDashes: number = 1;
+                    if (note.sourceNote.Length.RealValue === 1) {
+                        numberOfDashes = 3;
+                    }
                     const noteGLabel: GraphicalLabel = note.JianpuLabel;
                     const dashRelativeHeight: number = noteGLabel.PositionAndShape.RelativePosition.y - noteGLabel.PositionAndShape.Size.height * 0.5;
                     let dashIntervalEndX: number = this.PositionAndShape.Size.width; // end of measure if in last staffentry
@@ -258,16 +268,20 @@ export class JianpuMeasure extends VexFlowMeasure {
                         dashIntervalEndX = this.staffEntries[seIndex + 1].PositionAndShape.RelativePosition.x;
                     }
                     const totalDashInterval: number = dashIntervalEndX - se.PositionAndShape.RelativePosition.x;
-                    const dashWidth: number = totalDashInterval * 0.3;
-                    // TODO: 3 dashes for whole notes
-                    const dashStartX: number = totalDashInterval * 0.5 - dashWidth * 0.5; // e.g. 0.25 with totalDashInterval 0.5
-                    const dashEndX: number = dashStartX + dashWidth;
-                    const dashRectStart: PointF2D = new PointF2D(dashStartX, dashRelativeHeight);
-                    const dashRectEnd: PointF2D = new PointF2D(dashEndX, dashRelativeHeight + this.rules.JianpuNoteLengthDashWidth);
-                    const dashRect: GraphicalRectangle = new GraphicalRectangle(
-                        dashRectStart, dashRectEnd, undefined, OutlineAndFillStyleEnum.BaseWritingColor);
-                    dashRect.PositionAndShape.calculateBoundingBox();
-                    se.JianpuNoteLengthDashRectangles.push(dashRect);
+                    const singleDashInterval: number = totalDashInterval / numberOfDashes;
+                    const dashWidth: number = singleDashInterval * 0.3;
+                    let dashIntervalStartX: number = 0;
+                    for (let dashIndex: number = 0; dashIndex < numberOfDashes; dashIndex++) {
+                        const dashStartX: number = dashIntervalStartX + singleDashInterval * 0.5 - dashWidth * 0.5; // e.g. 0.25 with totalDashInterval 0.5
+                        const dashEndX: number = dashStartX + dashWidth;
+                        const dashRectStart: PointF2D = new PointF2D(dashStartX, dashRelativeHeight);
+                        const dashRectEnd: PointF2D = new PointF2D(dashEndX, dashRelativeHeight + this.rules.JianpuNoteLengthDashWidth);
+                        const dashRect: GraphicalRectangle = new GraphicalRectangle(
+                            dashRectStart, dashRectEnd, undefined, OutlineAndFillStyleEnum.BaseWritingColor);
+                        dashRect.PositionAndShape.calculateBoundingBox();
+                        se.JianpuNoteLengthDashRectangles.push(dashRect);
+                        dashIntervalStartX += singleDashInterval;
+                    }
                 }
             }
         }

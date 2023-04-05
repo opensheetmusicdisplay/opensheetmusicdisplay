@@ -322,7 +322,7 @@ export class VexFlowConverter {
                 // const measureDuration: number = note.sourceNote.SourceMeasure.Duration.RealValue;
                 const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
                     baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
-                if (isWholeMeasureRest) {
+                if (isWholeMeasureRest && !gve.parentVoiceEntry.ParentSourceStaffEntry.ParentStaff.isJianpuStaff) {
                     keys = ["d/5"];
                     duration = "w";
                     numDots = 0;
@@ -332,6 +332,7 @@ export class VexFlowConverter {
                     alignCenter = true;
                     xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
                     // affects VexFlowStaffEntry.calculateXPosition()
+                    // Jianpu: we don't want the rest in the middle, but at the start of the measure
                 }
                 //If we have more than one visible voice entry, shift the rests so no collision occurs
                 if (note.sourceNote.ParentStaff.Voices.length > 1) {
