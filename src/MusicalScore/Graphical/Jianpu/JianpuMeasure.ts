@@ -248,6 +248,9 @@ export class JianpuMeasure extends VexFlowMeasure {
                 const ve: GraphicalVoiceEntry = se.graphicalVoiceEntries[veIndex];
                 for (let noteIndex: number = ve.notes.length - 1; noteIndex >= 0; noteIndex--) {
                     const note: GraphicalNote = ve.notes[noteIndex];
+                    if (note.sourceNote.Length.RealValue < 0.5) {
+                        continue; // dashes only for half note or longer
+                    }
                     const noteGLabel: GraphicalLabel = note.JianpuLabel;
                     const dashRelativeHeight: number = noteGLabel.PositionAndShape.RelativePosition.y - noteGLabel.PositionAndShape.Size.height * 0.5;
                     let dashIntervalEndX: number = this.PositionAndShape.Size.width; // end of measure if in last staffentry
