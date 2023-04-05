@@ -396,6 +396,8 @@ export class EngravingRules {
     public JianpuNoteYMarginMinimum: number;
     public JianpuNoteLengthDashWidth: number;
     public JianpuWholeMeasureRestXShift: number;
+    /** Margin in percent to the left and right between Jianpu notes and note length dashes */
+    public JianpuDashesMarginXPercent: number;
 
     /** The skyline and bottom-line batch calculation algorithm to use.
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
@@ -782,6 +784,7 @@ export class EngravingRules {
         this.JianpuNoteYMarginMinimum = 1;
         this.JianpuNoteLengthDashWidth = 0.1;
         this.JianpuWholeMeasureRestXShift = 0.5;
+        this.JianpuDashesMarginXPercent = 0.1; // 10 percent of the distance available for dashes will be reserved for margin on each side
 
         this.SkyBottomLineBatchMinMeasures = 5;
         this.SkyBottomLineWebGLMinMeasures = 80;

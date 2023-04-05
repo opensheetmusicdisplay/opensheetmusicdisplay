@@ -271,16 +271,21 @@ export class JianpuMeasure extends VexFlowMeasure {
                     const dashRelativeHeight: number = noteGLabel.PositionAndShape.RelativePosition.y - noteGLabel.PositionAndShape.Size.height * 0.5;
                     let dashIntervalEndX: number = this.PositionAndShape.Size.width; // end of measure if in last staffentry
                     if (seIndex < this.staffEntries.length - 1) { // not the last staffentry -> go until next note/staffentry x position
+                        // TODO look for next note in voice instead, see test_note_overlap_staggering_whole_eighths.musicxml
                         dashIntervalEndX = this.staffEntries[seIndex + 1].PositionAndShape.RelativePosition.x;
                     }
-                    const dashesStartX: number = se.PositionAndShape.RelativePosition.x + noteGLabel.PositionAndShape.RelativePosition.x;
+                    const dashIntervalStartX: number = se.PositionAndShape.RelativePosition.x + noteGLabel.PositionAndShape.RelativePosition.x;
                     // noteGLabel x position is shifted for whole measure rests
-                    const totalDashInterval: number = dashIntervalEndX - dashesStartX;
-                    const singleDashInterval: number = totalDashInterval / numberOfDashes;
+                    const totalDashInterval: number = dashIntervalEndX - dashIntervalStartX;
+                    const dashesMarginedStartX: number = dashIntervalStartX + this.rules.JianpuDashesMarginXPercent * totalDashInterval;
+                    const startMargin: number = dashesMarginedStartX - dashIntervalStartX;
+                    const dashesMarginedEndX: number = dashIntervalEndX - this.rules.JianpuDashesMarginXPercent * totalDashInterval;
+                    const totalMarginedDashInterval: number = dashesMarginedEndX - dashesMarginedStartX;
+                    const singleDashInterval: number = totalMarginedDashInterval / numberOfDashes;
                     const dashWidth: number = singleDashInterval * 0.3;
-                    let dashIntervalStartX: number = noteGLabel.PositionAndShape.RelativePosition.x;
+                    let currentDashStartX: number = noteGLabel.PositionAndShape.RelativePosition.x + startMargin;
                     for (let dashIndex: number = 0; dashIndex < numberOfDashes; dashIndex++) {
-                        const dashStartX: number = dashIntervalStartX + singleDashInterval * 0.5 - dashWidth * 0.5; // e.g. 0.25 with totalDashInterval 0.5
+                        const dashStartX: number = currentDashStartX + singleDashInterval * 0.5 - dashWidth * 0.5; // e.g. 0.25 with totalDashInterval 0.5
                         const dashEndX: number = dashStartX + dashWidth;
                         const dashRectStart: PointF2D = new PointF2D(dashStartX, dashRelativeHeight);
                         const dashRectEnd: PointF2D = new PointF2D(dashEndX, dashRelativeHeight + this.rules.JianpuNoteLengthDashWidth);
@@ -288,7 +293,7 @@ export class JianpuMeasure extends VexFlowMeasure {
                             dashRectStart, dashRectEnd, undefined, OutlineAndFillStyleEnum.BaseWritingColor);
                         dashRect.PositionAndShape.calculateBoundingBox();
                         se.JianpuNoteLengthDashRectangles.push(dashRect);
-                        dashIntervalStartX += singleDashInterval;
+                        currentDashStartX += singleDashInterval;
                     }
                 }
             }
