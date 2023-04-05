@@ -380,6 +380,18 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             const rectangleF2D: RectangleF2D = this.applyScreenTransformationForRect(absoluteRect.RectangleF2D);
             this.renderRectangle(rectangleF2D, 0, OutlineAndFillStyleEnum.BaseWritingColor, this.rules.DefaultColorMusic, 1);
         }
+        for (const jianpuNoteLengthDashRectangle of staffEntry.JianpuNoteLengthDashRectangles) {
+            const absoluteStart: PointF2D = new PointF2D(
+                jianpuNoteLengthDashRectangle.UpperLeftPoint.x + staffEntry.PositionAndShape.AbsolutePosition.x,
+                jianpuNoteLengthDashRectangle.UpperLeftPoint.y + staffEntry.PositionAndShape.AbsolutePosition.y);
+            const absoluteEnd: PointF2D = new PointF2D(
+                jianpuNoteLengthDashRectangle.LowerRightPoint.x + staffEntry.PositionAndShape.AbsolutePosition.x,
+                jianpuNoteLengthDashRectangle.LowerRightPoint.y + staffEntry.PositionAndShape.AbsolutePosition.y);
+
+            const absoluteRect: GraphicalRectangle = new GraphicalRectangle(absoluteStart, absoluteEnd, null, OutlineAndFillStyleEnum.BaseWritingColor);
+            const rectangleF2D: RectangleF2D = this.applyScreenTransformationForRect(absoluteRect.RectangleF2D);
+            this.renderRectangle(rectangleF2D, 0, OutlineAndFillStyleEnum.BaseWritingColor, this.rules.DefaultColorMusic, 1);
+        }
     }
 
     /**

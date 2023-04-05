@@ -66,6 +66,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public JianpuNoteLabels: GraphicalLabel[] = [];
     public JianpuNoteLines: GraphicalLine[] = [];
     public JianpuNoteRectangles: GraphicalRectangle[] = [];
+    public JianpuNoteLengthDashRectangles: GraphicalRectangle[] = [];
 
     public get GraphicalInstructions(): AbstractGraphicalInstruction[] {
         return this.graphicalInstructions;

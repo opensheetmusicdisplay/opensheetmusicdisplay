@@ -68,6 +68,7 @@ import { GraphicalGlissando } from "../GraphicalGlissando";
 import { Glissando } from "../../VoiceData/Glissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
+import { JianpuMeasure } from "../Jianpu/JianpuMeasure";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -1643,6 +1644,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
   }
   */
+
+  protected calculateJianpuPositioningElements(): void {
+    for (const system of this.musicSystems) {
+      for (const line of system.StaffLines) {
+        if (!line.ParentStaff.isJianpuStaff) {
+            continue;
+        }
+        for (const measure of line.Measures) {
+            (measure as JianpuMeasure).calculateNoteLengthDashes();
+        }
+      }
+    }
+  }
 
   // Generate all Graphical Slurs and attach them to the staffline
   protected calculateSlurs(): void {

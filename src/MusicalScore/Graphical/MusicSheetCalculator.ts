@@ -881,6 +881,8 @@ export abstract class MusicSheetCalculator {
         // calculate TupletsNumbers
         this.calculateTupletNumbers();
 
+        this.calculateJianpuPositioningElements();
+
         // calculate MeasureNumbers
         if (this.rules.RenderMeasureNumbers) {
             for (let idx: number = 0, len: number = this.musicSystems.length; idx < len; ++idx) {
@@ -1180,6 +1182,10 @@ export abstract class MusicSheetCalculator {
             }
         }
         return;
+    }
+
+    protected calculateJianpuPositioningElements(): void {
+        return; // implemented in VexFlowMusicSheetCalculator
     }
 
     protected calculateSlurs(): void {

@@ -16,6 +16,7 @@ import { OutlineAndFillStyleEnum } from "../DrawingEnums";
 import { BoundingBox } from "../BoundingBox";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
+import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 
 export class JianpuMeasure extends VexFlowMeasure {
     /** Whether to draw the outer lines of the staffline (2 of 5), e.g. for the Skybottomline to work. */
@@ -235,6 +236,37 @@ export class JianpuMeasure extends VexFlowMeasure {
                 ve.PositionAndShape.calculateBoundingBox();
             }
             // se.PositionAndShape.calculateBoundingBox();
+        }
+    }
+
+    // create dashes for note length: half = -, whole = ---
+    public calculateNoteLengthDashes(): void {
+        for (let seIndex: number = 0; seIndex < this.staffEntries.length; seIndex++) {
+            const se: GraphicalStaffEntry = this.staffEntries[seIndex];
+            se.JianpuNoteLengthDashRectangles = [];
+            for (let veIndex: number = 0; veIndex < se.graphicalVoiceEntries.length; veIndex++) {
+                const ve: GraphicalVoiceEntry = se.graphicalVoiceEntries[veIndex];
+                for (let noteIndex: number = ve.notes.length - 1; noteIndex >= 0; noteIndex--) {
+                    const note: GraphicalNote = ve.notes[noteIndex];
+                    const noteGLabel: GraphicalLabel = note.JianpuLabel;
+                    const dashRelativeHeight: number = noteGLabel.PositionAndShape.RelativePosition.y - noteGLabel.PositionAndShape.Size.height * 0.5;
+                    let dashIntervalEndX: number = this.PositionAndShape.Size.width; // end of measure if in last staffentry
+                    if (seIndex < this.staffEntries.length - 1) { // not the last staffentry -> go until next note/staffentry x position
+                        dashIntervalEndX = this.staffEntries[seIndex + 1].PositionAndShape.RelativePosition.x;
+                    }
+                    const totalDashInterval: number = dashIntervalEndX - se.PositionAndShape.RelativePosition.x;
+                    const dashWidth: number = totalDashInterval * 0.3;
+                    // TODO: 3 dashes for whole notes
+                    const dashStartX: number = totalDashInterval * 0.5 - dashWidth * 0.5; // e.g. 0.25 with totalDashInterval 0.5
+                    const dashEndX: number = dashStartX + dashWidth;
+                    const dashRectStart: PointF2D = new PointF2D(dashStartX, dashRelativeHeight);
+                    const dashRectEnd: PointF2D = new PointF2D(dashEndX, dashRelativeHeight + this.rules.JianpuNoteLengthDashWidth);
+                    const dashRect: GraphicalRectangle = new GraphicalRectangle(
+                        dashRectStart, dashRectEnd, undefined, OutlineAndFillStyleEnum.BaseWritingColor);
+                    dashRect.PositionAndShape.calculateBoundingBox();
+                    se.JianpuNoteLengthDashRectangles.push(dashRect);
+                }
+            }
         }
     }
 
