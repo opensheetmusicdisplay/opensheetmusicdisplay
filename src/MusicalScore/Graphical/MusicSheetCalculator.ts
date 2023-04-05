@@ -297,6 +297,7 @@ export abstract class MusicSheetCalculator {
         //this.graphicalMusicSheet.MusicPages[0].PositionAndShape.BorderMarginBottom += 9;
 
         // transform Relative to Absolute Positions
+        //This is called for each measure in calculate music systems (calculateLines -> calculateSkyBottomLines)
         GraphicalMusicSheet.transformRelativeToAbsolutePosition(this.graphicalMusicSheet);
     }
 
@@ -2035,6 +2036,16 @@ export abstract class MusicSheetCalculator {
         } else if (!this.rules.RenderLyricist) {
             this.graphicalMusicSheet.Lyricist = undefined;
         }
+        if (musicSheet.Copyright !== undefined && this.rules.RenderCopyright) {
+            const copyright: GraphicalLabel = new GraphicalLabel(
+                musicSheet.Copyright, this.rules.SheetCopyrightHeight, TextAlignmentEnum.CenterBottom, this.rules);
+                copyright.Label.IsCreditLabel = true;
+                copyright.Label.colorDefault = defaultColorTitle;
+            this.graphicalMusicSheet.Copyright = copyright;
+            copyright.setLabelPositionAndShapeBorders();
+        } else if (!this.rules.RenderCopyright) {
+            this.graphicalMusicSheet.Copyright = undefined;
+        }
     }
 
     protected checkMeasuresForWholeRestNotes(): void {
@@ -2163,9 +2174,12 @@ export abstract class MusicSheetCalculator {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
         let firstSystemAbsoluteTopMargin: number = 10;
+        let lastSystemAbsoluteBottomMargin: number = -1;
         if (page.MusicSystems.length > 0) {
             const firstMusicSystem: MusicSystem = page.MusicSystems[0];
             firstSystemAbsoluteTopMargin = firstMusicSystem.PositionAndShape.RelativePosition.y + firstMusicSystem.PositionAndShape.BorderTop;
+            const lastMusicSystem: MusicSystem = page.MusicSystems[page.MusicSystems.length - 1];
+            lastSystemAbsoluteBottomMargin = lastMusicSystem.PositionAndShape.RelativePosition.y + lastMusicSystem.PositionAndShape.BorderBottom;
         }
         //const firstStaffLine: StaffLine = this.graphicalMusicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
         if (this.graphicalMusicSheet.Title && this.rules.RenderTitle) {
@@ -2256,6 +2270,17 @@ export abstract class MusicSheetCalculator {
             //relative.y = Math.max(relative.y, composer.PositionAndShape.RelativePosition.y);
             lyricist.PositionAndShape.RelativePosition = relative;
             page.Labels.push(lyricist);
+        }
+        const copyright: GraphicalLabel = this.graphicalMusicSheet.Copyright;
+        if (copyright && this.rules.RenderCopyright) {
+            copyright.PositionAndShape.Parent = page.PositionAndShape;
+            copyright.setLabelPositionAndShapeBorders();
+            const relative: PointF2D = new PointF2D();
+            relative.x = page.PositionAndShape.Size.width / 2;
+            relative.y = lastSystemAbsoluteBottomMargin + this.rules.SheetCopyrightMargin;
+            relative.y -= copyright.PositionAndShape.BorderTop;
+            copyright.PositionAndShape.RelativePosition = relative;
+            page.Labels.push(copyright);
         }
     }
 

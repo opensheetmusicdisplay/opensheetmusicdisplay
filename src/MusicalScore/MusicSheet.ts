@@ -17,6 +17,7 @@ import {NoteState} from "./Graphical/DrawingEnums";
 import {Note} from "./VoiceData/Note";
 import {VoiceEntry} from "./VoiceData/VoiceEntry";
 import log from "loglevel";
+import { TextAlignmentEnum } from "../Common/Enums/TextAlignment";
 
 // FIXME Andrea: Commented out some unnecessary/not-ported-yet code, have a look at (*)
 
@@ -62,6 +63,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private subtitle: Label;
     private composer: Label;
     private lyricist: Label;
+    private copyright: Label;
     // private languages: Language[] = [];
     // private activeLanguage: Language;
     private musicPartManager: MusicPartManager = undefined;
@@ -197,6 +199,16 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public set LyricistString(value: string) {
         this.Lyricist = new Label(value);
     }
+    public get CopyrightString(): string {
+        if (this.copyright) {
+            return this.copyright.text;
+        } else {
+            return "";
+        }
+    }
+    public set CopyrightString(value: string) {
+        this.Copyright = new Label(value, TextAlignmentEnum.CenterBottom, undefined, true);
+    }
     public get Title(): Label {
         return this.title;
     }
@@ -220,6 +232,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
     public set Lyricist(value: Label) {
         this.lyricist = value;
+    }
+    public get Copyright(): Label {
+        return this.copyright;
+    }
+    public set Copyright(value: Label) {
+        this.copyright = value;
     }
     public get Rules(): EngravingRules {
         if (!this.rules) {

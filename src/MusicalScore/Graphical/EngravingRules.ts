@@ -34,6 +34,8 @@ export class EngravingRules {
     public SheetMinimumDistanceBetweenTitleAndSubtitle: number;
     public SheetComposerHeight: number;
     public SheetAuthorHeight: number;
+    public SheetCopyrightHeight: number;
+    public SheetCopyrightMargin: number;
     public CompactMode: boolean;
     public PagePlacementEnum: PagePlacementEnum;
     public PageHeight: number;
@@ -321,6 +323,7 @@ export class EngravingRules {
     public RenderTitle: boolean;
     public RenderSubtitle: boolean;
     public RenderLyricist: boolean;
+    public RenderCopyright: boolean;
     public RenderPartNames: boolean;
     public RenderPartAbbreviations: boolean;
     public RenderFingerings: boolean;
@@ -413,6 +416,8 @@ export class EngravingRules {
         this.SheetMinimumDistanceBetweenTitleAndSubtitle = 1.0;
         this.SheetComposerHeight = 2.0;
         this.SheetAuthorHeight = 2.0;
+        this.SheetCopyrightHeight = 1.5;
+        this.SheetCopyrightMargin = 2.0;
 
         // Staff sizing Variables
         this.CompactMode = false;
@@ -709,6 +714,7 @@ export class EngravingRules {
         this.RenderTitle = true;
         this.RenderSubtitle = true;
         this.RenderLyricist = true;
+        this.RenderCopyright = false;
         this.RenderPartNames = true;
         this.RenderPartAbbreviations = true;
         this.RenderFingerings = true;

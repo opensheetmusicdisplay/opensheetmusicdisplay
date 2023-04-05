@@ -52,6 +52,7 @@ export class GraphicalMusicSheet {
     private subtitle: GraphicalLabel;
     private composer: GraphicalLabel;
     private lyricist: GraphicalLabel;
+    private copyright: GraphicalLabel;
     private cursors: GraphicalLine[] = [];
     private selectionStartSymbol: SelectionStartSymbol;
     private selectionEndSymbol: SelectionEndSymbol;
@@ -126,6 +127,14 @@ export class GraphicalMusicSheet {
 
     public set Lyricist(value: GraphicalLabel) {
         this.lyricist = value;
+    }
+
+    public get Copyright(): GraphicalLabel {
+        return this.copyright;
+    }
+
+    public set Copyright(value: GraphicalLabel) {
+        this.copyright = value;
     }
 
     public get Cursors(): GraphicalLine[] {
