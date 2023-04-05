@@ -11,6 +11,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var sampleFolder = "",
         samples = {
             // temporarily add jianpu samples to the top on jianpu branch
+            "test_jianpu_wholenote.musicxml": "test_jianpu_wholenote.musicxml",
+            "test_jianpu_simple.musicxml": "test_jianpu_simple.musicxml",
             "test_jianpu_2dots_simple.musicxml": "test_jianpu_2dots_simple.musicxml",
             "test_jianpu_dots_3_below_and_above_two_measures.musicxml": "test_jianpu_dots_3_below_and_above_two_measures.musicxml",
             "test_jianpu_dots_below_above_simple.musicxml": "test_jianpu_dots_below_above_simple.musicxml",
@@ -20,7 +22,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             "test_jianpu_multinote_voiceentry_chord_c_major.musicxml": "test_jianpu_multinote_voiceentry_chord_c_major.musicxml",
             "test_jianpu_rest_simple.musicxml": "test_jianpu_rest_simple.musicxml",
             "test_jianpu_scale_3measures.musicxml": "test_jianpu_scale_3measures.musicxml",
-            "test_jianpu_simple.musicxml": "test_jianpu_simple.musicxml",
             "test_jianpu_voices_2measures.musicxml": "test_jianpu_voices_2measures.musicxml",
             "test_jianpu_voices_2measures_simple.musicxml": "test_jianpu_voices_2measures_simple.musicxml",
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
