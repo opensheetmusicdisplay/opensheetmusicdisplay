@@ -127,9 +127,15 @@ export class JianpuMeasure extends VexFlowMeasure {
                     note.JianpuLines = [];
                     note.JianpuRectangles = [];
 
-                    if (seIndex === 0 && se.graphicalVoiceEntries.length === 0 && ve.notes.length === 0) {
+                    let noteGLabelXShift: number = 0;
+                    if (seIndex === 0 && se.graphicalVoiceEntries.length === 1
+                        && ve.notes.length === 1 && ve.notes[0].sourceNote.isWholeRest()) {
                         // single whole rest measure: move start of note to 0, so that dashes fit
-                        se.PositionAndShape.RelativePosition.x = 0;
+                        // se.PositionAndShape.RelativePosition.x = 0;
+                        noteGLabelXShift = this.getVFStave().getNoteStartX() / this.rules.SamplingUnit - se.PositionAndShape.RelativePosition.x
+                            + this.rules.JianpuWholeMeasureRestXShift;
+                        // probably more elegant would be to get the staffentry to be at the right x position,
+                        //   but it's somehow shifted for whole measure rests even with the alignedCenter = false fix in VexFlowConverter.
                     }
 
                     // create Jianpu number label
@@ -139,7 +145,7 @@ export class JianpuMeasure extends VexFlowMeasure {
                     const noteGLabel: GraphicalLabel = new GraphicalLabel(noteLabel, fontSize, noteLabel.textAlignment, this.rules);
                     note.JianpuLabel = noteGLabel;
                     noteGLabel.PositionAndShape.Parent = ve.PositionAndShape;
-                    noteGLabel.PositionAndShape.RelativePosition.x = 0;
+                    noteGLabel.PositionAndShape.RelativePosition.x = noteGLabelXShift;
                     noteGLabel.PositionAndShape.RelativePosition.y = 0;
                     if (previousProcessedNote) {
                         noteGLabel.PositionAndShape.RelativePosition.y = ve.PositionAndShape.Size.height + nextNoteMargin;
@@ -267,10 +273,12 @@ export class JianpuMeasure extends VexFlowMeasure {
                     if (seIndex < this.staffEntries.length - 1) { // not the last staffentry -> go until next note/staffentry x position
                         dashIntervalEndX = this.staffEntries[seIndex + 1].PositionAndShape.RelativePosition.x;
                     }
-                    const totalDashInterval: number = dashIntervalEndX - se.PositionAndShape.RelativePosition.x;
+                    const dashesStartX: number = se.PositionAndShape.RelativePosition.x + noteGLabel.PositionAndShape.RelativePosition.x;
+                    // noteGLabel x position is shifted for whole measure rests
+                    const totalDashInterval: number = dashIntervalEndX - dashesStartX;
                     const singleDashInterval: number = totalDashInterval / numberOfDashes;
                     const dashWidth: number = singleDashInterval * 0.3;
-                    let dashIntervalStartX: number = 0;
+                    let dashIntervalStartX: number = noteGLabel.PositionAndShape.RelativePosition.x;
                     for (let dashIndex: number = 0; dashIndex < numberOfDashes; dashIndex++) {
                         const dashStartX: number = dashIntervalStartX + singleDashInterval * 0.5 - dashWidth * 0.5; // e.g. 0.25 with totalDashInterval 0.5
                         const dashEndX: number = dashStartX + dashWidth;

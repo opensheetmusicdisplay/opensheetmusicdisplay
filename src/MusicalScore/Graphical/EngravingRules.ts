@@ -395,6 +395,7 @@ export class EngravingRules {
     /** Minimum vertical margin to next vertical Jianpu note */
     public JianpuNoteYMarginMinimum: number;
     public JianpuNoteLengthDashWidth: number;
+    public JianpuWholeMeasureRestXShift: number;
 
     /** The skyline and bottom-line batch calculation algorithm to use.
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
@@ -780,6 +781,7 @@ export class EngravingRules {
         this.JianpuOctaveDotYOffset = -0.8; // the jianpu number label bbox is a bit too large, so we reduce the margin here
         this.JianpuNoteYMarginMinimum = 1;
         this.JianpuNoteLengthDashWidth = 0.1;
+        this.JianpuWholeMeasureRestXShift = 0.5;
 
         this.SkyBottomLineBatchMinMeasures = 5;
         this.SkyBottomLineWebGLMinMeasures = 80;

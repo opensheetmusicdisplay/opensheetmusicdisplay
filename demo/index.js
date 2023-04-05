@@ -11,6 +11,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var sampleFolder = "",
         samples = {
             // temporarily add jianpu samples to the top on jianpu branch
+            "test_jianpu_whole_measure_rest_x_alignment.musicxml": "test_jianpu_whole_measure_rest_x_alignment.musicxml",
             "test_jianpu_wholenote.musicxml": "test_jianpu_wholenote.musicxml",
             "test_jianpu_simple.musicxml": "test_jianpu_simple.musicxml",
             "test_jianpu_2dots_simple.musicxml": "test_jianpu_2dots_simple.musicxml",
