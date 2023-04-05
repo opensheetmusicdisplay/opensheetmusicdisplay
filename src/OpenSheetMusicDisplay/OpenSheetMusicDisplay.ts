@@ -511,6 +511,9 @@ export class OpenSheetMusicDisplay {
         if (options.newSystemFromXML !== undefined) {
             this.rules.NewSystemAtXMLNewSystemAttribute = options.newSystemFromXML;
         }
+        if (options.newSystemFromNewPageInXML !== undefined) {
+            this.rules.NewSystemAtXMLNewPageAttribute = options.newSystemFromNewPageInXML;
+        }
         if (options.newPageFromXML !== undefined) {
             this.rules.NewPageAtXMLNewPageAttribute = options.newPageFromXML;
         }

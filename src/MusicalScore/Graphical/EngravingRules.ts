@@ -34,6 +34,8 @@ export class EngravingRules {
     public SheetMinimumDistanceBetweenTitleAndSubtitle: number;
     public SheetComposerHeight: number;
     public SheetAuthorHeight: number;
+    public SheetCopyrightHeight: number;
+    public SheetCopyrightMargin: number;
     public CompactMode: boolean;
     public PagePlacementEnum: PagePlacementEnum;
     public PageHeight: number;
@@ -321,6 +323,7 @@ export class EngravingRules {
     public RenderTitle: boolean;
     public RenderSubtitle: boolean;
     public RenderLyricist: boolean;
+    public RenderCopyright: boolean;
     public RenderPartNames: boolean;
     public RenderPartAbbreviations: boolean;
     public RenderFingerings: boolean;
@@ -357,6 +360,11 @@ export class EngravingRules {
     /** This is not for tabs, but for classical scores, especially violin. */
     public StringNumberOffsetY: number;
     public NewSystemAtXMLNewSystemAttribute: boolean;
+    /** Whether to begin a new system when a page break is given in XML ('new-page="yes"'), but newPageFromXML is false.
+     *  Default false, because it can lead to nonsensical system breaks after a single measure,
+     *  as OSMD does a different layout than the original music program exported from.
+     * */
+    public NewSystemAtXMLNewPageAttribute: boolean;
     public NewPageAtXMLNewPageAttribute: boolean;
     public PageFormat: PageFormat;
     public PageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
@@ -421,6 +429,8 @@ export class EngravingRules {
         this.SheetMinimumDistanceBetweenTitleAndSubtitle = 1.0;
         this.SheetComposerHeight = 2.0;
         this.SheetAuthorHeight = 2.0;
+        this.SheetCopyrightHeight = 1.5;
+        this.SheetCopyrightMargin = 2.0;
 
         // Staff sizing Variables
         this.CompactMode = false;
@@ -717,6 +727,7 @@ export class EngravingRules {
         this.RenderTitle = true;
         this.RenderSubtitle = true;
         this.RenderLyricist = true;
+        this.RenderCopyright = false;
         this.RenderPartNames = true;
         this.RenderPartAbbreviations = true;
         this.RenderFingerings = true;
@@ -747,6 +758,7 @@ export class EngravingRules {
         this.StringNumberOffsetY = 0.0;
         this.NewSystemAtXMLNewSystemAttribute = false;
         this.NewPageAtXMLNewPageAttribute = false;
+        this.NewSystemAtXMLNewPageAttribute = false;
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
         this.IgnoreBracketsWords = true;
