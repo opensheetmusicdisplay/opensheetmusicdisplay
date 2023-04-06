@@ -319,7 +319,9 @@ export class JianpuMeasure extends VexFlowMeasure {
                         numberOfDashes = 2;
                     }
                     const noteGLabel: GraphicalLabel = note.JianpuLabel;
-                    const dashRelativeHeight: number = noteGLabel.PositionAndShape.RelativePosition.y - noteGLabel.PositionAndShape.Size.height * 0.5;
+                    const dashRelativeHeight: number = noteGLabel.PositionAndShape.RelativePosition.y
+                        - noteGLabel.PositionAndShape.Size.height * 0.5
+                        + ve.PositionAndShape.RelativePosition.y;
                     let dashIntervalEndX: number = this.PositionAndShape.Size.width; // end of measure if in last staffentry
                     if (seIndex < this.staffEntries.length - 1) { // not the last staffentry -> go until next note/staffentry x position
                         // TODO look for next note in voice instead, see test_note_overlap_staggering_whole_eighths.musicxml
