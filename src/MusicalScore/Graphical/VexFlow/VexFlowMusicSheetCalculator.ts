@@ -1652,6 +1652,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             continue;
         }
         for (const measure of line.Measures) {
+            // (measure as JianpuMeasure).calculateYLayout(); // creates issues here
             (measure as JianpuMeasure).calculateAccidentals();
             (measure as JianpuMeasure).calculateNoteLengthDashes();
         }

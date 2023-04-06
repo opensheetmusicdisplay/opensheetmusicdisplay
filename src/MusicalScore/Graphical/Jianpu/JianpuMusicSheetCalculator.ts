@@ -9,7 +9,10 @@ export class JianpuMusicSheetCalculator extends VexFlowMusicSheetCalculator {
 
     // TODO do we actually need a JianpuMusicSheetCalculator? see JianpuMeasure.calculateYLayout()
     public override calculateYLayout(gSheet: GraphicalMusicSheet): void {
-        //gSheet.MeasureList
-        //for (const gSheet)
+        // for (const measures of gSheet.MeasureList) {
+        //     for (const measure of measures) {
+        //         measure.calculateYLayout();
+        //     }
+        // }
     }
 }

@@ -286,7 +286,7 @@ export abstract class MusicSheetCalculator {
         // calculate SheetLabelBoundingBoxes
         this.calculateSheetLabelBoundingBoxes();
         this.calculateXLayout(this.graphicalMusicSheet, this.maxInstrNameLabelLength());
-        this.calculateYLayout(this.graphicalMusicSheet); // for Jianpu
+        // this.calculateYLayout(this.graphicalMusicSheet); // for Jianpu
 
         // create List<MusicPage>
         this.graphicalMusicSheet.MusicPages.length = 0;
