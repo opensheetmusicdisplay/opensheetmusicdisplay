@@ -207,9 +207,9 @@ export class JianpuMeasure extends VexFlowMeasure {
                             baseHeightUnsigned = addedYPositionBelow + gDotLabel.PositionAndShape.Size.height; // 2nd part = margin
                         }
                         dotAddedHeight += sign * (baseHeightUnsigned +
-                            (this.rules.JianpuOctaveDotYOffset * Math.pow(fontSizeShrinkFactor, 3)));
+                            (this.rules.JianpuOctaveDotYOffset * fontSizeShrinkFactor));
                             // somehow the note label height shrinks faster than offset*fontSizeShrinkFactor
-                        gDotLabel.PositionAndShape.RelativePosition.y = dotAddedHeight;
+                        gDotLabel.PositionAndShape.RelativePosition.y = dotAddedHeight + noteGLabel.PositionAndShape.RelativePosition.y;
                         gDotLabel.setLabelPositionAndShapeBorders();
                         //gDotLabel.PositionAndShape.calculateBoundingBox();
                         lastBbox = gDotLabel.PositionAndShape;
@@ -222,7 +222,7 @@ export class JianpuMeasure extends VexFlowMeasure {
                             // ve.PositionAndShape.calculateBoundingBox();
                             previousLabel.PositionAndShape.Size.height *= 0.4; // TODO somehow the bounding boxes are way too large for the dots
                             dotAddedHeight += sign * lastBbox.Size.height;
-                            stackedGDotLabel.PositionAndShape.RelativePosition.y = dotAddedHeight;
+                            stackedGDotLabel.PositionAndShape.RelativePosition.y = dotAddedHeight + noteGLabel.PositionAndShape.RelativePosition.y;
                             stackedGDotLabel.PositionAndShape.RelativePosition.x = lastBbox.RelativePosition.x;
                             stackedGDotLabel.PositionAndShape.Parent = ve.PositionAndShape;
                             stackedGDotLabel.setLabelPositionAndShapeBorders();
