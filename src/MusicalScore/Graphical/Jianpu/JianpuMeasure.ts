@@ -309,8 +309,10 @@ export class JianpuMeasure extends VexFlowMeasure {
                         continue; // dashes only for half note or longer
                     }
                     let numberOfDashes: number = 1;
-                    if (note.sourceNote.Length.RealValue === 1) {
+                    if (note.sourceNote.Length.RealValue === 1) { // whole note
                         numberOfDashes = 3;
+                    } else if (note.sourceNote.Length.RealValue === 0.75) { // dotted half note
+                        numberOfDashes = 2;
                     }
                     const noteGLabel: GraphicalLabel = note.JianpuLabel;
                     const dashRelativeHeight: number = noteGLabel.PositionAndShape.RelativePosition.y - noteGLabel.PositionAndShape.Size.height * 0.5;
