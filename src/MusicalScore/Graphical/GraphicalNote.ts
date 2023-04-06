@@ -49,6 +49,7 @@ export class GraphicalNote extends GraphicalObject {
     public JianpuLabel: GraphicalLabel;
     public JianpuLines: GraphicalLine[] = [];
     public JianpuRectangles: GraphicalRectangle[] = [];
+    public JianpuFontSizeShrinkFactor: number = 1;
 
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         let transposedPitch: Pitch = this.sourceNote.Pitch;

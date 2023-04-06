@@ -125,6 +125,7 @@ export class JianpuMeasure extends VexFlowMeasure {
                     note.JianpuLabel = null;
                     note.JianpuLines = [];
                     note.JianpuRectangles = [];
+                    note.JianpuFontSizeShrinkFactor = fontSizeShrinkFactor; // save for accidentals in calculateAccidentals()
 
                     let noteGLabelXShift: number = 0;
                     if (seIndex === 0 && se.graphicalVoiceEntries.length === 1
@@ -283,7 +284,7 @@ export class JianpuMeasure extends VexFlowMeasure {
                             log.debug("jianpu: unhandled accidental " + drawnAccidental.toString());
                             continue;
                     }
-                    const textHeight: number = 1.5;
+                    const textHeight: number = 1.5 * note.JianpuFontSizeShrinkFactor;
                     const accLabel: Label = new Label(accidentalText, TextAlignmentEnum.CenterBottom);
                     const gAccLabel: GraphicalLabel = new GraphicalLabel(accLabel, textHeight, accLabel.textAlignment, this.rules);
                     gAccLabel.PositionAndShape.Parent = ve.PositionAndShape;
