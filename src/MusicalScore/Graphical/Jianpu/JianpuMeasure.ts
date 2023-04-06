@@ -1,6 +1,7 @@
 import Vex from "vexflow";
 import VF = Vex.Flow;
-import { NoteEnum } from "../../../Common/DataObjects/Pitch";
+import log from "loglevel";
+import { AccidentalEnum, NoteEnum } from "../../../Common/DataObjects/Pitch";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
 import { TextAlignmentEnum } from "../../../Common/Enums/TextAlignment";
 import { Label } from "../../Label";
@@ -71,9 +72,7 @@ export class JianpuMeasure extends VexFlowMeasure {
         // for (const se of this.staffEntries) {
         //     for (const ve of se.graphicalVoiceEntries) {
         //         for (const note of ve.notes) {
-        //             if (false) {
-        //                 console.log(note);
-        //             }
+        //             ((note as VexFlowGraphicalNote).vfnote[0] as VF.StaveNote).drawModifiers();
         //         }
         //     }
         // }
@@ -248,6 +247,52 @@ export class JianpuMeasure extends VexFlowMeasure {
                 ve.PositionAndShape.calculateBoundingBox();
             }
             // se.PositionAndShape.calculateBoundingBox();
+        }
+    }
+
+    public calculateAccidentals(): void {
+        for (let seIndex: number = 0; seIndex < this.staffEntries.length; seIndex++) {
+            const se: GraphicalStaffEntry = this.staffEntries[seIndex];
+            se.JianpuNoteLengthDashRectangles = [];
+            for (let veIndex: number = 0; veIndex < se.graphicalVoiceEntries.length; veIndex++) {
+                const ve: GraphicalVoiceEntry = se.graphicalVoiceEntries[veIndex];
+                for (let noteIndex: number = ve.notes.length - 1; noteIndex >= 0; noteIndex--) {
+                    const note: GraphicalNote = ve.notes[noteIndex];
+                    const drawnAccidental: AccidentalEnum = note.DrawnAccidental;
+                    let accidentalText: string = "";
+                    switch (drawnAccidental) {
+                        case AccidentalEnum.NONE:
+                            continue;
+                        case AccidentalEnum.SHARP:
+                            accidentalText = "#"; // UTF-8 only has 𝄰 sharp up and 𝄱 sharp down otherwise
+                            break;
+                        case AccidentalEnum.FLAT:
+                            accidentalText = "𝄬";
+                            break;
+                        case AccidentalEnum.NATURAL:
+                            accidentalText = "𝄮"; // or 𝄯
+                            break;
+                        case AccidentalEnum.DOUBLEFLAT:
+                            accidentalText = "𝄫";
+                            break;
+                        case AccidentalEnum.DOUBLESHARP:
+                            accidentalText = "𝄪";
+                            break;
+                        default:
+                            log.debug("jianpu: unhandled accidental " + drawnAccidental.toString());
+                            continue;
+                    }
+                    const textHeight: number = 1.5;
+                    const accLabel: Label = new Label(accidentalText, TextAlignmentEnum.CenterBottom);
+                    const gAccLabel: GraphicalLabel = new GraphicalLabel(accLabel, textHeight, accLabel.textAlignment, this.rules);
+                    gAccLabel.PositionAndShape.Parent = ve.PositionAndShape;
+                    gAccLabel.setLabelPositionAndShapeBorders(); // get Size.height
+                    gAccLabel.PositionAndShape.RelativePosition.x = -note.JianpuLabel.PositionAndShape.Size.width;
+                    gAccLabel.PositionAndShape.RelativePosition.y = -note.JianpuLabel.PositionAndShape.Size.height * 0.15;
+                    ve.PositionAndShape.calculateBoundingBox();
+                    se.JianpuNoteLabels.push(gAccLabel); // TODO: maybe put it into separate object so that we can separate them from notes
+                }
+            }
         }
     }
 
