@@ -207,7 +207,8 @@ export class JianpuMeasure extends VexFlowMeasure {
                             baseHeightUnsigned = addedYPositionBelow + gDotLabel.PositionAndShape.Size.height; // 2nd part = margin
                         }
                         dotAddedHeight += sign * (baseHeightUnsigned +
-                            (this.rules.JianpuOctaveDotYOffset * fontSizeShrinkFactor));
+                            //(this.rules.JianpuOctaveDotYOffset * fontSizeShrinkFactor));
+                            (this.rules.JianpuOctaveDotYOffset * Math.pow(fontSizeShrinkFactor, 3)));
                             // somehow the note label height shrinks faster than offset*fontSizeShrinkFactor
                         gDotLabel.PositionAndShape.RelativePosition.y = dotAddedHeight + noteGLabel.PositionAndShape.RelativePosition.y;
                         gDotLabel.setLabelPositionAndShapeBorders();
