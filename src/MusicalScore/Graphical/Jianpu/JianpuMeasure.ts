@@ -289,7 +289,8 @@ export class JianpuMeasure extends VexFlowMeasure {
                     gAccLabel.PositionAndShape.Parent = ve.PositionAndShape;
                     gAccLabel.setLabelPositionAndShapeBorders(); // get Size.height
                     gAccLabel.PositionAndShape.RelativePosition.x = -note.JianpuLabel.PositionAndShape.Size.width;
-                    gAccLabel.PositionAndShape.RelativePosition.y = -note.JianpuLabel.PositionAndShape.Size.height * 0.15;
+                    gAccLabel.PositionAndShape.RelativePosition.y = -note.JianpuLabel.PositionAndShape.Size.height * 0.15
+                        + note.JianpuLabel.PositionAndShape.RelativePosition.y;
                     ve.PositionAndShape.calculateBoundingBox();
                     se.JianpuNoteLabels.push(gAccLabel); // TODO: maybe put it into separate object so that we can separate them from notes
                 }
