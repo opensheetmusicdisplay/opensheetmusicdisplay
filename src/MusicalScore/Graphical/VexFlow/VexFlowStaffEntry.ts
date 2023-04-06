@@ -35,10 +35,8 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 if (!gve.vfStaveNote.preFormatted) {
                     continue;
                 }
-                if (!this.parentMeasure?.IsJianpuMeasure) {
-                    gve.applyBordersFromVexflow();
+                gve.applyBordersFromVexflow(this.parentMeasure.ParentStaff.isJianpuStaff);
                     // we don't want the RelativePosition.y to be set for Jianpu measures, shifts note y positions
-                }
                 if (this.parentMeasure.ParentStaff.isTab) {
                     // the x-position could be finetuned for the cursor.
                     // somehow, gve.vfStaveNote.getBoundingBox() is null for a TabNote (which is a StemmableNote).

@@ -17,7 +17,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         super(parentVoiceEntry, parentStaffEntry, rules);
     }
 
-    public applyBordersFromVexflow(): void {
+    public applyBordersFromVexflow(isJianpu: boolean = false): void {
         const staveNote: any = (this.vfStaveNote as any);
         if (!staveNote.getNoteHeadBeginX) {
             return;
@@ -25,11 +25,23 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         const boundingBox: any = staveNote.getBoundingBox();
         const modifierWidth: number = staveNote.getNoteHeadBeginX() - boundingBox.x;
 
-        this.PositionAndShape.RelativePosition.y = boundingBox.y / unitInPixels;
-        this.PositionAndShape.BorderTop = 0;
-        this.PositionAndShape.BorderBottom = boundingBox.h / unitInPixels;
-        this.PositionAndShape.BorderLeft = -(modifierWidth + staveNote.width / 2) / unitInPixels; // Left of our X origin is the modifier
-        this.PositionAndShape.BorderRight = (boundingBox.w - modifierWidth) / unitInPixels; // Right of x origin is the note
+        if (isJianpu) {
+            const noteheadBeginX: number = modifierWidth;
+            // we don't want to consider stemBeginX, to not shift notes depending on notehead positions.
+            //   see Beethoven measure 14 near end (notes both to left and right of stem)
+            // const stemBeginX: number = staveNote.getStemX() - boundingBox.x;
+            // const noteheadWidth: number = Math.abs(stemBeginX - noteheadBeginX);
+            this.PositionAndShape.BorderLeft = -(noteheadBeginX) / unitInPixels;
+            this.PositionAndShape.BorderRight = (noteheadBeginX) / unitInPixels;
+            // we don't want the RelativePosition.y to be set for Jianpu measures, shifts note y positions
+        } else {
+            this.PositionAndShape.BorderLeft = -(modifierWidth + staveNote.width / 2) / unitInPixels; // Left of our X origin is the modifier
+            this.PositionAndShape.BorderRight = (boundingBox.w - modifierWidth) / unitInPixels; // Right of x origin is the note
+
+            this.PositionAndShape.RelativePosition.y = boundingBox.y / unitInPixels;
+            this.PositionAndShape.BorderTop = 0;
+            this.PositionAndShape.BorderBottom = boundingBox.h / unitInPixels;
+        }
     }
 
     public set vfStaveNote(value: VF.StemmableNote) {
