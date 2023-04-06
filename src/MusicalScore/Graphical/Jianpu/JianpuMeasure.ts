@@ -190,13 +190,13 @@ export class JianpuMeasure extends VexFlowMeasure {
                         continue; // no octave dots for rest notes
                     }
                     const jianpuDotValue: number = note.sourceNote.Pitch.Octave - 1;
-                    const textHeight: number = 2;
+                    const dotTextHeight: number = fontSize; // same fontSizeShrinkFactor as for notes
                     let dotAddedHeight: number = 0;
                     if (jianpuDotValue > 0 || jianpuDotValue < 0) {
                         const totalDots: number = Math.abs(jianpuDotValue);
                         const sign: number = -Math.sign(jianpuDotValue); // shift upwards for above, downwards for below
                         const dotLabel: Label = new Label("•", TextAlignmentEnum.CenterBottom);
-                        const gDotLabel: GraphicalLabel = new GraphicalLabel(dotLabel, textHeight, dotLabel.textAlignment, this.rules);
+                        const gDotLabel: GraphicalLabel = new GraphicalLabel(dotLabel, dotTextHeight, dotLabel.textAlignment, this.rules);
                         ve.PositionAndShape.calculateBoundingBox();
                         gDotLabel.PositionAndShape.Parent = ve.PositionAndShape;
                         gDotLabel.setLabelPositionAndShapeBorders(); // get Size.height
@@ -216,7 +216,8 @@ export class JianpuMeasure extends VexFlowMeasure {
                         let previousLabel: GraphicalLabel = gDotLabel;
                         for (let i: number = 2; i <= totalDots; i++) {
                             const stackedDotLabel: Label = new Label("•", TextAlignmentEnum.CenterBottom);
-                            const stackedGDotLabel: GraphicalLabel = new GraphicalLabel(stackedDotLabel, textHeight, stackedDotLabel.textAlignment, this.rules);
+                            const stackedGDotLabel: GraphicalLabel = new GraphicalLabel(
+                                stackedDotLabel, dotTextHeight, stackedDotLabel.textAlignment, this.rules);
                             // ve.PositionAndShape.calculateBoundingBox();
                             previousLabel.PositionAndShape.Size.height *= 0.4; // TODO somehow the bounding boxes are way too large for the dots
                             dotAddedHeight += sign * lastBbox.Size.height;
