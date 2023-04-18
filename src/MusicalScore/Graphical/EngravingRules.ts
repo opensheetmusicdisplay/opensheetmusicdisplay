@@ -244,6 +244,17 @@ export class EngravingRules {
     public SystemDotWidth: number;
     public MultipleRestMeasureDefaultWidth: number;
     public MultipleRestMeasureAddKeySignature: boolean;
+    /** Use the same measure width for all measures (experimental).
+     *  Note that this will use the largest width of all measures,
+     *  as Vexflow will mess up the layout with overlays if using less than minimum width.
+     *  See formatter.preCalculateMinTotalWidth()
+     */
+    public FixedMeasureWidth: boolean;
+    /** Use a fixed width for all measures (experimental).
+     *  This is mostly for debugging or for when you already know how big the measures
+     *  in the target score are, because using a too low width will cause overlaps in Vexflow.
+     */
+    public FixedMeasureWidthFixedValue: number;
     public DistanceBetweenVerticalSystemLines: number;
     public DistanceBetweenDotAndLine: number;
     public RepeatEndStartPadding: number;
@@ -662,6 +673,9 @@ export class EngravingRules {
 
         this.MultipleRestMeasureDefaultWidth = 4;
         this.MultipleRestMeasureAddKeySignature = true;
+
+        this.FixedMeasureWidth = false;
+        this.FixedMeasureWidthFixedValue = undefined; // only set to a number x if the width should be always x
 
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;

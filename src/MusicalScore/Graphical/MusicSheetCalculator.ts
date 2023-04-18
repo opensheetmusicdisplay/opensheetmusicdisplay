@@ -315,12 +315,31 @@ export abstract class MusicSheetCalculator {
             minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
             MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
             // minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
+            let maxWidth: number = 0;
             for (let i: number = 1; i < this.graphicalMusicSheet.MeasureList.length; i++) {
                 measures = this.graphicalMusicSheet.MeasureList[i];
                 minimumStaffEntriesWidth = this.calculateMeasureXLayout(measures);
                 minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
+                if (minimumStaffEntriesWidth > maxWidth) {
+                    maxWidth = minimumStaffEntriesWidth;
+                }
+                //console.log(`min width for measure ${measures[0].MeasureNumber}: ${minimumStaffEntriesWidth}`);
                 MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
                 // minLength = Math.max(minLength, minimumStaffEntriesWidth * 1.2 + maxInstructionsLength);
+            }
+            if (this.rules.FixedMeasureWidth) {
+                // experimental: use the same measure width for all measures
+                //   here we take the maximum measure width for now,
+                //   otherwise Vexflow's layout can get completely messed up and place everything on top of each other,
+                //   if it gets less width than it says it needs as a minimum for a measure. (formatter.preCalculateMinTotalWidth)
+                let targetWidth: number = maxWidth;
+                if (this.rules.FixedMeasureWidthFixedValue) {
+                    targetWidth = this.rules.FixedMeasureWidthFixedValue;
+                }
+                for (let i: number = 1; i < this.graphicalMusicSheet.MeasureList.length; i++) {
+                    measures = this.graphicalMusicSheet.MeasureList[i];
+                    MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, targetWidth);
+                }
             }
         }
         // this.graphicalMusicSheet.MinAllowedSystemWidth = minLength; // currently unused
