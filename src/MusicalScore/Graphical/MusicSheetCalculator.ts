@@ -71,6 +71,7 @@ import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
 import { GraphicalChordSymbolContainer } from ".";
 import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
+import { Voice } from "../VoiceData/Voice";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -180,7 +181,13 @@ export abstract class MusicSheetCalculator {
                 // console.log(`skipping ${measuresToSkip} measures for measure #${sourceMeasure.MeasureNumber}.`);
                 idx += measuresToSkip;
                 for (let idx2: number = 1; idx2 <= measuresToSkip; idx2++) {
-                    const nextSourceMeasure: SourceMeasure = musicSheet.SourceMeasures[sourceMeasure.MeasureNumber - 1 + idx2];
+                    const nextMeasureIndex: number = musicSheet.SourceMeasures.indexOf(sourceMeasure) + idx2;
+                    // note that if there are pickup measures in the sheet, the measure index is not MeasureNumber - 1.
+                    //   (if first measure in the sheet is a pickup measure, its index and measure number will be 0)
+                    if (nextMeasureIndex >= musicSheet.SourceMeasures.length) {
+                        break; // shouldn't happen, but for safety.
+                    }
+                    const nextSourceMeasure: SourceMeasure = musicSheet.SourceMeasures[nextMeasureIndex];
                     // TODO handle the case that a measure after the first multiple rest measure can't be reduced
                     nextSourceMeasure.multipleRestMeasureNumber = idx2 + 1;
                     nextSourceMeasure.isReducedToMultiRest = true;
@@ -290,6 +297,7 @@ export abstract class MusicSheetCalculator {
         //this.graphicalMusicSheet.MusicPages[0].PositionAndShape.BorderMarginBottom += 9;
 
         // transform Relative to Absolute Positions
+        //This is called for each measure in calculate music systems (calculateLines -> calculateSkyBottomLines)
         GraphicalMusicSheet.transformRelativeToAbsolutePosition(this.graphicalMusicSheet);
     }
 
@@ -860,7 +868,7 @@ export abstract class MusicSheetCalculator {
         }
 
 
-        // build the MusicSystems
+        // build the MusicSystems (and StaffLines)
         const musicSystemBuilder: MusicSystemBuilder = new MusicSystemBuilder();
         musicSystemBuilder.initialize(this.graphicalMusicSheet, visibleMeasureList, numberOfStaffLines);
         this.musicSystems = musicSystemBuilder.buildMusicSystems();
@@ -2047,6 +2055,16 @@ export abstract class MusicSheetCalculator {
         } else if (!this.rules.RenderLyricist) {
             this.graphicalMusicSheet.Lyricist = undefined;
         }
+        if (musicSheet.Copyright !== undefined && this.rules.RenderCopyright) {
+            const copyright: GraphicalLabel = new GraphicalLabel(
+                musicSheet.Copyright, this.rules.SheetCopyrightHeight, TextAlignmentEnum.CenterBottom, this.rules);
+                copyright.Label.IsCreditLabel = true;
+                copyright.Label.colorDefault = defaultColorTitle;
+            this.graphicalMusicSheet.Copyright = copyright;
+            copyright.setLabelPositionAndShapeBorders();
+        } else if (!this.rules.RenderCopyright) {
+            this.graphicalMusicSheet.Copyright = undefined;
+        }
     }
 
     protected checkMeasuresForWholeRestNotes(): void {
@@ -2175,9 +2193,12 @@ export abstract class MusicSheetCalculator {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
         let firstSystemAbsoluteTopMargin: number = 10;
+        let lastSystemAbsoluteBottomMargin: number = -1;
         if (page.MusicSystems.length > 0) {
             const firstMusicSystem: MusicSystem = page.MusicSystems[0];
             firstSystemAbsoluteTopMargin = firstMusicSystem.PositionAndShape.RelativePosition.y + firstMusicSystem.PositionAndShape.BorderTop;
+            const lastMusicSystem: MusicSystem = page.MusicSystems[page.MusicSystems.length - 1];
+            lastSystemAbsoluteBottomMargin = lastMusicSystem.PositionAndShape.RelativePosition.y + lastMusicSystem.PositionAndShape.BorderBottom;
         }
         //const firstStaffLine: StaffLine = this.graphicalMusicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
         if (this.graphicalMusicSheet.Title && this.rules.RenderTitle) {
@@ -2268,6 +2289,17 @@ export abstract class MusicSheetCalculator {
             //relative.y = Math.max(relative.y, composer.PositionAndShape.RelativePosition.y);
             lyricist.PositionAndShape.RelativePosition = relative;
             page.Labels.push(lyricist);
+        }
+        const copyright: GraphicalLabel = this.graphicalMusicSheet.Copyright;
+        if (copyright && this.rules.RenderCopyright) {
+            copyright.PositionAndShape.Parent = page.PositionAndShape;
+            copyright.setLabelPositionAndShapeBorders();
+            const relative: PointF2D = new PointF2D();
+            relative.x = page.PositionAndShape.Size.width / 2;
+            relative.y = lastSystemAbsoluteBottomMargin + this.rules.SheetCopyrightMargin;
+            relative.y -= copyright.PositionAndShape.BorderTop;
+            copyright.PositionAndShape.RelativePosition = relative;
+            page.Labels.push(copyright);
         }
     }
 
@@ -2616,8 +2648,19 @@ export abstract class MusicSheetCalculator {
                                                           measure.parentSourceMeasure.AbsoluteTimestamp,
                                                           measure.parentSourceMeasure.CompleteNumberOfStaves),
                     staff);
+                if (staff.Voices.length === 0) {
+                    const newVoice: Voice = new Voice(measure.ParentStaff.ParentInstrument, -1);
+                    // this is problematic because we don't know the MusicXML voice ids and how many voices with which ids will be created after this.
+                    //   but it should only happen when the first measure of the piece is empty.
+                    staff.Voices.push(newVoice);
+                }
                 const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
-                const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined, sourceMeasure);
+                let duration: Fraction = sourceMeasure.Duration;
+                if (duration.RealValue === 0) {
+                    duration = sourceMeasure.ActiveTimeSignature.clone();
+                }
+                const note: Note = new Note(voiceEntry, sourceStaffEntry, duration, undefined, sourceMeasure, true);
+                note.IsWholeMeasureRest = true; // there may be a more elegant solution
                 note.PrintObject = this.rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
                   // don't display whole rest that wasn't given in XML, only for layout/voice completion
                 voiceEntry.Notes.push(note);
@@ -2630,7 +2673,8 @@ export abstract class MusicSheetCalculator {
                     note,
                     gve,
                     new ClefInstruction(),
-                    OctaveEnum.NONE, undefined);
+                    OctaveEnum.NONE,
+                    this.rules);
                 MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
                 gve.notes.push(graphicalNote);
             }
@@ -2780,6 +2824,14 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    private getFingeringPlacement(measure: GraphicalMeasure): PlacementEnum {
+        let placement: PlacementEnum = this.rules.FingeringPosition;
+        if (placement === PlacementEnum.NotYetDefined || placement === PlacementEnum.AboveOrBelow) {
+            placement = measure.isUpperStaffOfInstrument() ? PlacementEnum.Above : PlacementEnum.Below;
+        }
+        return placement;
+    }
+
     public calculateFingerings(): void {
         if (this.rules.FingeringPosition === PlacementEnum.Left ||
             this.rules.FingeringPosition === PlacementEnum.Right) {
@@ -2788,7 +2840,7 @@ export abstract class MusicSheetCalculator {
         for (const system of this.musicSystems) {
             for (const line of system.StaffLines) {
                 for (const measure of line.Measures) {
-                    const placement: PlacementEnum = measure.isUpperStaffOfInstrument() ? PlacementEnum.Above : PlacementEnum.Below;
+                    const placement: PlacementEnum = this.getFingeringPlacement(measure);
                     for (const gse of measure.staffEntries) {
                         gse.FingeringEntries = [];
                         const skybottomcalculator: SkyBottomLineCalculator = line.SkyBottomLineCalculator;

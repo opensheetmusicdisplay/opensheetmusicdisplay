@@ -320,7 +320,8 @@ export class VexFlowConverter {
                 //   (a whole rest note signifies a whole measure duration, unless the time signature is longer than 4 quarter notes, e.g. 6/4 or 3/2.
                 //   Note: this should not apply to most pickup measures, e.g. with an 8th pickup measure in a 3/4 time signature)
                 // const measureDuration: number = note.sourceNote.SourceMeasure.Duration.RealValue;
-                const isWholeMeasureRest: boolean =  baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
+                const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
+                    baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
                 if (isWholeMeasureRest) {
                     keys = ["d/5"];
                     duration = "w";

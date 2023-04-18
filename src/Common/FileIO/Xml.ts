@@ -103,4 +103,35 @@ export class IXmlElement {
         }
         return ret;
     }
+
+    /**
+     * Get the first child element with the given node name
+     * with all the children of consequent child elements with the same node name.
+     * for example two <notations> tags will be combined for better processing
+     * @param elementName
+     * @returns {IXmlElement}
+     */
+    public combinedElement(elementName: string): IXmlElement {
+        const nodes: NodeList = this.elem.childNodes;
+        if (nodes.length > 0) {
+            let firstNode: Node;
+            for (let i: number = 0, length: number = nodes.length; i < length; i += 1) {
+                const otherNode: Node = nodes[i];
+                if (otherNode.nodeType === Node.ELEMENT_NODE && otherNode.nodeName.toLowerCase() === elementName) {
+                    if (firstNode) {
+                        const childNodes: NodeList = otherNode.childNodes;
+                        for (let j: number = 0, numChildNodes: number = childNodes.length; j < numChildNodes; j += 1) {
+                            const childNode: Node = childNodes[j];
+                            firstNode.appendChild(childNode.cloneNode(true));
+                        }
+                    } else {
+                        firstNode = otherNode;
+                    }
+                }
+            }
+            if (firstNode) {
+                return new IXmlElement(firstNode as Element);
+            }
+        }
+    }
 }

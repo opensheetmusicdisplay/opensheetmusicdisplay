@@ -247,7 +247,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param currentClef the valid clef. Needed to put the accidentals on the right y-positions.
      */
     public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
-        if (!this.rules.RenderKeySignatures) {
+        if (!this.rules.RenderKeySignatures || !this.ShowKeySignature) {
+            return;
+        }
+        if (this.parentSourceMeasure?.isReducedToMultiRest && !this.rules.MultipleRestMeasureAddKeySignature) {
             return;
         }
         this.stave.setKeySignature(
