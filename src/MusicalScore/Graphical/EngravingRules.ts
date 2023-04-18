@@ -674,7 +674,7 @@ export class EngravingRules {
         this.MultipleRestMeasureDefaultWidth = 4;
         this.MultipleRestMeasureAddKeySignature = true;
 
-        this.FixedMeasureWidth = true;
+        this.FixedMeasureWidth = false;
         this.FixedMeasureWidthFixedValue = undefined; // only set to a number x if the width should be always x
 
         // Line Widths
