@@ -26,7 +26,7 @@ export class DrawingParameters {
     public drawErrors: boolean;
     public drawSelectionStartSymbol: boolean;
     public drawSelectionEndSymbol: boolean;
-    public drawCursors: boolean;
+    public drawCursors: boolean = true;
     public drawActivitySymbols: boolean;
     public drawScrollIndicator: boolean;
     public drawComments: boolean;
@@ -35,6 +35,7 @@ export class DrawingParameters {
     public drawSubtitle: boolean = true;
     public drawLyricist: boolean = true;
     public drawComposer: boolean = true;
+    public drawCopyright: boolean = false;
     public drawCredits: boolean = true;
     public drawPartNames: boolean = true;
     public coloringMode: ColoringModes;
@@ -174,6 +175,7 @@ export class DrawingParameters {
         this.DrawTitle = value;
         this.DrawSubtitle = value;
         this.DrawLyricist = value;
+        this.DrawCopyright = value;
     }
     // TODO these drawCredits settings are duplicate in drawingParameters and EngravingRules. Maybe we only need them in EngravingRules.
     // this sets the parameter in DrawingParameters, which in turn sets the parameter in EngravingRules.
@@ -223,6 +225,15 @@ export class DrawingParameters {
     public set DrawLyricist(value: boolean) {
         this.drawLyricist = value;
         this.rules.RenderLyricist = value;
+    }
+
+    public get DrawCopyright(): boolean {
+        return this.drawCopyright;
+    }
+
+    public set DrawCopyright(value: boolean) {
+        this.drawCopyright = value;
+        this.rules.RenderCopyright = value;
     }
 
     public get DrawPartNames(): boolean {

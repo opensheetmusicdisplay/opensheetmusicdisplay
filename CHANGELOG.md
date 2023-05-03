@@ -1,3 +1,23 @@
+## [1.7.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.7.4...1.7.5) (2023-03-24)
+
+
+### Bug Fixes
+
+* **Chord Symbols:** Fix chord symbols associated with the wrong note/timestamp ([#1270](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1270), PR [#1342](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1342)) ([f36ab0c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f36ab0cda960558c2d39f05a46ce82f2e97fe39b))
+* **Dorico Parsing:** Fix slur end missed when slur+tie stops simultaneous/in separate notation elements (PR [#1341](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1341)) ([cd4f125](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cd4f125ed04fc0da609d4a6a586c22eaf5a41937))
+* **EmptyMeasure:** Fix EngravingRules.FillEmptyMeasuresWithWholeRest = 1 (YesVisible) erroring when no voice was created yet (first measure) ([#1339](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1339)) ([1c1baf3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1c1baf333448f9310ddb071f1982e0f49a8cac3f))
+* **Fingering:** Don't place above for upper staff if EngravingRules.FingeringPosition was set to Below ([#1348](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1348), PR [#1349](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1349)) ([bdb1f51](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/bdb1f51ce71ec052287bea95d7b57fce725276a7))
+* **Multiple Rest Measures:** Fix an issue where the sheet containing pickup measures lead to the isReducedToMultiRest flag not set correctly ([#1327](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1327)) ([b5ba101](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b5ba101cd71a5faefd839485a34c3929df41876b))
+* **Multiple Rest Measures:** Fix repetition at the end of multiple rest measures not rendered ([#1333](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1333)) ([a7278cc](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a7278cc1b8046c50c2a98ee4e4cbd0862b3ece13))
+* **SVG Export / Tabs:** Fix tabnote not clearing/painting white rectangle around number (PR [#1321](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1321)) ([304076a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/304076a689d970a34f71d80ec5207493bd6e63a3))
+
+
+### Features
+
+* **Options:** Add GraphicalMeasure.ShowKeySignature, EngravingRules.MultipleRestMeasureAddKeySignature options ([#1329](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1329)) ([e8439a1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e8439a12bd349b3322a9fee88536897943b7190b))
+
+
+
 ## [1.7.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.7.3...1.7.4) (2023-02-02)
 
 

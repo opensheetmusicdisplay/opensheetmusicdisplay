@@ -23,6 +23,7 @@ import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstru
 import {RepetitionCalculator} from "./MusicSymbolModules/RepetitionCalculator";
 import {EngravingRules} from "../Graphical/EngravingRules";
 import { ReaderPluginManager } from "./ReaderPluginManager";
+import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
@@ -506,6 +507,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private pushSheetLabels(root: IXmlElement, filePath: string): void {
         this.readComposer(root);
         this.readTitle(root);
+        this.readCopyright(root);
         try {
             if (!this.musicSheet.Title || !this.musicSheet.Composer) {
                 this.readTitleAndComposerFromCredits(root); // this can also throw an error
@@ -550,6 +552,23 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     }
                     if (this.presentAttrsWithValue(creator, "lyricist") || this.presentAttrsWithValue(creator, "poet")) {
                         this.musicSheet.Lyricist = new Label(this.trimString(creator.value));
+                    }
+                }
+            }
+        }
+    }
+
+    private readCopyright(root: IXmlElement): void {
+        const idElements: IXmlElement[] = root.elements("identification");
+        if(idElements.length > 0){
+            const idElement: IXmlElement = idElements[0];
+            const rightElements: IXmlElement[] = idElement.elements("rights");
+            if(rightElements.length > 0){
+                for(let idx: number = 0, len: number = rightElements.length; idx < len; ++idx){
+                    const rightElement: IXmlElement = rightElements[idx];
+                    if(rightElement.value){
+                        this.musicSheet.Copyright = new Label(rightElement.value, TextAlignmentEnum.CenterBottom, undefined, true);
+                        break;
                     }
                 }
             }

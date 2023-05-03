@@ -16,7 +16,6 @@ import {ClefEnum} from "../VoiceData/Instructions/ClefInstruction";
 import {RhythmSymbolEnum} from "../VoiceData/Instructions/RhythmInstruction";
 import {KeyEnum} from "../VoiceData/Instructions/KeyInstruction";
 import {IXmlAttribute} from "../../Common/FileIO/Xml";
-import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
 import log from "loglevel";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {ChordSymbolReader} from "./MusicSymbolModules/ChordSymbolReader";
@@ -41,11 +40,6 @@ import { ReaderPluginManager } from "./ReaderPluginManager";
 //  public static addMetronomeSettings(xmlNode: IXmlElement, musicSheet: MusicSheet): void { }
 //  public static readMetronomeInstructions(xmlNode: IXmlElement, musicSheet: MusicSheet, currentXmlMeasureIndex: number): void { }
 //  public static readTempoInstruction(soundNode: IXmlElement, musicSheet: MusicSheet, currentXmlMeasureIndex: number): void { }
-//}
-//
-//class ChordSymbolReader {
-//  public static readChordSymbol(xmlNode:IXmlElement, musicSheet:MusicSheet, activeKey:any): void {
-//  }
 //}
 
 
@@ -93,7 +87,8 @@ export class InstrumentReader {
   private activeClefsHaveBeenInitialized: boolean[];
   private activeKeyHasBeenInitialized: boolean = false;
   private abstractInstructions: [number, AbstractNotationInstruction, Fraction][] = [];
-  private openChordSymbolContainers: ChordSymbolContainer[] = [];
+  //TODO: remove line below if it is not needed anymore?
+  //private openChordSymbolContainers: ChordSymbolContainer[] = [];
   private expressionReaders: ExpressionReader[];
   private currentVoiceGenerator: VoiceGenerator;
   //private openSlurDict: { [n: number]: Slur; } = {};
@@ -163,269 +158,13 @@ export class InstrumentReader {
           if (newPageAttr?.value === "yes") {
             currentMeasure.printNewPageXml = true;
           }
-        } else if (xmlNode.name === "note") {
-          let printObject: boolean = true;
-          if (xmlNode.attribute("print-object")?.value === "no") {
-              printObject = false; // note will not be rendered, but still parsed for Playback etc.
-              // if (xmlNode.attribute("print-spacing")) {
-              //   if (xmlNode.attribute("print-spacing").value === "yes" {
-              //     // TODO give spacing for invisible notes even when not displayed. might be hard with Vexflow formatting
-          }
-          let noteStaff: number = 1;
-          if (this.instrument.Staves.length > 1) {
-            if (xmlNode.element("staff")) {
-              noteStaff = parseInt(xmlNode.element("staff").value, 10);
-              if (isNaN(noteStaff)) {
-                log.debug("InstrumentReader.readNextXmlMeasure.get staff number");
-                noteStaff = 1;
-              }
-            }
-          }
-
-          this.currentStaff = this.instrument.Staves[noteStaff - 1];
-          const isChord: boolean = xmlNode.element("chord") !== undefined;
-          if (xmlNode.element("voice")) {
-            const noteVoice: number = parseInt(xmlNode.element("voice").value, 10);
-            this.currentVoiceGenerator = this.getOrCreateVoiceGenerator(noteVoice, noteStaff - 1);
-          } else {
-            if (!isChord || !this.currentVoiceGenerator) {
-              this.currentVoiceGenerator = this.getOrCreateVoiceGenerator(1, noteStaff - 1);
-            }
-          }
-          let noteDivisions: number = 0;
-          let noteDuration: Fraction = new Fraction(0, 1);
-          let normalNotes: number = 2;
-          let typeDuration: Fraction = undefined;
-          let isTuplet: boolean = false;
-          if (xmlNode.element("duration")) {
-            noteDivisions = parseInt(xmlNode.element("duration").value, 10);
-            if (!isNaN(noteDivisions)) {
-              noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
-              if (noteDivisions === 0) {
-                noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
-              } else {
-                typeDuration = this.getNoteDurationFromTypeNode(xmlNode);
-              }
-              if (xmlNode.element("time-modification")) {
-                noteDuration = this.getNoteDurationForTuplet(xmlNode);
-                const time: IXmlElement = xmlNode.element("time-modification");
-                if (time?.element("normal-notes")) {
-                  normalNotes = parseInt(time.element("normal-notes").value, 10);
-                }
-                isTuplet = true;
-              }
-            } else {
-              const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
-              this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-              log.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
-              continue;
-            }
-          }
-
-          const restNote: boolean = xmlNode.element("rest") !== undefined;
-          //log.info("New note found!", noteDivisions, noteDuration.toString(), restNote);
-
-          const notationsNode: IXmlElement = xmlNode.element("notations"); // used for multiple checks further on
-
-          const isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
-          let graceNoteSlash: boolean = false;
-          let graceSlur: boolean = false;
-          if (isGraceNote) {
-            const graceNode: IXmlElement = xmlNode.element("grace");
-            if (graceNode && graceNode.attributes()) {
-              if (graceNode.attribute("slash")) {
-                const slash: string = graceNode.attribute("slash").value;
-                if (slash === "yes") {
-                  graceNoteSlash = true;
-                }
-              }
-            }
-
-            noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
-
-            const notationNode: IXmlElement = xmlNode.element("notations");
-            if (notationNode) {
-              if (notationNode.element("slur")) {
-                graceSlur = true;
-                // grace slurs could be non-binary, but VexFlow.GraceNoteGroup modifier system is currently only boolean for slurs.
-              }
-            }
-          }
-
-          // check for cue note
-          let isCueNote: boolean = false;
-          const cueNode: IXmlElement = xmlNode.element("cue");
-          if (cueNode) {
-            isCueNote = true;
-          }
-          // alternative: check for <type size="cue">
-          const typeNode: IXmlElement = xmlNode.element("type");
-          let noteTypeXml: NoteType = NoteType.UNDEFINED;
-          if (typeNode) {
-            const sizeAttr: Attr = typeNode.attribute("size");
-            if (sizeAttr?.value === "cue") {
-              isCueNote = true;
-            }
-            noteTypeXml = NoteTypeHandler.StringToNoteType(typeNode.value);
-          }
-
-          // check stem element
-          let stemDirectionXml: StemDirectionType = StemDirectionType.Undefined;
-          let stemColorXml: string;
-          const stemNode: IXmlElement = xmlNode.element("stem");
-          if (stemNode) {
-            switch (stemNode.value) {
-              case "down":
-                stemDirectionXml = StemDirectionType.Down;
-                break;
-              case "up":
-                stemDirectionXml = StemDirectionType.Up;
-                break;
-              case "double":
-                stemDirectionXml = StemDirectionType.Double;
-                break;
-              case "none":
-                stemDirectionXml = StemDirectionType.None;
-                break;
-              default:
-                stemDirectionXml = StemDirectionType.Undefined;
-            }
-
-            const stemColorAttr: Attr = stemNode.attribute("color");
-            if (stemColorAttr) { // can be null, maybe also undefined
-              stemColorXml = this.parseXmlColor(stemColorAttr.value);
-            }
-          }
-
-          // check Tremolo
-          let tremoloStrokes: number = 0;
-          let vibratoStrokes: boolean = false;
-          if (notationsNode) {
-            const ornamentsNode: IXmlElement = notationsNode.element("ornaments");
-            if (ornamentsNode) {
-              const tremoloNode: IXmlElement = ornamentsNode.element("tremolo");
-              if (tremoloNode) {
-                const tremoloType: Attr = tremoloNode.attribute("type");
-                if (tremoloType && tremoloType.value === "single") {
-                  const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
-                  if (tremoloStrokesGiven > 0) {
-                    tremoloStrokes = tremoloStrokesGiven;
-                  }
-                }
-                // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
-              }
-              const vibratoNode: IXmlElement = ornamentsNode.element("wavy-line");
-              if (vibratoNode !== undefined) {
-                const vibratoType: Attr = vibratoNode.attribute("type");
-                if (vibratoType && vibratoType.value === "start") {
-                  vibratoStrokes = true;
-                }
-              }
-            }
-          }
-
-          // check notehead/color
-          let noteheadColorXml: string;
-          const noteheadNode: IXmlElement = xmlNode.element("notehead");
-          if (noteheadNode) {
-            const colorAttr: Attr = noteheadNode.attribute("color");
-            if (colorAttr) {
-              noteheadColorXml = this.parseXmlColor(colorAttr.value);
-            }
-          }
-
-          let noteColorXml: string;
-          const noteColorAttr: Attr = xmlNode.attribute("color");
-          if (noteColorAttr) { // can be undefined
-            noteColorXml = this.parseXmlColor(noteColorAttr.value);
-            if (!noteheadColorXml) {
-              noteheadColorXml = noteColorXml;
-            }
-            if (!stemColorXml) {
-              stemColorXml = noteColorXml;
-            }
-          }
-
-          let musicTimestamp: Fraction = currentFraction.clone();
-          if (isChord) {
-            musicTimestamp = previousFraction.clone();
-          }
-          this.currentStaffEntry = this.currentMeasure.findOrCreateStaffEntry(
-            musicTimestamp,
-            this.inSourceMeasureInstrumentIndex + noteStaff - 1,
-            this.currentStaff
-          ).staffEntry;
-          //log.info("currentStaffEntry", this.currentStaffEntry, this.currentMeasure.VerticalSourceStaffEntryContainers.length);
-
-          if (!this.currentVoiceGenerator.hasVoiceEntry()
-            || (!isChord && !isGraceNote && !lastNoteWasGrace)
-            || (isGraceNote && !lastNoteWasGrace)
-            || (isGraceNote && !isChord)
-            || (!isGraceNote && lastNoteWasGrace)
-          ) {
-            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote && !isGraceNote,
-                                                        isGraceNote, graceNoteSlash, graceSlur);
-          }
-          if (!isGraceNote && !isChord) {
-            previousFraction = currentFraction.clone();
-            currentFraction.Add(noteDuration);
-          }
-          if (
-            isChord &&
-            this.currentStaffEntry !== undefined &&
-            this.currentStaffEntry.ParentStaff !== this.currentStaff
-          ) {
-            this.currentStaffEntry = this.currentVoiceGenerator.checkForStaffEntryLink(
-              this.inSourceMeasureInstrumentIndex + noteStaff - 1, this.currentStaff, this.currentStaffEntry, this.currentMeasure
-            );
-          }
-          const beginOfMeasure: boolean = (
-            this.currentStaffEntry !== undefined &&
-            this.currentStaffEntry.Timestamp !== undefined &&
-            this.currentStaffEntry.Timestamp.Equals(new Fraction(0, 1)) && !this.currentStaffEntry.hasNotes()
-          );
-          this.saveAbstractInstructionList(this.instrument.Staves.length, beginOfMeasure);
-          if (this.openChordSymbolContainers.length !== 0) {
-            this.currentStaffEntry.ChordContainers = this.openChordSymbolContainers;
-            // TODO handle multiple chords on one note/staffentry
-            this.openChordSymbolContainers = [];
-          }
-          if (this.activeRhythm) {
-            // (*) this.musicSheet.SheetPlaybackSetting.Rhythm = this.activeRhythm.Rhythm;
-          }
-          if (!isTuplet && !isGraceNote) {
-            noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
-          }
-          const dots: number = xmlNode.elements("dot").length;
-          this.currentVoiceGenerator.read(
-            xmlNode, noteDuration, typeDuration, noteTypeXml, normalNotes, restNote,
-            this.currentStaffEntry, this.currentMeasure,
-            measureStartAbsoluteTimestamp,
-            this.maxTieNoteFraction, isChord, octavePlusOne,
-            printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
-            vibratoStrokes, dots
-          );
-
-          // notationsNode created further up for multiple checks
-          if (notationsNode !== undefined && notationsNode.element("dynamics")) {
-            const expressionReader: ExpressionReader = this.expressionReaders[this.readExpressionStaffNumber(xmlNode) - 1];
-            if (expressionReader) {
-             expressionReader.readExpressionParameters(
-               xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, false
-             );
-             expressionReader.read(
-               xmlNode, this.currentMeasure, previousFraction
-             );
-            }
-          }
-          lastNoteWasGrace = isGraceNote;
         } else if (xmlNode.name === "attributes") {
           const divisionsNode: IXmlElement = xmlNode.element("divisions");
           if (divisionsNode) {
             this.divisions = parseInt(divisionsNode.value, 10);
             if (isNaN(this.divisions)) {
               const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError",
-                                                                      "Invalid divisions value at Instrument: ");
+                  "Invalid divisions value at Instrument: ");
               log.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
               this.divisions = this.readDivisionsFromNotes();
               if (this.divisions > 0) {
@@ -437,9 +176,9 @@ export class InstrumentReader {
             }
           }
           if (
-            !xmlNode.element("divisions") &&
-            this.divisions === 0 &&
-            this.currentXmlMeasureIndex === 0
+              !xmlNode.element("divisions") &&
+              this.divisions === 0 &&
+              this.currentXmlMeasureIndex === 0
           ) {
             const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ");
             this.divisions = this.readDivisionsFromNotes();
@@ -452,7 +191,7 @@ export class InstrumentReader {
           }
           this.addAbstractInstruction(xmlNode, octavePlusOne, previousNode, currentFraction.clone());
           if (currentFraction.Equals(new Fraction(0, 1)) &&
-            this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
+              this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveAbstractInstructionList(this.instrument.Staves.length, true);
           }
           if (this.isAttributesNodeAtEndOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode, currentFraction)) {
@@ -499,7 +238,174 @@ export class InstrumentReader {
               }
             }
           }
+        } else if (xmlNode.name === "note") {
+          let printObject: boolean = true;
+          if (xmlNode.attribute("print-object")?.value === "no") {
+              printObject = false; // note will not be rendered, but still parsed for Playback etc.
+              // if (xmlNode.attribute("print-spacing")) {
+              //   if (xmlNode.attribute("print-spacing").value === "yes" {
+              //     // TODO give spacing for invisible notes even when not displayed. might be hard with Vexflow formatting
+          }
+          const noteStaff: number = this.getNoteStaff(xmlNode);
 
+          this.currentStaff = this.instrument.Staves[noteStaff - 1];
+          const isChord: boolean = xmlNode.element("chord") !== undefined;
+          if (xmlNode.element("voice")) {
+            const noteVoice: number = parseInt(xmlNode.element("voice").value, 10);
+            this.currentVoiceGenerator = this.getOrCreateVoiceGenerator(noteVoice, noteStaff - 1);
+          } else {
+            if (!isChord || !this.currentVoiceGenerator) {
+              this.currentVoiceGenerator = this.getOrCreateVoiceGenerator(1, noteStaff - 1);
+            }
+          }
+          let noteDivisions: number = 0;
+          let noteDuration: Fraction = new Fraction(0, 1);
+          let normalNotes: number = 2;
+          let typeDuration: Fraction = undefined;
+          let isTuplet: boolean = false;
+          if (xmlNode.element("duration")) {
+            noteDivisions = parseInt(xmlNode.element("duration").value, 10);
+            if (!isNaN(noteDivisions)) {
+              noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
+              if (noteDivisions === 0) {
+                noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
+              } else {
+                typeDuration = this.getNoteDurationFromTypeNode(xmlNode);
+              }
+              if (xmlNode.element("time-modification")) {
+                noteDuration = this.getNoteDurationForTuplet(xmlNode);
+                const time: IXmlElement = xmlNode.element("time-modification");
+                if (time?.element("normal-notes")) {
+                  normalNotes = parseInt(time.element("normal-notes").value, 10);
+                }
+                isTuplet = true;
+              }
+            } else {
+              const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
+              this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+              log.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
+              continue;
+            }
+          }
+
+          const restNote: boolean = xmlNode.element("rest") !== undefined;
+          //log.info("New note found!", noteDivisions, noteDuration.toString(), restNote);
+
+          const notationsNode: IXmlElement = xmlNode.combinedElement("notations"); // select all notation nodes
+
+          const isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
+          let graceNoteSlash: boolean = false;
+          let graceSlur: boolean = false;
+          if (isGraceNote) {
+            const graceNode: IXmlElement = xmlNode.element("grace");
+            if (graceNode && graceNode.attributes()) {
+              if (graceNode.attribute("slash")) {
+                const slash: string = graceNode.attribute("slash").value;
+                if (slash === "yes") {
+                  graceNoteSlash = true;
+                }
+              }
+            }
+
+            noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
+
+            if (notationsNode && notationsNode.element("slur")) {
+              graceSlur = true;
+              // grace slurs could be non-binary, but VexFlow.GraceNoteGroup modifier system is currently only boolean for slurs.
+            }
+          }
+
+          // check for cue note
+          const [isCueNote, noteTypeXml] = this.getCueNoteAndNoteTypeXml(xmlNode);
+
+          // check stem element
+          const [stemDirectionXml, stemColorXml, noteheadColorXml] = this.getStemDirectionAndColors(xmlNode);
+
+          // check Tremolo
+          let tremoloStrokes: number = 0;
+          let vibratoStrokes: boolean = false;
+          if (notationsNode) {
+            const ornamentsNode: IXmlElement = notationsNode.element("ornaments");
+            if (ornamentsNode) {
+              tremoloStrokes = this.getTremoloStrokes(ornamentsNode);
+              vibratoStrokes = this.getVibratoStrokes(ornamentsNode);
+            }
+          }
+
+          const musicTimestamp: Fraction = isChord ? previousFraction.clone() : currentFraction.clone();
+          this.currentStaffEntry = this.currentMeasure.findOrCreateStaffEntry(
+            musicTimestamp,
+            this.inSourceMeasureInstrumentIndex + noteStaff - 1,
+            this.currentStaff
+          ).staffEntry;
+          //log.info("currentStaffEntry", this.currentStaffEntry, this.currentMeasure.VerticalSourceStaffEntryContainers.length);
+
+          if (!this.currentVoiceGenerator.hasVoiceEntry()
+            || (!isChord && !isGraceNote && !lastNoteWasGrace)
+            || (isGraceNote && !lastNoteWasGrace)
+            || (isGraceNote && !isChord)
+            || (!isGraceNote && lastNoteWasGrace)
+          ) {
+            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote && !isGraceNote,
+                                                        isGraceNote, graceNoteSlash, graceSlur);
+          }
+          if (!isGraceNote && !isChord) {
+            previousFraction = currentFraction.clone();
+            currentFraction.Add(noteDuration);
+          }
+          if (
+            isChord &&
+            this.currentStaffEntry !== undefined &&
+            this.currentStaffEntry.ParentStaff !== this.currentStaff
+          ) {
+            this.currentStaffEntry = this.currentVoiceGenerator.checkForStaffEntryLink(
+              this.inSourceMeasureInstrumentIndex + noteStaff - 1, this.currentStaff, this.currentStaffEntry, this.currentMeasure
+            );
+          }
+          const beginOfMeasure: boolean = (
+            this.currentStaffEntry !== undefined &&
+            this.currentStaffEntry.Timestamp !== undefined &&
+            this.currentStaffEntry.Timestamp.Equals(new Fraction(0, 1)) && !this.currentStaffEntry.hasNotes()
+          );
+          this.saveAbstractInstructionList(this.instrument.Staves.length, beginOfMeasure);
+          // this if block handles harmony/chords on the next note/staffentry element, so it assumes that a
+          //   harmony is given before the staff entry, but when a harmony is given after a staff entry element with a backup node,
+          //   it is put on the next note/staffentry and the last chord item is never parsed at all.
+          //   see PR #1342
+          // if (this.openChordSymbolContainers.length !== 0) {
+          //   this.currentStaffEntry.ChordContainers = this.openChordSymbolContainers;
+          //   // TODO handle multiple chords on one note/staffentry
+          //   this.openChordSymbolContainers = [];
+          // }
+          if (this.activeRhythm) {
+            // (*) this.musicSheet.SheetPlaybackSetting.Rhythm = this.activeRhythm.Rhythm;
+          }
+          if (!isTuplet && !isGraceNote) {
+            noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
+          }
+          const dots: number = xmlNode.elements("dot").length;
+          this.currentVoiceGenerator.read(
+            xmlNode, noteDuration, typeDuration, noteTypeXml, normalNotes, restNote,
+            this.currentStaffEntry, this.currentMeasure,
+            measureStartAbsoluteTimestamp,
+            this.maxTieNoteFraction, isChord, octavePlusOne,
+            printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
+            vibratoStrokes, dots
+          );
+
+          // notationsNode created further up for multiple checks
+          if (notationsNode !== undefined && notationsNode.element("dynamics")) {
+            const expressionReader: ExpressionReader = this.expressionReaders[this.readExpressionStaffNumber(xmlNode) - 1];
+            if (expressionReader) {
+             expressionReader.readExpressionParameters(
+               xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, false
+             );
+             expressionReader.read(
+               xmlNode, this.currentMeasure, previousFraction
+             );
+            }
+          }
+          lastNoteWasGrace = isGraceNote;
         } else if (xmlNode.name === "forward") {
           const forFraction: number = parseInt(xmlNode.element("duration").value, 10);
           currentFraction.Add(new Fraction(forFraction, 4 * this.divisions));
@@ -586,8 +492,13 @@ export class InstrumentReader {
             log.debug("InstrumentReader.readTempoInstruction", e);
           }
         } else if (xmlNode.name === "harmony") {
+          const noteStaff: number = this.getNoteStaff(xmlNode);
+          this.currentStaff = this.instrument.Staves[noteStaff - 1];
           // new chord, could be second chord on same staffentry/note
-          this.openChordSymbolContainers.push(ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey));
+          const musicTimestamp: Fraction = currentFraction.clone();
+          this.currentStaffEntry = this.currentMeasure.findOrCreateStaffEntry(
+              musicTimestamp, this.inSourceMeasureInstrumentIndex + noteStaff - 1, this.currentStaff).staffEntry;
+          this.currentStaffEntry.ChordContainers.push(ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey));
         }
       }
       for (const j in this.voiceGeneratorsDict) {
@@ -633,6 +544,32 @@ export class InstrumentReader {
     this.previousMeasure = this.currentMeasure;
     this.currentXmlMeasureIndex += 1;
     return true;
+  }
+
+  private getStemDirectionAndColors(xmlNode: IXmlElement): [StemDirectionType, string, string] {
+    let stemDirectionXml: StemDirectionType = StemDirectionType.Undefined;
+    let stemColorXml: string;
+    const stemNode: IXmlElement = xmlNode.element("stem");
+    if (stemNode) {
+      stemDirectionXml = this.getStemDirectionType(stemNode);
+
+      const stemColorAttr: Attr = stemNode.attribute("color");
+      if (stemColorAttr) { // can be null, maybe also undefined
+        stemColorXml = this.parseXmlColor(stemColorAttr.value);
+      }
+    }
+
+    // check notehead/color
+    let noteheadColorXml: string = this.getNoteHeadColorXml(xmlNode);
+    const noteColorXml: string = this.getNoteColorXml(xmlNode);
+
+    if (noteColorXml && !noteheadColorXml) {
+      noteheadColorXml = noteColorXml;
+    }
+    if (noteColorXml && !stemColorXml) {
+      stemColorXml = noteColorXml;
+    }
+    return [stemDirectionXml, stemColorXml, noteheadColorXml];
   }
 
   /** Parse a color in XML format. Can be #ARGB or #RGB format, colors as byte hex values.
@@ -1424,5 +1361,98 @@ export class InstrumentReader {
       }
     }
     return divisionsFromNote;
+  }
+
+  private getCueNoteAndNoteTypeXml(xmlNode: IXmlElement): [boolean, NoteType] {
+    const cueNode: IXmlElement = xmlNode.element("cue");
+    let isCueNote: boolean = false;
+    if (cueNode) {
+      isCueNote = true;
+    }
+
+    const typeNode: IXmlElement = xmlNode.element("type");
+    let noteTypeXml: NoteType = NoteType.UNDEFINED;
+    if (typeNode) {
+      const sizeAttr: Attr = typeNode.attribute("size");
+      if (sizeAttr?.value === "cue") {
+        isCueNote = true;
+      }
+      noteTypeXml = NoteTypeHandler.StringToNoteType(typeNode.value);
+    }
+    return [isCueNote, noteTypeXml];
+  }
+
+  private getStemDirectionType(stemNode: IXmlElement): StemDirectionType {
+    switch (stemNode.value) {
+      case "down":
+        return StemDirectionType.Down;
+      case "up":
+        return StemDirectionType.Up;
+      case "double":
+        return StemDirectionType.Double;
+      case "none":
+        return StemDirectionType.None;
+      default:
+        return StemDirectionType.Undefined;
+    }
+  }
+
+  private getNoteHeadColorXml(xmlNode: IXmlElement): string | null {
+    const noteheadNode: IXmlElement = xmlNode.element("notehead");
+    if (noteheadNode) {
+      const colorAttr: Attr = noteheadNode.attribute("color");
+      if (colorAttr) {
+        return this.parseXmlColor(colorAttr.value);
+      }
+    }
+    return null;
+  }
+
+  private getNoteColorXml(xmlNode: IXmlElement): string | null {
+    const noteColorAttr: Attr = xmlNode.attribute("color");
+    if (noteColorAttr) { // can be undefined
+      return this.parseXmlColor(noteColorAttr.value);
+    }
+    return null;
+  }
+
+  private getTremoloStrokes(ornamentsNode: IXmlElement): number {
+    const tremoloNode: IXmlElement = ornamentsNode.element("tremolo");
+    if (tremoloNode) {
+      const tremoloType: Attr = tremoloNode.attribute("type");
+      if (tremoloType && tremoloType.value === "single") {
+        const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+        if (tremoloStrokesGiven > 0) {
+          return tremoloStrokesGiven;
+        }
+      }
+      // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
+    }
+    return 0;
+  }
+
+  private getVibratoStrokes(ornamentsNode: IXmlElement): boolean {
+    const vibratoNode: IXmlElement = ornamentsNode.element("wavy-line");
+    if (vibratoNode !== undefined) {
+      const vibratoType: Attr = vibratoNode.attribute("type");
+      if (vibratoType && vibratoType.value === "start") {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private getNoteStaff(xmlNode: IXmlElement): number {
+    let noteStaff: number = 1;
+    if (this.instrument.Staves.length > 1) {
+      if (xmlNode.element("staff")) {
+        noteStaff = parseInt(xmlNode.element("staff").value, 10);
+        if (isNaN(noteStaff)) {
+          log.debug("InstrumentReader.readNextXmlMeasure.get staff number");
+          noteStaff = 1;
+        }
+      }
+    }
+    return noteStaff;
   }
 }

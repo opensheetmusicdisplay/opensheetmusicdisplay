@@ -2,12 +2,13 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>test_graceslash_simple</work-title>
+    <work-title>test_multiple_rest_measures_repeat_3_measures</work-title>
     </work>
   <identification>
+    <creator type="composer">Composer</creator>
     <encoding>
       <software>MuseScore 3.6.2</software>
-      <encoding-date>2021-12-08</encoding-date>
+      <encoding-date>2023-02-16</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -17,23 +18,23 @@
     </identification>
   <defaults>
     <scaling>
-      <millimeters>7</millimeters>
+      <millimeters>6.99911</millimeters>
       <tenths>40</tenths>
       </scaling>
     <page-layout>
-      <page-height>1697.14</page-height>
-      <page-width>1200</page-width>
+      <page-height>1596.77</page-height>
+      <page-width>1233.87</page-width>
       <page-margins type="even">
-        <left-margin>85.7143</left-margin>
-        <right-margin>85.7143</right-margin>
-        <top-margin>85.7143</top-margin>
-        <bottom-margin>85.7143</bottom-margin>
+        <left-margin>85.7252</left-margin>
+        <right-margin>85.7252</right-margin>
+        <top-margin>85.7252</top-margin>
+        <bottom-margin>85.7252</bottom-margin>
         </page-margins>
       <page-margins type="odd">
-        <left-margin>85.7143</left-margin>
-        <right-margin>85.7143</right-margin>
-        <top-margin>85.7143</top-margin>
-        <bottom-margin>85.7143</bottom-margin>
+        <left-margin>85.7252</left-margin>
+        <right-margin>85.7252</right-margin>
+        <top-margin>85.7252</top-margin>
+        <bottom-margin>85.7252</bottom-margin>
         </page-margins>
       </page-layout>
     <word-font font-family="Edwin" font-size="10"/>
@@ -41,12 +42,9 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="600" default-y="1611.43" justify="center" valign="top" font-size="22">b</credit-words>
+    <credit-words default-x="616.935" default-y="1511.05" justify="center" valign="top" font-size="22">repeat-test</credit-words>
     </credit>
   <part-list>
-    <part-group type="start" number="1">
-      <group-symbol>brace</group-symbol>
-      </part-group>
     <score-part id="P1">
       <part-name>Piano</part-name>
       <part-abbreviation>Pno.</part-abbreviation>
@@ -63,12 +61,12 @@
       </score-part>
     </part-list>
   <part id="P1">
-    <measure number="1" width="455.36">
+    <measure number="1" width="231.90">
       <print>
         <system-layout>
           <system-margins>
             <left-margin>50.00</left-margin>
-            <right-margin>523.21</right-margin>
+            <right-margin>596.88</right-margin>
             </system-margins>
           <top-system-distance>170.00</top-system-distance>
           </system-layout>
@@ -76,7 +74,7 @@
       <attributes>
         <divisions>1</divisions>
         <key>
-          <fifths>-3</fifths>
+          <fifths>0</fifths>
           </key>
         <time>
           <beats>4</beats>
@@ -86,57 +84,32 @@
           <sign>G</sign>
           <line>2</line>
           </clef>
+        <measure-style>
+          <multiple-rest>3</multiple-rest>
+          </measure-style>
         </attributes>
-      <note default-x="118.84" default-y="0.00">
-        <grace slash="yes"/>
-        <pitch>
-          <step>F</step>
-          <octave>5</octave>
-          </pitch>
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
         <voice>1</voice>
-        <type>eighth</type>
-        <stem>up</stem>
-        <beam number="1">begin</beam>
         </note>
-      <note default-x="129.34" default-y="5.00">
-        <grace slash="yes"/>
-        <pitch>
-          <step>G</step>
-          <octave>5</octave>
-          </pitch>
+      </measure>
+	<measure number="2" width="181.22">
+	  <note>
+		<rest measure="yes"/>
+		<duration>4</duration>
+		<voice>1</voice>
+		</note>
+	  </measure>
+    <measure number="3" width="181.22">
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
         <voice>1</voice>
-        <type>eighth</type>
-        <stem>up</stem>
-        <beam number="1">end</beam>
-        </note>
-      <note default-x="140.44" default-y="10.00">
-        <pitch>
-          <step>A</step>
-          <alter>-1</alter>
-          <octave>5</octave>
-          </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>half</type>
-        <stem>down</stem>
-        </note>
-      <note default-x="292.57" default-y="-15.00">
-        <pitch>
-          <step>C</step>
-          <octave>5</octave>
-          </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>half</type>
-        <stem>down</stem>
-        <notations>
-          <articulations>
-            <staccato/>
-            </articulations>
-          </notations>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
+        <repeat direction="backward"/>
         </barline>
       </measure>
     </part>
