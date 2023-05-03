@@ -258,6 +258,9 @@ async function init () {
     osmdInstance.EngravingRules.PageLeftMargin = 4;
     osmdInstance.EngravingRules.PageRightMargin = 4;
     osmdInstance.EngravingRules.AutoGenerateMutipleRestMeasuresFromRestMeasures = false;
+    osmdInstance.EngravingRules.TupletNumberLimitConsecutiveRepetitions = false;
+    osmdInstance.EngravingRules.ChordOverlapAllowedIntoNextMeasure = 5;
+    // osmdInstance.EngravingRules.LyricsAlignmentStandard = 3;
     osmdInstance.zoom = 2.0
     // for more options check OSMDOptions.ts
 
