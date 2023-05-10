@@ -198,7 +198,7 @@ export abstract class MusicSheetCalculator {
             }
         }
 
-        if (this.rules.AutoGenerateMutipleRestMeasuresFromRestMeasures && this.rules.RenderMultipleRestMeasures) {
+        if (this.rules.AutoGenerateMultipleRestMeasuresFromRestMeasures && this.rules.RenderMultipleRestMeasures) {
             //track number of multirests
             let beginMultiRestMeasure: SourceMeasure = undefined;
             let multiRestCount: number = 0;

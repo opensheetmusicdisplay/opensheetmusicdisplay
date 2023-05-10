@@ -255,7 +255,7 @@ export interface IOSMDOptions {
      * Set to true if subsequent measures full of rests should be auto-converted to multi-rest measure. Default is true
      * This works across instruments- If all instruments have subsequent measures with nothing but rests, multirest measures are generated
      */
-    autoGenerateMutipleRestMeasuresFromRestMeasures?: boolean;
+    autoGenerateMultipleRestMeasuresFromRestMeasures?: boolean;
     /**
      * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used.
      */
