@@ -605,8 +605,8 @@ export class OpenSheetMusicDisplay {
         if (options.stretchLastSystemLine !== undefined) {
             this.rules.StretchLastSystemLine = options.stretchLastSystemLine;
         }
-        if (options.autoGenerateMutipleRestMeasuresFromRestMeasures !== undefined) {
-            this.rules.AutoGenerateMutipleRestMeasuresFromRestMeasures = options.autoGenerateMutipleRestMeasuresFromRestMeasures;
+        if (options.autoGenerateMultipleRestMeasuresFromRestMeasures !== undefined) {
+            this.rules.AutoGenerateMultipleRestMeasuresFromRestMeasures = options.autoGenerateMultipleRestMeasuresFromRestMeasures;
         }
         if (options.cursorsOptions !== undefined) {
             this.cursorsOptions = options.cursorsOptions;

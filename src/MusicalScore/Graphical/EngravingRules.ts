@@ -344,7 +344,7 @@ export class EngravingRules {
     public RenderLyrics: boolean;
     public RenderChordSymbols: boolean;
     public RenderMultipleRestMeasures: boolean;
-    public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
+    public AutoGenerateMultipleRestMeasuresFromRestMeasures: boolean;
     public RenderRehearsalMarks: boolean;
     public RenderClefsAtBeginningOfStaffline: boolean;
     public RenderKeySignatures: boolean;
@@ -738,7 +738,7 @@ export class EngravingRules {
         this.RenderLyrics = true;
         this.RenderChordSymbols = true;
         this.RenderMultipleRestMeasures = true;
-        this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;
+        this.AutoGenerateMultipleRestMeasuresFromRestMeasures = true;
         this.RenderRehearsalMarks = true;
         this.RenderClefsAtBeginningOfStaffline = true;
         this.RenderKeySignatures = true;
