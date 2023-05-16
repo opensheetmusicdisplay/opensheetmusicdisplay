@@ -77,7 +77,7 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
      * @param graphicalStaffEntry the staff entry that holds the end note
      */
     public setEndNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
-        if (GraphicalStaffEntry === undefined) {
+        if (!graphicalStaffEntry) {
             return false;
         }
         // this is duplicate code from setStartNote, but if we make one general method, we add a lot of branching.
