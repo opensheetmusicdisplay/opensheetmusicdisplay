@@ -117,13 +117,18 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         if (stopObject) {
             stop = stopObject as any;
         }
-        return new VF.TextBracket({
+        const vfBracket: VF.TextBracket = new VF.TextBracket({
             position: this.position,
             start: this.startNote,
             stop: stop,
             superscript: this.supscript,
             text: this.text,
         });
+        if (this.endsOnDifferentStaffLine) {
+            // make bracket open-ended (--- instead of ---|) if not ending on current staffline
+            (vfBracket as any).render_options.show_bracket = false;
+        }
+        return vfBracket;
     }
 
 }
