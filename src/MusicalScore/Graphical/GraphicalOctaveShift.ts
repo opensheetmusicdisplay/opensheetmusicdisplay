@@ -4,6 +4,7 @@ import {BoundingBox} from "./BoundingBox";
 import {MusicSymbol} from "./MusicSymbol";
 import {ArgumentOutOfRangeException} from "../Exceptions";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
+import { GraphicalMeasure } from "./GraphicalMeasure";
 
 /**
  * The graphical counterpart of an [[OctaveShift]]
@@ -24,6 +25,8 @@ export class GraphicalOctaveShift extends GraphicalObject {
     public dashesStart: PointF2D;
     public dashesEnd: PointF2D;
     public endsOnDifferentStaffLine: boolean;
+    public graphicalEndAtMeasureEnd: boolean;
+    public endMeasure: GraphicalMeasure;
     public isFirstPart: boolean;
     public isSecondPart: boolean;
 

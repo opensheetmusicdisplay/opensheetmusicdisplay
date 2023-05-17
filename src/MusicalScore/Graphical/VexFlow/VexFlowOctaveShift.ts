@@ -92,10 +92,35 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
      * Get the actual vexflow text bracket used for drawing
      */
     public getTextBracket(): VF.TextBracket {
+        let stop: VF.Note = this.endNote;
+        let stopObject: Object;
+        if (this.graphicalEndAtMeasureEnd) {
+            // hack for Vexflow 1.2.93 (will need to be adjusted for Vexflow 4+):
+            //   create a mock object with all the data Vexflow uses for the TextBracket
+            //   (Vexflow theoretically expects a note here, from which it takes position and width)
+            stopObject = {
+                // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+                getAbsoluteX: (() => {
+                    return (this.endMeasure.PositionAndShape.AbsolutePosition.x + this.endMeasure.PositionAndShape.Size.width) * 10;
+                }),
+                // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+                getGlyph: (() => {
+                    return {
+                        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+                        getWidth: (() => {
+                            return 0;
+                        })
+                    };
+                })
+            };
+        }
+        if (stopObject) {
+            stop = stopObject as any;
+        }
         return new VF.TextBracket({
             position: this.position,
             start: this.startNote,
-            stop: this.endNote,
+            stop: stop,
             superscript: this.supscript,
             text: this.text,
         });
