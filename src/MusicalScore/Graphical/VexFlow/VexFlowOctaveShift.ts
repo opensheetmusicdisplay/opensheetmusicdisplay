@@ -99,19 +99,16 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
             //   create a mock object with all the data Vexflow uses for the TextBracket
             //   (Vexflow theoretically expects a note here, from which it takes position and width)
             stopObject = {
-                // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-                getAbsoluteX: (() => {
+                getAbsoluteX(): number {
                     return (this.endMeasure.PositionAndShape.AbsolutePosition.x + this.endMeasure.PositionAndShape.Size.width) * 10;
-                }),
-                // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-                getGlyph: (() => {
+                },
+                getGlyph(): Object {
                     return {
-                        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-                        getWidth: (() => {
+                        getWidth(): number {
                             return 0;
-                        })
+                        }
                     };
-                })
+                }
             };
         }
         if (stopObject) {
