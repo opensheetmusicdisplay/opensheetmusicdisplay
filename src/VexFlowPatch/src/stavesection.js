@@ -36,8 +36,11 @@ export class StaveSection extends StaveModifier {
     const text_measurements = ctx.measureText('' + this.section);
     const text_width = text_measurements.width;
     let text_height = text_measurements.height;
-    if (!text_height) {
+    if (!text_height && text_measurements.emHeightAscent >= 0) { // VexFlowPatch
       text_height = text_measurements.emHeightAscent + 2; // node canvas / generateImages fix
+    }
+    if (!text_height) { // canvas: sometimes no height available (VexFlowPatch)
+      text_height = text_measurements.fontBoundingBoxAscent + 3; // estimation
     }
     let width = text_width + 6;  // add left & right padding
     if (width < 18) width = 18;

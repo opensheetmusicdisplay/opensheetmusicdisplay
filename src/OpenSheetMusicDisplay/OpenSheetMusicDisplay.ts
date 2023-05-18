@@ -29,7 +29,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "1.5.1-release"; // getter: this.Version
+    protected version: string = "1.7.5-release"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -282,7 +282,8 @@ export class OpenSheetMusicDisplay {
         // Set page width
         let width: number = this.container.offsetWidth;
         if (this.rules.RenderSingleHorizontalStaffline) {
-            width = this.graphic.MusicPages[0].PositionAndShape.Size.width * 10 * this.zoom;
+            width = (this.EngravingRules.PageLeftMargin + this.graphic.MusicPages[0].PositionAndShape.Size.width + this.EngravingRules.PageRightMargin)
+                * 10 * this.zoom;
             // this.container.style.width = width + "px";
             // console.log("width: " + width)
         }
@@ -309,7 +310,17 @@ export class OpenSheetMusicDisplay {
             } else {
                 height = page.PositionAndShape.Size.height;
                 height += this.rules.PageBottomMargin;
-                height += this.rules.CompactMode ? this.rules.PageTopMarginNarrow : this.rules.PageTopMargin;
+                if (backend.getOSMDBackendType() === BackendType.Canvas) {
+                    height += 0.1; // Canvas bug: cuts off bottom pixel with PageBottomMargin = 0. Doesn't happen with SVG.
+                    //  we could only add 0.1 if PageBottomMargin === 0, but that would mean a margin of 0.1 has no effect compared to 0.
+                }
+                //height += this.rules.CompactMode ? this.rules.PageTopMarginNarrow : this.rules.PageTopMargin;
+                // adding the PageTopMargin with a composer label leads to the margin also added to the bottom of the page
+                height += page.PositionAndShape.BorderTop;
+                // try to respect elements like composer cut off: this gets messy.
+                // if (page.PositionAndShape.BorderTop < 0 && this.rules.PageTopMargin === 0) {
+                //     height += page.PositionAndShape.BorderTop + this.rules.PageTopMargin;
+                // }
                 if (this.rules.RenderTitle) {
                     height += this.rules.TitleTopDistance;
                 }
@@ -322,8 +333,10 @@ export class OpenSheetMusicDisplay {
                 // TODO optional: reduce zoom to fit the score within the limit.
             }
 
-            backend.resize(width, height);
+            backend.resize(width, height); // this resets strokeStyle for Canvas
             backend.clear(); // set bgcolor if defined (this.rules.PageBackgroundColor, see OSMDOptions)
+            backend.getContext().setFillStyle(this.rules.DefaultColorMusic);
+            backend.getContext().setStrokeStyle(this.rules.DefaultColorMusic); // needs to be set after resize()
             this.drawer.Backends.push(backend);
             this.graphic.drawer = this.drawer;
         }
@@ -358,9 +371,17 @@ export class OpenSheetMusicDisplay {
         if (!this.rules) {
             this.rules = new EngravingRules();
         }
-        if (!this.drawingParameters) {
-            this.drawingParameters = new DrawingParameters();
-            this.drawingParameters.Rules = this.rules;
+        if (!this.drawingParameters && !options.drawingParameters) {
+            this.drawingParameters = new DrawingParameters(DrawingParametersEnum.default, this.rules);
+            // if "default", will be created below
+        } else if (options.drawingParameters) {
+            if (!this.drawingParameters) {
+                this.drawingParameters = new DrawingParameters(DrawingParametersEnum[options.drawingParameters], this.rules);
+            } else {
+                this.drawingParameters.DrawingParametersEnum =
+                    (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
+                    // see DrawingParameters.ts: set DrawingParametersEnum, and DrawingParameters.ts:setForCompactTightMode()
+            }
         }
         if (options === undefined || options === null) {
             log.warn("warning: osmd.setOptions() called without an options parameter, has no effect."
@@ -370,11 +391,6 @@ export class OpenSheetMusicDisplay {
         this.OnXMLRead = function(xml): string {return xml;};
         if (options.onXMLRead) {
             this.OnXMLRead = options.onXMLRead;
-        }
-        if (options.drawingParameters) {
-            this.drawingParameters.DrawingParametersEnum =
-                (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
-                // see DrawingParameters.ts: set DrawingParametersEnum, and DrawingParameters.ts:setForCompactTightMode()
         }
 
         const backendNotInitialized: boolean = !this.drawer || !this.drawer.Backends || this.drawer.Backends.length < 1;
@@ -823,8 +839,9 @@ export class OpenSheetMusicDisplay {
         }
         backend.graphicalMusicPage = page; // the page the backend renders on. needed to identify DOM element to extract image/SVG
         backend.initialize(this.container, this.zoom);
-        backend.getContext().setFillStyle(this.rules.DefaultColorMusic);
-        backend.getContext().setStrokeStyle(this.rules.DefaultColorMusic);
+        //backend.getContext().setFillStyle(this.rules.DefaultColorMusic);
+        //backend.getContext().setStrokeStyle(this.rules.DefaultColorMusic);
+        // color needs to be set after resize() for CanvasBackend
         return backend;
     }
 

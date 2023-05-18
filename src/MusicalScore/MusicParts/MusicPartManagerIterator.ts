@@ -78,6 +78,7 @@ export class MusicPartManagerIterator {
     private currentBpm: number;
     private activeDynamicExpressions: AbstractExpression[] = [];
     private activeTempoExpression: MultiTempoExpression;
+    public SkipInvisibleNotes: boolean = true;
 
     public get EndReached(): boolean {
         return this.endReached;
@@ -240,15 +241,41 @@ export class MusicPartManagerIterator {
     //public currentPlaybackSettings(): PlaybackSettings {
     //    return this.manager.MusicSheet.SheetPlaybackSetting;
     //}
+
+    // move to previous
+    public moveToPrevious(): void {
+        // this.forwardJumpOccurred = this.backJumpOccurred = false;
+        if (this.frontReached) {
+            return;
+        }
+        if (this.currentVoiceEntries) {
+            this.currentVoiceEntries = [];
+        }
+        this.recursiveMoveBack();
+    }
+
+    public moveToPreviousVisibleVoiceEntry(notesOnly: boolean): void {
+        while (!this.frontReached) {
+            this.moveToPrevious();
+            if (this.checkEntries(notesOnly)) {
+                return;
+            }
+        }
+    }
     public moveToNext(): void {
         this.forwardJumpOccurred = this.backJumpOccurred = false;
         if (this.endReached) { return; }
+        if (this.frontReached) {
+            this.frontReached = false;
+            this.currentVoiceEntryIndex = -1;
+        }
         if (this.currentVoiceEntries) {
             this.currentVoiceEntries = [];
         }
         this.recursiveMove();
         if (!this.currentMeasure) {
             this.currentTimeStamp = new Fraction(99999, 1);
+            this.currentMeasure = this.musicSheet.SourceMeasures.last();
         }
     }
     public moveToNextVisibleVoiceEntry(notesOnly: boolean): void {
@@ -499,6 +526,45 @@ export class MusicPartManagerIterator {
             }
         }
     }
+
+    private recursiveMoveBack(): void {
+       if (this.currentVoiceEntryIndex > 0 ) {
+            this.currentVoiceEntryIndex--;
+            const currentContainer: VerticalSourceStaffEntryContainer = this.currentMeasure.VerticalSourceStaffEntryContainers[this.currentVoiceEntryIndex];
+            this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
+            this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
+            this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
+            this.activateCurrentDynamicOrTempoInstructions();
+            // re-check endReached
+            const selectionEnd: Fraction = this.musicSheet.SelectionEnd;
+            if (selectionEnd && this.currentTimeStamp.lt(selectionEnd)) {
+                this.endReached = false;
+            }
+            this.currentMeasureIndex = this.musicSheet.SourceMeasures.indexOf(this.CurrentMeasure);
+            return;
+        }
+        else if (this.currentVoiceEntryIndex === 0  && this.currentMeasureIndex !== 0) {
+            const m: SourceMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex-1];
+            this.currentMeasureIndex--;
+            this.currentMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex];
+            const currentContainer: VerticalSourceStaffEntryContainer = m.VerticalSourceStaffEntryContainers[m.VerticalSourceStaffEntryContainers.length-1];
+            this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
+            this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
+            this.currentVoiceEntryIndex = m.VerticalSourceStaffEntryContainers.length-1;
+            this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, currentContainer.Timestamp);
+            this.activateCurrentDynamicOrTempoInstructions();
+            // re-check endReached
+            const selectionEnd: Fraction = this.musicSheet.SelectionEnd;
+            if (selectionEnd && this.currentTimeStamp.lt(selectionEnd)) {
+                this.endReached = false;
+            }
+            return;
+        }
+        // we reached the beginning
+        this.frontReached = true;
+        this.currentTimeStamp = new Fraction(-1, 1);
+    }
+
     private recursiveMove(): void {
         this.currentVoiceEntryIndex++; // TODO handle hidden part: skip hidden voice if requested by parameter
         if (this.currentVoiceEntryIndex === 0) {
@@ -553,6 +619,16 @@ export class MusicPartManagerIterator {
     }
     private getVisibleEntries(entry: VoiceEntry, visibleEntries: VoiceEntry[]): void {
         if (entry.ParentVoice.Visible) {
+            let anyNoteVisible: boolean = false;
+            for (const note of entry.Notes) {
+                if (note.PrintObject) {
+                    anyNoteVisible = true;
+                    break;
+                }
+            }
+            if (!anyNoteVisible && this.SkipInvisibleNotes) {
+                return;
+            }
             visibleEntries.push(entry);
         }
     }

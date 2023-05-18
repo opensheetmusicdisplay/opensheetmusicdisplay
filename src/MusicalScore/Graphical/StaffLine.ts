@@ -13,6 +13,8 @@ import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
 import { GraphicalSlur } from "./GraphicalSlur";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
+import { GraphicalPedal } from "./GraphicalPedal";
+import { GraphicalGlissando } from "./GraphicalGlissando";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -35,6 +37,7 @@ export abstract class StaffLine extends GraphicalObject {
 
     // For displaying Slurs
     protected graphicalSlurs: GraphicalSlur[] = [];
+    protected graphicalGlissandi: GraphicalGlissando[] = [];
 
     constructor(parentSystem: MusicSystem, parentStaff: Staff) {
         super();
@@ -169,6 +172,8 @@ export abstract class StaffLine extends GraphicalObject {
         this.octaveShifts = value;
     }
 
+    public Pedals: GraphicalPedal[] = [];
+
     public get StaffHeight(): number {
         return this.staffHeight;
     }
@@ -185,12 +190,21 @@ export abstract class StaffLine extends GraphicalObject {
         return this.graphicalSlurs;
     }
 
+    public get GraphicalGlissandi(): GraphicalGlissando[] {
+        return this.graphicalGlissandi;
+    }
+
     /**
      * Add a given Graphical Slur to the staffline
      * @param gSlur
      */
     public addSlurToStaffline(gSlur: GraphicalSlur): void {
         this.graphicalSlurs.push(gSlur);
+    }
+
+    public addGlissandoToStaffline(gGlissando: GraphicalGlissando): void {
+        this.graphicalGlissandi.push(gGlissando);
+        gGlissando.StaffLine = this;
     }
 
     public addActivitySymbolClickArea(): void {

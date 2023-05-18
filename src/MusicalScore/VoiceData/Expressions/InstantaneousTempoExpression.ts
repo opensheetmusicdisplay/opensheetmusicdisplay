@@ -26,10 +26,10 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
     private static listInstantaneousTempoAndanteModerato: string[] = ["Andante moderato"]; //  }), TempoEnum.andanteModerato);
     private static listInstantaneousTempoAndante: string[] = ["Andante", "Gehend", "Schreitend", "at a walking pace"]; //  }), TempoEnum.andante);
     private static listInstantaneousTempoAndantino: string[] = ["Andantino"]; //  }), TempoEnum.andantino);
-    private static listInstantaneousTempoModerato: string[] = ["Moderato", "Mäßig", "Mod�r�", "moderately"]; //  }), TempoEnum.moderato);
+    private static listInstantaneousTempoModerato: string[] = ["Moderato", "Mäßig", "Modéré", "moderately"]; //  }), TempoEnum.moderato);
     private static listInstantaneousTempoAllegretto: string[] = ["Allegretto", "fast"]; //  }), TempoEnum.allegretto);
     private static listInstantaneousTempoAllegroModerato: string[] = ["Allegro moderato"]; //  }), TempoEnum.allegroModerato);
-    private static listInstantaneousTempoAllegro: string[] = ["Allegro", "Rapide", "Vite", "Rasch", "Schnell", "Fr�hlich"]; //  }), TempoEnum.allegro);
+    private static listInstantaneousTempoAllegro: string[] = ["Allegro", "Rapide", "Vite", "Rasch", "Schnell", "Fröhlich"]; //  }), TempoEnum.allegro);
     private static listInstantaneousTempoVivace: string[] = ["Vivace", "Lebhaft", "Lebendig", "lively and fast"]; //  }), TempoEnum.vivace);
     private static listInstantaneousTempoVivacissimo: string[] = ["Vivacissimo", "Sehr lebhaft", "Sehr lebendig"]; //  }), TempoEnum.vivacissimo);
     private static listInstantaneousTempoAllegrissimo: string[] = ["Allegrissimo", "very fast"]; //  }), TempoEnum.allegrissimo);

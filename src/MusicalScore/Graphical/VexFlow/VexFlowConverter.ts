@@ -30,7 +30,7 @@ import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
-import { Articulation } from "../../VoiceData/Articulation";
+import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -268,7 +268,6 @@ export class VexFlowConverter {
         let numDots: number = baseNote.numberOfDots;
         let alignCenter: boolean = false;
         let xShift: number = 0;
-        let slashNoteHead: boolean = false;
         let isRest: boolean = false;
         let restYPitch: Pitch;
         for (const note of notes) {
@@ -321,7 +320,8 @@ export class VexFlowConverter {
                 //   (a whole rest note signifies a whole measure duration, unless the time signature is longer than 4 quarter notes, e.g. 6/4 or 3/2.
                 //   Note: this should not apply to most pickup measures, e.g. with an 8th pickup measure in a 3/4 time signature)
                 // const measureDuration: number = note.sourceNote.SourceMeasure.Duration.RealValue;
-                const isWholeMeasureRest: boolean =  baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
+                const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
+                    baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
                 if (isWholeMeasureRest) {
                     keys = ["d/5"];
                     duration = "w";
@@ -421,14 +421,6 @@ export class VexFlowConverter {
                 break;
             }
 
-            if (note.sourceNote.Notehead) {
-                if (note.sourceNote.Notehead.Shape === NoteHeadShape.SLASH) {
-                    slashNoteHead = true;
-                    // if we have slash heads and other heads in the voice entry, this will create the same head for all.
-                    // same problem with numDots. The slash case should be extremely rare though.
-                }
-            }
-
             const pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             keys.push(pitch[0]);
             accidentals.push(pitch[1]);
@@ -441,7 +433,9 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             duration += "d";
         }
-        if (slashNoteHead) {
+        if (notes.length === 1 && notes[0].sourceNote.Notehead?.Shape === NoteHeadShape.SLASH) {
+            //if there are multiple note heads, all of them will be slash note head if done like this
+            //  -> see note_type = "s" below
             duration += "s"; // we have to specify a slash note head like this in Vexflow
         }
         if (isRest) {
@@ -475,6 +469,17 @@ export class VexFlowConverter {
         const lineShift: number = gve.notes[0].lineShift;
         if (lineShift !== 0) {
             vfnote.getKeyProps()[0].line += lineShift;
+        }
+        // check for slash noteheads (among other noteheads)
+        if (notes.length > 1) {
+            // for a single note, we can use duration += "s" (see above).
+            //   If we use the below solution for a single note as well, the notehead sometimes goes over the stem.
+            for (let n: number = 0; n < notes.length; n++) {
+                const note: VexFlowGraphicalNote = notes[n] as VexFlowGraphicalNote;
+                if (note.sourceNote.Notehead?.Shape === NoteHeadShape.SLASH) {
+                    (vfnote as any).note_heads[n].note_type = "s"; // slash notehead
+                }
+            }
         }
 
         // Annotate GraphicalNote with which line of the staff it appears on
@@ -573,13 +578,13 @@ export class VexFlowConverter {
         return vfnote;
     }
 
-    public static generateArticulations(vfnote: VF.StemmableNote, articulations: Articulation[],
+    public static generateArticulations(vfnote: VF.StemmableNote, gNote: GraphicalNote,
                                         rules: EngravingRules): void {
         if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
         }
 
-        for (const articulation of articulations) {
+        for (const articulation of gNote.sourceNote.ParentVoiceEntry.Articulations) {
             let vfArtPosition: number = VF.Modifier.Position.ABOVE;
 
             if (vfnote.getStemDirection() === VF.Stem.UP) {
@@ -597,18 +602,38 @@ export class VexFlowConverter {
             switch (articulationEnum) {
                 case ArticulationEnum.accent: {
                     vfArt = new VF.Articulation("a>");
+                    const slurs: Slur[] = gNote.sourceNote.NoteSlurs;
+                    for (const slur of slurs) {
+                        if (slur.StartNote === gNote.sourceNote) { // && slur.PlacementXml === articulation.placement
+                            if (slur.PlacementXml === PlacementEnum.Above) {
+                                vfArt.setYShift(-rules.SlurStartArticulationYOffsetOfArticulation * 10);
+                            } else if (slur.PlacementXml === PlacementEnum.Below) {
+                                vfArt.setYShift(rules.SlurStartArticulationYOffsetOfArticulation * 10);
+                            }
+                        }
+                    }
+                    break;
+                }
+                case ArticulationEnum.breathmark: {
+                    vfArt = new VF.Articulation("abr");
+                    if (articulation.placement === PlacementEnum.Above) {
+                        vfArtPosition = VF.Modifier.Position.ABOVE;
+                    }
+                    (vfArt as any).breathMarkDistance = rules.BreathMarkDistance; // default 0.8 = 80% towards next note or staff end
                     break;
                 }
                 case ArticulationEnum.downbow: {
                     vfArt = new VF.Articulation("am");
                     if (articulation.placement === undefined) { // downbow/upbow should be above by default
                         vfArtPosition = VF.Modifier.Position.ABOVE;
+                        articulation.placement = PlacementEnum.Above;
                     }
                     break;
                 }
                 case ArticulationEnum.fermata: {
                     vfArt = new VF.Articulation("a@a");
                     vfArtPosition = VF.Modifier.Position.ABOVE;
+                    articulation.placement = PlacementEnum.Above;
                     break;
                 }
                 case ArticulationEnum.marcatodown: {
@@ -617,11 +642,35 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.marcatoup: {
                     vfArt = new VF.Articulation("a^");
+                    // according to Gould - Behind Bars, Marcato should always be above the staff, regardless of stem direction.
+                    vfArtPosition = VF.Modifier.Position.ABOVE;
+                    // alternative: place close to note (below staff if below 3rd line). looks strange though, see test_marcato_position
+                    // if (rules.PositionMarcatoCloseToNote) {
+                    //     const noteLine: number = vfnote.getLineNumber();
+                    //     if (noteLine > 3) {
+                    //         vfArtPosition = VF.Modifier.Position.ABOVE;
+                    //     } else {
+                    //         vfArtPosition = VF.Modifier.Position.BELOW;
+                    //     }
+                    //     //console.log("measure " + gNote.parentVoiceEntry.parentStaffEntry.parentMeasure.MeasureNumber + ", line " + noteLine);
+                    // }
                     break;
                 }
                 case ArticulationEnum.invertedfermata: {
+                    const pve: VoiceEntry = gNote.sourceNote.ParentVoiceEntry;
+                    const sourceNote: Note = gNote.sourceNote;
+                    // find inverted fermata, push it to last voice entry in staffentry list,
+                    //   so that it doesn't overlap notes (gets displayed right below higher note)
+                    //   TODO this could maybe be moved elsewhere or done more elegantly,
+                    //     but on the other hand here it only gets checked if we have an inverted fermata anyways, seems efficient.
+                    if (pve !== sourceNote.ParentVoiceEntry.ParentSourceStaffEntry.VoiceEntries.last()) {
+                        pve.Articulations = pve.Articulations.slice(pve.Articulations.indexOf(articulation));
+                        pve.ParentSourceStaffEntry.VoiceEntries.last().Articulations.push(articulation);
+                        continue;
+                    }
                     vfArt = new VF.Articulation("a@u");
                     vfArtPosition = VF.Modifier.Position.BELOW;
+                    articulation.placement = PlacementEnum.Below;
                     break;
                 }
                 case ArticulationEnum.lefthandpizzicato: {
@@ -652,6 +701,7 @@ export class VexFlowConverter {
                     vfArt = new VF.Articulation("a|");
                     if (articulation.placement === undefined) { // downbow/upbow should be above by default
                         vfArtPosition = VF.Modifier.Position.ABOVE;
+                        articulation.placement = PlacementEnum.Above;
                     }
                     break;
                 }

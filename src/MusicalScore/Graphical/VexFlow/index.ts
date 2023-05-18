@@ -6,6 +6,7 @@ export * from "./SvgVexFlowBackend";
 export * from "./VexFlowBackend";
 export * from "./VexFlowContinuousDynamicExpression";
 export * from "./VexFlowConverter";
+export * from "./VexFlowGlissando";
 export * from "./VexFlowGraphicalNote";
 export * from "./VexFlowGraphicalSymbolFactory";
 export * from "./VexFlowInstantaneousDynamicExpression";

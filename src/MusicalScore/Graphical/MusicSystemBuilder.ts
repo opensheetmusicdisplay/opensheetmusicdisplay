@@ -20,6 +20,7 @@ import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SystemLinePosition} from "./SystemLinePosition";
+import { MusicSheet } from "../MusicSheet";
 
 export class MusicSystemBuilder {
     protected measureList: GraphicalMeasure[][];
@@ -838,6 +839,22 @@ export class MusicSystemBuilder {
             const measure: GraphicalMeasure = this.measureList[this.measureListIndex][idx];
             if (measure.endsWithLineRepetition()) {
                 return true;
+            } else if (measure.parentSourceMeasure?.isReducedToMultiRest) {
+                // check if the last measure in the multiple rest measure sequence has a repeat ending
+                const sheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
+                let currentMultirestMeasure: SourceMeasure = measure.parentSourceMeasure;
+                const startMeasureIndex: number = sheet.SourceMeasures.indexOf(currentMultirestMeasure);
+                let currentMultirestMeasureNumber: number = currentMultirestMeasure.multipleRestMeasureNumber;
+                for (let i: number = startMeasureIndex + 1; i < sheet.SourceMeasures.length; i++) {
+                    const nextMultirestMeasure: SourceMeasure = sheet.SourceMeasures[i];
+                    if (nextMultirestMeasure.multipleRestMeasureNumber >= currentMultirestMeasureNumber) {
+                        currentMultirestMeasure = nextMultirestMeasure;
+                        currentMultirestMeasureNumber = nextMultirestMeasure.multipleRestMeasureNumber;
+                    } else {
+                        break; // end of current multirest chain = last multirest measure
+                    }
+                }
+                return currentMultirestMeasure.endsWithLineRepetition();
             }
         }
         return false;

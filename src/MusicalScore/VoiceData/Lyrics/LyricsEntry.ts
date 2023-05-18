@@ -1,8 +1,9 @@
 import {LyricWord} from "./LyricsWord";
 import {VoiceEntry} from "../VoiceEntry";
+import { FontStyles } from "../../../Common/Enums/FontStyles";
 
 export class LyricsEntry {
-    constructor(text: string, verseNumber: number, word: LyricWord, parent: VoiceEntry, syllableNumber: number = -1) {
+    constructor(text: string, verseNumber: string, word: LyricWord, parent: VoiceEntry, syllableNumber: number = -1) {
         this.text = text;
         this.word = word;
         this.parent = parent;
@@ -14,7 +15,7 @@ export class LyricsEntry {
     private text: string;
     private word: LyricWord;
     private parent: VoiceEntry;
-    private verseNumber: number;
+    private verseNumber: string;
     private syllableIndex: number;
     public extend: boolean;
 
@@ -34,11 +35,23 @@ export class LyricsEntry {
         this.parent = value;
     }
 
-    public get VerseNumber(): number {
+    public get VerseNumber(): string {
         return this.verseNumber;
     }
 
     public get SyllableIndex(): number {
         return this.syllableIndex;
+    }
+
+    public get IsTranslation(): boolean {
+        return this.VerseNumber.endsWith("translation");
+    }
+
+    public get IsChorus(): boolean {
+        return this.VerseNumber.startsWith("chorus");
+    }
+
+    public get FontStyle(): FontStyles {
+        return this.IsChorus || this.IsTranslation ? FontStyles.Italic : FontStyles.Regular;
     }
 }
