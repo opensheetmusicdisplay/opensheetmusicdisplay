@@ -62,6 +62,9 @@ export class TransposeCalculator implements ITransposeCalculator {
     public transposeKey(keyInstruction: KeyInstruction, transpose: number): void {
         let currentIndex: number = 0;
         let previousKeyType: number = 0;
+        if (keyInstruction.keyTypeOriginal === -6) {
+            TransposeCalculator.keyMapping[TransposeCalculator.keyMapping.indexOf(6)] = -6;
+        }
         for (; currentIndex < TransposeCalculator.keyMapping.length; currentIndex++) {
             previousKeyType = TransposeCalculator.keyMapping[currentIndex];
             if (previousKeyType === keyInstruction.keyTypeOriginal) {

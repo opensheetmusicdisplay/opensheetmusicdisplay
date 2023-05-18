@@ -140,8 +140,10 @@ export abstract class MusicSystem extends GraphicalObject {
         leftSystemLine.PositionAndShape.RelativePosition = new PointF2D(xPosition, 0);
         leftSystemLine.PositionAndShape.BorderLeft = 0;
         leftSystemLine.PositionAndShape.BorderRight = lineWidth;
-        leftSystemLine.PositionAndShape.BorderTop = 0;
-        leftSystemLine.PositionAndShape.BorderBottom = this.boundingBox.Size.height;
+        leftSystemLine.PositionAndShape.BorderTop = leftSystemLine.PositionAndShape.Parent.BorderTop;
+        leftSystemLine.PositionAndShape.BorderBottom = leftSystemLine.PositionAndShape.Parent.BorderBottom;
+        // TODO this is arguably still too large for the systemline bbox, but at least not larger than the MusicSystem anymore.
+        //   see https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1245
         this.createLinesForSystemLine(leftSystemLine);
     }
 

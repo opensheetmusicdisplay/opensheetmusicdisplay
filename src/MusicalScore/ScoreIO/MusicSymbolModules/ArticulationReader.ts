@@ -8,6 +8,9 @@ import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import { Articulation } from "../../VoiceData/Articulation";
 import { Note } from "../../VoiceData/Note";
 import { EngravingRules } from "../../Graphical/EngravingRules";
+import { MultiExpression } from "../../VoiceData/Expressions/MultiExpression";
+import { SourceMeasure } from "../../VoiceData/SourceMeasure";
+import { ContDynamicEnum, ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions";
 export class ArticulationReader {
   private rules: EngravingRules;
 
@@ -87,13 +90,51 @@ export class ArticulationReader {
                 currentVoiceEntry.Articulations.splice(0, 0, newArticulation); // TODO can't this overwrite another articulation?
               }
             }
-            if (name === "strongaccent") { // see name.replace("-", "") above
+            else if (name === "breathmark") { // breath-mark
+              if (placement === PlacementEnum.NotYetDefined) {
+                newArticulation.placement = PlacementEnum.Above;
+              }
+            }
+            else if (name === "strongaccent") { // see name.replace("-", "") above
               const marcatoType: string = childNode?.attribute("type")?.value;
               if (marcatoType === "up") {
                 newArticulation.articulationEnum = ArticulationEnum.marcatoup;
               } else if (marcatoType === "down") {
                 newArticulation.articulationEnum = ArticulationEnum.marcatodown;
               }
+            }
+            else if (articulationEnum === ArticulationEnum.softaccent) {
+              const staffId: number = currentVoiceEntry.ParentSourceStaffEntry.ParentStaff.Id - 1;
+              if (placement === PlacementEnum.NotYetDefined) {
+                placement = PlacementEnum.Above;
+                if (staffId > 0) {
+                  placement = PlacementEnum.Below;
+                }
+                // TODO place according to whether the corresponding note is higher (-> above) or lower (-> below)
+                //   than the middle note line. Though this could be tricky at this stage of parsing.
+              }
+              const sourceMeasure: SourceMeasure = currentVoiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure;
+              const multi: MultiExpression = new MultiExpression(sourceMeasure, currentVoiceEntry.Timestamp);
+              multi.StartingContinuousDynamic = new ContinuousDynamicExpression(
+                ContDynamicEnum.crescendo,
+                placement,
+                staffId,
+                sourceMeasure,
+                -1
+              );
+              multi.StartingContinuousDynamic.IsStartOfSoftAccent = true;
+              multi.StartingContinuousDynamic.StartMultiExpression = multi;
+              multi.StartingContinuousDynamic.EndMultiExpression = multi;
+              multi.EndingContinuousDynamic = new ContinuousDynamicExpression(
+                ContDynamicEnum.diminuendo,
+                placement,
+                staffId,
+                sourceMeasure,
+                -1
+              );
+              multi.EndingContinuousDynamic.StartMultiExpression = multi;
+              multi.EndingContinuousDynamic.EndMultiExpression = multi;
+              sourceMeasure.StaffLinkedExpressions[staffId].push(multi);
             }
 
             // don't add the same articulation twice
@@ -147,6 +188,7 @@ export class ArticulationReader {
       "snap-pizzicato": ArticulationEnum.snappizzicato,
       "stopped": ArticulationEnum.lefthandpizzicato,
       "up-bow": ArticulationEnum.upbow,
+      "harmonic": ArticulationEnum.naturalharmonic, // e.g. open hi-hat
       // fingering is special case
     };
 

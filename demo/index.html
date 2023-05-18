@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=980" />
 
     <title><%= htmlWebpackPlugin.options.title %></title>
     <meta name="description" content="A showcase for OpenSheetMusicDisplay.">
@@ -48,12 +48,20 @@
                 </div>
             </div>
             <div class="ui vertical buttons">
+                <div class="ui animated fade button" id="previous-cursor-btn">
+                    <div class="visible content">Previous</div>
+                    <div class="hidden content">
+                        <i class="arrow left icon"></i>
+                    </div>
+                </div>
                 <div class="ui animated fade button" id="next-cursor-btn">
                     <div class="visible content">Next</div>
                     <div class="hidden content">
                         <i class="arrow right icon"></i>
                     </div>
                 </div>
+            </div>
+            <div class="ui vertical buttons">
                 <div class="ui animated fade button" id="reset-cursor-btn">
                     <div class="visible content">Reset</div>
                     <div class="hidden content">
@@ -195,5 +203,6 @@
         </tr>
     </table>
 </div>
+<div id="osmdCanvasDiv" style="width: 980px;"></div>
 </body>
 </html>

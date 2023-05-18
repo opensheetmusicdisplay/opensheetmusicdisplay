@@ -601,6 +601,9 @@ export class SourceMeasure {
     }
 
     public canBeReducedToMultiRest(): boolean {
+        if (this.firstRepetitionInstructions.length > 0 || this.lastRepetitionInstructions.length > 0) {
+            return false;
+        }
         let allRestsOrInvisible: boolean = true;
         let visibleLyrics: boolean = false;
         for (const container of this.verticalSourceStaffEntryContainers) {
@@ -616,9 +619,6 @@ export class SourceMeasure {
                 }
                 if (staffEntry.ParentStaff.hasLyrics) {
                     visibleLyrics = true;
-                }
-                if (this.firstRepetitionInstructions.length > 0 || this.lastRepetitionInstructions.length > 0) {
-                    return false;
                 }
                 for (const voiceEntry of staffEntry.VoiceEntries) {
                     for (const note of voiceEntry.Notes) {

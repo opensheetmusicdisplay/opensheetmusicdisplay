@@ -58,6 +58,15 @@ import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions";
 import { GraphicalChordSymbolContainer } from "../GraphicalChordSymbolContainer";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
+import { SystemLinesEnum } from "../SystemLinesEnum";
+import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
+import { VexFlowPedal } from "./VexFlowPedal";
+import { MusicSymbol } from "../MusicSymbol";
+import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
+import { CollectionUtil } from "../../../Util/CollectionUtil";
+import { GraphicalGlissando } from "../GraphicalGlissando";
+import { Glissando } from "../../VoiceData/Glissando";
+import { VexFlowGlissando } from "./VexFlowGlissando";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -97,9 +106,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!verticalMeasureList || !verticalMeasureList[0]) {
         continue;
       }
-      const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
+      const firstVisibleMeasure: VexFlowMeasure = verticalMeasureList.find(measure => measure?.isVisible()) as VexFlowMeasure;
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
-      firstMeasure.format();
+      firstVisibleMeasure.format();
       for (const measure of verticalMeasureList) {
         for (const staffEntry of measure.staffEntries) {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
@@ -172,8 +181,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const voices: VF.Voice[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
-          voices.push(mvoices[voiceID]);
-          allVoices.push(mvoices[voiceID]);
+          const mvoice: any = mvoices[voiceID];
+          if (measure.hasOnlyRests && !mvoice.ticksUsed.equals(mvoice.totalTicks)) {
+            // fix layouting issues with whole measure rests in one staff and notes in other. especially in 12/8 rthythm (#1187)
+            mvoice.ticksUsed = mvoice.totalTicks;
+            // Vexflow 1.2.93: needs VexFlowPatch for formatter.js (see #1187)
+          }
+          voices.push(mvoice);
+          allVoices.push(mvoice);
         }
       }
 
@@ -203,10 +218,28 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // it seems like this should be respected by staffEntries.length and preCaculateMinTotalWidth, but apparently not,
         //   without this the pickup measures were always too long.
 
+        let barlineSpacing: number = 0;
+        const measureListIndex: number = parentSourceMeasure.measureListIndex;
+        if (measureListIndex > 1) {
+          // only give this implicit measure more space if the previous one had a thick barline (e.g. repeat end)
+          for (const gMeasure of this.graphicalMusicSheet.MeasureList[measureListIndex - 1]) {
+            const endingBarStyleEnum: SystemLinesEnum = gMeasure?.parentSourceMeasure.endingBarStyleEnum;
+            if (endingBarStyleEnum === SystemLinesEnum.ThinBold ||
+                endingBarStyleEnum === SystemLinesEnum.DotsThinBold
+            ) {
+              barlineSpacing = this.rules.PickupMeasureRepetitionSpacing;
+              break;
+            }
+          }
+        }
+        minStaffEntriesWidth += barlineSpacing;
         // add more than the original staffEntries scaling again: (removing it above makes it too short)
         if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
           minStaffEntriesWidth += maxStaffEntriesPlusAccidentals * staffEntryFactor * 1.5; // don't scale this for implicit measures
           // in fact overscale it, this needs a lot of space the more staffEntries (and modifiers like accidentals) there are
+        } else if (measureListIndex > 1 && maxStaffEntries === 1) {
+          // do this also for measures not after repetitions:
+          minStaffEntriesWidth += this.rules.PickupMeasureSpacingSingleNoteAddend;
         }
         minStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
       }
@@ -506,6 +539,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   public calculateMeasureWidthFromStaffEntries(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
+    // For GENIT Apps - measure width evenly
+    return 1;
+    /*
     let elongationFactorForMeasureWidth: number = 1;
 
     for (const measure of measuresVertical) {
@@ -528,6 +564,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const newMinimumStaffEntriesWidth: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
 
     return newMinimumStaffEntriesWidth;
+    */
   }
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
@@ -616,7 +653,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
-      if (vfStartNote) { // first_note or last_note must be not null in Vexflow
+      if (tie.Tie.firstNote) { // first_note or last_note must be not null in Vexflow
         const vfTie1: VF.StaveTie = new VF.StaveTie({
           first_indices: [startNoteIndexInTie],
           first_note: vfStartNote
@@ -624,8 +661,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
       }
-
-      if (vfEndNote) {
+      if (!tie.Tie.firstNote || (vfEndNote && tie.Tie.Notes.length >= 2)) {
         const vfTie2: VF.StaveTie = new VF.StaveTie({
           last_indices: [endNoteIndexInTie],
           last_note: vfEndNote
@@ -726,6 +762,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         staffLine,
         startMeasure.parentSourceMeasure);
       graphicalContinuousDynamic.StartMeasure = startMeasure;
+      graphicalContinuousDynamic.IsSoftAccent = multiExpression.StartingContinuousDynamic.IsStartOfSoftAccent;
+      //graphicalContinuousDynamic.StartIsEnd = multiExpression.StartingContinuousDynamic.EndMultiExpression === multiExpression;
 
       if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {
         try {
@@ -982,6 +1020,333 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 
+  protected calculateSinglePedal(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+    // calculate absolute Timestamp and startStaffLine (and EndStaffLine if needed)
+    const pedal: Pedal = multiExpression.PedalStart;
+
+    const startTimeStamp: Fraction = pedal.ParentStartMultiExpression.Timestamp;
+    const endTimeStamp: Fraction = pedal.ParentEndMultiExpression?.Timestamp;
+
+    const minMeasureToDrawIndex: number = this.rules.MinMeasureToDrawIndex;
+    const maxMeasureToDrawIndex: number = this.rules.MaxMeasureToDrawIndex;
+
+    let startStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
+    if (!startStaffLine) { // fix for rendering range set. all of these can probably be done cleaner.
+      startStaffLine = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex].ParentStaffLine;
+    }
+    let endMeasure: GraphicalMeasure = undefined;
+    if (pedal.ParentEndMultiExpression) {
+      endMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(pedal.ParentEndMultiExpression.SourceMeasureParent,
+                                                                                          staffIndex);
+    } else {
+      //return; // also possible: don't handle faulty pedal without end
+      endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true); // get last rendered measure
+    }
+    if (endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) { //  ends in measure not rendered
+      endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
+    }
+    let startMeasure: GraphicalMeasure = undefined;
+    if (pedal.ParentEndMultiExpression) {
+      startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(pedal.ParentStartMultiExpression.SourceMeasureParent,
+        staffIndex);
+    } else {
+      startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(
+        pedal.ParentStartMultiExpression.SourceMeasureParent,
+        staffIndex);
+      if (!startMeasure) {
+        startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
+      }
+      //console.log("no end multi expression for start measure " + startMeasure.MeasureNumber);
+    }
+    if (startMeasure.MeasureNumber < minMeasureToDrawIndex + 1) { //  starts before range of measures selected to render
+      startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
+    }
+
+    if (startMeasure.parentSourceMeasure.measureListIndex < minMeasureToDrawIndex ||
+        startMeasure.parentSourceMeasure.measureListIndex > maxMeasureToDrawIndex ||
+        endMeasure.parentSourceMeasure.measureListIndex < minMeasureToDrawIndex ||
+        endMeasure.parentSourceMeasure.measureListIndex > maxMeasureToDrawIndex) {
+      // completely out of drawing range, don't draw anything
+      return;
+    }
+
+    let endStaffLine: StaffLine = endMeasure.ParentStaffLine;
+    if (!endStaffLine) {
+      endStaffLine = startStaffLine;
+    }
+    if (endMeasure && startStaffLine && endStaffLine) {
+      let openEnd: boolean = false;
+      if (startStaffLine !== endStaffLine) {
+        openEnd = true;
+      }
+      // calculate GraphicalPedal and RelativePositions
+      const graphicalPedal: VexFlowPedal = new VexFlowPedal(pedal, startStaffLine.PositionAndShape, false, openEnd);
+      graphicalPedal.setEndsStave(endMeasure, endTimeStamp); // unfortunately this can't already be checked in ExpressionReader
+      // calculate RelativePosition
+      let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+      if (!startStaffEntry) { // fix for rendering range set
+        startStaffEntry = startMeasure.staffEntries[0];
+      }
+      let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+      if (!endStaffEntry) { // fix for rendering range set
+        endStaffEntry = endMeasure.staffEntries[endMeasure.staffEntries.length - 1];
+        // TODO can be undefined if no notes in end measure
+      }
+      if (!graphicalPedal.setStartNote(startStaffEntry)){
+        return;
+      }
+      graphicalPedal.setBeginsStave(graphicalPedal.startNote.isRest(), startTimeStamp);
+
+      if (endStaffLine !== startStaffLine) {
+        if(graphicalPedal.pedalSymbol === MusicSymbol.PEDAL_SYMBOL){
+          graphicalPedal.setEndNote(endStaffEntry);
+          graphicalPedal.setEndMeasure(endMeasure);
+          graphicalPedal.ReleaseText = " ";
+          graphicalPedal.CalculateBoundingBox();
+          this.calculatePedalSkyBottomLine(graphicalPedal.startVfVoiceEntry, graphicalPedal.endVfVoiceEntry, graphicalPedal, startStaffLine);
+
+          const nextPedalFirstMeasure: GraphicalMeasure = endStaffLine.Measures[0];
+          // pedal starts on the first measure
+          const nextPedal: VexFlowPedal = new VexFlowPedal(pedal, nextPedalFirstMeasure.PositionAndShape);
+          graphicalPedal.setEndsStave(endMeasure, endTimeStamp);
+          const firstNote: GraphicalStaffEntry = nextPedalFirstMeasure.staffEntries[0];
+          if(!nextPedal.setStartNote(firstNote)){
+            return;
+          }
+          nextPedal.setEndNote(endStaffEntry);
+          graphicalPedal.setEndMeasure(endMeasure);
+          endStaffLine.Pedals.push(nextPedal);
+          nextPedal.CalculateBoundingBox();
+          nextPedal.DepressText = " ";
+          this.calculatePedalSkyBottomLine(nextPedal.startVfVoiceEntry, nextPedal.endVfVoiceEntry, nextPedal, endStaffLine);
+        } else {
+          let lastMeasureOfFirstShift: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
+          if (lastMeasureOfFirstShift === undefined) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
+            lastMeasureOfFirstShift = endMeasure;
+          }
+          const lastNoteOfFirstShift: GraphicalStaffEntry = lastMeasureOfFirstShift.staffEntries[lastMeasureOfFirstShift.staffEntries.length - 1];
+          graphicalPedal.setEndNote(lastNoteOfFirstShift);
+          graphicalPedal.setEndMeasure(endMeasure);
+          graphicalPedal.ChangeEnd = false;
+
+          const systemsInBetweenCount: number = endStaffLine.ParentMusicSystem.Id - startStaffLine.ParentMusicSystem.Id;
+          if (systemsInBetweenCount > 0) {
+            //Loop through the stafflines in between to the end
+            let currentCount: number = 1;
+            for (let i: number = startStaffLine.ParentMusicSystem.Id; i < endStaffLine.ParentMusicSystem.Id; i++) {
+              const nextPedalMusicSystem: MusicSystem = this.musicSystems[i + 1];
+              const nextPedalStaffline: StaffLine = nextPedalMusicSystem.StaffLines[staffIndex];
+              const nextPedalFirstMeasure: GraphicalMeasure = nextPedalStaffline.Measures[0];
+              let nextOpenEnd: boolean = false;
+              let nextChangeEndFromParent: boolean = false;
+              if (currentCount < systemsInBetweenCount) {
+                nextOpenEnd = true;
+              } else {
+                nextChangeEndFromParent = true;
+              }
+              currentCount++;
+              // pedal starts on the first measure
+              const nextPedal: VexFlowPedal = new VexFlowPedal(pedal, nextPedalFirstMeasure.PositionAndShape, true, nextOpenEnd);
+              graphicalPedal.setEndsStave(endMeasure, endTimeStamp);
+              nextPedal.ChangeBegin = false;
+              if(nextChangeEndFromParent){
+                nextPedal.ChangeEnd = pedal.ChangeEnd;
+              } else {
+                nextPedal.ChangeEnd = false;
+              }
+              let nextPedalLastMeasure: GraphicalMeasure = nextPedalStaffline.Measures[nextPedalStaffline.Measures.length - 1];
+              const firstNote: GraphicalStaffEntry = nextPedalFirstMeasure.staffEntries[0];
+              let lastNote: GraphicalStaffEntry = nextPedalLastMeasure.staffEntries[nextPedalLastMeasure.staffEntries.length - 1];
+
+              //If the end measure's staffline is the ending staffline, this endMeasure is the end of the pedal
+              if (endMeasure.ParentStaffLine === nextPedalStaffline) {
+                nextPedalLastMeasure = endMeasure;
+                nextPedal.setEndMeasure(endMeasure);
+                lastNote = endStaffEntry;
+              } else {
+                nextPedal.setEndMeasure(nextPedalStaffline.Measures.last());
+              }
+              if(!nextPedal.setStartNote(firstNote)){
+                break;
+              }
+              nextPedal.setEndNote(lastNote);
+              graphicalPedal.setEndMeasure(endMeasure);
+              nextPedalStaffline.Pedals.push(nextPedal);
+              nextPedal.CalculateBoundingBox();
+              this.calculatePedalSkyBottomLine(nextPedal.startVfVoiceEntry, nextPedal.endVfVoiceEntry, nextPedal, nextPedalStaffline);
+            }
+          }
+          graphicalPedal.CalculateBoundingBox();
+          this.calculatePedalSkyBottomLine(graphicalPedal.startVfVoiceEntry, graphicalPedal.endVfVoiceEntry, graphicalPedal, startStaffLine);
+        }
+      } else {
+        graphicalPedal.setEndNote(endStaffEntry);
+        graphicalPedal.setEndMeasure(endMeasure);
+        graphicalPedal.CalculateBoundingBox();
+        this.calculatePedalSkyBottomLine(graphicalPedal.startVfVoiceEntry, graphicalPedal.endVfVoiceEntry, graphicalPedal, startStaffLine);
+      }
+      startStaffLine.Pedals.push(graphicalPedal);
+    } else {
+      log.warn("End measure or staffLines for pedal are undefined! This should not happen!");
+    }
+  }
+
+  private calculatePedalSkyBottomLine(startVfVoiceEntry: VexFlowVoiceEntry, endVfVoiceEntry: VexFlowVoiceEntry,
+    vfPedal: VexFlowPedal, parentStaffline: StaffLine): void {
+      let endBbox: BoundingBox = endVfVoiceEntry?.PositionAndShape;
+      if (!endBbox) {
+        endBbox = vfPedal.endMeasure.PositionAndShape;
+      }
+      //Just for shorthand. Easier readability below
+      const PEDAL_STYLES_ENUM: any = Vex.Flow.PedalMarking.Styles;
+      const pedalMarking: any = vfPedal.getPedalMarking();
+      //VF adds 3 lines to whatever the pedal line is set to.
+      //VF also measures from the bottom line, whereas our bottom line is from the top staff line
+      const yLineForPedalMarking: number = (pedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
+      //VF Uses a margin offset for rendering. Take this into account
+      const pedalMarkingMarginXOffset: number = pedalMarking.render_options.text_margin_right / 10;
+      //TODO: Most of this should be in the bounding box calculation
+      let startX: number = startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - pedalMarkingMarginXOffset;
+
+      if (pedalMarking.style === PEDAL_STYLES_ENUM.MIXED ||
+          pedalMarking.style === PEDAL_STYLES_ENUM.MIXED_OPEN_END ||
+          pedalMarking.style === PEDAL_STYLES_ENUM.TEXT) {
+        //Accomodate the Ped. sign
+        startX -= 1;
+      }
+      let stopX: number = undefined;
+      let footroom: number = (parentStaffline.StaffLines.length - 1);
+      //Find the highest foot room in our staffline
+      for (const otherPedal of parentStaffline.Pedals) {
+        const vfOtherPedal: VexFlowPedal = otherPedal as VexFlowPedal;
+        const otherPedalMarking: any = vfOtherPedal.getPedalMarking();
+        const yLineForOtherPedalMarking: number = (otherPedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
+        footroom = Math.max(yLineForOtherPedalMarking, footroom);
+      }
+      //We have the two seperate symbols, with two bounding boxes
+      if (vfPedal.EndSymbolPositionAndShape) {
+        const symbolHalfHeight: number = pedalMarking.render_options.glyph_point_size / 20;
+        //Width of the Ped. symbol
+        stopX = startX + 3.4;
+        const startX2: number = endBbox.AbsolutePosition.x - pedalMarkingMarginXOffset;
+        //Width of * symbol
+        const stopX2: number = startX2 + 1.5;
+
+        footroom = Math.max(parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX), footroom);
+        footroom = Math.max(yLineForPedalMarking + symbolHalfHeight * 2, footroom);
+        const footroom2: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX2, stopX2);
+        //If Depress text is set, means we are not rendering the begin label (we are just rendering the end one)
+        if (!vfPedal.DepressText) {
+          footroom = Math.max(footroom, footroom2);
+        }
+        vfPedal.setLine(footroom - 3 - (parentStaffline.StaffLines.length - 1));
+        parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + symbolHalfHeight);
+        parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX2, stopX2, footroom + symbolHalfHeight);
+      } else {
+        const bracketHeight: number = pedalMarking.render_options.bracket_height / 10;
+
+        if(pedalMarking.EndsStave){
+          if(endVfVoiceEntry){
+            stopX = endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.AbsolutePosition.x +
+              endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.Size.width - pedalMarkingMarginXOffset;
+
+          } else {
+            stopX = endBbox.AbsolutePosition.x + endBbox.Size.width;
+          }
+        } else {
+          switch (pedalMarking.style) {
+            case PEDAL_STYLES_ENUM.BRACKET_OPEN_END:
+            case PEDAL_STYLES_ENUM.BRACKET_OPEN_BOTH:
+            case PEDAL_STYLES_ENUM.MIXED_OPEN_END:
+              stopX = endBbox.AbsolutePosition.x + endBbox.BorderRight - pedalMarkingMarginXOffset;
+            break;
+            default:
+              stopX = endBbox.AbsolutePosition.x + endBbox.BorderLeft - pedalMarkingMarginXOffset;
+            break;
+          }
+        }
+        //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
+        const vfClefBefore: Vex.Flow.ClefNote = (endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
+        if (vfClefBefore) {
+          const clefWidth: number = vfClefBefore.getWidth() / 10;
+          stopX += clefWidth;
+        }
+
+        footroom = Math.max(parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX), footroom);
+        if (footroom === Infinity) { // will cause Vexflow error
+          return;
+        }
+        //Whatever is currently lower - the set render height of the begin vf stave, the set render height of the end vf stave,
+        //or the bottom line. Use that as the render height of both staves
+        footroom = Math.max(footroom, yLineForPedalMarking + bracketHeight);
+        vfPedal.setLine(footroom - 3 - (parentStaffline.StaffLines.length - 1));
+        if (startX > stopX) { // TODO hotfix for skybottomlinecalculator after pedal no endNote fix
+          const newStart: number = stopX;
+          stopX = startX;
+          startX = newStart;
+        }
+        parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + bracketHeight);
+      }
+      //If our current pedal is below the other pedals in this staffline, set them all to this height
+      for (const otherPedal of parentStaffline.Pedals) {
+        const vfOtherPedal: VexFlowPedal = otherPedal as VexFlowPedal;
+        const otherPedalMarking: any = vfOtherPedal.getPedalMarking();
+        const yLineForOtherPedalMarking: number = (otherPedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
+        //Only do these changes if current footroom is higher
+        if(footroom > yLineForOtherPedalMarking) {
+          const otherPedalMarkingMarginXOffset: number = otherPedalMarking.render_options.text_margin_right / 10;
+          let otherPedalStartX: number = vfOtherPedal.startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
+          let otherPedalStopX: number = undefined;
+          vfOtherPedal.setLine(footroom - 3 - (parentStaffline.StaffLines.length - 1));
+          let otherPedalEndBBox: BoundingBox = vfOtherPedal.endVfVoiceEntry?.PositionAndShape;
+          if (!otherPedalEndBBox) {
+            otherPedalEndBBox = vfOtherPedal.endMeasure.PositionAndShape;
+          }
+          if (vfOtherPedal.EndSymbolPositionAndShape) {
+            const otherSymbolHalfHeight: number = pedalMarking.render_options.glyph_point_size / 20;
+            //Width of the Ped. symbol
+            otherPedalStopX = otherPedalStartX + 3.4;
+            const otherPedalStartX2: number = otherPedalEndBBox.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
+            //Width of * symbol
+            const otherPedalStopX2: number = otherPedalStartX2 + 1.5;
+            parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX, otherPedalStopX, footroom + otherSymbolHalfHeight);
+            parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX2, otherPedalStopX2, footroom + otherSymbolHalfHeight);
+          } else {
+            const otherPedalBracketHeight: number = otherPedalMarking.render_options.bracket_height / 10;
+
+            if(otherPedalMarking.EndsStave){
+                otherPedalStopX = otherPedalEndBBox.AbsolutePosition.x + otherPedalEndBBox.Size.width - otherPedalMarkingMarginXOffset;
+            } else {
+              switch (pedalMarking.style) {
+                case PEDAL_STYLES_ENUM.BRACKET_OPEN_END:
+                case PEDAL_STYLES_ENUM.BRACKET_OPEN_BOTH:
+                case PEDAL_STYLES_ENUM.MIXED_OPEN_END:
+                  otherPedalStopX = otherPedalEndBBox.AbsolutePosition.x + otherPedalEndBBox.BorderRight - otherPedalMarkingMarginXOffset;
+                break;
+                default:
+                  otherPedalStopX = otherPedalEndBBox.AbsolutePosition.x + otherPedalEndBBox.BorderLeft - otherPedalMarkingMarginXOffset;
+                break;
+              }
+            }
+            //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
+            const vfOtherClefBefore: Vex.Flow.ClefNote = (vfOtherPedal.endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
+            if (vfOtherClefBefore) {
+              const otherClefWidth: number = vfOtherClefBefore.getWidth() / 10;
+              otherPedalStopX += otherClefWidth;
+            }
+            if (otherPedalStartX > otherPedalStopX) {
+              // TODO this shouldn't happen, though this fixes the SkyBottomLineCalculator error for now (startIndex needs to be <= endIndex)
+              // switch startX and stopX
+              const otherStartX: number = otherPedalStartX;
+              otherPedalStartX = otherPedalStopX;
+              otherPedalStopX = otherStartX;
+            }
+            parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX, otherPedalStopX, footroom + otherPedalBracketHeight);
+          }
+        }
+      }
+  }
+
   private calculateOctaveShiftSkyBottomLine(startStaffEntry: GraphicalStaffEntry, endStaffEntry: GraphicalStaffEntry,
                                             vfOctaveShift: VexFlowOctaveShift, parentStaffline: StaffLine): void {
     if (!endStaffEntry) {
@@ -1007,8 +1372,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (startStaffEntry === endStaffEntry) {
       endXOffset *= 2;
     }
-    const startX: number = startStaffEntry.PositionAndShape.AbsolutePosition.x - startXOffset;
-    const stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endXOffset;
+    let startX: number = startStaffEntry.PositionAndShape.AbsolutePosition.x - startXOffset;
+    let stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endXOffset;
+    if (startX > stopX) {
+      // very rare case of the start staffentry being before end staffentry. would lead to error in skybottomline. See #1281
+      // reverse startX and endX
+      const oldStartX: number = startX;
+      startX = stopX;
+      stopX = oldStartX;
+    }
+
     vfOctaveShift.PositionAndShape.Size.width = startX - stopX;
     const textBracket: VF.TextBracket = vfOctaveShift.getTextBracket();
     const fontSize: number = (textBracket as any).font.size / 10;
@@ -1056,7 +1429,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected calculateSkyBottomLines(): void {
-    const staffLines: StaffLine[] = this.musicSystems.map(musicSystem => musicSystem.StaffLines).flat();
+    const staffLines: StaffLine[] = CollectionUtil.flat(this.musicSystems.map(musicSystem => musicSystem.StaffLines));
     //const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
     let numMeasures: number = 0; // number of graphical measures that are rendered
     for (const staffline of staffLines) {
@@ -1128,7 +1501,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[]): void {
-    voiceEntry.LyricsEntries.forEach((key: number, lyricsEntry: LyricsEntry) => {
+    voiceEntry.LyricsEntries.forEach((key: string, lyricsEntry: LyricsEntry) => {
       const graphicalLyricEntry: GraphicalLyricEntry = new GraphicalLyricEntry(lyricsEntry,
                                                                                graphicalStaffEntry,
                                                                                this.rules.LyricsHeight,
@@ -1219,6 +1592,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     for (let slurIndex: number = 0; slurIndex < gSlurs.length; slurIndex++) {
       if (gSlurs[slurIndex].slur === slur) {
         return slurIndex;
+      }
+    }
+    return -1;
+  }
+  public indexOfGraphicalGlissFromGliss(gGlissandi: GraphicalGlissando[], glissando: Glissando): number {
+    for (let glissIndex: number = 0; glissIndex < gGlissandi.length; glissIndex++) {
+      if (gGlissandi[glissIndex].Glissando === glissando) {
+        return glissIndex;
       }
     }
     return -1;
@@ -1354,17 +1735,147 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // order slurs that were saved to the Staffline
     for (const musicSystem of this.musicSystems) {
-          for (const staffLine of musicSystem.StaffLines) {
-            // Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
-            const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
-            for (const gSlur of sortedGSlurs) {
-                // crossed slurs will be handled later:
-                if (gSlur.slur.isCrossed()) {
-                    continue;
-                }
-                gSlur.calculateCurve(this.rules);
+      for (const staffLine of musicSystem.StaffLines) {
+        // Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
+        const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
+        for (const gSlur of sortedGSlurs) {
+            // crossed slurs will be handled later:
+            if (gSlur.slur.isCrossed()) {
+                continue;
             }
+            gSlur.calculateCurve(this.rules);
+        }
+      }
+    }
+  }
+
+  public calculateGlissandi(): void {
+    const openGlissDict: { [staffId: number]: GraphicalGlissando[] } = {};
+    for (const graphicalMeasure of this.graphicalMusicSheet.MeasureList[0]) { //let i: number = 0; i < this.graphicalMusicSheet.MeasureList[0].length; i++) {
+      openGlissDict[graphicalMeasure.ParentStaff.idInMusicSheet] = [];
+    }
+
+    for (const musicSystem of this.musicSystems) {
+        for (const staffLine of musicSystem.StaffLines) {
+          // if a glissando reaches out of the last musicsystem, we have to create another glissando reaching into this musicsystem
+          // (one gliss needs 2 graphical gliss)
+          // const isTab: boolean = staffLine.ParentStaff.isTab;
+          const openGlissandi: GraphicalGlissando[] = openGlissDict[staffLine.ParentStaff.idInMusicSheet];
+          for (let glissIndex: number = 0; glissIndex < openGlissandi.length; glissIndex++) {
+            const oldGliss: GraphicalGlissando = openGlissandi[glissIndex];
+            const newGliss: GraphicalGlissando = new VexFlowGlissando(oldGliss.Glissando);
+            staffLine.addGlissandoToStaffline(newGliss);
+            openGlissandi[glissIndex] = newGliss;
+          }
+
+          // add reference of gliss array to the VexFlowStaffline class
+          for (const graphicalMeasure of staffLine.Measures) {
+            for (const graphicalStaffEntry of graphicalMeasure.staffEntries) {
+              // loop over "normal" notes (= no gracenotes)
+              for (const graphicalVoiceEntry of graphicalStaffEntry.graphicalVoiceEntries) {
+                for (const graphicalNote of graphicalVoiceEntry.notes) {
+                  const gliss: Glissando = graphicalNote.sourceNote.NoteGlissando;
+                  // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
+                  if (!gliss?.EndNote || !gliss?.StartNote) {
+                    continue;
+                  }
+                  // add new VexFlowGlissando to List
+                  if (gliss.StartNote === graphicalNote.sourceNote) {
+                    // Add a Graphical Glissando to the staffline, if the recent note is the Startnote of a slur
+                    const gGliss: GraphicalGlissando = new VexFlowGlissando(gliss);
+                    openGlissandi.push(gGliss);
+                    //gGliss.staffEntries.push(graphicalStaffEntry);
+                    staffLine.addGlissandoToStaffline(gGliss);
+                  }
+                  if (gliss.EndNote === graphicalNote.sourceNote) {
+                    // Remove the gliss from the staffline if the note is the Endnote of a gliss
+                    const index: number = this.indexOfGraphicalGlissFromGliss(openGlissandi, gliss);
+                    if (index >= 0) {
+                      // save Voice Entry in gliss and then remove it from array of open glissandi
+                      const gGliss: GraphicalGlissando = openGlissandi[index];
+                      if (gGliss.staffEntries.indexOf(graphicalStaffEntry) === -1) {
+                        gGliss.staffEntries.push(graphicalStaffEntry);
+                      }
+                      openGlissandi.splice(index, 1);
+                    }
+                  }
+                }
+              }
+
+              // probably unnecessary, as a gliss only has 2 staffentries
+              //add the present Staffentry to all open slurs that don't contain this Staffentry already
+              for (const gGliss of openGlissandi) {
+                if (gGliss.staffEntries.indexOf(graphicalStaffEntry) === -1) {
+                  gGliss.staffEntries.push(graphicalStaffEntry);
+                }
+              }
+            } // loop over StaffEntries
+          } // loop over Measures
+        } // loop over StaffLines
+      } // loop over MusicSystems
+
+      for (const musicSystem of this.musicSystems) {
+        for (const staffLine of musicSystem.StaffLines) {
+        // order glissandi that were saved to the Staffline
+        // TODO? Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
+        //const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
+        for (const gGliss of staffLine.GraphicalGlissandi) {
+          const isTab: boolean = staffLine.ParentStaff.isTab;
+          if (isTab) {
+            const startNote: TabNote = <TabNote> gGliss.Glissando.StartNote;
+            const endNote: TabNote = <TabNote> gGliss.Glissando.EndNote;
+            const vfStartNote: VexFlowGraphicalNote = gGliss.staffEntries[0].findGraphicalNoteFromNote(startNote) as VexFlowGraphicalNote;
+            const vfEndNote: VexFlowGraphicalNote = gGliss.staffEntries.last().findGraphicalNoteFromNote(endNote) as VexFlowGraphicalNote;
+            if (!vfStartNote && !vfEndNote) {
+              return; // otherwise causes Vexflow error
+            }
+
+            let slideDirection: number = 1;
+            if (startNote.FretNumber > endNote.FretNumber) {
+              slideDirection = -1;
+            }
+            let first_indices: number[] = undefined;
+            let last_indices: number[] = undefined;
+            let startStemmableNote: VF.StemmableNote  = undefined;
+            // let startNoteIndexInTie: number = 0;
+            if (vfStartNote && vfStartNote.vfnote && vfStartNote.vfnote.length >= 2) {
+              startStemmableNote = vfStartNote.vfnote[0]; // otherwise needs to be undefined in TabSlide constructor!
+              first_indices = [0];
+              // startNoteIndexInTie = vfStartNote.vfnote[1];
+            }
+            let endStemmableNote: VF.StemmableNote  = undefined;
+            // let endNoteIndexInTie: number = 0;
+            if (vfEndNote && vfEndNote.vfnote && vfEndNote.vfnote.length >= 2) {
+              endStemmableNote = vfEndNote.vfnote[0];
+              last_indices = [0];
+              // endNoteIndexInTie = vfEndNote.vfnote[1];
+            }
+            const vfTie: VF.TabSlide = new VF.TabSlide(
+              {
+                first_indices: first_indices,
+                first_note: startStemmableNote,
+                last_indices: last_indices,
+                last_note: endStemmableNote,
+              },
+              slideDirection
+            );
+
+            const startMeasure: VexFlowMeasure = (vfStartNote?.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            if (startMeasure) {
+              startMeasure.vfTies.push(vfTie);
+              (gGliss as VexFlowGlissando).vfTie = vfTie;
+            }
+            const endMeasure: VexFlowMeasure = (vfEndNote?.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            if (endMeasure) {
+              endMeasure.vfTies.push(vfTie);
+              (gGliss as VexFlowGlissando).vfTie = vfTie;
+            }
+          } else {
+            //gGliss.calculateLine(this.rules);
           }
         }
       }
+    }
   }
+}
+

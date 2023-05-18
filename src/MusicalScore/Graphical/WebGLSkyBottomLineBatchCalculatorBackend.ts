@@ -1,3 +1,5 @@
+import Vex from "vexflow";
+import VF = Vex.Flow;
 import { EngravingRules } from "./EngravingRules";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
@@ -9,6 +11,7 @@ import {
 import vertexShaderSource from "./Shaders/VertexShader.glsl";
 import fragmentShaderSource from "./Shaders/FragmentShader.glsl";
 import log from "loglevel";
+import { CollectionUtil } from "../../Util/CollectionUtil";
 
 // WebGL helper functions
 
@@ -56,7 +59,7 @@ function createVertexBuffer(gl: WebGLRenderingContext, program: WebGLShader, att
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(CollectionUtil.flat(vertices)), gl.STATIC_DRAW);
     gl.useProgram(program);
 
     const positionAttributeLocation: number = gl.getAttribLocation(program, attributeName);
@@ -167,7 +170,7 @@ export class WebGLSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
 
     protected calculateFromCanvas(
         canvas: HTMLCanvasElement,
-        _: Vex.Flow.CanvasContext,
+        _: VF.CanvasContext,
         measures: VexFlowMeasure[],
         samplingUnit: number,
         tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration

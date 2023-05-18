@@ -3,6 +3,7 @@
 export * from "./Arpeggio";
 export * from "./Beam";
 export * from "./ChordSymbolContainer";
+export * from "./Glissando";
 export * from "./LinkedVoice";
 export * from "./Note";
 export * from "./Notehead";

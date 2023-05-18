@@ -47,6 +47,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             "OSMD Function Test - Invisible Notes": "OSMD_function_test_invisible_notes.musicxml",
             "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
+            "OSMD Function Test - Pedals": "OSMD_Function_Test_Pedals.musicxml",
             "OSMD Function Test - Selecting Measures To Draw": "OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml",
             "OSMD Function Test - System and Page Breaks": "OSMD_Function_Test_System_and_Page_Breaks_4_pages.mxl",
             "OSMD Function Test - Tabulature": "OSMD_Function_Test_Tabulature_hayden_study_1.mxl",
@@ -87,6 +88,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         zoomOuts,
         zoomDivs,
         custom,
+        previousCursorBtn,
         nextCursorBtn,
         resetCursorBtn,
         followCursorCheckbox,
@@ -232,6 +234,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         }
         //canvas.id = 'osmdCanvasDiv';
         //canvas.style.overflowX = 'auto'; // enable horizontal scrolling
+        previousCursorBtn = document.getElementById("previous-cursor-btn");
         nextCursorBtn = document.getElementById("next-cursor-btn");
         resetCursorBtn = document.getElementById("reset-cursor-btn");
         followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
@@ -474,6 +477,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             // tripletsBracketed: true,
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });
+        openSheetMusicDisplay.TransposeCalculator = new TransposeCalculator(); // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
         //openSheetMusicDisplay.DrawSkyLine = true;
         //openSheetMusicDisplay.DrawBottomLine = true;
         //openSheetMusicDisplay.setDrawBoundingBox("GraphicalLabel", false);
@@ -482,9 +486,17 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         window.addEventListener("keydown", function (e) {
             var event = window.event ? window.event : e;
+            // left arrow key
+            if (event.keyCode === 37) {
+                openSheetMusicDisplay.cursor.previous();
+            }
+            // right arrow key
             if (event.keyCode === 39) {
                 openSheetMusicDisplay.cursor.next();
             }
+        });
+        previousCursorBtn?.addEventListener("click", function () {
+            openSheetMusicDisplay.cursor.previous();
         });
         nextCursorBtn.addEventListener("click", function () {
             openSheetMusicDisplay.cursor.next();
@@ -519,7 +531,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             if (createNewOsmd) {
                 // clears the canvas element
                 canvas.innerHTML = "";
-                openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value });
+                //openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value }); // resets EngravingRules
+                openSheetMusicDisplay.setOptions({backend: value});
                 openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to get more detailed control flow information
             } else {
                 // alternative, doesn't work yet, see setOptions():
@@ -529,8 +542,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             // selectSampleOnChange();
         });
         if(transposeBtn && transpose){
-            openSheetMusicDisplay.TransposeCalculator = new TransposeCalculator();
-
             transposeBtn.onclick = function(){
                 var transposeValue = parseInt(transpose.value);
                 openSheetMusicDisplay.Sheet.Transpose = transposeValue;
