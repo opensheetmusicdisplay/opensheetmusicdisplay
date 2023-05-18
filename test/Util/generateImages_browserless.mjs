@@ -320,6 +320,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
         const isTestPageBreakImpliesSystemBreak = sampleFilename.startsWith("test_pagebreak_implies_systembreak");
         const isTestPageBottomMargin0 = sampleFilename.includes("PageBottomMargin0");
+        const enableNewSystemAtSystemBreak = sampleFilename.includes("test_octaveshift_extragraphicalmeasure");
         osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
@@ -359,6 +360,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         }
         if (isTestPageBottomMargin0) {
             osmdInstance.EngravingRules.PageBottomMargin = 0;
+        }
+        if (enableNewSystemAtSystemBreak) {
+            osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
         }
     }
 
