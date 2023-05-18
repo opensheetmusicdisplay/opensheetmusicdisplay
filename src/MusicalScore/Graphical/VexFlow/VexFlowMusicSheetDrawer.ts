@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import Vex, { IRenderContext } from "vexflow";
 import VF = Vex.Flow;
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
@@ -29,6 +29,9 @@ import { DrawingParameters } from "../DrawingParameters";
 import { GraphicalMusicPage } from "../GraphicalMusicPage";
 import { GraphicalMusicSheet } from "../GraphicalMusicSheet";
 import { GraphicalUnknownExpression } from "../GraphicalUnknownExpression";
+import { VexFlowPedal } from "./VexFlowPedal";
+import { GraphicalGlissando } from "../GraphicalGlissando";
+import { VexFlowGlissando } from "./VexFlowGlissando";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -116,6 +119,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (this.rules.RenderSlurs) {
             this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
         }
+        if (this.rules.RenderGlissandi) {
+            this.drawGlissandi(staffLine as VexFlowStaffLine, absolutePos);
+        }
     }
 
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
@@ -125,6 +131,32 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 continue;
             }
             this.drawSlur(graphicalSlur, absolutePos);
+        }
+    }
+
+    private drawGlissandi(vfStaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
+        for (const gGliss of vfStaffLine.GraphicalGlissandi) {
+            this.drawGlissando(gGliss, absolutePos);
+        }
+    }
+
+    private drawGlissando(gGliss: GraphicalGlissando, abs: PointF2D): void {
+        if (!gGliss.StaffLine.ParentStaff.isTab) {
+            gGliss.calculateLine(this.rules);
+        }
+        if (gGliss.Line) {
+            const newStart: PointF2D = new PointF2D(gGliss.Line.Start.x + abs.x, gGliss.Line.Start.y);
+            const newEnd: PointF2D = new PointF2D(gGliss.Line.End.x + abs.x, gGliss.Line.End.y);
+            // note that we do not add abs.y, because GraphicalGlissando.calculateLine() uses AbsolutePosition for y,
+            //   because unfortunately RelativePosition seems imprecise.
+            this.drawLine(newStart, newEnd, gGliss.Color, gGliss.Width);
+        } else {
+            const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;
+            if (vfTie) {
+                const context: IRenderContext = this.backend.getContext();
+                vfTie.setContext(context);
+                vfTie.draw();
+            }
         }
     }
 
@@ -199,7 +231,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     /** Draws a line in the current backend. Only usable while pages are drawn sequentially, because backend reference is updated in that process.
      *  To add your own lines after rendering, use DrawOverlayLine.
      */
-    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): Node {
+    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#000000FF", lineWidth: number = 0.2): Node {
         // TODO maybe the backend should be given as an argument here as well, otherwise this can't be used after rendering of multiple pages is done.
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
@@ -333,6 +365,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private drawLyrics(lyricEntries: GraphicalLyricEntry[], layer: number): void {
         lyricEntries.forEach(lyricsEntry => {
             const label: GraphicalLabel = lyricsEntry.GraphicalLabel;
+            label.Label.colorDefault = this.rules.DefaultColorLyrics;
             label.SVGNode = this.drawLabel(label, layer);
         });
     }
@@ -355,12 +388,28 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 const vexFlowOctaveShift: VexFlowOctaveShift = graphicalOctaveShift as VexFlowOctaveShift;
                 const ctx: Vex.IRenderContext = this.backend.getContext();
                 const textBracket: VF.TextBracket = vexFlowOctaveShift.getTextBracket();
+                if (this.rules.DefaultColorMusic) {
+                    (textBracket as any).render_options.color = this.rules.DefaultColorMusic;
+                }
                 textBracket.setContext(ctx);
                 try {
                     textBracket.draw();
                 } catch (ex) {
                     log.warn(ex);
                 }
+            }
+        }
+    }
+
+    protected drawPedals(staffLine: StaffLine): void {
+        for (const graphicalPedal of staffLine.Pedals) {
+            if (graphicalPedal) {
+                const vexFlowPedal: VexFlowPedal = graphicalPedal as VexFlowPedal;
+                const ctx: Vex.IRenderContext = this.backend.getContext();
+                const pedalMarking: Vex.Flow.PedalMarking = vexFlowPedal.getPedalMarking();
+                (pedalMarking as any).render_options.color = this.rules.DefaultColorMusic;
+                pedalMarking.setContext(ctx);
+                pedalMarking.draw();
             }
         }
     }
@@ -410,7 +459,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                                                      graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.Start.y);
                 const end: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.End.x,
                                                    graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.End.y);
-                this.drawLine(start, end, "black", line.Width);
+                this.drawLine(start, end, line.colorHex ?? "#000000", line.Width);
+                // the null check for colorHex is not strictly necessary anymore, but the previous default color was red.
             }
         }
     }

@@ -34,13 +34,14 @@ function sleep (ms) {
 //   (without these being global, we'd have to pass many of these values to the generateSampleImage function)
 // eslint-disable-next-line prefer-const
 let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 12);
+imageFormat = imageFormat?.toLowerCase();
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
         // eslint-disable-next-line max-len
         "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]");
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)');
-    console.log("example: node test/Util/generateImages_browserless.mjs ../../build ./test/data/ ./export png 210 297 allSmall --debug 5000");
+    console.log("example: node test/Util/generateImages_browserless.mjs ../../build ./test/data/ ./export png");
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
 }
@@ -48,9 +49,6 @@ let pageFormat;
 
 if (!mode) {
     mode = "";
-}
-if (imageFormat !== "svg") {
-    imageFormat = "png";
 }
 
 // let OSMD; // can only be required once window was simulated
@@ -320,6 +318,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const defaultOrCompactTightMode = sampleFilename.startsWith("OSMD_Function_Test_Container_height") ? "compacttight" : "default";
         const isTestFlatBeams = sampleFilename.startsWith("test_drum_tuplet_beams");
         const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
+        const isTestPageBottomMargin0 = sampleFilename.includes("PageBottomMargin0");
+        osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
         } else {
@@ -340,6 +340,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             pageFormat: pageFormat, // reset by drawingparameters default,
             ...makeSkyBottomLineOptions()
         });
+        // note that loadDefaultValues() may be executed in setOptions with drawingParameters default
+        //osmdInstance.EngravingRules.RenderSingleHorizontalStaffline = true; // to use this option here, place it after setOptions(), see above
         osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false; // this would override the command line options (--plain etc)
         includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
         osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
@@ -352,6 +354,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             osmdInstance.EngravingRules.FlatBeamOffsetPerBeam = 10;
         } else {
             osmdInstance.EngravingRules.FlatBeams = false;
+        }
+        if (isTestPageBottomMargin0) {
+            osmdInstance.EngravingRules.PageBottomMargin = 0;
         }
     }
 

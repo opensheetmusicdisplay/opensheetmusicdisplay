@@ -17,6 +17,7 @@ export class Instrument extends InstrumentalGroup {
 
     /** Transposition halftones for this instrument only.
      *  This is additive to osmd.Sheet.Transpose (MusicSheet).
+     *  osmd.TransposeCaculator needs to be defined/created for this to take effect. (just set it with new TransposeCalculator())
      * You need to call osmd.updateGraphic() before the next render() (assuming this is set after load()).
      */
     public Transpose: number = 0;
@@ -31,7 +32,7 @@ export class Instrument extends InstrumentalGroup {
     private hasChordSymbols: boolean = false;
     private playbackTranspose: number;
 
-    private lyricVersesNumbers: number[] = [];
+    private lyricVersesNumbers: string[] = [];
     private subInstruments: SubInstrument[] = [];
     private partAbbreviation: string;
 
@@ -56,10 +57,10 @@ export class Instrument extends InstrumentalGroup {
     public set HasChordSymbols(value: boolean) {
         this.hasChordSymbols = value;
     }
-    public get LyricVersesNumbers(): number[] {
+    public get LyricVersesNumbers(): string[] {
         return this.lyricVersesNumbers;
     }
-    public set LyricVersesNumbers(value: number[]) {
+    public set LyricVersesNumbers(value: string[]) {
         this.lyricVersesNumbers = value;
     }
     public get Name(): string {

@@ -70,6 +70,8 @@ import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSM
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
 import { GraphicalChordSymbolContainer } from ".";
+import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
+import { Voice } from "../VoiceData/Voice";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -179,7 +181,13 @@ export abstract class MusicSheetCalculator {
                 // console.log(`skipping ${measuresToSkip} measures for measure #${sourceMeasure.MeasureNumber}.`);
                 idx += measuresToSkip;
                 for (let idx2: number = 1; idx2 <= measuresToSkip; idx2++) {
-                    const nextSourceMeasure: SourceMeasure = musicSheet.SourceMeasures[sourceMeasure.MeasureNumber - 1 + idx2];
+                    const nextMeasureIndex: number = musicSheet.SourceMeasures.indexOf(sourceMeasure) + idx2;
+                    // note that if there are pickup measures in the sheet, the measure index is not MeasureNumber - 1.
+                    //   (if first measure in the sheet is a pickup measure, its index and measure number will be 0)
+                    if (nextMeasureIndex >= musicSheet.SourceMeasures.length) {
+                        break; // shouldn't happen, but for safety.
+                    }
+                    const nextSourceMeasure: SourceMeasure = musicSheet.SourceMeasures[nextMeasureIndex];
                     // TODO handle the case that a measure after the first multiple rest measure can't be reduced
                     nextSourceMeasure.multipleRestMeasureNumber = idx2 + 1;
                     nextSourceMeasure.isReducedToMultiRest = true;
@@ -425,10 +433,14 @@ export abstract class MusicSheetCalculator {
         let previousMeasureNumber: number = staffLine.Measures[0].MeasureNumber;
         let labelOffsetX: number = 0;
         for (let i: number = 0; i < staffLine.Measures.length; i++) {
-            if (this.rules.RenderMeasureNumbersOnlyAtSystemStart && i > 0) {
+            const measure: GraphicalMeasure = staffLine.Measures[i];
+            let skip: boolean = this.rules.RenderMeasureNumbersOnlyAtSystemStart && i > 1;
+            if (i === 1 && staffLine.Measures[0].parentSourceMeasure.ImplicitMeasure) {
+                skip = false; // if the first measure (i=0) is a pickup measure, we shouldn't skip measure number 1 (i=1)
+            }
+            if (skip) {
                 return; // no more measures number labels need to be rendered for this system, so we can just return instead of continue.
             }
-            const measure: GraphicalMeasure = staffLine.Measures[i];
             if (measure.MeasureNumber === 0 || measure.MeasureNumber === 1) {
                 previousMeasureNumber = measure.MeasureNumber;
                 // for the first measure, this label still needs to be created. Afterwards, this variable will hold the previous label's measure number.
@@ -542,9 +554,10 @@ export abstract class MusicSheetCalculator {
      * @param staffLine
      * @param lyricVersesNumber
      */
-    protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): GraphicalStaffEntry[] {
+    protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: string[]): GraphicalStaffEntry[] {
         let numberOfVerses: number = 0;
         let lyricsStartYPosition: number = this.rules.StaffHeight; // Add offset to prevent collision
+        const relevantVerseNumbers: Map<string, boolean> = new Map<string, boolean>();
         const lyricsStaffEntriesList: GraphicalStaffEntry[] = [];
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
@@ -556,7 +569,15 @@ export abstract class MusicSheetCalculator {
             const len2: number = measure.staffEntries.length;
             for (let idx2: number = 0; idx2 < len2; ++idx2) {
                 const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
-                if (staffEntry.LyricsEntries.length > 0) {
+
+                // Collect relevant verse numbers
+                const len3: number = staffEntry.LyricsEntries.length;
+                for (let idx3: number = 0; idx3 < len3; ++idx3) {
+                    const lyricsEntry: LyricsEntry = staffEntry.LyricsEntries[idx3].LyricsEntry;
+                    relevantVerseNumbers[lyricsEntry.VerseNumber] = lyricsEntry.IsChorus;
+                }
+
+                if (len3 > 0) {
                     lyricsStaffEntriesList.push(staffEntry);
                     numberOfVerses = Math.max(numberOfVerses, staffEntry.LyricsEntries.length);
 
@@ -576,7 +597,7 @@ export abstract class MusicSheetCalculator {
 
                     // check BottomLine in this range and take the maximum between the two values
                     const bottomLineMax: number = skyBottomLineCalculator.getBottomLineMaxInRange(minMarginLeft, maxMarginRight);
-                    lyricsStartYPosition = Math.max(lyricsStartYPosition, bottomLineMax);
+                    lyricsStartYPosition = Math.max(lyricsStartYPosition, bottomLineMax + this.rules.LyricsYMarginToBottomLine);
                 }
             }
         }
@@ -585,6 +606,19 @@ export abstract class MusicSheetCalculator {
         // iterate again through the Staffentries with LyricEntries
         len = lyricsStaffEntriesList.length;
         for (const staffEntry of lyricsStaffEntriesList) {
+
+            // Filter verse numbers
+            const filteredLyricVersesNumber: string[] = [];
+            let isChorus: boolean = true;
+            for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
+                isChorus &&= staffEntry.LyricsEntries[i].LyricsEntry.IsChorus;
+            }
+            for (const lyricVerseNumber of lyricVersesNumber){
+                if (relevantVerseNumbers[lyricVerseNumber] === isChorus) {
+                    filteredLyricVersesNumber.push(lyricVerseNumber);
+                }
+            }
+
             // set LyricEntryLabel RelativePosition
             for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
                 const lyricEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[i];
@@ -592,8 +626,8 @@ export abstract class MusicSheetCalculator {
 
                 // read the verseNumber and get index of this number in the sorted LyricVerseNumbersList of Instrument
                 // eg verseNumbers: 2,3,4,6 => 1,2,3,4
-                const verseNumber: number = lyricEntry.LyricsEntry.VerseNumber;
-                const sortedLyricVerseNumberIndex: number = lyricVersesNumber.indexOf(verseNumber);
+                const verseNumber: string = lyricEntry.LyricsEntry.VerseNumber;
+                const sortedLyricVerseNumberIndex: number = filteredLyricVersesNumber.indexOf(verseNumber);
                 const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight + this.rules.VerticalBetweenLyricsDistance +
                     this.rules.LyricsYOffsetToStaffHeight;
 
@@ -604,6 +638,7 @@ export abstract class MusicSheetCalculator {
                 }
                 const previousRelativeX: number = lyricsEntryLabel.PositionAndShape.RelativePosition.x;
                 lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(previousRelativeX, position);
+                lyricsEntryLabel.Label.fontStyle = lyricEntry.LyricsEntry.FontStyle;
                 maxPosition = Math.max(maxPosition, position);
             }
         }
@@ -655,6 +690,16 @@ export abstract class MusicSheetCalculator {
                                          measureIndex: number, staffIndex: number): void {
         throw new Error(this.abstractNotImplementedErrorMessage);
     }
+
+    /**
+     * Calculate a single Pedal for a [[MultiExpression]].
+     * @param sourceMeasure
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
+    protected abstract calculateSinglePedal(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
+        measureIndex: number, staffIndex: number): void;
 
     /**
      * Calculate all the textual [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
@@ -842,6 +887,7 @@ export abstract class MusicSheetCalculator {
         if (!this.leadSheet && this.rules.RenderSlurs) {
             this.calculateSlurs();
         }
+        this.calculateGlissandi();
         //Calculate measure number skyline AFTER slurs
         if (this.rules.RenderMeasureNumbers) {
             for (let idx: number = 0, len: number = this.musicSystems.length; idx < len; ++idx) {
@@ -865,6 +911,10 @@ export abstract class MusicSheetCalculator {
             this.calculateExpressionAlignements();
             // calculate all OctaveShifts
             this.calculateOctaveShifts();
+            if (this.rules.RenderPedals) {
+                // calculate all Pedal Expressions
+                this.calculatePedals();
+            }
             // calcualte RepetitionInstructions (Dal Segno, Coda, etc)
             this.calculateWordRepetitionInstructions();
         }
@@ -924,13 +974,14 @@ export abstract class MusicSheetCalculator {
                 musicSystem.PositionAndShape.RelativePosition =
                     new PointF2D(musicSystem.PositionAndShape.RelativePosition.x, musicSystem.PositionAndShape.RelativePosition.y - distance);
             }
-            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                    const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                    staffLine.addActivitySymbolClickArea();
-                }
-            }
+            // add ActivitySymbolClickArea - currently unused, extends boundingbox of MusicSystem unnecessarily -> PageRightMargin 0 impossible
+            // for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
+            //     const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+            //     for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
+            //         const staffLine: StaffLine = musicSystem.StaffLines[idx3];
+            //         staffLine.addActivitySymbolClickArea();
+            //     }
+            // }
 
             // calculate TopBottom Borders for all elements recursively
             //   necessary for composer label (page labels) for high notes in first system
@@ -1055,10 +1106,81 @@ export abstract class MusicSheetCalculator {
     }
 
     protected calculateTupletNumbers(): void {
+        if (!this.rules.TupletNumberLimitConsecutiveRepetitions) {
+            return;
+        }
+        let currentTupletNumber: number = -1;
+        let currentTypeLength: Fraction = undefined;
+        let consecutiveTupletCount: number = 0;
+        let currentTuplet: Tuplet = undefined;
+        let skipTuplet: Tuplet = undefined; // if set, ignore (further) handling of this tuplet
+        const disabledPerVoice: Object = {};
+        for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
+            for (const voice of instrument.Voices) {
+                consecutiveTupletCount = 0; // reset for next voice
+                disabledPerVoice[voice.VoiceId] = {};
+                for (const ve of voice.VoiceEntries) {
+                    if (ve.Notes.length > 0) {
+                        const firstNote: Note = ve.Notes[0];
+                        if (!firstNote.NoteTuplet) {
+                            currentTupletNumber = -1;
+                            consecutiveTupletCount = 0;
+                            currentTuplet = undefined;
+                            currentTypeLength = undefined;
+                            continue;
+                        }
+                        if (firstNote.NoteTuplet === skipTuplet) {
+                            continue;
+                        }
+                        let typeLength: Fraction = firstNote.TypeLength;
+                        if (!typeLength) {
+                            // shouldn't happen, now that rest notes have TypeLength set too, see VoiceGenerator.addRestNote(), addSingleNote()
+                            //   see test_tuplets_starting_with_rests_layout.mxl (first measure bass)
+                            log.warn("note missing TypeLength");
+                            typeLength = firstNote.NoteTuplet.Fractions[0];
+                        }
+                        if (firstNote.NoteTuplet !== currentTuplet) {
+                            if (disabledPerVoice[voice.VoiceId][firstNote.NoteTuplet.TupletLabelNumber]) {
+                                if (disabledPerVoice[voice.VoiceId][firstNote.NoteTuplet.TupletLabelNumber][typeLength.RealValue]) {
+                                    firstNote.NoteTuplet.RenderTupletNumber = false;
+                                    skipTuplet = firstNote.NoteTuplet;
+                                    continue;
+                                }
+                            }
+                        }
+                        if (firstNote.NoteTuplet.TupletLabelNumber !== currentTupletNumber ||
+                            !typeLength.Equals(currentTypeLength)) {
+                            currentTupletNumber = firstNote.NoteTuplet.TupletLabelNumber;
+                            currentTypeLength = typeLength;
+                            consecutiveTupletCount = 0;
+                        }
+                        currentTuplet = firstNote.NoteTuplet;
+                        consecutiveTupletCount++;
+                        if (consecutiveTupletCount <= this.rules.TupletNumberMaxConsecutiveRepetitions) {
+                            firstNote.NoteTuplet.RenderTupletNumber = true; // need to re-activate after re-render when it was set to false
+                        }
+                        if (consecutiveTupletCount > this.rules.TupletNumberMaxConsecutiveRepetitions) {
+                            firstNote.NoteTuplet.RenderTupletNumber = false;
+                            if (this.rules.TupletNumberAlwaysDisableAfterFirstMax) {
+                                if (!disabledPerVoice[voice.VoiceId][currentTupletNumber]) {
+                                    disabledPerVoice[voice.VoiceId][currentTupletNumber] = {};
+                                }
+                                disabledPerVoice[voice.VoiceId][currentTupletNumber][typeLength.RealValue] = true;
+                            }
+                        }
+                        skipTuplet = currentTuplet;
+                    }
+                }
+            }
+        }
         return;
     }
 
     protected calculateSlurs(): void {
+        return;
+    }
+
+    protected calculateGlissandi(): void {
         return;
     }
 
@@ -1099,6 +1221,7 @@ export abstract class MusicSheetCalculator {
     * @param startPosInStaffline Starting point in staff line
     */
     public calculateGraphicalContinuousDynamic(graphicalContinuousDynamic: GraphicalContinuousDynamicExpression, startPosInStaffline: PointF2D): void {
+        const isSoftAccent: boolean = graphicalContinuousDynamic.IsSoftAccent;
         const staffIndex: number = graphicalContinuousDynamic.ParentStaffLine.ParentStaff.idInMusicSheet;
         // TODO: Previously the staffIndex was passed down. BUT you can (and this function actually does this) get it from
         // the musicSystem OR from the ParentStaffLine. Is this the same index?
@@ -1143,9 +1266,18 @@ export abstract class MusicSheetCalculator {
         const beginOfNextNote: Fraction = Fraction.plus(endAbsoluteTimestamp, maxNoteLength);
         const nextNotePosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
             beginOfNextNote, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0);
+        const wedgePadding: number = this.rules.SoftAccentWedgePadding;
+        const staffEntryWidth: number = container.getFirstNonNullStaffEntry().PositionAndShape.Size.width; // staff entry widths for whole notes is too long
+        const sizeFactor: number = this.rules.SoftAccentSizeFactor;
+        //const standardWidth: number = 2;
+
         //If the next note position is not on the next staffline
         //extend close to the next note
-        if (nextNotePosInStaffLine.x > endPosInStaffLine.x && nextNotePosInStaffLine.x < endOfMeasure) {
+        if (isSoftAccent) {
+            //startPosInStaffline.x -= 1;
+            startPosInStaffline.x -= staffEntryWidth / 2 * sizeFactor + wedgePadding;
+            endPosInStaffLine.x = startPosInStaffline.x + staffEntryWidth / 2 * sizeFactor;
+        } else if (nextNotePosInStaffLine.x > endPosInStaffLine.x && nextNotePosInStaffLine.x < endOfMeasure) {
             endPosInStaffLine.x += (nextNotePosInStaffLine.x - endPosInStaffLine.x) / this.rules.WedgeEndDistanceBetweenTimestampsFactor;
         } else { //Otherwise extend to the end of the measure
             endPosInStaffLine.x = endOfMeasure - this.rules.WedgeHorizontalMargin;
@@ -1169,13 +1301,13 @@ export abstract class MusicSheetCalculator {
         let secondGraphicalContinuousDynamic: GraphicalContinuousDynamicExpression = undefined;
 
         // last length check
-        if (sameStaffLine && endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength) {
+        if (sameStaffLine && endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength && !isSoftAccent) {
             endPosInStaffLine.x = startPosInStaffline.x + this.rules.WedgeMinLength;
         }
 
         // Upper staff wedge always starts at the given position and the lower staff wedge always starts at the begin of measure
         const upperStartX: number = startPosInStaffline.x;
-        const lowerStartX: number = endStaffLine.Measures[0].beginInstructionsWidth - this.rules.WedgeHorizontalMargin - 2;
+        let lowerStartX: number = endStaffLine.Measures[0].beginInstructionsWidth - this.rules.WedgeHorizontalMargin - 2;
         //TODO fix this when a range of measures to draw is given that doesn't include all the dynamic's measures (e.g. for crescendo)
         let upperEndX: number = 0;
         let lowerEndX: number = 0;
@@ -1191,6 +1323,17 @@ export abstract class MusicSheetCalculator {
             graphicalContinuousDynamic.IsSplittedPart = true;
         } else {
             upperEndX = endPosInStaffLine.x;
+        }
+        if (isSoftAccent) {
+            // secondGraphicalContinuousDynamic = new GraphicalContinuousDynamicExpression(
+            //     graphicalContinuousDynamic.ContinuousDynamic,
+            //     graphicalContinuousDynamic.ParentStaffLine,
+            //     graphicalContinuousDynamic.StartMeasure.parentSourceMeasure
+            // );
+            // secondGraphicalContinuousDynamic.StartIsEnd = true;
+            // doesn't work well with secondGraphicalDynamic, positions/rendering messed up
+            lowerStartX = endPosInStaffLine.x + wedgePadding;
+            lowerEndX = lowerStartX + staffEntryWidth / 2 * sizeFactor;
         }
 
         // the Height of the Expression's placement
@@ -1380,7 +1523,13 @@ export abstract class MusicSheetCalculator {
         // Crescendo (point to the left, opening to the right)
         graphicalContinuousDynamic.Lines.clear();
         if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
-            if (sameStaffLine) {
+            if (isSoftAccent) {
+                graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
+                graphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, idealY);
+                graphicalContinuousDynamic.calcPsi();
+                // secondGraphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, idealY);
+                // secondGraphicalContinuousDynamic.calcPsi();
+            } else if (sameStaffLine && !isSoftAccent) {
                 graphicalContinuousDynamic.createCrescendoLines(upperStartX, upperEndX, idealY);
                 graphicalContinuousDynamic.calcPsi();
             } else {
@@ -1494,7 +1643,8 @@ export abstract class MusicSheetCalculator {
                              style: FontStyles,
                              placement: PlacementEnum,
                              fontHeight: number,
-                             textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom): GraphicalLabel {
+                             textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom,
+                             yPadding: number = 0): GraphicalLabel {
         const label: Label = new Label(combinedString, textAlignment);
         label.fontStyle = style;
         label.fontHeight = fontHeight;
@@ -1527,9 +1677,9 @@ export abstract class MusicSheetCalculator {
         let drawingHeight: number;
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
         if (placement === PlacementEnum.Below) {
-            drawingHeight = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);
+            drawingHeight = skyBottomLineCalculator.getBottomLineMaxInRange(left, right) + yPadding;
         } else {
-            drawingHeight = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
+            drawingHeight = skyBottomLineCalculator.getSkyLineMinInRange(left, right) - yPadding;
         }
 
         // set RelativePosition
@@ -1616,7 +1766,8 @@ export abstract class MusicSheetCalculator {
                                                                        multiTempoExpression.getFontstyleOfFirstEntry(),
                                                                        entry.Expression.Placement,
                                                                        this.rules.UnknownTextHeight,
-                                                                       textAlignment);
+                                                                       textAlignment,
+                                                                       this.rules.TempoYSpacing);
 
                 if (entry.Expression instanceof InstantaneousTempoExpression) {
                     //already added?
@@ -2005,6 +2156,7 @@ export abstract class MusicSheetCalculator {
     protected calculatePageLabels(page: GraphicalMusicPage): void {
         if (this.rules.RenderSingleHorizontalStaffline) {
             page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width;
+            //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
             page.PositionAndShape.calculateBoundingBox();
             this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width;
         }
@@ -2016,7 +2168,7 @@ export abstract class MusicSheetCalculator {
             firstSystemAbsoluteTopMargin = firstMusicSystem.PositionAndShape.RelativePosition.y + firstMusicSystem.PositionAndShape.BorderTop;
         }
         //const firstStaffLine: StaffLine = this.graphicalMusicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
-        if (this.graphicalMusicSheet.Title) {
+        if (this.graphicalMusicSheet.Title && this.rules.RenderTitle) {
             const title: GraphicalLabel = this.graphicalMusicSheet.Title;
             title.PositionAndShape.Parent = page.PositionAndShape;
             //title.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
@@ -2027,7 +2179,7 @@ export abstract class MusicSheetCalculator {
             title.PositionAndShape.RelativePosition = relative;
             page.Labels.push(title);
         }
-        if (this.graphicalMusicSheet.Subtitle) {
+        if (this.graphicalMusicSheet.Subtitle && this.rules.RenderTitle && this.rules.RenderSubtitle) {
             const subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
             //subtitle.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
             subtitle.PositionAndShape.Parent = page.PositionAndShape;
@@ -2044,7 +2196,7 @@ export abstract class MusicSheetCalculator {
         //   we don't need a skybottomcalculator currently, labels are put above system skyline anyways.
         const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
         let composerRelativeY: number;
-        if (composer) {
+        if (composer && this.rules.RenderComposer) {
             composer.PositionAndShape.Parent = page.PositionAndShape; // if using pageWidth. (which can currently be too wide) TODO fix pageWidth (#578)
             //composer.PositionAndShape.Parent = topStaffline.PositionAndShape; // if using firstStaffLine...width.
             //      y-collision problems, harder to y-align with lyrics
@@ -2086,7 +2238,7 @@ export abstract class MusicSheetCalculator {
             page.Labels.push(composer);
         }
         const lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
-        if (lyricist) {
+        if (lyricist && this.rules.RenderLyricist) {
             lyricist.PositionAndShape.Parent = page.PositionAndShape;
             lyricist.setLabelPositionAndShapeBorders();
             const relative: PointF2D = new PointF2D();
@@ -2187,6 +2339,17 @@ export abstract class MusicSheetCalculator {
             return;
         }
         const ties: Tie[] = staffEntry.ties;
+        if (ties.length === 1) {
+            const tie: Tie = ties[0];
+            if (tie.TieDirection === PlacementEnum.NotYetDefined) {
+                const voiceId: number = tie.Notes[0].ParentVoiceEntry.ParentVoice.VoiceId;
+                // put ties of second voices (e.g. 2 for right hand, 6 left hand) below by default
+                //   TODO could be more precise but also more complex by checking lower notes, other notes, etc.
+                if (voiceId === 2 || voiceId === 6) {
+                    tie.TieDirection = PlacementEnum.Below;
+                }
+            }
+        }
         if (ties.length > 1) {
             let highestNote: Note = undefined;
             for (const gseTie of ties) {
@@ -2442,8 +2605,19 @@ export abstract class MusicSheetCalculator {
                                                           measure.parentSourceMeasure.AbsoluteTimestamp,
                                                           measure.parentSourceMeasure.CompleteNumberOfStaves),
                     staff);
+                if (staff.Voices.length === 0) {
+                    const newVoice: Voice = new Voice(measure.ParentStaff.ParentInstrument, -1);
+                    // this is problematic because we don't know the MusicXML voice ids and how many voices with which ids will be created after this.
+                    //   but it should only happen when the first measure of the piece is empty.
+                    staff.Voices.push(newVoice);
+                }
                 const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
-                const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined, sourceMeasure);
+                let duration: Fraction = sourceMeasure.Duration;
+                if (duration.RealValue === 0) {
+                    duration = sourceMeasure.ActiveTimeSignature.clone();
+                }
+                const note: Note = new Note(voiceEntry, sourceStaffEntry, duration, undefined, sourceMeasure, true);
+                note.IsWholeMeasureRest = true; // there may be a more elegant solution
                 note.PrintObject = this.rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
                   // don't display whole rest that wasn't given in XML, only for layout/voice completion
                 voiceEntry.Notes.push(note);
@@ -2456,7 +2630,8 @@ export abstract class MusicSheetCalculator {
                     note,
                     gve,
                     new ClefInstruction(),
-                    OctaveEnum.NONE, undefined);
+                    OctaveEnum.NONE,
+                    this.rules);
                 MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
                 gve.notes.push(graphicalNote);
             }
@@ -2606,6 +2781,14 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    private getFingeringPlacement(measure: GraphicalMeasure): PlacementEnum {
+        let placement: PlacementEnum = this.rules.FingeringPosition;
+        if (placement === PlacementEnum.NotYetDefined || placement === PlacementEnum.AboveOrBelow) {
+            placement = measure.isUpperStaffOfInstrument() ? PlacementEnum.Above : PlacementEnum.Below;
+        }
+        return placement;
+    }
+
     public calculateFingerings(): void {
         if (this.rules.FingeringPosition === PlacementEnum.Left ||
             this.rules.FingeringPosition === PlacementEnum.Right) {
@@ -2614,7 +2797,7 @@ export abstract class MusicSheetCalculator {
         for (const system of this.musicSystems) {
             for (const line of system.StaffLines) {
                 for (const measure of line.Measures) {
-                    const placement: PlacementEnum = measure.isUpperStaffOfInstrument() ? PlacementEnum.Above : PlacementEnum.Below;
+                    const placement: PlacementEnum = this.getFingeringPlacement(measure);
                     for (const gse of measure.staffEntries) {
                         gse.FingeringEntries = [];
                         const skybottomcalculator: SkyBottomLineCalculator = line.SkyBottomLineCalculator;
@@ -2928,6 +3111,7 @@ export abstract class MusicSheetCalculator {
      */
     private calculateSingleDashForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): void {
         const label: Label = new Label("-");
+        label.colorDefault = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         const dash: GraphicalLabel = new GraphicalLabel(
             label, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
         dash.setLabelPositionAndShapeBorders();
@@ -3032,6 +3216,7 @@ export abstract class MusicSheetCalculator {
         const lineStart: PointF2D = new PointF2D(startX, y);
         const lineEnd: PointF2D = new PointF2D(endX, y);
         const graphicalLine: GraphicalLine = new GraphicalLine(lineStart, lineEnd, this.rules.LyricUnderscoreLineWidth);
+        graphicalLine.colorHex = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         staffLine.LyricLines.push(graphicalLine);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
             this.staffLinesWithLyricWords.push(staffLine);
@@ -3048,6 +3233,7 @@ export abstract class MusicSheetCalculator {
      */
     private calculateRightAndLeftDashesForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): number {
         const leftLabel: Label = new Label("-");
+        leftLabel.colorDefault = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         const leftDash: GraphicalLabel = new GraphicalLabel(
             leftLabel, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
         leftDash.setLabelPositionAndShapeBorders();
@@ -3112,6 +3298,24 @@ export abstract class MusicSheetCalculator {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
                         if ((sourceMeasure.StaffLinkedExpressions[j][k].OctaveShiftStart)) {
                             this.calculateSingleOctaveShift(sourceMeasure, sourceMeasure.StaffLinkedExpressions[j][k], i, j);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private calculatePedals(): void {
+        for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
+            const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+            for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
+                if (!this.graphicalMusicSheet.MeasureList[i] || !this.graphicalMusicSheet.MeasureList[i][j]) {
+                    continue;
+                }
+                if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.ParentInstrument.Visible) {
+                    for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
+                        if ((sourceMeasure.StaffLinkedExpressions[j][k].PedalStart)) {
+                            this.calculateSinglePedal(sourceMeasure, sourceMeasure.StaffLinkedExpressions[j][k], i, j);
                         }
                     }
                 }

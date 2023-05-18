@@ -18,6 +18,7 @@ import {ITextTranslation} from "../../Interfaces/ITextTranslation";
 import log from "loglevel";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
+import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;
@@ -33,6 +34,9 @@ export class ExpressionReader {
     private openContinuousTempoExpression: ContinuousTempoExpression;
     private activeInstantaneousDynamic: InstantaneousDynamicExpression;
     private openOctaveShift: OctaveShift;
+    private lastWedge: ContinuousDynamicExpression;
+    private WedgeYPosXml: number;
+    private openPedal: Pedal;
     constructor(musicSheet: MusicSheet, instrument: Instrument, staffNumber: number) {
         this.musicSheet = musicSheet;
         this.staffNumber = staffNumber;
@@ -72,6 +76,21 @@ export class ExpressionReader {
             } else { this.directionTimestamp = Fraction.createFromFraction(offsetFraction); }
         }
 
+        // read default-y for wedge node
+        let newWedgeYPos: number;
+        const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
+        let wedgeNode: IXmlElement;
+        if (directionTypeNode) {
+            wedgeNode = directionTypeNode.element("wedge");
+            if (wedgeNode) {
+                const yPosAttr: IXmlAttribute = wedgeNode.attribute("default-y");
+                if (yPosAttr) {
+                    newWedgeYPos = this.readPosition(yPosAttr);
+                }
+            }
+        }
+        this.WedgeYPosXml = newWedgeYPos;
+
         const placeAttr: IXmlAttribute = xmlNode.attribute("placement");
         if (placeAttr) {
             try {
@@ -88,11 +107,9 @@ export class ExpressionReader {
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 this.placement = PlacementEnum.Below;
             }
-
         }
         if (this.placement === PlacementEnum.NotYetDefined) {
             try {
-                const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
                 if (directionTypeNode) {
                     const dynamicsNode: IXmlElement = directionTypeNode.element("dynamics");
                     if (dynamicsNode) {
@@ -101,7 +118,6 @@ export class ExpressionReader {
                             this.readExpressionPlacement(defAttr, "read dynamics y pos");
                         }
                     }
-                    const wedgeNode: IXmlElement = directionTypeNode.element("wedge");
                     if (wedgeNode) {
                         const defAttr: IXmlAttribute = wedgeNode.attribute("default-y");
                         if (defAttr) {
@@ -125,7 +141,7 @@ export class ExpressionReader {
                 }
             } catch (ex) {
                 const errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/ExpressionPlacementError",
-                                                                          "Invalid expression placement -> set to default.");
+                                                                          "Invalid expression placement. Set to default.");
                 log.debug("ExpressionReader.readExpressionParameters", errorMsg, ex);
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 this.placement = PlacementEnum.Below;
@@ -265,7 +281,7 @@ export class ExpressionReader {
                 octaveStaffNumber = parseInt(staffNode.value, 10);
             } catch (ex) {
                 const errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/OctaveShiftStaffError",
-                                                                          "Invalid octave shift staff number -> set to default");
+                                                                          "Invalid octave shift staff number. Set to default");
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 octaveStaffNumber = 1;
                 log.debug("ExpressionReader.addOctaveShift", errorMsg, ex);
@@ -327,6 +343,82 @@ export class ExpressionReader {
             }
         }
     }
+    public addPedalMarking(directionNode: IXmlElement, currentMeasure: SourceMeasure, endTimestamp: Fraction): void {
+        const directionTypeNode: IXmlElement = directionNode.element("direction-type");
+        if (directionTypeNode) {
+            const pedalNode: IXmlElement = directionTypeNode.element("pedal");
+            if (pedalNode !== undefined && pedalNode.hasAttributes) {
+                let sign: boolean = false, line: boolean = false;
+                try {
+                    if (pedalNode.attribute("line")?.value === "yes") {
+                        line = true;
+                    } else if (pedalNode.attribute("line")?.value === "no"){
+                        line = false;
+                        //No line implies sign
+                        sign = true;
+                    } else if (pedalNode.attribute("sign")?.value === "yes") {
+                        sign = true;
+                    } else { //if (pedalNode.attribute("sign")?.value === "no"){
+                        // only assume sign if explicitly given in one way or another
+                        sign = false;
+                        line = true;
+                    }
+                    switch (pedalNode.attribute("type").value) {
+                        case "start":
+                            //ignore duplicate tags (causes issues when pedals aren't terminated)
+                            // if (!this.openPedal || !this.openPedal.ParentStartMultiExpression.AbsoluteTimestamp.Equals(endTimestamp)) {
+                            //     this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+                            // }
+                            // instead, just end open pedal if there already was one, and create new one
+                            if (this.openPedal && this.openPedal.IsLine) {
+                                // if we don't check IsLine, the Ped. at the end of Dichterliebe overlaps with a *
+                                this.endOpenPedal(currentMeasure);
+                            }
+                            this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+                            this.openPedal = new Pedal(line, sign);
+                            this.getMultiExpression.PedalStart = this.openPedal;
+                            this.openPedal.ParentStartMultiExpression = this.getMultiExpression;
+                        break;
+                        case "stop":
+                            if (this.openPedal) {
+                                this.endOpenPedal(currentMeasure, endTimestamp);
+                            }
+                        break;
+                        case "change":
+                            //Ignore non-line pedals
+                            if (this.openPedal && this.openPedal.IsLine) {
+                                this.openPedal.ChangeEnd = true;
+                                this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+                                this.getMultiExpression.PedalEnd = this.openPedal;
+                                this.openPedal.ParentEndMultiExpression = this.getMultiExpression;
+
+                                this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+                                this.openPedal = new Pedal(line, sign);
+                                this.openPedal.ChangeBegin = true;
+                                this.getMultiExpression.PedalStart = this.openPedal;
+                                this.openPedal.ParentStartMultiExpression = this.getMultiExpression;
+                            }
+                        break;
+                        case "continue":
+                        break;
+                        default:
+                        break;
+                    }
+                } catch (ex) {
+                    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/PedalError", "Error while reading pedal.");
+                    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+                    log.debug("ExpressionReader.addPedalMarking", errorMsg, ex);
+                }
+            }
+        }
+    }
+    private endOpenPedal(currentMeasure: SourceMeasure, endTimeStamp?: Fraction): void {
+        this.createNewMultiExpressionIfNeeded(currentMeasure, -1, endTimeStamp);
+        // unfortunately currentMeasure.Duration doesn't exist here yet, so we can't check pedal.EndsStave
+        this.getMultiExpression.PedalEnd = this.openPedal;
+        this.openPedal.ParentEndMultiExpression = this.getMultiExpression;
+        this.openPedal = undefined;
+    }
     private initialize(): void {
         this.placement = PlacementEnum.NotYetDefined;
         this.soundTempo = 0;
@@ -343,18 +435,30 @@ export class ExpressionReader {
             return PlacementEnum.NotYetDefined;
         }
     }
-    private readExpressionPlacement(defAttr: IXmlAttribute, catchLogMessage: string): void {
+    private readExpressionPlacement(yPosAttr: IXmlAttribute, catchLogMessage: string): void {
         try {
-            const y: number = parseInt(defAttr.value, 10);
+            const y: number = this.readPosition(yPosAttr);
             if (y < 0) {
                 this.placement = PlacementEnum.Below;
             } else if (y > 0) {
                 this.placement = PlacementEnum.Above;
-                 }
+            }
         } catch (ex) {
             log.debug("ExpressionReader.readExpressionParameters", catchLogMessage, ex);
         }
-
+    }
+    private readPosition(posAttr: IXmlAttribute): number {
+        try {
+            const xOrY: number = parseInt(posAttr.value, 10);
+            if (xOrY < 0) {
+                this.placement = PlacementEnum.Below;
+            } else if (xOrY > 0) {
+                this.placement = PlacementEnum.Above;
+            }
+            return xOrY;
+        } catch (ex) {
+            log.debug("ExpressionReader.readExpressionParameters", ex);
+        }
     }
     private interpretInstantaneousDynamics(dynamicsNode: IXmlElement,
                                            currentMeasure: SourceMeasure,
@@ -365,7 +469,7 @@ export class ExpressionReader {
                 this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
             }
             const numberXml: number = this.readNumber(dynamicsNode); // probably never given, just to comply with createExpressionIfNeeded()
-            let expressionText: string = dynamicsNode.elements()[0].name;
+            let expressionText: string = dynamicsNode.elements()[0]?.name; // elements can in rare cases still be empty even though hasElements=true, see #1269
             if (expressionText === "other-dynamics") {
                 expressionText = dynamicsNode.elements()[0].value;
             }
@@ -414,6 +518,11 @@ export class ExpressionReader {
     }
     private interpretWords(wordsNode: IXmlElement, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction): void {
         const text: string = wordsNode.value;
+        if (currentMeasure.Rules.IgnoreBracketsWords && (
+            /^\(\s*\)$/.test(text) || /^\[\s*\]$/.test(text) // (*) and [*]
+        )) { // regex: brackets with arbitrary white space in-between
+            return;
+        }
         let fontStyle: FontStyles;
         const fontStyleAttr: Attr = wordsNode.attribute("font-style");
         if (fontStyleAttr) {
@@ -446,9 +555,25 @@ export class ExpressionReader {
             this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
         }
         const wedgeNumberXml: number = this.readNumber(wedgeNode);
+
+        const typeAttributeString: string = wedgeNode.attribute("type")?.value?.toLowerCase();
+
+        // check for duplicate
+        if (this.lastWedge && this.lastWedge.parentMeasure.MeasureNumberXML === currentMeasure.MeasureNumberXML &&
+                this.lastWedge.StaffNumber === this.staffNumber &&
+                this.placement === this.lastWedge.Placement &&
+                this.WedgeYPosXml !== undefined &&
+                this.lastWedge.YPosXml === this.WedgeYPosXml &&
+                this.lastWedge.StartMultiExpression.Timestamp.Equals(this.directionTimestamp) &&
+                this.lastWedge.DynamicType === ContDynamicEnum[typeAttributeString]
+
+        ) {
+            // duplicate, ignore
+            return;
+        }
         //Ending needs to use previous fraction, not current.
         //If current is used, when there is a system break it will mess up
-        if (wedgeNode.attribute("type")?.value?.toLowerCase() === "stop") {
+        if (typeAttributeString === "stop") {
             this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml, inSourceMeasureCurrentFraction);
         } else {
             this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml);
@@ -500,6 +625,8 @@ export class ExpressionReader {
                             this.staffNumber,
                             currentMeasure,
                             numberXml);
+                    this.lastWedge = continuousDynamicExpression;
+                    this.lastWedge.YPosXml = this.WedgeYPosXml;
                     this.openContinuousDynamicExpressions.push(continuousDynamicExpression);
                     let multiExpression: MultiExpression = this.getMultiExpression;
                     if (!multiExpression) {

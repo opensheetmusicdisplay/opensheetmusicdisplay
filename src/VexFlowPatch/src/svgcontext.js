@@ -346,7 +346,7 @@ export class SVGContext {
       attributes = {
         fill: 'none',
         'stroke-width': this.lineWidth,
-        stroke: 'black',
+        stroke: this.attributes.stroke, // VexFlowPatch: fix hardcoded 'black' instead of attributes.stroke (ctx strokeStyle)
       };
     }
 

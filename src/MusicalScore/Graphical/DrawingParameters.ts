@@ -21,7 +21,7 @@ export enum DrawingParametersEnum {
 export class DrawingParameters {
     /** will set other settings if changed with set method */
     private drawingParametersEnum: DrawingParametersEnum;
-    private rules: EngravingRules = new EngravingRules();
+    private rules: EngravingRules;
     public drawHighlights: boolean;
     public drawErrors: boolean;
     public drawSelectionStartSymbol: boolean;
@@ -42,7 +42,11 @@ export class DrawingParameters {
     /** Draw notes set to be invisible (print-object="no" in XML). */
     public drawHiddenNotes: boolean = false;
 
-    constructor(drawingParameters: DrawingParametersEnum = DrawingParametersEnum.default) {
+    constructor(drawingParameters: DrawingParametersEnum = DrawingParametersEnum.default, rules?: EngravingRules) {
+        this.rules = rules;
+        if (!this.rules) {
+            this.rules = new EngravingRules();
+        }
         this.DrawingParametersEnum = drawingParameters;
     }
 

@@ -10,14 +10,18 @@ import { EngravingRules } from "./EngravingRules";
  * The graphical counterpart of a [[VoiceEntry]].
  */
 export class GraphicalVoiceEntry extends GraphicalObject {
-    constructor(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry) {
+    constructor(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry, rules?: EngravingRules) {
         super();
         this.parentVoiceEntry = parentVoiceEntry;
         this.parentStaffEntry = parentStaffEntry;
         this.PositionAndShape = new BoundingBox(this, parentStaffEntry ? parentStaffEntry.PositionAndShape : undefined, true);
         this.notes = [];
-        this.rules = parentStaffEntry ?
-                        parentStaffEntry.parentMeasure.parentSourceMeasure.Rules : new EngravingRules();
+        if (rules) {
+            this.rules = rules;
+        } else {
+            this.rules = parentStaffEntry ?
+                parentStaffEntry.parentMeasure.parentSourceMeasure.Rules : new EngravingRules();
+        }
     }
 
     public parentVoiceEntry: VoiceEntry;

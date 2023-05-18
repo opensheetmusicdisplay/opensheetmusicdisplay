@@ -15,6 +15,7 @@ if (!Array.prototype.last) {
     // using Object.defineProperty instead of assigning Array.prototype.x directly prevents prototype pollution, see #980
     Object.defineProperty(Array.prototype, "last", {
         enumerable: false,
+        writable: true,
         value: function<T>(): T {
             return this[this.length - 1];
         }
@@ -24,6 +25,7 @@ if (!Array.prototype.last) {
 if (!Array.prototype.clear) {
     Object.defineProperty(Array.prototype, "clear", {
         enumerable: false,
+        writable: true,
         value: function<T>(): void {
             this.length = 0;
         }
@@ -33,6 +35,7 @@ if (!Array.prototype.clear) {
 if (!Array.prototype.contains) {
     Object.defineProperty(Array.prototype, "contains", {
         enumerable: false,
+        writable: true,
         value: function<T>(elem: T): boolean {
             return this.indexOf(elem) !== -1;
         }
@@ -55,6 +58,13 @@ export class CollectionUtil {
 
     public static last(array: any[]): any {
         return array[array.length - 1];
+    }
+
+    /** Array.flat(), introduced in ES2019, polyfilled here to stick with ES2017 target in tsconfig.json.
+     *  Performance tests: https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1299#issuecomment-1399062038
+     */
+    public static flat(array: any[]): any {
+        return [].concat(...array);
     }
 
     /**
@@ -89,8 +99,14 @@ export class CollectionUtil {
                                   startIndex: number = 0,
                                   endIndex: number = array.length - 1): number {
         let mid: number = 1;
+        let lastMidChecked: number = -1;
         while (startIndex <= endIndex) {
             mid = Math.floor((startIndex + endIndex) / 2);
+            if (mid === lastMidChecked) {
+                break;
+                // this fixes a rare infinite loop when no matching element can be found,
+                //   e.g. with very small fraction difference in AbsoluteTimestamp like 511/1024 instead of 1/2 (#1201)
+            }
             const c: number = cmp(array[mid], element);
             if (c === 0) {
                 return mid;
@@ -101,6 +117,7 @@ export class CollectionUtil {
             if (0 < c) {
                 endIndex = mid;
             }
+            lastMidChecked = mid;
         }
 
         return -mid;

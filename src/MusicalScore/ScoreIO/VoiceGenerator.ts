@@ -125,7 +125,7 @@ export class VoiceGenerator {
 
     try {
       this.currentNote = restNote
-        ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, normalNotes, printObject, isCueNote, noteheadColorXml)
+        ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, typeDuration, normalNotes, printObject, isCueNote, noteheadColorXml)
         : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, octavePlusOne,
                              printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
       this.currentNote.DotsXml = dotsXml;
@@ -144,10 +144,18 @@ export class VoiceGenerator {
         }
         // read slurs
         const slurElements: IXmlElement[] = notationNode.elements("slur");
+        const slideElements: IXmlElement[] = notationNode.elements("slide");
+        const glissElements: IXmlElement[] = notationNode.elements("glissando");
         if (this.slurReader !== undefined &&
-            slurElements.length > 0 &&
+            (slurElements.length > 0 || slideElements.length > 0) &&
             !this.currentNote.ParentVoiceEntry.IsGrace) {
           this.slurReader.addSlur(slurElements, this.currentNote);
+          if (slideElements.length > 0) {
+            this.slurReader.addSlur(slideElements, this.currentNote);
+          }
+          if (glissElements.length > 0) {
+            this.slurReader.addSlur(glissElements, this.currentNote);
+          }
         }
         // read Tuplets
         const tupletElements: IXmlElement[] = notationNode.elements("tuplet");
@@ -203,11 +211,12 @@ export class VoiceGenerator {
         if (tiedNodeList.length > 0) {
           this.addTie(tiedNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.SIMPLE);
         }
-        //check for slides, they are the same as Ties but with a different connection
-        const slideNodeList: IXmlElement[] = notationNode.elements("slide");
-        if (slideNodeList.length > 0) {
-          this.addTie(slideNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.SLIDE);
-        }
+        //"check for slides, they are the same as Ties but with a different connection"
+        //  correction: slide can have a different end note (e.g. guitar) -> should be handled like slur rather than tie
+        // const slideNodeList: IXmlElement[] = notationNode.elements("slide");
+        // if (slideNodeList.length > 0) {
+        //   this.addTie(slideNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.SLIDE);
+        // }
         //check for guitar specific symbols:
         const technicalNode: IXmlElement = notationNode.element("technical");
         if (technicalNode) {
@@ -522,7 +531,7 @@ export class VoiceGenerator {
    * @param divisions
    * @returns {Note}
    */
-  private addRestNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType,
+  private addRestNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType, typeDuration: Fraction,
                       normalNotes: number, printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
     const displayStepElement: IXmlElement = node.element("display-step");
@@ -533,10 +542,12 @@ export class VoiceGenerator {
     if (displayStepElement && octaveElement) {
         displayStep = NoteEnum[displayStepElement.value.toUpperCase()];
         displayOctave = parseInt(octaveElement.value, 10);
-        pitch = new Pitch(displayStep, displayOctave, AccidentalEnum.NONE);
+        pitch = new Pitch(displayStep, displayOctave, AccidentalEnum.NONE, undefined, true);
     }
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, this.currentMeasure, true);
     this.addNoteInfo(restNote, noteTypeXml, printObject, isCueNote, normalNotes, displayStep, displayOctave, noteheadColorXml, noteheadColorXml);
+    restNote.TypeLength = typeDuration; // needed for tuplet note type information
+    //  (e.g. quarter rest - but length different due to tuplet). see MusicSheetCalculator.calculateTupletNumbers()
     this.currentVoiceEntry.Notes.push(restNote);
     if (this.openBeams.length > 0) {
       this.openBeams.last().ExtendedNoteList.push(restNote);

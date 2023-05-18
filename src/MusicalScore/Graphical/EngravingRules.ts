@@ -99,6 +99,7 @@ export class EngravingRules {
     public SetWantedStemDirectionByXml: boolean;
     public GraceNoteScalingFactor: number;
     public GraceNoteXOffset: number;
+    public GraceNoteGroupXMargin: number;
     public WedgeOpeningLength: number;
     public WedgeMeasureEndOpeningLength: number;
     public WedgeMeasureBeginOpeningLength: number;
@@ -109,6 +110,8 @@ export class EngravingRules {
     public DistanceOffsetBetweenTwoHorizontallyCrossedWedges: number;
     public WedgeMinLength: number;
     public WedgeEndDistanceBetweenTimestampsFactor: number;
+    public SoftAccentWedgePadding: number;
+    public SoftAccentSizeFactor: number;
     public DistanceBetweenAdjacentDynamics: number;
     public TempoChangeMeasureValidity: number;
     public TempoContinousFactor: number;
@@ -127,7 +130,10 @@ export class EngravingRules {
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
     public ChordAccidentalTexts: Dictionary<AccidentalEnum, string>;
     public CustomChords: CustomChord[];
+    /** Not always a symbol, can also be text (RepetitionInstruction). Keeping the name for backwards compatibility. */
     public RepetitionSymbolsYOffset: number;
+    /** Adds a percent of the stave's width (e.g. 0.4 = 40%) to the x position of end instructions like Fine or D.C. al fine */
+    public RepetitionEndInstructionXShiftAsPercentOfStaveWidth: number;
     public RehearsalMarkXOffset: number;
     public RehearsalMarkXOffsetDefault: number;
     public RehearsalMarkXOffsetSystemStartMeasure: number;
@@ -151,6 +157,9 @@ export class EngravingRules {
     public TripletsBracketed: boolean;
     public TupletNumberLabelHeight: number;
     public TupletNumberYOffset: number;
+    public TupletNumberLimitConsecutiveRepetitions: boolean;
+    public TupletNumberMaxConsecutiveRepetitions: number;
+    public TupletNumberAlwaysDisableAfterFirstMax: boolean;
     public LabelMarginBorderFactor: number;
     public TupletVerticalLineLength: number;
     public TupletNumbersInTabs: boolean;
@@ -168,6 +177,7 @@ export class EngravingRules {
     public LyricsAlignmentStandard: TextAlignmentEnum;
     public LyricsHeight: number;
     public LyricsYOffsetToStaffHeight: number;
+    public LyricsYMarginToBottomLine: number;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
     public BetweenSyllableMaximumDistance: number;
@@ -190,6 +200,8 @@ export class EngravingRules {
     public TieHeightInterpolationK: number;
     public TieHeightInterpolationD: number;
     public SlurNoteHeadYOffset: number;
+    public SlurEndArticulationYOffset: number;
+    public SlurStartArticulationYOffsetOfArticulation: number;
     public SlurStemXOffset: number;
     public SlurSlopeMaxAngle: number;
     public SlurTangentMinAngle: number;
@@ -201,6 +213,12 @@ export class EngravingRules {
     public SlurHeightFlattenLongSlursCutoffWidth: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
     public SlurMaximumYControlPointDistance: number;
+    public GlissandoNoteOffset: number;
+    public GlissandoStafflineStartMinimumWidth: number;
+    public GlissandoStafflineStartYDistanceToNote: number;
+    public GlissandoStafflineEndOffset: number;
+    public GlissandoDefaultWidth: number;
+    public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
     public MoodTextHeight: number;
@@ -223,6 +241,7 @@ export class EngravingRules {
     public SystemRepetitionEndingLineWidth: number;
     public SystemDotWidth: number;
     public MultipleRestMeasureDefaultWidth: number;
+    public MultipleRestMeasureAddKeySignature: boolean;
     public DistanceBetweenVerticalSystemLines: number;
     public DistanceBetweenDotAndLine: number;
     public RepeatEndStartPadding: number;
@@ -241,6 +260,12 @@ export class EngravingRules {
     public VoiceSpacingMultiplierVexflow: number;
     public VoiceSpacingAddendVexflow: number;
     public PickupMeasureWidthMultiplier: number;
+    /** The spacing between a repetition that is followed by an implicit/pickup/incomplete measure.
+     *  (E.g. in a 4/4 time signature, a measure that repeats after the 3rd beat, continuing with a pickup measure)
+     */
+    public PickupMeasureRepetitionSpacing: number;
+    /** Multiplier for PickupMeasureRepetitionSpacing if there is only one note in the pickup measure. This usually needs a lot more space. */
+    public PickupMeasureSpacingSingleNoteAddend: number;
     public DisplacedNoteMargin: number;
     public MinNoteDistance: number;
     public SubMeasureXSpacingThreshold: number;
@@ -266,6 +291,7 @@ export class EngravingRules {
     public ArpeggiosGoAcrossVoices: boolean;
     public RenderArpeggios: boolean;
     public RenderSlurs: boolean;
+    public RenderGlissandi: boolean;
     public ColoringMode: ColoringMode;
     public ColoringEnabled: boolean;
     public ColorStemsLikeNoteheads: boolean;
@@ -278,6 +304,7 @@ export class EngravingRules {
     public DefaultColorRest: string;
     public DefaultColorStem: string;
     public DefaultColorLabel: string;
+    public DefaultColorLyrics: string;
     public DefaultColorChordSymbol: string;
     public DefaultColorTitle: string;
     public DefaultColorCursor: string;
@@ -308,9 +335,12 @@ export class EngravingRules {
     public RenderClefsAtBeginningOfStaffline: boolean;
     public RenderKeySignatures: boolean;
     public RenderTimeSignatures: boolean;
+    public RenderPedals: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
     public ArticulationPlacementFromXML: boolean;
+    /** Percent distance of breath marks to next note or end of staff, e.g. 0.8 = 80%. */
+    public BreathMarkDistance: number;
     /** Where to draw fingerings (Above, Below, AboveOrBelow, Left, Right, or Auto).
      * Default AboveOrBelow. Auto experimental. */
     public FingeringPosition: PlacementEnum;
@@ -333,13 +363,16 @@ export class EngravingRules {
     public RenderSingleHorizontalStaffline: boolean;
     public RestoreCursorAfterRerender: boolean;
     public StretchLastSystemLine: boolean;
+    /** Ignore brackets - e.g. `( )` - that were supposed to be around a note,
+     * but were inserted as a words element in the MusicXML, which can't be matched to the note anymore,
+     * and would otherwise just be placed somewhere else. See OSMD Issue 1251. */
+    public IgnoreBracketsWords: boolean;
+    // public PositionMarcatoCloseToNote: boolean;
     public SpacingBetweenTextLines: number;
 
     public NoteToGraphicalNoteMap: Dictionary<number, GraphicalNote>;
     // this is basically a WeakMap, except we save the id in the Note instead of using a WeakMap.
     public NoteToGraphicalNoteMapObjectCount: number = 0;
-
-    public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
 
     /** The skyline and bottom-line batch calculation algorithm to use.
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
@@ -461,6 +494,8 @@ export class EngravingRules {
         // GraceNote Variables
         this.GraceNoteScalingFactor = 0.6;
         this.GraceNoteXOffset = 0.2;
+        this.GraceNoteGroupXMargin = 0.0; // More than 0 leads to too much space in most cases.
+        //  see test_end_clef_measure. only potential 'tight' case: test_graceslash_simple
 
         // Wedge Variables
         this.WedgeOpeningLength = 1.2;
@@ -473,6 +508,8 @@ export class EngravingRules {
         this.DistanceOffsetBetweenTwoHorizontallyCrossedWedges = 0.3;
         this.WedgeMinLength = 2.0;
         this.WedgeEndDistanceBetweenTimestampsFactor = 1.75;
+        this.SoftAccentWedgePadding = 0.4;
+        this.SoftAccentSizeFactor = 0.6;
         this.DistanceBetweenAdjacentDynamics = 0.75;
 
         // Tempo Variables
@@ -499,6 +536,7 @@ export class EngravingRules {
         this.CustomChords = [];
         this.resetChordNames();
         this.RepetitionSymbolsYOffset = 0;
+        this.RepetitionEndInstructionXShiftAsPercentOfStaveWidth = 0.4; // 40%
         this.RehearsalMarkXOffsetDefault = 10; // avoid collision with metronome number
         this.RehearsalMarkXOffset = 0; // user defined
         this.RehearsalMarkXOffsetSystemStartMeasure = -20; // good test: Haydn Concertante
@@ -515,6 +553,9 @@ export class EngravingRules {
         this.TripletsBracketed = false; // special setting for triplets, overrides tuplet setting (for triplets only)
         this.TupletNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.TupletNumberYOffset = 0.5;
+        this.TupletNumberLimitConsecutiveRepetitions = true;
+        this.TupletNumberMaxConsecutiveRepetitions = 2;
+        this.TupletNumberAlwaysDisableAfterFirstMax = true;
         this.LabelMarginBorderFactor = 0.1;
         this.TupletVerticalLineLength = 0.5;
         this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
@@ -531,6 +572,8 @@ export class EngravingRules {
         this.TieHeightInterpolationK = 0.0288;
         this.TieHeightInterpolationD = 0.136;
         this.SlurNoteHeadYOffset = 0.5;
+        this.SlurEndArticulationYOffset = 0.8;
+        this.SlurStartArticulationYOffsetOfArticulation = 0.5;
         this.SlurStemXOffset = 0.3;
         this.SlurSlopeMaxAngle = 15.0;
         this.SlurTangentMinAngle = 30.0;
@@ -544,6 +587,13 @@ export class EngravingRules {
         //Maximum y difference between control points. Forces slurs to have less 'weight' either way in the x direction
         this.SlurMaximumYControlPointDistance = undefined;
 
+        // Glissandi
+        this.GlissandoNoteOffset = 0.5;
+        this.GlissandoStafflineStartMinimumWidth = 1;
+        this.GlissandoStafflineStartYDistanceToNote = 0.8; // just crossing the line above/below end note. should be similar to tab slide angle.
+        this.GlissandoStafflineEndOffset = 1;
+        this.GlissandoDefaultWidth = 0.1;
+
         // Repetitions
         this.RepetitionEndingLabelHeight = 2.0;
         this.RepetitionEndingLabelXOffset = 0.5;
@@ -556,6 +606,7 @@ export class EngravingRules {
         this.LyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
         this.LyricsHeight = 2.0; // actually size of lyrics
         this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
+        this.LyricsYMarginToBottomLine = 0.2;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
@@ -565,6 +616,7 @@ export class EngravingRules {
         this.MaximumLyricsElongationFactor = 2.5;
 
         // expressions variables
+        this.TempoYSpacing = 0.5; // note this is correlated with MetronomeMarkYShift: one-sided change can cause collisions
         this.InstantaneousTempoTextHeight = 2.3;
         this.ContinuousDynamicTextHeight = 2.3;
         this.MoodTextHeight = 2.3;
@@ -599,6 +651,7 @@ export class EngravingRules {
         this.GraceLineWidth = this.StaffLineWidth * this.GraceNoteScalingFactor;
 
         this.MultipleRestMeasureDefaultWidth = 4;
+        this.MultipleRestMeasureAddKeySignature = true;
 
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;
@@ -610,6 +663,8 @@ export class EngravingRules {
         this.VoiceSpacingMultiplierVexflow = 0.85;
         this.VoiceSpacingAddendVexflow = 3.0;
         this.PickupMeasureWidthMultiplier = 1.0;
+        this.PickupMeasureRepetitionSpacing = 0.8;
+        this.PickupMeasureSpacingSingleNoteAddend = 1.6;
         this.DisplacedNoteMargin = 0.1;
         this.MinNoteDistance = 2.0;
         this.SubMeasureXSpacingThreshold = 35;
@@ -617,7 +672,7 @@ export class EngravingRules {
         this.WholeRestXShiftVexflow = -1.5; // VexFlow draws rest notes too far to the right
         this.MetronomeMarksDrawn = true;
         this.MetronomeMarkXShift = -6; // our unit, is taken * unitInPixels
-        this.MetronomeMarkYShift = -0.5;
+        this.MetronomeMarkYShift = -1.0; // note this is correlated with TempoYSpacing: one-sided change can cause collisions
         this.SoftmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
         // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
         // if too low, smaller notes aren't positioned correctly.
@@ -630,6 +685,7 @@ export class EngravingRules {
         this.ArpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
         this.RenderArpeggios = true;
         this.RenderSlurs = true;
+        this.RenderGlissandi = true;
         this.ColoringMode = ColoringMode.XML;
         this.ColoringEnabled = true;
         this.ColorStemsLikeNoteheads = false;
@@ -662,7 +718,9 @@ export class EngravingRules {
         this.RenderClefsAtBeginningOfStaffline = true;
         this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
+        this.RenderPedals = true;
         this.ArticulationPlacementFromXML = true;
+        this.BreathMarkDistance = 0.8;
         this.FingeringPosition = PlacementEnum.AboveOrBelow; // AboveOrBelow = correct bounding boxes
         this.FingeringPositionFromXML = true;
         this.FingeringPositionGrace = PlacementEnum.Left;
@@ -678,8 +736,8 @@ export class EngravingRules {
         this.NewPageAtXMLNewPageAttribute = false;
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
-
-        EngravingRules.FixStafflineBoundingBox = false; // TODO temporary workaround
+        this.IgnoreBracketsWords = true;
+        // this.PositionMarcatoCloseToNote = true;
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
@@ -710,8 +768,12 @@ export class EngravingRules {
     }
 
     public setPreferredSkyBottomLineBackendAutomatically(numberOfGraphicalMeasures: number = -1): void {
-        const vendor: string = globalThis.navigator?.vendor ?? "";
-        const userAgent: string = globalThis.navigator?.userAgent ?? "";
+        let vendor: string = "";
+        let userAgent: string = "";
+        if (typeof globalThis === "object") { // it looks like globalThis can be undefined and cause build issues in es2017 (e.g. Android API 28), see #1299
+            vendor = globalThis.navigator?.vendor ?? "";
+            userAgent = globalThis.navigator?.userAgent ?? "";
+        }
         let alwaysUsePlain: boolean = false;
         if (this.DisableWebGLInSafariAndIOS && (/apple/i).test(vendor)) { // doesn't apply to Chrome on MacOS
             alwaysUsePlain = true;
@@ -734,12 +796,13 @@ export class EngravingRules {
      */
     public applyDefaultColorMusic(color: string): void {
         this.DefaultColorMusic = color;
-        this.DefaultColorNotehead = this.DefaultColorMusic;
-        this.DefaultColorRest = this.DefaultColorNotehead;
-        this.DefaultColorStem = this.DefaultColorNotehead;
-        this.DefaultColorLabel = this.DefaultColorNotehead;
-        this.DefaultColorTitle = this.DefaultColorNotehead;
-        this.LedgerLineColorDefault = this.DefaultColorNotehead;
+        this.DefaultColorNotehead = color;
+        this.DefaultColorRest = color;
+        this.DefaultColorStem = color;
+        this.DefaultColorLabel = color;
+        this.DefaultColorLyrics = color;
+        this.DefaultColorTitle = color;
+        this.LedgerLineColorDefault = color;
     }
 
     public addGraphicalNoteToNoteMap(note: Note, graphicalNote: GraphicalNote): void {
