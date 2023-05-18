@@ -8,7 +8,41 @@ export enum NoteEnum {
     A = 9,
     B = 11
 }
-
+/*
+export enum TheoricNoteEnum {
+    C   =  0 ,  //  0 HalfTones
+    Dff =  1 ,  //  0 HalfTones
+    Cs  =  2 ,  //  1 HalfTones
+    Df  =  3 ,  //  1 HalfTones
+    Css =  4 ,  //  2 HalfTones
+    D   =  5 ,  //  2 HalfTones
+    Eff =  6 ,  //  2 HalfTones
+    Ds  =  7 ,  //  3 HalfTones
+    Ef  =  8 ,  //  3 HalfTones
+    Dss =  9 ,  //  4 HalfTones
+    E   = 10 ,  //  4 HalfTones
+    Ff  = 11 ,  //  4 HalfTones
+    Es  = 12 ,  //  5 HalfTones
+    F   = 13 ,  //  5 HalfTones
+    Gff = 14 ,  //  5 HalfTones
+    Fs  = 15 ,  //  6 HalfTones
+    Gf  = 16 ,  //  6 HalfTones
+    Fss = 17 ,  //  7 HalfTones
+    G   = 18 ,  //  7 HalfTones
+    Aff = 19 ,  //  7 HalfTones
+    Gs  = 20 ,  //  8 HalfTones
+    Af  = 21 ,  //  8 HalfTones
+    Gss = 22 ,  //  9 HalfTones
+    A   = 23 ,  //  9 HalfTones
+    Bff = 24 ,  //  9 HalfTones
+    As  = 25 ,  // 10 HalfTones
+    Bf  = 26 ,  // 10 HalfTones
+    Ass = 27 ,  // 11 HalfTones
+    B   = 28 ,  // 11 HalfTones
+    Cf  = 29 ,  // 11 HalfTones
+    Bs  = 30 ,  //  0 HalfTones
+}
+*/
 /** Describes Accidental types.
  * Do not use the number values of these enum members directly for calculation anymore.
  * To use these for pitch calculation, use pitch.AccidentalHalfTones()
@@ -39,6 +73,9 @@ export enum AccidentalEnum {
 export class Pitch {
     public static pitchEnumValues: NoteEnum[] = [
         NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B,
+    ];
+    public static theoricPitchEnumValues: TheoricNoteEnum[] = [
+        TheoricNoteEnum.C, TheoricNoteEnum.D, TheoricNoteEnum.E, TheoricNoteEnum.F, TheoricNoteEnum.G, TheoricNoteEnum.A, TheoricNoteEnum.B,
     ];
 
     private static halftoneFactor: number = 12 / (Math.LN2 / Math.LN10);
@@ -374,7 +411,11 @@ export class Pitch {
     public get FundamentalNote(): NoteEnum {
         return this.fundamentalNote;
     }
-
+/*
+    public get TheoricFundamentalNote(): TheoricNoteEnum {
+        return TheoricNoteEnum[this.fundamentalNote];
+    }
+*/
     public get Accidental(): AccidentalEnum {
         return this.accidental;
     }
