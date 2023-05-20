@@ -6,6 +6,7 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import {
     AutoBeamOptions,
     AlignRestOption,
+    ColorOptions,
     FillEmptyMeasuresWithWholeRests,
     SkyBottomLineBatchCalculatorBackendType
 } from "../../OpenSheetMusicDisplay/OSMDOptions";
@@ -308,9 +309,7 @@ export class EngravingRules {
     public RenderGlissandi: boolean;
     public ColoringMode: ColoringMode;
     public ColoringEnabled: boolean;
-    public ColorStemsLikeNoteheads: boolean;
-    public ColorFlags: boolean;
-    public ColorBeams: boolean;
+    public ColorOptions: ColorOptions;
     public ColoringSetCurrent: Dictionary<NoteEnum|number, string>;
     /** Default color for all musical elements including key signature etc. Default undefined. */
     public DefaultColorMusic: string;
@@ -713,9 +712,13 @@ export class EngravingRules {
         this.RenderGlissandi = true;
         this.ColoringMode = ColoringMode.XML;
         this.ColoringEnabled = true;
-        this.ColorStemsLikeNoteheads = false;
-        this.ColorBeams = true;
-        this.ColorFlags = true;
+        this.ColorOptions = { // toggle color for graphic objects by type, inherits from notehead (ColorMode 1 and 2) or instrument (ColorMode 3)
+            stems: false,
+            beams: false,
+            flags: false,
+            rests: false,
+            slurs: false
+        };
         this.applyDefaultColorMusic("#000000"); // black. undefined is only black if a note's color hasn't been changed before.
         this.DefaultColorCursor = "#33e02f"; // green
         this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for

@@ -505,7 +505,7 @@ export class VexFlowConverter {
             if (stemColor) {
                 //gve.parentVoiceEntry.StemColor = stemColor; // this shouldn't be set by DefaultColorStem
                 vfnote.setStemStyle(stemStyle);
-                if (vfnote.flag && rules.ColorFlags) {
+                if (vfnote.flag && rules.ColorOptions.flags) {
                     vfnote.setFlagStyle(stemStyle);
                 }
             }

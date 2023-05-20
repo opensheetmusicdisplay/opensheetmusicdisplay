@@ -461,6 +461,15 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             coloringEnabled: true,
             // defaultColorNotehead: "#CC0055", // try setting a default color. default is black (undefined)
             // defaultColorStem: "#BB0099",
+            coloringMode: 1,
+            coloringSetCustom: ["#ff0000", "#ffa500", "#abad00", "#008000", "#0000ff", "#4b0082", "#ee82ee", "#9e8299"],        
+            colorOptions: { // colorOptions allows for toggling color inheritance for specific graphic object classes
+                stems: false,
+                beams: false,
+                flags: false,
+                rests: false,
+                slurs: false,
+            },
 
             autoBeam: false, // try true, OSMD Function Test AutoBeam sample
             autoBeamOptions: {
