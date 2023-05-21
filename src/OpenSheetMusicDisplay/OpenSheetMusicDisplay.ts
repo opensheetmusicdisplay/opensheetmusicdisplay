@@ -685,8 +685,8 @@ export class OpenSheetMusicDisplay {
             for (let i: number = 0; i < noteIndices.length; i++) {
                 coloringSetCurrent.setValue(noteIndices[i], colorSetString[i]);
             }
+            coloringSetCurrent.setValue(-1, colorSetString.last()); // index 7. Unfortunately -1 is not a NoteEnum value, so we can't put it into noteIndices
         }
-        coloringSetCurrent.setValue(-1, colorSetString.last()); // index 7. Unfortunately -1 is not a NoteEnum value, so we can't put it into noteIndices
         this.rules.ColoringSetCurrent = coloringSetCurrent;
         this.rules.ColoringMode = options.coloringMode;
     }
