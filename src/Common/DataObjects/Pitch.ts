@@ -57,6 +57,24 @@ export enum AccidentalEnum {
     DOUBLEFLAT,
     TRIPLESHARP,
     TRIPLEFLAT,
+    QUADRUPLESHARP,
+    QUADRUPLEFLAT,
+    QUINTUPLESHARP,
+    QUINTUPLEFLAT,
+    SEXTUPLESHARP,
+    SEXTUPLEFLAT,
+    SEPTUPLESHARP,
+    SEPTUPLEFLAT,
+    OCTUPLESHARP,
+    OCTUPLEFLAT,
+    NONUPLESHARP,
+    NONUPLEFLAT,
+    DECUPLESHARP,
+    DECUPLEFLAT,
+    UNDECUPLESHARP,
+    UNDECUPLEFLAT,
+    DUODECUPLESHARP,
+    DUODECUPLEFLAT,
     QUARTERTONESHARP,
     QUARTERTONEFLAT,
     SLASHFLAT,
@@ -273,6 +291,42 @@ export class Pitch {
                 return 3;
             case AccidentalEnum.TRIPLEFLAT:
                 return -3;
+            case AccidentalEnum.QUADRUPLESHARP:
+                return 4;
+            case AccidentalEnum.QUADRUPLEFLAT:
+                return -4;
+            case AccidentalEnum.QUINTUPLESHARP:
+                return 5;
+            case AccidentalEnum.QUINTUPLEFLAT:
+                return -5;
+            case AccidentalEnum.SEXTUPLESHARP:
+                return 6;
+            case AccidentalEnum.SEXTUPLEFLAT:
+                return -6;
+            case AccidentalEnum.SEPTUPLESHARP:
+                return 7;
+            case AccidentalEnum.SEPTUPLEFLAT:
+                return -7;
+            case AccidentalEnum.OCTUPLESHARP:
+                return 8;
+            case AccidentalEnum.OCTUPLEFLAT:
+                return -8;
+            case AccidentalEnum.NONUPLESHARP:
+                return 9;
+            case AccidentalEnum.NONUPLEFLAT:
+                return -9;
+            case AccidentalEnum.DECUPLESHARP:
+                return 10;
+            case AccidentalEnum.DECUPLEFLAT:
+                return -10;
+            case AccidentalEnum.UNDECUPLESHARP:
+                return 11;
+            case AccidentalEnum.UNDECUPLEFLAT:
+                return -11;
+            case AccidentalEnum.DUODECUPLESHARP:
+                return 12;
+            case AccidentalEnum.DUODECUPLEFLAT:
+                return -12;
             case AccidentalEnum.QUARTERTONESHARP:
                 return 0.5;
             case AccidentalEnum.QUARTERTONEFLAT:
@@ -316,6 +370,42 @@ export class Pitch {
                 return AccidentalEnum.TRIPLESHARP;
             case -3:
                 return AccidentalEnum.TRIPLEFLAT;
+            case 4:
+                return AccidentalEnum.QUADRUPLESHARP;
+            case -4:
+                return AccidentalEnum.QUADRUPLEFLAT;
+            case 5:
+                return AccidentalEnum.QUINTUPLESHARP;
+            case -5:
+                return AccidentalEnum.QUINTUPLEFLAT;
+            case 6:
+                return AccidentalEnum.SEXTUPLESHARP;
+            case -6:
+                return AccidentalEnum.SEXTUPLEFLAT;
+            case 7:
+                return AccidentalEnum.SEPTUPLESHARP;
+            case -7:
+                return AccidentalEnum.SEPTUPLEFLAT;
+            case 8:
+                return AccidentalEnum.OCTUPLESHARP;
+            case -8:
+                return AccidentalEnum.OCTUPLEFLAT;
+            case 9:
+                return AccidentalEnum.NONUPLESHARP;
+            case -9:
+                return AccidentalEnum.NONUPLEFLAT;
+            case 10:
+                return AccidentalEnum.DECUPLESHARP;
+            case -10:
+                return AccidentalEnum.DECUPLEFLAT;
+            case 11:
+                return AccidentalEnum.UNDECUPLESHARP;
+            case -11:
+                return AccidentalEnum.UNDECUPLEFLAT;
+            case 12:
+                return AccidentalEnum.DUODECUPLESHARP;
+            case -12:
+                return AccidentalEnum.DUODECUPLEFLAT;
             case 0.5:
                 return AccidentalEnum.QUARTERTONESHARP;
             case -0.5:
