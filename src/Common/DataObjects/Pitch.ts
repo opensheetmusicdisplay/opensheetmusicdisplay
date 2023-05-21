@@ -8,41 +8,7 @@ export enum NoteEnum {
     A = 9,
     B = 11
 }
-/*
-export enum TheoricNoteEnum {
-    C   =  0 ,  //  0 HalfTones
-    Dff =  1 ,  //  0 HalfTones
-    Cs  =  2 ,  //  1 HalfTones
-    Df  =  3 ,  //  1 HalfTones
-    Css =  4 ,  //  2 HalfTones
-    D   =  5 ,  //  2 HalfTones
-    Eff =  6 ,  //  2 HalfTones
-    Ds  =  7 ,  //  3 HalfTones
-    Ef  =  8 ,  //  3 HalfTones
-    Dss =  9 ,  //  4 HalfTones
-    E   = 10 ,  //  4 HalfTones
-    Ff  = 11 ,  //  4 HalfTones
-    Es  = 12 ,  //  5 HalfTones
-    F   = 13 ,  //  5 HalfTones
-    Gff = 14 ,  //  5 HalfTones
-    Fs  = 15 ,  //  6 HalfTones
-    Gf  = 16 ,  //  6 HalfTones
-    Fss = 17 ,  //  7 HalfTones
-    G   = 18 ,  //  7 HalfTones
-    Aff = 19 ,  //  7 HalfTones
-    Gs  = 20 ,  //  8 HalfTones
-    Af  = 21 ,  //  8 HalfTones
-    Gss = 22 ,  //  9 HalfTones
-    A   = 23 ,  //  9 HalfTones
-    Bff = 24 ,  //  9 HalfTones
-    As  = 25 ,  // 10 HalfTones
-    Bf  = 26 ,  // 10 HalfTones
-    Ass = 27 ,  // 11 HalfTones
-    B   = 28 ,  // 11 HalfTones
-    Cf  = 29 ,  // 11 HalfTones
-    Bs  = 30 ,  //  0 HalfTones
-}
-*/
+
 /** Describes Accidental types.
  * Do not use the number values of these enum members directly for calculation anymore.
  * To use these for pitch calculation, use pitch.AccidentalHalfTones()
@@ -57,24 +23,6 @@ export enum AccidentalEnum {
     DOUBLEFLAT,
     TRIPLESHARP,
     TRIPLEFLAT,
-    QUADRUPLESHARP,
-    QUADRUPLEFLAT,
-    QUINTUPLESHARP,
-    QUINTUPLEFLAT,
-    SEXTUPLESHARP,
-    SEXTUPLEFLAT,
-    SEPTUPLESHARP,
-    SEPTUPLEFLAT,
-    OCTUPLESHARP,
-    OCTUPLEFLAT,
-    NONUPLESHARP,
-    NONUPLEFLAT,
-    DECUPLESHARP,
-    DECUPLEFLAT,
-    UNDECUPLESHARP,
-    UNDECUPLEFLAT,
-    DUODECUPLESHARP,
-    DUODECUPLEFLAT,
     QUARTERTONESHARP,
     QUARTERTONEFLAT,
     SLASHFLAT,
@@ -91,9 +39,6 @@ export enum AccidentalEnum {
 export class Pitch {
     public static pitchEnumValues: NoteEnum[] = [
         NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B,
-    ];
-    public static theoricPitchEnumValues: TheoricNoteEnum[] = [
-        TheoricNoteEnum.C, TheoricNoteEnum.D, TheoricNoteEnum.E, TheoricNoteEnum.F, TheoricNoteEnum.G, TheoricNoteEnum.A, TheoricNoteEnum.B,
     ];
 
     private static halftoneFactor: number = 12 / (Math.LN2 / Math.LN10);
@@ -163,16 +108,11 @@ export class Pitch {
     public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { halftone: number, overflow: number } {
         const newHalfTone: number = <number>pitch.fundamentalNote + pitch.AccidentalHalfTones + transpose;
         return Pitch.WrapAroundCheck(newHalfTone, 12);
-        // (or avoiding the WrapAroundCheck function)
-        // return {overflow: Math.floor(newHalfTone / 12) || 0 , halftone:(newHalfTone % 12 + 12) % 12 || 0 };
     }
 
     public static WrapAroundCheck(value: number, limit: number): { halftone: number, overflow: number } {
-        // This line of code is approximately 99.976% faster than the old WrapAroundCheck() function. (This comment
-        // is for you. If you decide to approve this change, I kindly ask you to remove it.)
-        return {overflow: Math.floor(value / limit) || 0 , halftone:(value % limit + limit) % limit || 0 };
-        /*
         let overflow: number = 0;
+
         while (value < 0) {
             value += limit;
             overflow--; // the octave change
@@ -182,7 +122,6 @@ export class Pitch {
             overflow++; // the octave change
         }
         return {overflow: overflow, halftone: value};
-        */
     }
 
     //public static calcFrequency(pitch: Pitch): number;
@@ -291,42 +230,6 @@ export class Pitch {
                 return 3;
             case AccidentalEnum.TRIPLEFLAT:
                 return -3;
-            case AccidentalEnum.QUADRUPLESHARP:
-                return 4;
-            case AccidentalEnum.QUADRUPLEFLAT:
-                return -4;
-            case AccidentalEnum.QUINTUPLESHARP:
-                return 5;
-            case AccidentalEnum.QUINTUPLEFLAT:
-                return -5;
-            case AccidentalEnum.SEXTUPLESHARP:
-                return 6;
-            case AccidentalEnum.SEXTUPLEFLAT:
-                return -6;
-            case AccidentalEnum.SEPTUPLESHARP:
-                return 7;
-            case AccidentalEnum.SEPTUPLEFLAT:
-                return -7;
-            case AccidentalEnum.OCTUPLESHARP:
-                return 8;
-            case AccidentalEnum.OCTUPLEFLAT:
-                return -8;
-            case AccidentalEnum.NONUPLESHARP:
-                return 9;
-            case AccidentalEnum.NONUPLEFLAT:
-                return -9;
-            case AccidentalEnum.DECUPLESHARP:
-                return 10;
-            case AccidentalEnum.DECUPLEFLAT:
-                return -10;
-            case AccidentalEnum.UNDECUPLESHARP:
-                return 11;
-            case AccidentalEnum.UNDECUPLEFLAT:
-                return -11;
-            case AccidentalEnum.DUODECUPLESHARP:
-                return 12;
-            case AccidentalEnum.DUODECUPLEFLAT:
-                return -12;
             case AccidentalEnum.QUARTERTONESHARP:
                 return 0.5;
             case AccidentalEnum.QUARTERTONEFLAT:
@@ -370,42 +273,6 @@ export class Pitch {
                 return AccidentalEnum.TRIPLESHARP;
             case -3:
                 return AccidentalEnum.TRIPLEFLAT;
-            case 4:
-                return AccidentalEnum.QUADRUPLESHARP;
-            case -4:
-                return AccidentalEnum.QUADRUPLEFLAT;
-            case 5:
-                return AccidentalEnum.QUINTUPLESHARP;
-            case -5:
-                return AccidentalEnum.QUINTUPLEFLAT;
-            case 6:
-                return AccidentalEnum.SEXTUPLESHARP;
-            case -6:
-                return AccidentalEnum.SEXTUPLEFLAT;
-            case 7:
-                return AccidentalEnum.SEPTUPLESHARP;
-            case -7:
-                return AccidentalEnum.SEPTUPLEFLAT;
-            case 8:
-                return AccidentalEnum.OCTUPLESHARP;
-            case -8:
-                return AccidentalEnum.OCTUPLEFLAT;
-            case 9:
-                return AccidentalEnum.NONUPLESHARP;
-            case -9:
-                return AccidentalEnum.NONUPLEFLAT;
-            case 10:
-                return AccidentalEnum.DECUPLESHARP;
-            case -10:
-                return AccidentalEnum.DECUPLEFLAT;
-            case 11:
-                return AccidentalEnum.UNDECUPLESHARP;
-            case -11:
-                return AccidentalEnum.UNDECUPLEFLAT;
-            case 12:
-                return AccidentalEnum.DUODECUPLESHARP;
-            case -12:
-                return AccidentalEnum.DUODECUPLEFLAT;
             case 0.5:
                 return AccidentalEnum.QUARTERTONESHARP;
             case -0.5:
@@ -501,11 +368,7 @@ export class Pitch {
     public get FundamentalNote(): NoteEnum {
         return this.fundamentalNote;
     }
-/*
-    public get TheoricFundamentalNote(): TheoricNoteEnum {
-        return TheoricNoteEnum[this.fundamentalNote];
-    }
-*/
+
     public get Accidental(): AccidentalEnum {
         return this.accidental;
     }
