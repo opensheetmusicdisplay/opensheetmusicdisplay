@@ -117,8 +117,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         super.drawStaffLine(staffLine);
         const absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
         if (this.rules.RenderSlurs) {
-            const ctx: Vex.IRenderContext = this.backend.getContext();
             if (this.rules.ColorOptions.slurs) {
+                const ctx: Vex.IRenderContext = this.backend.getContext();
                 ctx.setFillStyle(staffLine.ParentStaff.ParentInstrument.Color);
                 this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
                 ctx.setFillStyle(this.rules.DefaultColorMusic);
