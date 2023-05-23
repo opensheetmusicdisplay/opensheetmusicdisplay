@@ -94,13 +94,14 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
     public getTextBracket(): VF.TextBracket {
         let stop: VF.Note = this.endNote;
         let stopObject: Object;
+        const self: VexFlowOctaveShift = this;
         if (this.graphicalEndAtMeasureEnd) {
             // hack for Vexflow 1.2.93 (will need to be adjusted for Vexflow 4+):
             //   create a mock object with all the data Vexflow uses for the TextBracket
             //   (Vexflow theoretically expects a note here, from which it takes position and width)
             stopObject = {
                 getAbsoluteX(): number {
-                    return (this.endMeasure.PositionAndShape.AbsolutePosition.x + this.endMeasure.PositionAndShape.Size.width) * 10;
+                    return (self.endMeasure.PositionAndShape.AbsolutePosition.x + self.endMeasure.PositionAndShape.Size.width) * 10;
                 },
                 getGlyph(): Object {
                     return {
