@@ -96,7 +96,8 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         let stopObject: Object;
         const self: VexFlowOctaveShift = this;
         if (this.graphicalEndAtMeasureEnd) {
-            // hack for Vexflow 1.2.93 (will need to be adjusted for Vexflow 4+):
+            // draw until end of measure (measure end barline):
+            //   hack for Vexflow 1.2.93 (will need to be adjusted for Vexflow 4+):
             //   create a mock object with all the data Vexflow uses for the TextBracket
             //   (Vexflow theoretically expects a note here, from which it takes position and width)
             stopObject = {
