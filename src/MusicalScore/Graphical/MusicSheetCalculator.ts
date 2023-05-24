@@ -2529,6 +2529,7 @@ export abstract class MusicSheetCalculator {
             if (multiExpression.OctaveShiftStart) {
                 targetOctaveShift = multiExpression.OctaveShiftStart;
             } else if (multiExpression.OctaveShiftEnd) {
+                // also check for octave shift that is ending here but starting in earlier measure, see test_octaveshift_notes_shifted_octave_shift_end.musicxml
                 targetOctaveShift = multiExpression.OctaveShiftEnd;
             }
             if (targetOctaveShift) {
