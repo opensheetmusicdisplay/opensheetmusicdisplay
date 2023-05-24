@@ -4,6 +4,7 @@ import {BoundingBox} from "./BoundingBox";
 import {MusicSymbol} from "./MusicSymbol";
 import {ArgumentOutOfRangeException} from "../Exceptions";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
+import { GraphicalMeasure } from "./GraphicalMeasure";
 
 /**
  * The graphical counterpart of an [[OctaveShift]]
@@ -24,6 +25,10 @@ export class GraphicalOctaveShift extends GraphicalObject {
     public dashesStart: PointF2D;
     public dashesEnd: PointF2D;
     public endsOnDifferentStaffLine: boolean;
+    /** Whether the octave shift should be drawn until the end of the measure, instead of the current note. */
+    public graphicalEndAtMeasureEnd: boolean;
+    /** The measure in which this OctaveShift (which can be a part/bracket of a multi-line shift) ends graphically. */
+    public endMeasure: GraphicalMeasure;
     public isFirstPart: boolean;
     public isSecondPart: boolean;
 
