@@ -91,7 +91,7 @@ export class AccidentalCalculator {
                 if (this.isAlterAmbiguousAccidental(pitch.Accidental) && ! pitch.AccidentalXml) {
                     return; // only display accidental if it was given as an accidental in the XML
                 }
-                if (pitch.Accidental === AccidentalEnum.NATURAL) {
+                if (pitch.Accidental === AccidentalEnum.NATURAL && inMeasureAlterationAccidental !== AccidentalEnum.NATURAL) {
                     // If a natural is added, clear alterations on the same pitch for the current measure.
                     this.currentInMeasureNoteAlterationsDict.remove(pitchKey);
                 }
