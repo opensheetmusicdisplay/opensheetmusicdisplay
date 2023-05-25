@@ -41,6 +41,14 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         "tempo i",
         "rubato",
         "doppio movimento",
+        "rallentando",
+        "ritardando",
+        "ritard.",
+        "rit.",
+        "ritard",
+        "rall...",
+        "accelerando",
+        "accel",
     ];
     private static listInstantaneousTempoAddons: string[] = [
         "assai",
