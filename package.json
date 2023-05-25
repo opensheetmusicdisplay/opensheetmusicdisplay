@@ -73,8 +73,7 @@
     "jszip": "3.10.1",
     "loglevel": "^1.8.0",
     "typescript-collections": "^1.3.3",
-    "vexflow": "1.2.93",
-    "opensheetmusicdisplay": "file:opensheetmusicdisplay.min.js"
+    "vexflow": "1.2.93"
   },
   "devDependencies": {
     "@types/chai": "^4.2.22",
