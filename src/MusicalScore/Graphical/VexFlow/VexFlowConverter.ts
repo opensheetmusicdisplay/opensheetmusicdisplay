@@ -467,9 +467,13 @@ export class VexFlowConverter {
                 //   so that measure doesn't need to be enlarged too much for spacing
 
                 let hasShortNotes: boolean = false;
+                let paddingMultiplier: number = 1;
                 for (const note of notes) {
                     if (note.sourceNote.Length.RealValue <= 0.125) { // 8th or shorter
                         hasShortNotes = true;
+                        if (note.sourceNote.Length.RealValue <= 0.0625) { // 16th or shorter
+                            paddingMultiplier = 1.7;
+                        }
                         break;
                     }
                 }
@@ -479,7 +483,12 @@ export class VexFlowConverter {
                     for (const lyricsEntry of lyricsEntries) {
                         const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
                         // letters like i and l take less space, so we should use the visual width and not number of characters
-                        if (lyricsEntry.GraphicalLabel.PositionAndShape.Size.width > widthThreshold) {
+                        let currentLyricsWidth: number = lyricsEntry.GraphicalLabel.PositionAndShape.Size.width;
+                        if (lyricsEntry.hasDashFromLyricWord()) {
+                            currentLyricsWidth += 1.5;
+                        }
+                        if (currentLyricsWidth > widthThreshold) {
+                            paddingMultiplier *= currentLyricsWidth / widthThreshold;
                             // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
                             const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
                             const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
@@ -498,7 +507,7 @@ export class VexFlowConverter {
                         //   so unfortunately we can't just check if the next note is 16th or less.
                     }
                     if (addPadding) {
-                        (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics;
+                        (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics * paddingMultiplier;
                     }
                 }
             }
