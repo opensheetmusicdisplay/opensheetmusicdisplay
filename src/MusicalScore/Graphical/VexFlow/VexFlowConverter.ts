@@ -480,7 +480,21 @@ export class VexFlowConverter {
                         const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
                         // letters like i and l take less space, so we should use the visual width and not number of characters
                         if (lyricsEntry.GraphicalLabel.PositionAndShape.Size.width > widthThreshold) {
-                            addPadding = true;
+                            // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
+                            const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
+                            const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
+                            const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
+                            if (currentStaffEntryIndex === measureStaffEntries.length - 1) {
+                                addPadding = true; // last note in the measure
+                            } else {
+                                const nextStaffEntry: GraphicalStaffEntry = measureStaffEntries[currentStaffEntryIndex + 1];
+                                for (const nextLyricsEntry of nextStaffEntry.LyricsEntries) {
+                                    if (nextLyricsEntry.GraphicalLabel.PositionAndShape.Size.width > rules.LyricsXPaddingWidthThreshold) {
+                                        addPadding = true;
+                                        break;
+                                    }
+                                }
+                            }
                             break;
                         }
                         // for situations unlikely to cause overlap we shouldn't add padding,
