@@ -488,13 +488,7 @@ export class VexFlowConverter {
                                 // addPadding = true; // last note in the measure
                                 // probably unnecessary
                             } else {
-                                const nextStaffEntry: GraphicalStaffEntry = measureStaffEntries[currentStaffEntryIndex + 1];
-                                for (const nextLyricsEntry of nextStaffEntry.LyricsEntries) {
-                                    if (nextLyricsEntry.GraphicalLabel.PositionAndShape.Size.width > rules.LyricsXPaddingWidthThreshold) {
-                                        addPadding = true;
-                                        break;
-                                    }
-                                }
+                                addPadding = true;
                             }
                             break;
                         }
