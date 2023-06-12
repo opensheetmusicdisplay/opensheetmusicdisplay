@@ -477,10 +477,16 @@ export class VexFlowConverter {
                 if (hasShortNotes) {
                     let addPadding: boolean = false;
                     for (const lyricsEntry of lyricsEntries) {
-                        if (lyricsEntry.GraphicalLabel.Label.text.length > 3) {
+                        const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
+                        // letters like i and l take less space, so we should use the visual width and not number of characters
+                        if (lyricsEntry.GraphicalLabel.PositionAndShape.Size.width > widthThreshold) {
                             addPadding = true;
                             break;
                         }
+                        // for situations unlikely to cause overlap we shouldn't add padding,
+                        //   e.g. Brooke West sample (OSMD Function Test Chord Symbols) - width ~3.1 in measure 11 on 'ling', no padding needed.
+                        //   though Beethoven - Geliebte has only 8ths in measure 2 and is still problematic,
+                        //   so unfortunately we can't just check if the next note is 16th or less.
                     }
                     if (addPadding) {
                         (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics;
