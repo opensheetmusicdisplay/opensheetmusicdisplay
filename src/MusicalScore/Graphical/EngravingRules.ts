@@ -181,6 +181,13 @@ export class EngravingRules {
     public LyricsHeight: number;
     public LyricsYOffsetToStaffHeight: number;
     public LyricsYMarginToBottomLine: number;
+    /** Whether to enable x padding (to the right) for short notes, see LyricsXPaddingFactorForLongLyrics for the degree. */
+    public LyricsUseXPaddingForShortNotes: boolean;
+    /** How much spacing/padding should be added after notes with long lyrics on short notes
+     * (>4 characters on <8th note),
+     * so that the measure doesn't need to be elongated too much to avoid lyrics collisions.
+     * Default 0.8 = 8 pixels */
+    public LyricsXPaddingFactorForLongLyrics: number;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
     public BetweenSyllableMaximumDistance: number;
@@ -629,6 +636,8 @@ export class EngravingRules {
         this.LyricsHeight = 2.0; // actually size of lyrics
         this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.LyricsYMarginToBottomLine = 0.2;
+        this.LyricsUseXPaddingForShortNotes = true;
+        this.LyricsXPaddingFactorForLongLyrics = 0.8;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;

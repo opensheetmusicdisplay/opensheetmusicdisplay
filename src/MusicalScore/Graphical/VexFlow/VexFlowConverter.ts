@@ -31,6 +31,7 @@ import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
+import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -460,6 +461,32 @@ export class VexFlowConverter {
             vfnote = new VF.StaveNote(vfnoteStruct);
             (vfnote as any).stagger_same_whole_notes = rules.StaggerSameWholeNotes;
             //   it would be nice to only save this once, not for every note, but has to be accessible in stavenote.js
+            const lyricsEntries: GraphicalLyricEntry[] = gve.parentStaffEntry.LyricsEntries;
+            if (rules.LyricsUseXPaddingForShortNotes && lyricsEntries.length > 0) {
+                // VexFlowPatch: add padding to the right for large lyrics,
+                //   so that measure doesn't need to be enlarged too much for spacing
+
+                let hasShortNotes: boolean = false;
+                for (const note of notes) {
+                    if (note.sourceNote.Length.RealValue < 0.25) { // shorter than quarter note
+                        hasShortNotes = true;
+                        break;
+                    }
+                }
+
+                if (hasShortNotes) {
+                    let addPadding: boolean = false;
+                    for (const lyricsEntry of lyricsEntries) {
+                        if (lyricsEntry.GraphicalLabel.Label.text.length > 3) {
+                            addPadding = true;
+                            break;
+                        }
+                    }
+                    if (addPadding) {
+                        (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics;
+                    }
+                }
+            }
         }
         const lineShift: number = gve.notes[0].lineShift;
         if (lineShift !== 0) {
