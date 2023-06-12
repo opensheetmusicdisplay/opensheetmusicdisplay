@@ -468,7 +468,7 @@ export class VexFlowConverter {
 
                 let hasShortNotes: boolean = false;
                 for (const note of notes) {
-                    if (note.sourceNote.Length.RealValue < 0.25) { // shorter than quarter note
+                    if (note.sourceNote.Length.RealValue <= 0.125) { // 8th or shorter
                         hasShortNotes = true;
                         break;
                     }
