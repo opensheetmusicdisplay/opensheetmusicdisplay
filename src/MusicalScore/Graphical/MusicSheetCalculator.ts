@@ -2525,9 +2525,16 @@ export abstract class MusicSheetCalculator {
         const octaveShifts: MultiExpression[] = [];
         for (let idx: number = 0, len: number = sourceMeasure.StaffLinkedExpressions[staffIndex].length; idx < len; ++idx) {
             const multiExpression: MultiExpression = sourceMeasure.StaffLinkedExpressions[staffIndex][idx];
+            let targetOctaveShift: OctaveShift;
             if (multiExpression.OctaveShiftStart) {
+                targetOctaveShift = multiExpression.OctaveShiftStart;
+            } else if (multiExpression.OctaveShiftEnd) {
+                // also check for octave shift that is ending here but starting in earlier measure, see test_octaveshift_notes_shifted_octave_shift_end.musicxml
+                targetOctaveShift = multiExpression.OctaveShiftEnd;
+            }
+            if (targetOctaveShift) {
                 octaveShifts.push(multiExpression);
-                const openOctaveShift: OctaveShift = multiExpression.OctaveShiftStart;
+                const openOctaveShift: OctaveShift = targetOctaveShift;
                 let absoluteEnd: Fraction = openOctaveShift?.ParentEndMultiExpression?.AbsoluteTimestamp;
                 if (!openOctaveShift?.ParentEndMultiExpression) {
                     const measureEndTimestamp: Fraction = Fraction.plus(sourceMeasure.AbsoluteTimestamp, sourceMeasure.Duration);
@@ -2537,7 +2544,8 @@ export abstract class MusicSheetCalculator {
                     // TODO check if octaveshift end exists, otherwise set to last measure end. only necessary if xml was cut manually and is incomplete
                 }
                 openOctaveShifts[staffIndex] = new OctaveShiftParams(
-                    openOctaveShift, multiExpression?.AbsoluteTimestamp,
+                    openOctaveShift, openOctaveShift.ParentStartMultiExpression.AbsoluteTimestamp,
+                    //openOctaveShift, multiExpression?.AbsoluteTimestamp,
                     absoluteEnd
                 );
             }
@@ -2580,9 +2588,15 @@ export abstract class MusicSheetCalculator {
                 if (octaveShiftValue === OctaveEnum.NONE) {
                     // check for existing octave shifts outside openOctaveShifts
                     for (const octaveShift of octaveShifts) {
-                        if (octaveShift.OctaveShiftStart?.ParentStartMultiExpression?.AbsoluteTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
-                            !octaveShift.OctaveShiftStart?.ParentEndMultiExpression?.AbsoluteTimestamp.lt(sourceStaffEntry.AbsoluteTimestamp)) {
-                                octaveShiftValue = octaveShift.OctaveShiftStart.Type;
+                        let targetOctaveShift: OctaveShift;
+                        if (octaveShift.OctaveShiftStart) {
+                            targetOctaveShift = octaveShift.OctaveShiftStart;
+                        } else if (octaveShift.OctaveShiftEnd) {
+                            targetOctaveShift = octaveShift.OctaveShiftEnd;
+                        }
+                        if (targetOctaveShift?.ParentStartMultiExpression?.AbsoluteTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
+                            !targetOctaveShift.ParentEndMultiExpression?.AbsoluteTimestamp.lt(sourceStaffEntry.AbsoluteTimestamp)) {
+                                octaveShiftValue = targetOctaveShift.Type;
                                 break;
                             }
                     }

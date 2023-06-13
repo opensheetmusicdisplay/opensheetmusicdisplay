@@ -110,16 +110,22 @@ export class Pitch {
         return Pitch.WrapAroundCheck(newHalfTone, 12);
     }
 
+    /** Returns the fundamental note x (0 <= x <= 11, e.g. 0 = C) with octave change/overflow.
+     * The halftone will be one of the values in the enum NoteEnum, converted to number here as we need numbers for calculation.
+     */
     public static WrapAroundCheck(value: number, limit: number): { halftone: number, overflow: number } {
+        // the following one-line solution produces the same result, but isn't faster for -128 <= value <=, and harder to understand.
+        //   For very large (unrealistic) numbers it's much faster, see PR #1374.
+        // return {overflow: Math.floor(value / limit) || 0 , halftone:(value % limit + limit) % limit || 0 };
         let overflow: number = 0;
 
         while (value < 0) {
             value += limit;
-            overflow--; // the octave change
+            overflow--; // octave change downwards
         }
         while (value >= limit) {
             value -= limit;
-            overflow++; // the octave change
+            overflow++; // octave change upwards
         }
         return {overflow: overflow, halftone: value};
     }
