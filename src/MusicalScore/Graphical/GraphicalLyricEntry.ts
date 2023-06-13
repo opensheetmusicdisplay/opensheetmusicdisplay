@@ -43,6 +43,14 @@ export class GraphicalLyricEntry {
         }
     }
 
+    public hasDashFromLyricWord(): boolean {
+        if (!this.ParentLyricWord) {
+            return false;
+        }
+        const lyricWordIndex: number = this.ParentLyricWord.GraphicalLyricsEntries.indexOf(this);
+        return this.ParentLyricWord.GraphicalLyricsEntries.length > 1 && lyricWordIndex < this.ParentLyricWord.GraphicalLyricsEntries.length - 1;
+    }
+
     public get LyricsEntry(): LyricsEntry {
         return this.lyricsEntry;
     }
