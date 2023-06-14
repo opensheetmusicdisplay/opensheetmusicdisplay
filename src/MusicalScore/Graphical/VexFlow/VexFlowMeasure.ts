@@ -1137,12 +1137,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
                       const notesOccupied: number = tuplet.Notes[0][0].NormalNotes;
                       let needsBracket: boolean = false;
                       // Gould: tuplets need bracket if they're not on one single beam (see #1400)
-                      const startingBeam: Beam = tuplet.Notes[0][0].NoteBeam;
+                      //const startingBeam: Beam = tuplet.Notes[0][0].NoteBeam; // doesn't work for AutoBeam currently, as it's not set.
+                      const startingBeam: VF.Beam = (tupletStaveNotes[0] as any).beam;
                       if (!startingBeam) {
                         needsBracket = true;
                       } else {
-                          for (const tupletNotes of tuplet.Notes) {
-                            if (tupletNotes[0].NoteBeam !== startingBeam) {
+                          for (const stavenote of tupletStaveNotes) {
+                            if ((stavenote as any).beam !== startingBeam) {
                                 needsBracket = true;
                                 break;
                             }
