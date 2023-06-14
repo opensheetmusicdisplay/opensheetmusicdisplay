@@ -692,7 +692,7 @@ export class VoiceGenerator {
    * @returns {number}
    */
   private addTuplet(node: IXmlElement, tupletNodeList: IXmlElement[]): number {
-    let bracketed: boolean = false; // true if bracketed=yes given, otherwise false
+    let bracketed: boolean = false; // true if bracket=yes given, otherwise false
     let bracketedXmlValue: boolean = undefined; // Exact xml bracket value given: true for bracket=yes, false for bracket=no, otherwise undefined.
     // TODO refactor this to not duplicate lots of code for the cases tupletNodeList.length == 1 and > 1
     if (tupletNodeList !== undefined && tupletNodeList.length > 1) {

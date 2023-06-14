@@ -162,9 +162,9 @@ export class EngravingRules {
      * (Bracketing all triplets can be cluttering)
      */
     public TripletsBracketed: boolean;
-    /** Whether to bracket like the XML says when 'bracketed="no"' or "yes" is given.
+    /** Whether to bracket like the XML says when 'bracket="no"' or "yes" is given.
      * Otherwise, OSMD decides bracket usage.
-     * Note that sometimes the XML doesn't have any 'bracketed' value. */
+     * Note that sometimes the XML doesn't have any 'bracket' value. */
     public TupletsBracketedUseXMLValue: boolean;
     public TupletNumberLabelHeight: number;
     public TupletNumberYOffset: number;
