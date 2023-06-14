@@ -1172,29 +1172,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     if (tupletStaveNotes.length > 1) {
                       const tuplet: Tuplet = tupletBuilder[0];
                       const notesOccupied: number = tuplet.Notes[0][0].NormalNotes;
-                      let bracketed: boolean;
-                      if (this.rules.TupletsBracketedUseXMLValue && tuplet.BracketedXmlValue !== undefined) {
-                        bracketed = tuplet.BracketedXmlValue;
-                      } else {
-                        let needsBracket: boolean = false;
-                        // Gould: tuplets need bracket if they're not on one single beam (see #1400)
-                        const startingBeam: Beam = tuplet.Notes[0][0].NoteBeam;
-                        // const startingVFBeam: VF.Beam = (tupletStaveNotes[0] as any).beam; // alternative way to check. see for loop
-                        if (!startingBeam) {
-                          needsBracket = true;
-                        } else {
-                          for (const tupletNotes of tuplet.Notes) {
-                              if (tupletNotes[0].NoteBeam !== startingBeam) {
-                                  needsBracket = true;
-                                  break;
-                              }
-                          }
-                        }
-                        bracketed = tuplet.Bracket ||
-                        needsBracket ||
-                        (tuplet.TupletLabelNumber === 3 && this.rules.TripletsBracketed) ||
-                        (tuplet.TupletLabelNumber !== 3 && this.rules.TupletsBracketed);
-                      }
+                      const bracketed: boolean = tuplet.shouldBeBracketed(
+                        this.rules.TupletsBracketedUseXMLValue,
+                        this.rules.TupletsBracketed,
+                        this.rules.TripletsBracketed
+                      );
                       let location: number = VF.Tuplet.LOCATION_TOP;
                       if (tuplet.tupletLabelNumberPlacement === PlacementEnum.Below) {
                           location = VF.Tuplet.LOCATION_BOTTOM;
