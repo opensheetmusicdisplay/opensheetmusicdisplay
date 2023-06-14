@@ -162,6 +162,10 @@ export class EngravingRules {
      * (Bracketing all triplets can be cluttering)
      */
     public TripletsBracketed: boolean;
+    /** Whether to bracket like the XML says when 'bracketed="no"' or "yes" is given.
+     * Otherwise, OSMD decides bracket usage.
+     * Note that sometimes the XML doesn't have any 'bracketed' value. */
+    public TupletsBracketedUseXMLValue: boolean;
     public TupletNumberLabelHeight: number;
     public TupletNumberYOffset: number;
     public TupletNumberLimitConsecutiveRepetitions: boolean;
@@ -591,6 +595,7 @@ export class EngravingRules {
         this.TupletsRatioed = false;
         this.TupletsBracketed = false;
         this.TripletsBracketed = false; // special setting for triplets, overrides tuplet setting (for triplets only)
+        this.TupletsBracketedUseXMLValue = true;
         this.TupletNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.TupletNumberYOffset = 0.5;
         this.TupletNumberLimitConsecutiveRepetitions = true;

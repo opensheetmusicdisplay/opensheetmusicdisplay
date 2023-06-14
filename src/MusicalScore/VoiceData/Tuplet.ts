@@ -21,6 +21,8 @@ export class Tuplet {
     private fractions: Fraction[] = [];
     /** Whether this tuplet has a bracket. (e.g. showing |--3--| or just 3 for a triplet) */
     private bracket: boolean;
+    /** Boolean if 'bracketed=no' or 'yes' was explicitly requested in the XML, otherwise undefined. */
+    public BracketedXmlValue: boolean;
 
     public get TupletLabelNumber(): number {
         return this.tupletLabelNumber;
