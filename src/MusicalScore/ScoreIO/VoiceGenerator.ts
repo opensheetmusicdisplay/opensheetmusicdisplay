@@ -692,7 +692,8 @@ export class VoiceGenerator {
    * @returns {number}
    */
   private addTuplet(node: IXmlElement, tupletNodeList: IXmlElement[]): number {
-    let bracketed: boolean = false; // xml bracket attribute value
+    let bracketed: boolean = false; // true if bracket=yes given, otherwise false
+    let bracketedXmlValue: boolean = undefined; // Exact xml bracket value given: true for bracket=yes, false for bracket=no, undefined if not given.
     // TODO refactor this to not duplicate lots of code for the cases tupletNodeList.length == 1 and > 1
     if (tupletNodeList !== undefined && tupletNodeList.length > 1) {
       let timeModNode: IXmlElement = node.element("time-modification");
@@ -706,6 +707,9 @@ export class VoiceGenerator {
           const bracketAttr: Attr = tupletNode.attribute("bracket");
           if (bracketAttr && bracketAttr.value === "yes") {
             bracketed = true;
+            bracketedXmlValue = true;
+          } else if (bracketAttr && bracketAttr.value === "no") {
+            bracketedXmlValue = false;
           }
 
           const type: Attr = tupletNode.attribute("type");
@@ -727,6 +731,7 @@ export class VoiceGenerator {
 
             }
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
+            tuplet.BracketedXmlValue = bracketedXmlValue;
             //Default to above
             tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
             //If we ever encounter a placement attribute for this tuplet, should override.
@@ -818,6 +823,9 @@ export class VoiceGenerator {
         const bracketAttr: Attr = n.attribute("bracket");
         if (bracketAttr && bracketAttr.value === "yes") {
           bracketed = true;
+          bracketedXmlValue = true;
+        } else if (bracketAttr && bracketAttr.value === "no") {
+          bracketedXmlValue = false;
         }
         if (type === "start") {
           let tupletLabelNumber: number = 0;
@@ -843,6 +851,7 @@ export class VoiceGenerator {
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
           if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
+            tuplet.BracketedXmlValue = bracketedXmlValue;
             //Default to above
             tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
           }
