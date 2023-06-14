@@ -25,6 +25,7 @@ export class Tuplet {
     /** Boolean if 'bracket="no"' or "yes" was explicitly requested in the XML, otherwise undefined. */
     public BracketedXmlValue: boolean;
 
+    /** Determines whether the tuplet should be bracketed (arguments are EngravingRules). */
     public shouldBeBracketed(useXmlValue: boolean, tupletsBracketed: boolean, tripletsBracketed: boolean): boolean {
         if (useXmlValue && this.BracketedXmlValue !== undefined) {
             return this.BracketedXmlValue;
