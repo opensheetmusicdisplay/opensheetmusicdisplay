@@ -94,7 +94,7 @@
           <normal-notes>2</normal-notes>
           </time-modification>
         <notations>
-          <tuplet type="start" bracket="yes"/>
+          <tuplet type="start"/>
           </notations>
         </note>
       <note default-x="133.66" default-y="-50.00">
@@ -145,7 +145,7 @@
         <stem>up</stem>
         <beam number="1">begin</beam>
         <notations>
-          <tuplet type="start" bracket="no"/>
+          <tuplet type="start"/>
           </notations>
         </note>
       <note default-x="292.47" default-y="-35.00">
@@ -196,7 +196,7 @@
           </time-modification>
         <stem>up</stem>
         <notations>
-          <tuplet type="start" bracket="yes"/>
+          <tuplet type="start"/>
           </notations>
         </note>
       <note default-x="483.05" default-y="-20.00">
