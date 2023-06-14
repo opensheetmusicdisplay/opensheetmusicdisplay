@@ -823,6 +823,9 @@ export class VoiceGenerator {
         const bracketAttr: Attr = n.attribute("bracket");
         if (bracketAttr && bracketAttr.value === "yes") {
           bracketed = true;
+          bracketedXmlValue = true;
+        } else if (bracketAttr && bracketAttr.value === "no") {
+          bracketedXmlValue = false;
         }
         if (type === "start") {
           let tupletLabelNumber: number = 0;
@@ -848,6 +851,7 @@ export class VoiceGenerator {
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
           if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
+            tuplet.BracketedXmlValue = bracketedXmlValue;
             //Default to above
             tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
           }
