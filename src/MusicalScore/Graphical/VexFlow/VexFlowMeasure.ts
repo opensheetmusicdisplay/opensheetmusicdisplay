@@ -1135,7 +1135,21 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     if (tupletStaveNotes.length > 1) {
                       const tuplet: Tuplet = tupletBuilder[0];
                       const notesOccupied: number = tuplet.Notes[0][0].NormalNotes;
+                      let needsBracket: boolean = false;
+                      // Gould: tuplets need bracket if they're not on one single beam (see #1400)
+                      const startingBeam: Beam = tuplet.Notes[0][0].NoteBeam;
+                      if (!startingBeam) {
+                        needsBracket = true;
+                      } else {
+                          for (const tupletNotes of tuplet.Notes) {
+                            if (tupletNotes[0].NoteBeam !== startingBeam) {
+                                needsBracket = true;
+                                break;
+                            }
+                          }
+                      }
                       const bracketed: boolean = tuplet.Bracket ||
+                        needsBracket ||
                         (tuplet.TupletLabelNumber === 3 && this.rules.TripletsBracketed) ||
                         (tuplet.TupletLabelNumber !== 3 && this.rules.TupletsBracketed);
                       let location: number = VF.Tuplet.LOCATION_TOP;
