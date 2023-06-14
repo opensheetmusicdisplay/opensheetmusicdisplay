@@ -123,6 +123,10 @@ export class EngravingRules {
     public ChordSymbolTextHeight: number;
     public ChordSymbolTextAlignment: TextAlignmentEnum;
     public ChordSymbolRelativeXOffset: number;
+    /** Additional x-shift for short chord symbols (e.g. C, but not Eb/7), to appear more centered. */
+    public ChordSymbolExtraXShiftForShortChordSymbols: number;
+    /** Threshold width below which to apply ChordSymbolExtraXShiftForShortChordSymbols. */
+    public ChordSymbolExtraXShiftWidthThreshold: number;
     public ChordSymbolXSpacing: number;
     public ChordOverlapAllowedIntoNextMeasure: number;
     public ChordSymbolYOffset: number;
@@ -557,6 +561,8 @@ export class EngravingRules {
         this.ChordSymbolTextHeight = 2.0;
         this.ChordSymbolTextAlignment = TextAlignmentEnum.LeftBottom;
         this.ChordSymbolRelativeXOffset = -1.0;
+        this.ChordSymbolExtraXShiftForShortChordSymbols = 0.3;
+        this.ChordSymbolExtraXShiftWidthThreshold = 2.0;
         this.ChordSymbolXSpacing = 1.0;
         this.ChordOverlapAllowedIntoNextMeasure = 0;
         this.ChordSymbolYOffset = 0.1;
