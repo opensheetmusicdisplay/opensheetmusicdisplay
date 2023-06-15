@@ -462,7 +462,7 @@ export class VexFlowConverter {
             (vfnote as any).stagger_same_whole_notes = rules.StaggerSameWholeNotes;
             //   it would be nice to only save this once, not for every note, but has to be accessible in stavenote.js
             const lyricsEntries: GraphicalLyricEntry[] = gve.parentStaffEntry.LyricsEntries;
-            if (rules.LyricsUseXPaddingForShortNotes && lyricsEntries.length > 0) {
+            if (rules.RenderLyrics && rules.LyricsUseXPaddingForShortNotes && lyricsEntries.length > 0) {
                 // VexFlowPatch: add padding to the right for large lyrics,
                 //   so that measure doesn't need to be enlarged too much for spacing
 
