@@ -1142,7 +1142,14 @@ export abstract class MusicSheetCalculator {
                 for (const ve of voice.VoiceEntries) {
                     if (ve.Notes.length > 0) {
                         const firstNote: Note = ve.Notes[0];
-                        if (!firstNote.NoteTuplet) {
+                        if (!firstNote.NoteTuplet ||
+                            firstNote.NoteTuplet.shouldBeBracketed(
+                                this.rules.TupletsBracketedUseXMLValue,
+                                this.rules.TupletsBracketed,
+                                this.rules.TripletsBracketed
+                            )
+                        ) {
+                            // don't disable tuplet numbers under these conditions, reset consecutive tuplet count
                             currentTupletNumber = -1;
                             consecutiveTupletCount = 0;
                             currentTuplet = undefined;
@@ -1169,7 +1176,8 @@ export abstract class MusicSheetCalculator {
                             }
                         }
                         if (firstNote.NoteTuplet.TupletLabelNumber !== currentTupletNumber ||
-                            !typeLength.Equals(currentTypeLength)) {
+                            !typeLength.Equals(currentTypeLength) ||
+                            firstNote.NoteTuplet.Bracket) {
                             currentTupletNumber = firstNote.NoteTuplet.TupletLabelNumber;
                             currentTypeLength = typeLength;
                             consecutiveTupletCount = 0;
