@@ -1283,17 +1283,23 @@ export abstract class MusicSheetCalculator {
         const endOfMeasure: number = parentMeasure.PositionAndShape.AbsolutePosition.x + parentMeasure.PositionAndShape.BorderRight;
         let maxNoteLength: Fraction = new Fraction(0, 0, 0);
         for (const staffEntry of container.StaffEntries) {
-            const currentMaxLength: Fraction = staffEntry?.sourceStaffEntry?.calculateMaxNoteLength();
+            const currentMaxLength: Fraction = staffEntry?.sourceStaffEntry?.calculateMaxNoteLength(false);
             if ( currentMaxLength?.gt(maxNoteLength) ) {
                 maxNoteLength = currentMaxLength;
             }
         }
+        const useStaffEntryBorderLeft: boolean = !isSoftAccent &&
+            graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo;
         const endPosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-            endAbsoluteTimestamp, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0);
+            endAbsoluteTimestamp, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
+            useStaffEntryBorderLeft);
 
         const beginOfNextNote: Fraction = Fraction.plus(endAbsoluteTimestamp, maxNoteLength);
+        // TODO for the last note of the piece (wedge ending after last note), this timestamp is incorrect, being after the last note
+        //   but there's a workaround in getRelativePositionInStaffLineFromTimestamp() via the variable endAfterRightStaffEntry
         const nextNotePosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-            beginOfNextNote, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0);
+            beginOfNextNote, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
+            graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo);
         const wedgePadding: number = this.rules.SoftAccentWedgePadding;
         const staffEntryWidth: number = container.getFirstNonNullStaffEntry().PositionAndShape.Size.width; // staff entry widths for whole notes is too long
         const sizeFactor: number = this.rules.SoftAccentSizeFactor;
@@ -2139,8 +2145,11 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    protected getRelativePositionInStaffLineFromTimestamp(timestamp: Fraction, verticalIndex: number, staffLine: StaffLine,
-                                                          multiStaffInstrument: boolean, firstVisibleMeasureRelativeX: number = 0.0): PointF2D {
+    protected getRelativePositionInStaffLineFromTimestamp(
+        timestamp: Fraction, verticalIndex: number, staffLine: StaffLine,
+        multiStaffInstrument: boolean, firstVisibleMeasureRelativeX: number = 0.0,
+        useLeftStaffEntryBorder: boolean = false
+    ): PointF2D {
         let relative: PointF2D = new PointF2D();
         let leftStaffEntry: GraphicalStaffEntry = undefined;
         let rightStaffEntry: GraphicalStaffEntry = undefined;
@@ -2160,8 +2169,16 @@ export abstract class MusicSheetCalculator {
             }
             let leftX: number = leftStaffEntry.PositionAndShape.RelativePosition.x + measureRelativeX;
             let rightX: number = rightStaffEntry.PositionAndShape.RelativePosition.x + rightStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
+            const endAfterRightStaffEntry: boolean = timestamp.RealValue > rightStaffEntry.getAbsoluteTimestamp().RealValue;
+            // endAfterRightStaffEntry is an unfortunate case where the timestamp isn't correct for the last note in the piece,
+            //   see test_wedge_diminuendo_duplicated.musicxml
             if (firstVisibleMeasureRelativeX > 0) {
                 rightX = rightStaffEntry.PositionAndShape.RelativePosition.x + measureRelativeX;
+            } else if (useLeftStaffEntryBorder &&
+                (leftStaffEntry.getAbsoluteTimestamp().RealValue === timestamp.RealValue || endAfterRightStaffEntry)
+            ) {
+                leftX = leftStaffEntry.PositionAndShape.RelativePosition.x + leftStaffEntry.PositionAndShape.BorderLeft + measureRelativeX;
+                rightX = leftX;
             }
             let timestampQuotient: number = 0.0;
             if (leftStaffEntry !== rightStaffEntry) {
