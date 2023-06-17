@@ -331,6 +331,10 @@ export class VexFlowConverter {
                     // if the measure has no modifiers.
                     alignCenter = true;
                     xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
+
+                    // For GENIT Apps - whole rest left alignment
+                    alignCenter = false;
+                    xShift = 0;
                     // affects VexFlowStaffEntry.calculateXPosition()
                 }
                 //If we have more than one visible voice entry, shift the rests so no collision occurs
