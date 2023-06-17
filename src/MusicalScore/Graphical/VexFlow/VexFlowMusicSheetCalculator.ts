@@ -507,7 +507,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
     for (const staffEntry of staffEntries) {
-      if (staffEntry.LyricsEntries.length > 0) {
+      if (staffEntry.LyricsEntries.length > 0 && false) {
         newElongationFactorForMeasureWidth =
           this.calculateElongationFactor(
             staffEntry.LyricsEntries,
@@ -520,7 +520,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             this.rules.LyricOverlapAllowedIntoNextMeasure,
           );
       }
-      if (staffEntry.graphicalChordContainers.length > 0) {
+      if (staffEntry.graphicalChordContainers.length > 0 && false) {
         newElongationFactorForMeasureWidth =
           this.calculateElongationFactor(
             staffEntry.graphicalChordContainers,
