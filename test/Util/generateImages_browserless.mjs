@@ -318,7 +318,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const defaultOrCompactTightMode = sampleFilename.startsWith("OSMD_Function_Test_Container_height") ? "compacttight" : "default";
         const isTestFlatBeams = sampleFilename.startsWith("test_drum_tuplet_beams");
         const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
+        const isTestPageBreakImpliesSystemBreak = sampleFilename.startsWith("test_pagebreak_implies_systembreak");
         const isTestPageBottomMargin0 = sampleFilename.includes("PageBottomMargin0");
+        const enableNewSystemAtSystemBreak = sampleFilename.includes("test_octaveshift_extragraphicalmeasure");
         osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
@@ -335,6 +337,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
             drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
             newSystemFromXML: isFunctionTestSystemAndPageBreaks,
+            newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
             newPageFromXML: isFunctionTestSystemAndPageBreaks,
             pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
             pageFormat: pageFormat, // reset by drawingparameters default,
@@ -357,6 +360,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         }
         if (isTestPageBottomMargin0) {
             osmdInstance.EngravingRules.PageBottomMargin = 0;
+        }
+        if (enableNewSystemAtSystemBreak) {
+            osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
         }
     }
 
