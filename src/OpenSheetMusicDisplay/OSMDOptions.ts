@@ -178,6 +178,11 @@ export interface IOSMDOptions {
      *  at different measures. So this option may result in a system break after a single measure in a system.
      */
     newSystemFromXML?: boolean;
+    /** Whether to begin a new system ("line break") when given a new page in XML ('new-page="yes"'), but newPageFromXML is false.
+     *  Default false, because OSMD does its own layout that will do line breaks interactively
+     *  at different measures. So this option may result in a system break after a single measure in a system.
+     */
+    newSystemFromNewPageInXML?: boolean;
     /** Whether to begin a new page ("page break") when given in XML ('new-page="yes"').
      *  Default false, because OSMD does its own layout that will do page breaks interactively
      * (when given a PageFormat) at different measures.
@@ -250,7 +255,7 @@ export interface IOSMDOptions {
      * Set to true if subsequent measures full of rests should be auto-converted to multi-rest measure. Default is true
      * This works across instruments- If all instruments have subsequent measures with nothing but rests, multirest measures are generated
      */
-    autoGenerateMutipleRestMeasuresFromRestMeasures?: boolean;
+    autoGenerateMultipleRestMeasuresFromRestMeasures?: boolean;
     /**
      * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used.
      */

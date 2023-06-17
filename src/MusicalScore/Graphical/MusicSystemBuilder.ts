@@ -134,7 +134,9 @@ export class MusicSystemBuilder {
             }
             const measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth < systemMaxWidth;
             const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && sourceMeasure.printNewPageXml;
-            const doXmlLineBreak: boolean = doXmlPageBreak || // also create new system if doing page break
+            const impliedSystemBreak: boolean = doXmlPageBreak || // also create new system if doing page break
+                (this.rules.NewSystemAtXMLNewPageAttribute && sourceMeasure.printNewPageXml);
+            const doXmlLineBreak: boolean = impliedSystemBreak ||
                 (this.rules.NewSystemAtXMLNewSystemAttribute && sourceMeasure.printNewSystemXml);
             if (isSystemStartMeasure || (measureFitsInSystem && !doXmlLineBreak)) {
                 this.addMeasureToSystem(
@@ -167,6 +169,7 @@ export class MusicSystemBuilder {
                 this.finalizeCurrentSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
                 return this.musicSystems;
             }
+            // TODO FixedMeasureWidth: last measure will have a different stretch factor, misaligning measures and widths. use previous stretch factor instead
             this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
         }
         return this.musicSystems;

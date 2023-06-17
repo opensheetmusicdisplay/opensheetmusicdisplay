@@ -263,6 +263,11 @@ export class Note {
         return this.isRest() && this.Length.RealValue === this.sourceMeasure.ActiveTimeSignature.RealValue;
     }
 
+    /** Whether the note fills the whole measure. */
+    public isWholeMeasureNote(): boolean {
+        return this.Length.RealValue === this.sourceMeasure.ActiveTimeSignature.RealValue;
+    }
+
     public ToString(): string {
         if (this.pitch) {
             return this.Pitch.ToString() + ", length: " + this.length.toString();

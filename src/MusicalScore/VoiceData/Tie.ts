@@ -9,17 +9,13 @@ import log from "loglevel";
  * A [[Tie]] connects two notes of the same pitch and name, indicating that they have to be played as a single note.
  */
 export class Tie {
-    // For GENIT Apps - noPair tie
+
     constructor(note: Note, type: TieTypes) {
-        this.firstNote = note;
-        if(note){
-            this.AddNote(note);
-        }
+        this.AddNote(note);
         this.type = type;
     }
 
     private notes: Note[] = [];
-    public firstNote: Note;
     private type: TieTypes;
     public TieNumber: number = 1;
     public TieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
