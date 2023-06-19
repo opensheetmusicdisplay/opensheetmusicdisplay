@@ -373,6 +373,7 @@ export class EngravingRules {
     public RenderPedals: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
+    public IgnoreRepeatedDynamics: boolean;
     public ArticulationPlacementFromXML: boolean;
     /** Percent distance of breath marks to next note or end of staff, e.g. 0.8 = 80%. */
     public BreathMarkDistance: number;
@@ -672,6 +673,7 @@ export class EngravingRules {
         this.ContinuousTempoTextHeight = 2.3;
         this.DynamicExpressionMaxDistance = 2;
         this.DynamicExpressionSpacer = 0.5;
+        this.IgnoreRepeatedDynamics = false;
 
         // Line Widths
         this.VexFlowDefaultNotationFontScale = 39; // scales notes, including rests. default value 39 in Vexflow.
