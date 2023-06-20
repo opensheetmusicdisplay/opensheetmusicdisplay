@@ -3197,7 +3197,7 @@ export abstract class MusicSheetCalculator {
         let textHeight: number = this.rules.LyricsHeight;
         if (endX - startX < 0.8) {
             textHeight *= 0.8;
-            y -= 0.15 * textHeight; // dash moves downwards when textHeight is reduced. counter-act that.
+            y -= 0.1 * textHeight; // dash moves downwards when textHeight is reduced. counter-act that.
             //xShift = -0.1;
             // dashes in short/narrow intervals are slightly right-leaning and tend to overlap with right lyricsentry
             //   see Cornelius - Christbaum, measure 9 and 11 ("li-che", "li-ger")
