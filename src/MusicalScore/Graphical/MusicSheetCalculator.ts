@@ -3097,7 +3097,8 @@ export abstract class MusicSheetCalculator {
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
                 lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight -
+                lyricEntry.GraphicalLabel.CenteringXShift; // TODO not sure why this is necessary, see Christbaum measure 9+11, Land der Berge 11-12
 
             const endX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffentry.PositionAndShape.RelativePosition.x +
@@ -3193,8 +3194,19 @@ export abstract class MusicSheetCalculator {
     private calculateSingleDashForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): void {
         const label: Label = new Label("-");
         label.colorDefault = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
+        let textHeight: number = this.rules.LyricsHeight;
+        if (endX - startX < 0.8) {
+            textHeight *= 0.8;
+            y -= 0.1 * textHeight; // dash moves downwards when textHeight is reduced. counteract that.
+            //xShift = -0.1;
+            // x-position is situational, sometimes it's slightly right-leaning and tends to overlap with the right LyricsEntry
+            //   (see Cornelius - Christbaum, measure 9 and 11 ("li-che", "li-ger"), due to centering x-shift = GraphicalLabel.CenteringXShift)
+            // sometimes the x-position is perfect and the interval is extremely narrow
+            //   (see Mozart/Holzer Land der Berge measure 11-12)
+            // or even slightly too far left (Beethoven Geliebte measure 4, due to centering x-shift = GraphicalLabel.CenteringXShift)
+        }
         const dash: GraphicalLabel = new GraphicalLabel(
-            label, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
+            label, textHeight, TextAlignmentEnum.CenterBottom, this.rules);
         dash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(dash);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
