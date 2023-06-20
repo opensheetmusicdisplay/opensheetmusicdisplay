@@ -3199,8 +3199,11 @@ export abstract class MusicSheetCalculator {
             textHeight *= 0.8;
             y -= 0.1 * textHeight; // dash moves downwards when textHeight is reduced. counter-act that.
             //xShift = -0.1;
-            // dashes in short/narrow intervals are slightly right-leaning and tend to overlap with right lyricsentry
-            //   see Cornelius - Christbaum, measure 9 and 11 ("li-che", "li-ger")
+            // x-position is situational, sometimes it's slightly right-leaning and tends to overlap with the right LyricsEntry
+            //   (see Cornelius - Christbaum, measure 9 and 11 ("li-che", "li-ger"), due to centering x-shift = GraphicalLabel.CenteringXShift)
+            // sometimes the x-position is perfect and the interval is extremely narrow
+            //   (see Mozart/Holzer Land der Berge measure 11-12)
+            // or even slightly too far left (Beethoven Geliebte measure 4, due to centering x-shift = GraphicalLabel.CenteringXShift)
         }
         const dash: GraphicalLabel = new GraphicalLabel(
             label, textHeight, TextAlignmentEnum.CenterBottom, this.rules);
