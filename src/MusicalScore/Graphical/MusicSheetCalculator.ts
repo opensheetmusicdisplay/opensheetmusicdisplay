@@ -3195,11 +3195,11 @@ export abstract class MusicSheetCalculator {
         label.colorDefault = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         let textHeight: number = this.rules.LyricsHeight;
         let xShift: number = 0;
-        if (endX - startX < 0.7) {
-            textHeight *= 0.9;
+        if (endX - startX < 0.8) {
+            textHeight *= 0.8;
             xShift = -0.2;
             // dashes in short/narrow intervals are slightly right-leaning and tend to overlap with right lyricsentry
-            //   see Cornelius - Christbaum, measure 9 ("li-che")
+            //   see Cornelius - Christbaum, measure 9 and 11 ("li-che", "li-ger")
         }
         const dash: GraphicalLabel = new GraphicalLabel(
             label, textHeight, TextAlignmentEnum.CenterBottom, this.rules);
