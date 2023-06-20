@@ -189,6 +189,12 @@ export class EngravingRules {
     public LyricsHeight: number;
     public LyricsYOffsetToStaffHeight: number;
     public LyricsYMarginToBottomLine: number;
+    /** Extra x-shift (to the right) for short lyrics to be better vertically aligned.
+     * Also see ChordSymbolExtraXShiftForShortChordSymbols, same principle, same default value.
+     */
+    public LyricsExtraXShiftForShortLyrics: number;
+    /** Threshold of the lyric entry's width below which the x-shift is applied. Default 1.4. */
+    public LyricsExtraXShiftForShortLyricsWidthThreshold: number;
     /** Whether to enable x padding (to the right) for short notes, see LyricsXPaddingFactorForLongLyrics for the degree. */
     public LyricsUseXPaddingForShortNotes: boolean;
     /** How much spacing/padding should be added after notes with long lyrics on short notes
@@ -566,7 +572,7 @@ export class EngravingRules {
         this.ChordSymbolTextHeight = 2.0;
         this.ChordSymbolTextAlignment = TextAlignmentEnum.LeftBottom;
         this.ChordSymbolRelativeXOffset = -1.0;
-        this.ChordSymbolExtraXShiftForShortChordSymbols = 0.3;
+        this.ChordSymbolExtraXShiftForShortChordSymbols = 0.3; // also see LyricsExtraXShiftForShortLyrics, same principle
         this.ChordSymbolExtraXShiftWidthThreshold = 2.0;
         this.ChordSymbolXSpacing = 1.0;
         this.ChordOverlapAllowedIntoNextMeasure = 0;
@@ -653,6 +659,8 @@ export class EngravingRules {
         this.LyricsHeight = 2.0; // actually size of lyrics
         this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.LyricsYMarginToBottomLine = 0.2;
+        this.LyricsExtraXShiftForShortLyrics = 0.5; // also see ChordSymbolExtraXShiftForShortChordSymbols, same principle
+        this.LyricsExtraXShiftForShortLyricsWidthThreshold = 1.4; // width of '+': 1.12, 'II': 1.33 (benefits from x-shift), 'III': 1.99 (doesn't benefit)
         this.LyricsUseXPaddingForShortNotes = true;
         this.LyricsXPaddingFactorForLongLyrics = 0.8;
         this.LyricsXPaddingWidthThreshold = 3.3;

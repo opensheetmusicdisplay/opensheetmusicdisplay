@@ -38,6 +38,10 @@ export class GraphicalLyricEntry {
         );
         this.graphicalLabel.Label.colorDefault = rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0, staffHeight);
+        this.graphicalLabel.setLabelPositionAndShapeBorders(); // needed to have Size.width
+        if (this.graphicalLabel.PositionAndShape.Size.width < rules.LyricsExtraXShiftForShortLyricsWidthThreshold) {
+            this.graphicalLabel.PositionAndShape.RelativePosition.x += rules.LyricsExtraXShiftForShortLyrics;
+        }
         if (lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
             this.graphicalLabel.PositionAndShape.RelativePosition.x -= 1; // make lyrics optically left-aligned
         }

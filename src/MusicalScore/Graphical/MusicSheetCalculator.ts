@@ -3193,15 +3193,23 @@ export abstract class MusicSheetCalculator {
     private calculateSingleDashForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): void {
         const label: Label = new Label("-");
         label.colorDefault = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
+        let textHeight: number = this.rules.LyricsHeight;
+        let xShift: number = 0;
+        if (endX - startX < 0.7) {
+            textHeight *= 0.9;
+            xShift = -0.2;
+            // dashes in short/narrow intervals are slightly right-leaning and tend to overlap with right lyricsentry
+            //   see Cornelius - Christbaum, measure 9 ("li-che")
+        }
         const dash: GraphicalLabel = new GraphicalLabel(
-            label, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
+            label, textHeight, TextAlignmentEnum.CenterBottom, this.rules);
         dash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(dash);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
             this.staffLinesWithLyricWords.push(staffLine);
         }
         dash.PositionAndShape.Parent = staffLine.PositionAndShape;
-        const relative: PointF2D = new PointF2D(startX + (endX - startX) / 2, y);
+        const relative: PointF2D = new PointF2D(startX + (endX - startX) / 2 + xShift, y);
         dash.PositionAndShape.RelativePosition = relative;
     }
 
