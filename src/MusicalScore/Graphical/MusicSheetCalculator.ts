@@ -3197,7 +3197,7 @@ export abstract class MusicSheetCalculator {
         let textHeight: number = this.rules.LyricsHeight;
         if (endX - startX < 0.8) {
             textHeight *= 0.8;
-            y -= 0.1 * textHeight; // dash moves downwards when textHeight is reduced. counter-act that.
+            y -= 0.1 * textHeight; // dash moves downwards when textHeight is reduced. counteract that.
             //xShift = -0.1;
             // x-position is situational, sometimes it's slightly right-leaning and tends to overlap with the right LyricsEntry
             //   (see Cornelius - Christbaum, measure 9 and 11 ("li-che", "li-ger"), due to centering x-shift = GraphicalLabel.CenteringXShift)
