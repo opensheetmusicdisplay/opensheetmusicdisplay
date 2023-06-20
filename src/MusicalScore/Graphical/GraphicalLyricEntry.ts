@@ -41,6 +41,7 @@ export class GraphicalLyricEntry {
         this.graphicalLabel.setLabelPositionAndShapeBorders(); // needed to have Size.width
         if (this.graphicalLabel.PositionAndShape.Size.width < rules.LyricsExtraXShiftForShortLyricsWidthThreshold) {
             this.graphicalLabel.PositionAndShape.RelativePosition.x += rules.LyricsExtraXShiftForShortLyrics;
+            this.graphicalLabel.CenteringXShift = rules.LyricsExtraXShiftForShortLyrics;
         }
         if (lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
             this.graphicalLabel.PositionAndShape.RelativePosition.x -= 1; // make lyrics optically left-aligned

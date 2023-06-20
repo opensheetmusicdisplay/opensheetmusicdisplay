@@ -3097,7 +3097,8 @@ export abstract class MusicSheetCalculator {
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
                 lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight -
+                lyricEntry.GraphicalLabel.CenteringXShift; // TODO not sure why this is necessary, see Christbaum measure 9+11, Land der Berge 11-12
 
             const endX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffentry.PositionAndShape.RelativePosition.x +
@@ -3194,10 +3195,10 @@ export abstract class MusicSheetCalculator {
         const label: Label = new Label("-");
         label.colorDefault = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         let textHeight: number = this.rules.LyricsHeight;
-        let xShift: number = 0;
         if (endX - startX < 0.8) {
             textHeight *= 0.8;
-            xShift = -0.2;
+            y -= 0.15 * textHeight; // dash moves downwards when textHeight is reduced. counter-act that.
+            //xShift = -0.1;
             // dashes in short/narrow intervals are slightly right-leaning and tend to overlap with right lyricsentry
             //   see Cornelius - Christbaum, measure 9 and 11 ("li-che", "li-ger")
         }
@@ -3209,7 +3210,7 @@ export abstract class MusicSheetCalculator {
             this.staffLinesWithLyricWords.push(staffLine);
         }
         dash.PositionAndShape.Parent = staffLine.PositionAndShape;
-        const relative: PointF2D = new PointF2D(startX + (endX - startX) / 2 + xShift, y);
+        const relative: PointF2D = new PointF2D(startX + (endX - startX) / 2, y);
         dash.PositionAndShape.RelativePosition = relative;
     }
 
