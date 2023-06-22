@@ -714,8 +714,11 @@ export class MusicSystemBuilder {
     protected getMeasureStartLine(): SystemLinesEnum {
         const thisMeasureBeginsLineRep: boolean = this.thisMeasureBeginsLineRepetition();
         if (thisMeasureBeginsLineRep) {
-            const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
             const isGlobalFirstMeasure: boolean = this.measureListIndex === 0;
+            if (isGlobalFirstMeasure && this.rules.RepetitionAllowFirstMeasureBeginningRepeatBarline) {
+                return SystemLinesEnum.BoldThinDots;
+            }
+            const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
             if (this.previousMeasureEndsLineRepetition() && !isSystemStartMeasure) {
                 return SystemLinesEnum.DotsBoldBoldDots;
             }

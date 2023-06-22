@@ -179,6 +179,7 @@ export class EngravingRules {
     public TupletVerticalLineLength: number;
     public TupletNumbersInTabs: boolean;
 
+    public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
     public RepetitionEndingLabelXOffset: number;
     public RepetitionEndingLabelYOffset: number;
@@ -652,6 +653,7 @@ export class EngravingRules {
         this.GlissandoDefaultWidth = 0.1;
 
         // Repetitions
+        this.RepetitionAllowFirstMeasureBeginningRepeatBarline = true;
         this.RepetitionEndingLabelHeight = 2.0;
         this.RepetitionEndingLabelXOffset = 0.5;
         this.RepetitionEndingLabelYOffset = 0.3;
