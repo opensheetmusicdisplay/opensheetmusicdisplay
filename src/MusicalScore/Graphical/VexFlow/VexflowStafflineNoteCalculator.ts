@@ -92,7 +92,7 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
         //const xmlSingleStaffline: boolean = graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1;
         const positionByXml: boolean = this.rules.PercussionUseXMLDisplayStep &&
             graphicalNote.sourceNote.displayStepUnpitched !== undefined;
-        if (currentPitchList.length > this.rules.PercussionOneLineCutoff && !positionByXml) {
+        if (currentPitchList.length > this.rules.PercussionOneLineCutoff && !positionByXml && !this.rules.PercussionUseCajon2NoteSystem) {
             //Don't need to position notes. We aren't under the cutoff
             return graphicalNote;
         }
@@ -101,7 +101,12 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
 
         let displayNote: NoteEnum = this.baseLineNote;
         let displayOctave: number = this.baseLineOctave;
-        if (this.rules.PercussionUseXMLDisplayStep
+        if (this.rules.PercussionUseCajon2NoteSystem) {
+            if (notePitch.FundamentalNote === NoteEnum.C) {
+                displayNote = NoteEnum.G;
+                displayOctave = 1;
+            }
+        } else if (this.rules.PercussionUseXMLDisplayStep
             && graphicalNote.sourceNote.displayStepUnpitched !== undefined) {
             //&& xmlSingleStaffline) {
             displayNote = graphicalNote.sourceNote.displayStepUnpitched;

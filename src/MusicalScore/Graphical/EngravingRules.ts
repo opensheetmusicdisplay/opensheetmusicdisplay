@@ -78,6 +78,10 @@ export class EngravingRules {
     public PercussionUseXMLDisplayStep: boolean;
     public PercussionXMLDisplayStepNoteValueShift: number;
     public PercussionOneLineXMLDisplayStepOctaveOffset: number;
+    /** Makes the score position notes on the 2 cajon stafflines, and use 2 stafflines even if PercussionOneLineCutoff set.
+     * Should only be set for cajon scores, as this will disable the PercussionOneLineCutoff.
+     */
+    public PercussionUseCajon2NoteSystem: boolean;
     public BetweenKeySymbolsDistance: number;
     public KeyRightMargin: number;
     public RhythmRightMargin: number;
@@ -513,6 +517,7 @@ export class EngravingRules {
         this.PercussionUseXMLDisplayStep = true;
         this.PercussionXMLDisplayStepNoteValueShift = 0;
         this.PercussionOneLineXMLDisplayStepOctaveOffset = 0;
+        this.PercussionUseCajon2NoteSystem = false;
         this.BetweenKeySymbolsDistance = 0.2;
         this.KeyRightMargin = 0.75;
         this.RhythmRightMargin = 1.25;

@@ -2764,7 +2764,7 @@ export abstract class MusicSheetCalculator {
                     continue;
                 }
                 //This property is active...
-                if (this.rules.PercussionOneLineCutoff !== undefined && this.rules.PercussionOneLineCutoff !== 0) {
+                if (this.rules.PercussionOneLineCutoff > 0 && !this.rules.PercussionUseCajon2NoteSystem) {
                     //We have a percussion clef, check to see if this property applies...
                     if (staffIsPercussionArray[idx2]) {
                         //-1 means always trigger, or we are under the cutoff number specified

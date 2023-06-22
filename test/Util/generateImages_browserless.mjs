@@ -321,6 +321,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isTestPageBreakImpliesSystemBreak = sampleFilename.startsWith("test_pagebreak_implies_systembreak");
         const isTestPageBottomMargin0 = sampleFilename.includes("PageBottomMargin0");
         const isTestTupletBracketTupletNumber = sampleFilename.includes("test_tuplet_bracket_tuplet_number");
+        const isTestCajon2NoteSystem = sampleFilename.includes("test_cajon_2-note-system");
         const enableNewSystemAtSystemBreak = sampleFilename.includes("test_octaveshift_extragraphicalmeasure");
         osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
         if (isTestEndClefStaffEntryBboxes) {
@@ -366,6 +367,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             osmdInstance.EngravingRules.TupletNumberLimitConsecutiveRepetitions = true;
             osmdInstance.EngravingRules.TupletNumberMaxConsecutiveRepetitions = 2;
             osmdInstance.EngravingRules.TupletNumberAlwaysDisableAfterFirstMax = true; // necessary to trigger bug
+        }
+        if (isTestCajon2NoteSystem) {
+            osmdInstance.EngravingRules.PercussionUseCajon2NoteSystem = true;
         }
         if (enableNewSystemAtSystemBreak) {
             osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
