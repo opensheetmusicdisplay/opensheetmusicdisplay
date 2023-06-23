@@ -747,6 +747,7 @@ export abstract class MusicSheetCalculator {
         const measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[measureIndex];
         let relative: PointF2D = new PointF2D();
 
+        const defaultYXml: number = multiExpression.UnknownList[0]?.defaultYXml;
         if ((multiExpression.MoodList.length > 0) || (multiExpression.UnknownList.length > 0)) {
         let combinedExprString: string  = "";
         for (let idx: number = 0, len: number = multiExpression.EntriesList.length; idx < len; ++idx) {
@@ -782,6 +783,13 @@ export abstract class MusicSheetCalculator {
                                                                 multiExpression.getFontstyleOfFirstEntry(),
                                                                 placement,
                                                                 fontHeight);
+        if (this.rules.PlaceWordsInsideStafflineFromXml) {
+            if (defaultYXml < 0 && defaultYXml > -50) { // within staffline
+                let newY: number = defaultYXml / 10; // OSMD units
+                newY += this.rules.PlaceWordsInsideStafflineYOffset;
+                graphLabel.PositionAndShape.RelativePosition.y = newY;
+            }
+        }
 
         const gue: GraphicalUnknownExpression = new GraphicalUnknownExpression(
             staffLine, graphLabel, placement, measures[staffIndex]?.parentSourceMeasure, multiExpression);

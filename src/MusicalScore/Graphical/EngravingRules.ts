@@ -422,6 +422,8 @@ export class EngravingRules {
      * but were inserted as a words element in the MusicXML, which can't be matched to the note anymore,
      * and would otherwise just be placed somewhere else. See OSMD Issue 1251. */
     public IgnoreBracketsWords: boolean;
+    public PlaceWordsInsideStafflineFromXml: boolean;
+    public PlaceWordsInsideStafflineYOffset: number;
     // public PositionMarcatoCloseToNote: boolean;
     public SpacingBetweenTextLines: number;
 
@@ -813,6 +815,8 @@ export class EngravingRules {
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
         this.IgnoreBracketsWords = true;
+        this.PlaceWordsInsideStafflineFromXml = false;
+        this.PlaceWordsInsideStafflineYOffset = 0.9;
         // this.PositionMarcatoCloseToNote = true;
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
