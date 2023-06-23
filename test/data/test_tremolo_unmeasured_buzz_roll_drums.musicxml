@@ -1,7 +1,9 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <!DOCTYPE score-partwise PUBLIC '-//Recordare//DTD MusicXML 4.0 Partwise//EN' 'http://www.musicxml.org/dtds/partwise.dtd'>
 <score-partwise version='4.0'>
-	<movement-title>test_tremolo_unmeasured_buzz_roll_drums</movement-title>
+	<work>
+    	<work-title>test_tremolo_unmeasured_buzz_roll_drums</work-title>
+  	</work>
 	<identification>
 		<encoding>
 			<software>Sibelius 2022.12</software>
@@ -192,7 +194,8 @@
 			</note>
 			<direction placement='above'>
 				<direction-type>
-					<words default-y='50' relative-x='-6' font-size='9.36' xml:space='preserve'>BuzzRoll</words>
+					<words default-y='50' relative-x='-6' font-size='9.36' xml:space='preserve'>Buzz
+Roll</words>
 				</direction-type>
 				<voice>1</voice>
 			</direction>
