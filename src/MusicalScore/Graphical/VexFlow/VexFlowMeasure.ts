@@ -1302,8 +1302,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
                 const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
                 if (vexFlowVoiceEntry.vfStaveNote.getTicks().denominator === 0) {
-                    continue; // TODO not sure why the ticks aren't calculated correctly, see #1073
+                    vexFlowVoiceEntry.vfStaveNote.getTicks().denominator = 1;
+                    // TODO not sure why the ticks aren't calculated correctly, see #1073
                     // if denominator === 0, addTickable() below goes into an infinite loop.
+                    // continue; // previous solution, but can lead to valid notes skipped, further problems, see #1073
                 }
                 if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
                     // GhostNote, don't add modifiers like in-measure clefs
