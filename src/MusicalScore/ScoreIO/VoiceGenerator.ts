@@ -2,7 +2,7 @@ import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { Voice } from "../VoiceData/Voice";
 import { MusicSheet } from "../MusicSheet";
 import { VoiceEntry, StemDirectionType } from "../VoiceData/VoiceEntry";
-import { Note } from "../VoiceData/Note";
+import { Note, TremoloInfo } from "../VoiceData/Note";
 import { SourceMeasure } from "../VoiceData/SourceMeasure";
 import { SourceStaffEntry } from "../VoiceData/SourceStaffEntry";
 import { Beam } from "../VoiceData/Beam";
@@ -116,7 +116,7 @@ export class VoiceGenerator {
   public read(noteNode: IXmlElement, noteDuration: Fraction, typeDuration: Fraction, noteTypeXml: NoteType, normalNotes: number, restNote: boolean,
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
               measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, octavePlusOne: boolean,
-              printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
+              printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloInfo: TremoloInfo,
               stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean,
               dotsXml: number): Note {
     this.currentStaffEntry = parentStaffEntry;
@@ -127,7 +127,7 @@ export class VoiceGenerator {
       this.currentNote = restNote
         ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, typeDuration, normalNotes, printObject, isCueNote, noteheadColorXml)
         : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, octavePlusOne,
-                             printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
+                             printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloInfo, stemColorXml, noteheadColorXml, vibratoStrokes);
       this.currentNote.DotsXml = dotsXml;
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
@@ -340,7 +340,7 @@ export class VoiceGenerator {
    */
   private addSingleNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType, typeDuration: Fraction,
                         normalNotes: number, chord: boolean, octavePlusOne: boolean,
-                        printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
+                        printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloInfo: TremoloInfo,
                         stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
@@ -504,7 +504,7 @@ export class VoiceGenerator {
     note.TypeLength = typeDuration;
     note.IsGraceNote = isGraceNote;
     note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
-    note.TremoloStrokes = tremoloStrokes; // could be a Tremolo object in future if we have more data to manage like two-note tremolo
+    note.TremoloInfo = tremoloInfo;
     note.PlaybackInstrumentId = playbackInstrumentId;
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);

@@ -264,6 +264,7 @@ export class EngravingRules {
     public VexFlowDefaultTabFontScale: number;
     public TremoloStrokeScale: number;
     public TremoloYSpacingScale: number;
+    public TremoloBuzzRollThickness: number;
     public StaffLineWidth: number;
     public StaffLineColor: string;
     public LedgerLineWidth: number;
@@ -702,6 +703,7 @@ export class EngravingRules {
         this.VexFlowDefaultTabFontScale = 39;
         this.TremoloStrokeScale = 1;
         this.TremoloYSpacingScale = 1;
+        this.TremoloBuzzRollThickness = 0.25;
         this.StemWidth = 0.15; // originally 0.13. vexflow default 0.15. should probably be adjusted when increasing vexFlowDefaultNotationFontScale,
         this.StaffLineWidth = 0.10; // originally 0.12, but this will be pixels in Vexflow (*10).
         this.StaffLineColor = undefined; // if undefined, vexflow default (grey). not a width, but affects visual line clarity.
