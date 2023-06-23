@@ -221,6 +221,8 @@ export class EngravingRules {
     public MaximumLyricsElongationFactor: number;
 
     public SlurPlacementFromXML: boolean;
+    public SlurPlacementAtStems: boolean;
+    public SlurPlacementUseSkyBottomLine: boolean;
     public BezierCurveStepSize: number;
     public TPower3: number[];
     public OneMinusTPower3: number[];
@@ -621,6 +623,8 @@ export class EngravingRules {
 
         // Slur and Tie variables
         this.SlurPlacementFromXML = true;
+        this.SlurPlacementAtStems = false;
+        this.SlurPlacementUseSkyBottomLine = false;
         this.BezierCurveStepSize = 1000;
         this.calculateCurveParametersArrays();
         this.TieGhostObjectWidth = 0.75;
