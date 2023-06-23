@@ -287,6 +287,7 @@ export class EngravingRules {
      *  in the target score are, because using a too low width will cause overlaps in Vexflow.
      */
     public FixedMeasureWidthFixedValue: number;
+    public FixedMeasureWidthUseForPickupMeasures: boolean;
     public DistanceBetweenVerticalSystemLines: number;
     public DistanceBetweenDotAndLine: number;
     public RepeatEndStartPadding: number;
@@ -720,6 +721,7 @@ export class EngravingRules {
 
         this.FixedMeasureWidth = false;
         this.FixedMeasureWidthFixedValue = undefined; // only set to a number x if the width should be always x
+        this.FixedMeasureWidthUseForPickupMeasures = false;
 
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;

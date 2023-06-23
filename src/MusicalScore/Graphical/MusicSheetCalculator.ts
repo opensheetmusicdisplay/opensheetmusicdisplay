@@ -316,7 +316,7 @@ export abstract class MusicSheetCalculator {
             MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
             // minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
             let maxWidth: number = 0;
-            for (let i: number = 1; i < this.graphicalMusicSheet.MeasureList.length; i++) {
+            for (let i: number = 0; i < this.graphicalMusicSheet.MeasureList.length; i++) {
                 measures = this.graphicalMusicSheet.MeasureList[i];
                 minimumStaffEntriesWidth = this.calculateMeasureXLayout(measures);
                 minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
@@ -336,8 +336,12 @@ export abstract class MusicSheetCalculator {
                 if (this.rules.FixedMeasureWidthFixedValue) {
                     targetWidth = this.rules.FixedMeasureWidthFixedValue;
                 }
-                for (let i: number = 1; i < this.graphicalMusicSheet.MeasureList.length; i++) {
+                for (let i: number = 0; i < this.graphicalMusicSheet.MeasureList.length; i++) {
                     measures = this.graphicalMusicSheet.MeasureList[i];
+                    if (!this.rules.FixedMeasureWidthUseForPickupMeasures && measures[0]?.parentSourceMeasure.ImplicitMeasure) {
+                        // note that measures[0] is undefined for multi-measure rests
+                        continue;
+                    }
                     MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, targetWidth);
                 }
             }
