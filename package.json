@@ -39,6 +39,11 @@
     "test:visual:build:batch": "npm-run-all prebuild build:webpack generate:current:batch test:visual",
     "test:visual:build:webgl": "npm-run-all prebuild build:webpack generate:current:webgl test:visual",
     "test:visual:singletest": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven",
+    "ETC": "webpack-dev-server --progress --config ETC.webpack.dev.js",
+    "build:ETC-webpack": "webpack --progress --config ETC.webpack.prod.js",
+    "build:ETC-webpack-dev": "webpack --progress --config ETC.webpack.dev.js",
+    "build:ETC-webpack-sourcemap": "webpack --progress --config ETC.webpack.sourcemap.js",
+
     "fix-memory-limit": "cross-env NODE_OPTIONS=--max_old_space_size=4096"
   },
   "pre-commit": [
