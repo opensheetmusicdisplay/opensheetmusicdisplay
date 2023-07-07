@@ -23,7 +23,11 @@ let transposeDiatonically: HTMLSelectElement;
 let transposeDiatonicallyBtn: HTMLButtonElement;
 
 const samples: string[][] = [
-    ["Stress Test - Homophonic Keys","sheets/Stress_Test_With_Homophonic_Keys.musicxml"],
+    ["Stress Test - Homophonic Keys - G Clef","sheets/Stress_Test_With_Homophonic_Keys_G_Clef.musicxml"],
+    ["Stress Test - Homophonic Keys - F Clef","sheets/Stress_Test_With_Homophonic_Keys_F_Clef.musicxml"],
+    ["Stress Test - Homophonic Keys - C Clef","sheets/Stress_Test_With_Homophonic_Keys_C_Clef.musicxml"],
+    ["Stress Test - Homophonic Keys - F/C/G Clefs","sheets/Stress_Test_With_Homophonic_Keys_F_C_G_Clef.musicxml"],
+    ["Stress Test - Homophonic Keys - G/C/F Clefs","sheets/Stress_Test_With_Homophonic_Keys_G_C_F_Clef.musicxml"],
     ["Stress Test - Key Transpose","sheets/Stress_Test_Key_Transpose.musicxml"],
     ["Stress Test - Diminished Seventh Chords","sheets/Stress_Test_With_Diminished_Seventh_Chords.musicxml"],
     ["Bach, J.S. - Preludio e Fuga 3 in Do diesis maggiore (BWV 848)","sheets/JohannSebastianBach_Preludio_e_Fuga_3_in_Do_diesis_maggiore_BWV848.musicxml"],

@@ -673,6 +673,7 @@ export class MusicSystemBuilder {
         const measure: GraphicalMeasure = MusicSheetCalculator.symbolFactory.createExtraGraphicalMeasure(currentSystem.StaffLines[visStaffIdx]);
         measures.push(measure);
         if (keyInstruction) {
+            console.log("addKeyAtBegin",keyInstruction,this.activeKeys[visStaffIdx],this.activeClefs[visStaffIdx]);
             measure.addKeyAtBegin(keyInstruction, this.activeKeys[visStaffIdx], this.activeClefs[visStaffIdx]);
         }
         if (rhythmInstruction !== undefined && rhythmInstruction.PrintObject) {

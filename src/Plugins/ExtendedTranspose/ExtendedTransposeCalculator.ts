@@ -137,5 +137,6 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
             keyInstruction.Key = keyInstruction.keyTypeOriginal;
             keyInstruction.isTransposedBy = transpose;
         }
+        keyInstruction.Mode = 0;
     }
 }
