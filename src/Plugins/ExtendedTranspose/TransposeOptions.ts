@@ -101,7 +101,7 @@ export class TransposeOptions {
         this.transposeOctave = Number(value);
     }
 
-    public transposeHalftone(value: number): void {
+    public transposeToHalftone(value: number): void {
         this.TransposeByHalftone = true;
         this.Transpose = value;
     }

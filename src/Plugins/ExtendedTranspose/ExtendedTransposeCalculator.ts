@@ -113,12 +113,12 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
             // as the existing one between the MainKey and the target transpose key.
             // I wonder if it would be appropriate to perform this operation only once and
             // perhaps place it in TransposeOptions.
-            const closest: string = ETC.directionsOfKeyRelation(
+            const closest: string = ETC.keyToKeyProximity(
                 this.MainKey,
                 transposeToKey
             ).closestIs;
 
-            keyInstruction.isTransposedBy = ETC.directionsOfKeyRelation(
+            keyInstruction.isTransposedBy = ETC.keyToKeyProximity(
                 keyInstruction.keyTypeOriginal,
                 keyInstruction.Key
             )[closest] + (octave * ETC.OctaveSize);
@@ -128,8 +128,8 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
         } else if (this.Options.TransposeKeySignatures && ( this.Options.TransposeByInterval || this.Options.TransposeByHalftone)) {
             const octave: number = Math.floor(transpose / 12);
             const semitone: number = ((transpose % 12) + 12 ) % 12;
-            keyInstruction.Key = ETC.keyToMajorKey(keyInstruction.keyTypeOriginal + (semitone * -5));
-            keyInstruction.isTransposedBy = ETC.directionsOfKeyRelation(
+            keyInstruction.Key = ETC.keyToMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyDiatonicFactor));
+            keyInstruction.isTransposedBy = ETC.keyToKeyProximity(
                 keyInstruction.keyTypeOriginal,
                 keyInstruction.Key
             ).up + (octave * ETC.OctaveSize);
