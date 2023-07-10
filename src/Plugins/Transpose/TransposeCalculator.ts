@@ -1,11 +1,58 @@
 import { ITransposeCalculator } from "../../MusicalScore/Interfaces";
-import { Pitch, NoteEnum, AccidentalEnum } from "../../Common/DataObjects";
+import { Pitch, NoteEnum /*, AccidentalEnum */ } from "../../Common/DataObjects";
 import { KeyInstruction } from "../../MusicalScore/VoiceData/Instructions";
+import { ETC, ETCPitch } from "../ExtendedTranspose/ETC";
 
 /** Calculates transposition of individual notes and keys,
  * which is used by multiple OSMD classes to transpose the whole sheet.
  * Note: This class may not look like much, but a lot of thought has gone into the algorithms,
  * and the exact usage within OSMD classes. */
+export class TransposeCalculator implements ITransposeCalculator {
+
+    public transposePitch(pitch: Pitch, currentKeyInstruction: KeyInstruction, halftones: number): Pitch {
+        // What is the degree relationship of "pitch" in the context of "currentKeyInstruction.keyTypeOriginal"?
+        const degree: number = ETC.pitchToDegree({
+            fundamentalNote: Number(pitch.FundamentalNote),
+            alterations: Pitch.HalfTonesFromAccidental(pitch.Accidental),
+            octave: pitch.Octave
+        }, currentKeyInstruction.keyTypeOriginal);
+
+        // Right now, "currentKeyInstruction.isTransposedBy" holds the distance (expressed in commas)
+        // between currentKeyInstruction.keyTypeOriginal and currentKeyInstruction.Key.
+        // We will add the obtained degree to this distance, resulting in the transposed comma on the new key.
+
+        const etcPitch: ETCPitch = ETC.commaToDrawablePitch(degree + currentKeyInstruction.isTransposedBy);
+
+        // Alright, let's translate everything into the OSMD Pitch.
+        return new Pitch(
+            <NoteEnum>etcPitch.fundamentalNote,
+            etcPitch.octave,
+            Pitch.AccidentalFromHalfTones(etcPitch.alterations),
+        );
+    }
+
+    public transposeKey(keyInstruction: KeyInstruction, transpose: number): void {
+        const octave: number = Math.floor(transpose / 12);
+        const semitone: number = ((transpose % 12) + 12 ) % 12;
+
+        // This is a voodoo ritual practiced by members of the Circle of Fifths club:
+        // you must multiply the semitone distance to be converted to a key by the
+        // key's diatonic factor (-5), take the product modulo 12, and if the resulting
+        // value is < -7, add 12. If the resulting value is > 7, subtract 12.
+        keyInstruction.Key = ETC.keyToMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyDiatonicFactor));
+
+        // Alright, for the semitone transposition, let's look for a proximity comma value
+        // between keys that, unlike "closest", always goes in one direction.
+        // "Up" has never given me any problems.
+        // Ah! And at this point, we add any additional octaves.
+        keyInstruction.isTransposedBy = ETC.keyToKeyProximity(
+            keyInstruction.keyTypeOriginal,
+            keyInstruction.Key
+        ).up + (octave * ETC.OctaveSize);
+    }
+}
+
+/*
 export class TransposeCalculator implements ITransposeCalculator {
     private static keyMapping: number[] = [0, -5, 2, -3, 4, -1, 6, 1, -4, 3, -2, 5];
     private static noteEnums: NoteEnum[] = [NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B];
@@ -79,3 +126,4 @@ export class TransposeCalculator implements ITransposeCalculator {
         keyInstruction.isTransposedBy = transpose;
     }
 }
+*/

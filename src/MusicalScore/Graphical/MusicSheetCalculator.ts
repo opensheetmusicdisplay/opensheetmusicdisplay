@@ -2547,9 +2547,17 @@ export abstract class MusicSheetCalculator {
                 if (instruction instanceof KeyInstruction) {
                     const key: KeyInstruction = KeyInstruction.copy(instruction);
                     const transposeHalftones: number = measure.getTransposedHalftones();
-                    if (transposeHalftones !== 0 &&
+                    if (
+                        // In my perspective, within this section of the code, there seems to be an
+                        // abundance of conditions that ultimately result in a visually cluttered rendering
+                        // of the musical score when the "transposeHalftones" directive is set to zero.
+                        // When the TransposeCalculator is involved, it becomes imperative for the
+                        // TransposeCalculator to actively engage and determine the appropriate course
+                        // of action in the event that the "transposeHalftones" directive is set to zero. 
+                        // transposeHalftones !== 0 &&
                         measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
-                        MusicSheetCalculator.transposeCalculator) {
+                        MusicSheetCalculator.transposeCalculator
+                    ) {
                         MusicSheetCalculator.transposeCalculator.transposeKey(
                             key, transposeHalftones
                         );
