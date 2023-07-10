@@ -23,6 +23,7 @@ let transposeDiatonically: HTMLSelectElement;
 let transposeDiatonicallyBtn: HTMLButtonElement;
 
 const samples: string[][] = [
+    ["Stress Test - F Clef & Key","sheets/Stress_Test_F_Clef_and_Key.musicxml"],
     ["Stress Test - Clef & Key","sheets/Stress_Test_Clef_and_Key.musicxml"],
     ["Stress Test - Homophonic Keys - G Clef","sheets/Stress_Test_With_Homophonic_Keys_G_Clef.musicxml"],
     ["Stress Test - Homophonic Keys - F Clef","sheets/Stress_Test_With_Homophonic_Keys_F_Clef.musicxml"],
