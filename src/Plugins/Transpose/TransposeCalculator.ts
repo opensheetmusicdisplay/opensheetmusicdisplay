@@ -10,6 +10,7 @@ import { ETC, ETCPitch } from "../ExtendedTranspose/ETC";
 export class TransposeCalculator implements ITransposeCalculator {
 
     public transposePitch(pitch: Pitch, currentKeyInstruction: KeyInstruction, halftones: number): Pitch {
+
         // What is the degree relationship of "pitch" in the context of "currentKeyInstruction.keyTypeOriginal"?
         const degree: number = ETC.pitchToDegree({
             fundamentalNote: Number(pitch.FundamentalNote),
@@ -20,7 +21,6 @@ export class TransposeCalculator implements ITransposeCalculator {
         // Right now, "currentKeyInstruction.isTransposedBy" holds the distance (expressed in commas)
         // between currentKeyInstruction.keyTypeOriginal and currentKeyInstruction.Key.
         // We will add the obtained degree to this distance, resulting in the transposed comma on the new key.
-
         const etcPitch: ETCPitch = ETC.commaToDrawablePitch(degree + currentKeyInstruction.isTransposedBy);
 
         // Alright, let's translate everything into the OSMD Pitch.
@@ -32,13 +32,16 @@ export class TransposeCalculator implements ITransposeCalculator {
     }
 
     public transposeKey(keyInstruction: KeyInstruction, transpose: number): void {
+
         const octave: number = Math.floor(transpose / 12);
+
         const semitone: number = ((transpose % 12) + 12 ) % 12;
 
         // This is a voodoo ritual practiced by members of the Circle of Fifths club:
-        // you must multiply the semitone distance to be converted to a key by the
-        // key's diatonic factor (-5), take the product modulo 12, and if the resulting
-        // value is < -7, add 12. If the resulting value is > 7, subtract 12.
+        // you must add multiply the semitone distance to be converted to a key by the
+        // key's diatonic factor (-5), then add the value of the original key.
+        // Take the product modulo 12, and if the resulting value is < -7, add 12, else
+        // if the resulting value is > 7, subtract 12.
         keyInstruction.Key = ETC.keyToMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyDiatonicFactor));
 
         // Alright, for the semitone transposition, let's look for a proximity comma value
