@@ -618,12 +618,27 @@ export class ETC {
      * @returns a number from -7 to +7
      */
     public static keyToMajorKey(key: number): number{
-//        const octave: number = ETC77.keyOctave(key);
-//        key = key - (octave * ETC77.octaveSize);
         key = key % 12;
         if (key< -7){
-            key -= -12;
+            key += 12;
         } else if (key > 7) {
+            key -= 12;
+        }
+        return key || 0;
+    }
+
+    /**
+     * Everything is a key, that's the underlying concept of ETC.
+     * **ETC.keyToSimplifiedMajorKey**  method returns a simplified MajorKey within the range of -6 to 5
+     * is brought back into the circle of fifths set.
+     * @param key a number
+     * @returns a number from -5 to +6
+     */
+    public static keyToSimplifiedMajorKey(key: number): number{
+        key = key % 12;
+        if (key< -5){
+            key += 12;
+        } else if (key > 6) {
             key -= 12;
         }
         return key || 0;

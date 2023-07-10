@@ -38,11 +38,21 @@ export class TransposeCalculator implements ITransposeCalculator {
         const semitone: number = ((transpose % 12) + 12 ) % 12;
 
         // This is a voodoo ritual practiced by members of the Circle of Fifths club:
-        // you must add multiply the semitone distance to be converted to a key by the
-        // key's diatonic factor (-5), then add the value of the original key.
+        // you must multiply the semitone distance ( to be converted to a key ) by the
+        // key's diatonic factor (-5) if the original key is >= 0 or chromatic factor
+        // if the original key is < 0, then add the value of the original key.
         // Take the product modulo 12, and if the resulting value is < -7, add 12, else
         // if the resulting value is > 7, subtract 12.
-        keyInstruction.Key = ETC.keyToMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyDiatonicFactor));
+        // In compliance with the previous version, the keys will be chosen from -5 to +6
+        // in each case, but unlike the old version, it is now possible to start from any key.
+        // If you do not wish to use this simplification (personally, I believe that
+        // simplifying keys is a wise choice when it comes to halftone transposition),
+        // replace ETC.keyToSimplifiedMajorKey() with ETC.keyToMajorKey().
+        if (keyInstruction.keyTypeOriginal >= 0) {
+            keyInstruction.Key = ETC.keyToSimplifiedMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyDiatonicFactor));
+        } else {
+            keyInstruction.Key = ETC.keyToSimplifiedMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyChromaticFactor));
+        }
 
         // Alright, for the semitone transposition, let's look for a proximity comma value
         // between keys that, unlike "closest", always goes in one direction.
