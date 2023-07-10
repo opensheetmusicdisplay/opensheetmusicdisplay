@@ -368,7 +368,7 @@ export class ETC {
     }
 
     /**
-     * **ETC.OctaveSize** getter get the size of ocatve, expressed in comma
+     * **ETC.OctaveSize** getter get the size of octave, expressed in comma
      */
     public static get OctaveSize(): number {
         return ETC.octaveSize;
