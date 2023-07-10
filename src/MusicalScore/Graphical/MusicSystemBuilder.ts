@@ -79,6 +79,7 @@ export class MusicSystemBuilder {
                 continue; // previous measure was probably multi-rest, skip this one
             }
             for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
+                // graphicalMeasures[idx].InitiallyActiveClef = this.activeClefs[idx]; // too early to know clef
                 graphicalMeasures[idx].resetLayout();
             }
             const sourceMeasure: SourceMeasure = graphicalMeasures[0].parentSourceMeasure;
@@ -401,6 +402,7 @@ export class MusicSystemBuilder {
                 const graphicalMeasure: GraphicalMeasure = this.graphicalMusicSheet
                     .getGraphicalMeasureFromSourceMeasureAndIndex(firstSourceMeasure, staffIndex);
                 this.activeClefs[i] = <ClefInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[0];
+                graphicalMeasure.InitiallyActiveClef = this.activeClefs[i]; // TODO ClefInstruction.copy? doesn't exist
                 const firstKeyInstruction: KeyInstruction = <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1];
                 if (firstKeyInstruction) {
                     let keyInstruction: KeyInstruction = KeyInstruction.copy(firstKeyInstruction);
@@ -501,6 +503,7 @@ export class MusicSystemBuilder {
                 }
             }
         }
+        measure.InitiallyActiveClef = currentClef ?? this.activeClefs[visibleStaffIdx];
         if (isSystemStartMeasure) {
             if (!currentClef) {
                 currentClef = this.activeClefs[visibleStaffIdx];
@@ -598,6 +601,8 @@ export class MusicSystemBuilder {
                     }
                 }
             }
+            // graphicalMeasures[visStaffIdx].InitiallyActiveClef = this.activeClefs[visStaffIdx];
+            //   already done at MusicSystemBuilder.AddInstructionsAtMeasureBegin
             const entries: SourceStaffEntry[] = measure.getEntriesPerStaff(staffIndex);
             for (let idx: number = 0, len2: number = entries.length; idx < len2; ++idx) {
                 const staffEntry: SourceStaffEntry = entries[idx];
