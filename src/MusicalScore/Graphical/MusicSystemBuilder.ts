@@ -601,6 +601,8 @@ export class MusicSystemBuilder {
                     }
                 }
             }
+            // graphicalMeasures[visStaffIdx].InitiallyActiveClef = this.activeClefs[visStaffIdx];
+            //   already done at MusicSystemBuilder.AddInstructionsAtMeasureBegin
             const entries: SourceStaffEntry[] = measure.getEntriesPerStaff(staffIndex);
             for (let idx: number = 0, len2: number = entries.length; idx < len2; ++idx) {
                 const staffEntry: SourceStaffEntry = entries[idx];
