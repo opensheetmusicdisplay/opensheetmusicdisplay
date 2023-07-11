@@ -118,22 +118,10 @@ export interface ETCProximity {
     down: number;
     closestIs: "up" | "down";
 }
-/*
-export interface ETCKeyTransposeInstruction {
-    mainKey: number;
-    currentKey: number;
-    transposedkey: number;
-    trasposeBy: number;
-    trasposeMode: number;
-}
 
-export interface ETCPitchTransposeInstruction extends ETCKeyTransposeInstruction{
-    pitch: ETCPitch;
-}
-*/
 export class ETC {
     /******************************************** BEGIN PRIVATE *********************************************/
-    private static version: string = "0.2.5";
+    private static version: string = "0.2.6";
     private static fifhtyLeapNotes:             number[] = [ 0,  7,  2,  9,  4, 11,  6 ]; // in key context the jump after 11 is 6, not 5 (F#, not F)
     private static fundamentalAscendingNotes:   number[] = [ 0,  2,  4,  5,  7,  9, 11 ];
     private static fundamentalDescendingNotes:  number[] = [ 0, 11,  9,  7,  5,  4,  2 ];
@@ -347,7 +335,7 @@ export class ETC {
                 proximity.up  = toComma + ETC.octaveSize;
                 proximity.down  = toComma;
             }
-    
+
             proximity.distanceUp = Math.abs(proximity.from - proximity.up);
             proximity.distanceDown = Math.abs(proximity.from - proximity.down);
 
@@ -520,8 +508,8 @@ export class ETC {
             } else if (proximity.distanceUp === 39 && proximity.distanceDown === 38 && proximity.closestIs === "down"){
                 proximity.closestIs = "up";
             }
-        } 
-        return proximity;  
+        }
+        return proximity;
     }
 
     /**
