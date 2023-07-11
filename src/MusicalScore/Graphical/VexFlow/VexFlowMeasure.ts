@@ -113,6 +113,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0
         });
+        if (this.InitiallyActiveClef) {
+            (this.stave as any).clef = VexFlowConverter.Clef(this.InitiallyActiveClef).type;
+            // Vexflow sets stave.clef to treble by default. It needs this info e.g. for key signature accidentals on new key sig
+        }
         (this.stave as any).MeasureNumber = this.MeasureNumber; // for debug info. vexflow automatically uses stave.measure for rendering measure numbers
         // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
 
