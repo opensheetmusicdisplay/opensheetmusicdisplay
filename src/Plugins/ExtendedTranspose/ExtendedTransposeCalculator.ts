@@ -2,7 +2,7 @@ import { ITransposeCalculator } from "../../MusicalScore/Interfaces";
 import { Pitch, NoteEnum } from "../../Common/DataObjects";
 import { KeyInstruction } from "../../MusicalScore/VoiceData/Instructions";
 import { OpenSheetMusicDisplay } from "../../OpenSheetMusicDisplay";
-import { ETC, ETCPitch} from "./ETC";
+import { ETC, ETCPitch } from "./ETC";
 import { TransposeOptions } from "./TransposeOptions";
 
 export class ExtendedTransposeCalculator implements ITransposeCalculator {
@@ -113,9 +113,11 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
             // as the existing one between the MainKey and the target transpose key.
             // I wonder if it would be appropriate to perform this operation only once and
             // perhaps place it in TransposeOptions.
+
             const closest: string = ETC.keyToKeyProximity(
                 this.MainKey,
-                transposeToKey
+                transposeToKey,
+                true // swapTritoneSense!
             ).closestIs;
 
             keyInstruction.isTransposedBy = ETC.keyToKeyProximity(

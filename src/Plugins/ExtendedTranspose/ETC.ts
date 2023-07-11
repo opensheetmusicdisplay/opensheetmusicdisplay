@@ -109,6 +109,10 @@ const THE_COMMA_77_IDEA: ETCPitch[] = [
 */
 
 export interface ETCProximity {
+    from: number;
+    to: number;
+    distanceUp: number;
+    distanceDown: number;
     up: number;
     closest: number;
     down: number;
@@ -326,6 +330,10 @@ export class ETC {
      */
     private static commaToCommaProximity(comma: number, toComma: number): ETCProximity{
         const proximity: ETCProximity = {
+            from: comma,
+            to: toComma,
+            distanceUp: 0,
+            distanceDown: 0,
             closest: comma,
             up : toComma,
             down: toComma,
@@ -339,7 +347,11 @@ export class ETC {
                 proximity.up  = toComma + ETC.octaveSize;
                 proximity.down  = toComma;
             }
-            if ( (proximity.up-comma) <= (comma - proximity.down)) {
+    
+            proximity.distanceUp = Math.abs(proximity.from - proximity.up);
+            proximity.distanceDown = Math.abs(proximity.from - proximity.down);
+
+            if ( proximity.distanceUp <= proximity.distanceDown) {
                 proximity.closest = proximity.up;
             } else {
                 proximity.closest = proximity.down;
@@ -491,12 +503,25 @@ export class ETC {
 
     /**
      * **ETC.keyToKeyProximity** method returns an object containing the proximity values between key and toKey.
-     * @param key
-     * @param toKey
+     * The comma of the diminished fifth is closer than the comma of the augmented fourth.
+     * This is okay, but on the staff, the visually larger distance is chosen.
+     * ***swapTritoneSense*** is a boolean value that provides a small workaround
+     *  by inverting the value of "closestIs" when it encounters this type of situation.
+     * @param key mumber
+     * @param toKey mumber
+     * @param swapTritoneSense boolean
      * @returns ETCProximity
      */
-    public static keyToKeyProximity(key: number, toKey: number): ETCProximity{
-        return ETC.commaToCommaProximity(ETC.keyToComma(key), ETC.keyToComma(toKey));
+    public static keyToKeyProximity(key: number, toKey: number, swapTritoneSense: boolean = false): ETCProximity{
+        const proximity: ETCProximity = ETC.commaToCommaProximity(ETC.keyToComma(key), ETC.keyToComma(toKey));
+        if ( swapTritoneSense === true ) {
+            if (proximity.distanceUp === 38 && proximity.distanceDown === 39 && proximity.closestIs === "up") {
+                proximity.closestIs = "down";
+            } else if (proximity.distanceUp === 39 && proximity.distanceDown === 38 && proximity.closestIs === "down"){
+                proximity.closestIs = "up";
+            }
+        } 
+        return proximity;  
     }
 
     /**
