@@ -1,5 +1,5 @@
 import { ITransposeCalculator } from "../../MusicalScore/Interfaces";
-import { Pitch, NoteEnum /*, AccidentalEnum */ } from "../../Common/DataObjects";
+import { Pitch, NoteEnum } from "../../Common/DataObjects";
 import { KeyInstruction } from "../../MusicalScore/VoiceData/Instructions";
 import { ETC, ETCPitch } from "../ExtendedTranspose/ETC";
 
@@ -39,10 +39,11 @@ export class TransposeCalculator implements ITransposeCalculator {
 
         // This is a voodoo ritual practiced by members of the Circle of Fifths club:
         // you must multiply the semitone distance ( to be converted to a key ) by the
-        // key's diatonic factor (-5) if the original key is >= 0 or chromatic factor
-        // if the original key is < 0, then add the value of the original key.
+        // key's diatonic factor (-5) if the original key is >= 0 or keys's chromatic
+        // factor (7) if the original key is < 0, then add the value of the original key.
         // Take the product modulo 12, and if the resulting value is < -7, add 12, else
         // if the resulting value is > 7, subtract 12.
+        // ...more...
         // In compliance with the previous version, the keys will be chosen from -5 to +6
         // in each case, but unlike the old version, it is now possible to start from any key.
         // If you do not wish to use this simplification (personally, I believe that
@@ -64,79 +65,3 @@ export class TransposeCalculator implements ITransposeCalculator {
         ).up + (octave * ETC.OctaveSize);
     }
 }
-
-/*
-export class TransposeCalculator implements ITransposeCalculator {
-    private static keyMapping: number[] = [0, -5, 2, -3, 4, -1, 6, 1, -4, 3, -2, 5];
-    private static noteEnums: NoteEnum[] = [NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B];
-    public transposePitch(pitch: Pitch, currentKeyInstruction: KeyInstruction, halftones: number): Pitch {
-
-        let transposedFundamentalNote: NoteEnum = NoteEnum.C;
-        let transposedOctave: number = 0;
-        let transposedAccidental: AccidentalEnum = AccidentalEnum.NONE;
-        const result: { halftone: number, overflow: number } = Pitch.CalculateTransposedHalfTone(pitch, halftones);
-        let transposedHalfTone: number = result.halftone;
-        let octaveChange: number = result.overflow;
-
-        for (let i: number = 0; i < TransposeCalculator.noteEnums.length; i++) {
-            const currentValue: number = <number>TransposeCalculator.noteEnums[i];
-            if (currentValue === transposedHalfTone) {
-                const noteIndex: number = i;
-                transposedFundamentalNote = TransposeCalculator.noteEnums[noteIndex];
-                transposedOctave = <number>(pitch.Octave + octaveChange);
-                transposedAccidental = AccidentalEnum.NONE;
-                return new Pitch(transposedFundamentalNote, transposedOctave, transposedAccidental);
-            } else if (currentValue > transposedHalfTone) {
-                break;
-            }
-        }
-        for (let i: number = 0; i < TransposeCalculator.noteEnums.length; i++) {
-            const currentValue: number = <number>TransposeCalculator.noteEnums[i];
-            if (currentValue > transposedHalfTone) {
-                let noteIndex: number = i;
-                const accidentalHalfTones: number = Pitch.HalfTonesFromAccidental(pitch.Accidental);
-
-                if (accidentalHalfTones > 0 || (accidentalHalfTones === 0 && currentKeyInstruction.Key >= 0)) {
-                    noteIndex--;
-                }
-                while (noteIndex < 0) {
-                    noteIndex += 7;
-                    transposedHalfTone += 12;
-                    octaveChange--;
-                }
-                while (noteIndex >= 7) {
-                    noteIndex -= 7;
-                    transposedHalfTone -= 12;
-                    octaveChange++;
-                }
-                transposedFundamentalNote = TransposeCalculator.noteEnums[noteIndex];
-                transposedAccidental = Pitch.AccidentalFromHalfTones(transposedHalfTone - <number>transposedFundamentalNote);
-                transposedOctave = <number>(pitch.Octave + octaveChange);
-                break;
-            }
-        }
-
-        const transposedPitch: Pitch = new Pitch(transposedFundamentalNote, transposedOctave, transposedAccidental);
-        return transposedPitch;
-    }
-    public transposeKey(keyInstruction: KeyInstruction, transpose: number): void {
-        let currentIndex: number = 0;
-        let previousKeyType: number = 0;
-        for (; currentIndex < TransposeCalculator.keyMapping.length; currentIndex++) {
-            previousKeyType = TransposeCalculator.keyMapping[currentIndex];
-            if (previousKeyType === keyInstruction.keyTypeOriginal) {
-                break;
-            }
-        }
-        let newIndex: number = (currentIndex + transpose);
-        while (newIndex >= 12) {
-            newIndex -= 12;
-        }
-        while (newIndex < 0) {
-            newIndex += 12;
-        }
-        keyInstruction.Key = TransposeCalculator.keyMapping[newIndex];
-        keyInstruction.isTransposedBy = transpose;
-    }
-}
-*/

@@ -1,5 +1,34 @@
-import { ETC, ETCPitch } from "./ETC";
+import { ETC, ETCDirections, ETCPitch } from "./ETC";
 import { OpenSheetMusicDisplay } from "../../OpenSheetMusicDisplay";
+
+/*
+KEY RELATION TABLE
+
+I know many of you will do this calculation in your head,
+but then I forget the reasoning behind it and get confused
+every time. I prefer to keep a table at hand...
+
+          |  Cb  Gb  Db  Ab  Eb  Bb  F   C   G   D   A   E   B   F#  C#
+          | -7  -6  -5  -4  -3  -2  -1   0   1   2   3   4   5   6   7
+----------+------------------------------------------------------------
+Cb   -7   |  0  -1  -2  -3  -4  -5  -6  -7   7   6   5   4   3   2   1
+Gb   -6   |  1   0  -1  -2  -3  -4  -5  -6  -7   7   6   5   4   3   2
+Db   -5   |  2   1   0  -1  -2  -3  -4  -5  -6  -7   7   6   5   4   3
+Ab   -4   |  3   2   1   0  -1  -2  -3  -4  -5  -6  -7   7   6   5   4
+Eb   -3   |  4   3   2   1   0  -1  -2  -3  -4  -5  -6  -7   7   6   5
+Bb   -2   |  5   4   3   2   1   0  -1  -2  -3  -4  -5  -6  -7   7   6
+F    -1   |  6   5   4   3   2   1   0  -1  -2  -3  -4  -5  -6  -7   7
+C     0   |  7   6   5   4   3   2   1   0  -1  -2  -3  -4  -5  -6  -7
+G     1   | -7   7   6   5   4   3   2   1   0  -1  -2  -3  -4  -5  -6
+D     2   | -6  -7   7   6   5   4   3   2   1   0  -1  -2  -3  -4  -5
+A     3   | -5  -6  -7   7   6   5   4   3   2   1   0  -1  -2  -3  -4
+E     4   | -4  -5  -6  -7   7   6   5   4   3   2   1   0  -1  -2  -3
+B     5   | -3  -4  -5  -6  -7   7   6   5   4   3   2   1   0  -1  -2
+F#    6   | -2  -3  -4  -5  -6  -7   7   6   5   4   3   2   1   0  -1
+C#    7   | -1  -2  -3  -4  -5  -6  -7   7   6   5   4   3   2   1   0
+
+*/
+
 
 export class TransposeOptions {
     // A "dirty workaround" to bypass OSMD's inaction when Sheet.Transpose === 0.
@@ -23,6 +52,8 @@ export class TransposeOptions {
     private osmd: OpenSheetMusicDisplay = undefined;
 
     private transposeKeySignatures: boolean = true;
+
+    private transposeDirection: ETCDirections = "up";
 
     private transposeOctave: number = 0;
 
@@ -101,15 +132,35 @@ export class TransposeOptions {
         this.transposeOctave = Number(value);
     }
 
+    public get TransposeDirection(): ETCDirections {
+        return this.transposeDirection;
+    }
+
+    public set TransposeDirection(value: ETCDirections) {
+        this.transposeDirection = value;
+    }
+
     public transposeToHalftone(value: number): void {
         this.TransposeByHalftone = true;
         this.Transpose = value;
     }
 
-    public transposeToKey(value: number, octave: number = 0): void {
+    public transposeToKey(toKey: number, octave: number = 0): void {
         this.TransposeByKey = true;
-        value = value + (octave * ETC.OctaveSize);
-        this.Transpose = value;
+        this.TransposeOctave = octave;
+        // At this point, we need to ensure that the closest direction chosen is always the same
+        // as the existing one between the MainKey and the target transpose key.
+        this.TransposeDirection = ETC.keyToKeyProximity(
+            this.MainKey,
+            toKey,
+            true // swapTritoneSense!
+        ).closestIs;
+        this.Transpose = toKey;
+        /*
+        this.TransposeByKey = true;
+        toKey = toKey + (octave * ETC.OctaveSize);
+        this.Transpose = toKey;
+        */
     }
 
     public transposeToKeyRelation(value: number, octave: number = 0): void {

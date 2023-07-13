@@ -108,6 +108,8 @@ const THE_COMMA_77_IDEA: ETCPitch[] = [
 ];
 */
 
+export type ETCDirections = "down" | "up";
+
 export interface ETCProximity {
     from: number;
     to: number;
@@ -116,18 +118,17 @@ export interface ETCProximity {
     up: number;
     closest: number;
     down: number;
-    closestIs: "up" | "down";
+    closestIs: ETCDirections;
 }
 
 export class ETC {
     /******************************************** BEGIN PRIVATE *********************************************/
-    private static version: string = "0.2.6";
+    private static version: string = "0.2.7";
     private static fifhtyLeapNotes:             number[] = [ 0,  7,  2,  9,  4, 11,  6 ]; // in key context the jump after 11 is 6, not 5 (F#, not F)
     private static fundamentalAscendingNotes:   number[] = [ 0,  2,  4,  5,  7,  9, 11 ];
     private static fundamentalDescendingNotes:  number[] = [ 0, 11,  9,  7,  5,  4,  2 ];
     private static fundamentalAscendingCommas:  number[] = [ 0, 13, 26, 32, 45, 58, 71 ];
     private static fundamentalDescendingCommas: number[] = [ 0, 71, 58, 45, 32, 26, 13 ];
-
 
     private static octaveSize: number = 77;
     private static commaOctaveLowKey: number = 36;
@@ -314,7 +315,7 @@ export class ETC {
      * so that you can choose the most convenient direction to go from "comma" to "toComma".
      * @param comma number
      * @param toComma number
-     * @returns ETCDirections
+     * @returns ETCProximity
      */
     private static commaToCommaProximity(comma: number, toComma: number): ETCProximity{
         const proximity: ETCProximity = {

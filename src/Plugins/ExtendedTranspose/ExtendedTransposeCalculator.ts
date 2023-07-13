@@ -106,9 +106,11 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
     public transposeKey(keyInstruction: KeyInstruction, transpose: number): void {
         transpose = Math.floor(transpose);
         if (this.Options.TransposeByKey) {
+            /*
             const octave: number = ETC.keyOctave(transpose);
             const transposeToKey: number = ETC.keyToMajorKey(transpose - (octave * ETC.OctaveSize));
             keyInstruction.Key = ETC.keyToMajorKey(transposeToKey - this.MainKey + keyInstruction.keyTypeOriginal);
+
             // At this point, we need to ensure that the closest direction chosen is always the same
             // as the existing one between the MainKey and the target transpose key.
             // I wonder if it would be appropriate to perform this operation only once and
@@ -124,6 +126,15 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
                 keyInstruction.keyTypeOriginal,
                 keyInstruction.Key
             )[closest] + (octave * ETC.OctaveSize);
+            */
+            const transposeToKey: number = ETC.keyToMajorKey(transpose);
+            keyInstruction.Key = ETC.keyToMajorKey(transposeToKey - this.MainKey + keyInstruction.keyTypeOriginal);
+
+            keyInstruction.isTransposedBy = ETC.keyToKeyProximity(
+                keyInstruction.keyTypeOriginal,
+                keyInstruction.Key
+            )[this.Options.TransposeDirection] + (this.Options.TransposeOctave * ETC.OctaveSize);
+
             if (!this.Options.TransposeKeySignatures) {
                 keyInstruction.Key = keyInstruction.keyTypeOriginal;
             }
