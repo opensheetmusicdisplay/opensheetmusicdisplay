@@ -554,6 +554,8 @@ export class Stave extends Element {
       const modifierX = modifier.getX();
       if (modifierX > x) { // e.g. when beginning modifiers already x-aligned, different key signatures
         x = modifierX;
+        // VexFlowPatch: don't overwrite modifier.x when it was already shifted further, e.g. to align time signatures.
+        //   see formatBegModifiers().
       } else {
         modifier.setX(x);
       }
