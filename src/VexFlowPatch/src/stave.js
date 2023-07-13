@@ -72,7 +72,10 @@ export class Stave extends Element {
     this.options.bottom_text_position = this.options.num_lines;
   }
 
-  static formatBegModifiers(staves) {
+  /** align modifiers like time signature for vertical staves with different key signatures / time signature xs
+   * This method should be static, but that makes using it with `any` usage more difficult.
+   */
+  formatBegModifiers(staves) {
     let maxX = 0;
     // align note start
     staves.forEach((stave) => {

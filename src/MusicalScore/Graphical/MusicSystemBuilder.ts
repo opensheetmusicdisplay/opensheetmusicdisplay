@@ -21,9 +21,6 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SystemLinePosition} from "./SystemLinePosition";
 import { MusicSheet } from "../MusicSheet";
-import { VexFlowMeasure } from "./VexFlow";
-import Vex from "vexflow"; // unfortunately necessary here for horizontal alignment
-import VF = Vex.Flow;
 
 export class MusicSystemBuilder {
     protected measureList: GraphicalMeasure[][];
@@ -459,10 +456,12 @@ export class MusicSystemBuilder {
         }
         let totalBeginInstructionLengthX: number = 0.0;
         const sourceMeasure: SourceMeasure = measures[0].parentSourceMeasure;
-        const staves: VF.Stave[] = [];
+        const staves: any[] = []; // VF.Stave. generally don't want to reference Vexflow classes here.
         for (let idx: number = 0; idx < measureCount; ++idx) {
             const measure: GraphicalMeasure = measures[idx];
-            staves.push((measure as VexFlowMeasure).getVFStave());
+            if (measure) { // MultiRestMeasure may be undefined
+                staves.push((measure as any).getVFStave()); // as VexFlowMeasure
+            }
             const staffIndex: number = this.visibleStaffIndices[idx];
             const beginInstructionsStaffEntry: SourceStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[staffIndex];
             const beginInstructionLengthX: number = this.AddInstructionsAtMeasureBegin(
@@ -472,7 +471,7 @@ export class MusicSystemBuilder {
             );
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
         }
-        (VF.Stave as any).formatBegModifiers(staves);
+        staves[0].formatBegModifiers(staves);
         return totalBeginInstructionLengthX;
     }
 
