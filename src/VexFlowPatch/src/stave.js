@@ -72,14 +72,69 @@ export class Stave extends Element {
     this.options.bottom_text_position = this.options.num_lines;
   }
 
+  static formatBegModifiers(staves) {
+    let maxX = 0;
+    // align note start
+    staves.forEach((stave) => {
+      if (stave.getNoteStartX() > maxX) maxX = stave.getNoteStartX();
+    });
+    staves.forEach((stave) => {
+      stave.setNoteStartX(maxX);
+    });
+
+    maxX = 0;
+    // align REPEAT_BEGIN
+    staves.forEach((stave) => {
+      const modifiers = stave.getModifiers(StaveModifier.Position.BEGIN, Barline.CATEGORY);
+      modifiers.forEach((modifier) => {
+        if (modifier.getType() == Barline.type.REPEAT_BEGIN)
+          if (modifier.getX() > maxX) maxX = modifier.getX();
+      });
+    });
+    staves.forEach((stave) => {
+      const modifiers = stave.getModifiers(StaveModifier.Position.BEGIN, Barline.CATEGORY);
+      modifiers.forEach((modifier) => {
+        if (modifier.getType() == Barline.type.REPEAT_BEGIN) modifier.setX(maxX);
+      });
+    });
+
+    maxX = 0;
+    // Align time signatures
+    staves.forEach((stave) => {
+      const modifiers = stave.getModifiers(StaveModifier.Position.BEGIN, TimeSignature.CATEGORY);
+      modifiers.forEach((modifier) => {
+        if (modifier.getX() > maxX) maxX = modifier.getX();
+      });
+    });
+    staves.forEach((stave) => {
+      const modifiers = stave.getModifiers(StaveModifier.Position.BEGIN, TimeSignature.CATEGORY);
+      modifiers.forEach((modifier) => {
+        modifier.setX(maxX);
+      });
+    });
+    // Align key signatures
+    // staves.forEach((stave) => {
+    //   const modifiers = stave.getModifiers(StaveModifier.Position.BEGIN, KeySignature.CATEGORY);
+    //   modifiers.forEach((modifier) => {
+    //     if (modifier.getX() > maxX) maxX = modifier.getX();
+    //   });
+    // });
+    // staves.forEach((stave) => {
+    //   const modifiers = stave.getModifiers(StaveModifier.Position.BEGIN, KeySignature.CATEGORY);
+    //   modifiers.forEach((modifier) => {
+    //     modifier.setX(maxX);
+    //   });
+    // });
+  }
+
   getOptions() { return this.options; }
 
   setNoteStartX(x) {
     if (!this.formatted) this.format();
 
     this.setStartX(x);
-    const begBarline = this.modifiers[0];
-    begBarline.setX(this.start_x - begBarline.getWidth());
+    // const begBarline = this.modifiers[0];
+    // begBarline.setX(this.start_x - begBarline.getWidth());
     return this;
   }
   setStartX(x) {
@@ -493,7 +548,12 @@ export class Stave extends Element {
       }
 
       x += padding;
-      modifier.setX(x);
+      const modifierX = modifier.getX();
+      if (modifierX > x) { // e.g. when beginning modifiers already x-aligned, different key signatures
+        x = modifierX;
+      } else {
+        modifier.setX(x);
+      }
       x += width;
 
       if (padding + width === 0) offset--;

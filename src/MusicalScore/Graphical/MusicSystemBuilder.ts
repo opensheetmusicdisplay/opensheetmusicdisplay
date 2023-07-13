@@ -21,6 +21,9 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SystemLinePosition} from "./SystemLinePosition";
 import { MusicSheet } from "../MusicSheet";
+import { VexFlowMeasure } from "./VexFlow";
+import Vex from "vexflow"; // unfortunately necessary here for horizontal alignment
+import VF = Vex.Flow;
 
 export class MusicSystemBuilder {
     protected measureList: GraphicalMeasure[][];
@@ -165,6 +168,13 @@ export class MusicSystemBuilder {
                 // don't set prevMeasureEndsPart in this case! because we will loop with the same measure again.
             }
         }
+        // for (const gMeasures of this.measureList) {
+        //     const staves: VF.Stave[] = [];
+        //     for (const gMeasure of gMeasures) {
+        //         staves.push((gMeasure as VexFlowMeasure).getVFStave());
+        //     }
+        //     (VF.Stave as any).formatBegModifiers(staves);
+        // }
         if (this.currentSystemParams.systemMeasures.length > 0) {
             if (this.rules.MaxSystemToDrawNumber === this.musicSystems.length) {
                 this.finalizeCurrentSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
@@ -449,8 +459,10 @@ export class MusicSystemBuilder {
         }
         let totalBeginInstructionLengthX: number = 0.0;
         const sourceMeasure: SourceMeasure = measures[0].parentSourceMeasure;
+        const staves: VF.Stave[] = [];
         for (let idx: number = 0; idx < measureCount; ++idx) {
             const measure: GraphicalMeasure = measures[idx];
+            staves.push((measure as VexFlowMeasure).getVFStave());
             const staffIndex: number = this.visibleStaffIndices[idx];
             const beginInstructionsStaffEntry: SourceStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[staffIndex];
             const beginInstructionLengthX: number = this.AddInstructionsAtMeasureBegin(
@@ -460,6 +472,7 @@ export class MusicSystemBuilder {
             );
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
         }
+        (VF.Stave as any).formatBegModifiers(staves);
         return totalBeginInstructionLengthX;
     }
 
