@@ -566,8 +566,8 @@ export class Stave extends Element {
 
     if (x > this.start_x) {
       this.setStartX(x);
+      // VexFlowPatch: don't overwrite start_x if it's already bigger (alignment, see formatBegModifiers())
     }
-    // this.start_x = x;
     x = this.x + this.width;
 
     const widths = {
