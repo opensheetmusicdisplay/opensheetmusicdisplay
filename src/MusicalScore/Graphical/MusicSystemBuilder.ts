@@ -449,8 +449,12 @@ export class MusicSystemBuilder {
         }
         let totalBeginInstructionLengthX: number = 0.0;
         const sourceMeasure: SourceMeasure = measures[0].parentSourceMeasure;
+        const staves: any[] = []; // VF.Stave. generally don't want to reference Vexflow classes here.
         for (let idx: number = 0; idx < measureCount; ++idx) {
             const measure: GraphicalMeasure = measures[idx];
+            if (measure) { // MultiRestMeasure may be undefined
+                staves.push((measure as any).getVFStave()); // as VexFlowMeasure
+            }
             const staffIndex: number = this.visibleStaffIndices[idx];
             const beginInstructionsStaffEntry: SourceStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[staffIndex];
             const beginInstructionLengthX: number = this.AddInstructionsAtMeasureBegin(
@@ -460,6 +464,7 @@ export class MusicSystemBuilder {
             );
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
         }
+        staves[0].formatBegModifiers(staves);
         return totalBeginInstructionLengthX;
     }
 
