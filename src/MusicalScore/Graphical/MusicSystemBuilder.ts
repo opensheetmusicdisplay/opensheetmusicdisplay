@@ -165,13 +165,6 @@ export class MusicSystemBuilder {
                 // don't set prevMeasureEndsPart in this case! because we will loop with the same measure again.
             }
         }
-        // for (const gMeasures of this.measureList) {
-        //     const staves: VF.Stave[] = [];
-        //     for (const gMeasure of gMeasures) {
-        //         staves.push((gMeasure as VexFlowMeasure).getVFStave());
-        //     }
-        //     (VF.Stave as any).formatBegModifiers(staves);
-        // }
         if (this.currentSystemParams.systemMeasures.length > 0) {
             if (this.rules.MaxSystemToDrawNumber === this.musicSystems.length) {
                 this.finalizeCurrentSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);

@@ -145,18 +145,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   protected calculateMeasureXLayout(measures: GraphicalMeasure[]): number {
     const visibleMeasures: GraphicalMeasure[] = [];
-    const staves: VF.Stave[] = [];
     for (const measure of measures) {
       if (measure) {
         visibleMeasures.push(measure);
-        staves.push((measure as VexFlowMeasure).getVFStave());
       }
     }
     if (visibleMeasures.length === 0) { // e.g. after Multiple Rest measures (VexflowMultiRestMeasure)
       return 0;
     }
     measures = visibleMeasures;
-    // (VF.Stave as any).formatBegModifiers(staves);
 
     // Format the voices
     const allVoices: VF.Voice[] = [];
@@ -203,8 +200,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // all voices that belong to one stave are collectively added to create a common context in VexFlow.
       formatter.joinVoices(voices);
     }
-
-    // (VF.Stave as any).formatBegModifiers(staves);
 
     let minStaffEntriesWidth: number = 12; // a typical measure has roughly a length of 3*StaffHeight (3*4 = 12)
     const parentSourceMeasure: SourceMeasure = measures[0].parentSourceMeasure;
