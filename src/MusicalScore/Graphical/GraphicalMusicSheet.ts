@@ -219,8 +219,10 @@ export class GraphicalMusicSheet {
     }
 
     public findGraphicalMeasure(measureIndex: number, staffIndex: number): GraphicalMeasure {
+        // note the cursor calls this with measureIndex 1 (measure 2) when advancing beyond the end of a 1-measure piece
         for (let i: number = measureIndex; i >= 0; i--) {
-            const gMeasure: GraphicalMeasure = this.measureList[i][staffIndex];
+            const verticalMeasures: GraphicalMeasure[] = this.measureList[i];
+            const gMeasure: GraphicalMeasure = verticalMeasures?.[staffIndex];
             if (gMeasure) {
                 return gMeasure;
             }
