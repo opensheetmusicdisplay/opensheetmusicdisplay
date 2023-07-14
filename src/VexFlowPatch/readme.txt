@@ -29,6 +29,9 @@ gracenotegroup.js (custom addition, needs check if necessary in vexflow 4):
 check for gracenotegroup.spacing set, to allow e.g. spacing = 0 by default.
 (with previous default 4, spacing is way too large unnecessarily, in most cases)
 
+notehead.js (custom addition):
+add stem_up_y_shift and stem_down_y_shift to shift notehead (independent of stem length)
+
 keysignature.js (merged vexflow 4):
 open group to get SVG group+class for key signature
 
@@ -51,6 +54,7 @@ Fix stem/flag formatting. Instead of shifting notes by default, update the stem/
 able to add svg node id+class to stem (merged vexflow 4.x)
 Save and restore noteheads (e.g. slash noteheads) in reset()
 preFormat() and getBoundingBox(): add paddingRight variable to allow for custom right padding (e.g. for long lyrics below note)
+allow notehead y_shift without 
 
 staverepetition.js (fixed vexflow 4):
 add TO_CODA enum to type() and draw()
@@ -78,6 +82,9 @@ Add manual flag rendering variable so we can choose not to render flags if notes
 svgcontext.js (custom addition, probably not necessary for vexflow 4):
 able to add extra attributes (like svg node id) to a stroke (e.g. stem)
 fix rect() always using black color, ignoring attributes.stroke (ctx strokeStlye) -> fix defaultColorMusic ignored
+
+tables.js (custom addition):
+add inverted triangle notehead ('TI')
 
 tabnote.js (merged Vexflow 3.x):
 Add a context group for each tabnote, so that it can be found in the SVG DOM ("vf-tabnote")
