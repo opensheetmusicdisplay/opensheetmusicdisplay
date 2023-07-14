@@ -517,6 +517,9 @@ export class StaveNote extends StemmableNote {
         x_shift: noteProps.shift_right,
         stem_up_x_offset: noteProps.stem_up_x_offset,
         stem_down_x_offset: noteProps.stem_down_x_offset,
+        // VexFlowPatch: add option to shift notehead up or down (instead of stem in the variables above)
+        stem_up_y_shift: noteProps.stem_up_y_shift,
+        stem_down_y_shift: noteProps.stem_down_y_shift,
         line: noteProps.line,
       });
 
