@@ -207,6 +207,8 @@ export class VexFlowConverter {
                 return codeStart + "D" + codeFilled;
             case NoteHeadShape.TRIANGLE:
                 return codeStart + "T" + codeFilled;
+            case NoteHeadShape.TRIANGLE_INVERTED:
+                return codeStart + "TI";
             case NoteHeadShape.X:
                 return codeStart + "X" + codeFilled;
             case NoteHeadShape.CIRCLEX:
