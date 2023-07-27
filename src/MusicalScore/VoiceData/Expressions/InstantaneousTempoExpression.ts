@@ -14,11 +14,13 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
             label = " = " + soundTempo;
         }*/
         super(label, placement, staffNumber, parentMultiTempoExpression);
+        this.isMetronomeMark = isMetronomeMark;
         this.setTempoAndTempoType(soundTempo);
     }
 
     public dotted: boolean;
     public beatUnit: string;
+    public isMetronomeMark: boolean;
     private static listInstantaneousTempoLarghissimo: string[] = ["Larghissimo", "Sehr breit", "very, very slow"]; // }), TempoEnum.larghissimo);
     private static listInstantaneousTempoGrave: string[] = ["Grave", "Schwer", "slow and solemn"]; //  }), TempoEnum.grave);
     private static listInstantaneousTempoLento: string[] = ["Lento", "Lent", "Langsam", "slowly"]; //  }), TempoEnum.lento);

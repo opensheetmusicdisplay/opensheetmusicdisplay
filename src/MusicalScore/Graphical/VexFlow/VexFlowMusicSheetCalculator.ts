@@ -789,7 +789,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const measureNumber: number = Math.max(metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber - 1, 0);
     const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
     const firstMetronomeMark: boolean = measureNumber === 0 && staffNumber === 0;
-    const vfStave: VF.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
+    const vfMeasure: VexFlowMeasure = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure);
+    if (vfMeasure.hasMetronomeMark) {
+      return; // don't create more than one metronome mark per measure;
+      // TODO some measures still seem to have two metronome marks, one less bold than the other (or not bold),
+      //   might be because of both <sound> node and <per-minute> node (within <metronome>) creating metronome marks
+    }
+    const vfStave: VF.Stave = vfMeasure.getVFStave();
     //vfStave.addModifier(new VF.StaveTempo( // needs Vexflow PR
     let vexflowDuration: string = "q";
     if (metronomeExpression.beatUnit) {
@@ -830,6 +836,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
       xShift
     );
+    vfMeasure.hasMetronomeMark = true;
     if (skyline) {
       // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
       skyline[0] = Math.min(skyline[0], -4.5 + yShift);
