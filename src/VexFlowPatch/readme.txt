@@ -21,9 +21,11 @@ able to add svg node id+class to beam (not yet in vexflow 4)
 clef.js (merged vexflow 4):
 open group to get SVG group+class for clef
 
-formatter.js (custom addition, unnecessary in vexflow 4):
+formatter.js:
 comment out unnecessary error thrown, which prevents the fix to
-layouting improvements with whole measure rests and e.g. 12/8 rhythm in #1187.
+  layouting improvements with whole measure rests and e.g. 12/8 rhythm in #1187.
+  (custom addition, unnecessary in vexflow 4)
+fix x set to NaN when totalTicks = 0 (bugfix for some tab scores, not sure if fixed in vexflow 4)
 
 gracenotegroup.js (custom addition, needs check if necessary in vexflow 4):
 check for gracenotegroup.spacing set, to allow e.g. spacing = 0 by default.
