@@ -539,6 +539,9 @@ export abstract class MusicSheetCalculator {
                 for (const groupBracket of musicSystem.GroupBrackets) {
                     minBracketTopBorder = Math.min(minBracketTopBorder, groupBracket.PositionAndShape.BorderTop);
                 }
+            } else if (measure.ParentStaff.ParentInstrument.Parent) { // Parent InstrumentalGroup
+                // note that GroupBracket creation is currently done after measure number creation, so we have to check it indirectly.
+                minBracketTopBorder = -1;
             }
             relativeY = Math.min(skyLineMinValue, minBracketTopBorder);
         } else {
