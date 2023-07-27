@@ -87,7 +87,7 @@
     "cross-blob": "^3.0.0",
     "cross-env": "^7.0.3",
     "cz-conventional-changelog": "^3.3.0",
-    "eslint": "^8.4.0",
+    "eslint": "^8.45.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jsdoc": "^46.4.5",
     "eslint-plugin-no-null": "^1.0.2",
