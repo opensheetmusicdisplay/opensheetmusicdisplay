@@ -867,7 +867,7 @@ export class VexFlowConverter {
             const tabNote: TabNote = note.sourceNote as TabNote;
             let tabPosition: {str: number, fret: number} = {str: tabNote.StringNumberTab, fret: tabNote.FretNumber};
             if (!(note.sourceNote instanceof TabNote)) {
-                log.info(`not a valid tab note: ${note.sourceNote.Pitch.ToString()} in measure ${gve.parentStaffEntry.parentMeasure.MeasureNumber}` +
+                log.info(`invalid tab note: ${note.sourceNote.Pitch.ToString()} in measure ${gve.parentStaffEntry.parentMeasure.MeasureNumber}` +
                     ", likely missing XML string+fret number.");
                 tabPosition = {str: 5, fret: 0};
             }
