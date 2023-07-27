@@ -4,6 +4,9 @@ import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {MultiTempoExpression} from "./MultiTempoExpression";
 
+/** Tempo expressions that usually have an instantaneous and non-gradual effect on playback speed (e.g. Allegro),
+ * or at least cover large sections, compared to the usually gradual effects or shorter sections of ContinuousExpressions.
+ */
 export class InstantaneousTempoExpression extends AbstractTempoExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number,
                 soundTempo: number, parentMultiTempoExpression: MultiTempoExpression, isMetronomeMark: boolean = false) {

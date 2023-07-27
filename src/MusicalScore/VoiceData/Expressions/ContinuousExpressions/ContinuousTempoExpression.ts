@@ -3,6 +3,9 @@ import {PlacementEnum} from "../AbstractExpression";
 import {MultiTempoExpression} from "../MultiTempoExpression";
 import {AbstractTempoExpression} from "../AbstractTempoExpression";
 
+/** Tempo expressions that usually have a continuous or gradual effect playback-wise (e.g. accelerando),
+ * or describe shorter sections (e.g. meno mosso).
+ */
 export class ContinuousTempoExpression extends AbstractTempoExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number, parentMultiTempoExpression: MultiTempoExpression) {
         super(label, placement, staffNumber, parentMultiTempoExpression);
