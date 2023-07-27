@@ -869,7 +869,7 @@ export class VexFlowConverter {
             if (!(note.sourceNote instanceof TabNote)) {
                 log.info(`invalid tab note: ${note.sourceNote.Pitch.ToString()} in measure ${gve.parentStaffEntry.parentMeasure.MeasureNumber}` +
                     ", likely missing XML string+fret number.");
-                tabPosition = {str: 5, fret: 0};
+                tabPosition = {str: 1, fret: 0}; // random safe values, otherwise it's both undefined for invalid notes
             }
             tabPositions.push(tabPosition);
             if (tabNote.BendArray) {
