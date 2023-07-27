@@ -484,7 +484,7 @@ export class Formatter {
     let totalTicks = this.totalTicks.value();
     if (totalTicks === 0) {
       totalTicks = 1;
-      // VexFlowPatch: this is not supposed to happen, but needs to be fixed if it does,
+      // VexFlowPatch: this is not supposed to happen, but does for faulty tab scores, needs fixing,
       //   so that leftoverPxPerTick doesn't become Infinity, and then x is set to NaN (via setX())
     }
     const leftoverPxPerTick = remainingX / (totalTicks * resolutionMultiplier);
