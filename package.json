@@ -121,7 +121,7 @@
     "webpack-visualizer-plugin2": "^1.0.0"
   },
   "optionalDependencies": {
-    "gl": "^5.0.0"
+    "gl": "^6.0.2"
   },
   "config": {
     "commitizen": {
