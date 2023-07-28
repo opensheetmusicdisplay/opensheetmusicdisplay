@@ -4,6 +4,9 @@ import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {MultiTempoExpression} from "./MultiTempoExpression";
 
+/** Tempo expressions that usually have an instantaneous and non-gradual effect on playback speed (e.g. Allegro),
+ * or at least cover large sections, compared to the usually gradual effects or shorter sections of ContinuousExpressions.
+ */
 export class InstantaneousTempoExpression extends AbstractTempoExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number,
                 soundTempo: number, parentMultiTempoExpression: MultiTempoExpression, isMetronomeMark: boolean = false) {
@@ -11,11 +14,13 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
             label = " = " + soundTempo;
         }*/
         super(label, placement, staffNumber, parentMultiTempoExpression);
+        this.isMetronomeMark = isMetronomeMark;
         this.setTempoAndTempoType(soundTempo);
     }
 
     public dotted: boolean;
     public beatUnit: string;
+    public isMetronomeMark: boolean;
     private static listInstantaneousTempoLarghissimo: string[] = ["Larghissimo", "Sehr breit", "very, very slow"]; // }), TempoEnum.larghissimo);
     private static listInstantaneousTempoGrave: string[] = ["Grave", "Schwer", "slow and solemn"]; //  }), TempoEnum.grave);
     private static listInstantaneousTempoLento: string[] = ["Lento", "Lent", "Langsam", "slowly"]; //  }), TempoEnum.lento);

@@ -460,8 +460,8 @@ export class VoiceGenerator {
     const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAccidental, accidentalValue);
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     let note: Note = undefined;
-    let stringNumber: number = -1;
-    let fretNumber: number = -1;
+    let stringNumber: number = -1; //1 to always recognize as valid tab note
+    let fretNumber: number = -1; //0 to always recognize as valid tab note
     const bends: {bendalter: number, direction: string}[] = [];
     // check for guitar tabs:
     const notationNode: IXmlElement = node.element("notations");

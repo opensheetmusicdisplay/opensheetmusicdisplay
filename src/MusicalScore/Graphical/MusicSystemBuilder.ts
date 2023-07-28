@@ -464,7 +464,7 @@ export class MusicSystemBuilder {
             );
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
         }
-        staves[0].formatBegModifiers(staves);
+        staves[0].formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
         return totalBeginInstructionLengthX;
     }
 

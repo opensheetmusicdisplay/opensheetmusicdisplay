@@ -207,6 +207,8 @@ export class VexFlowConverter {
                 return codeStart + "D" + codeFilled;
             case NoteHeadShape.TRIANGLE:
                 return codeStart + "T" + codeFilled;
+            case NoteHeadShape.TRIANGLE_INVERTED:
+                return codeStart + "TI";
             case NoteHeadShape.X:
                 return codeStart + "X" + codeFilled;
             case NoteHeadShape.CIRCLEX:
@@ -863,7 +865,12 @@ export class VexFlowConverter {
         let tabVibrato: boolean = false;
         for (const note of gve.notes) {
             const tabNote: TabNote = note.sourceNote as TabNote;
-            const tabPosition: {str: number, fret: number} = {str: tabNote.StringNumberTab, fret: tabNote.FretNumber};
+            let tabPosition: {str: number, fret: number} = {str: tabNote.StringNumberTab, fret: tabNote.FretNumber};
+            if (!(note.sourceNote instanceof TabNote)) {
+                log.info(`invalid tab note: ${note.sourceNote.Pitch.ToString()} in measure ${gve.parentStaffEntry.parentMeasure.MeasureNumber}` +
+                    ", likely missing XML string+fret number.");
+                tabPosition = {str: 1, fret: 0}; // random safe values, otherwise it's both undefined for invalid notes
+            }
             tabPositions.push(tabPosition);
             if (tabNote.BendArray) {
                 tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {

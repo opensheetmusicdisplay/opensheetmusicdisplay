@@ -1,6 +1,6 @@
 {
   "name": "opensheetmusicdisplay",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
   "main": "build/opensheetmusicdisplay.min.js",
   "types": "build/dist/src/index.d.ts",
@@ -92,12 +92,12 @@
     "cross-blob": "^3.0.0",
     "cross-env": "^7.0.3",
     "cz-conventional-changelog": "^3.3.0",
-    "eslint": "^8.4.0",
+    "eslint": "^8.45.0",
     "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-jsdoc": "^37.1.0",
+    "eslint-plugin-jsdoc": "^46.4.5",
     "eslint-plugin-no-null": "^1.0.2",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-standard": "^4.1.0",
+    "eslint-plugin-standard": "^5.0.0",
     "html-webpack-plugin": "^5.5.0",
     "jquery": "^3.6.0",
     "jsdom": "^21.0.0",
@@ -126,7 +126,7 @@
     "webpack-visualizer-plugin2": "^1.0.0"
   },
   "optionalDependencies": {
-    "gl": "^5.0.0"
+    "gl": "^6.0.2"
   },
   "config": {
     "commitizen": {

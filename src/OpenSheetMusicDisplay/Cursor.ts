@@ -216,7 +216,11 @@ export class Cursor {
     height = endY - y;
 
     // Update the graphical cursor
-    const measurePositionAndShape: BoundingBox = this.graphic.findGraphicalMeasure(currentMeasureIndex, 0).PositionAndShape;
+    const visibleMeasure: GraphicalMeasure = this.findVisibleGraphicalMeasure(currentMeasureIndex);
+    if (!visibleMeasure) {
+      return;
+    }
+    const measurePositionAndShape: BoundingBox = visibleMeasure.PositionAndShape;
     this.updateWidthAndStyle(measurePositionAndShape, x, y, height);
 
     if (this.openSheetMusicDisplay.FollowCursor && this.cursorOptions.follow) {

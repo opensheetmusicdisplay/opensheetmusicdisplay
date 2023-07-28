@@ -539,6 +539,9 @@ export abstract class MusicSheetCalculator {
                 for (const groupBracket of musicSystem.GroupBrackets) {
                     minBracketTopBorder = Math.min(minBracketTopBorder, groupBracket.PositionAndShape.BorderTop);
                 }
+            } else if (measure.ParentStaff.ParentInstrument.Parent) { // Parent InstrumentalGroup
+                // note that GroupBracket creation is currently done after measure number creation, so we have to check it indirectly.
+                minBracketTopBorder = -1;
             }
             relativeY = Math.min(skyLineMinValue, minBracketTopBorder);
         } else {
@@ -1840,20 +1843,16 @@ export abstract class MusicSheetCalculator {
                         }
                     }
                 } else if (entry.Expression instanceof ContinuousTempoExpression) {
-                    // FIXME: Not yet implemented
-                    // let alreadyAdded: boolean = false;
-                    // for (const expr of staffLine.AbstractExpressions) {
-                    //     if (expr instanceof GraphicalContinuousTempoExpression &&
-                    //         expr.GetContinuousTempoExpression.Label === entry.Expression.Label) {
-                    //         alreadyAdded = true;
-                    //     }
-                    // }
-
-                    // if (alreadyAdded) {
-                    //     continue;
-                    // }
-
-                    // staffLine.AbstractExpressions.push(new GraphicalContinuousTempoExpression((ContinuousTempoExpression)(entry.Expression), graphLabel));
+                    for (const expr of staffLine.AbstractExpressions) {
+                        if (expr instanceof GraphicalInstantaneousTempoExpression &&
+                        (expr.SourceExpression as AbstractTempoExpression).Label === entry.Expression.Label) {
+                            continue; // already added
+                        }
+                    }
+                    // TODO maybe create GraphicalContinuousTempoExpression class,
+                    //   though the ContinuousTempoExpressions we have currently behave the same graphically (accelerando, ritardando, etc).
+                    //   The behavior difference rather affects playback (e.g. ritardando, which gradually changes tempo)
+                    staffLine.AbstractExpressions.push(new GraphicalInstantaneousTempoExpression(entry.Expression, graphLabel));
                 }
             }
         }
