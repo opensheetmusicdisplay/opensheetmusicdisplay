@@ -67,7 +67,7 @@
   "bugs": {
     "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
   },
-  "homepage": "http://opensheetmusicdisplay.org",
+  "homepage": "https://opensheetmusicdisplay.org",
   "dependencies": {
     "@types/vexflow": "^1.2.38",
     "jszip": "3.10.1",
