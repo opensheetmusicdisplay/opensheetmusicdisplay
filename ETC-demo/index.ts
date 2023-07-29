@@ -7,6 +7,7 @@ import { ExtendedTransposeCalculator } from "../src/Plugins/ExtendedTranspose";
 //"use strict";
 let openSheetMusicDisplay: OpenSheetMusicDisplay;
 const zoom: number = 0.66;
+let osmdVersion: HTMLSpanElement;
 let error_tr: HTMLElement;
 let error_td: HTMLElement;
 let canvas: HTMLDivElement;
@@ -174,7 +175,7 @@ function setDisabledForControls(disabledValue): void {
 }
 
 window.addEventListener("DOMContentLoaded",(e)=>{
-
+    osmdVersion = <HTMLSpanElement>document.getElementById("osmd-version");
     error_tr = <HTMLDivElement>document.getElementById("error-tr");
     error_td = <HTMLDivElement>document.getElementById("error-td");
     canvas = <HTMLDivElement>document.querySelector("#sheet-container");
@@ -251,7 +252,7 @@ window.addEventListener("DOMContentLoaded",(e)=>{
         coloringEnabled: true,
         autoBeam: false
     });
-
+    osmdVersion.innerHTML = `(on OpenSheetMusicDisplay v${openSheetMusicDisplay.Version})`;
     // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
     openSheetMusicDisplay.TransposeCalculator = new ExtendedTransposeCalculator(openSheetMusicDisplay);
 

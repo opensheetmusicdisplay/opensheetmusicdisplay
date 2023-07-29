@@ -2553,7 +2553,9 @@ export abstract class MusicSheetCalculator {
                         // When the TransposeCalculator is involved, it becomes imperative for the
                         // TransposeCalculator to actively engage and determine the appropriate course
                         // of action in the event that the "transposeHalftones" directive is set to zero.
-                        // transposeHalftones !== 0 &&
+                        /*
+                        transposeHalftones !== 0 &&
+                        */
                         measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
                         MusicSheetCalculator.transposeCalculator
                     ) {
@@ -2755,7 +2757,20 @@ export abstract class MusicSheetCalculator {
                                    octaveEnum: OctaveEnum): void {
         let pitch: Pitch = graphicalNote.sourceNote.Pitch;
         const transposeHalftones: number = graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure.getTransposedHalftones();
-        if (transposeHalftones !== 0 && graphicalNote.sourceNote.ParentStaffEntry.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion) {
+        if (
+            // In my perspective, within this section of the code, there seems to be an
+            // abundance of conditions that ultimately result in a visually cluttered rendering
+            // of the musical score when the "transposeHalftones" directive is set to zero.
+            // When the TransposeCalculator is involved, it becomes imperative for the
+            // TransposeCalculator to actively engage and determine the appropriate course
+            // of action in the event that the "transposeHalftones" directive is set to zero.
+            /*
+            transposeHalftones !== 0 &&
+            */
+            graphicalNote.sourceNote.ParentStaffEntry.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
+            // addedd MusicSheetCalculator.transposeCalculator condition
+            && MusicSheetCalculator.transposeCalculator
+        ) {
             pitch = graphicalNote.Transpose(
                 accidentalCalculator.ActiveKeyInstruction, activeClef, transposeHalftones, octaveEnum
             );

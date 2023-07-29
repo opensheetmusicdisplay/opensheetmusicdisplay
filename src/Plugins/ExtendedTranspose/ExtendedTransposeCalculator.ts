@@ -50,7 +50,12 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
     }
 
     public transposePitch(pitch: Pitch, currentKeyInstruction: KeyInstruction, halftones: number): Pitch {
-        halftones = Math.floor(halftones);
+        // A "dirty workaround" to bypass OSMD's inaction when Sheet.Transpose === 0.
+        // If we remove the condition "transposeHalftones !== 0" from the function
+        // "createGraphicalMeasure" in the file MusicSheetCalculator.ts, this workaround is not needed.
+        /*
+            halftones = Math.floor(halftones);
+        */
         if(!this.Options.TransposeByDiatonic) {
             if (this.Options.TransposeKeySignatures) {
                 // TRANSPOSE BY KEY, INTERVAL, HALFTONESE WITH SIGNATURE TRANSPOSING
@@ -104,7 +109,12 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
     }
 
     public transposeKey(keyInstruction: KeyInstruction, transpose: number): void {
-        transpose = Math.floor(transpose);
+        // A "dirty workaround" to bypass OSMD's inaction when Sheet.Transpose === 0.
+        // If we remove the condition "transposeHalftones !== 0" from the function
+        // "createGraphicalMeasure" in the file MusicSheetCalculator.ts, this workaround is not needed.
+        /*
+            transpose = Math.floor(transpose);
+        */
         if (this.Options.TransposeByKey) {
             /*
             const octave: number = ETC.keyOctave(transpose);

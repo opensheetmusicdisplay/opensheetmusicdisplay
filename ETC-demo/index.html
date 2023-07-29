@@ -55,6 +55,12 @@
                 line-height: 32px;
                 text-align:center;
             }
+            div#menu>div#menu-header>div#brand>#osmd-version{
+                font-weight: 100;
+                font-size: 0.8em;
+                line-height: 32px;
+                text-align:center;
+            }
             div#menu>div.menu-item{
                 padding:8px;
                 padding-bottom:0px;
@@ -91,7 +97,8 @@
             <div id="menu-header" style="line-height:32px;">
                 <img src="./favicon.ico?" style="width:32px;height:32px">
                 <div id="brand">
-                    <%= htmlWebpackPlugin.options.title %>
+                    <span><%= htmlWebpackPlugin.options.title %></span><br/>
+                    <span id="osmd-version"></span>
                 </div>
             </div>
             <table cellpadding="4" cellspacing="4">
