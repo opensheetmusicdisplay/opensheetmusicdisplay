@@ -1,3 +1,20 @@
+## [1.8.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.1...1.8.2) (2023-07-28)
+
+
+### Bug Fixes
+
+* **Measure Numbers:** Avoid collisions with group brackets / instrument brackets (shift measure numbers upwards) ([a43875f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a43875f72424091b6538db284a0662a1ce9dfdc6)), closes [#1430](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1430)
+* **Metronome Marks:** Prevent multiple metronome marks per measure drawn ([#1393](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1393)). (Side effect: some marks less bold) ([c457922](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c45792290a476fc234b9caa631d84a129c2eac39))
+* **Tabs:** Fix errors for faulty tab xml files, add info log when fret, string missing ([#1432](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1432)) ([6b65369](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6b6536928a94e6dc780096233ae9ecc0b6b7ab4f))
+* **Build:** Fix npm install with node v18 and on MacOS when OSMD is a dependency, updating gl dependency etc ([#1433](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1433))
+
+
+### Features
+
+* **Tempo:** Render more tempo expressions like poco meno ([#1431](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1431)) by treating them as instant expressions graphically ([94b3dec](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/94b3dec263267fbcfba4ff20047107dc9931cddf))
+
+
+
 ## [1.8.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.0...1.8.1) (2023-07-14)
 
 

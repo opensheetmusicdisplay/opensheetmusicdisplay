@@ -1,6 +1,6 @@
 {
   "name": "opensheetmusicdisplay",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
   "main": "build/opensheetmusicdisplay.min.js",
   "types": "build/dist/src/index.d.ts",
@@ -72,7 +72,7 @@
   "bugs": {
     "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
   },
-  "homepage": "http://opensheetmusicdisplay.org",
+  "homepage": "https://opensheetmusicdisplay.org",
   "dependencies": {
     "@types/vexflow": "^1.2.38",
     "jszip": "3.10.1",
