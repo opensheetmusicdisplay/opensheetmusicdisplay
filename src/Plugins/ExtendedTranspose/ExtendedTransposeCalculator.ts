@@ -151,7 +151,11 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
         } else if (this.Options.TransposeKeySignatures && ( this.Options.TransposeByInterval || this.Options.TransposeByHalftone)) {
             const octave: number = Math.floor(transpose / 12);
             const semitone: number = ((transpose % 12) + 12 ) % 12;
-            keyInstruction.Key = ETC.keyToMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyDiatonicFactor));
+            if((transpose%12)!==0) {
+                keyInstruction.Key = ETC.keyToMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyDiatonicFactor));
+            } else {
+                keyInstruction.Key = keyInstruction.keyTypeOriginal;
+            }
             keyInstruction.isTransposedBy = ETC.keyToKeyProximity(
                 keyInstruction.keyTypeOriginal,
                 keyInstruction.Key

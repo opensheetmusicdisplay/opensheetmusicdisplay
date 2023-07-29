@@ -49,10 +49,14 @@ export class TransposeCalculator implements ITransposeCalculator {
         // If you do not wish to use this simplification (personally, I believe that
         // simplifying keys is a wise choice when it comes to halftone transposition),
         // replace ETC.keyToSimplifiedMajorKey() with ETC.keyToMajorKey().
-        if (keyInstruction.keyTypeOriginal >= 0) {
-            keyInstruction.Key = ETC.keyToSimplifiedMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyDiatonicFactor));
+        if(transpose!==0){
+            if (keyInstruction.keyTypeOriginal >= 0) {
+                keyInstruction.Key = ETC.keyToSimplifiedMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyDiatonicFactor));
+            } else {
+                keyInstruction.Key = ETC.keyToSimplifiedMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyChromaticFactor));
+            }
         } else {
-            keyInstruction.Key = ETC.keyToSimplifiedMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyChromaticFactor));
+            keyInstruction.Key = keyInstruction.keyTypeOriginal;
         }
 
         // Alright, for the semitone transposition, let's look for a proximity comma value
