@@ -43,7 +43,6 @@
     "build:ETC-webpack": "webpack --progress --config ETC.webpack.prod.js",
     "build:ETC-webpack-dev": "webpack --progress --config ETC.webpack.dev.js",
     "build:ETC-webpack-sourcemap": "webpack --progress --config ETC.webpack.sourcemap.js",
-
     "fix-memory-limit": "cross-env NODE_OPTIONS=--max_old_space_size=4096"
   },
   "pre-commit": [
@@ -89,6 +88,7 @@
     "canvas": "^2.8.0",
     "chai": "^4.3.4",
     "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^11.0.0",
     "cross-blob": "^3.0.0",
     "cross-env": "^7.0.3",
     "cz-conventional-changelog": "^3.3.0",
