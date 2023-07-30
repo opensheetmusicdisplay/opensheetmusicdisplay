@@ -22,6 +22,7 @@ let transposeByIntervalBtn: HTMLButtonElement;
 let transposeKeySignatures: HTMLInputElement;
 let transposeDiatonically: HTMLSelectElement;
 let transposeDiatonicallyBtn: HTMLButtonElement;
+let removeKeySignatures: HTMLButtonElement;
 
 const samples: string[][] = [
     ["Bach, J.S. - Preludio e Fuga 3 in Do diesis maggiore (BWV 848)","sheets/JohannSebastianBach_Preludio_e_Fuga_3_in_Do_diesis_maggiore_BWV848.musicxml"],
@@ -191,6 +192,7 @@ window.addEventListener("DOMContentLoaded",(e)=>{
     transposeKeySignatures = <HTMLInputElement>document.getElementById("transpose-key-signatures");
     transposeDiatonically = <HTMLSelectElement>document.getElementById("transpose-diatonically");
     transposeDiatonicallyBtn = <HTMLButtonElement>document.getElementById("transpose-diatonically-btn");
+    removeKeySignatures = <HTMLButtonElement>document.getElementById("remove-key-signatures");
 
     selectSample.addEventListener("change",(ev)=>{
         selectSampleOnChange();
@@ -230,6 +232,14 @@ window.addEventListener("DOMContentLoaded",(e)=>{
         transposeDiatonicallyBtn.onclick = function(): void{
             const transposeValue: number = Number(transposeDiatonically.value);
             openSheetMusicDisplay.TransposeCalculator.Options.transposeToDiatonic(transposeValue);
+            openSheetMusicDisplay.updateGraphic();
+            rerender();
+        };
+    }
+
+    if(removeKeySignatures){
+        removeKeySignatures.onclick = function(): void{
+            openSheetMusicDisplay.TransposeCalculator.Options.removeKeySignatures();
             openSheetMusicDisplay.updateGraphic();
             rerender();
         };

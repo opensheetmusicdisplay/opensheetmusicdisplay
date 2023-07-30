@@ -57,7 +57,9 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
             halftones = Math.floor(halftones);
         */
         if(!this.Options.TransposeByDiatonic) {
-            if (this.Options.TransposeKeySignatures) {
+            if (this.Options.NoKeySignatures) {
+                return pitch;
+            } else if (this.Options.TransposeKeySignatures) {
                 // TRANSPOSE BY KEY, INTERVAL, HALFTONESE WITH SIGNATURE TRANSPOSING
                 const degree: number = this.pitchToDegree(pitch, currentKeyInstruction.keyTypeOriginal);
                 return this.commaToPitch(degree + currentKeyInstruction.isTransposedBy);
@@ -148,7 +150,7 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
             if (!this.Options.TransposeKeySignatures) {
                 keyInstruction.Key = keyInstruction.keyTypeOriginal;
             }
-        } else if (this.Options.TransposeKeySignatures && ( this.Options.TransposeByInterval || this.Options.TransposeByHalftone)) {
+        } else if (this.Options.TransposeKeySignatures && this.Options.TransposeByInterval) {
             const octave: number = Math.floor(transpose / 12);
             const semitone: number = ((transpose % 12) + 12 ) % 12;
             if((transpose%12)!==0) {
@@ -160,10 +162,50 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
                 keyInstruction.keyTypeOriginal,
                 keyInstruction.Key
             ).up + (octave * ETC.OctaveSize);
+        } else if (this.Options.TransposeKeySignatures && this.Options.TransposeByHalftone) {
+
+            const octave: number = Math.floor(transpose / 12);
+
+            const semitone: number = ((transpose % 12) + 12 ) % 12;
+
+            // This is a voodoo ritual practiced by members of the Circle of Fifths club:
+            // you must multiply the semitone distance ( to be converted to a key ) by the
+            // key's diatonic factor (-5) if the original key is >= 0 or keys's chromatic
+            // factor (7) if the original key is < 0, then add the value of the original key.
+            // Take the product modulo 12, and if the resulting value is < -7, add 12, else
+            // if the resulting value is > 7, subtract 12.
+            // ...more...
+            // In compliance with the previous version, the keys will be chosen from -5 to +6
+            // in each case, but unlike the old version, it is now possible to start from any key.
+            // If you do not wish to use this simplification (personally, I believe that
+            // simplifying keys is a wise choice when it comes to halftone transposition),
+            // replace ETC.keyToSimplifiedMajorKey() with ETC.keyToMajorKey().
+            if(transpose!==0){
+                if (keyInstruction.keyTypeOriginal >= 0) {
+                    keyInstruction.Key = ETC.keyToSimplifiedMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyDiatonicFactor));
+                } else {
+                    keyInstruction.Key = ETC.keyToSimplifiedMajorKey(keyInstruction.keyTypeOriginal + (semitone * ETC.KeyChromaticFactor));
+                }
+            } else {
+                keyInstruction.Key = keyInstruction.keyTypeOriginal;
+            }
+
+            // Alright, for the semitone transposition, let's look for a proximity comma value
+            // between keys that, unlike "closest", always goes in one direction.
+            // "Up" has never given me any problems.
+            // Ah! And at this point, we add any additional octaves.
+            keyInstruction.isTransposedBy = ETC.keyToKeyProximity(
+                keyInstruction.keyTypeOriginal,
+                keyInstruction.Key
+            ).up + (octave * ETC.OctaveSize);
+        } else if( this.Options.NoKeySignatures ) {
+            keyInstruction.Key = 0;
+            keyInstruction.isTransposedBy = 0;
         } else {
             keyInstruction.Key = keyInstruction.keyTypeOriginal;
             keyInstruction.isTransposedBy = transpose;
         }
         keyInstruction.Mode = 0;
     }
+
 }

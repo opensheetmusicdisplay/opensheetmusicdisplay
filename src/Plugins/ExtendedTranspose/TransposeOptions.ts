@@ -50,6 +50,8 @@ export class TransposeOptions {
     private static transposeByDiatonic: number = 1;
     private static transposeByInterval: number = 2;
     private static transposeByKey: number = 3;
+    private static noKeySignatures: number = 4;
+
     private transposeType: number = TransposeOptions.transposeByHalftone;
 
     private osmd: OpenSheetMusicDisplay = undefined;
@@ -132,6 +134,14 @@ export class TransposeOptions {
         this.transposeKeySignatures = Boolean(value);
     }
 
+    public get NoKeySignatures(): boolean {
+        return this.transposeType ===  TransposeOptions.noKeySignatures;
+    }
+
+    public set NoKeySignatures(value: boolean ) {
+        this.transposeType = Boolean(value) ? TransposeOptions.noKeySignatures : TransposeOptions.transposeByHalftone;
+    }
+
     public get TransposeOctave(): number {
         return this.transposeOctave;
     }
@@ -149,11 +159,16 @@ export class TransposeOptions {
     }
 
     public transposeToHalftone(value: number): void {
+        value = Number(value);
+        this.NoKeySignatures = false;
         this.TransposeByHalftone = true;
         this.Transpose = value;
     }
 
     public transposeToKey(toKey: number, octave: number = 0): void {
+        toKey = Number(toKey);
+        octave = Number(octave);
+        this.NoKeySignatures = false;
         this.TransposeByKey = true;
         this.TransposeOctave = octave;
         // At this point, we need to ensure that the closest direction chosen is always the same
@@ -172,6 +187,8 @@ export class TransposeOptions {
     }
 
     public transposeToKeyRelation(value: number, octave: number = 0): void {
+        value = Number(value);
+        this.NoKeySignatures = false;
         this.TransposeByKey = true;
         const keyRelation: number = value - this.MainKey;
         value = keyRelation + (octave * ETC.OctaveSize);
@@ -180,6 +197,7 @@ export class TransposeOptions {
 
     public transposeToInterval(value: number): void {
         value = Number(value);
+        this.NoKeySignatures = false;
         this.TransposeByInterval = true;
         if (this.TransposeKeySignatures) {
             const pitch: ETCPitch = ETC.commaToPitch(value);
@@ -191,7 +209,15 @@ export class TransposeOptions {
     }
 
     public transposeToDiatonic(value: number): void {
+        value = Number(value);
+        this.NoKeySignatures = false;
         this.TransposeByDiatonic = true;
         this.Transpose = Number(value);
     }
+
+    public removeKeySignatures(): void {
+        this.NoKeySignatures = true;
+        this.Transpose = 0;
+    }
+
 }
