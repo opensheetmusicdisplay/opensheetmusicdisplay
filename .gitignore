@@ -1,6 +1,7 @@
 # Build
 build
 ETC-build/
+ETC-build/*
 
 # Dist
 dist
