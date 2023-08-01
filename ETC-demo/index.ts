@@ -25,6 +25,7 @@ let transposeDiatonicallyBtn: HTMLButtonElement;
 let removeKeySignatures: HTMLButtonElement;
 
 const samples: string[][] = [
+    ["Stress Test - Accidentals","sheets/Stress_Test_Accidentals.musicxml"],
     ["Bach, J.S. - Preludio e Fuga 3 in Do diesis maggiore (BWV 848)","sheets/JohannSebastianBach_Preludio_e_Fuga_3_in_Do_diesis_maggiore_BWV848.musicxml"],
     ["Bach, J.S. - Preludio e Fuga 8 in Mi bemolle minore (BWV 853)","sheets/JohannSebastianBach_Preludio_e_Fuga_3_in_Mi_bemolle_minore_BWv853.musicxml"],
     ["Bach, J.S. - Praeludium in C-Dur BWV846 1","sheets/JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml"],
@@ -118,7 +119,9 @@ function selectSampleOnChange(str: string = ""): void {
         function () {
             if (1) {
                 // "0" is bad for now, then 0 --> 12
-                transposeByKey.value = String(openSheetMusicDisplay.TransposeCalculator.Options.MainKey  || 0 );
+                if (openSheetMusicDisplay.TransposeCalculator && openSheetMusicDisplay.TransposeCalculator.Options) {
+                    transposeByKey.value = String(openSheetMusicDisplay.TransposeCalculator.Options.MainKey  || 0 );
+                }
                 enable();
             }
             return;
@@ -265,6 +268,5 @@ window.addEventListener("DOMContentLoaded",(e)=>{
     osmdVersion.innerHTML = `(on OpenSheetMusicDisplay v${openSheetMusicDisplay.Version})`;
     // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
     openSheetMusicDisplay.TransposeCalculator = new ExtendedTransposeCalculator(openSheetMusicDisplay);
-
     selectSampleOnChange();
 });

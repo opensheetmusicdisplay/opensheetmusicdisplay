@@ -25,7 +25,8 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
     private pitchToComma(pitch: Pitch): number {
         const comma: number = ETC.pitchToComma({
             fundamentalNote: Number(pitch.FundamentalNote),
-            alterations: Pitch.HalfTonesFromAccidental(pitch.Accidental),
+            // Math.floor() -> Temporary fix for microtonal tunings
+            alterations: Math.floor(Pitch.HalfTonesFromAccidental(pitch.Accidental)),
             octave: pitch.Octave
         });
         return comma;
@@ -34,7 +35,8 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
     private pitchToDegree(pitch: Pitch, majorKey: number): number {
         const degree: number = ETC.pitchToDegree({
             fundamentalNote: Number(pitch.FundamentalNote),
-            alterations: Pitch.HalfTonesFromAccidental(pitch.Accidental),
+            // Math.floor() -> Temporary fix for microtonal tunings
+            alterations: Math.floor(Pitch.HalfTonesFromAccidental(pitch.Accidental)),
             octave: pitch.Octave
         }, majorKey);
         return degree;
