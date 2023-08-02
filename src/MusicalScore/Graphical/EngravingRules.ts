@@ -78,6 +78,10 @@ export class EngravingRules {
     public PercussionUseXMLDisplayStep: boolean;
     public PercussionXMLDisplayStepNoteValueShift: number;
     public PercussionOneLineXMLDisplayStepOctaveOffset: number;
+    /** Makes the score position notes on the 2 cajon stafflines, and use 2 stafflines even if PercussionOneLineCutoff set.
+     * Should only be set for cajon scores, as this will disable the PercussionOneLineCutoff.
+     */
+    public PercussionUseCajon2NoteSystem: boolean;
     public BetweenKeySymbolsDistance: number;
     public KeyRightMargin: number;
     public RhythmRightMargin: number;
@@ -123,6 +127,10 @@ export class EngravingRules {
     public ChordSymbolTextHeight: number;
     public ChordSymbolTextAlignment: TextAlignmentEnum;
     public ChordSymbolRelativeXOffset: number;
+    /** Additional x-shift for short chord symbols (e.g. C, but not Eb/7), to appear more centered. */
+    public ChordSymbolExtraXShiftForShortChordSymbols: number;
+    /** Threshold width below which to apply ChordSymbolExtraXShiftForShortChordSymbols. */
+    public ChordSymbolExtraXShiftWidthThreshold: number;
     public ChordSymbolXSpacing: number;
     public ChordOverlapAllowedIntoNextMeasure: number;
     public ChordSymbolYOffset: number;
@@ -158,6 +166,10 @@ export class EngravingRules {
      * (Bracketing all triplets can be cluttering)
      */
     public TripletsBracketed: boolean;
+    /** Whether to bracket like the XML says when 'bracket="no"' or "yes" is given.
+     * Otherwise, OSMD decides bracket usage.
+     * Note that sometimes the XML doesn't have any 'bracket' value. */
+    public TupletsBracketedUseXMLValue: boolean;
     public TupletNumberLabelHeight: number;
     public TupletNumberYOffset: number;
     public TupletNumberLimitConsecutiveRepetitions: boolean;
@@ -167,6 +179,7 @@ export class EngravingRules {
     public TupletVerticalLineLength: number;
     public TupletNumbersInTabs: boolean;
 
+    public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
     public RepetitionEndingLabelXOffset: number;
     public RepetitionEndingLabelYOffset: number;
@@ -181,6 +194,24 @@ export class EngravingRules {
     public LyricsHeight: number;
     public LyricsYOffsetToStaffHeight: number;
     public LyricsYMarginToBottomLine: number;
+    /** Extra x-shift (to the right) for short lyrics to be better vertically aligned.
+     * Also see ChordSymbolExtraXShiftForShortChordSymbols, same principle, same default value.
+     */
+    public LyricsExtraXShiftForShortLyrics: number;
+    /** Threshold of the lyric entry's width below which the x-shift is applied. Default 1.4. */
+    public LyricsExtraXShiftForShortLyricsWidthThreshold: number;
+    /** Whether to enable x padding (to the right) for short notes, see LyricsXPaddingFactorForLongLyrics for the degree. */
+    public LyricsUseXPaddingForShortNotes: boolean;
+    /** How much spacing/padding should be added after notes with long lyrics on short notes
+     * (>4 characters on <8th note),
+     * so that the measure doesn't need to be elongated too much to avoid lyrics collisions.
+     * Default 0.8 = 8 pixels */
+    public LyricsXPaddingFactorForLongLyrics: number;
+    /** How wide a text needs to be to trigger lyrics padding for short notes.
+     * This is visual width, not number of characters, as e.g. 'zzz' is about as wide as 'iiii'.
+     * Default 3.3.
+     */
+    public LyricsXPaddingWidthThreshold: number;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
     public BetweenSyllableMaximumDistance: number;
@@ -190,6 +221,8 @@ export class EngravingRules {
     public MaximumLyricsElongationFactor: number;
 
     public SlurPlacementFromXML: boolean;
+    public SlurPlacementAtStems: boolean;
+    public SlurPlacementUseSkyBottomLine: boolean;
     public BezierCurveStepSize: number;
     public TPower3: number[];
     public OneMinusTPower3: number[];
@@ -231,6 +264,7 @@ export class EngravingRules {
     public VexFlowDefaultTabFontScale: number;
     public TremoloStrokeScale: number;
     public TremoloYSpacingScale: number;
+    public TremoloBuzzRollThickness: number;
     public StaffLineWidth: number;
     public StaffLineColor: string;
     public LedgerLineWidth: number;
@@ -256,6 +290,7 @@ export class EngravingRules {
      *  in the target score are, because using a too low width will cause overlaps in Vexflow.
      */
     public FixedMeasureWidthFixedValue: number;
+    public FixedMeasureWidthUseForPickupMeasures: boolean;
     public DistanceBetweenVerticalSystemLines: number;
     public DistanceBetweenDotAndLine: number;
     public RepeatEndStartPadding: number;
@@ -353,6 +388,7 @@ export class EngravingRules {
     public RenderPedals: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
+    public IgnoreRepeatedDynamics: boolean;
     public ArticulationPlacementFromXML: boolean;
     /** Percent distance of breath marks to next note or end of staff, e.g. 0.8 = 80%. */
     public BreathMarkDistance: number;
@@ -387,6 +423,8 @@ export class EngravingRules {
      * but were inserted as a words element in the MusicXML, which can't be matched to the note anymore,
      * and would otherwise just be placed somewhere else. See OSMD Issue 1251. */
     public IgnoreBracketsWords: boolean;
+    public PlaceWordsInsideStafflineFromXml: boolean;
+    public PlaceWordsInsideStafflineYOffset: number;
     // public PositionMarcatoCloseToNote: boolean;
     public SpacingBetweenTextLines: number;
 
@@ -486,6 +524,7 @@ export class EngravingRules {
         this.PercussionUseXMLDisplayStep = true;
         this.PercussionXMLDisplayStepNoteValueShift = 0;
         this.PercussionOneLineXMLDisplayStepOctaveOffset = 0;
+        this.PercussionUseCajon2NoteSystem = false;
         this.BetweenKeySymbolsDistance = 0.2;
         this.KeyRightMargin = 0.75;
         this.RhythmRightMargin = 1.25;
@@ -545,6 +584,8 @@ export class EngravingRules {
         this.ChordSymbolTextHeight = 2.0;
         this.ChordSymbolTextAlignment = TextAlignmentEnum.LeftBottom;
         this.ChordSymbolRelativeXOffset = -1.0;
+        this.ChordSymbolExtraXShiftForShortChordSymbols = 0.3; // also see LyricsExtraXShiftForShortLyrics, same principle
+        this.ChordSymbolExtraXShiftWidthThreshold = 2.0;
         this.ChordSymbolXSpacing = 1.0;
         this.ChordOverlapAllowedIntoNextMeasure = 0;
         this.ChordSymbolYOffset = 0.1;
@@ -573,6 +614,7 @@ export class EngravingRules {
         this.TupletsRatioed = false;
         this.TupletsBracketed = false;
         this.TripletsBracketed = false; // special setting for triplets, overrides tuplet setting (for triplets only)
+        this.TupletsBracketedUseXMLValue = true;
         this.TupletNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.TupletNumberYOffset = 0.5;
         this.TupletNumberLimitConsecutiveRepetitions = true;
@@ -584,6 +626,8 @@ export class EngravingRules {
 
         // Slur and Tie variables
         this.SlurPlacementFromXML = true;
+        this.SlurPlacementAtStems = false;
+        this.SlurPlacementUseSkyBottomLine = false;
         this.BezierCurveStepSize = 1000;
         this.calculateCurveParametersArrays();
         this.TieGhostObjectWidth = 0.75;
@@ -617,6 +661,7 @@ export class EngravingRules {
         this.GlissandoDefaultWidth = 0.1;
 
         // Repetitions
+        this.RepetitionAllowFirstMeasureBeginningRepeatBarline = true;
         this.RepetitionEndingLabelHeight = 2.0;
         this.RepetitionEndingLabelXOffset = 0.5;
         this.RepetitionEndingLabelYOffset = 0.3;
@@ -629,6 +674,11 @@ export class EngravingRules {
         this.LyricsHeight = 2.0; // actually size of lyrics
         this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.LyricsYMarginToBottomLine = 0.2;
+        this.LyricsExtraXShiftForShortLyrics = 0.5; // also see ChordSymbolExtraXShiftForShortChordSymbols, same principle
+        this.LyricsExtraXShiftForShortLyricsWidthThreshold = 1.4; // width of '+': 1.12, 'II': 1.33 (benefits from x-shift), 'III': 1.99 (doesn't benefit)
+        this.LyricsUseXPaddingForShortNotes = true;
+        this.LyricsXPaddingFactorForLongLyrics = 0.8;
+        this.LyricsXPaddingWidthThreshold = 3.3;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
@@ -646,12 +696,14 @@ export class EngravingRules {
         this.ContinuousTempoTextHeight = 2.3;
         this.DynamicExpressionMaxDistance = 2;
         this.DynamicExpressionSpacer = 0.5;
+        this.IgnoreRepeatedDynamics = false;
 
         // Line Widths
         this.VexFlowDefaultNotationFontScale = 39; // scales notes, including rests. default value 39 in Vexflow.
         this.VexFlowDefaultTabFontScale = 39;
         this.TremoloStrokeScale = 1;
         this.TremoloYSpacingScale = 1;
+        this.TremoloBuzzRollThickness = 0.25;
         this.StemWidth = 0.15; // originally 0.13. vexflow default 0.15. should probably be adjusted when increasing vexFlowDefaultNotationFontScale,
         this.StaffLineWidth = 0.10; // originally 0.12, but this will be pixels in Vexflow (*10).
         this.StaffLineColor = undefined; // if undefined, vexflow default (grey). not a width, but affects visual line clarity.
@@ -677,6 +729,7 @@ export class EngravingRules {
 
         this.FixedMeasureWidth = false;
         this.FixedMeasureWidthFixedValue = undefined; // only set to a number x if the width should be always x
+        this.FixedMeasureWidthUseForPickupMeasures = false;
 
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;
@@ -764,6 +817,8 @@ export class EngravingRules {
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
         this.IgnoreBracketsWords = true;
+        this.PlaceWordsInsideStafflineFromXml = false;
+        this.PlaceWordsInsideStafflineYOffset = 0.9;
         // this.PositionMarcatoCloseToNote = true;
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height

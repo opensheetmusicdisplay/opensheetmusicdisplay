@@ -43,7 +43,8 @@
 # Show images over this PHASH threshold.
 # 0.01 is probably too low, but a good first pass.
 # 0.0001 catches for example a repetition ending not having a down line at the end (see Saltarello bar 10) (0.001 doesn't catch this)
-THRESHOLD=0.0001
+# 0.0000001 (6 0s after the dot) catches e.g. a chord symbol moving about 3 pixels to the right (on a canvas of ~1450px width)
+THRESHOLD=0.00000001
 
 # Set up Directories
 #   It does not matter where this script is executed, as long as these folders are given correctly (and blessed/current have png images set up correctly)
@@ -154,6 +155,18 @@ function diff_image() {
 
   # Calculate the difference metric and store the composite diff image.
   local hash=`compare -metric PHASH -highlight-color '#ff000050' $diff-b.png $diff-a.png $diff-diff.png 2>&1`
+  # convert hash to decimal if it was in scientific notation (e.g. 1.5e-2 -> 0.015)
+  #   otherwise, syntax error will be returned for $hash > $THRESHOLD" | bc -l
+  if [ ! $hash == 0 ] # don't change a "0" string
+  then
+    export LC_NUMERIC="en_US.UTF-8" # use dot instead of comma for decimals (1.5 instead of 1,5)
+    hash=$(printf "%.14f" $hash) # precision seems limited to 15 digits in shell/awk(?)
+    hash=$(echo $hash | bc -l | grep -o '.*[1-9]') # remove trailing 0s
+    if (( $(echo "$hash < 1" |bc -l) ))
+    then
+      hash="0$hash" # add leading 0 (e.g. .01 -> 0.01), just for readability/display
+    fi
+  fi
 
   local isGT=`echo "$hash > $THRESHOLD" | bc -l`
   if [ "$isGT" == "1" ]

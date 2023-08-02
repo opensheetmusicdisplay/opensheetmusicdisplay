@@ -1,0 +1,305 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE score-partwise PUBLIC '-//Recordare//DTD MusicXML 4.0 Partwise//EN' 'http://www.musicxml.org/dtds/partwise.dtd'>
+<score-partwise version='4.0'>
+	<work>
+		<work-title>test_tempo_expression_poco_meno_continuoustempoexpression</work-title>
+	</work>
+	<identification>
+		<encoding>
+			<software>Sibelius 2023.6</software>
+			<software>Dolet 8.1 for Sibelius</software>
+			<encoding-date>2023-07-26</encoding-date>
+			<supports element='accidental' type='yes'/>
+			<supports element='transpose' type='yes'/>
+			<supports attribute='new-page' element='print' type='yes' value='yes'/>
+			<supports attribute='new-system' element='print' type='yes' value='yes'/>
+		</encoding>
+	</identification>
+	<defaults>
+		<scaling>
+			<millimeters>7</millimeters>
+			<tenths>40</tenths>
+		</scaling>
+		<concert-score/>
+		<page-layout>
+			<page-height>1597</page-height>
+			<page-width>1234</page-width>
+			<page-margins type='both'>
+				<left-margin>72.5714</left-margin>
+				<right-margin>72.5714</right-margin>
+				<top-margin>72.5714</top-margin>
+				<bottom-margin>72.5714</bottom-margin>
+			</page-margins>
+		</page-layout>
+		<system-layout>
+			<system-margins>
+				<left-margin>46.25</left-margin>
+				<right-margin>0</right-margin>
+			</system-margins>
+			<system-distance>120</system-distance>
+			<top-system-distance>108.75</top-system-distance>
+		</system-layout>
+		<?DoletSibelius StaffJustificationPercentage=65?>
+		<appearance>
+			<line-width type='beam'>5</line-width>
+			<line-width type='heavy barline'>5</line-width>
+			<line-width type='leger'>1.5625</line-width>
+			<line-width type='light barline'>1.5625</line-width>
+			<line-width type='slur middle'>2.1875</line-width>
+			<line-width type='slur tip'>0.625</line-width>
+			<line-width type='staff'>1.25</line-width>
+			<line-width type='stem'>1.25</line-width>
+			<line-width type='tie middle'>2.1875</line-width>
+			<line-width type='tie tip'>0.625</line-width>
+			<note-size type='grace'>60</note-size>
+			<note-size type='cue'>75</note-size>
+		</appearance>
+		<music-font font-family='Helsinki Std,engraved'/>
+		<word-font font-family='Palatino,serif'/>
+	</defaults>
+	<part-list>
+		<score-part id='P1'>
+			<part-name>Flute</part-name>
+			<part-abbreviation>Fl.</part-abbreviation>
+			<group>score</group>
+			<score-instrument id='P1-I1'>
+				<instrument-name>Flute</instrument-name>
+				<instrument-abbreviation>Fl.</instrument-abbreviation>
+				<instrument-sound>wind.flutes.flute</instrument-sound>
+			</score-instrument>
+			<midi-instrument id='P1-I1'>
+				<volume>75</volume>
+				<pan>9</pan>
+			</midi-instrument>
+		</score-part>
+	</part-list>
+<!--=========================================================-->
+	<part id='P1'>
+		<measure number='1'>
+			<print>
+				<system-layout>
+					<system-margins>
+						<left-margin>75</left-margin>
+						<right-margin>0</right-margin>
+					</system-margins>
+					<top-system-distance>181.5625</top-system-distance>
+				</system-layout>
+				<staff-layout>
+					<?DoletSibelius ExtraSpacesAbove=3?>
+				</staff-layout>
+			</print>
+			<attributes>
+				<divisions>768</divisions>
+				<key>
+					<fifths>0</fifths>
+					<mode>major</mode>
+				</key>
+				<time>
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef>
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+			</attributes>
+			<direction placement='above' directive='yes' system='only-top'>
+				<direction-type>
+					<words font-weight='bold' font-size='12.56'>Andante</words>
+				</direction-type>
+			</direction>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>E</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+		</measure>
+<!--=========================================================-->
+		<measure number='2'>
+			<note>
+				<pitch>
+					<step>E</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+			<direction placement='above'>
+				<direction-type>
+					<words default-y='20' relative-x='-6' font-size='11'>poco meno</words>
+				</direction-type>
+				<offset>-345</offset>
+				<voice>1</voice>
+			</direction>
+			<note>
+				<pitch>
+					<step>D</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>B</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+		</measure>
+<!--=========================================================-->
+		<measure number='3'>
+			<note>
+				<pitch>
+					<step>A</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>up</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>B</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+		</measure>
+<!--=========================================================-->
+		<measure number='4'>
+			<note>
+				<pitch>
+					<step>E</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>D</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>B</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>768</duration>
+				<voice>1</voice>
+				<type>quarter</type>
+				<stem>down</stem>
+			</note>
+		</measure>
+<!--=========================================================-->
+		<measure number='5'>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>3072</duration>
+				<voice>1</voice>
+				<type>whole</type>
+			</note>
+			<barline location='right'>
+				<bar-style>light-heavy</bar-style>
+			</barline>
+		</measure>
+	</part>
+<!--=========================================================-->
+</score-partwise>

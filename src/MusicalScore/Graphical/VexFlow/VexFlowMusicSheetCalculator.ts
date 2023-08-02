@@ -507,7 +507,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
     for (const staffEntry of staffEntries) {
-      if (staffEntry.LyricsEntries.length > 0 && false) {
+      if (staffEntry.LyricsEntries.length > 0 && this.rules.RenderLyrics && false) {
         newElongationFactorForMeasureWidth =
           this.calculateElongationFactor(
             staffEntry.LyricsEntries,
@@ -520,7 +520,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             this.rules.LyricOverlapAllowedIntoNextMeasure,
           );
       }
-      if (staffEntry.graphicalChordContainers.length > 0 && false) {
+      if (staffEntry.graphicalChordContainers.length > 0 && this.rules.RenderChordSymbols && false) {
         newElongationFactorForMeasureWidth =
           this.calculateElongationFactor(
             staffEntry.graphicalChordContainers,
@@ -734,11 +734,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const startMeasure: GraphicalMeasure = measures[staffIndex];
 
     // start position in staffline:
+    // const useStaffEntryBorderLeft: boolean = multiExpression.StartingContinuousDynamic?.DynamicType === ContDynamicEnum.diminuendo;
+    const continuousDynamic: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
+    const useStaffEntryBorderLeft: boolean = continuousDynamic !== undefined && !continuousDynamic.IsStartOfSoftAccent;
     const dynamicStartPosition: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
       absoluteTimestamp,
       staffIndex,
       staffLine,
-      staffLine?.isPartOfMultiStaffInstrument());
+      staffLine?.isPartOfMultiStaffInstrument(),
+      undefined,
+      useStaffEntryBorderLeft
+      );
     if (dynamicStartPosition.x <= 0) {
       dynamicStartPosition.x = startMeasure.beginInstructionsWidth + this.rules.RhythmRightMargin;
     }
@@ -752,10 +758,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, dynamicStartPosition, absoluteTimestamp);
       this.dynamicExpressionMap.set(absoluteTimestamp.RealValue, graphicalInstantaneousDynamic.PositionAndShape);
     }
-    if (multiExpression.StartingContinuousDynamic) {
-      const continuousDynamic: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
+    if (continuousDynamic) {
       const graphicalContinuousDynamic: VexFlowContinuousDynamicExpression = new VexFlowContinuousDynamicExpression(
-        multiExpression.StartingContinuousDynamic,
+        continuousDynamic,
         staffLine,
         startMeasure.parentSourceMeasure);
       graphicalContinuousDynamic.StartMeasure = startMeasure;
@@ -784,7 +789,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const measureNumber: number = Math.max(metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber - 1, 0);
     const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
     const firstMetronomeMark: boolean = measureNumber === 0 && staffNumber === 0;
-    const vfStave: VF.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
+    const vfMeasure: VexFlowMeasure = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure);
+    if (vfMeasure.hasMetronomeMark) {
+      return; // don't create more than one metronome mark per measure;
+      // TODO some measures still seem to have two metronome marks, one less bold than the other (or not bold),
+      //   might be because of both <sound> node and <per-minute> node (within <metronome>) creating metronome marks
+    }
+    const vfStave: VF.Stave = vfMeasure.getVFStave();
     //vfStave.addModifier(new VF.StaveTempo( // needs Vexflow PR
     let vexflowDuration: string = "q";
     if (metronomeExpression.beatUnit) {
@@ -825,6 +836,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
       xShift
     );
+    vfMeasure.hasMetronomeMark = true;
     if (skyline) {
       // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
       skyline[0] = Math.min(skyline[0], -4.5 + yShift);

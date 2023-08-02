@@ -28,7 +28,8 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         this.PositionAndShape.RelativePosition.y = boundingBox.y / unitInPixels;
         this.PositionAndShape.BorderTop = 0;
         this.PositionAndShape.BorderBottom = boundingBox.h / unitInPixels;
-        this.PositionAndShape.BorderLeft = -(modifierWidth + staveNote.width / 2) / unitInPixels; // Left of our X origin is the modifier
+        const halfStavenoteWidth: number = (staveNote.width - ((staveNote as any).paddingRight ?? 0)) / 2;
+        this.PositionAndShape.BorderLeft = -(modifierWidth + halfStavenoteWidth) / unitInPixels; // Left of our X origin is the modifier
         this.PositionAndShape.BorderRight = (boundingBox.w - modifierWidth) / unitInPixels; // Right of x origin is the note
     }
 

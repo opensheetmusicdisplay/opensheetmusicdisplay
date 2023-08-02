@@ -38,9 +38,22 @@ export class GraphicalLyricEntry {
         );
         this.graphicalLabel.Label.colorDefault = rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0, staffHeight);
+        this.graphicalLabel.setLabelPositionAndShapeBorders(); // needed to have Size.width
+        if (this.graphicalLabel.PositionAndShape.Size.width < rules.LyricsExtraXShiftForShortLyricsWidthThreshold) {
+            this.graphicalLabel.PositionAndShape.RelativePosition.x += rules.LyricsExtraXShiftForShortLyrics;
+            this.graphicalLabel.CenteringXShift = rules.LyricsExtraXShiftForShortLyrics;
+        }
         if (lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
             this.graphicalLabel.PositionAndShape.RelativePosition.x -= 1; // make lyrics optically left-aligned
         }
+    }
+
+    public hasDashFromLyricWord(): boolean {
+        if (!this.ParentLyricWord) {
+            return false;
+        }
+        const lyricWordIndex: number = this.ParentLyricWord.GraphicalLyricsEntries.indexOf(this);
+        return this.ParentLyricWord.GraphicalLyricsEntries.length > 1 && lyricWordIndex < this.ParentLyricWord.GraphicalLyricsEntries.length - 1;
     }
 
     public get LyricsEntry(): LyricsEntry {

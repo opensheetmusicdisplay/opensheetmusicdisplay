@@ -79,6 +79,7 @@ export class MusicSystemBuilder {
                 continue; // previous measure was probably multi-rest, skip this one
             }
             for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
+                // graphicalMeasures[idx].InitiallyActiveClef = this.activeClefs[idx]; // too early to know clef
                 graphicalMeasures[idx].resetLayout();
             }
             const sourceMeasure: SourceMeasure = graphicalMeasures[0].parentSourceMeasure;
@@ -401,6 +402,7 @@ export class MusicSystemBuilder {
                 const graphicalMeasure: GraphicalMeasure = this.graphicalMusicSheet
                     .getGraphicalMeasureFromSourceMeasureAndIndex(firstSourceMeasure, staffIndex);
                 this.activeClefs[i] = <ClefInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[0];
+                graphicalMeasure.InitiallyActiveClef = this.activeClefs[i]; // TODO ClefInstruction.copy? doesn't exist
                 const firstKeyInstruction: KeyInstruction = <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1];
                 if (firstKeyInstruction) {
                     let keyInstruction: KeyInstruction = KeyInstruction.copy(firstKeyInstruction);
@@ -447,8 +449,12 @@ export class MusicSystemBuilder {
         }
         let totalBeginInstructionLengthX: number = 0.0;
         const sourceMeasure: SourceMeasure = measures[0].parentSourceMeasure;
+        const staves: any[] = []; // VF.Stave. generally don't want to reference Vexflow classes here.
         for (let idx: number = 0; idx < measureCount; ++idx) {
             const measure: GraphicalMeasure = measures[idx];
+            if (measure) { // MultiRestMeasure may be undefined
+                staves.push((measure as any).getVFStave()); // as VexFlowMeasure
+            }
             const staffIndex: number = this.visibleStaffIndices[idx];
             const beginInstructionsStaffEntry: SourceStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[staffIndex];
             const beginInstructionLengthX: number = this.AddInstructionsAtMeasureBegin(
@@ -457,6 +463,9 @@ export class MusicSystemBuilder {
                 isSystemFirstMeasure
             );
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
+        }
+        if(staves[0].formatBegModifiers){
+            staves[0].formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
         }
         return totalBeginInstructionLengthX;
     }
@@ -501,6 +510,7 @@ export class MusicSystemBuilder {
                 }
             }
         }
+        measure.InitiallyActiveClef = currentClef ?? this.activeClefs[visibleStaffIdx];
         if (isSystemStartMeasure) {
             if (!currentClef) {
                 currentClef = this.activeClefs[visibleStaffIdx];
@@ -598,6 +608,8 @@ export class MusicSystemBuilder {
                     }
                 }
             }
+            // graphicalMeasures[visStaffIdx].InitiallyActiveClef = this.activeClefs[visStaffIdx];
+            //   already done at MusicSystemBuilder.AddInstructionsAtMeasureBegin
             const entries: SourceStaffEntry[] = measure.getEntriesPerStaff(staffIndex);
             for (let idx: number = 0, len2: number = entries.length; idx < len2; ++idx) {
                 const staffEntry: SourceStaffEntry = entries[idx];
@@ -714,8 +726,11 @@ export class MusicSystemBuilder {
     protected getMeasureStartLine(): SystemLinesEnum {
         const thisMeasureBeginsLineRep: boolean = this.thisMeasureBeginsLineRepetition();
         if (thisMeasureBeginsLineRep) {
-            const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
             const isGlobalFirstMeasure: boolean = this.measureListIndex === 0;
+            if (isGlobalFirstMeasure && this.rules.RepetitionAllowFirstMeasureBeginningRepeatBarline) {
+                return SystemLinesEnum.BoldThinDots;
+            }
+            const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
             if (this.previousMeasureEndsLineRepetition() && !isSystemStartMeasure) {
                 return SystemLinesEnum.DotsBoldBoldDots;
             }

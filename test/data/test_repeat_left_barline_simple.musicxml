@@ -2,13 +2,12 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>test_chord_symbols_collision_high_notes_alignment</work-title>
+    <work-title>test_repeat_left_barline_simple</work-title>
     </work>
   <identification>
-    <creator type="composer">Composer</creator>
     <encoding>
       <software>MuseScore 3.6.2</software>
-      <encoding-date>2021-11-11</encoding-date>
+      <encoding-date>2023-06-22</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -22,8 +21,8 @@
       <tenths>40</tenths>
       </scaling>
     <page-layout>
-      <page-height>1696.94</page-height>
-      <page-width>1200.48</page-width>
+      <page-height>1596.77</page-height>
+      <page-width>1233.87</page-width>
       <page-margins type="even">
         <left-margin>85.7252</left-margin>
         <right-margin>85.7252</right-margin>
@@ -40,6 +39,10 @@
     <word-font font-family="Edwin" font-size="10"/>
     <lyric-font font-family="Edwin" font-size="10"/>
     </defaults>
+  <credit page="1">
+    <credit-type>title</credit-type>
+    <credit-words default-x="616.935" default-y="1511.05" justify="center" valign="top" font-size="22">test_repeat_left_simple</credit-words>
+    </credit>
   <part-list>
     <score-part id="P1">
       <part-name>Piano</part-name>
@@ -57,16 +60,20 @@
       </score-part>
     </part-list>
   <part id="P1">
-    <measure number="1" width="317.05">
+    <measure number="1" width="380.56">
       <print>
         <system-layout>
           <system-margins>
             <left-margin>50.00</left-margin>
-            <right-margin>0.00</right-margin>
+            <right-margin>598.15</right-margin>
             </system-margins>
           <top-system-distance>170.00</top-system-distance>
           </system-layout>
         </print>
+      <barline location="left">
+        <bar-style>heavy-light</bar-style>
+        <repeat direction="forward"/>
+        </barline>
       <attributes>
         <divisions>1</divisions>
         <key>
@@ -81,86 +88,10 @@
           <line>2</line>
           </clef>
         </attributes>
-      <harmony print-frame="no">
-        <root>
-          <root-step>A</root-step>
-          </root>
-        <kind text="7">dominant</kind>
-        </harmony>
-      <note default-x="80.72" default-y="10.00">
-        <pitch>
-          <step>A</step>
-          <octave>5</octave>
-          </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>half</type>
-        <stem>down</stem>
-        </note>
-      <harmony print-frame="no">
-        <root>
-          <root-step>B</root-step>
-          </root>
-        <kind text="7">dominant</kind>
-        </harmony>
-      <note default-x="197.99" default-y="30.00">
-        <pitch>
-          <step>E</step>
-          <octave>6</octave>
-          </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>half</type>
-        <stem>down</stem>
-        </note>
-      </measure>
-    <measure number="2" width="222.63">
-      <harmony print-frame="no">
-        <root>
-          <root-step>A</root-step>
-          </root>
-        <kind text="7">dominant</kind>
-        </harmony>
-      <note default-x="25.42" default-y="20.00">
-        <pitch>
-          <step>C</step>
-          <alter>1</alter>
-          <octave>6</octave>
-          </pitch>
-        <duration>4</duration>
-        <voice>1</voice>
-        <type>whole</type>
-        <accidental>sharp</accidental>
-        </note>
-      </measure>
-    <measure number="3" width="216.46">
-      <harmony print-frame="no">
-        <root>
-          <root-step>A</root-step>
-          </root>
-        <kind text="7">dominant</kind>
-        </harmony>
-      <note default-x="16.50" default-y="30.00">
-        <pitch>
-          <step>E</step>
-          <octave>6</octave>
-          </pitch>
-        <duration>4</duration>
-        <voice>1</voice>
-        <type>whole</type>
-        </note>
-      </measure>
-    <measure number="4" width="222.56">
-      <harmony print-frame="no">
-        <root>
-          <root-step>A</root-step>
-          </root>
-        <kind text="7">dominant</kind>
-        </harmony>
-      <note default-x="16.50" default-y="40.00">
+      <note default-x="109.57" default-y="-30.00">
         <pitch>
           <step>G</step>
-          <octave>6</octave>
+          <octave>4</octave>
           </pitch>
         <duration>4</duration>
         <voice>1</voice>
@@ -168,6 +99,7 @@
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
+        <repeat direction="backward"/>
         </barline>
       </measure>
     </part>

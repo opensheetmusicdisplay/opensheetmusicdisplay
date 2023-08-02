@@ -102,9 +102,11 @@ public abstract getContext(): Vex.IRenderContext;
    */
   public abstract renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number): Node;
 
-  public abstract renderLine(start: PointF2D, stop: PointF2D, color: string, lineWidth: number): Node;
+  public abstract renderLine(start: PointF2D, stop: PointF2D, color: string, lineWidth: number, id?: string): Node;
 
   public abstract renderCurve(points: PointF2D[]): Node;
+
+  public abstract renderPath(points: PointF2D[], fill: boolean, id?: string): Node;
 
   public abstract getVexflowBackendType(): VF.Renderer.Backends;
 

@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <!DOCTYPE score-partwise PUBLIC '-//Recordare//DTD MusicXML 4.0 Partwise//EN' 'http://www.musicxml.org/dtds/partwise.dtd'>
 <score-partwise version='4.0'>
-	<movement-title>test_clef_measure_end_backup_nodes</movement-title>
+	<movement-title>test_chord_symbol_centering_short_symbols</movement-title>
 	<identification>
 		<encoding>
-			<software>Sibelius 2022.10</software>
+			<software>Sibelius 2022.12</software>
 			<software>Dolet 8.2 for Sibelius</software>
-			<encoding-date>2022-12-26</encoding-date>
+			<encoding-date>2023-02-27</encoding-date>
 			<supports element='accidental' type='yes'/>
 			<supports element='transpose' type='yes'/>
 			<supports attribute='new-page' element='print' type='yes' value='yes'/>
@@ -55,7 +55,7 @@
 			<note-size type='cue'>75</note-size>
 		</appearance>
 		<music-font font-family='Helsinki Std,engraved'/>
-		<word-font font-family='Palatino,serif' font-size='13'/>
+		<word-font font-family='Palatino,serif'/>
 	</defaults>
 	<part-list>
 		<score-part id='P1'>
@@ -87,8 +87,8 @@
 			<attributes>
 				<divisions>768</divisions>
 				<key>
-					<fifths>4</fifths>
-					<mode>major</mode>
+					<fifths>0</fifths>
+					<mode>minor</mode>
 				</key>
 				<time>
 					<beats>4</beats>
@@ -104,144 +104,41 @@
 					<line>4</line>
 				</clef>
 			</attributes>
-			<note>
-				<rest/>
-				<duration>3072</duration>
-				<voice>1</voice>
-				<type>whole</type>
+			<harmony print-frame='no' default-y='25'>
+				<root>
+					<root-step>C</root-step>
+				</root>
+				<kind text=''>major</kind>
 				<staff>1</staff>
-			</note>
-			<attributes>
-				<clef number='1'>
-					<sign>F</sign>
-					<line>4</line>
-				</clef>
-			</attributes>
-			<backup>
-				<duration>3072</duration>
-			</backup>
-			<note>
-				<rest measure='yes'/>
-				<duration>3072</duration>
-				<voice>5</voice>
-				<staff>2</staff>
-			</note>
-			<barline location='right'>
-				<bar-style>light-light</bar-style>
-			</barline>
-		</measure>
-<!--=========================================================-->
-		<measure number='2'>
+			</harmony>
 			<note>
 				<pitch>
-					<step>E</step>
+					<step>C</step>
 					<octave>4</octave>
 				</pitch>
-				<duration>384</duration>
+				<duration>1536</duration>
 				<voice>1</voice>
-				<type>eighth</type>
-				<stem>down</stem>
-				<staff>1</staff>
-				<beam number='1'>begin</beam>
-			</note>
-			<backup>
-				<duration>384</duration>
-			</backup>
-			<note print-object='no'>
-				<rest/>
-				<duration>384</duration>
-				<voice>2</voice>
-				<type>eighth</type>
+				<type>half</type>
+				<stem>up</stem>
 				<staff>1</staff>
 			</note>
+			<harmony print-frame='no' default-y='25'>
+				<root>
+					<root-step>F</root-step>
+				</root>
+				<kind text=''>major</kind>
+				<staff>1</staff>
+			</harmony>
 			<note>
 				<pitch>
-					<step>G</step>
-					<alter>1</alter>
-					<octave>3</octave>
-				</pitch>
-				<duration>384</duration>
-				<voice>1</voice>
-				<type>eighth</type>
-				<stem>down</stem>
-				<staff>1</staff>
-				<beam number='1'>continue</beam>
-			</note>
-			<note>
-				<pitch>
-					<step>E</step>
+					<step>F</step>
 					<octave>4</octave>
 				</pitch>
-				<duration>384</duration>
+				<duration>1536</duration>
 				<voice>1</voice>
-				<type>eighth</type>
-				<stem>down</stem>
+				<type>half</type>
+				<stem>up</stem>
 				<staff>1</staff>
-				<beam number='1'>continue</beam>
-			</note>
-			<note>
-				<pitch>
-					<step>G</step>
-					<alter>1</alter>
-					<octave>3</octave>
-				</pitch>
-				<duration>384</duration>
-				<voice>1</voice>
-				<type>eighth</type>
-				<stem>down</stem>
-				<staff>1</staff>
-				<beam number='1'>end</beam>
-			</note>
-			<note>
-				<pitch>
-					<step>E</step>
-					<octave>4</octave>
-				</pitch>
-				<duration>384</duration>
-				<voice>1</voice>
-				<type>eighth</type>
-				<stem>down</stem>
-				<staff>1</staff>
-				<beam number='1'>begin</beam>
-			</note>
-			<note>
-				<pitch>
-					<step>G</step>
-					<alter>1</alter>
-					<octave>3</octave>
-				</pitch>
-				<duration>384</duration>
-				<voice>1</voice>
-				<type>eighth</type>
-				<stem>down</stem>
-				<staff>1</staff>
-				<beam number='1'>continue</beam>
-			</note>
-			<note>
-				<pitch>
-					<step>D</step>
-					<alter>1</alter>
-					<octave>4</octave>
-				</pitch>
-				<duration>384</duration>
-				<voice>1</voice>
-				<type>eighth</type>
-				<stem>down</stem>
-				<staff>1</staff>
-				<beam number='1'>continue</beam>
-			</note>
-			<note>
-				<pitch>
-					<step>G</step>
-					<alter>1</alter>
-					<octave>3</octave>
-				</pitch>
-				<duration>384</duration>
-				<voice>1</voice>
-				<type>eighth</type>
-				<stem>down</stem>
-				<staff>1</staff>
-				<beam number='1'>end</beam>
 			</note>
 			<backup>
 				<duration>3072</duration>
@@ -249,14 +146,156 @@
 			<note>
 				<pitch>
 					<step>C</step>
-					<alter>1</alter>
 					<octave>3</octave>
 				</pitch>
-				<duration>3072</duration>
+				<duration>1536</duration>
 				<voice>5</voice>
-				<type>whole</type>
+				<type>half</type>
+				<stem>up</stem>
 				<staff>2</staff>
 			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<octave>3</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>5</voice>
+				<type>half</type>
+				<stem>down</stem>
+				<staff>2</staff>
+			</note>
+		</measure>
+<!--=========================================================-->
+		<measure number='2'>
+			<harmony print-frame='no' default-y='25'>
+				<root>
+					<root-step>G</root-step>
+				</root>
+				<kind text=''>major</kind>
+				<staff>1</staff>
+			</harmony>
+			<note>
+				<pitch>
+					<step>G</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<stem>up</stem>
+				<staff>1</staff>
+			</note>
+			<harmony print-frame='no' default-y='25'>
+				<root>
+					<root-step>F</root-step>
+				</root>
+				<kind text=''>major</kind>
+				<staff>1</staff>
+			</harmony>
+			<note>
+				<pitch>
+					<step>F</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<stem>up</stem>
+				<staff>1</staff>
+			</note>
+			<backup>
+				<duration>3072</duration>
+			</backup>
+			<note>
+				<pitch>
+					<step>G</step>
+					<octave>3</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>5</voice>
+				<type>half</type>
+				<stem>down</stem>
+				<staff>2</staff>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<octave>3</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>5</voice>
+				<type>half</type>
+				<stem>down</stem>
+				<staff>2</staff>
+			</note>
+		</measure>
+<!--=========================================================-->
+		<measure number='3'>
+			<harmony print-frame='no' default-y='25'>
+				<root>
+					<root-step>C</root-step>
+				</root>
+				<kind text=''>major</kind>
+				<staff>1</staff>
+			</harmony>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<stem>up</stem>
+				<staff>1</staff>
+			</note>
+			<harmony print-frame='no' default-y='25'>
+				<root>
+					<root-step>F</root-step>
+				</root>
+				<kind text=''>major</kind>
+				<staff>1</staff>
+			</harmony>
+			<note>
+				<pitch>
+					<step>F</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<stem>up</stem>
+				<staff>1</staff>
+			</note>
+			<backup>
+				<duration>3072</duration>
+			</backup>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>3</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>5</voice>
+				<type>half</type>
+				<stem>up</stem>
+				<staff>2</staff>
+			</note>
+			<note>
+				<pitch>
+					<step>F</step>
+					<octave>3</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>5</voice>
+				<type>half</type>
+				<stem>down</stem>
+				<staff>2</staff>
+			</note>
+			<barline location='right'>
+				<bar-style>light-heavy</bar-style>
+			</barline>
 		</measure>
 	</part>
 <!--=========================================================-->

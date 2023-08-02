@@ -128,7 +128,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         return undefined; // can't return dom node like with SVG
     }
 
-    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number= 2): Node {
+    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2, id?: string): Node {
         const oldStyle: string | CanvasGradient | CanvasPattern = this.CanvasRenderingCtx.strokeStyle;
         this.CanvasRenderingCtx.strokeStyle = color;
         this.CanvasRenderingCtx.beginPath();
@@ -163,6 +163,27 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         //this.ctx.stroke();
         this.ctx.closePath();
         this.ctx.fill();
+        return undefined;
+    }
+
+    public renderPath(points: PointF2D[], fill: boolean = true, id?: string): Node {
+        this.ctx.beginPath();
+        let currentPoint: PointF2D;
+        for (const point of points) {
+            if (!currentPoint) {
+                this.ctx.moveTo(point.x, point.y);
+                currentPoint = point;
+                continue;
+            }
+            this.ctx.lineTo(point.x, point.y);
+            // this.ctx.stroke();
+        }
+        this.ctx.closePath();
+        if (fill) {
+            this.ctx.fill();
+        } else {
+            this.ctx.stroke(); // just trace outline, don't fill inner area
+        }
         return undefined;
     }
 

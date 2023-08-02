@@ -31,6 +31,7 @@ import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
+import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -206,6 +207,8 @@ export class VexFlowConverter {
                 return codeStart + "D" + codeFilled;
             case NoteHeadShape.TRIANGLE:
                 return codeStart + "T" + codeFilled;
+            case NoteHeadShape.TRIANGLE_INVERTED:
+                return codeStart + "TI";
             case NoteHeadShape.X:
                 return codeStart + "X" + codeFilled;
             case NoteHeadShape.CIRCLEX:
@@ -464,6 +467,56 @@ export class VexFlowConverter {
             vfnote = new VF.StaveNote(vfnoteStruct);
             (vfnote as any).stagger_same_whole_notes = rules.StaggerSameWholeNotes;
             //   it would be nice to only save this once, not for every note, but has to be accessible in stavenote.js
+            const lyricsEntries: GraphicalLyricEntry[] = gve.parentStaffEntry.LyricsEntries;
+            if (rules.RenderLyrics && rules.LyricsUseXPaddingForShortNotes && lyricsEntries.length > 0) {
+                // VexFlowPatch: add padding to the right for large lyrics,
+                //   so that measure doesn't need to be enlarged too much for spacing
+
+                let hasShortNotes: boolean = false;
+                let paddingMultiplier: number = 1;
+                for (const note of notes) {
+                    if (note.sourceNote.Length.RealValue <= 0.125) { // 8th or shorter
+                        hasShortNotes = true;
+                        if (note.sourceNote.Length.RealValue <= 0.0625) { // 16th or shorter
+                            paddingMultiplier = 1.7;
+                        }
+                        break;
+                    }
+                }
+
+                if (hasShortNotes) {
+                    let addPadding: boolean = false;
+                    for (const lyricsEntry of lyricsEntries) {
+                        const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
+                        // letters like i and l take less space, so we should use the visual width and not number of characters
+                        let currentLyricsWidth: number = lyricsEntry.GraphicalLabel.PositionAndShape.Size.width;
+                        if (lyricsEntry.hasDashFromLyricWord()) {
+                            currentLyricsWidth += 1.5;
+                        }
+                        if (currentLyricsWidth > widthThreshold) {
+                            paddingMultiplier *= currentLyricsWidth / widthThreshold;
+                            // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
+                            const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
+                            const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
+                            const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
+                            if (currentStaffEntryIndex === measureStaffEntries.length - 1) {
+                                // addPadding = true; // last note in the measure
+                                // probably unnecessary
+                            } else {
+                                addPadding = true;
+                            }
+                            break;
+                        }
+                        // for situations unlikely to cause overlap we shouldn't add padding,
+                        //   e.g. Brooke West sample (OSMD Function Test Chord Symbols) - width ~3.1 in measure 11 on 'ling', no padding needed.
+                        //   though Beethoven - Geliebte has only 8ths in measure 2 and is still problematic,
+                        //   so unfortunately we can't just check if the next note is 16th or less.
+                    }
+                    if (addPadding) {
+                        (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics * paddingMultiplier;
+                    }
+                }
+            }
         }
         const lineShift: number = gve.notes[0].lineShift;
         if (lineShift !== 0) {
@@ -816,7 +869,12 @@ export class VexFlowConverter {
         let tabVibrato: boolean = false;
         for (const note of gve.notes) {
             const tabNote: TabNote = note.sourceNote as TabNote;
-            const tabPosition: {str: number, fret: number} = {str: tabNote.StringNumberTab, fret: tabNote.FretNumber};
+            let tabPosition: {str: number, fret: number} = {str: tabNote.StringNumberTab, fret: tabNote.FretNumber};
+            if (!(note.sourceNote instanceof TabNote)) {
+                log.info(`invalid tab note: ${note.sourceNote.Pitch.ToString()} in measure ${gve.parentStaffEntry.parentMeasure.MeasureNumber}` +
+                    ", likely missing XML string+fret number.");
+                tabPosition = {str: 1, fret: 0}; // random safe values, otherwise it's both undefined for invalid notes
+            }
             tabPositions.push(tabPosition);
             if (tabNote.BendArray) {
                 tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {

@@ -2,7 +2,7 @@ import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { Voice } from "../VoiceData/Voice";
 import { MusicSheet } from "../MusicSheet";
 import { VoiceEntry, StemDirectionType } from "../VoiceData/VoiceEntry";
-import { Note } from "../VoiceData/Note";
+import { Note, TremoloInfo } from "../VoiceData/Note";
 import { SourceMeasure } from "../VoiceData/SourceMeasure";
 import { SourceStaffEntry } from "../VoiceData/SourceStaffEntry";
 import { Beam } from "../VoiceData/Beam";
@@ -116,7 +116,7 @@ export class VoiceGenerator {
   public read(noteNode: IXmlElement, noteDuration: Fraction, typeDuration: Fraction, noteTypeXml: NoteType, normalNotes: number, restNote: boolean,
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
               measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, octavePlusOne: boolean,
-              printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
+              printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloInfo: TremoloInfo,
               stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean,
               dotsXml: number): Note {
     this.currentStaffEntry = parentStaffEntry;
@@ -127,7 +127,7 @@ export class VoiceGenerator {
       this.currentNote = restNote
         ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, typeDuration, normalNotes, printObject, isCueNote, noteheadColorXml)
         : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, octavePlusOne,
-                             printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
+                             printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloInfo, stemColorXml, noteheadColorXml, vibratoStrokes);
       this.currentNote.DotsXml = dotsXml;
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
@@ -340,7 +340,7 @@ export class VoiceGenerator {
    */
   private addSingleNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType, typeDuration: Fraction,
                         normalNotes: number, chord: boolean, octavePlusOne: boolean,
-                        printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
+                        printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloInfo: TremoloInfo,
                         stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
@@ -460,8 +460,8 @@ export class VoiceGenerator {
     const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAccidental, accidentalValue);
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     let note: Note = undefined;
-    let stringNumber: number = -1;
-    let fretNumber: number = -1;
+    let stringNumber: number = -1; //1 to always recognize as valid tab note
+    let fretNumber: number = -1; //0 to always recognize as valid tab note
     const bends: {bendalter: number, direction: string}[] = [];
     // check for guitar tabs:
     const notationNode: IXmlElement = node.element("notations");
@@ -504,7 +504,7 @@ export class VoiceGenerator {
     note.TypeLength = typeDuration;
     note.IsGraceNote = isGraceNote;
     note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
-    note.TremoloStrokes = tremoloStrokes; // could be a Tremolo object in future if we have more data to manage like two-note tremolo
+    note.TremoloInfo = tremoloInfo;
     note.PlaybackInstrumentId = playbackInstrumentId;
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
@@ -692,7 +692,8 @@ export class VoiceGenerator {
    * @returns {number}
    */
   private addTuplet(node: IXmlElement, tupletNodeList: IXmlElement[]): number {
-    let bracketed: boolean = false; // xml bracket attribute value
+    let bracketed: boolean = false; // true if bracket=yes given, otherwise false
+    let bracketedXmlValue: boolean = undefined; // Exact xml bracket value given: true for bracket=yes, false for bracket=no, undefined if not given.
     // TODO refactor this to not duplicate lots of code for the cases tupletNodeList.length == 1 and > 1
     if (tupletNodeList !== undefined && tupletNodeList.length > 1) {
       let timeModNode: IXmlElement = node.element("time-modification");
@@ -706,6 +707,9 @@ export class VoiceGenerator {
           const bracketAttr: Attr = tupletNode.attribute("bracket");
           if (bracketAttr && bracketAttr.value === "yes") {
             bracketed = true;
+            bracketedXmlValue = true;
+          } else if (bracketAttr && bracketAttr.value === "no") {
+            bracketedXmlValue = false;
           }
 
           const type: Attr = tupletNode.attribute("type");
@@ -727,6 +731,7 @@ export class VoiceGenerator {
 
             }
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
+            tuplet.BracketedXmlValue = bracketedXmlValue;
             //Default to above
             tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
             //If we ever encounter a placement attribute for this tuplet, should override.
@@ -818,6 +823,9 @@ export class VoiceGenerator {
         const bracketAttr: Attr = n.attribute("bracket");
         if (bracketAttr && bracketAttr.value === "yes") {
           bracketed = true;
+          bracketedXmlValue = true;
+        } else if (bracketAttr && bracketAttr.value === "no") {
+          bracketedXmlValue = false;
         }
         if (type === "start") {
           let tupletLabelNumber: number = 0;
@@ -843,6 +851,7 @@ export class VoiceGenerator {
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
           if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
+            tuplet.BracketedXmlValue = bracketedXmlValue;
             //Default to above
             tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
           }

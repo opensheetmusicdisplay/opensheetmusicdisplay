@@ -399,6 +399,9 @@ export class StaveNote extends StemmableNote {
     // for displaced ledger lines
     this.use_default_head_x = false;
 
+    // VexFlowPatch: add optional padding to the right (e.g. for large lyrics)
+    this.paddingRight = 0;
+
     // Drawing
     this.note_heads = [];
     this.modifiers = [];
@@ -514,6 +517,9 @@ export class StaveNote extends StemmableNote {
         x_shift: noteProps.shift_right,
         stem_up_x_offset: noteProps.stem_up_x_offset,
         stem_down_x_offset: noteProps.stem_down_x_offset,
+        // VexFlowPatch: add option to shift notehead up or down (instead of stem in the variables above)
+        stem_up_y_shift: noteProps.stem_up_y_shift,
+        stem_down_y_shift: noteProps.stem_down_y_shift,
         line: noteProps.line,
       });
 
@@ -602,7 +608,8 @@ export class StaveNote extends StemmableNote {
     }
 
     const { width: w, modLeftPx, extraLeftPx } = this.getMetrics();
-    const x = this.getAbsoluteX() - modLeftPx - extraLeftPx;
+    // VexFlowPatch: also subtract paddingRight (newly added in VexFlowPatch) to not shift note bbox
+    const x = this.getAbsoluteX() - modLeftPx - extraLeftPx - this.paddingRight;
 
     let minY = 0;
     let maxY = 0;
@@ -951,7 +958,8 @@ export class StaveNote extends StemmableNote {
     if (this.preFormatted) return;
     if (this.modifierContext) this.modifierContext.preFormat();
 
-    let width = this.getGlyphWidth() + this.extraLeftPx + this.extraRightPx;
+    // VexFlowPatch: add optional padding to the right (e.g. for large lyrics), default 0.
+    let width = this.getGlyphWidth() + this.extraLeftPx + this.extraRightPx + this.paddingRight;
 
     // For upward flagged notes, the width of the flag needs to be added
     if (this.renderFlag && this.glyph.flag && this.beam === null && this.stem_direction === Stem.UP) {
