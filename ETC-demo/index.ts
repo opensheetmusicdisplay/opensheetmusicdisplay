@@ -25,7 +25,6 @@ let transposeDiatonicallyBtn: HTMLButtonElement;
 let removeKeySignatures: HTMLButtonElement;
 
 const samples: string[][] = [
-    ["Stress Test - Accidentals","sheets/Stress_Test_Accidentals.musicxml"],
     ["Bach, J.S. - Preludio e Fuga 3 in Do diesis maggiore (BWV 848)","sheets/JohannSebastianBach_Preludio_e_Fuga_3_in_Do_diesis_maggiore_BWV848.musicxml"],
     ["Bach, J.S. - Preludio e Fuga 8 in Mi bemolle minore (BWV 853)","sheets/JohannSebastianBach_Preludio_e_Fuga_3_in_Mi_bemolle_minore_BWv853.musicxml"],
     ["Bach, J.S. - Praeludium in C-Dur BWV846 1","sheets/JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml"],
