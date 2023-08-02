@@ -431,6 +431,11 @@ export class EngravingRules {
     public NoteToGraphicalNoteMap: Dictionary<number, GraphicalNote>;
     // this is basically a WeakMap, except we save the id in the Note instead of using a WeakMap.
     public NoteToGraphicalNoteMapObjectCount: number = 0;
+    /** How many times osmd.render() was already called on the currently loaded score.
+     * Resets after osmd.load() (via osmd.reset()).
+     * Can be relevant for transposition or generally informative.
+     */
+    public RenderCount: number = 0;
 
     /** The skyline and bottom-line batch calculation algorithm to use.
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
