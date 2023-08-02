@@ -254,6 +254,7 @@ export class OpenSheetMusicDisplay {
             });
         }
         this.zoomUpdated = false;
+        this.rules.RenderCount++;
         //console.log("[OSMD] render finished");
     }
 
@@ -707,6 +708,7 @@ export class OpenSheetMusicDisplay {
         this.sheet = undefined;
         this.graphic = undefined;
         this.zoom = 1.0;
+        this.rules.RenderCount = 0;
     }
 
     /**
