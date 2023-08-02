@@ -34,7 +34,7 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
 
     private pitchToDegree(pitch: Pitch, majorKey: number): number {
         if (pitch.AccidentalXml){
-            console.log(pitch.AccidentalXml);
+            //console.log(pitch.AccidentalXml);
         }
         const degree: number = ETC.pitchToDegree({
             fundamentalNote: Number(pitch.FundamentalNote),

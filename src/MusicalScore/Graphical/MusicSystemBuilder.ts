@@ -429,6 +429,7 @@ export class MusicSystemBuilder {
             /*
             //transposeHalftones !== keyInstruction.isTransposedBy &&
             */
+            this.rules.RenderCount > 0 &&
             graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
             && MusicSheetCalculator.transposeCalculator !== undefined
         ) {
