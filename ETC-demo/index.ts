@@ -183,10 +183,9 @@ window.addEventListener("DOMContentLoaded",(e)=>{
     error_td = <HTMLDivElement>document.getElementById("error-td");
     canvas = <HTMLDivElement>document.querySelector("#sheet-container");
     selectSample = <HTMLSelectElement>document.querySelector("#select-sample");
-    transposeByKey = <HTMLSelectElement>document.querySelector("#transpose-by-key");
     transposeByHalftones = <HTMLInputElement>document.getElementById("transpose-by-halftones");
     transposeByHalftonesBtn = <HTMLButtonElement>document.getElementById("transpose-by-halftones-btn");
-    transposeByKey = <HTMLSelectElement>document.getElementById("transpose-by-key");
+    transposeByKey = <HTMLSelectElement>document.querySelector("#transpose-by-key");
     transposeByKeyBtn = <HTMLButtonElement>document.getElementById("transpose-by-key-btn");
     transposeByKeyOctave = <HTMLInputElement>document.getElementById("transpose-by-key-octave");
     transposeByInterval = <HTMLSelectElement>document.getElementById("transpose-by-interval");
@@ -203,7 +202,7 @@ window.addEventListener("DOMContentLoaded",(e)=>{
         transposeByKeyBtn.onclick = function(): void {
             const key: number = Number(transposeByKey.value);
             const octave: number = Number(transposeByKeyOctave.value);
-            openSheetMusicDisplay.TransposeCalculator.Options.transposeToKey(key,octave);
+            openSheetMusicDisplay.TransposeCalculator.Options.transposeToKeyRelation(key,octave);
             openSheetMusicDisplay.updateGraphic();
             rerender();
         };

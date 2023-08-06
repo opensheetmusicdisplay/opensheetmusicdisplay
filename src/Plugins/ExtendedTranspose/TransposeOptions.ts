@@ -50,7 +50,8 @@ export class TransposeOptions {
     private static transposeByDiatonic: number = 1;
     private static transposeByInterval: number = 2;
     private static transposeByKey: number = 3;
-    private static noKeySignatures: number = 4;
+    private static transposeByKeyRelation: number = 4;
+    private noKeySignatures: boolean = false;
 
     private transposeType: number = TransposeOptions.transposeByHalftone;
 
@@ -92,6 +93,10 @@ export class TransposeOptions {
         }
     }
 
+    public get TransposeType(): number {
+        return this.transposeType;
+    }
+
     public get TransposeByHalftone(): boolean {
         return !this.osmd || this.transposeType === TransposeOptions.transposeByHalftone;
     }
@@ -126,6 +131,17 @@ export class TransposeOptions {
         this.transposeType = Boolean(value) ? TransposeOptions.transposeByKey : TransposeOptions.transposeByHalftone;
     }
 
+    public get TransposeByKeyRelation(): boolean {
+        return this.osmd && this.transposeType ===  TransposeOptions.transposeByKeyRelation;
+    }
+
+    public set TransposeByKeyRelation(value: boolean) {
+        console.log("-.------------------------------");
+        console.log(this.transposeType);
+        this.transposeType = Boolean(value) ? TransposeOptions.transposeByKeyRelation : TransposeOptions.transposeByHalftone;
+        console.log(this.transposeType, this.TransposeByKeyRelation);
+    }
+
     public get TransposeKeySignatures(): boolean {
         return this.transposeKeySignatures;
     }
@@ -135,11 +151,11 @@ export class TransposeOptions {
     }
 
     public get NoKeySignatures(): boolean {
-        return this.transposeType ===  TransposeOptions.noKeySignatures;
+        return this.noKeySignatures;
     }
 
     public set NoKeySignatures(value: boolean ) {
-        this.transposeType = Boolean(value) ? TransposeOptions.noKeySignatures : TransposeOptions.transposeByHalftone;
+        this.noKeySignatures = Boolean(value);
     }
 
     public get TransposeOctave(): number {
@@ -186,13 +202,22 @@ export class TransposeOptions {
         */
     }
 
-    public transposeToKeyRelation(value: number, octave: number = 0): void {
-        value = Number(value);
+    public transposeToKeyRelation(toKey: number, octave: number = 0): void {
+
+        this.TransposeByKeyRelation = true;
+        toKey = Number(toKey);
+        octave = Number(octave);
         this.NoKeySignatures = false;
-        this.TransposeByKey = true;
-        const keyRelation: number = value - this.MainKey;
-        value = keyRelation + (octave * ETC.OctaveSize);
-        this.Transpose = value;
+        this.TransposeOctave = octave;
+        // At this point, we need to ensure that the closest direction chosen is always the same
+        // as the existing one between the MainKey and the target transpose key.
+        this.TransposeDirection = ETC.keyToKeyProximity(
+            this.MainKey,
+            toKey,
+            true // swapTritoneSense!
+        ).closestIs;
+        const keyRelation: number = ETC.keyToMajorKey(this.MainKey - toKey);
+        this.Transpose = keyRelation;
     }
 
     public transposeToInterval(value: number): void {

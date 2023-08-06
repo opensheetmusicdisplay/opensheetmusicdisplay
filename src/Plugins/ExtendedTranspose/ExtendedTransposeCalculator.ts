@@ -9,8 +9,8 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
     private osmd: OpenSheetMusicDisplay = undefined;
     public Options: TransposeOptions = undefined;
 
-    constructor (graphicSheet: OpenSheetMusicDisplay = undefined) {
-        this.osmd = graphicSheet;
+    constructor (osmd: OpenSheetMusicDisplay = undefined) {
+        this.osmd = osmd;
         this.Options = new TransposeOptions(this.osmd);
     }
 
@@ -55,12 +55,9 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
     }
 
     public transposePitch(pitch: Pitch, currentKeyInstruction: KeyInstruction, halftones: number): Pitch {
-        // A "dirty workaround" to bypass OSMD's inaction when Sheet.Transpose === 0.
-        // If we remove the condition "transposeHalftones !== 0" from the function
-        // "createGraphicalMeasure" in the file MusicSheetCalculator.ts, this workaround is not needed.
-        /*
-            halftones = Math.floor(halftones);
-        */
+        if (this.Options.TransposeByKeyRelation) {
+            halftones = ETC.keyToMajorKey(this.MainKey - halftones);
+        }
         if(!this.Options.TransposeByDiatonic) {
             if (this.Options.NoKeySignatures) {
                 return pitch;
@@ -70,7 +67,7 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
                 return this.commaToPitch(degree + currentKeyInstruction.isTransposedBy);
             } else {
                 const srcComma: number = this.pitchToComma(pitch);
-                if (this.Options.TransposeByKey) {
+                if (this.Options.TransposeByKey || this.Options.TransposeByKeyRelation) {
                     // TRANSPOSE BY KEY WITHOUT KEY SIGNATURE TRANSPOSING
                     const degreeOfKey: number = this.pitchToDegree(pitch, currentKeyInstruction.keyTypeOriginal);
                     return this.commaToPitch(degreeOfKey + currentKeyInstruction.isTransposedBy);
@@ -116,34 +113,14 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
     }
 
     public transposeKey(keyInstruction: KeyInstruction, transpose: number): void {
-        // A "dirty workaround" to bypass OSMD's inaction when Sheet.Transpose === 0.
-        // If we remove the condition "transposeHalftones !== 0" from the function
-        // "createGraphicalMeasure" in the file MusicSheetCalculator.ts, this workaround is not needed.
-        /*
-            transpose = Math.floor(transpose);
-        */
-        if (this.Options.TransposeByKey) {
-            /*
-            const octave: number = ETC.keyOctave(transpose);
-            const transposeToKey: number = ETC.keyToMajorKey(transpose - (octave * ETC.OctaveSize));
-            keyInstruction.Key = ETC.keyToMajorKey(transposeToKey - this.MainKey + keyInstruction.keyTypeOriginal);
+        if (this.Options.TransposeByKeyRelation) {
+            console.log("keyRelation", transpose);
+            transpose = ETC.keyToMajorKey(this.MainKey - transpose);
+            console.log("mainKey", this.MainKey);
+            console.log("toKey", transpose);
 
-            // At this point, we need to ensure that the closest direction chosen is always the same
-            // as the existing one between the MainKey and the target transpose key.
-            // I wonder if it would be appropriate to perform this operation only once and
-            // perhaps place it in TransposeOptions.
-
-            const closest: string = ETC.keyToKeyProximity(
-                this.MainKey,
-                transposeToKey,
-                true // swapTritoneSense!
-            ).closestIs;
-
-            keyInstruction.isTransposedBy = ETC.keyToKeyProximity(
-                keyInstruction.keyTypeOriginal,
-                keyInstruction.Key
-            )[closest] + (octave * ETC.OctaveSize);
-            */
+        }
+        if (this.Options.TransposeByKey || this.Options.TransposeByKeyRelation) {
             const transposeToKey: number = ETC.keyToMajorKey(transpose);
             keyInstruction.Key = ETC.keyToMajorKey(transposeToKey - this.MainKey + keyInstruction.keyTypeOriginal);
 
