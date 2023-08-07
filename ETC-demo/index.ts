@@ -1,4 +1,4 @@
-import { ETC } from "../src/Plugins/ExtendedTranspose";
+import { ETC, TransposeOptions } from "../src/Plugins/ExtendedTranspose";
 import { OpenSheetMusicDisplay } from "../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { ExtendedTransposeCalculator } from "../src/Plugins/ExtendedTranspose";
 
@@ -23,6 +23,7 @@ let transposeKeySignatures: HTMLInputElement;
 let transposeDiatonically: HTMLSelectElement;
 let transposeDiatonicallyBtn: HTMLButtonElement;
 let removeKeySignatures: HTMLButtonElement;
+let actionForKeySignatures: number = TransposeOptions.keySignaturesIsTransposed;
 
 const samples: string[][] = [
     ["Bach, J.S. - Preludio e Fuga 3 in Do diesis maggiore (BWV 848)","sheets/JohannSebastianBach_Preludio_e_Fuga_3_in_Do_diesis_maggiore_BWV848.musicxml"],
@@ -202,7 +203,7 @@ window.addEventListener("DOMContentLoaded",(e)=>{
         transposeByKeyBtn.onclick = function(): void {
             const key: number = Number(transposeByKey.value);
             const octave: number = Number(transposeByKeyOctave.value);
-            openSheetMusicDisplay.TransposeCalculator.Options.transposeToKeyRelation(key,octave);
+            openSheetMusicDisplay.TransposeCalculator.Options.transposeToKeyRelation(key, octave, actionForKeySignatures);
             openSheetMusicDisplay.updateGraphic();
             rerender();
         };
@@ -211,7 +212,7 @@ window.addEventListener("DOMContentLoaded",(e)=>{
         transposeByHalftonesBtn.onclick = function(): void{
             openSheetMusicDisplay.TransposeCalculator.Options.TransposeByHalftone = true;
             const transposeValue: number = Number(transposeByHalftones.value);
-            openSheetMusicDisplay.TransposeCalculator.Options.transposeToHalftone(transposeValue);
+            openSheetMusicDisplay.TransposeCalculator.Options.transposeToHalftone(transposeValue, actionForKeySignatures);
             openSheetMusicDisplay.updateGraphic();
             rerender();
         };
@@ -219,14 +220,18 @@ window.addEventListener("DOMContentLoaded",(e)=>{
     if(transposeByIntervalBtn && transposeByInterval){
         transposeByIntervalBtn.onclick = function(): void {
             const transposeValue: number = ETC.commaIntervals[transposeByInterval.value];
-            openSheetMusicDisplay.TransposeCalculator.Options.transposeToInterval(transposeValue);
+            openSheetMusicDisplay.TransposeCalculator.Options.transposeToInterval(transposeValue, actionForKeySignatures);
             openSheetMusicDisplay.updateGraphic();
             rerender();
         };
     }
     if(transposeKeySignatures){
         transposeKeySignatures.onchange = function(): void{
-            openSheetMusicDisplay.TransposeCalculator.Options.TransposeKeySignatures = Boolean(transposeKeySignatures.checked);
+            if (Boolean(transposeKeySignatures.checked)) {
+                actionForKeySignatures = TransposeOptions.keySignaturesIsTransposed;
+            } else {
+                actionForKeySignatures = TransposeOptions.keySignaturesIsFixed;
+            }
         };
     }
     if(transposeDiatonicallyBtn && transposeDiatonically){

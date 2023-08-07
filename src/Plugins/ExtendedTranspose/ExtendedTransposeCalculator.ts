@@ -56,12 +56,12 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
 
     public transposePitch(pitch: Pitch, currentKeyInstruction: KeyInstruction, halftones: number): Pitch {
         if (this.Options.TransposeByKeyRelation) {
-            halftones = ETC.keyToMajorKey(this.MainKey - halftones);
+            halftones = ETC.recoverTransposedKey(halftones, this.MainKey);
         }
         if(!this.Options.TransposeByDiatonic) {
-            if (this.Options.NoKeySignatures) {
+            if (this.Options.KeySignaturesIsRemoved) {
                 return pitch;
-            } else if (this.Options.TransposeKeySignatures) {
+            } else if (this.Options.KeySignaturesIsTransposed) {
                 // TRANSPOSE BY KEY, INTERVAL, HALFTONESE WITH SIGNATURE TRANSPOSING
                 const degree: number = this.pitchToDegree(pitch, currentKeyInstruction.keyTypeOriginal);
                 return this.commaToPitch(degree + currentKeyInstruction.isTransposedBy);
@@ -114,11 +114,7 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
 
     public transposeKey(keyInstruction: KeyInstruction, transpose: number): void {
         if (this.Options.TransposeByKeyRelation) {
-            console.log("keyRelation", transpose);
-            transpose = ETC.keyToMajorKey(this.MainKey - transpose);
-            console.log("mainKey", this.MainKey);
-            console.log("toKey", transpose);
-
+            transpose = ETC.recoverTransposedKey(transpose, this.MainKey);
         }
         if (this.Options.TransposeByKey || this.Options.TransposeByKeyRelation) {
             const transposeToKey: number = ETC.keyToMajorKey(transpose);
@@ -129,10 +125,10 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
                 keyInstruction.Key
             )[this.Options.TransposeDirection] + (this.Options.TransposeOctave * ETC.OctaveSize);
 
-            if (!this.Options.TransposeKeySignatures) {
+            if (!this.Options.KeySignaturesIsTransposed) {
                 keyInstruction.Key = keyInstruction.keyTypeOriginal;
             }
-        } else if (this.Options.TransposeKeySignatures && this.Options.TransposeByInterval) {
+        } else if (this.Options.KeySignaturesIsTransposed && this.Options.TransposeByInterval) {
             const octave: number = Math.floor(transpose / 12);
             const semitone: number = ((transpose % 12) + 12 ) % 12;
             if((transpose%12)!==0) {
@@ -144,7 +140,7 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
                 keyInstruction.keyTypeOriginal,
                 keyInstruction.Key
             ).up + (octave * ETC.OctaveSize);
-        } else if (this.Options.TransposeKeySignatures && this.Options.TransposeByHalftone) {
+        } else if (this.Options.KeySignaturesIsTransposed && this.Options.TransposeByHalftone) {
 
             const octave: number = Math.floor(transpose / 12);
 
@@ -180,7 +176,7 @@ export class ExtendedTransposeCalculator implements ITransposeCalculator {
                 keyInstruction.keyTypeOriginal,
                 keyInstruction.Key
             ).up + (octave * ETC.OctaveSize);
-        } else if( this.Options.NoKeySignatures ) {
+        } else if( this.Options.KeySignaturesIsRemoved ) {
             keyInstruction.Key = 0;
             keyInstruction.isTransposedBy = 0;
         } else {

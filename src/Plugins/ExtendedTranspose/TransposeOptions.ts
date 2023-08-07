@@ -8,8 +8,8 @@ I know many of you will do this calculation in your head,
 but then I forget the reasoning behind it and get confused
 every time. I prefer to keep a table at hand...
 
-          |  Cb  Gb  Db  Ab  Eb  Bb  F   C   G   D   A   E   B   F#  C#
-          | -7  -6  -5  -4  -3  -2  -1   0   1   2   3   4   5   6   7
+MainKey   |  Cb  Gb  Db  Ab  Eb  Bb  F   C   G   D   A   E   B   F#  C#
+Transpose | -7  -6  -5  -4  -3  -2  -1   0   1   2   3   4   5   6   7
 ----------+------------------------------------------------------------
 Cb   -7   |  0  -1  -2  -3  -4  -5  -6  -7   7   6   5   4   3   2   1
 Gb   -6   |  1   0  -1  -2  -3  -4  -5  -6  -7   7   6   5   4   3   2
@@ -51,13 +51,15 @@ export class TransposeOptions {
     private static transposeByInterval: number = 2;
     private static transposeByKey: number = 3;
     private static transposeByKeyRelation: number = 4;
-    private noKeySignatures: boolean = false;
+    public static keySignaturesIsTransposed: number = 0;
+    public static keySignaturesIsFixed: number = 1;
+    public static keySignaturesIsRemoved: number = 2;
 
     private transposeType: number = TransposeOptions.transposeByHalftone;
 
-    private osmd: OpenSheetMusicDisplay = undefined;
+    private keySignatures: number = TransposeOptions.keySignaturesIsTransposed;
 
-    private transposeKeySignatures: boolean = true;
+    private osmd: OpenSheetMusicDisplay = undefined;
 
     private transposeDirection: ETCDirections = "up";
 
@@ -97,6 +99,40 @@ export class TransposeOptions {
         return this.transposeType;
     }
 
+    public get KeySignatures(): number {
+        return this.keySignatures;
+    }
+
+    public get KeySignaturesIsTransposed(): boolean {
+        return this.keySignatures === TransposeOptions.keySignaturesIsTransposed;
+    }
+
+    public set KeySignaturesIsTransposed(value: boolean) {
+        if (Boolean(value)) {
+            this.keySignatures = TransposeOptions.keySignaturesIsTransposed;
+        }
+    }
+
+    public get KeySignaturesIsFixed(): boolean {
+        return this.keySignatures === TransposeOptions.keySignaturesIsFixed;
+    }
+
+    public set KeySignaturesIsFixed(value: boolean) {
+        if (Boolean(value)) {
+            this.keySignatures = TransposeOptions.keySignaturesIsFixed;
+        }
+    }
+
+    public get KeySignaturesIsRemoved(): boolean {
+        return this.keySignatures === TransposeOptions.keySignaturesIsRemoved;
+    }
+
+    public set KeySignaturesIsRemoved(value: boolean) {
+        if (Boolean(value)) {
+            this.keySignatures = TransposeOptions.keySignaturesIsRemoved;
+        }
+    }
+
     public get TransposeByHalftone(): boolean {
         return !this.osmd || this.transposeType === TransposeOptions.transposeByHalftone;
     }
@@ -106,6 +142,7 @@ export class TransposeOptions {
             this.transposeType = TransposeOptions.transposeByHalftone;
         }
     }
+
 
     public get TransposeByDiatonic(): boolean {
         return this.transposeType === TransposeOptions.transposeByDiatonic;
@@ -142,22 +179,6 @@ export class TransposeOptions {
         console.log(this.transposeType, this.TransposeByKeyRelation);
     }
 
-    public get TransposeKeySignatures(): boolean {
-        return this.transposeKeySignatures;
-    }
-
-    public set TransposeKeySignatures(value: boolean) {
-        this.transposeKeySignatures = Boolean(value);
-    }
-
-    public get NoKeySignatures(): boolean {
-        return this.noKeySignatures;
-    }
-
-    public set NoKeySignatures(value: boolean ) {
-        this.noKeySignatures = Boolean(value);
-    }
-
     public get TransposeOctave(): number {
         return this.transposeOctave;
     }
@@ -174,17 +195,24 @@ export class TransposeOptions {
         this.transposeDirection = value;
     }
 
-    public transposeToHalftone(value: number): void {
+    public transposeToHalftone(
+        value: number,
+        keySignatures: number = TransposeOptions.keySignaturesIsTransposed
+    ): void {
+        this.keySignatures = keySignatures;
         value = Number(value);
-        this.NoKeySignatures = false;
         this.TransposeByHalftone = true;
         this.Transpose = value;
     }
 
-    public transposeToKey(toKey: number, octave: number = 0): void {
+    public transposeToKey(
+        toKey: number,
+        octave: number = 0,
+        keySignatures: number = TransposeOptions.keySignaturesIsTransposed
+    ): void {
+        this.keySignatures = keySignatures;
         toKey = Number(toKey);
         octave = Number(octave);
-        this.NoKeySignatures = false;
         this.TransposeByKey = true;
         this.TransposeOctave = octave;
         // At this point, we need to ensure that the closest direction chosen is always the same
@@ -195,19 +223,17 @@ export class TransposeOptions {
             true // swapTritoneSense!
         ).closestIs;
         this.Transpose = toKey;
-        /*
-        this.TransposeByKey = true;
-        toKey = toKey + (octave * ETC.OctaveSize);
-        this.Transpose = toKey;
-        */
     }
 
-    public transposeToKeyRelation(toKey: number, octave: number = 0): void {
-
+    public transposeToKeyRelation(
+        toKey: number,
+        octave: number = 0,
+        keySignatures: number = TransposeOptions.keySignaturesIsTransposed
+    ): void {
+        this.keySignatures = keySignatures;
         this.TransposeByKeyRelation = true;
         toKey = Number(toKey);
         octave = Number(octave);
-        this.NoKeySignatures = false;
         this.TransposeOctave = octave;
         // At this point, we need to ensure that the closest direction chosen is always the same
         // as the existing one between the MainKey and the target transpose key.
@@ -216,15 +242,18 @@ export class TransposeOptions {
             toKey,
             true // swapTritoneSense!
         ).closestIs;
-        const keyRelation: number = ETC.keyToMajorKey(this.MainKey - toKey);
+        const keyRelation: number = ETC. computeKeyRelation(this.MainKey, toKey);
         this.Transpose = keyRelation;
     }
 
-    public transposeToInterval(value: number): void {
+    public transposeToInterval(
+        value: number,
+        keySignatures: number = TransposeOptions.keySignaturesIsTransposed
+    ): void {
+        this.keySignatures = keySignatures;
         value = Number(value);
-        this.NoKeySignatures = false;
         this.TransposeByInterval = true;
-        if (this.TransposeKeySignatures) {
+        if (this.KeySignaturesIsTransposed) {
             const pitch: ETCPitch = ETC.commaToPitch(value);
             value = (pitch.octave * 12) + pitch.fundamentalNote + pitch.alterations;
             this.Transpose = value;
@@ -234,14 +263,14 @@ export class TransposeOptions {
     }
 
     public transposeToDiatonic(value: number): void {
+        this.KeySignaturesIsFixed = true;
         value = Number(value);
-        this.NoKeySignatures = false;
         this.TransposeByDiatonic = true;
         this.Transpose = Number(value);
     }
 
     public removeKeySignatures(): void {
-        this.NoKeySignatures = true;
+        this.KeySignaturesIsRemoved = true;
         this.Transpose = 0;
     }
 

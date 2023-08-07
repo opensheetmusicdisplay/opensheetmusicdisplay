@@ -123,7 +123,7 @@ export interface ETCProximity {
 
 export class ETC {
     /******************************************** BEGIN PRIVATE *********************************************/
-    private static version: string = "0.2.8";
+    private static version: string = "0.2.9";
     private static fifhtyLeapNotes:             number[] = [ 0,  7,  2,  9,  4, 11,  6 ]; // in key context the jump after 11 is 6, not 5 (F#, not F)
     private static fundamentalAscendingNotes:   number[] = [ 0,  2,  4,  5,  7,  9, 11 ];
     private static fundamentalDescendingNotes:  number[] = [ 0, 11,  9,  7,  5,  4,  2 ];
@@ -234,6 +234,54 @@ export class ETC {
         ETC.commaIntervals.augmentedSixthAscending,
         ETC.commaIntervals.majorSeventhAscending,
     ];
+/*
+    public static keyRelationTable: number[][] = [
+        // rows = transposeKeys
+        // cols = mainKeys
+        // keyRelationTable[transposeKey+7, mainKey+7]
+        [   0 ,   -1 ,  -2 ,   -3 ,   -4 ,   -5 ,   -6 ,   -7  ,  -8  ,  -9  , -10  , -11  ,  -12  ,  -13  ,  -14 ],
+        [   1 ,    0 ,  -1 ,   -2 ,   -3 ,   -4 ,   -5 ,   -6  ,  -7  ,  -8  ,  -9  , -10  ,  -11  ,  -12  ,  -13 ],
+        [   2 ,    1 ,   0 ,   -1 ,   -2 ,   -3 ,   -4 ,   -5  ,  -6  ,  -7  ,  -8  ,  -9  ,  -10  ,  -11  ,  -12 ],
+        [   3 ,    2 ,   1 ,    0 ,   -1 ,   -2 ,   -3 ,   -4  ,  -5  ,  -6  ,  -7  ,  -8  ,   -9  ,  -10  ,  -11 ],
+        [   4 ,    3 ,   2 ,    1 ,    0 ,   -1 ,   -2 ,   -3  ,  -4  ,  -5  ,  -6  ,  -7  ,   -8  ,   -9  ,  -10 ],
+        [   5 ,    4 ,   3 ,    2 ,    1 ,    0 ,   -1 ,   -2  ,  -3  ,  -4  ,  -5  ,  -6  ,   -7  ,   -8  ,   -9 ],
+        [   6 ,    5 ,   4 ,    3 ,    2 ,    1 ,    0 ,   -1  ,  -2  ,  -3  ,  -4  ,  -5  ,   -6  ,   -7  ,   -8 ],
+        [   7 ,    6 ,   5 ,    4 ,    3 ,    2 ,    1 ,    0  ,  -1  ,  -2  ,  -3  ,  -4  ,   -5  ,   -6  ,   -7 ],
+        [  -8 ,    7 ,   6 ,    5 ,    4 ,    3 ,    2 ,    1  ,   0  ,  -1  ,  -2  ,  -3  ,   -4  ,   -5  ,   -6 ],
+        [  -9 ,    8 ,   7 ,    6 ,    5 ,    4 ,    3 ,    2  ,   1  ,   0  ,  -1  ,  -2  ,   -3  ,   -4  ,   -5 ],
+        [ -10 ,    9 ,   8 ,    7 ,    6 ,    5 ,    4 ,    3  ,   2  ,   1  ,   0  ,  -1  ,   -2  ,   -3  ,   -4 ],
+        [ -11 ,   10 ,   9 ,    8 ,    7 ,    6 ,    5 ,    4  ,   3  ,   2  ,   1  ,   0  ,   -1  ,   -2  ,   -3 ],
+        [ -12 ,   11 ,  10 ,    9 ,    8 ,    7 ,    6 ,    5  ,   4  ,   3  ,   2  ,   1  ,    0  ,   -1  ,   -2 ],
+        [ -13 ,   12 ,  11 ,   10 ,    9 ,    8 ,    7 ,    6  ,   5  ,   4  ,   3  ,   2  ,    1  ,    0  ,   -1 ],
+        [ -14 ,   13 ,  12 ,   11 ,   10 ,    9 ,    8 ,    7  ,   6  ,   5  ,   4  ,   3  ,    2  ,    1  ,    0 ],
+    ];
+*/
+    /**
+     * **ETC.computeKeyRelation** method establishes a key relationship between
+     * the main key and the key to which it is intended to transpose. The achieved
+     * result should not be reduced through key simplification operations.
+     * The key relationship is a straightforward operation: TransposedKey - MainKey.
+     * The recovery of the transposedKey is equally simple:
+     * transposedKey = keyRelation + MainKey
+     * The obtained value serves to bypass the issue of OSMD not responding when
+     * a transpose value of 0 is given.
+     * @param mainKey
+     * @param transposeKey
+     * @returns number
+     */
+    public static computeKeyRelation(mainKey: number, transposeKey: number): number {
+        mainKey = ETC.keyToMajorKey(mainKey);
+        transposeKey = ETC.keyToMajorKey(transposeKey);
+        return transposeKey - mainKey;
+        //return ETC.keyRelationTable[transposeKey][mainKey];
+    }
+
+    public static recoverTransposedKey(mainKey: number, keyRelation: number): number {
+        mainKey = ETC.keyToMajorKey(mainKey);
+        return ETC.keyToMajorKey(keyRelation + mainKey);
+        //return ETC.keyRelationTable[transposeKey][mainKey];
+    }
+
 
     /**
      * **ETC.extendedEuclidean** method is an extended Euclid's algorithm to calculate GCD and Bézout coefficients

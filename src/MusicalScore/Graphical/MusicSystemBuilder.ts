@@ -420,18 +420,18 @@ export class MusicSystemBuilder {
     protected transposeKeyInstruction(keyInstruction: KeyInstruction, graphicalMeasure: GraphicalMeasure): KeyInstruction {
         const transposeHalftones: number = graphicalMeasure.getTransposedHalftones();
         if (
-            // In my perspective, within this section of the code, there seems to be an
-            // abundance of conditions that ultimately result in a visually cluttered rendering
-            // of the musical score when the "transposeHalftones" directive is set to zero.
-            // When the TransposeCalculator is involved, it becomes imperative for the
-            // TransposeCalculator to actively engage and determine the appropriate course
-            // of action in the event.
             /*
-            //transposeHalftones !== keyInstruction.isTransposedBy &&
+            // this is a drama... whath is transposeHalftones in key transpose context?
+            // transposeHalftones !== keyInstruction.isTransposedBy &&
             */
+           /*
             this.rules.RenderCount > 0 &&
             graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
             && MusicSheetCalculator.transposeCalculator !== undefined
+            */
+            MusicSheetCalculator.transposeCalculator !== undefined &&
+            ((this.rules.RenderCount > 0) || ( transposeHalftones !== keyInstruction.isTransposedBy)) &&
+            graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
         ) {
             MusicSheetCalculator.transposeCalculator.transposeKey(
                 keyInstruction,

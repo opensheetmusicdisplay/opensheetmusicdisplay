@@ -2556,9 +2556,13 @@ export abstract class MusicSheetCalculator {
                         /*
                         transposeHalftones !== 0 &&
                         */
-                        this.rules.RenderCount > 0 &&
-                        measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
-                        MusicSheetCalculator.transposeCalculator
+                        //this.rules.RenderCount > 0 &&
+                        //measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
+                        //MusicSheetCalculator.transposeCalculator
+
+                        MusicSheetCalculator.transposeCalculator &&
+                        (this.rules.RenderCount > 0 || transposeHalftones !== 0 ) &&
+                        measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
                     ) {
                         MusicSheetCalculator.transposeCalculator.transposeKey(
                             key, transposeHalftones
@@ -2768,10 +2772,9 @@ export abstract class MusicSheetCalculator {
             /*
             transposeHalftones !== 0 &&
             */
-            this.rules.RenderCount > 0 &&
-            graphicalNote.sourceNote.ParentStaffEntry.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
-            // added MusicSheetCalculator.transposeCalculator condition
-            MusicSheetCalculator.transposeCalculator
+            MusicSheetCalculator.transposeCalculator &&
+            (this.rules.RenderCount > 0 || transposeHalftones !== 0 ) &&
+            graphicalNote.sourceNote.ParentStaffEntry.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
         ) {
             pitch = graphicalNote.Transpose(
                 accidentalCalculator.ActiveKeyInstruction, activeClef, transposeHalftones, octaveEnum
