@@ -1,18 +1,21 @@
 ## Extended Transpose Calculator with OpenSheetMusicDisplay
 Welcome to the Extended Transpose Calculator based on OpenSheetMusicDisplay!
-You can see it in action at the link [https://ammatwain.github.io/extended-transpose-calculator](https://ammatwain.github.io/extended-transpose-calculator)
+You can see it in action at the link:
+[https://ammatwain.github.io/extended-transpose-calculator](https://ammatwain.github.io/extended-transpose-calculator)
 
 ### WARNING
 The ExtendendTransposeCalculator project is in alpha and is undergoing continuous review.
 Procedure names and strategies for interfacing with OSMD may change suddenly and without notice.
 If you're interested in a stable product, I invite you to use the original version of OpenSheetMusicDisplay,
-available at the link [https://github.com/opensheetmusicdisplay/opensheetmusicdisplay](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay)
+available at the link:
+[https://github.com/opensheetmusicdisplay/opensheetmusicdisplay](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay)
 
 ## Introduction
 
 This project is a practical implementation of another
 project of mine, ETC (Equal Temperament Calculator),
-available at the link [https://github.com/ammatwain/ETC/](https://github.com/ammatwain/ETC/)
+available at the link:
+[https://github.com/ammatwain/ETC/](https://github.com/ammatwain/ETC/)
 
 The transposition calculator is called ExtendedTransposeCalculator and uses ETC's routines to calculate transpositions.
 
