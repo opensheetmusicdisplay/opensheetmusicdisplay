@@ -1,16 +1,12 @@
-# OpenSheetMusicDisplay
-OpenSheetMusicDisplay renders sheet music in MusicXML format in your web browser based on VexFlow. OSMD is brought to you by PhonicScore.com.
-
-# osmd-extended-transpose-calculator
-
 ## Extended Transpose Calculator with OpenSheetMusicDisplay
-
 Welcome to the Extended Transpose Calculator based on OpenSheetMusicDisplay!
 You can see it in action at the link [https://ammatwain.github.io/extended-transpose-calculator](https://ammatwain.github.io/extended-transpose-calculator)
 
 ### WARNING
 The ExtendendTransposeCalculator project is in alpha and is undergoing continuous review.
 Procedure names and strategies for interfacing with OSMD may change suddenly and without notice.
+If you're interested in a stable product, I invite you to use the original version of OpenSheetMusicDisplay,
+available at the link [https://github.com/opensheetmusicdisplay/opensheetmusicdisplay](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay)
 
 ## Introduction
 
@@ -41,3 +37,4 @@ in the system I have envisioned, a Comma unit represents the seventy-seventh par
 An example: Once you obtain the Comma of a Pitch, the Comma of the current key, and the Comma of the transposition key,
 transposition becomes a game of subtracting/adding Commas.
 After performing these operations, ETC provides routines to convert the Comma back into a Pitch.
+
