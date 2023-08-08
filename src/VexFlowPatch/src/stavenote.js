@@ -1230,8 +1230,6 @@ export class StaveNote extends StemmableNote {
     // Apply the overall style -- may be contradicted by local settings:
     this.applyStyle();
 
-    // console.log(this.keys);
-
     this.setAttribute(
       'el',
       this.context.openGroup(
@@ -1242,6 +1240,9 @@ export class StaveNote extends StemmableNote {
           xPos: xBegin.toString(),
           yPos: this.getNoteHeadBounds().y_bottom,
           keys: this.keys.join(","),
+          ticks: this.getTicks().value(),
+          startTicks: this.startTicks,
+          endTicks: this.endTicks,
         }
       )
     );

@@ -595,14 +595,14 @@ export class Stave extends Element {
     }
 
     // Render measure numbers
-    if (this.measure > 0) {
-      this.context.save();
-      this.context.setFont(this.font.family, this.font.size, this.font.weight);
-      const text_width = this.context.measureText('' + this.measure).width;
-      y = this.getYForTopText(0) + 3;
-      this.context.fillText('' + this.measure, this.x - text_width / 2, y);
-      this.context.restore();
-    }
+    // if (this.measure > 0) {
+    //   this.context.save();
+    //   this.context.setFont(this.font.family, this.font.size, this.font.weight);
+    //   const text_width = this.context.measureText('' + this.measure).width;
+    //   y = this.getYForTopText(0) + 3;
+    //   this.context.fillText('' + this.measure, this.x - text_width / 2, y);
+    //   this.context.restore();
+    // }
 
     this.context.closeGroup();
 

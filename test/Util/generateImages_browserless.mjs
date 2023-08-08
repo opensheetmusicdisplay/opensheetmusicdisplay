@@ -36,7 +36,7 @@ function sleep (ms) {
 // global variables
 //   (without these being global, we'd have to pass many of these values to the generateSampleImage function)
 // eslint-disable-next-line prefer-const
-let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, pageZoom, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 13);
+let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, pageZoom, maxWidth, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 14);
 imageFormat = imageFormat?.toLowerCase();
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
@@ -85,7 +85,7 @@ async function init () {
     pageFormat = "Endless";
     pageWidth = Number.parseInt(pageWidth, 10);
     pageHeight = Number.parseInt(pageHeight, 10);
-    pageZoom = Number.parseInt(pageZoom, 10);
+    pageZoom = +pageZoom;
     const endlessPage = !(pageHeight > 0 && pageWidth > 0);
     if (!endlessPage) {
         pageFormat = `${pageWidth}x${pageHeight}`;
@@ -152,7 +152,7 @@ async function init () {
     // const canvas = document.createElement('canvas')
     // div.canvas = document.createElement('canvas')
 
-    const zoom = 1.0;
+    const zoom = pageZoom;
     // width of the div / PNG generated
     let width = pageWidth * zoom;
     // TODO sometimes the width is way too small for the score, may need to adjust zoom.
@@ -260,8 +260,12 @@ async function init () {
     osmdInstance.EngravingRules.AutoGenerateMutipleRestMeasuresFromRestMeasures = false;
     osmdInstance.EngravingRules.TupletNumberLimitConsecutiveRepetitions = false;
     osmdInstance.EngravingRules.ChordOverlapAllowedIntoNextMeasure = 5;
+    if (maxWidth) {
+        osmdInstance.EngravingRules.SheetMaximumWidth = maxWidth;
+    }
     // osmdInstance.EngravingRules.LyricsAlignmentStandard = 3;
-    osmdInstance.zoom = 2.0
+    osmdInstance.zoom = pageZoom;
+    console.log(pageZoom);
     // for more options check OSMDOptions.ts
 
     // you can set finer-grained rendering/engraving settings in EngravingRules:
