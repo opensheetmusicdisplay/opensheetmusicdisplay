@@ -483,14 +483,20 @@ export class GraphicalSlur extends GraphicalCurve {
 
             if (this.placement === PlacementEnum.Above) {
                 startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
-                // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
-                //     if (articulation.placement === PlacementEnum.Above) {
-                //         startY -= 1;
-                //         break;
-                //     }
-                // }
+                if (this.rules.SlurPlacementUseSkyBottomLine) {
+                    startY = Math.min(endY, slurStartVE.parentStaffEntry.getSkylineMin());
+                    // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
+                    //     if (articulation.placement === PlacementEnum.Above) {
+                    //         startY -= this.rules.SlurEndArticulationYOffset;
+                    //         break;
+                    //     }
+                    // }
+                }
             } else {
                 startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
+                if (this.rules.SlurPlacementUseSkyBottomLine) {
+                    startY = Math.max(endY, slurStartVE.parentStaffEntry.getBottomlineMax());
+                }
                 // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
                 //     if (articulation.placement === PlacementEnum.Below) {
                 //         startY += 1;
@@ -538,6 +544,7 @@ export class GraphicalSlur extends GraphicalCurve {
             //   TODO alternatively, we could fix the bounding box of the note to include the ornament, but that seems tricky
             let articulationPlacement: PlacementEnum; // whether there's an articulation and where
             for (const articulation of slurEndVE.parentVoiceEntry.Articulations) {
+                articulationPlacement = articulation.placement;
                 if (articulation.placement === PlacementEnum.NotYetDefined) {
                     for (const modifier of ((slurEndNote as VexFlowGraphicalNote).vfnote[0] as any).modifiers) {
                         if (modifier.getCategory() === VF.Articulation.CATEGORY) {
@@ -555,11 +562,17 @@ export class GraphicalSlur extends GraphicalCurve {
             }
             if (this.placement === PlacementEnum.Above) {
                 endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
+                if (this.rules.SlurPlacementUseSkyBottomLine) {
+                    endY = Math.min(endY, slurEndVE.parentStaffEntry.getSkylineMin());
+                }
                 if (articulationPlacement === PlacementEnum.Above) {
                     endY -= this.rules.SlurEndArticulationYOffset;
                 }
             } else {
                 endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
+                if (this.rules.SlurPlacementUseSkyBottomLine) {
+                    endY = Math.max(endY, slurEndVE.parentStaffEntry.getBottomlineMax());
+                }
                 if (articulationPlacement === PlacementEnum.Below) {
                     endY += this.rules.SlurEndArticulationYOffset;
                 }
@@ -695,6 +708,9 @@ export class GraphicalSlur extends GraphicalCurve {
         if (startStemDirection  ===
             endStemDirection) {
             this.placement = (startStemDirection === StemDirectionType.Up) ? PlacementEnum.Below : PlacementEnum.Above;
+            if (this.rules.SlurPlacementAtStems) {
+                this.placement = (startStemDirection === StemDirectionType.Up) ? PlacementEnum.Above : PlacementEnum.Below;
+            }
         } else {
             // Placement at the side with the minimum border
             let sX: number = startStaffEntry.PositionAndShape.BorderLeft + startStaffEntry.PositionAndShape.RelativePosition.x

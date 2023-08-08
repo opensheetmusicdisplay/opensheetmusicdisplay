@@ -200,9 +200,14 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                                                 );
             const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GraphicalLabel;
             graphicalLabel.PositionAndShape.RelativePosition.y -= rules.ChordSymbolYOffset;
-            graphicalLabel.PositionAndShape.RelativePosition.x += xShift;
-            // TODO check for available space until next staffEntry or chord symbol (x direction)
+            graphicalLabel.setLabelPositionAndShapeBorders(); // to get Size.width
+            let extraXShiftForShortChordSymbols: number = 0;
+            if (graphicalLabel.PositionAndShape.Size.width < rules.ChordSymbolExtraXShiftWidthThreshold) {
+                extraXShiftForShortChordSymbols = rules.ChordSymbolExtraXShiftForShortChordSymbols;
+            }
+            graphicalLabel.PositionAndShape.RelativePosition.x += xShift + extraXShiftForShortChordSymbols;
             graphicalLabel.setLabelPositionAndShapeBorders();
+            // TODO check for available space until next staffEntry or chord symbol? (x direction)
             graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
             graphicalStaffEntry.graphicalChordContainers.push(graphicalChordSymbolContainer);
 

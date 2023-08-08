@@ -16,6 +16,7 @@ export class UnknownExpression extends AbstractExpression {
     private textAlignment: TextAlignmentEnum;
     private staffNumber: number;
     public fontStyle: FontStyles;
+    public defaultYXml: number;
 
     public get Label(): string {
         return this.label;

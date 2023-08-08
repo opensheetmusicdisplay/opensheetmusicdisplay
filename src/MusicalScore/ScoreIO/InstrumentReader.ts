@@ -26,6 +26,7 @@ import {StemDirectionType} from "../VoiceData/VoiceEntry";
 import {NoteType, NoteTypeHandler} from "../VoiceData/NoteType";
 import { SystemLinesEnumHelper } from "../Graphical/SystemLinesEnum";
 import { ReaderPluginManager } from "./ReaderPluginManager";
+import { TremoloInfo } from "../VoiceData/Note";
 // import {Dictionary} from "typescript-collections";
 
 // FIXME: The following classes are missing
@@ -321,13 +322,13 @@ export class InstrumentReader {
           // check stem element
           const [stemDirectionXml, stemColorXml, noteheadColorXml] = this.getStemDirectionAndColors(xmlNode);
 
-          // check Tremolo
-          let tremoloStrokes: number = 0;
+          // check Tremolo, Vibrato
           let vibratoStrokes: boolean = false;
+          let tremoloInfo: TremoloInfo;
           if (notationsNode) {
             const ornamentsNode: IXmlElement = notationsNode.element("ornaments");
             if (ornamentsNode) {
-              tremoloStrokes = this.getTremoloStrokes(ornamentsNode);
+              tremoloInfo = this.getTremoloInfo(ornamentsNode);
               vibratoStrokes = this.getVibratoStrokes(ornamentsNode);
             }
           }
@@ -389,7 +390,7 @@ export class InstrumentReader {
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, octavePlusOne,
-            printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
+            printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloInfo, stemColorXml, noteheadColorXml,
             vibratoStrokes, dots
           );
 
@@ -1416,19 +1417,31 @@ export class InstrumentReader {
     return null;
   }
 
-  private getTremoloStrokes(ornamentsNode: IXmlElement): number {
+  private getTremoloInfo(ornamentsNode: IXmlElement): TremoloInfo {
+    let tremoloStrokes: number;
+    let tremoloUnmeasured: boolean;
     const tremoloNode: IXmlElement = ornamentsNode.element("tremolo");
     if (tremoloNode) {
       const tremoloType: Attr = tremoloNode.attribute("type");
-      if (tremoloType && tremoloType.value === "single") {
-        const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
-        if (tremoloStrokesGiven > 0) {
-          return tremoloStrokesGiven;
+      if (tremoloType) {
+        if (tremoloType.value === "single") {
+          const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+          if (tremoloStrokesGiven > 0) {
+            tremoloStrokes = tremoloStrokesGiven;
+          }
+        } else {
+          tremoloStrokes = 0;
         }
+        if (tremoloType.value === "unmeasured") {
+          tremoloUnmeasured = true;
+        }
+        // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
       }
-      // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
     }
-    return 0;
+    return {
+      tremoloStrokes: tremoloStrokes,
+      tremoloUnmeasured: tremoloUnmeasured
+    };
   }
 
   private getVibratoStrokes(ornamentsNode: IXmlElement): boolean {

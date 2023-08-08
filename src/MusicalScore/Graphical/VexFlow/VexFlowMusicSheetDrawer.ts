@@ -32,6 +32,9 @@ import { GraphicalUnknownExpression } from "../GraphicalUnknownExpression";
 import { VexFlowPedal } from "./VexFlowPedal";
 import { GraphicalGlissando } from "../GraphicalGlissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
+import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
+import { SvgVexFlowBackend } from "./SvgVexFlowBackend";
+import { CanvasVexFlowBackend } from "./CanvasVexFlowBackend";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -213,10 +216,81 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             log.warn("VexFlowMusicSheetDrawer.drawMeasure", ex);
         }
 
+        let newBuzzRollId: number = 0;
         // Draw the StaffEntries
         for (const staffEntry of measure.staffEntries) {
             this.drawStaffEntry(staffEntry);
+            newBuzzRollId = this.drawBuzzRolls(staffEntry, newBuzzRollId);
         }
+    }
+
+    protected drawBuzzRolls(staffEntry: GraphicalStaffEntry, newBuzzRollId): number {
+        for (const gve of staffEntry.graphicalVoiceEntries) {
+            for (const note of gve.notes) {
+                if (note.sourceNote.TremoloInfo?.tremoloUnmeasured) {
+                    const thickness: number = this.rules.TremoloBuzzRollThickness;
+                    const baseLength: number = 0.9;
+                    const baseHeight: number = 0.5;
+
+                    const vfNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
+                    let stemTip: PointF2D;
+                    let stemHeight: number;
+                    const directionSign: number = vfNote.vfnote[0].getStemDirection(); // 1 or -1
+                    if (this.backend instanceof SvgVexFlowBackend) {
+                        const stemElement: HTMLElement = vfNote.getStemSVG();
+                        const rect: SVGRect = (stemElement as any).getBBox();
+                        stemTip = new PointF2D(rect.x / 10, rect.y / 10);
+                        stemHeight = rect.height / 10;
+                    } else if (this.backend instanceof CanvasVexFlowBackend) {
+                        stemHeight = vfNote.vfnote[0].getStemLength() / 10;
+                        stemTip = new PointF2D(
+                            (vfNote.vfnote[0].getStem() as any).x_begin / 10,
+                            (vfNote.vfnote[0].getStem() as any).y_top / 10,
+                        );
+                        if (directionSign === 1) {
+                            stemTip.y -= stemHeight;
+                        }
+                    }
+                    // this.DrawOverlayLine(stemTip, new PointF2D(stemTip.x + 5, stemTip.y), vfNote.ParentMusicPage); // debug
+
+                    let startHeight: number = stemTip.y + stemHeight / 3;
+                    if (vfNote.vfnote[0].getBeamCount() > 1) {
+                        startHeight = stemTip.y + (stemHeight / 2);
+                        if (directionSign === -1) {
+                            // downwards stem, z paints in downwards direction, so we need to start further up
+                            startHeight -= (baseHeight + 0.2);
+                        }
+                        // note that buzz rolls usually don't appear on notes smaller than 16ths, rather on longer ones
+                    }
+
+                    const buzzStartX: number = stemTip.x - 0.5; // top left start point
+                    const buzzStartY: number = startHeight;
+                    const pathPoints: PointF2D[] = [];
+                    // movements to draw the "z" point by point: (drawing by numbers)
+                    const movements: PointF2D[] = [
+                        new PointF2D(0, -thickness), // down a bit
+                        new PointF2D(baseLength-thickness, 0), // to the right
+                        new PointF2D(-baseLength+thickness,-baseHeight), // down left (etc)
+                        new PointF2D(0, -thickness),
+                        new PointF2D(baseLength, 0),
+                        new PointF2D(0, thickness),
+                        new PointF2D(-baseLength+thickness, 0),
+                        new PointF2D(baseLength-thickness, baseHeight),
+                        new PointF2D(0, thickness),
+                        new PointF2D(-baseLength, 0)
+                    ];
+                    let currentPoint: PointF2D = new PointF2D(buzzStartX, buzzStartY);
+                    pathPoints.push(currentPoint);
+                    for (const movement of movements) {
+                        currentPoint = pathPoints.last();
+                        pathPoints.push(new PointF2D(currentPoint.x + movement.x, currentPoint.y - movement.y));
+                    }
+                    this.DrawPath(pathPoints, vfNote.ParentMusicPage, true, `buzzRoll${newBuzzRollId}`);
+                    newBuzzRollId++;
+                }
+            }
+        }
+        return newBuzzRollId;
     }
 
     // private drawPixel(coord: PointF2D): void {
@@ -247,7 +321,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      *  To get a MusicPage, use GraphicalNote.ParentMusicPage.
      */
     public DrawOverlayLine(start: PointF2D, stop: PointF2D, musicPage: GraphicalMusicPage,
-                           color: string = "#FF0000FF", lineWidth: number = 0.2): Node {
+                           color: string = "#FF0000FF", lineWidth: number = 0.2,
+                           id?: string): Node {
         if (!musicPage.PageNumber || musicPage.PageNumber > this.backends.length || musicPage.PageNumber < 1) {
             console.log("VexFlowMusicSheetDrawer.drawOverlayLine: invalid page number / music page number doesn't correspond to an existing backend.");
             return;
@@ -257,7 +332,22 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
-        return backendToUse.renderLine(start, stop, color, lineWidth * unitInPixels);
+        if (!id) {
+            id = `overlayLine ${start.x}/${start.y}`;
+        }
+        return backendToUse.renderLine(start, stop, color, lineWidth * unitInPixels, id);
+    }
+
+    public DrawPath(inputPoints: PointF2D[], musicPage: GraphicalMusicPage,
+        fill: boolean = true, id?: string): Node {
+        const musicPageIndex: number = musicPage.PageNumber - 1;
+        const backendToUse: VexFlowBackend = this.backends[musicPageIndex];
+
+        const transformedPoints: PointF2D[] = [];
+        for (const inputPoint of inputPoints) {
+            transformedPoints.push(this.applyScreenTransformation(inputPoint));
+        }
+        return backendToUse.renderPath(transformedPoints, fill, id);
     }
 
     protected drawSkyLine(staffline: StaffLine): void {

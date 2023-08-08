@@ -77,6 +77,8 @@ export class Notehead {
             case "do":
             case "triangle":
                 return NoteHeadShape.TRIANGLE;
+            case "inverted triangle":
+                return NoteHeadShape.TRIANGLE_INVERTED;
             case "rectangle":
                 return NoteHeadShape.RECTANGLE;
             case "circle-x":
@@ -97,6 +99,7 @@ export enum NoteHeadShape {
     SLASH,
     SQUARE,
     TRIANGLE,
+    TRIANGLE_INVERTED,
     X,
     // TODO: Add the rest from https://usermanuals.musicxml.com/MusicXML/Content/ST-MusicXML-notehead-value.htm
     // currently all Vexflow supported shapes present

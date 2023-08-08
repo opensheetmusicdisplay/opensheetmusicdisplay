@@ -82,7 +82,7 @@ export class Note {
     /** The number of tremolo strokes this note has (16th tremolo = 2 strokes).
      * Could be a Tremolo object in future when there is more data like tremolo between two notes.
      */
-    private tremoloStrokes: number;
+    public TremoloInfo: TremoloInfo;
     /** Color of the stem given in the XML Stem tag. RGB Hexadecimal, like #00FF00.
      * This is not used for rendering, which takes VoiceEntry.StemColor.
      * It is merely given in the note's stem element in XML and stored here for reference.
@@ -220,10 +220,7 @@ export class Note {
         this.stemDirectionXml = value;
     }
     public get TremoloStrokes(): number {
-        return this.tremoloStrokes;
-    }
-    public set TremoloStrokes(value: number) {
-        this.tremoloStrokes = value;
+        return this.TremoloInfo?.tremoloStrokes;
     }
     public get StemColorXml(): string {
         return this.stemColorXml;
@@ -263,6 +260,11 @@ export class Note {
         return this.isRest() && this.Length.RealValue === this.sourceMeasure.ActiveTimeSignature.RealValue;
     }
 
+    /** Whether the note fills the whole measure. */
+    public isWholeMeasureNote(): boolean {
+        return this.Length.RealValue === this.sourceMeasure.ActiveTimeSignature.RealValue;
+    }
+
     public ToString(): string {
         if (this.pitch) {
             return this.Pitch.ToString() + ", length: " + this.length.toString();
@@ -296,4 +298,11 @@ export enum Appearance {
     Normal,
     Grace,
     Cue
+}
+
+export interface TremoloInfo {
+    tremoloStrokes: number;
+    /** Buzz roll (type="unmeasured" in XML) */
+    tremoloUnmeasured: boolean;
+    // could in future be extended e.g. for tremolo between notes
 }
