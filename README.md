@@ -1,10 +1,13 @@
 ## Extended Transpose Calculator with OpenSheetMusicDisplay
 Welcome to the Extended Transpose Calculator based on OpenSheetMusicDisplay!
 
-### WARNING
+### ⚠️ WARNING
+
+This API is unstable - use at your own risk.
+
 The ExtendendTransposeCalculator project is in alpha and is undergoing continuous review.
 Function names and strategies for interfacing with OSMD may change suddenly and without notice.
-If you're interested in a stable product, I invite you to use the original version of OpenSheetMusicDisplay,
+If you're interested in a stable product, I **highly** recommend you to use the original version of OpenSheetMusicDisplay,
 available at the link:
 [https://github.com/opensheetmusicdisplay/opensheetmusicdisplay](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay)
 
