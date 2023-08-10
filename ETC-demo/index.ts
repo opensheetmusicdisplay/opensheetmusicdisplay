@@ -44,6 +44,7 @@ const samples: string[][] = [
     ["Mozart, W.A. - Clarinet Quintet (Excerpt)","sheets/Mozart_Clarinet_Quintet_Excerpt.mxl"],
     ["Mozart, W.A. - String Quartet in G, K. 387, 1st Mvmt Excerpt","sheets/Mozart_String_Quartet_in_G_K._387_1st_Mvmnt_excerpt.musicxml"],
     ["Mozart/Holzer - Land der Berge (national anthem of Austria)","sheets/Land_der_Berge.musicxml"],
+    ["Stress Test Octave Line","sheets/Scale_sixteenth.mxl"],
     ["Stress Test - F Clef & Key","sheets/Stress_Test_F_Clef_and_Key.musicxml"],
     ["Stress Test - Clef & Key","sheets/Stress_Test_Clef_and_Key.musicxml"],
     ["Stress Test - Homophonic Keys - G Clef","sheets/Stress_Test_With_Homophonic_Keys_G_Clef.musicxml"],
