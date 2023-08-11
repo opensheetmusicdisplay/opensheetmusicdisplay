@@ -984,7 +984,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           for (let i: number = startStaffLine.ParentMusicSystem.Id; i < endStaffLine.ParentMusicSystem.Id; i++) {
             const idx: number = i + 1;
             const nextShiftMusicSystem: MusicSystem = this.musicSystems[idx];
-            let nextShiftStaffline: StaffLine;
+            let nextShiftStaffline: StaffLine; // not always = nextShiftMusicSystem.StaffLines[staffIndex], e.g. when first instrument invisible
             for (const staffline of nextShiftMusicSystem.StaffLines) {
               if (staffline.ParentStaff.idInMusicSheet === staffIndex) {
                 nextShiftStaffline = staffline;
