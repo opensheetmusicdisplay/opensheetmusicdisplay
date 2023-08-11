@@ -818,15 +818,6 @@
         </note>
       </measure>
     <measure number="8" width="260.20">
-      <print new-system="yes">
-        <system-layout>
-          <system-margins>
-            <left-margin>49.52</left-margin>
-            <right-margin>719.32</right-margin>
-            </system-margins>
-          <system-distance>150.00</system-distance>
-          </system-layout>
-        </print>
       <note default-x="63.89" default-y="-50.00">
         <pitch>
           <step>C</step>
@@ -1599,11 +1590,6 @@
         </note>
       </measure>
     <measure number="8" width="260.20">
-      <print new-system="yes">
-        <staff-layout number="1">
-          <staff-distance>65.00</staff-distance>
-          </staff-layout>
-        </print>
       <note default-x="63.89" default-y="-165.00">
         <pitch>
           <step>C</step>
