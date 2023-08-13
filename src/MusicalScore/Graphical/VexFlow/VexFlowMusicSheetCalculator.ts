@@ -984,7 +984,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           for (let i: number = startStaffLine.ParentMusicSystem.Id; i < endStaffLine.ParentMusicSystem.Id; i++) {
             const idx: number = i + 1;
             const nextShiftMusicSystem: MusicSystem = this.musicSystems[idx];
-            const nextShiftStaffline: StaffLine = nextShiftMusicSystem.StaffLines[staffIndex];
+            let nextShiftStaffline: StaffLine; // not always = nextShiftMusicSystem.StaffLines[staffIndex], e.g. when first instrument invisible
+            for (const staffline of nextShiftMusicSystem.StaffLines) {
+              if (staffline.ParentStaff.idInMusicSheet === staffIndex) {
+                nextShiftStaffline = staffline;
+                break;
+              }
+            }
+            if (!nextShiftStaffline) { // shouldn't happen
+              continue;
+            }
             const nextShiftFirstMeasure: GraphicalMeasure = nextShiftStaffline.Measures[0];
             // Shift starts on the first measure
             const nextOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, nextShiftFirstMeasure.PositionAndShape);
