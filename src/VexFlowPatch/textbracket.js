@@ -185,9 +185,6 @@ export class TextBracket extends Element {
       );
       // Ending Bracket
       if (this.render_options.show_bracket) {
-        if (end_x < start_x) {
-          end_x = start_x;
-        }
         Renderer.drawDashedLine(
           ctx,
           end_x,
