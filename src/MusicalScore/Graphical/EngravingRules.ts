@@ -178,6 +178,7 @@ export class EngravingRules {
     public LabelMarginBorderFactor: number;
     public TupletVerticalLineLength: number;
     public TupletNumbersInTabs: boolean;
+    public TabBeamsRendered: boolean;
 
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
@@ -628,6 +629,7 @@ export class EngravingRules {
         this.LabelMarginBorderFactor = 0.1;
         this.TupletVerticalLineLength = 0.5;
         this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
+        this.TabBeamsRendered = true;
 
         // Slur and Tie variables
         this.SlurPlacementFromXML = true;

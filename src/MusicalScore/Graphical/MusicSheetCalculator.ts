@@ -72,6 +72,7 @@ import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
 import { GraphicalChordSymbolContainer } from ".";
 import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
 import { Voice } from "../VoiceData/Voice";
+import { TabNote } from "../VoiceData/TabNote";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -1955,7 +1956,9 @@ export abstract class MusicSheetCalculator {
             graphicalNote.PositionAndShape.calculateBoundingBox();
             if (!this.leadSheet) {
                 if (note.NoteBeam !== undefined && note.PrintObject) {
-                    this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
+                    if (!(note instanceof TabNote) || this.rules.TabBeamsRendered) {
+                        this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
+                    }
                 }
                 if (note.NoteTuplet !== undefined && note.PrintObject) {
                     this.handleTuplet(graphicalNote, note.NoteTuplet, openTuplets);
