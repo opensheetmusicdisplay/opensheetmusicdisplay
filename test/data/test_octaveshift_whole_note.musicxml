@@ -41,7 +41,7 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="616.935" default-y="1511.05" justify="center" valign="top" font-size="22">test_octaveshift_whole_note</credit-words>
+    <credit-words default-x="616.935" default-y="1511.09" justify="center" valign="top" font-size="22">test_octaveshift_whole_note</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">
@@ -60,12 +60,12 @@
       </score-part>
     </part-list>
   <part id="P1">
-    <measure number="1" width="304.16">
+    <measure number="1" width="222.10">
       <print>
         <system-layout>
           <system-margins>
             <left-margin>50.00</left-margin>
-            <right-margin>674.54</right-margin>
+            <right-margin>618.93</right-margin>
             </system-margins>
           <top-system-distance>170.00</top-system-distance>
           </system-layout>
@@ -89,7 +89,7 @@
           <octave-shift type="down" size="8" number="1" default-y="20.00"/>
           </direction-type>
         </direction>
-      <note default-x="80.72" default-y="-5.00">
+      <note default-x="73.72" default-y="-5.00">
         <pitch>
           <step>E</step>
           <octave>6</octave>
@@ -100,7 +100,28 @@
         </note>
       <direction placement="above">
         <direction-type>
-          <octave-shift type="stop" size="8" number="1" relative-x="192.09"/>
+          <octave-shift type="stop" size="8" number="1"/>
+          </direction-type>
+        </direction>
+      </measure>
+    <measure number="2" width="171.39">
+      <direction placement="below">
+        <direction-type>
+          <octave-shift type="up" size="8" number="1" default-y="-60.00"/>
+          </direction-type>
+        </direction>
+      <note default-x="13.00" default-y="-30.00">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        </note>
+      <direction placement="below">
+        <direction-type>
+          <octave-shift type="stop" size="8" number="1"/>
           </direction-type>
         </direction>
       <barline location="right">

@@ -91,6 +91,9 @@ add inverted triangle notehead ('TI')
 tabnote.js (merged Vexflow 3.x):
 Add a context group for each tabnote, so that it can be found in the SVG DOM ("vf-tabnote")
 
+textbracket.js (custom fix):
+make sure text bracket doesn't go backwards+overlap (e.g. short octave bracket)
+
 timesignature.js (fixed vexflow 4):
 open group to get SVG group+class for key signature
 

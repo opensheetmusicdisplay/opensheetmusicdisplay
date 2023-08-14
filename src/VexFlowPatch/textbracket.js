@@ -150,7 +150,7 @@ export class TextBracket extends Element {
     // Setup initial coordinates for the bracket line
     let start_x = start.x;
     let line_y = super_y;
-    const end_x = stop.x + this.stop.getGlyph().getWidth();
+    let end_x = stop.x + this.stop.getGlyph().getWidth();
 
     // Adjust x and y coordinates based on position
     if (this.position === TextBracket.Positions.TOP) {
@@ -166,6 +166,14 @@ export class TextBracket extends Element {
     }
 
     if (this.render_options.dashed) {
+      // VexFlowPatch: make sure bracket doesn't go backwards, also causing overlap with text
+      if (end_x < start_x + 5 && this.position === TextBracket.Positions.TOP) {
+        end_x = start_x + 5; 
+      } else if (end_x < start_x + superscript_width && this.position === TextBracket.Positions.BOTTOM) {
+        // text bracket bottom (below staff) means it already starts where the superscript starts,
+        //   so we need to end at the end of the superscript at minimum
+        end_x = start_x + superscript_width;
+      }
       // Main line
       Renderer.drawDashedLine(
         ctx,
@@ -177,6 +185,9 @@ export class TextBracket extends Element {
       );
       // Ending Bracket
       if (this.render_options.show_bracket) {
+        if (end_x < start_x) {
+          end_x = start_x;
+        }
         Renderer.drawDashedLine(
           ctx,
           end_x,
