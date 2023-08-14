@@ -44,7 +44,9 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             // create vex flow Notes:
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
                 if (gve.notes[0].sourceNote.isRest()) {
-                    (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.GhostNotes(gve.notes[0].sourceNote.Length)[0];
+                    const ghostNotes: VF.GhostNote[] = VexFlowConverter.GhostNotes(gve.notes[0].sourceNote.Length);
+                    (gve as VexFlowVoiceEntry).vfStaveNote = ghostNotes[0];
+                    (gve as VexFlowVoiceEntry).vfGhostNotes = ghostNotes; // we actually need multiple ghost notes sometimes, see #1062 Sep. 23 2021 comment
                 } else {
                     (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.CreateTabNote(gve);
                 }
@@ -81,7 +83,13 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                 const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
                 if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
                     // GhostNote, don't add modifiers like in-measure clefs
-                    this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
+                    if (vexFlowVoiceEntry.vfGhostNotes) {
+                        for (const ghostNote of vexFlowVoiceEntry.vfGhostNotes) {
+                            this.vfVoices[voice.VoiceId].addTickable(ghostNote);
+                        }
+                    } else {
+                        this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
+                    }
                     continue;
                 }
 
@@ -113,7 +121,13 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                     }
                 }
 
-                this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
+                if (vexFlowVoiceEntry.vfGhostNotes) {
+                    for (const ghostNote of vexFlowVoiceEntry.vfGhostNotes) {
+                        this.vfVoices[voice.VoiceId].addTickable(ghostNote);
+                    }
+                } else {
+                    this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
+                }
             }
         }
         //this.createArticulations();
