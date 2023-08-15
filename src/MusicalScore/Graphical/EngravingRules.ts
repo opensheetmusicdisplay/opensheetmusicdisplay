@@ -137,6 +137,10 @@ export class EngravingRules {
     public ChordSymbolYPadding: number;
     public ChordSymbolYAlignment: boolean;
     public ChordSymbolYAlignmentScope: string;
+    /** Offset to start of measure (barline) when chord symbol is on whole measure rest.
+     * An offset of 0 would place the chord symbol directly above the barline, so the default is ~1.2.
+     */
+    public ChordSymbolWholeMeasureRestXOffset: number;
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
     public ChordAccidentalTexts: Dictionary<AccidentalEnum, string>;
     public CustomChords: CustomChord[];
@@ -599,6 +603,7 @@ export class EngravingRules {
         this.ChordSymbolYPadding = 0.0;
         this.ChordSymbolYAlignment = true;
         this.ChordSymbolYAlignmentScope = "staffline"; // "measure" or "staffline"
+        this.ChordSymbolWholeMeasureRestXOffset = 1.9;
         this.ChordAccidentalTexts = new Dictionary<AccidentalEnum, string>();
         this.resetChordAccidentalTexts(this.ChordAccidentalTexts, false);
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();

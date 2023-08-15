@@ -394,7 +394,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const bBox: BoundingBox = container instanceof GraphicalLyricEntry ? container.GraphicalLabel.PositionAndShape : container.PositionAndShape;
       const labelWidth: number = bBox.Size.width;
       const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
-      const xPosition: number = staffEntryXPosition + bBox.BorderMarginLeft;
+      let xPosition: number = staffEntryXPosition + bBox.BorderMarginLeft;
+      if (container instanceof GraphicalChordSymbolContainer && container.PositionAndShape.Parent.DataObject instanceof GraphicalMeasure) {
+        // the parent is only the measure for whole measure rest notes with chord symbols,
+        //   which should start near the beginning of the measure instead of the middle, where there is no desired staffEntry position.
+        //   TODO somehow on the 2nd render, above xPosition (from VexFlowStaffEntry) is way too big (for whole measure rests).
+        xPosition = this.rules.ChordSymbolWholeMeasureRestXOffset + bBox.BorderMarginLeft;
+      }
 
       if (lastEntryDict[currentContainerIndex] !== undefined) {
         if (lastEntryDict[currentContainerIndex].extend) {
