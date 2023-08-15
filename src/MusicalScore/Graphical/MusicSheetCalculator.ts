@@ -35,7 +35,7 @@ import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { VerticalGraphicalStaffEntryContainer } from "./VerticalGraphicalStaffEntryContainer";
 import { KeyInstruction } from "../VoiceData/Instructions/KeyInstruction";
 import { AbstractNotationInstruction } from "../VoiceData/Instructions/AbstractNotationInstruction";
-import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruction";
+import { TechnicalInstruction, TechnicalInstructionType } from "../VoiceData/Instructions/TechnicalInstruction";
 import { Pitch } from "../../Common/DataObjects/Pitch";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { ColDirEnum } from "./BoundingBox";
@@ -2901,12 +2901,21 @@ export abstract class MusicSheetCalculator {
                             measure.PositionAndShape.RelativePosition.x;
                         const fingerings: TechnicalInstruction[] = [];
                         for (const voiceEntry of gse.graphicalVoiceEntries) {
-                            for (const note of voiceEntry.notes) {
-                                const sourceNote: Note = note.sourceNote;
-                                if (sourceNote.Fingering && !sourceNote.IsGraceNote) {
-                                    fingerings.push(sourceNote.Fingering);
+                            if (voiceEntry.parentVoiceEntry.IsGrace) {
+                                continue;
+                            }
+                            // Sibelius: can have multiple fingerings per note, so we need to check voice entry instructions, not note.Fingering
+                            for (const instruction of voiceEntry.parentVoiceEntry.TechnicalInstructions) {
+                                if (instruction.type === TechnicalInstructionType.Fingering) {
+                                    fingerings.push(instruction);
                                 }
                             }
+                            // for (const note of voiceEntry.notes) {
+                            //     const sourceNote: Note = note.sourceNote;
+                            //     if (sourceNote.Fingering && !sourceNote.IsGraceNote) {
+                            //         fingerings.push(sourceNote.Fingering);
+                            //     }
+                            // }
                         }
                         if (placement === PlacementEnum.Below) {
                             fingerings.reverse();
