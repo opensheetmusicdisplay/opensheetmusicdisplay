@@ -918,7 +918,9 @@ export abstract class MusicSheetCalculator {
                 this.calculateMeasureNumberPlacement(musicSystem);
             }
         }
-        this.calculateFingerings(); // if this is done after slurs, fingerings can be on top of slurs
+        if (this.rules.RenderFingerings) {
+            this.calculateFingerings(); // if this is done after slurs, fingerings can be on top of slurs
+        }
         // calculate Slurs
         if (!this.leadSheet && this.rules.RenderSlurs) {
             this.calculateSlurs();
