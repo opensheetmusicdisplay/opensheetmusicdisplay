@@ -199,6 +199,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                 // whole measure rests: position at start of measure instead of middle like the rest note
                 // xShift -= graphicalStaffEntry.PositionAndShape.RelativePosition.x; // unfortunately relative x is 0 here
                 parentBbox = graphicalStaffEntry.parentMeasure.PositionAndShape;
+                xShift += graphicalStaffEntry.parentMeasure.beginInstructionsWidth;
                 xShift += rules.ChordSymbolWholeMeasureRestXOffset; // margin to start of measure / bar
             }
             const graphicalChordSymbolContainer: GraphicalChordSymbolContainer =

@@ -603,7 +603,7 @@ export class EngravingRules {
         this.ChordSymbolYPadding = 0.0;
         this.ChordSymbolYAlignment = true;
         this.ChordSymbolYAlignmentScope = "staffline"; // "measure" or "staffline"
-        this.ChordSymbolWholeMeasureRestXOffset = 1.9;
+        this.ChordSymbolWholeMeasureRestXOffset = 0;
         this.ChordAccidentalTexts = new Dictionary<AccidentalEnum, string>();
         this.resetChordAccidentalTexts(this.ChordAccidentalTexts, false);
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();

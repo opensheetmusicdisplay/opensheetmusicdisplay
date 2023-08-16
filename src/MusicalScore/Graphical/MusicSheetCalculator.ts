@@ -1071,8 +1071,15 @@ export abstract class MusicSheetCalculator {
                             const graphicalChordContainer: GraphicalChordSymbolContainer = staffEntry.graphicalChordContainers[i];
                             const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
                             const parentBbox: BoundingBox = gps.Parent; // usually the staffEntry (bbox), but sometimes measure (for whole measure rests)
-                            const start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x;
-                            const end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x;
+                            let start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x;
+                            let end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x;
+                            if (parentBbox.DataObject instanceof GraphicalMeasure) {
+                                gps.RelativePosition.x = Math.max(measure.beginInstructionsWidth, gps.RelativePosition.x);
+                                // beginInstructionsWidth wasn't set correctly before this
+
+                                start += measure.beginInstructionsWidth;
+                                end += measure.beginInstructionsWidth;
+                            }
                             if (!this.rules.ChordSymbolYAlignment || minimumOffset > 0) {
                                 //minimumOffset = this.calculateAlignedChordSymbolsOffset([staffEntry], skybottomcalculator);
                                 minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end); // same as above, less code executed
@@ -1103,8 +1110,12 @@ export abstract class MusicSheetCalculator {
             for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
                 const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
                 const parentBbox: BoundingBox = gps.Parent; // usually the staffEntry (bbox), but sometimes measure (for whole measure rests)
-                const start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x;
-                const end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x;
+                let start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x;
+                let end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x;
+                if (parentBbox.DataObject instanceof GraphicalMeasure) {
+                    start += (parentBbox.DataObject as GraphicalMeasure).beginInstructionsWidth;
+                    end += (parentBbox.DataObject as GraphicalMeasure).beginInstructionsWidth;
+                }
                 minimumOffset = Math.min(minimumOffset, sbc.getSkyLineMinInRange(start, end));
             }
         }

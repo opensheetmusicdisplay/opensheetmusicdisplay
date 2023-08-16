@@ -7,7 +7,7 @@
   <identification>
     <encoding>
       <software>MuseScore 3.6.2</software>
-      <encoding-date>2023-08-15</encoding-date>
+      <encoding-date>2023-08-16</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -41,7 +41,7 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="616.935" default-y="1511.05" justify="center" valign="top" font-size="22">test_chord_symbol_position_whole_rest</credit-words>
+    <credit-words default-x="616.935" default-y="1511.09" justify="center" valign="top" font-size="22">test_chord_symbol_position_whole_rest</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">
@@ -60,12 +60,12 @@
       </score-part>
     </part-list>
   <part id="P1">
-    <measure number="1" width="371.20">
+    <measure number="1" width="206.60">
       <print>
         <system-layout>
           <system-margins>
             <left-margin>50.00</left-margin>
-            <right-margin>0.00</right-margin>
+            <right-margin>477.50</right-margin>
             </system-margins>
           <top-system-distance>170.00</top-system-distance>
           </system-layout>
@@ -90,24 +90,14 @@
           </root>
         <kind>major</kind>
         </harmony>
-      <note default-x="80.72" default-y="-30.00">
-        <pitch>
-          <step>G</step>
-          <octave>4</octave>
-          </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>half</type>
-        <stem>up</stem>
-        </note>
       <note>
         <rest/>
-        <duration>2</duration>
+        <duration>4</duration>
         <voice>1</voice>
-        <type>half</type>
+        <type>whole</type>
         </note>
       </measure>
-    <measure number="2" width="292.68">
+    <measure number="2" width="153.09">
       <harmony print-frame="no">
         <root>
           <root-step>A</root-step>
@@ -120,7 +110,7 @@
         <voice>1</voice>
         </note>
       </measure>
-    <measure number="3" width="314.82">
+    <measure number="3" width="175.23">
       <harmony print-frame="no">
         <root>
           <root-step>C</root-step>
