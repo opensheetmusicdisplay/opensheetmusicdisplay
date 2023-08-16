@@ -1071,7 +1071,8 @@ export abstract class MusicSheetCalculator {
                         }
                         for (let i: number = 0; i < staffEntry.graphicalChordContainers.length; i++) {
                             const graphicalChordContainer: GraphicalChordSymbolContainer = staffEntry.graphicalChordContainers[i];
-                            if (staffEntry.PositionAndShape.RelativePosition.x === 0 && staffEntry.relInMeasureTimestamp.RealValue > 0) {
+                            // check for chord not over a note
+                            if (staffEntry.graphicalVoiceEntries.length === 0 && staffEntry.relInMeasureTimestamp.RealValue > 0) {
                                 // re-position (second chord symbol on whole measure rest)
                                 let firstNoteStartX: number = 0;
                                 if (measure.staffEntries[0].relInMeasureTimestamp.RealValue === 0) {
@@ -1093,6 +1094,12 @@ export abstract class MusicSheetCalculator {
                                 }
                                 graphicalChordContainer.PositionAndShape.RelativePosition.x = newStartX;
                                 graphicalChordContainer.PositionAndShape.Parent = measure.staffEntries[0].PositionAndShape.Parent;
+                                // TODO it would be more clean to set the staffEntry relative position instead of the container's,
+                                //   so that the staff entry also gets a valid position (and not relative 0),
+                                //   but this is tricky with elongationFactor, skyline etc, would need some adjustments
+                                // // graphicalChordContainer.PositionAndShape.Parent = measure.staffEntries[0].PositionAndShape.Parent; // not here
+                                // //   don't switch parent from StaffEntry if setting staffEntry.x
+                                // staffEntry.PositionAndShape.RelativePosition.x = newStartX;
                                 // staffEntry.PositionAndShape.calculateAbsolutePosition();
                             }
                             const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
