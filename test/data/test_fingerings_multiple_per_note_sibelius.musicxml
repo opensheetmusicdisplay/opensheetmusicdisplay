@@ -1,0 +1,182 @@
+<?xml version='1.0' encoding='UTF-16' standalone='no'?>
+<!DOCTYPE score-partwise PUBLIC '-//Recordare//DTD MusicXML 4.0 Partwise//EN' 'http://www.musicxml.org/dtds/partwise.dtd'>
+<score-partwise version='4.0'>
+	<movement-title>test_fingerings_multiple_per_note_sibelius</movement-title>
+	<identification>
+		<encoding>
+			<software>Sibelius 2023.5</software>
+			<software>Dolet 8.3 for Sibelius</software>
+			<encoding-date>2023-07-21</encoding-date>
+			<supports element='accidental' type='yes'/>
+			<supports element='transpose' type='yes'/>
+			<supports attribute='new-page' element='print' type='yes' value='yes'/>
+			<supports attribute='new-system' element='print' type='yes' value='yes'/>
+		</encoding>
+	</identification>
+	<defaults>
+		<scaling>
+			<millimeters>6.5</millimeters>
+			<tenths>40</tenths>
+		</scaling>
+		<page-layout>
+			<page-height>1828</page-height>
+			<page-width>1292</page-width>
+			<page-margins type='both'>
+				<left-margin>78.1538</left-margin>
+				<right-margin>78.1538</right-margin>
+				<top-margin>78.1538</top-margin>
+				<bottom-margin>78.1538</bottom-margin>
+			</page-margins>
+		</page-layout>
+		<system-layout>
+			<system-margins>
+				<left-margin>0</left-margin>
+				<right-margin>0</right-margin>
+			</system-margins>
+			<system-distance>100</system-distance>
+			<top-system-distance>153.75</top-system-distance>
+		</system-layout>
+		<?DoletSibelius StaffJustificationPercentage=40?>
+		<appearance>
+			<line-width type='beam'>5</line-width>
+			<line-width type='heavy barline'>5</line-width>
+			<line-width type='leger'>1.5625</line-width>
+			<line-width type='light barline'>1.5625</line-width>
+			<line-width type='slur middle'>2.1875</line-width>
+			<line-width type='slur tip'>0.625</line-width>
+			<line-width type='staff'>1.25</line-width>
+			<line-width type='stem'>1.25</line-width>
+			<line-width type='tie middle'>2.1875</line-width>
+			<line-width type='tie tip'>0.625</line-width>
+			<note-size type='grace'>60</note-size>
+			<note-size type='cue'>75</note-size>
+		</appearance>
+		<music-font font-family='Helsinki Std,engraved'/>
+		<word-font font-family='Palatino,serif'/>
+	</defaults>
+	<credit page='1'>
+		<credit-type>test_fingerings_multiple_per_note_sibelius</credit-type>
+		<credit-words/>
+	</credit>
+	<part-list>
+		<score-part id='P1'>
+			<part-name print-object='no'>Piano</part-name>
+			<part-abbreviation print-object='no'>Pno.</part-abbreviation>
+			<group>score</group>
+			<score-instrument id='P1-I1'>
+				<instrument-name>Piano</instrument-name>
+				<instrument-abbreviation>Pno.</instrument-abbreviation>
+				<instrument-sound>keyboard.piano.grand</instrument-sound>
+			</score-instrument>
+			<midi-instrument id='P1-I1'>
+				<volume>79</volume>
+				<pan>-18</pan>
+			</midi-instrument>
+		</score-part>
+		<part-group number='1' type='stop'/>
+	</part-list>
+<!--=========================================================-->
+	<part id='P1'>
+		<measure number='1'>
+			<print>
+				<system-layout>
+					<top-system-distance>246.25</top-system-distance>
+				</system-layout>
+			</print>
+			<attributes>
+				<divisions>768</divisions>
+				<key>
+					<fifths>4</fifths>
+					<mode>major</mode>
+				</key>
+				<time>
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef>
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+			</attributes>
+			<sound tempo='119'/>
+			<harmony print-frame='no' default-y='25'>
+				<root>
+					<root-step>A</root-step>
+				</root>
+				<kind use-symbols='yes'>major-seventh</kind>
+			</harmony>
+			<note>
+				<pitch>
+					<step>A</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<stem>down</stem>
+				<notations>
+					<technical>
+						<fingering default-y='1' default-x='4'>1</fingering>
+						<fingering default-y='15' default-x='4'>3</fingering>
+					</technical>
+				</notations>
+			</note>
+			<note>
+				<chord/>
+				<pitch>
+					<step>C</step>
+					<alter>1</alter>
+					<octave>5</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<pitch>
+					<step>A</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<stem>down</stem>
+				<notations>
+					<technical>
+						<fingering default-y='1' default-x='4'>1</fingering>
+						<fingering default-y='15' default-x='4'>3</fingering>
+						<fingering default-y='30' default-x='4'>5</fingering>
+					</technical>
+				</notations>
+			</note>
+			<note>
+				<chord/>
+				<pitch>
+					<step>C</step>
+					<alter>1</alter>
+					<octave>5</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<stem>down</stem>
+			</note>
+			<note>
+				<chord/>
+				<pitch>
+					<step>E</step>
+					<octave>5</octave>
+				</pitch>
+				<duration>1536</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<stem>down</stem>
+			</note>
+			<barline location='right'>
+				<bar-style>light-heavy</bar-style>
+			</barline>
+		</measure>
+	</part>
+<!--=========================================================-->
+</score-partwise>

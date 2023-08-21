@@ -35,7 +35,7 @@ import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { VerticalGraphicalStaffEntryContainer } from "./VerticalGraphicalStaffEntryContainer";
 import { KeyInstruction } from "../VoiceData/Instructions/KeyInstruction";
 import { AbstractNotationInstruction } from "../VoiceData/Instructions/AbstractNotationInstruction";
-import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruction";
+import { TechnicalInstruction, TechnicalInstructionType } from "../VoiceData/Instructions/TechnicalInstruction";
 import { Pitch } from "../../Common/DataObjects/Pitch";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { ColDirEnum } from "./BoundingBox";
@@ -72,6 +72,7 @@ import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
 import { GraphicalChordSymbolContainer } from ".";
 import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
 import { Voice } from "../VoiceData/Voice";
+import { TabNote } from "../VoiceData/TabNote";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -917,7 +918,9 @@ export abstract class MusicSheetCalculator {
                 this.calculateMeasureNumberPlacement(musicSystem);
             }
         }
-        this.calculateFingerings(); // if this is done after slurs, fingerings can be on top of slurs
+        if (this.rules.RenderFingerings) {
+            this.calculateFingerings(); // if this is done after slurs, fingerings can be on top of slurs
+        }
         // calculate Slurs
         if (!this.leadSheet && this.rules.RenderSlurs) {
             this.calculateSlurs();
@@ -1056,20 +1059,81 @@ export abstract class MusicSheetCalculator {
                     }
                     minimumOffset = this.calculateAlignedChordSymbolsOffset(alignmentScopedStaffEntries, skybottomcalculator);
                 }
-                for (const measure of staffLine.Measures) {
+                for (let measureStafflineIndex: number = 0; measureStafflineIndex < staffLine.Measures.length; measureStafflineIndex++) {
+                    const measure: GraphicalMeasure = staffLine.Measures[measureStafflineIndex];
                     if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "measure") {
                         minimumOffset = this.calculateAlignedChordSymbolsOffset(measure.staffEntries, skybottomcalculator);
                     }
+                    let previousChordContainer: GraphicalChordSymbolContainer;
                     for (const staffEntry of measure.staffEntries) {
                         if (!staffEntry.graphicalChordContainers || staffEntry.graphicalChordContainers.length === 0) {
                             continue;
                         }
                         for (let i: number = 0; i < staffEntry.graphicalChordContainers.length; i++) {
                             const graphicalChordContainer: GraphicalChordSymbolContainer = staffEntry.graphicalChordContainers[i];
-                            const sps: BoundingBox = staffEntry.PositionAndShape;
+                            // check for chord not over a note
+                            if (staffEntry.graphicalVoiceEntries.length === 0 && staffEntry.relInMeasureTimestamp.RealValue > 0) {
+                                // re-position (second chord symbol on whole measure rest)
+                                let firstNoteStartX: number = 0;
+                                if (measure.staffEntries[0].relInMeasureTimestamp.RealValue === 0) {
+                                    firstNoteStartX = measure.staffEntries[0].PositionAndShape.RelativePosition.x;
+                                    if (measure.MeasureNumber === 1) {
+                                        firstNoteStartX += this.rules.ChordSymbolWholeMeasureRestXOffsetMeasure1;
+                                        // shift second chord same way as first chord
+                                    }
+                                }
+                                const measureEndX: number = measure.PositionAndShape.Size.width - measure.endInstructionsWidth;
+                                const proportionInMeasure: number = staffEntry.relInMeasureTimestamp.RealValue / measure.parentSourceMeasure.Duration.RealValue;
+                                let newStartX: number = firstNoteStartX + (measureEndX - firstNoteStartX) * proportionInMeasure +
+                                    graphicalChordContainer.PositionAndShape.BorderMarginLeft; // negative -> shift a bit left to where it starts visually
+                                if (previousChordContainer) {
+                                    // prevent overlap to previous chord symbol
+                                    newStartX = Math.max(newStartX, previousChordContainer.PositionAndShape.RelativePosition.x +
+                                        previousChordContainer.GraphicalLabel.PositionAndShape.Size.width +
+                                        this.rules.ChordSymbolXSpacing);
+                                }
+                                graphicalChordContainer.PositionAndShape.RelativePosition.x = newStartX;
+                                graphicalChordContainer.PositionAndShape.Parent = measure.staffEntries[0].PositionAndShape.Parent;
+                                // TODO it would be more clean to set the staffEntry relative position instead of the container's,
+                                //   so that the staff entry also gets a valid position (and not relative 0),
+                                //   but this is tricky with elongationFactor, skyline etc, would need some adjustments
+                                // // graphicalChordContainer.PositionAndShape.Parent = measure.staffEntries[0].PositionAndShape.Parent; // not here
+                                // //   don't switch parent from StaffEntry if setting staffEntry.x
+                                // staffEntry.PositionAndShape.RelativePosition.x = newStartX;
+                                // staffEntry.PositionAndShape.calculateAbsolutePosition();
+                            }
                             const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
-                            const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
-                            const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
+                            const parentBbox: BoundingBox = gps.Parent; // usually the staffEntry (bbox), but sometimes measure (for whole measure rests)
+                            if (parentBbox.DataObject instanceof GraphicalMeasure) {
+                                if (staffEntry.relInMeasureTimestamp.RealValue === 0) {
+                                    gps.RelativePosition.x = Math.max(measure.beginInstructionsWidth, gps.RelativePosition.x);
+                                    // beginInstructionsWidth wasn't set correctly before this
+                                    if (measure.MeasureNumber === 1 && gps.RelativePosition.x > 3) {
+                                        gps.RelativePosition.x += this.rules.ChordSymbolWholeMeasureRestXOffsetMeasure1;
+                                    }
+                                }
+                            }
+                            // check if there already exists a vertical staffentry with the same relative timestamp,
+                            //   use its relativePosition (= x-align chord symbols to vertical staffentries in other measures)
+                            if (staffEntry.PositionAndShape.RelativePosition.x === 0) {
+                                const verticalMeasures: GraphicalMeasure[] = musicSystem.GraphicalMeasures[measureStafflineIndex];
+                                for (const verticalMeasure of verticalMeasures) {
+                                    let positionFound: boolean = false;
+                                    for (const verticalSe of verticalMeasure.staffEntries) {
+                                        if (verticalSe.relInMeasureTimestamp === staffEntry.relInMeasureTimestamp &&
+                                            verticalSe.PositionAndShape.RelativePosition.x !== 0) {
+                                            gps.RelativePosition.x = verticalSe.PositionAndShape.RelativePosition.x;
+                                            positionFound = true;
+                                            break;
+                                        }
+                                    }
+                                    if (positionFound) {
+                                        break;
+                                    }
+                                }
+                            }
+                            const start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
+                            const end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
                             if (!this.rules.ChordSymbolYAlignment || minimumOffset > 0) {
                                 //minimumOffset = this.calculateAlignedChordSymbolsOffset([staffEntry], skybottomcalculator);
                                 minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end); // same as above, less code executed
@@ -1087,6 +1151,7 @@ export abstract class MusicSheetCalculator {
                             gLabel.setLabelPositionAndShapeBorders();
                             gLabel.PositionAndShape.calculateBoundingBox();
                             skybottomcalculator.updateSkyLineInRange(start, end, minimumOffset + gLabel.PositionAndShape.BorderMarginTop);
+                            previousChordContainer = graphicalChordContainer;
                         }
                     }
                 }
@@ -1098,10 +1163,14 @@ export abstract class MusicSheetCalculator {
         let minimumOffset: number = Number.MAX_SAFE_INTEGER;
         for (const staffEntry of staffEntries) {
             for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
-                const sps: BoundingBox = staffEntry.PositionAndShape;
                 const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
-                const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
-                const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
+                const parentBbox: BoundingBox = gps.Parent; // usually the staffEntry (bbox), but sometimes measure (for whole measure rests)
+                let start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x;
+                let end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x;
+                if (parentBbox.DataObject instanceof GraphicalMeasure) {
+                    start += (parentBbox.DataObject as GraphicalMeasure).beginInstructionsWidth;
+                    end += (parentBbox.DataObject as GraphicalMeasure).beginInstructionsWidth;
+                }
                 minimumOffset = Math.min(minimumOffset, sbc.getSkyLineMinInRange(start, end));
             }
         }
@@ -1955,7 +2024,9 @@ export abstract class MusicSheetCalculator {
             graphicalNote.PositionAndShape.calculateBoundingBox();
             if (!this.leadSheet) {
                 if (note.NoteBeam !== undefined && note.PrintObject) {
-                    this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
+                    if (!(note instanceof TabNote) || this.rules.TabBeamsRendered) {
+                        this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
+                    }
                 }
                 if (note.NoteTuplet !== undefined && note.PrintObject) {
                     this.handleTuplet(graphicalNote, note.NoteTuplet, openTuplets);
@@ -2898,12 +2969,21 @@ export abstract class MusicSheetCalculator {
                             measure.PositionAndShape.RelativePosition.x;
                         const fingerings: TechnicalInstruction[] = [];
                         for (const voiceEntry of gse.graphicalVoiceEntries) {
-                            for (const note of voiceEntry.notes) {
-                                const sourceNote: Note = note.sourceNote;
-                                if (sourceNote.Fingering && !sourceNote.IsGraceNote) {
-                                    fingerings.push(sourceNote.Fingering);
+                            if (voiceEntry.parentVoiceEntry.IsGrace) {
+                                continue;
+                            }
+                            // Sibelius: can have multiple fingerings per note, so we need to check voice entry instructions, not note.Fingering
+                            for (const instruction of voiceEntry.parentVoiceEntry.TechnicalInstructions) {
+                                if (instruction.type === TechnicalInstructionType.Fingering) {
+                                    fingerings.push(instruction);
                                 }
                             }
+                            // for (const note of voiceEntry.notes) {
+                            //     const sourceNote: Note = note.sourceNote;
+                            //     if (sourceNote.Fingering && !sourceNote.IsGraceNote) {
+                            //         fingerings.push(sourceNote.Fingering);
+                            //     }
+                            // }
                         }
                         if (placement === PlacementEnum.Below) {
                             fingerings.reverse();

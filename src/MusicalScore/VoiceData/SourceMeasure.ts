@@ -589,15 +589,14 @@ export class SourceMeasure {
      * @param instrumentIndex
      * @returns {SourceStaffEntry}
      */
-    private getLastSourceStaffEntryForInstrument(instrumentIndex: number): SourceStaffEntry {
+    private getLastSourceStaffEntryForInstrument(instrumentIndex: number, skipChordOnlyEntry: boolean = true): SourceStaffEntry {
         let entry: SourceStaffEntry;
         for (let i: number = this.verticalSourceStaffEntryContainers.length - 1; i >= 0; i--) {
             entry = this.verticalSourceStaffEntryContainers[i].StaffEntries[instrumentIndex];
-            if (entry) {
-                break;
+            if (entry && (!skipChordOnlyEntry || entry.VoiceEntries.length > 0)) {
+                return entry;
             }
         }
-        return entry;
     }
 
     public canBeReducedToMultiRest(): boolean {

@@ -347,6 +347,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     // set sample-specific options for OSMD visual regression testing
     let includeSkyBottomLine = false;
     let drawBoundingBoxString;
+    let isTestOctaveShiftInvisibleInstrument;
     if (osmdTestingMode) {
         const isFunctionTestAutobeam = sampleFilename.startsWith("OSMD_function_test_autobeam");
         const isFunctionTestAutoColoring = sampleFilename.startsWith("OSMD_function_test_auto-custom-coloring");
@@ -359,7 +360,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isTestPageBottomMargin0 = sampleFilename.includes("PageBottomMargin0");
         const isTestTupletBracketTupletNumber = sampleFilename.includes("test_tuplet_bracket_tuplet_number");
         const isTestCajon2NoteSystem = sampleFilename.includes("test_cajon_2-note-system");
-        const enableNewSystemAtSystemBreak = sampleFilename.includes("test_octaveshift_extragraphicalmeasure");
+        isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
+        const isTextOctaveShiftExtraGraphicalMeasure = sampleFilename.includes("test_octaveshift_extragraphicalmeasure");
         osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
@@ -408,7 +410,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         if (isTestCajon2NoteSystem) {
             osmdInstance.EngravingRules.PercussionUseCajon2NoteSystem = true;
         }
-        if (enableNewSystemAtSystemBreak) {
+        if (isTextOctaveShiftExtraGraphicalMeasure || isTestOctaveShiftInvisibleInstrument) {
             osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
         }
     }
@@ -416,6 +418,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     try {
         debug("loading sample " + sampleFilename, DEBUG);
         await osmdInstance.load(loadParameter, sampleFilename); // if using load.then() without await, memory will not be freed up between renders
+        if (isTestOctaveShiftInvisibleInstrument) {
+            osmdInstance.Sheet.Instruments[0].Visible = false;
+        }
     } catch (ex) {
         debug("couldn't load sample " + sampleFilename + ", skipping. Error: \n" + ex);
         return;

@@ -394,7 +394,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const bBox: BoundingBox = container instanceof GraphicalLyricEntry ? container.GraphicalLabel.PositionAndShape : container.PositionAndShape;
       const labelWidth: number = bBox.Size.width;
       const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
-      const xPosition: number = staffEntryXPosition + bBox.BorderMarginLeft;
+      let xPosition: number = staffEntryXPosition + bBox.BorderMarginLeft;
+      if (container instanceof GraphicalChordSymbolContainer && container.PositionAndShape.Parent.DataObject instanceof GraphicalMeasure) {
+        // the parent is only the measure for whole measure rest notes with chord symbols,
+        //   which should start near the beginning of the measure instead of the middle, where there is no desired staffEntry position.
+        //   TODO somehow on the 2nd render, above xPosition (from VexFlowStaffEntry) is way too big (for whole measure rests).
+        xPosition = this.rules.ChordSymbolWholeMeasureRestXOffset + bBox.BorderMarginLeft +
+          (container.PositionAndShape.Parent.DataObject as GraphicalMeasure).beginInstructionsWidth;
+      }
 
       if (lastEntryDict[currentContainerIndex] !== undefined) {
         if (lastEntryDict[currentContainerIndex].extend) {
@@ -984,7 +991,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           for (let i: number = startStaffLine.ParentMusicSystem.Id; i < endStaffLine.ParentMusicSystem.Id; i++) {
             const idx: number = i + 1;
             const nextShiftMusicSystem: MusicSystem = this.musicSystems[idx];
-            const nextShiftStaffline: StaffLine = nextShiftMusicSystem.StaffLines[staffIndex];
+            let nextShiftStaffline: StaffLine; // not always = nextShiftMusicSystem.StaffLines[staffIndex], e.g. when first instrument invisible
+            for (const staffline of nextShiftMusicSystem.StaffLines) {
+              if (staffline.ParentStaff.idInMusicSheet === staffIndex) {
+                nextShiftStaffline = staffline;
+                break;
+              }
+            }
+            if (!nextShiftStaffline) { // shouldn't happen
+              continue;
+            }
             const nextShiftFirstMeasure: GraphicalMeasure = nextShiftStaffline.Measures[0];
             // Shift starts on the first measure
             const nextOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, nextShiftFirstMeasure.PositionAndShape);

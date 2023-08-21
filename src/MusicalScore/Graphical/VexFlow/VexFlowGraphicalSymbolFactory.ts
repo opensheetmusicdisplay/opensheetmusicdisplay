@@ -30,6 +30,7 @@ import { VexFlowTabMeasure } from "./VexFlowTabMeasure";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
 import { VexFlowMultiRestMeasure } from "./VexFlowMultiRestMeasure";
+import { BoundingBox } from "../BoundingBox";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -190,9 +191,20 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
         let xShift: number = 0;
         const chordSymbolSpacing: number = rules.ChordSymbolXSpacing;
         for (const chordSymbolContainer of sourceStaffEntry.ChordContainers) {
+            let parentBbox: BoundingBox = graphicalStaffEntry.PositionAndShape;
+            if (graphicalStaffEntry.graphicalVoiceEntries.length === 1 &&
+                graphicalStaffEntry.graphicalVoiceEntries[0].notes.length === 1 &&
+                graphicalStaffEntry.graphicalVoiceEntries[0].notes[0].sourceNote.isWholeRest()) {
+                // graphicalStaffEntry.graphicalVoiceEntries[0]?.notes[0]?.sourceNote.IsWholeMeasureRest // not yet set apparently
+                // whole measure rests: position at start of measure instead of middle like the rest note
+                // xShift -= graphicalStaffEntry.PositionAndShape.RelativePosition.x; // unfortunately relative x is 0 here
+                parentBbox = graphicalStaffEntry.parentMeasure.PositionAndShape;
+                xShift += graphicalStaffEntry.parentMeasure.beginInstructionsWidth;
+                xShift += rules.ChordSymbolWholeMeasureRestXOffset; // margin to start of measure / bar
+            }
             const graphicalChordSymbolContainer: GraphicalChordSymbolContainer =
               new GraphicalChordSymbolContainer(chordSymbolContainer,
-                                                graphicalStaffEntry.PositionAndShape,
+                                                parentBbox,
                                                 rules.ChordSymbolTextHeight,
                                                 keyInstruction,
                                                 transposeHalftones,

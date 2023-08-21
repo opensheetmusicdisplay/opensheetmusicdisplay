@@ -28,7 +28,7 @@ import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {Voice} from "../../VoiceData/Voice";
 import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
-import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
+import {TechnicalInstruction, TechnicalInstructionType} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
@@ -1339,7 +1339,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     if (this.rules.FingeringPosition === PlacementEnum.Left ||
                         this.rules.FingeringPosition === PlacementEnum.Right) {
                             this.createFingerings(voiceEntry);
-                    } // else created in MusicSheetCalculater.createFingerings() as Labels
+                    } // else created in MusicSheetCalculator.calculateFingerings() as Labels
                     this.createStringNumber(voiceEntry);
                 }
 
@@ -1447,6 +1447,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
     }
 
+    /** Creates vexflow fingering elements.
+     * Note that this is currently only used for Left and Right fingering positions, not Above and Below,
+     * in which case they are instead added via MusicSheetCalculator.calculateFingerings() as Labels with bounding boxes.
+     */
     protected createFingerings(voiceEntry: GraphicalVoiceEntry): void {
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
         let numberOfFingerings: number = 0;
@@ -1455,6 +1459,24 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const fingering: TechnicalInstruction = note.sourceNote.Fingering;
             if (fingering) {
                 numberOfFingerings++;
+            }
+        }
+        const fingeringInstructions: TechnicalInstruction[] = [];
+        for (const instruction of voiceEntry.parentVoiceEntry.TechnicalInstructions) {
+            if (instruction.type === TechnicalInstructionType.Fingering) {
+                fingeringInstructions.push(instruction);
+            }
+        }
+        if (fingeringInstructions.length > numberOfFingerings) { // likely multiple instructions per note given (e.g. Sibelius)
+            // assign fingerings to notes
+            for (const note of voiceEntry.notes) {
+                if (!note.sourceNote.Fingering) {
+                    note.sourceNote.Fingering = fingeringInstructions.pop();
+                    numberOfFingerings++;
+                    if (fingeringInstructions.length === 0) {
+                        break;
+                    }
+                }
             }
         }
         let fingeringIndex: number = -1;

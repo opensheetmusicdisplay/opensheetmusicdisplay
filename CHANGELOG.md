@@ -1,3 +1,24 @@
+## [1.8.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.2...1.8.3) (2023-08-17)
+
+
+### Bug Fixes
+
+* **Chord Symbols:** Fix chords not displayed when not above a note, e.g. multiple per note ([#1445](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1445), PR [#1446](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1446)) ([75a2f8a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/75a2f8a33ece150ae07b6b691b395b507adb779d)), closes [#599](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/599) [#791](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/791) [#1443](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1443) [#1443](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1443)
+* **Chord Symbols:** Chord Symbols on whole measure rests now start near the beginning of the measure, not in the middle above the rest note ([#1443](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1443)) ([0b7df62](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0b7df6227fc509441e2dd1394aade3ef10ec94ac))
+* **Fingering:** Fix multiple fingerings per note not shown/parsed (Sibelius xml syntax) ([#1442](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1442)) ([e121c0a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e121c0adb2909cba770852e11bfc4762bd2c2f8b))
+* **Fingering:** Fix fingerings drawn if drawFingerings: false option was set, for above/below position ([6233d5a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6233d5a55bab11322808e4bc138200114d8dbe29)), closes [#650](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/650) [#1442](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1442)
+* **OctaveShift:** Fix error for multiline shifts when (first) instrument hidden ([#1439](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1439)) ([c3d3402](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c3d34020bb55575d0fbb155c278a451682ecf05b))
+* **OctaveShift:** Fix short octave shifts (single note) overlapping text+bracket ([#1440](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1440), [#1378](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1378)). Add EngravingRule OctaveShiftOnWholeMeasureNoteUntilEndOfMeasure ([7ea0911](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7ea0911b7a93538e369452c85240770489a47024))
+* **Tabs:** Fix tab notes not x-aligned vertically when multiple ghost notes needed ([#1062](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1062)) ([6495011](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/64950112700b2ab2f24e900474a10d94f14338bd))
+
+
+### Features
+
+* **API:** Add osmd.EngravingRules.RenderCount (how many times render() was called) ([#1383](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1383), [#1420](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1420)) ([1e16c6d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1e16c6d341da5c26562f99a6aee93536d2aabd04))
+* **Tabs:** Tab beams can be disabled optionally. Add EngravingRules.TabRenderBeams ([fb78862](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/fb78862e5280115dfec5796478a7f67698a62c04))
+
+
+
 ## [1.8.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.1...1.8.2) (2023-07-28)
 
 
