@@ -257,7 +257,7 @@ async function init () {
     osmdInstance.EngravingRules.PageBottomMargin = 4;
     osmdInstance.EngravingRules.PageLeftMargin = 4;
     osmdInstance.EngravingRules.PageRightMargin = 4;
-    osmdInstance.EngravingRules.AutoGenerateMutipleRestMeasuresFromRestMeasures = false;
+    osmdInstance.EngravingRules.AutoGenerateMultipleRestMeasuresFromRestMeasures = false;
     osmdInstance.EngravingRules.TupletNumberLimitConsecutiveRepetitions = false;
     osmdInstance.EngravingRules.ChordOverlapAllowedIntoNextMeasure = 5;
     if (maxWidth) {
@@ -422,6 +422,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     }
     debug("xml loaded", DEBUG);
     try {
+        console.log("Render: " + sampleFilename);
         osmdInstance.zoom = pageZoom;
         osmdInstance.render();
         // there were reports that await could help here, but render isn't a synchronous function, and it seems to work. see #932
