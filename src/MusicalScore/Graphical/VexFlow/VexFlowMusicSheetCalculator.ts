@@ -958,6 +958,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             break;
           }
         }
+        if (!endGse) {
+          // shouldn't happen, but apparently some MusicXMLs (GuitarPro/Sibelius) have measures without StaffEntries.
+          graphicalOctaveShift.graphicalEndAtMeasureEnd = true;
+          return;
+        }
         graphicalOctaveShift.setEndNote(endGse);
         if (!graphicalOctaveShift.endNote) {
           return;
@@ -1161,6 +1166,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             return;
           }
           nextPedal.setEndNote(endStaffEntry);
+          nextPedal.setEndMeasure(endMeasure);
           graphicalPedal.setEndMeasure(endMeasure);
           endStaffLine.Pedals.push(nextPedal);
           nextPedal.CalculateBoundingBox();

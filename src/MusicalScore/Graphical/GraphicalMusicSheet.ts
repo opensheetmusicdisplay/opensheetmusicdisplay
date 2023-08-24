@@ -494,6 +494,10 @@ export class GraphicalMusicSheet {
         if (lastRendered) {
             measureIndex = Math.min(measureIndex, this.musicSheet.Rules.MaxMeasureToDrawIndex);
         }
+        let measure: GraphicalMeasure = this.measureList[measureIndex][staffIndex];
+        while (!measure && measureIndex >= 0) { // check for undefined measures, e.g. multi-measure-rest
+            measure = this.measureList[--measureIndex][staffIndex];
+        }
         return this.measureList[measureIndex][staffIndex];
     }
 

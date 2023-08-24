@@ -321,6 +321,10 @@ export class PedalMarking extends Element {
 
     // Iterate through each note, placing glyphs or custom text accordingly
     this.notes.forEach(note => {
+      if (!note) {
+        return;
+        // apparently happens for some GuitarPro/Sibelius exports with faulty MusicXML
+      }
       is_pedal_depressed = !is_pedal_depressed;
       const stave = note.getStave();
       const x = note.getAbsoluteX();
