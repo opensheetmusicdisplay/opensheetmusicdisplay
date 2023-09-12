@@ -146,7 +146,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected calculateMeasureXLayout(measures: GraphicalMeasure[]): number {
     const visibleMeasures: GraphicalMeasure[] = [];
     for (const measure of measures) {
-      if (measure) {
+      if (measure?.isVisible()) { // if we don't check for visibility, invisible parts affect layout (#1444)
         visibleMeasures.push(measure);
       }
     }
