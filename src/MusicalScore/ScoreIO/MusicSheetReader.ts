@@ -509,7 +509,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.readTitle(root);
         this.readCopyright(root);
         try {
-            if (!this.musicSheet.Title || !this.musicSheet.Composer) {
+            if (!this.musicSheet.Title || !this.musicSheet.Composer || !this.musicSheet.Subtitle) {
                 this.readTitleAndComposerFromCredits(root); // this can also throw an error
             }
         } catch (ex) {
@@ -624,20 +624,28 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                     } else {
                                         possibleTitle = creditChild.value;
                                     }
+                                } else {
+                                    if (finalSubtitle) {
+                                        finalSubtitle += "\n" + creditChild.value;
+                                    } else {
+                                        finalSubtitle = creditChild.value;
+                                    }
                                 }
                             }
                         }
-                        if (!(this.musicSheet.Composer !== undefined && this.musicSheet.Lyricist)) {
-                            switch (creditJustify) {
-                                case "right":
+                        switch (creditJustify) {
+                            case "right":
+                                if (!this.musicSheet.Composer) {
                                     this.musicSheet.Composer = new Label(this.trimString(creditChild.value));
-                                    break;
-                                case "left":
+                                }
+                                break;
+                            case "left":
+                                if (!this.musicSheet.Lyricist) {
                                     this.musicSheet.Lyricist = new Label(this.trimString(creditChild.value));
-                                    break;
-                                default:
-                                    break;
-                            }
+                                }
+                                break;
+                            default:
+                                break;
                         }
                     }
                 }
