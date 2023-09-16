@@ -83,7 +83,8 @@
                     <td>openUrl</td>
                     <td>valid URL pointing to a valid musicxml file</td>
                     <td>"auto"</td>
-                    <td>If given, this attribute open the given musicxml file and display it.
+                    <td>If given, this attribute open the given musicxml file and display it.<br>
+                        Note that you need to add <i>&endUrl</i> after the URL.
                         <p>
                             <h5>Important:</h5>
                             For now, the resources must be hosted on the same server, otherwise it will be blocked by
@@ -92,11 +93,11 @@
                         <p>
                             <h5>Examples:</h5>
                             <a
-                                href="http://localhost:8000/?embedded&openUrl=http://localhost:8000/BrookeWestSample.musicxml">
-                                http://localhost:8000/?embedded&openUrl=http://localhost:8000/BrookeWestSample.musicxml</a>
+                                href="http://localhost:8000/?embedded&openUrl=http://localhost:8000/BrookeWestSample.musicxml&endUrl">
+                                http://localhost:8000/?embedded&openUrl=http://localhost:8000/BrookeWestSample.musicxml&endUrl</a>
                                 <br>
                             <a
-                                href="http://localhost:8000/?embedded&openUrl=https://wpmedia.musicxml.com/wp-content/uploads/2017/12/MahlFaGe4Sample.mxl">http://localhost:8000/?embedded&openUrl=https://wpmedia.musicxml.com/wp-content/uploads/2017/12/MahlFaGe4Sample.mxl</a>
+                                href="http://localhost:8000/?embedded&openUrl=https://wpmedia.musicxml.com/wp-content/uploads/2017/12/MahlFaGe4Sample.mxl&endUrl">http://localhost:8000/?embedded&openUrl=https://wpmedia.musicxml.com/wp-content/uploads/2017/12/MahlFaGe4Sample.mxl&endUrl</a>
 
                         </p>
                     </td>
