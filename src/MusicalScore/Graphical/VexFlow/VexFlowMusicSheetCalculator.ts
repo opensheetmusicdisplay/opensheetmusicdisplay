@@ -540,6 +540,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   public calculateMeasureWidthFromStaffEntries(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
     let elongationFactorForMeasureWidth: number = 1;
+    // GENIT Edit
+    return 1;
 
     for (const measure of measuresVertical) {
       if (!measure || measure.staffEntries.length === 0) {
