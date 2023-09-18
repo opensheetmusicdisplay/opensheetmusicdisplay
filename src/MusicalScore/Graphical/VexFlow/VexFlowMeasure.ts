@@ -630,6 +630,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     for (let i: number = 0; i < this.tuplets[voiceID].length; i++) {
                         const tuplet: Tuplet = this.tuplets[voiceID][i][0];
                         const vftuplet: VF.Tuplet = this.vftuplets[voiceID][i];
+                        if (!vftuplet) { // see #1330, potentially to be investigated. why undefined?
+                            continue;
+                        }
                         if (!tuplet.RenderTupletNumber) {
                             // (vftuplet as any).numerator_glyphs_stored = [...(vftuplet as any).numerator_glyphs];
                             // (vftuplet as any).numerator_glyphs = [];
