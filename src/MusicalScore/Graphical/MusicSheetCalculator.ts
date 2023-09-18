@@ -1674,64 +1674,56 @@ export abstract class MusicSheetCalculator {
         // now we have the correct placement Height for the Expression
         // the idealY is calculated relative to the currentStaffLine
 
-        // Crescendo (point to the left, opening to the right)
         graphicalContinuousDynamic.Lines.clear();
-        if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
-            if (isSoftAccent) {
-                graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
-                // secondGraphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, idealY);
-                // secondGraphicalContinuousDynamic.calcPsi();
-            } else if (sameStaffLine && !isSoftAccent) {
-                graphicalContinuousDynamic.createCrescendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
-            } else {
-                // two+ different Wedges
-                graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
+        if (isSoftAccent) {
+            // either createFirstHalfCrescendoLines or createFirstHalfDiminuendoLines, same principle / parameters.
+            graphicalContinuousDynamic.createFirstHalfLines(upperStartX, upperEndX, idealY);
+            graphicalContinuousDynamic.createSecondHalfLines(lowerStartX, lowerEndX, idealY);
+            graphicalContinuousDynamic.calcPsi();
+        } else if (sameStaffLine && !isSoftAccent) {
+            graphicalContinuousDynamic.createLines(upperStartX, upperEndX, idealY);
+            graphicalContinuousDynamic.calcPsi();
+        } else {
+            // two+ different Wedges
+            graphicalContinuousDynamic.createFirstHalfLines(upperStartX, upperEndX, idealY);
+            graphicalContinuousDynamic.calcPsi();
 
-                for (let i: number = 0; i < inbetweenWedges.length; i++) {
-                    const inbetweenWedge: GraphicalContinuousDynamicExpression = inbetweenWedges[i];
-                    const inbetweenStaffline: StaffLine = inbetweenWedge.ParentStaffLine;
-                    let betweenIdealY: number = endIdealY;
+            for (let i: number = 0; i < inbetweenWedges.length; i++) {
+                const inbetweenWedge: GraphicalContinuousDynamicExpression = inbetweenWedges[i];
+                const inbetweenStaffline: StaffLine = inbetweenWedge.ParentStaffLine;
+                let betweenIdealY: number = endIdealY;
 
-                    if (placement === PlacementEnum.Below) {
-                        const maxBottomLineValueForExpressionLength: number =
-                        endStaffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(lowerStartX, upperEndX);
-                        if (maxBottomLineValueForExpressionLength > betweenIdealY) {
-                            betweenIdealY = maxBottomLineValueForExpressionLength;
-                        }
-                        betweenIdealY += this.rules.WedgeOpeningLength / 2;
-                        betweenIdealY += this.rules.WedgeVerticalMargin;
-                    } else if (placement === PlacementEnum.Above) {
-                        const minSkyLineValueForExpressionLength: number =
-                            inbetweenStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(lowerStartX, lowerEndX);
-                        if (minSkyLineValueForExpressionLength < endIdealY) {
-                            betweenIdealY = minSkyLineValueForExpressionLength;
-                        }
-                        betweenIdealY -= this.rules.WedgeOpeningLength / 2;
+                if (placement === PlacementEnum.Below) {
+                    const maxBottomLineValueForExpressionLength: number =
+                    endStaffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(lowerStartX, upperEndX);
+                    if (maxBottomLineValueForExpressionLength > betweenIdealY) {
+                        betweenIdealY = maxBottomLineValueForExpressionLength;
                     }
-
-                    inbetweenWedge.createSecondHalfCrescendoLines(0, inbetweenStaffline.PositionAndShape.Size.width, betweenIdealY);
-                    inbetweenWedge.calcPsi();
+                    betweenIdealY += this.rules.WedgeOpeningLength / 2;
+                    betweenIdealY += this.rules.WedgeVerticalMargin;
+                } else if (placement === PlacementEnum.Above) {
+                    const minSkyLineValueForExpressionLength: number =
+                        inbetweenStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(lowerStartX, lowerEndX);
+                    if (minSkyLineValueForExpressionLength < endIdealY) {
+                        betweenIdealY = minSkyLineValueForExpressionLength;
+                    }
+                    betweenIdealY -= this.rules.WedgeOpeningLength / 2;
                 }
 
-                endGraphicalContinuousDynamic.createSecondHalfCrescendoLines(lowerStartX, lowerEndX, endIdealY);
-                endGraphicalContinuousDynamic.calcPsi();
+                if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+                    inbetweenWedge.createSecondHalfCrescendoLines(0, inbetweenStaffline.PositionAndShape.Size.width, betweenIdealY);
+                    // for crescendo, we want the same look as on the last staffline: not starting with an intersection / starting wedge
+                } else {
+                    inbetweenWedge.createFirstHalfDiminuendoLines(0, inbetweenStaffline.PositionAndShape.Size.width, betweenIdealY);
+                    // for diminuendo, we want the same look as on the first staffline: not ending in an intersection / looking finished
+                }
+                inbetweenWedge.calcPsi();
             }
-        } else if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
-            if (sameStaffLine) {
-                graphicalContinuousDynamic.createDiminuendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
-            } else {
-                graphicalContinuousDynamic.createFirstHalfDiminuendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
 
-                endGraphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, endIdealY);
-                endGraphicalContinuousDynamic.calcPsi();
-            }
-        } //End Diminuendo
+            // last wedge
+            endGraphicalContinuousDynamic.createSecondHalfLines(lowerStartX, lowerEndX, endIdealY);
+            endGraphicalContinuousDynamic.calcPsi();
+        }
         this.dynamicExpressionMap.set(endAbsoluteTimestamp.RealValue, graphicalContinuousDynamic.PositionAndShape);
     }
 
