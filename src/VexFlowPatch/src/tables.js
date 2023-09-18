@@ -83,7 +83,10 @@ Flow.keyProperties = (key, clef, params) => {
   let octave = parseInt(pieces[1], 10);
 
   // Octave_shift is the shift to compensate for clef 8va/8vb.
-  octave += -1 * options.octave_shift;
+  octave -= options.octave_shift;
+  // VexFlowPatch: change "+= -1 *" to "-=". No change in OSMD detected,
+  //   though apparently -0 can cause issues on some systems.
+  //   https://github.com/0xfe/vexflow/pull/1596
 
   const base_index = (octave * 7) - (4 * 7);
   let line = (base_index + value.index) / 2;
