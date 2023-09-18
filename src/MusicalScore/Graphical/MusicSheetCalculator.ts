@@ -1677,8 +1677,8 @@ export abstract class MusicSheetCalculator {
         graphicalContinuousDynamic.Lines.clear();
         if (isSoftAccent) {
             // either createFirstHalfCrescendoLines or createFirstHalfDiminuendoLines, same principle / parameters.
-            graphicalContinuousDynamic.createFirstHalfLines(upperStartX, upperEndX, idealY);
-            graphicalContinuousDynamic.createSecondHalfLines(lowerStartX, lowerEndX, idealY);
+            graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
+            graphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, idealY);
             graphicalContinuousDynamic.calcPsi();
         } else if (sameStaffLine && !isSoftAccent) {
             graphicalContinuousDynamic.createLines(upperStartX, upperEndX, idealY);
