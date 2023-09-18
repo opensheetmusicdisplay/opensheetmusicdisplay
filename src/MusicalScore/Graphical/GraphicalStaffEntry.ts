@@ -305,16 +305,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      * Returns true if this staff entry has only rests
      */
     public hasOnlyRests(): boolean {
-        const hasOnlyRests: boolean = true;
-        for (const gve of this.graphicalVoiceEntries) {
-            for (const graphicalNote of gve.notes) {
-                const note: Note = graphicalNote.sourceNote;
-                if (!note.isRest()) {
-                    return false;
-                }
-            }
-        }
-        return hasOnlyRests;
+        return this.sourceStaffEntry.hasOnlyRests;
     }
 
     public getSkylineMin(): number {
