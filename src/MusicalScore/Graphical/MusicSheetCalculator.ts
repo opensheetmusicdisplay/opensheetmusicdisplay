@@ -1424,24 +1424,23 @@ export abstract class MusicSheetCalculator {
         }
 
         // First staff wedge always starts at the given position and the last and inbetween wedges always start at the begin of measure
-        //   TODO: rename upper / lower to first / last, now that we can have inbetween wedges
+        //   TODO: rename upper / lower to first / last, now that we can have inbetween wedges, though this creates a huge diff, and this should be clear now.
         const upperStartX: number = startPosInStaffline.x;
         let lowerStartX: number = endStaffLine.Measures[0].beginInstructionsWidth - this.rules.WedgeHorizontalMargin - 2;
         //TODO fix this when a range of measures to draw is given that doesn't include all the dynamic's measures (e.g. for crescendo)
         let upperEndX: number = 0;
         let lowerEndX: number = 0;
 
+        /** Wedges between first and last staffline, in case we span more than 2 stafflines. */
         const inbetweenWedges: GraphicalContinuousDynamicExpression[] = [];
         if (!sameStaffLine) {
             // add wedge in all stafflines between (including) start and end measure
             upperEndX = staffLine.PositionAndShape.Size.width;
             lowerEndX = endPosInStaffLine.x;
 
+            // get all stafflines between start measure and end measure, and add wedges for them.
+            //   This would be less lines of code if there was already a list of stafflines for the sheet.
             const stafflinesCovered: StaffLine[] = [staffLine, endStaffLine]; // start and end staffline already get a wedge
-            // get all stafflines between start measure and end measure
-            //   somehow this is quite a lot of lines of code,
-            //   because measures can be undefined, stafflines can be on other pages, etc.
-            //   It would be easier if there was already a list of stafflines for the sheet.
             const startMeasure: GraphicalMeasure = graphicalContinuousDynamic.StartMeasure;
             let nextMeasure: GraphicalMeasure = startMeasure;
             let iterations: number = 0; // safety measure against infinite loop
@@ -1685,9 +1684,11 @@ export abstract class MusicSheetCalculator {
             graphicalContinuousDynamic.calcPsi();
         } else {
             // two+ different Wedges
+            // first wedge
             graphicalContinuousDynamic.createFirstHalfLines(upperStartX, upperEndX, idealY);
             graphicalContinuousDynamic.calcPsi();
 
+            // inbetween wedges
             for (let i: number = 0; i < inbetweenWedges.length; i++) {
                 const inbetweenWedge: GraphicalContinuousDynamicExpression = inbetweenWedges[i];
                 const inbetweenStaffline: StaffLine = inbetweenWedge.ParentStaffLine;
