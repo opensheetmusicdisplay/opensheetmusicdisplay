@@ -660,10 +660,11 @@ export abstract class MusicSheetCalculator {
                     this.rules.LyricsYOffsetToStaffHeight;
 
                 // Y-position calculated according to aforementioned mapping
-                let position: number = firstPosition + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * sortedLyricVerseNumberIndex;
-                if (this.leadSheet) {
-                    position = 3.4 + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
-                }
+                const position: number = firstPosition + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * sortedLyricVerseNumberIndex;
+                // TODO not sure what this leadsheet lyrics positioning was supposed to be, but it seems to ALWAYS put the lyrics inside the stafflines now.
+                // if (this.leadSheet) {
+                //     position = 3.4 + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
+                // }
                 const previousRelativeX: number = lyricsEntryLabel.PositionAndShape.RelativePosition.x;
                 lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(previousRelativeX, position);
                 lyricsEntryLabel.Label.fontStyle = lyricEntry.LyricsEntry.FontStyle;

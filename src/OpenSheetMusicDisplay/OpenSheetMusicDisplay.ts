@@ -188,6 +188,9 @@ export class OpenSheetMusicDisplay {
                 cursor.init(this.sheet.MusicPartManager, this.graphic);
             });
         }
+        if (this.drawingParameters.DrawingParametersEnum === DrawingParametersEnum.leadsheet) {
+            this.graphic.LeadSheet = true;
+        }
     }
 
     /**
