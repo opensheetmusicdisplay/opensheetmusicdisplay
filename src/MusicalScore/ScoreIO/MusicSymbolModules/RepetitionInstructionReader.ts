@@ -60,8 +60,18 @@ export class RepetitionInstructionReader {
           direction = childNode.attribute("direction").value;
         } else if ( "ending" === childNode.name && childNode.hasAttributes &&
                     childNode.attribute("type") !== undefined && childNode.attribute("number")) {
+          if (childNode.attribute("print-object")?.value === "no") {
+            continue;
+            // Finale only puts print-object="no" at the (duplicated) <ending> node at thestart of measure barline,
+            //   making this uneffective. Unclear whether the intention is to render the volta or not. (See #1367)
+          }
           type = childNode.attribute("type").value;
-          const num: string = childNode.attribute("number").value;
+          let num: string = childNode.attribute("number").value;
+          if (childNode.value) {
+            num = childNode.value;
+            // MusicXML spec: "The element text is used when the text displayed in the ending is different than what appears in the number attribute."
+            //   Finale v27.3 accordingly seems to put the desired printed number here instead of in "number" (#1367)
+          }
 
           // Parse the given ending indices:
           // handle cases like: "1, 2" or "1 + 2" or even "1 - 3, 6"
