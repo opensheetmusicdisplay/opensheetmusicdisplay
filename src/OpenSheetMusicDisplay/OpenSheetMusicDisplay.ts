@@ -169,6 +169,9 @@ export class OpenSheetMusicDisplay {
             // error loading sheet, probably already logged, do nothing
             return Promise.reject(new Error("given music sheet was incomplete or could not be loaded."));
         }
+        // if (this.sheet.TitleString === "osmd.Version") {
+        //     this.sheet.TitleString = "OSMD version: " + this.Version; // useful for debug e.g. when console not available
+        // }
         log.info(`[OSMD] Loaded sheet ${this.sheet.TitleString} successfully.`);
 
         this.needBackendUpdate = true;
@@ -272,6 +275,9 @@ export class OpenSheetMusicDisplay {
             // }
             if (this.drawer.Backends[0]) {
                 this.drawer.Backends[0].removeAllChildrenFromContainer(this.container);
+            }
+            for (const backend of this.drawer.Backends) {
+                backend.free();
             }
             this.drawer.Backends.clear();
         }
