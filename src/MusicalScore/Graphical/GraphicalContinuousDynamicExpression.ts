@@ -260,7 +260,9 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         }
     }
 
-    /** Wrapper for createFirstHalfCrescendoLines and createFirstHalfDiminuendoLines, agnostic of crescendo/diminuendo. */
+    /** Wrapper for createFirstHalfCrescendoLines and createFirstHalfDiminuendoLines.
+     * Checks whether `this` is crescendo or diminuendo, helps avoid code duplication.
+     */
     public createFirstHalfLines(startX: number, endX: number, y: number,
         wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
         wedgeMeasureEndOpeningLength: number = this.rules.WedgeMeasureEndOpeningLength,
@@ -275,7 +277,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         }
     }
 
-    /** Wrapper for createSecondHalfCrescendoLines and createSecondHalfDiminuendoLines, agnostic of crescendo/diminuendo. */
+    /** Wrapper for createSecondHalfCrescendoLines and createSecondHalfDiminuendoLines, see createFirstHalfLines. */
     public createSecondHalfLines(startX: number, endX: number, y: number,
         wedgeMeasureBeginOpeningLength: number = this.rules.WedgeMeasureBeginOpeningLength,
         wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
@@ -290,7 +292,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         }
     }
 
-    /** Wrapper for createCrescendoLines and createDiminuendoLines, agnostic of crescendo/decrescendo. */
+    /** Wrapper for createCrescendoLines and createDiminuendoLines, see createFirstHalfLines. */
     public createLines(startX: number, endX: number, y: number,
         wedgeOpeningLength: number = this.rules.WedgeOpeningLength, wedgeLineWidth: number = this.rules.WedgeLineWidth
     ): void {

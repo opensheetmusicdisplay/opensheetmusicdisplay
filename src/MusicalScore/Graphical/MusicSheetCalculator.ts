@@ -1675,12 +1675,13 @@ export abstract class MusicSheetCalculator {
         // the idealY is calculated relative to the currentStaffLine
 
         graphicalContinuousDynamic.Lines.clear();
+        // create wedges (crescendo / decrescendo lines)
         if (isSoftAccent) {
-            // either createFirstHalfCrescendoLines or createFirstHalfDiminuendoLines, same principle / parameters.
             graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
             graphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, idealY);
             graphicalContinuousDynamic.calcPsi();
         } else if (sameStaffLine && !isSoftAccent) {
+            // either create crescendo or decrescendo lines, same principle / parameters.
             graphicalContinuousDynamic.createLines(upperStartX, upperEndX, idealY);
             graphicalContinuousDynamic.calcPsi();
         } else {
