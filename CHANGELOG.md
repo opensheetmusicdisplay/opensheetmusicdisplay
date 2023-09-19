@@ -1,3 +1,19 @@
+## [1.8.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.3...1.8.4) (2023-09-19)
+
+
+### Bug Fixes
+
+* **Error:** Fix faulty MusicXML files from Sibelius/GuitarPro erroring on open for faulty xml pedal, octaveshift ([#1450](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1450)) ([d1ea681](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d1ea681363dace395fad3c45d4f9d91f86ee76b9))
+* **iOS:** Fix memory leak when using Canvas on iOS in Safari ([#1411](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1411)) ([22d349d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/22d349dc8ab4a393a3dad245d659f8c87759ec44))
+* **Layout:** Fix invisible parts/measures affecting layout, especially when very note-dense ([#1444](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1444)) ([8bc6c6c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8bc6c6cd74e66c0e734f4a945868ba19960d8629))
+* **Lyrics:** Fix lyrics position / staffentry x position if there's a whole rest in a secondary voice ([#1267](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1267)). Fix SourceStaffEntry.hasOnlyRests getter ([52b7116](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/52b71166bbd8d93c75a1065cdaca1f70806bd76d))
+* **Percussion:** Fix position of whole rest note for 1-staffline rendering ([#1034](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1034)) ([25521e9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/25521e92f5c2222e4d803283371669088fc58836))
+* **Repetitions:** Fix volta number not read from ending node text value (Finale) ([#1367](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1367)). Respect print-object="no". ([5fb6c56](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5fb6c569e12250278299d6f726e9d6ba31d8c1f4))
+* **Subtitle:** Fix subtitle sometimes not displayed with certain MusicXML structures ([#1456](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1456)) ([642b83d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/642b83dc27fd1671349eab691935953c903985c0))
+* **Wedges:** Add missing in-between wedges for multiline crescendo/decrescendo ([#1277](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1277), PR [#1459](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1459)) ([45440a8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/45440a82ed0809a391be1014d096f9e452dfb6b9))
+
+
+
 ## [1.8.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.2...1.8.3) (2023-08-17)
 
 
