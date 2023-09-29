@@ -603,8 +603,13 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     // eslint-disable-next-line no-null/no-null
                     const creditYGiven: boolean = creditY !== undefined && creditY !== null;
                     const creditYInfo: number = creditYGiven ? parseFloat(creditY) : Number.MIN_VALUE;
-                    if (creditYGiven && creditYInfo > systemYCoordinates) {
-                        if (!this.musicSheet.Title) {
+                    let isSubtitle: boolean = false;
+                    const typeChild: IXmlElement = credit.element("credit-type");
+                    if (typeChild?.value === "subtitle") {
+                        isSubtitle = true;
+                    }
+                    if ((creditYGiven && creditYInfo > systemYCoordinates) || isSubtitle) {
+                        if (!this.musicSheet.Title && !isSubtitle) {
                             const creditSize: string = creditChild.attribute("font-size")?.value;
                             if (creditSize) {
                                 const titleCreditSizeInt: number = parseFloat(creditSize);
@@ -615,7 +620,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                             }
                         }
                         if (!this.musicSheet.Subtitle) {
-                            if (creditJustify !== "right" && creditJustify !== "left") {
+                            if (creditJustify !== "right" && creditJustify !== "left" || isSubtitle) {
                                 if (largestCreditYInfo < creditYInfo) {
                                     largestCreditYInfo = creditYInfo;
                                     if (possibleTitle) {
