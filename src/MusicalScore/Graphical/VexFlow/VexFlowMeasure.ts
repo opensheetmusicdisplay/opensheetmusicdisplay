@@ -633,7 +633,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         if (!vftuplet) { // see #1330, potentially to be investigated. why undefined?
                             continue;
                         }
-                        if (!tuplet.RenderTupletNumber) {
+                        if (!tuplet.RenderTupletNumber ||
+                            tuplet.ShowNumberNoneGivenInXml && this.rules.TupletNumberUseShowNoneXMLValue) {
                             // (vftuplet as any).numerator_glyphs_stored = [...(vftuplet as any).numerator_glyphs];
                             // (vftuplet as any).numerator_glyphs = [];
                             (vftuplet as any).RenderTupletNumber = false;

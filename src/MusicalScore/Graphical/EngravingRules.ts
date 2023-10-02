@@ -180,6 +180,8 @@ export class EngravingRules {
     public TupletNumberLimitConsecutiveRepetitions: boolean;
     public TupletNumberMaxConsecutiveRepetitions: number;
     public TupletNumberAlwaysDisableAfterFirstMax: boolean;
+    /** Whether to use the <tuplet show-number="value"> value or to ignore it. */
+    public TupletNumberUseShowNoneXMLValue: boolean;
     public LabelMarginBorderFactor: number;
     public TupletVerticalLineLength: number;
     public TupletNumbersInTabs: boolean;
@@ -634,6 +636,7 @@ export class EngravingRules {
         this.TupletNumberLimitConsecutiveRepetitions = true;
         this.TupletNumberMaxConsecutiveRepetitions = 2;
         this.TupletNumberAlwaysDisableAfterFirstMax = true;
+        this.TupletNumberUseShowNoneXMLValue = true;
         this.LabelMarginBorderFactor = 0.1;
         this.TupletVerticalLineLength = 0.5;
         this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
