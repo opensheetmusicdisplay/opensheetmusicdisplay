@@ -1074,11 +1074,13 @@ export class InstrumentReader {
             let lastStaffEntryBefore: SourceStaffEntry;
             const duration: Fraction = this.activeRhythm.Rhythm;
             if (duration.RealValue > 0 &&
-              instructionTimestamp.RealValue / duration.RealValue > 0.90) {
-                if (!this.currentMeasure.LastInstructionsStaffEntries[key - 1]) {
-                  this.currentMeasure.LastInstructionsStaffEntries[key - 1] = new SourceStaffEntry(undefined, this.instrument.Staves[key - 1]);
-                }
-                lastStaffEntryBefore = this.currentMeasure.LastInstructionsStaffEntries[key - 1];
+              instructionTimestamp.RealValue / duration.RealValue > 0.90 && // necessary for #1120
+              duration.RealValue !== instructionTimestamp.RealValue // necessary for #1461
+            ) {
+              if (!this.currentMeasure.LastInstructionsStaffEntries[key - 1]) {
+                this.currentMeasure.LastInstructionsStaffEntries[key - 1] = new SourceStaffEntry(undefined, this.instrument.Staves[key - 1]);
+              }
+              lastStaffEntryBefore = this.currentMeasure.LastInstructionsStaffEntries[key - 1];
             }
             // TODO figure out a more elegant way to do this. (see #1120)
             //   the problem is that not all the staffentries in the measure exist yet,
