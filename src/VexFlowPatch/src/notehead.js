@@ -92,6 +92,16 @@ export class NoteHead extends Note {
     }
 
     this.glyph_code = this.glyph.code_head;
+
+    // Swap out the glyph with leger lines
+    if (this.glyph.rest && (this.line > 5 || this.line < 0)) {
+      if (this.duration === 'h') {
+        head_options.custom_glyph_code = 'rhl';
+      } else if (this.duration === 'w') {
+        head_options.custom_glyph_code = 'rwl';
+      }
+      // this.glyph.code_head = this.glyph.leger_code_head;
+    }
     this.x_shift = head_options.x_shift || 0;
     if (head_options.custom_glyph_code) {
       this.custom_glyph = true;
