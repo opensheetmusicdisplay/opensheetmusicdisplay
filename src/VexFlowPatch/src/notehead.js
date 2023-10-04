@@ -99,10 +99,10 @@ export class NoteHead extends Note {
     if (this.glyph.rest && (this.line > 5 || this.line < 0)) {
       if (this.duration === 'h') {
         head_options.custom_glyph_code = 'rhl';
-        this.x_shift_ledger_rest -= 5;
+        this.x_shift_ledger_rest -= 4;
       } else if (this.duration === 'w') {
         head_options.custom_glyph_code = 'rwl';
-        this.x_shift_ledger_rest -= 5;
+        this.x_shift_ledger_rest -= 4;
       }
       // this.glyph.code_head = this.glyph.leger_code_head;
     }
