@@ -101,7 +101,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         selectPageSizes,
         printPdfBtns,
         transpose,
-        transposeBtn;
+        transposeBtn,
+        versionDiv;
     
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -252,6 +253,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         printPdfBtns.push(document.getElementById("print-pdf-btn-optional"));
         transpose = document.getElementById('transpose');
         transposeBtn = document.getElementById('transpose-btn');
+        versionDiv = document.getElementById('versionDiv');
 
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
@@ -483,6 +485,10 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         //openSheetMusicDisplay.setDrawBoundingBox("GraphicalLabel", false);
         openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to see more detailed control flow information in console
         document.body.appendChild(canvas);
+
+        if (versionDiv) {
+            versionDiv.innerHTML = "OSMD Version: " + openSheetMusicDisplay.Version.replace("-release", "").replace("-dev", "");
+        }
 
         window.addEventListener("keydown", function (e) {
             var event = window.event ? window.event : e;
