@@ -96,7 +96,7 @@ export class NoteHead extends Note {
     this.x_shift_ledger_rest = 0; // somehow some percussion glyphs need to not apply this.x_shift
     this.y_shift_ledger_rest = 0;
     this.x_shift = head_options.x_shift || 0;
-    // Swap out the glyph with leger lines
+    // Swap out the glyph with ledger lines
     if (this.glyph.rest && (this.line > 5 || this.line < 0)) {
       if (this.duration === 'h') {
         head_options.custom_glyph_code = 'rhl';
@@ -107,7 +107,6 @@ export class NoteHead extends Note {
         this.x_shift_ledger_rest -= 4;
         this.y_shift_ledger_rest = 5; // was too far up
       }
-      // this.glyph.code_head = this.glyph.leger_code_head;
     }
     if (head_options.custom_glyph_code) {
       this.custom_glyph = true;
