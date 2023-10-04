@@ -1074,12 +1074,17 @@ export class StaveNote extends StemmableNote {
     const width = glyph.getWidth() + (stroke_px * 2);
     const doubleWidth = 2 * (glyph.getWidth() + stroke_px) - (Stem.WIDTH / 2);
 
-    if (this.isRest()) return;
+    if (this.isRest() && this.duration !== "h" && this.duration !== "w") {
+      return;
+    }
+
     if (!ctx) {
       throw new Vex.RERR('NoCanvasContext', "Can't draw without a canvas context.");
     }
 
-    const {
+    let {
+      y_top,
+      y_bottom,
       highest_line,
       lowest_line,
       highest_displaced_line,
@@ -1089,6 +1094,34 @@ export class StaveNote extends StemmableNote {
       displaced_x,
       non_displaced_x,
     } = this.getNoteHeadBounds();
+
+    let yOffsetRest = 0;
+    const isRest = this.isRest();
+    if (isRest) {
+      if (highest_line > 5 || lowest_line < 1) {
+        if (this.duration === "h" || this.duration === "w") {
+          // yOffsetRest = glyph.getHeight();
+          // yOffsetRest = y_top - y_bottom; // = 0 // note/glyph height
+          // yOffsetRest = -3.5; // unfortunately height isn't set anywhere, also not on glyph etc
+          if (this.duration === "h") {
+            if (highest_line > 5) {
+              highest_line++;
+              highest_non_displaced_line++;
+              // if (highest_line - Math.floor(highest_line) === 0) {
+              //   highest_line -= 0.5;
+              //   highest_non_displaced_line -= 0.5;
+              // }
+            }
+            if (lowest_line < 1) {
+              lowest_line--; // we need an extra ledger line above the half rest
+              lowest_non_displaced_line--;
+            }
+          }
+        }
+      } else {
+        return;
+      }
+    }
 
     const min_x = Math.min(displaced_x, non_displaced_x);
 
@@ -1108,18 +1141,32 @@ export class StaveNote extends StemmableNote {
     const style = { ...stave.getStyle() || {}, ...this.getLedgerLineStyle() || {} };
     this.applyStyle(ctx, style);
 
-    // Draw ledger lines below the staff:
+    // Draw ledger lines above the staff:
     for (let line = 6; line <= highest_line; ++line) {
+      if (isRest && line < highest_line - 0.5) {
+        continue; // rests: only draw outermost line
+      }
+      let y = stave.getYForNote(line);
+      if (line === highest_line - 1) {
+        y += yOffsetRest;
+      }
       const normal = (non_displaced_x !== null) && (line <= highest_non_displaced_line);
       const displaced = (displaced_x !== null) && (line <= highest_displaced_line);
-      drawLedgerLine(stave.getYForNote(line), normal, displaced);
+      drawLedgerLine(y, normal, displaced);
     }
 
-    // Draw ledger lines above the staff:
+    // Draw ledger lines below the staff:
     for (let line = 0; line >= lowest_line; --line) {
+      if (isRest && line > lowest_line + 0.5) {
+        continue; // rests: only draw outermost line
+      }
+      let y = stave.getYForNote(line);
+      if (line === lowest_line + 1) {
+        y += yOffsetRest;
+      }
       const normal = (non_displaced_x !== null) && (line >= lowest_non_displaced_line);
       const displaced = (displaced_x !== null) && (line >= lowest_displaced_line);
-      drawLedgerLine(stave.getYForNote(line), normal, displaced);
+      drawLedgerLine(y, normal, displaced);
     }
 
     this.restoreStyle(ctx, style);

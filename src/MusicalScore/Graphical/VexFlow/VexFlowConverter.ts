@@ -360,6 +360,9 @@ export class VexFlowConverter {
                             const noteHalftone: number = gveNotePitch.getHalfTone();
                             const newHigh: boolean = lineShiftDirection === 1 && noteHalftone > maxHalftone;
                             const newLow: boolean = lineShiftDirection === -1 && noteHalftone < maxHalftone;
+                            if (staffGve.parentStaffEntry.parentMeasure.MeasureNumber === 8) {
+                                console.log("here");
+                            }
                             if (!maxHalftone || newHigh || newLow) {
                                 maxHalftone = noteHalftone;
                                 linesShift = 0;
@@ -409,7 +412,8 @@ export class VexFlowConverter {
                             default:
                                 break;
                         }
-                        restYPitch = Pitch.fromHalftone(maxHalftone);
+                        // TODO it's hard to get half notes positioned correctly so that they automatically fit ledger lines
+                        restYPitch = Pitch.fromHalftone(maxHalftone+4);
                         keys = [VexFlowConverter.pitch(restYPitch, true, restClefInstruction, undefined, octaveOffset)[0]];
                     }
                 }
