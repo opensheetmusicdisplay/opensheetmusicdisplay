@@ -93,15 +93,16 @@ export class NoteHead extends Note {
 
     this.glyph_code = this.glyph.code_head;
 
+    this.x_shift_ledger_rest = 0; // somehow some percussion glyphs need to not apply this.x_shift
     this.x_shift = head_options.x_shift || 0;
     // Swap out the glyph with leger lines
     if (this.glyph.rest && (this.line > 5 || this.line < 0)) {
       if (this.duration === 'h') {
         head_options.custom_glyph_code = 'rhl';
-        this.x_shift -= 5;
+        this.x_shift_ledger_rest -= 5;
       } else if (this.duration === 'w') {
         head_options.custom_glyph_code = 'rwl';
-        this.x_shift -= 5;
+        this.x_shift_ledger_rest -= 5;
       }
       // this.glyph.code_head = this.glyph.leger_code_head;
     }
@@ -210,7 +211,8 @@ export class NoteHead extends Note {
     let head_x = this.getAbsoluteX();
     let y = this.y;
     if (this.custom_glyph) {
-      head_x += this.x_shift;
+      // head_x += this.x_shift;  // somehow some new percussion glyphs need to not apply this.x_shift
+      head_x += this.x_shift_ledger_rest;
       if (this.stem_direction === Stem.UP) {
         head_x += this.stem_up_x_offset;
         // VexFlowPatch: also allow notehead shift independent of stem length
