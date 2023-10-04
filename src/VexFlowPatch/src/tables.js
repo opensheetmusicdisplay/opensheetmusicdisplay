@@ -230,6 +230,10 @@ Flow.keyProperties.customNoteHeads = {
   /* Rectangle */
   'R1': { code: 'vd5', shift_right: 0 },
   'R2': { code: 'vd4', shift_right: 0 },
+
+  /* Whole and Half Rests with ledger line */
+  'rwl': { code: 'rwl', shift_right: 0 },
+  'rhl': { code: 'rhl', shift_right: 0 },
 };
 
 Flow.integerToNote = integer => {

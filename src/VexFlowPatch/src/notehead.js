@@ -92,7 +92,22 @@ export class NoteHead extends Note {
     }
 
     this.glyph_code = this.glyph.code_head;
+
+    this.x_shift_ledger_rest = 0; // somehow some percussion glyphs need to not apply this.x_shift
+    this.y_shift_ledger_rest = 0;
     this.x_shift = head_options.x_shift || 0;
+    // Swap out the glyph with ledger lines
+    if (this.glyph.rest && (this.line > 5 || this.line < 0)) {
+      if (this.duration === 'h') {
+        head_options.custom_glyph_code = 'rhl';
+        this.x_shift_ledger_rest -= 4;
+        this.y_shift_ledger_rest = -5; // was too far down
+      } else if (this.duration === 'w') {
+        head_options.custom_glyph_code = 'rwl';
+        this.x_shift_ledger_rest -= 4;
+        this.y_shift_ledger_rest = 5; // was too far up
+      }
+    }
     if (head_options.custom_glyph_code) {
       this.custom_glyph = true;
       this.glyph_code = head_options.custom_glyph_code;
@@ -198,15 +213,17 @@ export class NoteHead extends Note {
     let head_x = this.getAbsoluteX();
     let y = this.y;
     if (this.custom_glyph) {
-      // head_x += this.x_shift;
+      // head_x += this.x_shift; // somehow some new percussion glyphs need to not apply this.x_shift
+      head_x += this.x_shift_ledger_rest;
       if (this.stem_direction === Stem.UP) {
         head_x += this.stem_up_x_offset;
         // VexFlowPatch: also allow notehead shift independent of stem length
         y += (this.stem_up_y_shift || 0);
-      } else {
+      } else if (this.stem_direction === Stem.DOWN) {
         head_x += this.stem_down_x_offset
         y += (this.stem_down_y_shift || 0)
       }
+      y += this.y_shift_ledger_rest;
     }
 
     L("Drawing note head '", this.note_type, this.duration, "' at", head_x, y);
