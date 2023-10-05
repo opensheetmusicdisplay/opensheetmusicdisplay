@@ -61,7 +61,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.resetLayout();
     }
 
-    public isTabMeasure: boolean = false;
     /** octaveOffset according to active clef */
     public octaveOffset: number = 3;
     /** The VexFlow Voices in the measure */
@@ -257,6 +256,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (!this.rules.RenderKeySignatures || !this.ShowKeySignature) {
             return;
         }
+        if (this.isTabMeasure && !this.rules.TabKeySignatureRendered) {
+            return;
+        }
         if (this.parentSourceMeasure?.isReducedToMultiRest && !this.rules.MultipleRestMeasureAddKeySignature) {
             return;
         }
@@ -274,6 +276,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param rhythm
      */
     public addRhythmAtBegin(rhythm: RhythmInstruction): void {
+        if (this.isTabMeasure && !this.rules.TabTimeSignatureRendered) {
+            return;
+        }
         const timeSig: VF.TimeSignature = VexFlowConverter.TimeSignature(rhythm);
         this.stave.addModifier(
             timeSig,

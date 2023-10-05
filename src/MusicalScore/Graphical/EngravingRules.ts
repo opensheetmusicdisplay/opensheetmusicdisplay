@@ -186,6 +186,8 @@ export class EngravingRules {
     public TupletVerticalLineLength: number;
     public TupletNumbersInTabs: boolean;
     public TabBeamsRendered: boolean;
+    public TabKeySignatureRendered: boolean;
+    public TabTimeSignatureRendered: boolean;
 
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
@@ -641,6 +643,8 @@ export class EngravingRules {
         this.TupletVerticalLineLength = 0.5;
         this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
         this.TabBeamsRendered = true;
+        this.TabKeySignatureRendered = false; // standard not to render for tab scores
+        this.TabTimeSignatureRendered = false; // standard not to render for tab scores
 
         // Slur and Tie variables
         this.SlurPlacementFromXML = true;
