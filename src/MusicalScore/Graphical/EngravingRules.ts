@@ -188,6 +188,7 @@ export class EngravingRules {
     public TabBeamsRendered: boolean;
     public TabKeySignatureRendered: boolean;
     public TabTimeSignatureRendered: boolean;
+    public TabFingeringsRendered: boolean;
 
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
@@ -645,6 +646,7 @@ export class EngravingRules {
         this.TabBeamsRendered = true;
         this.TabKeySignatureRendered = false; // standard not to render for tab scores
         this.TabTimeSignatureRendered = false; // standard not to render for tab scores
+        this.TabFingeringsRendered = false; // tabs usually don't show fingering. This can also be duplicated when you have a classical+tab score.
 
         // Slur and Tie variables
         this.SlurPlacementFromXML = true;

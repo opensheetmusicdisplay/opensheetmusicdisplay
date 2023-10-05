@@ -3018,6 +3018,9 @@ export abstract class MusicSheetCalculator {
         for (const system of this.musicSystems) {
             for (const line of system.StaffLines) {
                 for (const measure of line.Measures) {
+                    if (measure.isTabMeasure && !this.rules.TabFingeringsRendered) {
+                        continue; // don't duplicate fingerings into tab measures. tab notes are already
+                    }
                     const placement: PlacementEnum = this.getFingeringPlacement(measure);
                     for (const gse of measure.staffEntries) {
                         gse.FingeringEntries = [];
