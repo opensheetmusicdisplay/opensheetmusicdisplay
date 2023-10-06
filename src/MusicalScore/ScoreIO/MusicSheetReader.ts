@@ -509,7 +509,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.readTitle(root);
         this.readCopyright(root);
         try {
-            if (!this.musicSheet.Title || !this.musicSheet.Composer) {
+            if (!this.musicSheet.Title || !this.musicSheet.Composer || !this.musicSheet.Subtitle) {
                 this.readTitleAndComposerFromCredits(root); // this can also throw an error
             }
         } catch (ex) {
@@ -603,8 +603,13 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     // eslint-disable-next-line no-null/no-null
                     const creditYGiven: boolean = creditY !== undefined && creditY !== null;
                     const creditYInfo: number = creditYGiven ? parseFloat(creditY) : Number.MIN_VALUE;
-                    if (creditYGiven && creditYInfo > systemYCoordinates) {
-                        if (!this.musicSheet.Title) {
+                    let isSubtitle: boolean = false;
+                    const typeChild: IXmlElement = credit.element("credit-type");
+                    if (typeChild?.value === "subtitle") {
+                        isSubtitle = true;
+                    }
+                    if ((creditYGiven && creditYInfo > systemYCoordinates) || isSubtitle) {
+                        if (!this.musicSheet.Title && !isSubtitle) {
                             const creditSize: string = creditChild.attribute("font-size")?.value;
                             if (creditSize) {
                                 const titleCreditSizeInt: number = parseFloat(creditSize);
@@ -615,7 +620,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                             }
                         }
                         if (!this.musicSheet.Subtitle) {
-                            if (creditJustify !== "right" && creditJustify !== "left") {
+                            if (creditJustify !== "right" && creditJustify !== "left" || isSubtitle) {
                                 if (largestCreditYInfo < creditYInfo) {
                                     largestCreditYInfo = creditYInfo;
                                     if (possibleTitle) {
@@ -624,20 +629,28 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                     } else {
                                         possibleTitle = creditChild.value;
                                     }
+                                } else {
+                                    if (finalSubtitle) {
+                                        finalSubtitle += "\n" + creditChild.value;
+                                    } else {
+                                        finalSubtitle = creditChild.value;
+                                    }
                                 }
                             }
                         }
-                        if (!(this.musicSheet.Composer !== undefined && this.musicSheet.Lyricist)) {
-                            switch (creditJustify) {
-                                case "right":
+                        switch (creditJustify) {
+                            case "right":
+                                if (!this.musicSheet.Composer) {
                                     this.musicSheet.Composer = new Label(this.trimString(creditChild.value));
-                                    break;
-                                case "left":
+                                }
+                                break;
+                            case "left":
+                                if (!this.musicSheet.Lyricist) {
                                     this.musicSheet.Lyricist = new Label(this.trimString(creditChild.value));
-                                    break;
-                                default:
-                                    break;
-                            }
+                                }
+                                break;
+                            default:
+                                break;
                         }
                     }
                 }

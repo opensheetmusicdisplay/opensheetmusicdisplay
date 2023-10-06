@@ -71,10 +71,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         return true;
     }
 
-    public clear(): void {
-        if (!this.ctx) {
-            return;
-        }
+    public free(): void {
         //const { svg } = this.ctx; // seems to make svg static between osmd instances.
         const svg: SVGElement = this.ctx.svg;
         // removes all children from the SVG element,
@@ -82,6 +79,13 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         while (svg.lastChild) {
             svg.removeChild(svg.lastChild);
         }
+    }
+
+    public clear(): void {
+        if (!this.ctx) {
+            return;
+        }
+        this.free();
 
         // set background color if not transparent
         if (this.rules.PageBackgroundColor) {

@@ -712,6 +712,8 @@ export class VoiceGenerator {
             bracketedXmlValue = false;
           }
 
+          const showNumberNoneGiven: boolean = this.readShowNumberNoneGiven(tupletNode);
+
           const type: Attr = tupletNode.attribute("type");
           if (type && type.value === "start") {
             let tupletNumber: number = 1;
@@ -732,6 +734,7 @@ export class VoiceGenerator {
             }
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
             tuplet.BracketedXmlValue = bracketedXmlValue;
+            tuplet.ShowNumberNoneGivenInXml = showNumberNoneGiven;
             //Default to above
             tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
             //If we ever encounter a placement attribute for this tuplet, should override.
@@ -819,6 +822,7 @@ export class VoiceGenerator {
           tupletnumber = parseInt(n.attribute("number").value, 10);
         }
         const noTupletNumbering: boolean = isNaN(tupletnumber);
+        const showNumberNoneGiven: boolean = this.readShowNumberNoneGiven(n);
 
         const bracketAttr: Attr = n.attribute("bracket");
         if (bracketAttr && bracketAttr.value === "yes") {
@@ -852,6 +856,7 @@ export class VoiceGenerator {
           if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
             tuplet.BracketedXmlValue = bracketedXmlValue;
+            tuplet.ShowNumberNoneGivenInXml = showNumberNoneGiven;
             //Default to above
             tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
           }
@@ -925,6 +930,16 @@ export class VoiceGenerator {
       }
     }
     return this.openTupletNumber;
+  }
+
+  private readShowNumberNoneGiven(tupletNode: IXmlElement): boolean {
+    const showNumber: Attr = tupletNode.attribute("show-number");
+    if (showNumber?.value) {
+      if (showNumber.value === "none") {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

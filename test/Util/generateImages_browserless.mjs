@@ -348,6 +348,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     let includeSkyBottomLine = false;
     let drawBoundingBoxString;
     let isTestOctaveShiftInvisibleInstrument;
+    let isTestInvisibleMeasureNotAffectingLayout;
     if (osmdTestingMode) {
         const isFunctionTestAutobeam = sampleFilename.startsWith("OSMD_function_test_autobeam");
         const isFunctionTestAutoColoring = sampleFilename.startsWith("OSMD_function_test_auto-custom-coloring");
@@ -362,6 +363,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isTestCajon2NoteSystem = sampleFilename.includes("test_cajon_2-note-system");
         isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
         const isTextOctaveShiftExtraGraphicalMeasure = sampleFilename.includes("test_octaveshift_extragraphicalmeasure");
+        isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
+        const isTestWedgeMultilineCrescendo = sampleFilename.includes("test_wedge_multiline_crescendo");
+        const isTestWedgeMultilineDecrescendo = sampleFilename.includes("test_wedge_multiline_decrescendo");
         osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
@@ -410,7 +414,10 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         if (isTestCajon2NoteSystem) {
             osmdInstance.EngravingRules.PercussionUseCajon2NoteSystem = true;
         }
-        if (isTextOctaveShiftExtraGraphicalMeasure || isTestOctaveShiftInvisibleInstrument) {
+        if (isTextOctaveShiftExtraGraphicalMeasure ||
+            isTestOctaveShiftInvisibleInstrument ||
+            isTestWedgeMultilineCrescendo ||
+            isTestWedgeMultilineDecrescendo) {
             osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
         }
     }
@@ -420,6 +427,11 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         await osmdInstance.load(loadParameter, sampleFilename); // if using load.then() without await, memory will not be freed up between renders
         if (isTestOctaveShiftInvisibleInstrument) {
             osmdInstance.Sheet.Instruments[0].Visible = false;
+        }
+        if (isTestInvisibleMeasureNotAffectingLayout) {
+            if (osmdInstance.Sheet.Instruments[1]) { // some systems can't handle ?. in this script (just a safety check anyways)
+                osmdInstance.Sheet.Instruments[1].Visible = false;
+            }
         }
     } catch (ex) {
         debug("couldn't load sample " + sampleFilename + ", skipping. Error: \n" + ex);

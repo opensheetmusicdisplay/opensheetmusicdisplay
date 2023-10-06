@@ -24,6 +24,8 @@ export class Tuplet {
     private bracket: boolean;
     /** Boolean if 'bracket="no"' or "yes" was explicitly requested in the XML, otherwise undefined. */
     public BracketedXmlValue: boolean;
+    /** Whether <tuplet show-number="none"> was given in the XML, indicating the tuplet number should not be rendered. */
+    public ShowNumberNoneGivenInXml: boolean;
 
     /** Determines whether the tuplet should be bracketed (arguments are EngravingRules). */
     public shouldBeBracketed(useXmlValue: boolean, tupletsBracketed: boolean, tripletsBracketed: boolean): boolean {

@@ -260,6 +260,51 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         }
     }
 
+    /** Wrapper for createFirstHalfCrescendoLines and createFirstHalfDiminuendoLines.
+     * Checks whether `this` is crescendo or diminuendo, helps avoid code duplication.
+     */
+    public createFirstHalfLines(startX: number, endX: number, y: number,
+        wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
+        wedgeMeasureEndOpeningLength: number = this.rules.WedgeMeasureEndOpeningLength,
+        wedgeLineWidth: number = this.rules.WedgeLineWidth
+    ): void {
+        if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+            this.createFirstHalfCrescendoLines(startX, endX, y,
+                wedgeMeasureEndOpeningLength, wedgeLineWidth);
+        } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+            this.createFirstHalfDiminuendoLines(startX, endX, y,
+                wedgeOpeningLength, wedgeMeasureEndOpeningLength, wedgeLineWidth);
+        }
+    }
+
+    /** Wrapper for createSecondHalfCrescendoLines and createSecondHalfDiminuendoLines, see createFirstHalfLines. */
+    public createSecondHalfLines(startX: number, endX: number, y: number,
+        wedgeMeasureBeginOpeningLength: number = this.rules.WedgeMeasureBeginOpeningLength,
+        wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
+        wedgeLineWidth: number = this.rules.WedgeLineWidth
+    ): void {
+        if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+            this.createSecondHalfCrescendoLines(startX, endX, y,
+                wedgeMeasureBeginOpeningLength, wedgeOpeningLength, wedgeLineWidth);
+        } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+            this.createSecondHalfDiminuendoLines(startX, endX, y,
+                wedgeMeasureBeginOpeningLength, wedgeLineWidth);
+        }
+    }
+
+    /** Wrapper for createCrescendoLines and createDiminuendoLines, see createFirstHalfLines. */
+    public createLines(startX: number, endX: number, y: number,
+        wedgeOpeningLength: number = this.rules.WedgeOpeningLength, wedgeLineWidth: number = this.rules.WedgeLineWidth
+    ): void {
+        if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+            this.createCrescendoLines(startX, endX, y,
+                wedgeOpeningLength, wedgeLineWidth);
+        } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+            this.createDiminuendoLines(startX, endX, y,
+                wedgeOpeningLength, wedgeLineWidth);
+        }
+    }
+
     /**
      * Calculate the BoundingBox (as a box around the Wedge).
      */

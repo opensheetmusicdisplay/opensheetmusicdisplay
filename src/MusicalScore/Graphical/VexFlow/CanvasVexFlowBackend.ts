@@ -74,6 +74,18 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         return this.ctx;
     }
 
+    public free(): void {
+        if (this.canvas) {
+            // the following seems to only be necessary on iOS, preventing a memory leak (#1411)
+            (this.canvas as any).width = 0;
+            (this.canvas as any).height = 0;
+
+            this.canvas.remove();
+            delete this.canvas;
+            this.canvas = null;
+        }
+    }
+
     public clear(): void {
         (<any>this.ctx).clearRect(0, 0, (<any>this.canvas).width, (<any>this.canvas).height);
 

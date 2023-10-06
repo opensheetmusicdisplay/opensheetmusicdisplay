@@ -660,10 +660,11 @@ export abstract class MusicSheetCalculator {
                     this.rules.LyricsYOffsetToStaffHeight;
 
                 // Y-position calculated according to aforementioned mapping
-                let position: number = firstPosition + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * sortedLyricVerseNumberIndex;
-                if (this.leadSheet) {
-                    position = 3.4 + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
-                }
+                const position: number = firstPosition + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * sortedLyricVerseNumberIndex;
+                // TODO not sure what this leadsheet lyrics positioning was supposed to be, but it seems to ALWAYS put the lyrics inside the stafflines now.
+                // if (this.leadSheet) {
+                //     position = 3.4 + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
+                // }
                 const previousRelativeX: number = lyricsEntryLabel.PositionAndShape.RelativePosition.x;
                 lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(previousRelativeX, position);
                 lyricsEntryLabel.Label.fontStyle = lyricEntry.LyricsEntry.FontStyle;
@@ -1416,28 +1417,63 @@ export abstract class MusicSheetCalculator {
         const placement: PlacementEnum = graphicalContinuousDynamic.ContinuousDynamic.Placement;
 
         // if ContinuousDynamicExpression is given from wedge
-        let secondGraphicalContinuousDynamic: GraphicalContinuousDynamicExpression = undefined;
+        let endGraphicalContinuousDynamic: GraphicalContinuousDynamicExpression = undefined;
 
         // last length check
         if (sameStaffLine && endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength && !isSoftAccent) {
             endPosInStaffLine.x = startPosInStaffline.x + this.rules.WedgeMinLength;
         }
 
-        // Upper staff wedge always starts at the given position and the lower staff wedge always starts at the begin of measure
+        // First staff wedge always starts at the given position and the last and inbetween wedges always start at the begin of measure
+        //   TODO: rename upper / lower to first / last, now that we can have inbetween wedges, though this creates a huge diff, and this should be clear now.
         const upperStartX: number = startPosInStaffline.x;
         let lowerStartX: number = endStaffLine.Measures[0].beginInstructionsWidth - this.rules.WedgeHorizontalMargin - 2;
         //TODO fix this when a range of measures to draw is given that doesn't include all the dynamic's measures (e.g. for crescendo)
         let upperEndX: number = 0;
         let lowerEndX: number = 0;
 
+        /** Wedges between first and last staffline, in case we span more than 2 stafflines. */
+        const inbetweenWedges: GraphicalContinuousDynamicExpression[] = [];
         if (!sameStaffLine) {
+            // add wedge in all stafflines between (including) start and end measure
             upperEndX = staffLine.PositionAndShape.Size.width;
             lowerEndX = endPosInStaffLine.x;
 
-            // must create a new Wedge
-            secondGraphicalContinuousDynamic = new GraphicalContinuousDynamicExpression(
+            // get all stafflines between start measure and end measure, and add wedges for them.
+            //   This would be less lines of code if there was already a list of stafflines for the sheet.
+            const stafflinesCovered: StaffLine[] = [staffLine, endStaffLine]; // start and end staffline already get a wedge
+            const startMeasure: GraphicalMeasure = graphicalContinuousDynamic.StartMeasure;
+            let nextMeasure: GraphicalMeasure = startMeasure;
+            let iterations: number = 0; // safety measure against infinite loop
+            let sourceMeasureIndex: number = startMeasure.parentSourceMeasure.measureListIndex;
+            while (nextMeasure !== endMeasure && iterations < 1000) {
+                const nextSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[sourceMeasureIndex];
+                const potentialNextMeasure: GraphicalMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(
+                    nextSourceMeasure, staffIndex
+                );
+                if (potentialNextMeasure) {
+                    nextMeasure = potentialNextMeasure;
+                    const nextStaffline: StaffLine = nextMeasure.ParentStaffLine;
+                    if (!stafflinesCovered.includes(nextStaffline)) {
+                        stafflinesCovered.push(nextStaffline);
+                        const newWedge: GraphicalContinuousDynamicExpression =
+                            new GraphicalContinuousDynamicExpression(
+                                graphicalContinuousDynamic.ContinuousDynamic,
+                                nextStaffline,
+                                nextStaffline.Measures[0].parentSourceMeasure
+                            );
+                        newWedge.IsSplittedPart = true;
+                        inbetweenWedges.push(newWedge);
+                    }
+                }
+                sourceMeasureIndex++;
+                iterations++;
+            }
+
+            // last wedge at endMeasure
+            endGraphicalContinuousDynamic = new GraphicalContinuousDynamicExpression(
                 graphicalContinuousDynamic.ContinuousDynamic, endStaffLine, endMeasure.parentSourceMeasure);
-            secondGraphicalContinuousDynamic.IsSplittedPart = true;
+            endGraphicalContinuousDynamic.IsSplittedPart = true;
             graphicalContinuousDynamic.IsSplittedPart = true;
         } else {
             upperEndX = endPosInStaffLine.x;
@@ -1456,7 +1492,7 @@ export abstract class MusicSheetCalculator {
 
         // the Height of the Expression's placement
         let idealY: number = 0;
-        let secondIdealY: number = 0;
+        let endIdealY: number = 0;
 
         if (placement === PlacementEnum.Below) {
             // can be a single Staff Instrument or an Instrument with 2 Staves
@@ -1486,7 +1522,7 @@ export abstract class MusicSheetCalculator {
             if (!sameStaffLine) {
                 // Set the value for the splitted y position to the ideal position before we check and modify it with
                 // the skybottom calculator detection
-                secondIdealY = idealY;
+                endIdealY = idealY;
             }
             // must check BottomLine for possible collisions within the Length of the Expression
             // find the corresponding max value for the given Length
@@ -1537,12 +1573,12 @@ export abstract class MusicSheetCalculator {
             if (!sameStaffLine) {
                 maxBottomLineValueForExpressionLength = endStaffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(lowerStartX, lowerEndX);
 
-                if (maxBottomLineValueForExpressionLength > secondIdealY) {
-                    secondIdealY = maxBottomLineValueForExpressionLength;
+                if (maxBottomLineValueForExpressionLength > endIdealY) {
+                    endIdealY = maxBottomLineValueForExpressionLength;
                 }
 
-                secondIdealY += this.rules.WedgeOpeningLength / 2;
-                secondIdealY += this.rules.WedgeVerticalMargin;
+                endIdealY += this.rules.WedgeOpeningLength / 2;
+                endIdealY += this.rules.WedgeVerticalMargin;
             }
 
             if (!withinCrossedBeam) {
@@ -1574,7 +1610,7 @@ export abstract class MusicSheetCalculator {
             // must consider the upperWedge starting/ending tip for the comparison with the SkyLine
             idealY += this.rules.WedgeOpeningLength / 2;
             if (!sameStaffLine) {
-                secondIdealY = idealY;
+                endIdealY = idealY;
             }
 
             // must check SkyLine for possible collisions within the Length of the Expression
@@ -1619,11 +1655,11 @@ export abstract class MusicSheetCalculator {
             if (!sameStaffLine) {
                 minSkyLineValueForExpressionLength = endStaffLine.SkyBottomLineCalculator.getSkyLineMinInRange(lowerStartX, lowerEndX);
 
-                if (minSkyLineValueForExpressionLength < secondIdealY) {
-                    secondIdealY = minSkyLineValueForExpressionLength;
+                if (minSkyLineValueForExpressionLength < endIdealY) {
+                    endIdealY = minSkyLineValueForExpressionLength;
                 }
 
-                secondIdealY -= this.rules.WedgeOpeningLength / 2;
+                endIdealY -= this.rules.WedgeOpeningLength / 2;
             }
 
             if (!withinCrossedBeam) {
@@ -1631,45 +1667,66 @@ export abstract class MusicSheetCalculator {
                 idealY -= this.rules.WedgeVerticalMargin;
             }
             if (!sameStaffLine) {
-                secondIdealY -= this.rules.WedgeVerticalMargin;
+                endIdealY -= this.rules.WedgeVerticalMargin;
             }
         }
 
         // now we have the correct placement Height for the Expression
         // the idealY is calculated relative to the currentStaffLine
 
-        // Crescendo (point to the left, opening to the right)
         graphicalContinuousDynamic.Lines.clear();
-        if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
-            if (isSoftAccent) {
-                graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
-                // secondGraphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, idealY);
-                // secondGraphicalContinuousDynamic.calcPsi();
-            } else if (sameStaffLine && !isSoftAccent) {
-                graphicalContinuousDynamic.createCrescendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
-            } else {
-                // two different Wedges
-                graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
+        // create wedges (crescendo / decrescendo lines)
+        if (isSoftAccent) {
+            graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
+            graphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, idealY);
+            graphicalContinuousDynamic.calcPsi();
+        } else if (sameStaffLine && !isSoftAccent) {
+            // either create crescendo or decrescendo lines, same principle / parameters.
+            graphicalContinuousDynamic.createLines(upperStartX, upperEndX, idealY);
+            graphicalContinuousDynamic.calcPsi();
+        } else {
+            // two+ different Wedges
+            // first wedge
+            graphicalContinuousDynamic.createFirstHalfLines(upperStartX, upperEndX, idealY);
+            graphicalContinuousDynamic.calcPsi();
 
-                secondGraphicalContinuousDynamic.createSecondHalfCrescendoLines(lowerStartX, lowerEndX, secondIdealY);
-                secondGraphicalContinuousDynamic.calcPsi();
-            }
-        } else if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
-            if (sameStaffLine) {
-                graphicalContinuousDynamic.createDiminuendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
-            } else {
-                graphicalContinuousDynamic.createFirstHalfDiminuendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
+            // inbetween wedges
+            for (let i: number = 0; i < inbetweenWedges.length; i++) {
+                const inbetweenWedge: GraphicalContinuousDynamicExpression = inbetweenWedges[i];
+                const inbetweenStaffline: StaffLine = inbetweenWedge.ParentStaffLine;
+                let betweenIdealY: number = endIdealY;
 
-                secondGraphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, secondIdealY);
-                secondGraphicalContinuousDynamic.calcPsi();
+                if (placement === PlacementEnum.Below) {
+                    const maxBottomLineValueForExpressionLength: number =
+                    endStaffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(lowerStartX, upperEndX);
+                    if (maxBottomLineValueForExpressionLength > betweenIdealY) {
+                        betweenIdealY = maxBottomLineValueForExpressionLength;
+                    }
+                    betweenIdealY += this.rules.WedgeOpeningLength / 2;
+                    betweenIdealY += this.rules.WedgeVerticalMargin;
+                } else if (placement === PlacementEnum.Above) {
+                    const minSkyLineValueForExpressionLength: number =
+                        inbetweenStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(lowerStartX, lowerEndX);
+                    if (minSkyLineValueForExpressionLength < endIdealY) {
+                        betweenIdealY = minSkyLineValueForExpressionLength;
+                    }
+                    betweenIdealY -= this.rules.WedgeOpeningLength / 2;
+                }
+
+                if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+                    inbetweenWedge.createSecondHalfCrescendoLines(0, inbetweenStaffline.PositionAndShape.Size.width, betweenIdealY);
+                    // for crescendo, we want the same look as on the last staffline: not starting with an intersection / starting wedge
+                } else {
+                    inbetweenWedge.createFirstHalfDiminuendoLines(0, inbetweenStaffline.PositionAndShape.Size.width, betweenIdealY);
+                    // for diminuendo, we want the same look as on the first staffline: not ending in an intersection / looking finished
+                }
+                inbetweenWedge.calcPsi();
             }
-        } //End Diminuendo
+
+            // last wedge
+            endGraphicalContinuousDynamic.createSecondHalfLines(lowerStartX, lowerEndX, endIdealY);
+            endGraphicalContinuousDynamic.calcPsi();
+        }
         this.dynamicExpressionMap.set(endAbsoluteTimestamp.RealValue, graphicalContinuousDynamic.PositionAndShape);
     }
 
@@ -2961,6 +3018,9 @@ export abstract class MusicSheetCalculator {
         for (const system of this.musicSystems) {
             for (const line of system.StaffLines) {
                 for (const measure of line.Measures) {
+                    if (measure.isTabMeasure && !this.rules.TabFingeringsRendered) {
+                        continue; // don't duplicate fingerings into tab measures. tab notes are already
+                    }
                     const placement: PlacementEnum = this.getFingeringPlacement(measure);
                     for (const gse of measure.staffEntries) {
                         gse.FingeringEntries = [];

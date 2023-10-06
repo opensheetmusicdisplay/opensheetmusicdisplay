@@ -180,10 +180,15 @@ export class EngravingRules {
     public TupletNumberLimitConsecutiveRepetitions: boolean;
     public TupletNumberMaxConsecutiveRepetitions: number;
     public TupletNumberAlwaysDisableAfterFirstMax: boolean;
+    /** Whether to use the <tuplet show-number="value"> value or to ignore it. */
+    public TupletNumberUseShowNoneXMLValue: boolean;
     public LabelMarginBorderFactor: number;
     public TupletVerticalLineLength: number;
     public TupletNumbersInTabs: boolean;
     public TabBeamsRendered: boolean;
+    public TabKeySignatureRendered: boolean;
+    public TabTimeSignatureRendered: boolean;
+    public TabFingeringsRendered: boolean;
 
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
@@ -634,10 +639,14 @@ export class EngravingRules {
         this.TupletNumberLimitConsecutiveRepetitions = true;
         this.TupletNumberMaxConsecutiveRepetitions = 2;
         this.TupletNumberAlwaysDisableAfterFirstMax = true;
+        this.TupletNumberUseShowNoneXMLValue = true;
         this.LabelMarginBorderFactor = 0.1;
         this.TupletVerticalLineLength = 0.5;
         this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
         this.TabBeamsRendered = true;
+        this.TabKeySignatureRendered = false; // standard not to render for tab scores
+        this.TabTimeSignatureRendered = false; // standard not to render for tab scores
+        this.TabFingeringsRendered = false; // tabs usually don't show fingering. This can also be duplicated when you have a classical+tab score.
 
         // Slur and Tie variables
         this.SlurPlacementFromXML = true;

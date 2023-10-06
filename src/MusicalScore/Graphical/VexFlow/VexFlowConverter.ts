@@ -327,6 +327,9 @@ export class VexFlowConverter {
                     baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
                 if (isWholeMeasureRest) {
                     keys = ["d/5"];
+                    if (gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1) {
+                        keys = ["b/4"];
+                    }
                     duration = "w";
                     numDots = 0;
                     // If it's a whole rest we want it smack in the middle. Apparently there is still an issue in vexflow:

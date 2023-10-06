@@ -87,6 +87,8 @@ public abstract getContext(): Vex.IRenderContext;
   }
 
   public abstract clear(): void;
+  /** (Try to) free memory. Currently only relevant on iOS. */
+  public abstract free(): void;
 
   public abstract translate(x: number, y: number): void;
   public abstract renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
