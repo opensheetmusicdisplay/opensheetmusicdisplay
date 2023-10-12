@@ -535,6 +535,13 @@ export class ExpressionReader {
                 fontStyle = FontStyles.Italic;
             }
         }
+        const fontWeightAttr: Attr = wordsNode.attribute("font-weight");
+        if (fontWeightAttr) {
+            const fontWeightText: string = fontWeightAttr.value;
+            if (fontWeightText === "bold") {
+                fontStyle = FontStyles.Bold;
+            }
+        }
         let defaultYXml: number;
         if (currentMeasure.Rules.PlaceWordsInsideStafflineFromXml) {
             const defaultYString: string = wordsNode.attribute("default-y")?.value;
