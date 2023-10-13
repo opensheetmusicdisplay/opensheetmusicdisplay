@@ -65,10 +65,10 @@ export class RepetitionInstructionReader {
 
           // Parse the given ending indices:
           // handle cases like: "1, 2" or "1 + 2" or even "1 - 3, 6"
-          const separatedEndingIndices: string[] = num.split("[,+]");
+          const separatedEndingIndices: string[] = num.split(/[,+]/);
           for (let idx2: number = 0, len2: number = separatedEndingIndices.length; idx2 < len2; ++idx2) {
             const separatedEndingIndex: string = separatedEndingIndices[idx2];
-            const indices: string[] = separatedEndingIndex.match("[0-9]");
+            const indices: string[] = separatedEndingIndex.match(/[0-9]/);
 
             // check if possibly something like "1-3" is given..
             if (separatedEndingIndex.search("-") !== -1 && indices.length === 2) {
