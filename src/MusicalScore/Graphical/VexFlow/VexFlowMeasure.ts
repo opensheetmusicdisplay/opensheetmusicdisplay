@@ -560,7 +560,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             //convert to VF units (pixels)
             vexFlowVoltaHeight *= 10;
-            this.stave.setVoltaType(voltaType, repetitionInstruction.endingIndices[0], vexFlowVoltaHeight);
+            this.stave.setVoltaType(voltaType, repetitionInstruction.endingIndices.join(","), vexFlowVoltaHeight);
             skyBottomLineCalculator.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
         }
     }
