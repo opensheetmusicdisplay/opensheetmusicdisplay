@@ -702,7 +702,7 @@ export class EngravingRules {
         this.LyricsExtraXShiftForShortLyricsWidthThreshold = 1.4; // width of '+': 1.12, 'II': 1.33 (benefits from x-shift), 'III': 1.99 (doesn't benefit)
         this.LyricsUseXPaddingForShortNotes = true;
         this.LyricsXPaddingFactorForLongLyrics = 0.8;
-        this.LyricsXPaddingWidthThreshold = 2.5;
+        this.LyricsXPaddingWidthThreshold = 2.1;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
