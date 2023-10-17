@@ -219,7 +219,7 @@ export class EngravingRules {
      * Default 0.8 = 8 pixels */
     public LyricsXPaddingFactorForLongLyrics: number;
     /** How wide a text needs to be to trigger lyrics padding for short notes.
-     * This is visual width, not number of characters, as e.g. 'zzz' is about as wide as 'iiii'.
+     * This is visual width, not number of characters, as e.g. 'zzz' is wider than 'iii'.
      * Default 3.3.
      */
     public LyricsXPaddingWidthThreshold: number;
@@ -702,7 +702,7 @@ export class EngravingRules {
         this.LyricsExtraXShiftForShortLyricsWidthThreshold = 1.4; // width of '+': 1.12, 'II': 1.33 (benefits from x-shift), 'III': 1.99 (doesn't benefit)
         this.LyricsUseXPaddingForShortNotes = true;
         this.LyricsXPaddingFactorForLongLyrics = 0.8;
-        this.LyricsXPaddingWidthThreshold = 3.3;
+        this.LyricsXPaddingWidthThreshold = 2.5;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;

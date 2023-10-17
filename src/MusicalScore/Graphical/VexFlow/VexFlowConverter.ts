@@ -490,7 +490,7 @@ export class VexFlowConverter {
                         // letters like i and l take less space, so we should use the visual width and not number of characters
                         let currentLyricsWidth: number = lyricsEntry.GraphicalLabel.PositionAndShape.Size.width;
                         if (lyricsEntry.hasDashFromLyricWord()) {
-                            currentLyricsWidth += 1.5;
+                            currentLyricsWidth += 1.6;
                         }
                         if (currentLyricsWidth > widthThreshold) {
                             paddingMultiplier *= currentLyricsWidth / widthThreshold;
