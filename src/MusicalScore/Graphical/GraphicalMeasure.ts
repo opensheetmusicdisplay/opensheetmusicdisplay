@@ -77,6 +77,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public ShowTimeSignature: boolean = true;
     public ShowKeySignature: boolean = true;
     public isTabMeasure: boolean = false;
+    public CumulativeStaffEntryPaddingRight: number = 0;
 
     public get ParentStaff(): Staff {
         return this.parentStaff;

@@ -194,8 +194,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         //console.log("demo: osmd pagebgcolor: " + pageBackgroundColor);
         var backendType = (paramBackendType && paramBackendType.toLowerCase) ? paramBackendType : "svg";
 
-        var horizontalScrolling = paramHorizontalScrolling === '1';
-        var singleHorizontalStaffline = paramSingleHorizontalStaffline === '1';
+        var horizontalScrolling = true || paramHorizontalScrolling === '1';
+        var singleHorizontalStaffline = true || paramSingleHorizontalStaffline === '1';
         
         // set the backendSelect debug controls dropdown menu selected item
         //console.log("true: " + backendSelect && backendType.toLowerCase && backendType.toLowerCase() === "canvas");

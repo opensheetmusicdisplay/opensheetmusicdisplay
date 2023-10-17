@@ -61,6 +61,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     private graphicalTies: GraphicalTie[] = [];
     private lyricsEntries: GraphicalLyricEntry[] = [];
     public FingeringEntries: GraphicalLabel[];
+    public PaddingRight: number;
 
     public get GraphicalInstructions(): AbstractGraphicalInstruction[] {
         return this.graphicalInstructions;

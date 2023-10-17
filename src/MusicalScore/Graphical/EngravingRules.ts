@@ -848,7 +848,7 @@ export class EngravingRules {
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
-        this.RenderSingleHorizontalStaffline = false;
+        this.RenderSingleHorizontalStaffline = true;
         this.SpacingBetweenTextLines = 0;
 
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();

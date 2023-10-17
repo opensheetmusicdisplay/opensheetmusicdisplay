@@ -512,7 +512,9 @@ export class VexFlowConverter {
                         //   so unfortunately we can't just check if the next note is 16th or less.
                     }
                     if (addPadding) {
-                        (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics * paddingMultiplier;
+                        const paddingRight: number = rules.LyricsXPaddingFactorForLongLyrics * paddingMultiplier;
+                        (vfnote as any).paddingRight = 10 * paddingRight;
+                        gve.parentStaffEntry.PaddingRight = paddingRight;
                     }
                 }
             }

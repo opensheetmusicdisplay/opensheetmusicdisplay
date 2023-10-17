@@ -354,7 +354,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return minStaffEntriesWidth;
   }
 
-  private calculateElongationFactor(containers: (GraphicalLyricEntry|GraphicalChordSymbolContainer)[], staffEntry: GraphicalStaffEntry, lastEntryDict: any,
+  private calculateElongationFactor(measure: GraphicalMeasure,
+                                    containers: (GraphicalLyricEntry|GraphicalChordSymbolContainer)[], staffEntry: GraphicalStaffEntry, lastEntryDict: any,
                                     oldMinimumStaffEntriesWidth: number, elongationFactorForMeasureWidth: number,
                                     measureNumber: number, oldMinSpacing: number, nextMeasureOverlap: number): number {
     let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
@@ -370,7 +371,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // spacing for multi-syllable words
         if (container.LyricsEntry.SyllableIndex > 0) { // syllables after first
           // give a little more spacing for dash between syllables
-          minSpacing = this.rules.BetweenSyllableMinimumDistance;
+          minSpacing = 0;
+          // minSpacing = this.rules.BetweenSyllableMinimumDistance;
           if (TextAlignment.IsCenterAligned(alignment)) {
             minSpacing += 1.0; // TODO check for previous lyric alignment too. though center is not standard
             // without this, there's not enough space for dashes between long syllables on eigth notes
@@ -392,9 +394,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
 
       const bBox: BoundingBox = container instanceof GraphicalLyricEntry ? container.GraphicalLabel.PositionAndShape : container.PositionAndShape;
-      const labelWidth: number = bBox.Size.width;
+      const labelWidth: number = bBox.Size.width - 0.44; // label bbox has about 0.2 margin on either side
       const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
-      let xPosition: number = staffEntryXPosition + bBox.BorderMarginLeft;
+      let xPosition: number = staffEntryXPosition + bBox.BorderMarginLeft + measure.CumulativeStaffEntryPaddingRight;
+      measure.CumulativeStaffEntryPaddingRight += staffEntry.PaddingRight ?? 0;
       if (container instanceof GraphicalChordSymbolContainer && container.PositionAndShape.Parent.DataObject instanceof GraphicalMeasure) {
         // the parent is only the measure for whole measure rest notes with chord symbols,
         //   which should start near the beginning of the measure instead of the middle, where there is no desired staffEntry position.
@@ -435,6 +438,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (lastEntryDict[currentContainerIndex]) {
           spacingNeededToLastContainer = lastEntryDict[currentContainerIndex].labelWidth + minSpacing;
         }
+      }
+      if (spacingNeededToLastContainer > currentSpacingToLastContainer) {
+        console.log("here>");
       }
 
       // get factor of how much we need to stretch the measure to space the current lyric
@@ -481,6 +487,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         labelWidth: labelWidth,
         measureNumber: measureNumber,
         sourceNoteDuration: container instanceof GraphicalLyricEntry ? (container.LyricsEntry && container.LyricsEntry.Parent.Notes[0].Length) : false,
+        paddingRight: container instanceof GraphicalLyricEntry ? container.StaffEntryParent.PaddingRight ?? 0 : 0,
         text: container instanceof GraphicalLyricEntry ? container.LyricsEntry.Text : container.GraphicalLabel.Label.text,
         xPosition: xPosition,
       };
@@ -491,7 +498,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return newElongationFactorForMeasureWidth;
   }
 
-  public calculateElongationFactorFromStaffEntries(staffEntries: GraphicalStaffEntry[], oldMinimumStaffEntriesWidth: number,
+  public calculateElongationFactorFromStaffEntries(measure: GraphicalMeasure,
+                                                  staffEntries: GraphicalStaffEntry[], oldMinimumStaffEntriesWidth: number,
                                                   elongationFactorForMeasureWidth: number, measureNumber: number): number {
     interface EntryInfo {
       cumulativeOverlap: number;
@@ -514,9 +522,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
     for (const staffEntry of staffEntries) {
+      (staffEntry as VexFlowStaffEntry).calculateXPosition();
+    }
+    for (const staffEntry of staffEntries) {
       if (staffEntry.LyricsEntries.length > 0 && this.rules.RenderLyrics) {
         newElongationFactorForMeasureWidth =
           this.calculateElongationFactor(
+            measure,
             staffEntry.LyricsEntries,
             staffEntry,
             lastLyricEntryDict,
@@ -526,10 +538,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             this.rules.HorizontalBetweenLyricsDistance,
             this.rules.LyricOverlapAllowedIntoNextMeasure,
           );
+          console.log("new elongation factor: " + newElongationFactorForMeasureWidth);
+          if (newElongationFactorForMeasureWidth > 1) {
+            console.log("in measure " + measure.MeasureNumber);
+          }
+          newElongationFactorForMeasureWidth = 1;
       }
       if (staffEntry.graphicalChordContainers.length > 0 && this.rules.RenderChordSymbols) {
         newElongationFactorForMeasureWidth =
           this.calculateElongationFactor(
+            measure,
             staffEntry.graphicalChordContainers,
             staffEntry,
             lastChordEntryDict,
@@ -553,8 +571,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         continue;
       }
 
+      // (measure as VexFlowMeasure).format();
+      measure.CumulativeStaffEntryPaddingRight = 0;
       elongationFactorForMeasureWidth =
         this.calculateElongationFactorFromStaffEntries(
+          measure,
           measure.staffEntries,
           oldMinimumStaffEntriesWidth,
           elongationFactorForMeasureWidth,
