@@ -476,9 +476,9 @@ export class VexFlowConverter {
                 for (const note of notes) {
                     if (note.sourceNote.Length.RealValue <= 0.125) { // 8th or shorter
                         hasShortNotes = true;
-                        if (note.sourceNote.Length.RealValue <= 0.0625) { // 16th or shorter
-                            padding += 0.0;
-                        }
+                        // if (note.sourceNote.Length.RealValue <= 0.0625) { // 16th or shorter
+                        //     padding += 0.0; // unnecessary by now. what rather needs more padding is eighth notes now.
+                        // }
                         break;
                     }
                 }
@@ -494,11 +494,9 @@ export class VexFlowConverter {
                         }
                         if (currentLyricsWidth > widthThreshold) {
                             padding += currentLyricsWidth - widthThreshold;
-                            if (currentLyricsWidth > 5) {
-                                padding *= 1.15; // TODO somehow very long strings need just a little more padding to prevent overlaps
-                            }
-                            // console.log("padding for " + lyricsEntry.LyricsEntry.Text + ": " + padding);
-                            // console.log("lyricsWidth: " + currentLyricsWidth);
+                            // if (currentLyricsWidth > 4) {
+                            //     padding *= 1.15; // only maybe needed if LyricsXPaddingFactorForLongLyrics < 1
+                            // }
                             // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
                             const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
                             const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
