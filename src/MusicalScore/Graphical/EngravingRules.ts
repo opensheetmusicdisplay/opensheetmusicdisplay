@@ -223,6 +223,7 @@ export class EngravingRules {
      * Default 3.3.
      */
     public LyricsXPaddingWidthThreshold: number;
+    public LyricsXPaddingForLastNoteInMeasure: boolean;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
     public BetweenSyllableMaximumDistance: number;
@@ -703,6 +704,7 @@ export class EngravingRules {
         this.LyricsUseXPaddingForShortNotes = true;
         this.LyricsXPaddingFactorForLongLyrics = 1.0;
         this.LyricsXPaddingWidthThreshold = 2.2; // generateImages script with png might need more for 8th notes, e.g. Chloe
+        this.LyricsXPaddingForLastNoteInMeasure = false;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
