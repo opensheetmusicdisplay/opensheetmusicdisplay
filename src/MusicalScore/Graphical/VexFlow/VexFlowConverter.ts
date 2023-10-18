@@ -503,7 +503,8 @@ export class VexFlowConverter {
                             const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
                             if (rules.LyricsXPaddingForLastNoteInMeasure || currentStaffEntryIndex !== measureStaffEntries.length - 1) {
                                 addPadding = true;
-                                // for last note in the measure, this might be unnecessary
+                                // for last note in the measure, this is usually not necessary,
+                                //   but in rare samples with quite long text on the last note it is.
                             }
                             break;
                         }
