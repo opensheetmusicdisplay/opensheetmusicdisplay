@@ -501,11 +501,9 @@ export class VexFlowConverter {
                             const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
                             const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
                             const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
-                            if (currentStaffEntryIndex === measureStaffEntries.length - 1) {
-                                // addPadding = true; // last note in the measure
-                                // probably unnecessary
-                            } else {
+                            if (rules.LyricsXPaddingForLastNoteInMeasure || currentStaffEntryIndex !== measureStaffEntries.length - 1) {
                                 addPadding = true;
+                                // for last note in the measure, this might be unnecessary
                             }
                             break;
                         }
