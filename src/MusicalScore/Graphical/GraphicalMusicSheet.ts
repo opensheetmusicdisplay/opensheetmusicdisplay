@@ -407,10 +407,15 @@ export class GraphicalMusicSheet {
      */
     public GetInterpolatedIndexInVerticalContainers(musicTimestamp: Fraction): number {
         const containers: VerticalGraphicalStaffEntryContainer[] = this.verticalGraphicalStaffEntryContainers;
+        if (containers.length === 1) {
+            return 0; // this fixes an error with Noteflight samples, see below (#1473). It may also be faster.
+        }
         let leftIndex: number = 0;
         let rightIndex: number = containers.length - 1;
         let leftTS: Fraction = undefined;
         let rightTS: Fraction = undefined;
+        // TODO AbsoluteTimestamp can be NaN in some erroneous MusicXML files like from Noteflight, see omd issue #1473
+        //   (though in the sample tested, there is only one container, so above containers.length === 1 prevents the error)
         if (musicTimestamp.lte(containers[containers.length - 1].AbsoluteTimestamp)) {
             while (rightIndex - leftIndex > 1) {
                 const middleIndex: number = Math.floor((rightIndex + leftIndex) / 2);
@@ -445,7 +450,7 @@ export class GraphicalMusicSheet {
 
         // estimate the interpolated index
         const foundIndex: number = rightIndex - (diffTS / diff);
-        return Math.min(foundIndex, this.verticalGraphicalStaffEntryContainers.length);
+        return Math.min(foundIndex, this.verticalGraphicalStaffEntryContainers.length - 1);
     }
 
     /**
