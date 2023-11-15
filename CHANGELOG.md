@@ -1,3 +1,10 @@
+## 1.8.5 Preview
+### Bug Fixes
+
+* **Ledger Lines:** Fix whole and half rests outside staff lines not having ledger lines ([#1142](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1142), PR [#1463](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/pull/1463)) ([e273c1c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e273c1cea10e638e8f55336d98091c5600a88f86)) 
+
+
+
 ## [1.8.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.3...1.8.4) (2023-09-19)
 
 
