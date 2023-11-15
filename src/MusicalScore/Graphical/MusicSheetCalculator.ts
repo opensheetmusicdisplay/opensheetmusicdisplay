@@ -1056,6 +1056,8 @@ export abstract class MusicSheetCalculator {
                     }
                     minimumOffset = this.calculateAlignedChordSymbolsOffset(alignmentScopedStaffEntries, skybottomcalculator);
                 }
+                let lastRightX: number = 0;
+                let lastIsUpper: boolean = false;
                 for (const measure of staffLine.Measures) {
                     if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "measure") {
                         minimumOffset = this.calculateAlignedChordSymbolsOffset(measure.staffEntries, skybottomcalculator);
@@ -1087,6 +1089,16 @@ export abstract class MusicSheetCalculator {
                             gLabel.setLabelPositionAndShapeBorders();
                             gLabel.PositionAndShape.calculateBoundingBox();
                             skybottomcalculator.updateSkyLineInRange(start, end, minimumOffset + gLabel.PositionAndShape.BorderMarginTop);
+                            if (start < lastRightX && lastIsUpper === false) {
+                                gLabel.PositionAndShape.RelativePosition.y = minimumOffset + yShift - 2;
+                                gLabel.setLabelPositionAndShapeBorders();
+                                gLabel.PositionAndShape.calculateBoundingBox();
+                                skybottomcalculator.updateSkyLineInRange(start, end, minimumOffset + gLabel.PositionAndShape.BorderMarginTop);
+                                lastIsUpper = true;
+                            } else {
+                                lastIsUpper = false;
+                            }
+                            lastRightX = end;
                         }
                     }
                 }
