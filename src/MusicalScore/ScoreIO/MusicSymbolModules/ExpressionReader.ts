@@ -542,6 +542,13 @@ export class ExpressionReader {
                 fontStyle = FontStyles.Bold;
             }
         }
+        if (fontStyleAttr && fontWeightAttr) {
+            const fontStyleText: string = fontStyleAttr.value;
+            const fontWeightText: string = fontWeightAttr.value;
+            if (fontStyleText === "italic" && fontWeightText === "bold") {
+                fontStyle = FontStyles.BoldItalic;
+            }
+        }
         let defaultYXml: number;
         if (currentMeasure.Rules.PlaceWordsInsideStafflineFromXml) {
             const defaultYString: string = wordsNode.attribute("default-y")?.value;
