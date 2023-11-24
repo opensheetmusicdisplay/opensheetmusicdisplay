@@ -59,6 +59,7 @@ export class RepetitionCalculator {
         } else { // ending end
           for (let idx: number = 0, len: number = currentRepetitionInstruction.endingIndices.length; idx < len; ++idx) {
             this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
+            break;
           }
         }
         break;
