@@ -529,18 +529,23 @@ export class ExpressionReader {
         }
         let fontStyle: FontStyles;
         const fontStyleAttr: Attr = wordsNode.attribute("font-style");
+        let fontStyleText: string;
+        let fontWeightText: string;
         if (fontStyleAttr) {
-            const fontStyleText: string = fontStyleAttr.value;
+            fontStyleText = fontStyleAttr.value;
             if (fontStyleText === "italic") {
                 fontStyle = FontStyles.Italic;
             }
         }
         const fontWeightAttr: Attr = wordsNode.attribute("font-weight");
         if (fontWeightAttr) {
-            const fontWeightText: string = fontWeightAttr.value;
+            fontWeightText = fontWeightAttr.value;
             if (fontWeightText === "bold") {
                 fontStyle = FontStyles.Bold;
             }
+        }
+        if (fontStyleText === "italic" && fontWeightText === "bold") {
+            fontStyle = FontStyles.BoldItalic;
         }
         let defaultYXml: number;
         if (currentMeasure.Rules.PlaceWordsInsideStafflineFromXml) {
