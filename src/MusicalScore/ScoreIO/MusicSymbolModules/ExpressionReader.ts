@@ -542,10 +542,10 @@ export class ExpressionReader {
             fontWeightText = fontWeightAttr.value;
             if (fontWeightText === "bold") {
                 fontStyle = FontStyles.Bold;
+                if (fontStyleText === "italic") {
+                    fontStyle = FontStyles.BoldItalic;
+                }
             }
-        }
-        if (fontStyleText === "italic" && fontWeightText === "bold") {
-            fontStyle = FontStyles.BoldItalic;
         }
         let defaultYXml: number;
         if (currentMeasure.Rules.PlaceWordsInsideStafflineFromXml) {
