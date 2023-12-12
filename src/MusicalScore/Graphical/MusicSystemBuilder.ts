@@ -464,6 +464,9 @@ export class MusicSystemBuilder {
             );
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
         }
+        for (const stave of staves) {
+            stave.linkedStaves = staves; // to update each other's (Note)StartX if one of the staves gets a higher one, for vertical x-alignment
+        }
         staves[0].formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
         return totalBeginInstructionLengthX;
     }

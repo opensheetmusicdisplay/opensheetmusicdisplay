@@ -344,7 +344,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     case SystemLinesEnum.BoldThinDots:
                         //customize the barline draw function if repeat is beginning of system
                         if (!renderInitialLine) {
-                            (this.stave as any).modifiers[0].draw = function(stave: VF.Stave): void {
+                            (this.stave as any).modifiers[0].draw = function(stave: VF.Stave, modifierXShift: number = 0): void {
                                 (stave as any).checkContext();
                                 this.setRendered();
                                 switch (this.type) {
@@ -359,7 +359,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                                     break;
                                     case VF.Barline.type.REPEAT_BEGIN:
                                     //removed the vertical line rendering that exists in VF codebase
-                                    this.drawRepeatBar(stave, this.x, true);
+                                    this.drawRepeatBar(stave, (stave as any).start_x, true);
                                     break;
                                     case VF.Barline.type.REPEAT_END:
                                     this.drawRepeatBar(stave, this.x, false);

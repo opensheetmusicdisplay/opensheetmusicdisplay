@@ -24,6 +24,7 @@ export class Stave extends Element {
     this.y = y;
     this.width = width;
     this.formatted = false;
+    this.linkedStaves = []; // VexFlowPatch
     this.setStartX(x + 5);
     // this.start_x = x + 5;
     this.end_x = x + width;
@@ -132,16 +133,32 @@ export class Stave extends Element {
 
   getOptions() { return this.options; }
 
-  setNoteStartX(x) {
+  setNoteStartX(x, linkedStavesLoop) {
     if (!this.formatted) this.format();
 
     this.setStartX(x);
+    if (!linkedStavesLoop) {
+      return this;
+    }
+    for (const linkedStave of this.linkedStaves) {
+      if (linkedStave !== this && linkedStave.getNoteStartX() < x) {
+        linkedStave.setNoteStartX(x, false); // VexFlowPatch: Update the noteStartX of linked (vertical) staves as well
+      }
+    }
     // const begBarline = this.modifiers[0];
     // begBarline.setX(this.start_x - begBarline.getWidth());
     return this;
   }
-  setStartX(x) {
+  setStartX(x, linkedStavesLoop) {
     this.start_x = x;
+    if (!linkedStavesLoop) {
+      return;
+    }
+    for (const linkedStave of this.linkedStaves) {
+      if (linkedStave !== this) {
+        linkedStave.setStartX(this.start_x, false);
+      }
+    }
   }
   getNoteStartX() {
     if (!this.formatted) this.format();
@@ -565,7 +582,7 @@ export class Stave extends Element {
     }
 
     if (x > this.start_x) {
-      this.setStartX(x);
+      this.setStartX(x, true); // true: also set it for other vertical staves to x-align them
       // VexFlowPatch: don't overwrite start_x if it's already bigger (alignment, see formatBegModifiers())
     }
     x = this.x + this.width;
