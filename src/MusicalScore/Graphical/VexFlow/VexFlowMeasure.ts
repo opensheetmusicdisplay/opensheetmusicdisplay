@@ -256,9 +256,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (!this.rules.RenderKeySignatures || !this.ShowKeySignature) {
             return;
         }
-        // if (this.isTabMeasure && !this.rules.TabKeySignatureRendered) {
-        //     return; // we still need to x-align the startX / note startX though, so just not rendering the modifier is not enough
-        // }
+        if (this.isTabMeasure && !this.rules.TabKeySignatureRendered && !this.rules.TabKeySignatureSpacingAdded) {
+            return;
+            // This will ignore key signatures completely, so for non-tab-only scores, vertical x-alignment will be prevented.
+            //   If we want to x-align the startX / note startX, just not rendering the modifier is not enough.
+            //   For tab-only scores, this is more compact though.
+        }
         if (this.parentSourceMeasure?.isReducedToMultiRest && !this.rules.MultipleRestMeasureAddKeySignature) {
             return;
         }
@@ -286,9 +289,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param rhythm
      */
     public addRhythmAtBegin(rhythm: RhythmInstruction): void {
-        // if (this.isTabMeasure && !this.rules.TabTimeSignatureRendered) {
-        //     return; // we still need to x-align the startX / note startX though, so just not rendering the modifier is not enough
-        // }
+        if (this.isTabMeasure && !this.rules.TabTimeSignatureRendered && !this.rules.TabTimeSignatureSpacingAdded) {
+            return;
+            // This will ignore time signatures completely, so for non-tab-only scores, vertical x-alignment will be prevented.
+            //   If we want to x-align the startX / note startX, just not rendering the modifier is not enough.
+            //   For tab-only scores, this is more compact though.
+        }
         const timeSig: VF.TimeSignature = VexFlowConverter.TimeSignature(rhythm);
         this.stave.addModifier(
             timeSig,
