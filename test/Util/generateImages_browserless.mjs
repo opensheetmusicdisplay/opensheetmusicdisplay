@@ -329,6 +329,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
         const isTestWedgeMultilineCrescendo = sampleFilename.includes("test_wedge_multiline_crescendo");
         const isTestWedgeMultilineDecrescendo = sampleFilename.includes("test_wedge_multiline_decrescendo");
+        const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
         osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
@@ -382,6 +383,11 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             isTestWedgeMultilineCrescendo ||
             isTestWedgeMultilineDecrescendo) {
             osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
+        }
+        if (isTestTabs4Strings) {
+            osmdInstance.EngravingRules.TabKeySignatureSpacingAdded = false;
+            osmdInstance.EngravingRules.TabTimeSignatureSpacingAdded = false;
+            // more compact rendering. These are basically just aesthetic options, as a showcase.
         }
     }
 
