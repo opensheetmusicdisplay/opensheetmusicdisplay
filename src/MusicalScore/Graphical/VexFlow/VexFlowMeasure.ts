@@ -256,9 +256,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (!this.rules.RenderKeySignatures || !this.ShowKeySignature) {
             return;
         }
-        if (this.isTabMeasure && !this.rules.TabKeySignatureRendered) {
-            return;
-        }
+        // if (this.isTabMeasure && !this.rules.TabKeySignatureRendered) {
+        //     return; // we still need to x-align the startX / note startX though, so just not rendering the modifier is not enough
+        // }
         if (this.parentSourceMeasure?.isReducedToMultiRest && !this.rules.MultipleRestMeasureAddKeySignature) {
             return;
         }
@@ -267,6 +267,16 @@ export class VexFlowMeasure extends GraphicalMeasure {
             VexFlowConverter.keySignature(previousKey),
             undefined
         );
+        if (this.isTabMeasure && !this.rules.TabKeySignatureRendered) {
+            const modifiers: VF.StaveModifier[] = this.stave.getModifiers();
+            for (const modifier of modifiers) {
+                if (modifier instanceof VF.KeySignature) {
+                    modifier.setStyle({ fillStyle: "#00000000"}); // transparent. requires VexflowPatch
+                    // instead of not rendering the key signature, technically, we render it, but with transparent color. this helps layout / x-alignment.
+                    break;
+                }
+            }
+        }
         this.updateInstructionWidth();
     }
 
@@ -276,17 +286,19 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param rhythm
      */
     public addRhythmAtBegin(rhythm: RhythmInstruction): void {
-        if (this.isTabMeasure && !this.rules.TabTimeSignatureRendered) {
-            return;
-        }
+        // if (this.isTabMeasure && !this.rules.TabTimeSignatureRendered) {
+        //     return; // we still need to x-align the startX / note startX though, so just not rendering the modifier is not enough
+        // }
         const timeSig: VF.TimeSignature = VexFlowConverter.TimeSignature(rhythm);
         this.stave.addModifier(
             timeSig,
             VF.StaveModifier.Position.BEGIN
         );
-        if (!this.ShowTimeSignature) {
+        if (!this.ShowTimeSignature ||
+            this.isTabMeasure && !this.rules.TabTimeSignatureRendered) {
             // extends Element is missing from class StaveModifier in DefinitelyTyped definitions, so setStyle isn't found
             timeSig.setStyle({ fillStyle: "#00000000"}); // transparent. requires VexflowPatch
+            // instead of not rendering the time signature, technically, we render it, but with transparent color. this helps layout / x-alignment.
         }
         this.updateInstructionWidth();
     }
