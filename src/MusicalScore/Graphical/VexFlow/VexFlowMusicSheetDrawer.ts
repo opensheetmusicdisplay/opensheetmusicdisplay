@@ -34,7 +34,6 @@ import { GraphicalGlissando } from "../GraphicalGlissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { SvgVexFlowBackend } from "./SvgVexFlowBackend";
-import { CanvasVexFlowBackend } from "./CanvasVexFlowBackend";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -236,12 +235,17 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                     let stemTip: PointF2D;
                     let stemHeight: number;
                     const directionSign: number = vfNote.vfnote[0].getStemDirection(); // 1 or -1
+                    let stemElement: HTMLElement;
                     if (this.backend instanceof SvgVexFlowBackend) {
-                        const stemElement: HTMLElement = vfNote.getStemSVG();
+                        stemElement = vfNote.getStemSVG();
+                    }
+                    const hasBbox: boolean = (stemElement as any)?.getBbox !== undefined;
+                    if (hasBbox) {
+                        // apparently sometimes the stemElement is null, in that case we need to use the canvas method.
                         const rect: SVGRect = (stemElement as any).getBBox();
                         stemTip = new PointF2D(rect.x / 10, rect.y / 10);
                         stemHeight = rect.height / 10;
-                    } else if (this.backend instanceof CanvasVexFlowBackend) {
+                    } else { // if this.backend instanceof CanvasVexFlowBackend // also seems to work for SVG
                         stemHeight = vfNote.vfnote[0].getStemLength() / 10;
                         stemTip = new PointF2D(
                             (vfNote.vfnote[0].getStem() as any).x_begin / 10,
