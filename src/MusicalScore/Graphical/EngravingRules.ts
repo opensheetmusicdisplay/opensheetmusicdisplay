@@ -994,7 +994,7 @@ export class EngravingRules {
         this.addChordName("m(maj11)", "majorminor", ["11"], [], []);
         this.addChordName("m(maj13)", "majorminor", ["13"], [], []);
         this.addChordName("69", "majorsixth", ["9"], [], []);
-        this.addChordName("mi69", "minorsixth", ["9"], [], []);
+        this.addChordName("m69", "minorsixth", ["9"], [], []);
     }
 
     /**
