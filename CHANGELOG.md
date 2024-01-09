@@ -1,7 +1,28 @@
-## 1.8.5 Preview
+## [1.8.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.4...1.8.5) (2024-01-09)
+
+
 ### Bug Fixes
 
+* **Buzz Roll:** Fix error in SVG export for buzz rolls (PR [#1493](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1493), [#1413](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1413)) ([e565af1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e565af114ca065f9266c2f96ecee9460e19233dc))
+* **Crescendo:** Fix crescendo wedges for multi instrument scores ([#1480](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1480), PR [#1499](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1499)) ([3d60d46](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3d60d4678ad5d68a6ead1f0432bd7b41d4c31ea6))
+* **Noteflight:** Fix rare error in erroneous Noteflight samples ([#1473](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1473)) ([0695159](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/06951596931ad73358519e7754e65ffb09e2a769))
+* **Fontstyle:** Fix BoldItalic text displayed as Bold instead of BoldItalic ([#1487](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1487)) ([0e229dd](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0e229ddf865b79d5899d122035a8422b862666b5)), closes [#1483](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1483) [#1483](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1483)
+* **Fraction:** Fix rare infinite loop with complex rhythms and floating point inaccuracies in greatestCommonDenominator ([#1478](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1478)) ([8e33752](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8e3375210007f357409808132de692ab3431cee2))
+* **In-Measure Clefs:** Wrong clef at end of measure no longer appears in certain Sibelius-exported scores ([#1461](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1461)) ([dab58b2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/dab58b2aeb1e9a407adf8b27577f5079088a90bd))
 * **Ledger Lines:** Fix whole and half rests outside staff lines not having ledger lines ([#1142](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1142), PR [#1463](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/pull/1463)) ([e273c1c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e273c1cea10e638e8f55336d98091c5600a88f86)) 
+* **Subtitle:** Recognize subtitle by credit-type element (even if given y value above title) ([#1456](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1456)) ([7c7329f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7c7329fd6754ad7d61213aaad44af4a625b36ff4))
+* **SVG Export:** Fix octave shift bracket text overlapping ([#1482](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1482)) (only affects SVG export via JSDOM script). ([e62cd28](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e62cd2800473cb059b7147ff49b63a8d7bbe79d9))
+* **Tab Bends:** Fix Tab bend moving on second render (re-render) ([#1496](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1496), PR [#1497](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1497)) ([df69d9d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/df69d9d87ce326848645d07f49b395531f32aab1))
+* **Tabs:** Don't show fingerings by default in a tab staff ([#1468](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1468)). Add EngravingRule TabFingeringsRendered ([82068b7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/82068b79a8c4428bbe0a4a3e3f627d22b4ce03f8))
+* **Tabs:** Don't show time and key signature by default in a tab staff ([#1467](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1467)). Add EngravingRules TabTimeSignatureRendered, TabKeySignatureRendered ([10f9c78](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/10f9c787f767136d6ce78fabc8b8cced24faee44))
+* **Tuplet:** Respect show-number="none" ([#1460](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1460)). Add EngravingRule TupletNumberUseShowNoneXMLValue ([68320ab](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/68320ab5fe824cb30850e5d5f357dfd15e7cd157))
+
+
+### Features
+
+* **Color:** Words nodes / expressions use XML color by default. Add EngravingRule ExpressionsUseXMLColor ([#1492](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1492), PR [#1498](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1498)) ([207fcd4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/207fcd44fc7581f6e5d096b84e78bdf5849c77e2))
+* **Expressions:** Show words text in bold if given in XML (PR [#1471](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1471)), add tempo expressions like allegro vivace to parsing ([4580100](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4580100e0708c54f620253eec63a94512edd3d11))
+* **Tabs:** Add EngravingRules TabKeySignatureSpacingAdded, TabTimeSignatureSpacingAdded (for tab-only scores). Fix tabs x-alignment broken (no release affected) ([#1489](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1489), PR [#1490](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1490)) ([47cdd11](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/47cdd11b3796b35fdf648bb2a7c423d13a5b4bda))
 
 
 
