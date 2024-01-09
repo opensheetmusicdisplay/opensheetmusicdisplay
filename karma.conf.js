@@ -105,7 +105,7 @@ module.exports = function (config) {
         autoWatch: false,
 
         // start these browsers
-        browsers: ['ChromeHeadlessNoSandbox'],
+        browsers: ['FirefoxHeadless'],
 
         // For security reasons, Google Chrome is unable to provide sandboxing
         // when it is running in container-based environments (e.g. CI).
