@@ -1405,7 +1405,12 @@ export abstract class MusicSheetCalculator {
         const startCollideBox: BoundingBox =
             this.dynamicExpressionMap.get(graphicalContinuousDynamic.ContinuousDynamic.StartMultiExpression.AbsoluteTimestamp.RealValue);
         if (startCollideBox) {
-            startPosInStaffline.x = startCollideBox.RelativePosition.x + startCollideBox.BorderMarginRight + this.rules.WedgeHorizontalMargin;
+            startPosInStaffline.x = startCollideBox.RelativePosition.x + this.rules.WedgeHorizontalMargin;
+            if ((startCollideBox.DataObject as any).ParentStaffLine === staffLine) {
+                // TODO the dynamicExpressionMap doesn't distinguish between staffLines, so we may react to a different staffline otherwise
+                //   so the more fundamental solution would be to fix dynamicExpressionMap mapping across stafflines.
+                startPosInStaffline.x += startCollideBox.BorderMarginRight;
+            }
         }
         //currentMusicSystem and currentStaffLine
         const musicSystem: MusicSystem = staffLine.ParentMusicSystem;
