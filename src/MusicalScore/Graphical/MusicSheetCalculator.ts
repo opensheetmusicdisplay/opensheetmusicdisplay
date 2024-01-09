@@ -1943,6 +1943,9 @@ export abstract class MusicSheetCalculator {
                                                                        this.rules.UnknownTextHeight,
                                                                        textAlignment,
                                                                        this.rules.TempoYSpacing);
+                if (entry.Expression.ColorXML && this.rules.ExpressionsUseXMLColor) {
+                    graphLabel.ColorXML = entry.Expression.ColorXML;
+                }
 
                 if (entry.Expression instanceof InstantaneousTempoExpression) {
                     //already added?
