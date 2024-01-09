@@ -1407,8 +1407,8 @@ export abstract class MusicSheetCalculator {
         if (startCollideBox) {
             startPosInStaffline.x = startCollideBox.RelativePosition.x + this.rules.WedgeHorizontalMargin;
             if ((startCollideBox.DataObject as any).ParentStaffLine === staffLine) {
-                // issue: the dynamicExpressionMap doesn't distinguish between staffLines, so we may react to a different staffline otherwise
-                //   the more fundamental solution would be to fix dynamicExpressionMap mapping across stafflines.
+                // TODO the dynamicExpressionMap doesn't distinguish between staffLines, so we may react to a different staffline otherwise
+                //   so the more fundamental solution would be to fix dynamicExpressionMap mapping across stafflines.
                 startPosInStaffline.x += startCollideBox.BorderMarginRight;
             }
         }
