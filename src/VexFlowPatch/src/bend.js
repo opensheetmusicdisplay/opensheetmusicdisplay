@@ -212,7 +212,11 @@ export class Bend extends Modifier {
     let last_drawn_width = 0;
     for (let i = 0; i < this.phrase.length; ++i) {
       const bend = this.phrase[i];
-      if (i === 0) bend.draw_width += x_shift;
+      if (i === 0) {
+        //VexflowPatch: Save unmodified width so that we don't increase x on every render
+        bend.draw_width_unmodified = bend.draw_width;
+        bend.draw_width += x_shift;
+      }
 
       last_drawn_width = bend.draw_width +
         (last_bend ? last_bend.draw_width : 0) -
@@ -253,6 +257,13 @@ export class Bend extends Modifier {
       renderArrowHead(last_bend.x + last_drawn_width, bend_height);
     } else if (last_bend.type === Bend.DOWN) {
       renderArrowHead(last_bend.x + last_drawn_width, start.y, -1);
+    }
+    // VexflowPatch: reset draw_width, so that bend doesn't get longer every re-render
+    for (let i = 0; i < this.phrase.length; ++i) {
+        const bend = this.phrase[i];
+        if (bend.draw_width_unmodified) {
+            bend.draw_width = bend.draw_width_unmodified;
+        }
     }
   }
 }
