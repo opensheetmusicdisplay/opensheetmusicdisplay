@@ -3,7 +3,7 @@ environment:
   timeout: 20000
   matrix:
     # - nodejs_version: "12"
-    - nodejs_version: "16"
+    - nodejs_version: "20"
 platform:
   # - x86
   - x64

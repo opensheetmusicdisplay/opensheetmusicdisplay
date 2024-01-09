@@ -7,7 +7,7 @@
   <identification>
     <encoding>
       <software>MuseScore 3.6.2</software>
-      <encoding-date>2023-10-04</encoding-date>
+      <encoding-date>2024-01-08</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -111,7 +111,7 @@
         </backup>
       <note>
         <rest>
-          <display-step>B</display-step>
+          <display-step>D</display-step>
           <display-octave>6</display-octave>
           </rest>
         <duration>4</duration>
@@ -145,7 +145,7 @@
         </backup>
       <note>
         <rest>
-          <display-step>D</display-step>
+          <display-step>C</display-step>
           <display-octave>3</display-octave>
           </rest>
         <duration>2</duration>
@@ -154,7 +154,7 @@
         </note>
       <note>
         <rest>
-          <display-step>D</display-step>
+          <display-step>C</display-step>
           <display-octave>3</display-octave>
           </rest>
         <duration>2</duration>
