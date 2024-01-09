@@ -19,6 +19,7 @@ export class GraphicalLabel extends Clickable {
     public SVGNode: Node;
     /** Read-only informational variable only set once by lyrics centering algorithm. */
     public CenteringXShift: number = 0;
+    public ColorXML: string;
 
     /**
      * Creates a new GraphicalLabel from a Label
