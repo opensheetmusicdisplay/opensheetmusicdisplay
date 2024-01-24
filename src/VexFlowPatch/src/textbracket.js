@@ -133,8 +133,17 @@ export class TextBracket extends Element {
     ctx.fillText(this.text, start.x, start.y);
 
     // Get the width and height for the octave number
-    const main_width = ctx.measureText(this.text).width;
-    const main_height = ctx.measureText('M').width;
+    let main_width = ctx.measureText(this.text).width;
+    // JSDOM / SVG export: getBbox doesn't work/exist in JSDOM. couldn't find a working polyfill yet.
+    //   see https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1482
+    //   this only affects JSDOM / the nodeJS script generateImages_browserless.mjs with the SVG option
+    if (!(main_width > 0)) { // might be NaN, so Math.Max doesn't work
+      main_width = 10 * this.text.length; // 10 for "8", 20 for "15" (8va/15ma) hardcoded workaround until we have a polyfill, see above
+    }
+    let main_height = ctx.measureText('M').width;
+    if (!(main_height > 0)) {
+      main_height = 20;
+    }
 
     // Calculate the y position for the super script
     const super_y = start.y - (main_height / 2.5);
@@ -144,8 +153,17 @@ export class TextBracket extends Element {
     ctx.fillText(this.superscript, start.x + main_width + 1, super_y);
 
     // Determine width and height of the superscript
-    const superscript_width = ctx.measureText(this.superscript).width;
-    const super_height = ctx.measureText('M').width;
+    let superscript_width = ctx.measureText(this.superscript).width;
+    if (!(superscript_width > 0)) {
+      superscript_width = 12;
+      if (this.superscript.includes("m")) {
+        superscript_width += 5; // "m" wider than "v" or "b"
+      }
+    }
+    let super_height = ctx.measureText('M').width;
+    if (!(super_height > 0)) {
+      super_height = 10;
+    }
 
     // Setup initial coordinates for the bracket line
     let start_x = start.x;

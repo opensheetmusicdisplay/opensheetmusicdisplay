@@ -1,0 +1,218 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE score-partwise PUBLIC '-//Recordare//DTD MusicXML 4.0 Partwise//EN' 'http://www.musicxml.org/dtds/partwise.dtd'>
+<score-partwise version='4.0'>
+	<movement-title>test_tab_x-align_vertically</movement-title>
+	<identification>
+		<encoding>
+			<software>Sibelius 2023.6</software>
+			<software>Dolet 8.3 for Sibelius</software>
+			<encoding-date>2023-08-31</encoding-date>
+			<supports element='accidental' type='yes'/>
+			<supports element='transpose' type='yes'/>
+			<supports attribute='new-page' element='print' type='yes' value='yes'/>
+			<supports attribute='new-system' element='print' type='yes' value='yes'/>
+		</encoding>
+	</identification>
+	<defaults>
+		<scaling>
+			<millimeters>6.5</millimeters>
+			<tenths>40</tenths>
+		</scaling>
+		<page-layout>
+			<page-height>1828</page-height>
+			<page-width>1292</page-width>
+			<page-margins type='both'>
+				<left-margin>78.1538</left-margin>
+				<right-margin>78.1538</right-margin>
+				<top-margin>78.1538</top-margin>
+				<bottom-margin>78.1538</bottom-margin>
+			</page-margins>
+		</page-layout>
+		<system-layout>
+			<system-margins>
+				<left-margin>0</left-margin>
+				<right-margin>0</right-margin>
+			</system-margins>
+			<system-distance>130</system-distance>
+			<top-system-distance>153.75</top-system-distance>
+		</system-layout>
+		<staff-layout>
+			<staff-distance>90</staff-distance>
+		</staff-layout>
+		<?DoletSibelius StaffJustificationPercentage=40?>
+		<appearance>
+			<line-width type='beam'>5</line-width>
+			<line-width type='heavy barline'>5</line-width>
+			<line-width type='leger'>1.5625</line-width>
+			<line-width type='light barline'>1.5625</line-width>
+			<line-width type='slur middle'>2.1875</line-width>
+			<line-width type='slur tip'>0.625</line-width>
+			<line-width type='staff'>1.25</line-width>
+			<line-width type='stem'>1.25</line-width>
+			<line-width type='tie middle'>2.1875</line-width>
+			<line-width type='tie tip'>0.625</line-width>
+			<note-size type='grace'>60</note-size>
+			<note-size type='cue'>75</note-size>
+		</appearance>
+		<music-font font-family='Helsinki Std,engraved'/>
+		<word-font font-family='Palatino,serif'/>
+	</defaults>
+	<credit page='1'>
+		<credit-type>test_tab_x-align_vertically</credit-type>
+		<credit-words/>
+	</credit>
+	<part-list>
+		<part-group number='1' type='start'>
+			<group-symbol>bracket</group-symbol>
+			<group-barline>no</group-barline>
+		</part-group>
+		<score-part id='P1'>
+			<part-name print-object='no'>Electric Guitar</part-name>
+			<part-abbreviation print-object='no'>E. Gtr.</part-abbreviation>
+			<group>score</group>
+			<score-instrument id='P1-I1'>
+				<instrument-name>Electric Guitar [notation]</instrument-name>
+				<instrument-abbreviation>E. Gtr.</instrument-abbreviation>
+				<instrument-sound>pluck.guitar.electric</instrument-sound>
+			</score-instrument>
+			<midi-instrument id='P1-I1'>
+				<volume>79</volume>
+				<pan>0</pan>
+			</midi-instrument>
+		</score-part>
+		<score-part id='P2'>
+			<part-name print-object='no'>Acoustic Guitar</part-name>
+			<part-abbreviation print-object='no'>A. Gtr.</part-abbreviation>
+			<group>score</group>
+			<score-instrument id='P2-I1'>
+				<instrument-name>Acoustic Guitar, standard tuning (no rhythms) [tab]</instrument-name>
+				<instrument-abbreviation>A. Gtr.</instrument-abbreviation>
+				<instrument-sound>pluck.guitar.steel-string</instrument-sound>
+			</score-instrument>
+			<midi-instrument id='P2-I1'>
+				<volume>79</volume>
+				<pan>0</pan>
+			</midi-instrument>
+		</score-part>
+		<part-group number='1' type='stop'/>
+	</part-list>
+<!--=========================================================-->
+	<part id='P1'>
+		<measure number='1'>
+			<print>
+				<system-layout>
+					<top-system-distance>246.25</top-system-distance>
+				</system-layout>
+			</print>
+			<barline location='left'>
+				<bar-style>heavy-light</bar-style>
+				<repeat direction='forward'/>
+			</barline>
+			<attributes>
+				<divisions>768</divisions>
+				<key>
+					<fifths>-4</fifths>
+					<mode>major</mode>
+				</key>
+				<time>
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef>
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+				<transpose>
+					<diatonic>0</diatonic>
+					<chromatic>0</chromatic>
+					<octave-change>-1</octave-change>
+				</transpose>
+			</attributes>
+			<sound tempo='114'/>
+			<note>
+				<pitch>
+					<step>F</step>
+					<octave>3</octave>
+				</pitch>
+				<duration>3072</duration>
+				<voice>1</voice>
+				<type>whole</type>
+			</note>
+			<barline location='right'>
+				<bar-style>light-heavy</bar-style>
+				<repeat direction='backward'/>
+			</barline>
+		</measure>
+	</part>
+<!--=========================================================-->
+	<part id='P2'>
+		<measure number='1'>
+			<barline location='left'>
+				<bar-style>heavy-light</bar-style>
+				<repeat direction='forward'/>
+			</barline>
+			<attributes>
+				<divisions>768</divisions>
+				<key>
+					<fifths>-4</fifths>
+					<mode>major</mode>
+				</key>
+				<time>
+					<beats>4</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<clef>
+					<sign>TAB</sign>
+				</clef>
+				<staff-details>
+					<staff-lines>6</staff-lines>
+					<staff-tuning line='1'>
+						<tuning-step>D</tuning-step>
+						<tuning-octave>2</tuning-octave>
+					</staff-tuning>
+					<staff-tuning line='2'>
+						<tuning-step>A</tuning-step>
+						<tuning-octave>2</tuning-octave>
+					</staff-tuning>
+					<staff-tuning line='3'>
+						<tuning-step>D</tuning-step>
+						<tuning-octave>3</tuning-octave>
+					</staff-tuning>
+					<staff-tuning line='4'>
+						<tuning-step>G</tuning-step>
+						<tuning-octave>3</tuning-octave>
+					</staff-tuning>
+					<staff-tuning line='5'>
+						<tuning-step>B</tuning-step>
+						<tuning-octave>3</tuning-octave>
+					</staff-tuning>
+					<staff-tuning line='6'>
+						<tuning-step>E</tuning-step>
+						<tuning-octave>4</tuning-octave>
+					</staff-tuning>
+					<staff-size>150</staff-size>
+				</staff-details>
+			</attributes>
+			<note>
+				<pitch>
+					<step>F</step>
+					<octave>2</octave>
+				</pitch>
+				<duration>3072</duration>
+				<voice>1</voice>
+				<type>whole</type>
+				<notations>
+					<technical>
+						<string>6</string>
+						<fret>3</fret>
+					</technical>
+				</notations>
+			</note>
+			<barline location='right'>
+				<bar-style>light-heavy</bar-style>
+				<repeat direction='backward'/>
+			</barline>
+		</measure>
+	</part>
+<!--=========================================================-->
+</score-partwise>

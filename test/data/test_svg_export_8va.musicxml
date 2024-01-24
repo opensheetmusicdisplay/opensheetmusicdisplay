@@ -2,12 +2,12 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>test_ledger_line_rest</work-title>
+    <work-title>test_8va_svg_export</work-title>
     </work>
   <identification>
     <encoding>
       <software>MuseScore 3.6.2</software>
-      <encoding-date>2024-01-08</encoding-date>
+      <encoding-date>2023-11-15</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -41,7 +41,7 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="616.935" default-y="1511.09" justify="center" valign="top" font-size="22">test_ledger_line_rest</credit-words>
+    <credit-words default-x="616.935" default-y="1511.05" justify="center" valign="top" font-size="22">test_8va_svg_export</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">
@@ -60,12 +60,12 @@
       </score-part>
     </part-list>
   <part id="P1">
-    <measure number="1" width="289.74">
+    <measure number="1" width="296.40">
       <print>
         <system-layout>
           <system-margins>
             <left-margin>50.00</left-margin>
-            <right-margin>483.89</right-margin>
+            <right-margin>0.00</right-margin>
             </system-margins>
           <top-system-distance>170.00</top-system-distance>
           </system-layout>
@@ -84,43 +84,118 @@
           <line>2</line>
           </clef>
         </attributes>
-      <note default-x="73.72" default-y="0.00">
+      <direction placement="below">
+        <direction-type>
+          <octave-shift type="up" size="8" number="1" default-y="-60.00"/>
+          </direction-type>
+        </direction>
+      <note default-x="80.72" default-y="5.00">
         <pitch>
-          <step>F</step>
-          <octave>5</octave>
+          <step>G</step>
+          <octave>4</octave>
           </pitch>
-        <duration>1</duration>
-        <voice>1</voice>
-        <type>quarter</type>
-        <stem>down</stem>
-        </note>
-      <note>
-        <rest/>
-        <duration>1</duration>
-        <voice>1</voice>
-        <type>quarter</type>
-        </note>
-      <note>
-        <rest/>
         <duration>2</duration>
         <voice>1</voice>
         <type>half</type>
+        <stem>down</stem>
         </note>
-      <backup>
-        <duration>4</duration>
-        </backup>
-      <note>
-        <rest>
-          <display-step>D</display-step>
-          <display-octave>6</display-octave>
-          </rest>
-        <duration>4</duration>
-        <voice>2</voice>
-        <type>whole</type>
+      <note default-x="187.66" default-y="10.00">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
         </note>
+      <direction placement="below">
+        <direction-type>
+          <octave-shift type="stop" size="8" number="1" relative-x="-1.70"/>
+          </direction-type>
+        </direction>
       </measure>
-    <measure number="2" width="238.79">
-      <note default-x="18.56" default-y="-65.00">
+    <measure number="2" width="224.48">
+      <direction placement="above">
+        <direction-type>
+          <octave-shift type="down" size="8" number="1" default-y="20.00"/>
+          </direction-type>
+        </direction>
+      <note default-x="13.00" default-y="-20.00">
+        <pitch>
+          <step>B</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
+        </note>
+      <note default-x="117.84" default-y="-15.00">
+        <pitch>
+          <step>C</step>
+          <octave>6</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
+        </note>
+      <direction placement="above">
+        <direction-type>
+          <octave-shift type="stop" size="8" number="1" relative-x="-1.70"/>
+          </direction-type>
+        </direction>
+      </measure>
+    <measure number="3" width="224.48">
+      <direction placement="above">
+        <direction-type>
+          <octave-shift type="down" size="15" number="1" default-y="20.00"/>
+          </direction-type>
+        </direction>
+      <note default-x="13.00" default-y="-45.00">
+        <pitch>
+          <step>D</step>
+          <octave>6</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>up</stem>
+        </note>
+      <note default-x="117.84" default-y="-40.00">
+        <pitch>
+          <step>E</step>
+          <octave>6</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>up</stem>
+        </note>
+      <direction placement="above">
+        <direction-type>
+          <octave-shift type="stop" size="15" number="1"/>
+          </direction-type>
+        </direction>
+      </measure>
+    <measure number="4" width="233.33">
+      <direction placement="below">
+        <direction-type>
+          <octave-shift type="up" size="15" number="1" default-y="-60.00"/>
+          </direction-type>
+        </direction>
+      <note default-x="13.00" default-y="0.00">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
+        </note>
+      <note default-x="117.84" default-y="5.00">
         <pitch>
           <step>G</step>
           <octave>3</octave>
@@ -128,39 +203,13 @@
         <duration>2</duration>
         <voice>1</voice>
         <type>half</type>
-        <stem>up</stem>
+        <stem>down</stem>
         </note>
-      <note default-x="123.35" default-y="-60.00">
-        <pitch>
-          <step>A</step>
-          <octave>3</octave>
-          </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>half</type>
-        <stem>up</stem>
-        </note>
-      <backup>
-        <duration>4</duration>
-        </backup>
-      <note>
-        <rest>
-          <display-step>C</display-step>
-          <display-octave>3</display-octave>
-          </rest>
-        <duration>2</duration>
-        <voice>2</voice>
-        <type>half</type>
-        </note>
-      <note>
-        <rest>
-          <display-step>C</display-step>
-          <display-octave>3</display-octave>
-          </rest>
-        <duration>2</duration>
-        <voice>2</voice>
-        <type>half</type>
-        </note>
+      <direction placement="below">
+        <direction-type>
+          <octave-shift type="stop" size="15" number="1"/>
+          </direction-type>
+        </direction>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
         </barline>

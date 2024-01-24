@@ -187,7 +187,17 @@ export class EngravingRules {
     public TupletNumbersInTabs: boolean;
     public TabBeamsRendered: boolean;
     public TabKeySignatureRendered: boolean;
+    /** Whether space should be reserved as if there was a key signature.
+     * False basically only works for tab-only scores, as it prevents vertical x-alignment with other staves.
+     * False is more compact for tab-only scores.
+     */
+    public TabKeySignatureSpacingAdded: boolean;
     public TabTimeSignatureRendered: boolean;
+    /** Whether space should be reserved as if there was a key signature.
+     * False basically only works for tab-only scores, as it prevents vertical x-alignment with other staves.
+     * False is more compact for tab-only scores.
+     */
+    public TabTimeSignatureSpacingAdded: boolean;
     public TabFingeringsRendered: boolean;
 
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
@@ -402,6 +412,7 @@ export class EngravingRules {
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
     public IgnoreRepeatedDynamics: boolean;
+    public ExpressionsUseXMLColor: boolean;
     public ArticulationPlacementFromXML: boolean;
     /** Percent distance of breath marks to next note or end of staff, e.g. 0.8 = 80%. */
     public BreathMarkDistance: number;
@@ -646,7 +657,9 @@ export class EngravingRules {
         this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
         this.TabBeamsRendered = true;
         this.TabKeySignatureRendered = false; // standard not to render for tab scores
+        this.TabKeySignatureSpacingAdded = true; // false only works for tab-only scores, as it will prevent vertical x-alignment.
         this.TabTimeSignatureRendered = false; // standard not to render for tab scores
+        this.TabTimeSignatureSpacingAdded = true; // false only works for tab-only scores, as it will prevent vertical x-alignment.
         this.TabFingeringsRendered = false; // tabs usually don't show fingering. This can also be duplicated when you have a classical+tab score.
 
         // Slur and Tie variables
@@ -723,6 +736,7 @@ export class EngravingRules {
         this.DynamicExpressionMaxDistance = 2;
         this.DynamicExpressionSpacer = 0.5;
         this.IgnoreRepeatedDynamics = false;
+        this.ExpressionsUseXMLColor = true;
 
         // Line Widths
         this.VexFlowDefaultNotationFontScale = 39; // scales notes, including rests. default value 39 in Vexflow.
