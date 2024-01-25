@@ -311,15 +311,16 @@ export abstract class MusicSheetCalculator {
         // const maxInstructionsLength: number = this.rules.MaxInstructionsConstValue;
         if (this.graphicalMusicSheet.MeasureList.length > 0) {
             /** list of vertically ordered measures belonging to one bar */
-            let measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[0];
-            let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
-            minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
-            MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
+            // let measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[0];
+            // let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
+            // minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
+            // MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
             // minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
             let maxWidth: number = 0;
+            let measures: GraphicalMeasure[];
             for (let i: number = 0; i < this.graphicalMusicSheet.MeasureList.length; i++) {
                 measures = this.graphicalMusicSheet.MeasureList[i];
-                minimumStaffEntriesWidth = this.calculateMeasureXLayout(measures);
+                let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
                 minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
                 if (minimumStaffEntriesWidth > maxWidth) {
                     maxWidth = minimumStaffEntriesWidth;
