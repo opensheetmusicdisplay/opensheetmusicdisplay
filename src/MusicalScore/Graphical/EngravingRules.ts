@@ -716,7 +716,7 @@ export class EngravingRules {
         this.LyricsExtraXShiftForShortLyricsWidthThreshold = 1.4; // width of '+': 1.12, 'II': 1.33 (benefits from x-shift), 'III': 1.99 (doesn't benefit)
         this.LyricsUseXPaddingForShortNotes = true;
         this.LyricsXPaddingFactorForLongLyrics = 1.0;
-        this.LyricsXPaddingWidthThreshold = 2.2; // generateImages script with png might need more for 8th notes, e.g. Chloe
+        this.LyricsXPaddingWidthThreshold = 1.7; // generateImages script with png might need more for 8th notes, e.g. Chloe
         this.LyricsXPaddingForLastNoteInMeasure = true;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;

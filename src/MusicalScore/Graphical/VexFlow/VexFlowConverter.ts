@@ -501,7 +501,7 @@ export class VexFlowConverter {
                     }
                 }
 
-                if (hasShortNotes) {
+                if (true || hasShortNotes) { // also add padding for longer notes, just less
                     let addPadding: boolean = false;
                     for (const lyricsEntry of lyricsEntries) {
                         const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
@@ -519,16 +519,23 @@ export class VexFlowConverter {
                             const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
                             const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
                             const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
-                            if (rules.LyricsXPaddingForLastNoteInMeasure || currentStaffEntryIndex !== measureStaffEntries.length - 1) {
-                                const paddingGainedByMeasureEnd: number = 0.1; // ~extra padding we get for measure bar + bar end/start padding
-                                if (currentLyricsWidth > widthThreshold + paddingGainedByMeasureEnd) {
+                            const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
+                            let extraExistingPadding: number = 0;
+                            if (isLastNoteInMeasure) {
+                                extraExistingPadding += 1.2; // ~extra padding we get for measure bar + bar end/start padding
+                            }
+                            if (!hasShortNotes) {
+                                extraExistingPadding += 0.7; // quarter or longer notes need less padding
+                            }
+                            if (rules.LyricsXPaddingForLastNoteInMeasure || !isLastNoteInMeasure) {
+                                if (currentLyricsWidth > widthThreshold + extraExistingPadding) {
                                     addPadding = true;
-                                    padding -= paddingGainedByMeasureEnd; // we don't need to add the e.g. 0.1 we already get from measure end padding
+                                    padding -= extraExistingPadding; // we don't need to add the e.g. 1.2 we already get from measure end padding
                                     // for last note in the measure, this is usually not necessary,
                                     //   but in rare samples with quite long text on the last note it is.
                                 }
                             }
-                            break;
+                            break; // TODO take the max padding across verses
                         }
                         // for situations unlikely to cause overlap we shouldn't add padding,
                         //   e.g. Brooke West sample (OSMD Function Test Chord Symbols) - width ~3.1 in measure 11 on 'ling', no padding needed.
