@@ -32,6 +32,7 @@ import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
+import { GraphicalMeasure } from "../GraphicalMeasure";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -468,24 +469,50 @@ export class VexFlowConverter {
             //   it would be nice to only save this once, not for every note, but has to be accessible in stavenote.js
             const lyricsEntries: GraphicalLyricEntry[] = gve.parentStaffEntry.LyricsEntries;
 
-            // don't add padding if next voice entry (note) has no lyrics
-            //   there might be some edge cases where there's a long text on one note, then nothing on a short note,
-            //   then an overlap with the next note that has lyrics, which is not covered here,
-            //   but should be rare and covered by measure elongation (see EngravingRule MaximumLyricsElongationFactor)
-            let nextVoiceEntryHasLyrics: boolean = false;
-            // const currentStaffEntryIndex: number = gve.parentStaffEntry.parentMeasure.staffEntries.indexOf(gve.parentStaffEntry);
-            const voiceEntries: VoiceEntry[] = gve.parentVoiceEntry.ParentVoice.VoiceEntries;
-            const currentVoiceEntryIndex: number = voiceEntries.indexOf(gve.parentVoiceEntry);
-            if (currentVoiceEntryIndex < voiceEntries.length - 1) {
-                const nextVoiceEntry: VoiceEntry = voiceEntries[currentVoiceEntryIndex + 1];
-                if (nextVoiceEntry.LyricsEntries.size() > 0) {
-                    nextVoiceEntryHasLyrics = true;
+            let nextOrCloseNoteHasLyrics: boolean = false;
+            let extraExistingPadding: number = 0;
+            if (lyricsEntries.length > 0 &&
+                rules.RenderLyrics &&
+                rules.LyricsUseXPaddingForShortNotes
+            ) { // if these conditions don't apply, we don't need the following calculation
+                // don't add padding if next note or close note (within quarter distance) has no lyrics
+                //   usually checking the last note is enough, but
+                //   sometimes you get e.g. a 16th with lyrics, one without lyrics, then one with lyrics again,
+                //   easily causing an overlap as well
+                //   the overlap is fixed by measure elongation, but leads to huge measures (see EngravingRule MaximumLyricsElongationFactor)
+                const startingGMeasure: GraphicalMeasure = gve.parentStaffEntry.parentMeasure;
+                const startingSEIndex: number = startingGMeasure.staffEntries.indexOf(gve.parentStaffEntry);
+                // const staffEntries: VoiceEntry[] = gve.parentVoiceEntry.ParentVoice.VoiceEntries;
+                //   unfortunately the voice entries apparently don't include rests, so they would be ignored
+                const staffEntriesToCheck: GraphicalStaffEntry [] = [];
+                for (let seIndex: number = startingSEIndex + 1; seIndex < startingGMeasure.staffEntries.length; seIndex++) {
+                    const se: GraphicalStaffEntry = startingGMeasure.staffEntries[seIndex];
+                    if (se.graphicalVoiceEntries[0]) {
+                        staffEntriesToCheck.push(se);
+                    }
+                }
+
+                let totalDistanceFromFirstNote: Fraction;
+                let lastTimestamp: Fraction = gve.parentStaffEntry.relInMeasureTimestamp.clone();
+                for (const currentSE of staffEntriesToCheck) {
+                    const currentTimestamp: Fraction = currentSE.relInMeasureTimestamp.clone();
+                    totalDistanceFromFirstNote = Fraction.minus(currentTimestamp, gve.parentVoiceEntry.Timestamp);
+                    if (totalDistanceFromFirstNote.RealValue > 0.25) { // more than a quarter note distance: don't add padding
+                        break; // nextOrCloseNoteHasLyrics = false;
+                    }
+                    if (currentSE.LyricsEntries.length > 0) {
+                        nextOrCloseNoteHasLyrics = true;
+                        break;
+                    }
+                    const lastDistanceCovered: Fraction = Fraction.minus(currentTimestamp, lastTimestamp);
+                    extraExistingPadding += lastDistanceCovered.RealValue * 32; // for every 8th note in between (0.125), we need around 4 padding less (*4*8)
+                    lastTimestamp = currentTimestamp;
                 }
             }
             if (rules.RenderLyrics &&
                 rules.LyricsUseXPaddingForShortNotes &&
                 lyricsEntries.length > 0 &&
-                nextVoiceEntryHasLyrics) {
+                nextOrCloseNoteHasLyrics) {
                 // VexFlowPatch: add padding to the right for large lyrics,
                 //   so that measure doesn't need to be enlarged too much for spacing
 
@@ -519,7 +546,6 @@ export class VexFlowConverter {
                         const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
                         const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
                         const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
-                        let extraExistingPadding: number = 0;
                         if (isLastNoteInMeasure) {
                             extraExistingPadding += 1.2; // ~extra padding we get for measure bar + bar end/start padding
                         }
