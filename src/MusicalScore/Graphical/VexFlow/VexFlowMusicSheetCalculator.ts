@@ -396,7 +396,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const vexStaffEntry: VexFlowStaffEntry = staffEntry as VexFlowStaffEntry;
       // vexStaffEntry.calculateXPosition(false);
       // const notePosition: number = (staffEntry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote.getBoundingBox().getX() / unitInPixels;
-      const staffEntryXPosition: number = vexStaffEntry.PositionAndShape.RelativePosition.x;
+      const staffEntryXPosition: number = vexStaffEntry.PositionAndShape.RelativePosition.x + bBox.BorderLeft;
       let xPosition: number = staffEntryXPosition + bBox.BorderLeft;
       // vexStaffEntry.calculateXPosition();
       if (container instanceof GraphicalChordSymbolContainer && container.PositionAndShape.Parent.DataObject instanceof GraphicalMeasure) {
@@ -488,7 +488,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         sourceNoteDuration: container instanceof GraphicalLyricEntry ? (container.LyricsEntry && container.LyricsEntry.Parent.Notes[0].Length) : false,
         text: container instanceof GraphicalLyricEntry ? container.LyricsEntry.Text : container.GraphicalLabel.Label.text,
         xPosition: xPosition,
-        bBox: bBox
       };
 
       currentContainerIndex++;
@@ -559,7 +558,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         continue;
       }
 
-      (measure as VexFlowMeasure).format();
+      // (measure as VexFlowMeasure).format(); // needed to get vexflow bbox / x-position
       elongationFactorForMeasureWidth =
         this.calculateElongationFactorFromStaffEntries(
           measure.staffEntries,
