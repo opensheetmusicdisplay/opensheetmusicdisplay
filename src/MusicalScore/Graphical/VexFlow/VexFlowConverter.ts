@@ -501,50 +501,48 @@ export class VexFlowConverter {
                     }
                 }
 
-                if (true || hasShortNotes) { // also add padding for longer notes, just less
-                    let addPadding: boolean = false;
-                    for (const lyricsEntry of lyricsEntries) {
-                        const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
-                        // letters like i and l take less space, so we should use the visual width and not number of characters
-                        let currentLyricsWidth: number = lyricsEntry.GraphicalLabel.PositionAndShape.Size.width;
-                        if (lyricsEntry.hasDashFromLyricWord()) {
-                            currentLyricsWidth += 0.5;
-                        }
-                        if (currentLyricsWidth > widthThreshold) {
-                            padding += currentLyricsWidth - widthThreshold;
-                            // if (currentLyricsWidth > 4) {
-                            //     padding *= 1.15; // only maybe needed if LyricsXPaddingFactorForLongLyrics < 1
-                            // }
-                            // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
-                            const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
-                            const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
-                            const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
-                            const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
-                            let extraExistingPadding: number = 0;
-                            if (isLastNoteInMeasure) {
-                                extraExistingPadding += 1.2; // ~extra padding we get for measure bar + bar end/start padding
-                            }
-                            if (!hasShortNotes) {
-                                extraExistingPadding += 0.7; // quarter or longer notes need less padding
-                            }
-                            if (rules.LyricsXPaddingForLastNoteInMeasure || !isLastNoteInMeasure) {
-                                if (currentLyricsWidth > widthThreshold + extraExistingPadding) {
-                                    addPadding = true;
-                                    padding -= extraExistingPadding; // we don't need to add the e.g. 1.2 we already get from measure end padding
-                                    // for last note in the measure, this is usually not necessary,
-                                    //   but in rare samples with quite long text on the last note it is.
-                                }
-                            }
-                            break; // TODO take the max padding across verses
-                        }
-                        // for situations unlikely to cause overlap we shouldn't add padding,
-                        //   e.g. Brooke West sample (OSMD Function Test Chord Symbols) - width ~3.1 in measure 11 on 'ling', no padding needed.
-                        //   though Beethoven - Geliebte has only 8ths in measure 2 and is still problematic,
-                        //   so unfortunately we can't just check if the next note is 16th or less.
+                let addPadding: boolean = false;
+                for (const lyricsEntry of lyricsEntries) {
+                    const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
+                    // letters like i and l take less space, so we should use the visual width and not number of characters
+                    let currentLyricsWidth: number = lyricsEntry.GraphicalLabel.PositionAndShape.Size.width;
+                    if (lyricsEntry.hasDashFromLyricWord()) {
+                        currentLyricsWidth += 0.5;
                     }
-                    if (addPadding) {
-                        (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics * padding;
+                    if (currentLyricsWidth > widthThreshold) {
+                        padding += currentLyricsWidth - widthThreshold;
+                        // if (currentLyricsWidth > 4) {
+                        //     padding *= 1.15; // only maybe needed if LyricsXPaddingFactorForLongLyrics < 1
+                        // }
+                        // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
+                        const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
+                        const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
+                        const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
+                        const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
+                        let extraExistingPadding: number = 0;
+                        if (isLastNoteInMeasure) {
+                            extraExistingPadding += 1.2; // ~extra padding we get for measure bar + bar end/start padding
+                        }
+                        if (!hasShortNotes) {
+                            extraExistingPadding += 0.7; // quarter or longer notes need less padding
+                        }
+                        if (rules.LyricsXPaddingForLastNoteInMeasure || !isLastNoteInMeasure) {
+                            if (currentLyricsWidth > widthThreshold + extraExistingPadding) {
+                                addPadding = true;
+                                padding -= extraExistingPadding; // we don't need to add the e.g. 1.2 we already get from measure end padding
+                                // for last note in the measure, this is usually not necessary,
+                                //   but in rare samples with quite long text on the last note it is.
+                            }
+                        }
+                        break; // TODO take the max padding across verses
                     }
+                    // for situations unlikely to cause overlap we shouldn't add padding,
+                    //   e.g. Brooke West sample (OSMD Function Test Chord Symbols) - width ~3.1 in measure 11 on 'ling', no padding needed.
+                    //   though Beethoven - Geliebte has only 8ths in measure 2 and is still problematic,
+                    //   so unfortunately we can't just check if the next note is 16th or less.
+                }
+                if (addPadding) {
+                    (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics * padding;
                 }
             }
         }
