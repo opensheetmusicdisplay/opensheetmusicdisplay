@@ -4,6 +4,7 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
 import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";
 import { GraphicalObject } from "./GraphicalObject";
+import { VexFlowStaffEntry } from "./VexFlow/VexFlowStaffEntry";
 
 /**
  * A bounding box delimits an area on the 2D plane.
@@ -81,10 +82,19 @@ export class BoundingBox {
     }
 
     public get RelativePosition(): PointF2D {
+        if (this.dataObject instanceof VexFlowStaffEntry) {
+            const text: string = this.dataObject.LyricsEntries[0]?.GraphicalLabel.Label.text;
+            if (text === "Auf" || text === "dem") {
+                console.log("Auf || dem"); // debug breakpoint
+            }
+        }
         return this.relativePosition;
     }
 
     public set RelativePosition(value: PointF2D) {
+        if (this.dataObject instanceof VexFlowStaffEntry && this.dataObject.LyricsEntries[0]?.GraphicalLabel.Label.text === "Auf") {
+            console.log("Auf"); // debug breakpoint
+        }
         this.relativePosition = value;
         this.relativePositionHasBeenSet = true;
     }

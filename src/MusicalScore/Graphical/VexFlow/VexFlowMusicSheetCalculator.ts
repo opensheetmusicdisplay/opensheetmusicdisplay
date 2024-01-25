@@ -393,8 +393,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       const bBox: BoundingBox = container instanceof GraphicalLyricEntry ? container.GraphicalLabel.PositionAndShape : container.PositionAndShape;
       const labelWidth: number = bBox.Size.width;
-      const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
-      let xPosition: number = staffEntryXPosition + bBox.BorderMarginLeft;
+      const vexStaffEntry: VexFlowStaffEntry = staffEntry as VexFlowStaffEntry;
+      // vexStaffEntry.calculateXPosition(false);
+      // const notePosition: number = (staffEntry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote.getBoundingBox().getX() / unitInPixels;
+      const staffEntryXPosition: number = vexStaffEntry.PositionAndShape.RelativePosition.x;
+      let xPosition: number = staffEntryXPosition + bBox.BorderLeft;
+      // vexStaffEntry.calculateXPosition();
       if (container instanceof GraphicalChordSymbolContainer && container.PositionAndShape.Parent.DataObject instanceof GraphicalMeasure) {
         // the parent is only the measure for whole measure rest notes with chord symbols,
         //   which should start near the beginning of the measure instead of the middle, where there is no desired staffEntry position.
@@ -414,6 +418,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       let currentSpacingToLastContainer: number; // undefined for first container in measure
       if (lastEntryDict[currentContainerIndex]) {
         currentSpacingToLastContainer = xPosition - lastEntryDict[currentContainerIndex].xPosition;
+        // currentSpacingToLastContainer = lastEntryDict[currentContainerIndex].bBox.Size.width;
       }
 
       let currentSpacingToMeasureEnd: number;
@@ -483,6 +488,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         sourceNoteDuration: container instanceof GraphicalLyricEntry ? (container.LyricsEntry && container.LyricsEntry.Parent.Notes[0].Length) : false,
         text: container instanceof GraphicalLyricEntry ? container.LyricsEntry.Text : container.GraphicalLabel.Label.text,
         xPosition: xPosition,
+        bBox: bBox
       };
 
       currentContainerIndex++;
@@ -553,6 +559,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         continue;
       }
 
+      (measure as VexFlowMeasure).format();
       elongationFactorForMeasureWidth =
         this.calculateElongationFactorFromStaffEntries(
           measure.staffEntries,
@@ -563,6 +570,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     }
     elongationFactorForMeasureWidth = Math.min(elongationFactorForMeasureWidth, this.rules.MaximumLyricsElongationFactor);
+    console.log(`elongationFactor for measure ${measuresVertical[0]?.MeasureNumber}: ${elongationFactorForMeasureWidth}`);
     // TODO check when this is > 2.0. there seems to be an error here where this is unnecessarily > 2 in Beethoven Geliebte.
 
     const newMinimumStaffEntriesWidth: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
