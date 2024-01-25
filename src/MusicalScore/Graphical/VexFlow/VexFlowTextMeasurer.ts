@@ -26,12 +26,13 @@ export class VexFlowTextMeasurer implements ITextMeasurer {
         return this.context.measureText(text).width / fontSize;
     }
 
-    public computeTextWidth(text: string, font: Fonts, style: FontStyles,
-        fontFamily: string = undefined,
-        fontSize: number = this.fontSize): number {
-        this.context.font = VexFlowConverter.font(fontSize, style, font, this.rules, fontFamily);
-        return this.context.measureText(text).width / 10.0;
-    }
+    // public computeTextWidth(text: string, font: Fonts, style: FontStyles,
+    //     fontFamily: string = undefined,
+    //     fontSize: number = this.fontSize): number {
+    //     this.context.font = VexFlowConverter.font(fontSize, style, font, this.rules, fontFamily);
+    //     return this.context.measureText(text).width / 10.0;
+    //     // TODO this shifts the title text of sheets to the right for some reason, maybe because of bigger fontSize?
+    // }
 
     public setFontSize(fontSize: number = this.fontSizeStandard): number {
         this.fontSize = fontSize;
