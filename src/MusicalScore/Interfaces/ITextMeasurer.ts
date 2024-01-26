@@ -6,5 +6,7 @@ export interface ITextMeasurer {
     fontSizeStandard: number;
     computeTextWidthToHeightRatio(text: string, font: Fonts, style: FontStyles,
                                   fontFamily?: string, fontSize?: number): number;
+    // computeTextWidth(text: string, font: Fonts, style: FontStyles,
+    //                  fontFamily?: string, fontSize?: number): number;
     setFontSize(fontSize: number): number;
 }
