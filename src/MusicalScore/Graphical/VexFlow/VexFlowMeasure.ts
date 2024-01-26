@@ -309,6 +309,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // extends Element is missing from class StaveModifier in DefinitelyTyped definitions, so setStyle isn't found
             timeSig.setStyle({ fillStyle: "#00000000"}); // transparent. requires VexflowPatch
             // instead of not rendering the time signature, technically, we render it, but with transparent color. this helps layout / x-alignment.
+
+            // SVG compatibility: also set visibility="hidden".
+            //   this helps make the modifier invisible instead of black in some systems like apps, outside the browser. (VexFlowPatch)
+            (timeSig as any).hidden = true;
         }
         this.updateInstructionWidth();
     }
