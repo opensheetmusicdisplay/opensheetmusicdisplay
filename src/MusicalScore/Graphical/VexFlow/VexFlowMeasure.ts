@@ -276,6 +276,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (modifier instanceof VF.KeySignature) {
                     modifier.setStyle({ fillStyle: "#00000000"}); // transparent. requires VexflowPatch
                     // instead of not rendering the key signature, technically, we render it, but with transparent color. this helps layout / x-alignment.
+
+                    // SVG compatibility: also set visibility="hidden".
+                    //   this helps make the key invisible instead of black in some systems like apps, outside the browser. (VexFlowPatch)
+                    (modifier as any).hidden = true;
                     break;
                 }
             }
