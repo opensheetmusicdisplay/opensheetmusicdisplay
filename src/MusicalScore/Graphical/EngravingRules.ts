@@ -187,7 +187,17 @@ export class EngravingRules {
     public TupletNumbersInTabs: boolean;
     public TabBeamsRendered: boolean;
     public TabKeySignatureRendered: boolean;
+    /** Whether space should be reserved as if there was a key signature.
+     * False basically only works for tab-only scores, as it prevents vertical x-alignment with other staves.
+     * False is more compact for tab-only scores.
+     */
+    public TabKeySignatureSpacingAdded: boolean;
     public TabTimeSignatureRendered: boolean;
+    /** Whether space should be reserved as if there was a key signature.
+     * False basically only works for tab-only scores, as it prevents vertical x-alignment with other staves.
+     * False is more compact for tab-only scores.
+     */
+    public TabTimeSignatureSpacingAdded: boolean;
     public TabFingeringsRendered: boolean;
 
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
@@ -211,18 +221,24 @@ export class EngravingRules {
     public LyricsExtraXShiftForShortLyrics: number;
     /** Threshold of the lyric entry's width below which the x-shift is applied. Default 1.4. */
     public LyricsExtraXShiftForShortLyricsWidthThreshold: number;
-    /** Whether to enable x padding (to the right) for short notes, see LyricsXPaddingFactorForLongLyrics for the degree. */
-    public LyricsUseXPaddingForShortNotes: boolean;
+    /** Whether to enable x padding (to the right) for notes with long lyrics, see LyricsXPaddingFactorForLongLyrics for the degree.
+     * This helps avoid overlaps and shorten measures, because otherwise the whole measure needs to be stretched to avoid overlaps,
+     * see MaximumLyricsElongationFactor */
+    public LyricsUseXPaddingForLongLyrics: boolean;
     /** How much spacing/padding should be added after notes with long lyrics on short notes
      * (>4 characters on <8th note),
      * so that the measure doesn't need to be elongated too much to avoid lyrics collisions.
-     * Default 0.8 = 8 pixels */
+     * Default 1 = 10 pixels */
     public LyricsXPaddingFactorForLongLyrics: number;
     /** How wide a text needs to be to trigger lyrics padding for short notes.
      * This is visual width, not number of characters, as e.g. 'zzz' is wider than 'iii'.
      * Default 3.3.
      */
     public LyricsXPaddingWidthThreshold: number;
+    /** Long notes need less padding than short ones, by default we use 0.7 less padding. */
+    public LyricsXPaddingReductionForLongNotes: number;
+    /** Last note in measure needs less padding because of measure bar and bar start/end padding. */
+    public LyricsXPaddingReductionForLastNoteInMeasure: number;
     public LyricsXPaddingForLastNoteInMeasure: boolean;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
@@ -402,6 +418,7 @@ export class EngravingRules {
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
     public IgnoreRepeatedDynamics: boolean;
+    public ExpressionsUseXMLColor: boolean;
     public ArticulationPlacementFromXML: boolean;
     /** Percent distance of breath marks to next note or end of staff, e.g. 0.8 = 80%. */
     public BreathMarkDistance: number;
@@ -646,7 +663,9 @@ export class EngravingRules {
         this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
         this.TabBeamsRendered = true;
         this.TabKeySignatureRendered = false; // standard not to render for tab scores
+        this.TabKeySignatureSpacingAdded = true; // false only works for tab-only scores, as it will prevent vertical x-alignment.
         this.TabTimeSignatureRendered = false; // standard not to render for tab scores
+        this.TabTimeSignatureSpacingAdded = true; // false only works for tab-only scores, as it will prevent vertical x-alignment.
         this.TabFingeringsRendered = false; // tabs usually don't show fingering. This can also be duplicated when you have a classical+tab score.
 
         // Slur and Tie variables
@@ -701,10 +720,12 @@ export class EngravingRules {
         this.LyricsYMarginToBottomLine = 0.2;
         this.LyricsExtraXShiftForShortLyrics = 0.5; // also see ChordSymbolExtraXShiftForShortChordSymbols, same principle
         this.LyricsExtraXShiftForShortLyricsWidthThreshold = 1.4; // width of '+': 1.12, 'II': 1.33 (benefits from x-shift), 'III': 1.99 (doesn't benefit)
-        this.LyricsUseXPaddingForShortNotes = true;
+        this.LyricsUseXPaddingForLongLyrics = true;
         this.LyricsXPaddingFactorForLongLyrics = 1.0;
-        this.LyricsXPaddingWidthThreshold = 2.2; // generateImages script with png might need more for 8th notes, e.g. Chloe
-        this.LyricsXPaddingForLastNoteInMeasure = false;
+        this.LyricsXPaddingWidthThreshold = 1.7; // generateImages script with png might need more for 8th notes, e.g. Chloe
+        this.LyricsXPaddingReductionForLongNotes = 0.7;
+        this.LyricsXPaddingReductionForLastNoteInMeasure = 1.2;
+        this.LyricsXPaddingForLastNoteInMeasure = true;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
@@ -723,6 +744,7 @@ export class EngravingRules {
         this.DynamicExpressionMaxDistance = 2;
         this.DynamicExpressionSpacer = 0.5;
         this.IgnoreRepeatedDynamics = false;
+        this.ExpressionsUseXMLColor = true;
 
         // Line Widths
         this.VexFlowDefaultNotationFontScale = 39; // scales notes, including rests. default value 39 in Vexflow.

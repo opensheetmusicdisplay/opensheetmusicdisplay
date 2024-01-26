@@ -64,7 +64,8 @@ export class Fraction {
       return 1;
     }
 
-    while (Math.abs(b) > 1e-8) { // essentially b > 0, accounts for floating point inaccuracies (0.000...01)
+    while (Math.abs(b) > 1e-8 && Math.abs(a) > 1e-8) { // essentially b > 0, accounts for floating point inaccuracies (0.000...01)
+      // if we don't check a > 1e-8, we infinite loop for e.g. a = 2.666666666666667, b = 4. See #1478 (rare)
       if (a > b) {
         a -= b;
       } else {

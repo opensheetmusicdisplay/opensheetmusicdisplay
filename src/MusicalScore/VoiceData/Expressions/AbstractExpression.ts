@@ -3,6 +3,7 @@ import { SourceMeasure } from "../SourceMeasure";
 export class AbstractExpression {
     protected placement: PlacementEnum;
     public parentMeasure: SourceMeasure; // could be undefined
+    public ColorXML: string;
 
     constructor(placement: PlacementEnum) {
         this.placement = placement;

@@ -315,13 +315,17 @@ export class KeySignature extends StaveModifier {
     this.setRendered();
 
     if (this.glyphs.length > 0) {
-        this.stave.context.openGroup("keysignature");
+        const group = this.stave.context.openGroup("keysignature");
         for (let i = 0; i < this.glyphs.length; i++) {
           const glyph = this.glyphs[i];
           const x = this.x + this.xPositions[i];
           glyph.setStave(this.stave);
           glyph.setContext(this.stave.context);
           glyph.renderToStave(x);
+        }
+        if (this.hidden) {
+          // VexflowPatch: set visibility hidden, as in some systems (rendering SVG file) the key signature is rendered black even if alpha = 0
+          group?.setAttribute("visibility", "hidden"); // group is undefined for CanvasContext, e.g. in SkybottomlineCalculator
         }
         this.stave.context.closeGroup();
     }

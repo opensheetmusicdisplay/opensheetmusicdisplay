@@ -28,6 +28,9 @@ const isInnerNoteIndex = (note, index) =>
 
 // Helper methods for rest positioning in ModifierContext.
 function shiftRestVertical(rest, note, dir) {
+  if (rest.note.shiftRestVerticalDisabled) {
+    return;
+  }
   const delta = (note.isrest ? 0.0 : 1.0) * dir;
 
   rest.line += delta;
@@ -124,7 +127,9 @@ export class StaveNote extends StemmableNote {
 
     // for two voice backward compatibility, ensure upper voice is stems up
     // for three voices, the voices must be in order (upper, middle, lower)
-    if (voices === 2 && noteU.stemDirection === -1 && noteL.stemDirection === 1) {
+    if (voices === 2 && noteU.stemDirection === -1 && noteL.stemDirection === 1 &&
+      !noteU.isrest && !noteL.isRest // no need to switch positions if one is a rest
+    ) {
       noteU = notesList[1];
       noteL = notesList[0];
     }
@@ -149,9 +154,15 @@ export class StaveNote extends StemmableNote {
         if (noteU.isrest) {
           // shift rest up
           shiftRestVertical(noteU, noteL, 1);
+          if (noteU.note.hasLedgerLinedRest) {
+            noteU.note.shiftRestVerticalDisabled = true; // don't shift again on re-render
+          }
         } else if (noteL.isrest) {
           // shift rest down
           shiftRestVertical(noteL, noteU, -1);
+          if (noteL.note.hasLedgerLinedRest) {
+            noteL.note.shiftRestVerticalDisabled = true; // don't shift again on re-render
+          }
         } else {
           xShift = voiceXShift;
           //Vexflowpatch: Instead of shifting notes, remove the appropriate flag.
@@ -522,6 +533,9 @@ export class StaveNote extends StemmableNote {
         stem_down_y_shift: noteProps.stem_down_y_shift,
         line: noteProps.line,
       });
+      if (notehead.isLedgerLinedRest) {
+        this.hasLedgerLinedRest = true;
+      }
 
       this.note_heads[i] = notehead;
     }

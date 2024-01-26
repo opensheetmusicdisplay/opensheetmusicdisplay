@@ -172,7 +172,8 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     });
 
-    it("load something invalid by URL", (done: Mocha.Done) => {
+    // skip: this test is unnecessary and creates traffic (to google)
+    it.skip("load something invalid by URL", (done: Mocha.Done) => {
         const url: string = "https://www.google.com";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);

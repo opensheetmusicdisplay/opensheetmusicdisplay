@@ -76,6 +76,9 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             }
         }
         this.PositionAndShape.RelativePosition.x -= lastBorderLeft;
+        // TODO sometimes subtracting lastBorderLeft fixes the x-position for lyrics spacing, sometimes it makes it wrong
+        //   e.g. wrong for Beethoven Geliebte measure 1 ("auf - dem", distance < width of "auf"), correct for measure 3 ("spä - hend")
+        //   this leads to a (lyrics) measure elongation of ~1.3 for measure 1, though it doesn't need any elongation (should be factor 1)
         this.PositionAndShape.calculateBoundingBox();
     }
 

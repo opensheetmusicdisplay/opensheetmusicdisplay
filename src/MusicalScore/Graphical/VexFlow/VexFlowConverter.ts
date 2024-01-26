@@ -32,6 +32,7 @@ import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
+import { GraphicalMeasure } from "../GraphicalMeasure";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -467,7 +468,62 @@ export class VexFlowConverter {
             (vfnote as any).stagger_same_whole_notes = rules.StaggerSameWholeNotes;
             //   it would be nice to only save this once, not for every note, but has to be accessible in stavenote.js
             const lyricsEntries: GraphicalLyricEntry[] = gve.parentStaffEntry.LyricsEntries;
-            if (rules.RenderLyrics && rules.LyricsUseXPaddingForShortNotes && lyricsEntries.length > 0) {
+
+            let nextOrCloseNoteHasLyrics: boolean = true;
+            let extraExistingPadding: number = 0;
+            if (lyricsEntries.length > 0 &&
+                rules.RenderLyrics &&
+                rules.LyricsUseXPaddingForLongLyrics
+            ) { // if these conditions don't apply, we don't need the following calculation
+                // don't add padding if next note or close note (within quarter distance) has no lyrics
+                //   usually checking the last note is enough, but
+                //   sometimes you get e.g. a 16th with lyrics, one without lyrics, then one with lyrics again,
+                //   easily causing an overlap as well
+                //   the overlap is fixed by measure elongation, but leads to huge measures (see EngravingRule MaximumLyricsElongationFactor)
+                const startingGMeasure: GraphicalMeasure = gve.parentStaffEntry.parentMeasure;
+                const startingSEIndex: number = startingGMeasure.staffEntries.indexOf(gve.parentStaffEntry);
+                // const staffEntries: VoiceEntry[] = gve.parentVoiceEntry.ParentVoice.VoiceEntries;
+                //   unfortunately the voice entries apparently don't include rests, so they would be ignored
+                const staffEntriesToCheck: GraphicalStaffEntry [] = [];
+                for (let seIndex: number = startingSEIndex + 1; seIndex < startingGMeasure.staffEntries.length; seIndex++) {
+                    const se: GraphicalStaffEntry = startingGMeasure.staffEntries[seIndex];
+                    if (se.graphicalVoiceEntries[0]) {
+                        staffEntriesToCheck.push(se);
+                    }
+                }
+                // // also check next measure:
+                // //   problem: hard to get the next measure object here. (might need to put .nextMeasure into GraphicalMeasure)
+                // const stafflineMeasures: GraphicalMeasure[] = startingGMeasure.ParentStaffLine.Measures;
+                // const measureIndexInStaffline: number = stafflineMeasures.indexOf(startingGMeasure);
+                // if (measureIndexInStaffline + 1 < stafflineMeasures.length) {
+                //     const nextMeasure: GraphicalMeasure = stafflineMeasures[measureIndexInStaffline + 1];
+                //     for (const se of nextMeasure.staffEntries) {
+                //         staffEntriesToCheck.push(se);
+                //     }
+                // }
+                let totalDistanceFromFirstNote: Fraction;
+                let lastTimestamp: Fraction = gve.parentStaffEntry.relInMeasureTimestamp.clone();
+                for (const currentSE of staffEntriesToCheck) {
+                    const currentTimestamp: Fraction = currentSE.relInMeasureTimestamp.clone();
+                    totalDistanceFromFirstNote = Fraction.minus(currentTimestamp, gve.parentVoiceEntry.Timestamp);
+                    if (totalDistanceFromFirstNote.RealValue > 0.25) { // more than a quarter note distance: don't add padding
+                        nextOrCloseNoteHasLyrics = false;
+                        break;
+                    }
+                    if (currentSE.LyricsEntries.length > 0) {
+                        // nextOrCloseNoteHasLyrics = true;
+                        break;
+                    }
+                    const lastDistanceCovered: Fraction = Fraction.minus(currentTimestamp, lastTimestamp);
+                    extraExistingPadding += lastDistanceCovered.RealValue * 32; // for every 8th note in between (0.125), we need around 4 padding less (*4*8)
+                    lastTimestamp = currentTimestamp;
+                }
+                // if the for loop ends without breaking, we are at measure end and assume we need padding
+            }
+            if (rules.RenderLyrics &&
+                rules.LyricsUseXPaddingForLongLyrics &&
+                lyricsEntries.length > 0 &&
+                nextOrCloseNoteHasLyrics) {
                 // VexFlowPatch: add padding to the right for large lyrics,
                 //   so that measure doesn't need to be enlarged too much for spacing
 
@@ -483,38 +539,47 @@ export class VexFlowConverter {
                     }
                 }
 
-                if (hasShortNotes) {
-                    let addPadding: boolean = false;
-                    for (const lyricsEntry of lyricsEntries) {
-                        const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
-                        // letters like i and l take less space, so we should use the visual width and not number of characters
-                        let currentLyricsWidth: number = lyricsEntry.GraphicalLabel.PositionAndShape.Size.width;
-                        if (lyricsEntry.hasDashFromLyricWord()) {
-                            currentLyricsWidth += 0.5;
+                let addPadding: boolean = false;
+                for (const lyricsEntry of lyricsEntries) {
+                    const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
+                    // letters like i and l take less space, so we should use the visual width and not number of characters
+                    let currentLyricsWidth: number = lyricsEntry.GraphicalLabel.PositionAndShape.Size.width;
+                    if (lyricsEntry.hasDashFromLyricWord()) {
+                        currentLyricsWidth += 0.5;
+                    }
+                    if (currentLyricsWidth > widthThreshold) {
+                        padding += currentLyricsWidth - widthThreshold;
+                        // if (currentLyricsWidth > 4) {
+                        //     padding *= 1.15; // only maybe needed if LyricsXPaddingFactorForLongLyrics < 1
+                        // }
+                        // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
+                        const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
+                        const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
+                        const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
+                        const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
+                        if (isLastNoteInMeasure) {
+                            extraExistingPadding += rules.LyricsXPaddingReductionForLastNoteInMeasure; // need less padding
                         }
-                        if (currentLyricsWidth > widthThreshold) {
-                            padding += currentLyricsWidth - widthThreshold;
-                            // if (currentLyricsWidth > 4) {
-                            //     padding *= 1.15; // only maybe needed if LyricsXPaddingFactorForLongLyrics < 1
-                            // }
-                            // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
-                            const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
-                            const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
-                            const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
-                            if (rules.LyricsXPaddingForLastNoteInMeasure || currentStaffEntryIndex !== measureStaffEntries.length - 1) {
+                        if (!hasShortNotes) {
+                            extraExistingPadding += rules.LyricsXPaddingReductionForLongNotes; // quarter or longer notes need less padding
+                        }
+                        if (rules.LyricsXPaddingForLastNoteInMeasure || !isLastNoteInMeasure) {
+                            if (currentLyricsWidth > widthThreshold + extraExistingPadding) {
                                 addPadding = true;
-                                // for last note in the measure, this might be unnecessary
+                                padding -= extraExistingPadding; // we don't need to add the e.g. 1.2 we already get from measure end padding
+                                // for last note in the measure, this is usually not necessary,
+                                //   but in rare samples with quite long text on the last note it is.
                             }
-                            break;
                         }
-                        // for situations unlikely to cause overlap we shouldn't add padding,
-                        //   e.g. Brooke West sample (OSMD Function Test Chord Symbols) - width ~3.1 in measure 11 on 'ling', no padding needed.
-                        //   though Beethoven - Geliebte has only 8ths in measure 2 and is still problematic,
-                        //   so unfortunately we can't just check if the next note is 16th or less.
+                        break; // TODO take the max padding across verses
                     }
-                    if (addPadding) {
-                        (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics * padding;
-                    }
+                    // for situations unlikely to cause overlap we shouldn't add padding,
+                    //   e.g. Brooke West sample (OSMD Function Test Chord Symbols) - width ~3.1 in measure 11 on 'ling', no padding needed.
+                    //   though Beethoven - Geliebte has only 8ths in measure 2 and is still problematic,
+                    //   so unfortunately we can't just check if the next note is 16th or less.
+                }
+                if (addPadding) {
+                    (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics * padding;
                 }
             }
         }

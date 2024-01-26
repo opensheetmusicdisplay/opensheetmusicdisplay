@@ -386,7 +386,7 @@ export class Beam extends Element {
     super();
     this.setAttribute('type', 'Beam');
 
-    if (!notes || notes === []) {
+    if (!notes || notes == []) {
       throw new Vex.RuntimeError('BadArguments', 'No notes provided for beam.');
     }
 
