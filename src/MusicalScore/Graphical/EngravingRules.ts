@@ -221,12 +221,14 @@ export class EngravingRules {
     public LyricsExtraXShiftForShortLyrics: number;
     /** Threshold of the lyric entry's width below which the x-shift is applied. Default 1.4. */
     public LyricsExtraXShiftForShortLyricsWidthThreshold: number;
-    /** Whether to enable x padding (to the right) for short notes, see LyricsXPaddingFactorForLongLyrics for the degree. */
-    public LyricsUseXPaddingForShortNotes: boolean;
+    /** Whether to enable x padding (to the right) for notes with long lyrics, see LyricsXPaddingFactorForLongLyrics for the degree.
+     * This helps avoid overlaps and shorten measures, because otherwise the whole measure needs to be stretched to avoid overlaps,
+     * see MaximumLyricsElongationFactor */
+    public LyricsUseXPaddingForLongLyrics: boolean;
     /** How much spacing/padding should be added after notes with long lyrics on short notes
      * (>4 characters on <8th note),
      * so that the measure doesn't need to be elongated too much to avoid lyrics collisions.
-     * Default 0.8 = 8 pixels */
+     * Default 1 = 10 pixels */
     public LyricsXPaddingFactorForLongLyrics: number;
     /** How wide a text needs to be to trigger lyrics padding for short notes.
      * This is visual width, not number of characters, as e.g. 'zzz' is wider than 'iii'.
@@ -714,7 +716,7 @@ export class EngravingRules {
         this.LyricsYMarginToBottomLine = 0.2;
         this.LyricsExtraXShiftForShortLyrics = 0.5; // also see ChordSymbolExtraXShiftForShortChordSymbols, same principle
         this.LyricsExtraXShiftForShortLyricsWidthThreshold = 1.4; // width of '+': 1.12, 'II': 1.33 (benefits from x-shift), 'III': 1.99 (doesn't benefit)
-        this.LyricsUseXPaddingForShortNotes = true;
+        this.LyricsUseXPaddingForLongLyrics = true;
         this.LyricsXPaddingFactorForLongLyrics = 1.0;
         this.LyricsXPaddingWidthThreshold = 1.7; // generateImages script with png might need more for 8th notes, e.g. Chloe
         this.LyricsXPaddingForLastNoteInMeasure = true;

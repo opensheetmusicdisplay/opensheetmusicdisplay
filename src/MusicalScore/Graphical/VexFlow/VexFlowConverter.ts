@@ -473,7 +473,7 @@ export class VexFlowConverter {
             let extraExistingPadding: number = 0;
             if (lyricsEntries.length > 0 &&
                 rules.RenderLyrics &&
-                rules.LyricsUseXPaddingForShortNotes
+                rules.LyricsUseXPaddingForLongLyrics
             ) { // if these conditions don't apply, we don't need the following calculation
                 // don't add padding if next note or close note (within quarter distance) has no lyrics
                 //   usually checking the last note is enough, but
@@ -521,7 +521,7 @@ export class VexFlowConverter {
                 // if the for loop ends without breaking, we are at measure end and assume we need padding
             }
             if (rules.RenderLyrics &&
-                rules.LyricsUseXPaddingForShortNotes &&
+                rules.LyricsUseXPaddingForLongLyrics &&
                 lyricsEntries.length > 0 &&
                 nextOrCloseNoteHasLyrics) {
                 // VexFlowPatch: add padding to the right for large lyrics,
