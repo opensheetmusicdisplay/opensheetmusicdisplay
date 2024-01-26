@@ -469,7 +469,7 @@ export class VexFlowConverter {
             //   it would be nice to only save this once, not for every note, but has to be accessible in stavenote.js
             const lyricsEntries: GraphicalLyricEntry[] = gve.parentStaffEntry.LyricsEntries;
 
-            let nextOrCloseNoteHasLyrics: boolean = false;
+            let nextOrCloseNoteHasLyrics: boolean = true;
             let extraExistingPadding: number = 0;
             if (lyricsEntries.length > 0 &&
                 rules.RenderLyrics &&
@@ -491,23 +491,34 @@ export class VexFlowConverter {
                         staffEntriesToCheck.push(se);
                     }
                 }
-
+                // // also check next measure:
+                // //   problem: hard to get the next measure object here. (might need to put .nextMeasure into GraphicalMeasure)
+                // const stafflineMeasures: GraphicalMeasure[] = startingGMeasure.ParentStaffLine.Measures;
+                // const measureIndexInStaffline: number = stafflineMeasures.indexOf(startingGMeasure);
+                // if (measureIndexInStaffline + 1 < stafflineMeasures.length) {
+                //     const nextMeasure: GraphicalMeasure = stafflineMeasures[measureIndexInStaffline + 1];
+                //     for (const se of nextMeasure.staffEntries) {
+                //         staffEntriesToCheck.push(se);
+                //     }
+                // }
                 let totalDistanceFromFirstNote: Fraction;
                 let lastTimestamp: Fraction = gve.parentStaffEntry.relInMeasureTimestamp.clone();
                 for (const currentSE of staffEntriesToCheck) {
                     const currentTimestamp: Fraction = currentSE.relInMeasureTimestamp.clone();
                     totalDistanceFromFirstNote = Fraction.minus(currentTimestamp, gve.parentVoiceEntry.Timestamp);
                     if (totalDistanceFromFirstNote.RealValue > 0.25) { // more than a quarter note distance: don't add padding
-                        break; // nextOrCloseNoteHasLyrics = false;
+                        nextOrCloseNoteHasLyrics = false;
+                        break;
                     }
                     if (currentSE.LyricsEntries.length > 0) {
-                        nextOrCloseNoteHasLyrics = true;
+                        // nextOrCloseNoteHasLyrics = true;
                         break;
                     }
                     const lastDistanceCovered: Fraction = Fraction.minus(currentTimestamp, lastTimestamp);
                     extraExistingPadding += lastDistanceCovered.RealValue * 32; // for every 8th note in between (0.125), we need around 4 padding less (*4*8)
                     lastTimestamp = currentTimestamp;
                 }
+                // if the for loop ends without breaking, we are at measure end and assume we need padding
             }
             if (rules.RenderLyrics &&
                 rules.LyricsUseXPaddingForShortNotes &&
