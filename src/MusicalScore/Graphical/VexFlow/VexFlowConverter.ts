@@ -558,10 +558,10 @@ export class VexFlowConverter {
                         const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
                         const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
                         if (isLastNoteInMeasure) {
-                            extraExistingPadding += 1.2; // ~extra padding we get for measure bar + bar end/start padding
+                            extraExistingPadding += rules.LyricsXPaddingReductionForLastNoteInMeasure; // need less padding
                         }
                         if (!hasShortNotes) {
-                            extraExistingPadding += 0.7; // quarter or longer notes need less padding
+                            extraExistingPadding += rules.LyricsXPaddingReductionForLongNotes; // quarter or longer notes need less padding
                         }
                         if (rules.LyricsXPaddingForLastNoteInMeasure || !isLastNoteInMeasure) {
                             if (currentLyricsWidth > widthThreshold + extraExistingPadding) {

@@ -235,6 +235,10 @@ export class EngravingRules {
      * Default 3.3.
      */
     public LyricsXPaddingWidthThreshold: number;
+    /** Long notes need less padding than short ones, by default we use 0.7 less padding. */
+    public LyricsXPaddingReductionForLongNotes: number;
+    /** Last note in measure needs less padding because of measure bar and bar start/end padding. */
+    public LyricsXPaddingReductionForLastNoteInMeasure: number;
     public LyricsXPaddingForLastNoteInMeasure: boolean;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
@@ -719,6 +723,8 @@ export class EngravingRules {
         this.LyricsUseXPaddingForLongLyrics = true;
         this.LyricsXPaddingFactorForLongLyrics = 1.0;
         this.LyricsXPaddingWidthThreshold = 1.7; // generateImages script with png might need more for 8th notes, e.g. Chloe
+        this.LyricsXPaddingReductionForLongNotes = 0.7;
+        this.LyricsXPaddingReductionForLastNoteInMeasure = 1.2;
         this.LyricsXPaddingForLastNoteInMeasure = true;
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
