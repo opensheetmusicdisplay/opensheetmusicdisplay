@@ -531,6 +531,7 @@ export class ExpressionReader {
         const fontStyleAttr: Attr = wordsNode.attribute("font-style");
         let fontStyleText: string;
         let fontWeightText: string;
+        let fontColor: string;
         if (fontStyleAttr) {
             fontStyleText = fontStyleAttr.value;
             if (fontStyleText === "italic") {
@@ -547,6 +548,10 @@ export class ExpressionReader {
                 }
             }
         }
+        const colorAttr: Attr = wordsNode.attribute("color");
+        if (colorAttr) {
+            fontColor = colorAttr.value;
+        }
         let defaultYXml: number;
         if (currentMeasure.Rules.PlaceWordsInsideStafflineFromXml) {
             const defaultYString: string = wordsNode.attribute("default-y")?.value;
@@ -561,7 +566,7 @@ export class ExpressionReader {
             if (this.checkIfWordsNodeIsRepetitionInstruction(text)) {
                 return;
             }
-            this.fillMultiOrTempoExpression(text, currentMeasure, inSourceMeasureCurrentFraction, fontStyle, defaultYXml);
+            this.fillMultiOrTempoExpression(text, currentMeasure, inSourceMeasureCurrentFraction, fontStyle, fontColor, defaultYXml);
             this.initialize();
         }
     }
@@ -664,9 +669,8 @@ export class ExpressionReader {
                 } else if (type === "stop") {
                     for (const openCont of this.openContinuousDynamicExpressions) {
                         if (openCont.NumberXml === numberXml) {
-                            if (openCont.NumberXml === numberXml) {
-                                this.closeOpenContinuousDynamic(openCont, currentMeasure, inSourceMeasureCurrentFraction);
-                            }
+                            // if (openCont.NumberXml === numberXml) { // was there supposed to be another check here? someone wrote the same check twice.
+                            this.closeOpenContinuousDynamic(openCont, currentMeasure, inSourceMeasureCurrentFraction);
                         }
                     }
                 }
@@ -678,7 +682,7 @@ export class ExpressionReader {
         }
     }
     private fillMultiOrTempoExpression(inputString: string, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction,
-        fontStyle: FontStyles, defaultYXml: number = undefined): void {
+        fontStyle: FontStyles, fontColor: string, defaultYXml: number = undefined): void {
         if (!inputString) {
             return;
         }
@@ -687,7 +691,7 @@ export class ExpressionReader {
         //const splitStrings: string[] = tmpInputString.split(/([\s,\r\n]and[\s,\r\n]|[\s,\r\n]und[\s,\r\n]|[\s,\r\n]e[\s,\r\n]|[\s,\r\n])+/g);
 
         //for (const splitStr of splitStrings) {
-        this.createExpressionFromString("", tmpInputString, currentMeasure, inSourceMeasureCurrentFraction, inputString, fontStyle, defaultYXml);
+        this.createExpressionFromString("", tmpInputString, currentMeasure, inSourceMeasureCurrentFraction, inputString, fontStyle, fontColor, defaultYXml);
         //}
     }
     /*
@@ -721,6 +725,7 @@ export class ExpressionReader {
     private createExpressionFromString(prefix: string, stringTrimmed: string,
                                        currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction, inputString: string,
                                        fontStyle: FontStyles,
+                                       fontColor: string,
                                        defaultYXml: number = undefined): boolean {
         if (InstantaneousTempoExpression.isInputStringInstantaneousTempo(stringTrimmed) ||
             ContinuousTempoExpression.isInputStringContinuousTempo(stringTrimmed)) {
@@ -743,6 +748,7 @@ export class ExpressionReader {
                                                                                                                       this.staffNumber,
                                                                                                                       this.soundTempo,
                                                                                                                       this.currentMultiTempoExpression);
+                instantaneousTempoExpression.ColorXML = fontColor;
                 this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, prefix);
                 return true;
             }
@@ -752,6 +758,7 @@ export class ExpressionReader {
                     this.placement,
                     this.staffNumber,
                     this.currentMultiTempoExpression);
+                continuousTempoExpression.ColorXML = fontColor;
                 this.currentMultiTempoExpression.addExpression(continuousTempoExpression, prefix);
                 return true;
             }
@@ -782,6 +789,7 @@ export class ExpressionReader {
                     currentMeasure,
                     -1,
                     stringTrimmed);
+            continuousDynamicExpression.ColorXML = fontColor;
             const openWordContinuousDynamic: MultiExpression = this.getMultiExpression;
             if (openWordContinuousDynamic) {
                 this.closeOpenContinuousDynamic(openWordContinuousDynamic.StartingContinuousDynamic, currentMeasure, inSourceMeasureCurrentFraction);
@@ -800,6 +808,7 @@ export class ExpressionReader {
             currentMeasure.hasMoodExpressions = true;
             const moodExpression: MoodExpression = new MoodExpression(stringTrimmed, this.placement, this.staffNumber);
             moodExpression.fontStyle = fontStyle;
+            moodExpression.ColorXML = fontColor;
             multiExpression.addExpression(moodExpression, prefix);
             return true;
         }
@@ -833,6 +842,7 @@ export class ExpressionReader {
         const unknownExpression: UnknownExpression = new UnknownExpression(
             stringTrimmed, this.placement, textAlignment, this.staffNumber);
         unknownExpression.fontStyle = fontStyle;
+        unknownExpression.ColorXML = fontColor;
         unknownExpression.defaultYXml = defaultYXml;
         unknownMultiExpression.addExpression(unknownExpression, prefix);
         return false;

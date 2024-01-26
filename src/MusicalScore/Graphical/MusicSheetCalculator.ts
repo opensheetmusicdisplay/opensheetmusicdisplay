@@ -311,15 +311,16 @@ export abstract class MusicSheetCalculator {
         // const maxInstructionsLength: number = this.rules.MaxInstructionsConstValue;
         if (this.graphicalMusicSheet.MeasureList.length > 0) {
             /** list of vertically ordered measures belonging to one bar */
-            let measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[0];
-            let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
-            minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
-            MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
+            // let measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[0];
+            // let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
+            // minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
+            // MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
             // minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
             let maxWidth: number = 0;
+            let measures: GraphicalMeasure[];
             for (let i: number = 0; i < this.graphicalMusicSheet.MeasureList.length; i++) {
                 measures = this.graphicalMusicSheet.MeasureList[i];
-                minimumStaffEntriesWidth = this.calculateMeasureXLayout(measures);
+                let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
                 minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
                 if (minimumStaffEntriesWidth > maxWidth) {
                     maxWidth = minimumStaffEntriesWidth;
@@ -1405,7 +1406,12 @@ export abstract class MusicSheetCalculator {
         const startCollideBox: BoundingBox =
             this.dynamicExpressionMap.get(graphicalContinuousDynamic.ContinuousDynamic.StartMultiExpression.AbsoluteTimestamp.RealValue);
         if (startCollideBox) {
-            startPosInStaffline.x = startCollideBox.RelativePosition.x + startCollideBox.BorderMarginRight + this.rules.WedgeHorizontalMargin;
+            startPosInStaffline.x = startCollideBox.RelativePosition.x + this.rules.WedgeHorizontalMargin;
+            if ((startCollideBox.DataObject as any).ParentStaffLine === staffLine) {
+                // TODO the dynamicExpressionMap doesn't distinguish between staffLines, so we may react to a different staffline otherwise
+                //   so the more fundamental solution would be to fix dynamicExpressionMap mapping across stafflines.
+                startPosInStaffline.x += startCollideBox.BorderMarginRight;
+            }
         }
         //currentMusicSystem and currentStaffLine
         const musicSystem: MusicSystem = staffLine.ParentMusicSystem;
@@ -1943,6 +1949,9 @@ export abstract class MusicSheetCalculator {
                                                                        this.rules.UnknownTextHeight,
                                                                        textAlignment,
                                                                        this.rules.TempoYSpacing);
+                if (entry.Expression.ColorXML && this.rules.ExpressionsUseXMLColor) {
+                    graphLabel.ColorXML = entry.Expression.ColorXML;
+                }
 
                 if (entry.Expression instanceof InstantaneousTempoExpression) {
                     //already added?

@@ -29,7 +29,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "1.8.4-dev"; // getter: this.Version
+    protected version: string = "1.8.5-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -369,7 +369,7 @@ export class OpenSheetMusicDisplay {
 
     /** Clears what OSMD has drawn on its canvas. */
     public clear(): void {
-        this.drawer.clear();
+        this.drawer?.clear();
         this.reset(); // without this, resize will draw loaded sheet again
     }
 
