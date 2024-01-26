@@ -182,9 +182,9 @@ export class TimeSignature extends StaveModifier {
     this.placeGlyphOnLine(this.timeSig.glyph, this.stave, this.timeSig.line);
     const group = this.stave.context.openGroup("timesignature");
     this.timeSig.glyph.renderToStave(this.x);
-    if (this.hidden) {
+    if (this.hidden && group) {
       // VexflowPatch: set visibility hidden, as in some systems (rendering SVG file) this is rendered black even if alpha = 0
-      group?.setAttribute("visibility", "hidden"); // group is undefined for CanvasContext, e.g. in SkybottomlineCalculator
+      group.setAttribute("visibility", "hidden"); // group is undefined for CanvasContext, e.g. in SkybottomlineCalculator
     }
     this.stave.context.closeGroup("timesignature");
   }
