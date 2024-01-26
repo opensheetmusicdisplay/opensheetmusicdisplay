@@ -396,7 +396,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const vexStaffEntry: VexFlowStaffEntry = staffEntry as VexFlowStaffEntry;
       // vexStaffEntry.calculateXPosition(false);
       // const notePosition: number = (staffEntry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote.getBoundingBox().getX() / unitInPixels;
-      const staffEntryXPosition: number = vexStaffEntry.PositionAndShape.RelativePosition.x + bBox.BorderLeft;
+      const staffEntryXPosition: number = vexStaffEntry.PositionAndShape.RelativePosition.x;
       let xPosition: number = staffEntryXPosition + bBox.BorderLeft;
       // vexStaffEntry.calculateXPosition();
       if (container instanceof GraphicalChordSymbolContainer && container.PositionAndShape.Parent.DataObject instanceof GraphicalMeasure) {
