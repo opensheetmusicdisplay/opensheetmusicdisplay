@@ -183,7 +183,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
 
         if (this.repetitionInstructionReader) {
-            this.repetitionInstructionReader.removeRedundantInstructions();
+            //this.repetitionInstructionReader.removeRedundantInstructions();
             if (this.repetitionCalculator) {
                 this.repetitionCalculator.calculateRepetitions(this.musicSheet, this.repetitionInstructionReader.repetitionInstructions);
             }
