@@ -127,7 +127,7 @@ export class ChordSymbolContainer {
             text += "(" + degrees.adds.join(",") + ")";
         }
         if (degrees.alts.length > 0) {
-            text += "(alt " + degrees.alts.join(",") + ")";
+            text += "(" + degrees.alts.join(",") + ")";
         }
         if (degrees.subs.length > 0) {
             text += "(omit " + degrees.subs.join(",") + ")";
