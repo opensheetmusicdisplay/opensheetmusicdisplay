@@ -580,11 +580,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (systemYCoordinates === 0) {
             return;
         }
-        let largestTitleCreditSize: number = 1;
+        // let largestTitleCreditSize: number = 1;
         let finalTitle: string = undefined;
         let largestCreditYInfo: number = 0;
         let finalSubtitle: string = undefined;
         let possibleTitle: string = undefined;
+        let finalComposer: string = undefined;
         const creditElements: IXmlElement[] = root.elements("credit");
         for (let idx: number = 0, len: number = creditElements.length; idx < len; ++idx) {
             const credit: IXmlElement = creditElements[idx];
@@ -595,10 +596,14 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 let creditChildren: IXmlElement[] = undefined;
                 if (credit) {
                     let isSubtitle: boolean = false;
+                    let isComposer: boolean = false;
                     const typeChild: IXmlElement = credit.element("credit-type");
                     if (typeChild?.value === "subtitle") {
                         isSubtitle = true;
+                    } else if (typeChild?.value === "composer") {
+                        isComposer = true;
                     }
+                    const isSubtitleOrComposer: boolean = isSubtitle || isComposer;
 
                     creditChildren = credit.elements("credit-words");
                     for (const creditChild of creditChildren) {
@@ -607,18 +612,31 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         // eslint-disable-next-line no-null/no-null
                         const creditYGiven: boolean = creditY !== undefined && creditY !== null;
                         const creditYInfo: number = creditYGiven ? parseFloat(creditY) : Number.MIN_VALUE;
-                        if ((creditYGiven && creditYInfo > systemYCoordinates) || isSubtitle) {
-                            if (!this.musicSheet.Title && !isSubtitle) {
-                                const creditSize: string = creditChild.attribute("font-size")?.value;
-                                if (creditSize) {
-                                    const titleCreditSizeInt: number = parseFloat(creditSize);
-                                    if (largestTitleCreditSize < titleCreditSizeInt) {
-                                        largestTitleCreditSize = titleCreditSizeInt;
-                                        finalTitle = creditChild.value;
-                                    }
+                        if ((creditYGiven && creditYInfo > systemYCoordinates) || isSubtitleOrComposer) {
+                            if (!this.musicSheet.Title && !isSubtitleOrComposer) {
+                                // only take largest font size label
+                                // const creditSize: string = creditChild.attribute("font-size")?.value;
+                                // if (creditSize) {
+                                //     const titleCreditSizeInt: number = parseFloat(creditSize);
+                                //     if (largestTitleCreditSize < titleCreditSizeInt) {
+                                //         largestTitleCreditSize = titleCreditSizeInt;
+                                //         finalTitle = creditChild.value;
+                                //     }
+                                // }
+
+                                if (!finalTitle) {
+                                    finalTitle = creditChild.value;
+                                } else {
+                                    finalTitle += "\n" + creditChild.value;
                                 }
                             }
-                            if (creditJustify !== "right" && creditJustify !== "left" || isSubtitle) {
+                            if (isComposer || creditJustify === "right") {
+                                if (!finalComposer) {
+                                    finalComposer = creditChild.value?.trim();
+                                } else {
+                                    finalComposer += "\n" + creditChild.value?.trim();
+                                }
+                            } else if (isSubtitle || creditJustify !== "right" && creditJustify !== "left") {
                                 if (largestCreditYInfo < creditYInfo) {
                                     largestCreditYInfo = creditYInfo;
                                     if (possibleTitle) {
@@ -634,20 +652,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                         finalSubtitle = creditChild.value;
                                     }
                                 }
-                            }
-                            switch (creditJustify) {
-                                case "right":
-                                    if (!this.musicSheet.Composer) {
-                                        this.musicSheet.Composer = new Label(this.trimString(creditChild.value));
-                                    }
-                                    break;
-                                case "left":
-                                    if (!this.musicSheet.Lyricist) {
-                                        this.musicSheet.Lyricist = new Label(this.trimString(creditChild.value));
-                                    }
-                                    break;
-                                default:
-                                    break;
+                            } else if (creditJustify === "left") {
+                                if (!this.musicSheet.Lyricist) {
+                                    this.musicSheet.Lyricist = new Label(this.trimString(creditChild.value));
+                                }
+                                break;
                             }
                         }
                     }
@@ -659,6 +668,24 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
         if (!this.musicSheet.Subtitle && finalSubtitle) {
             this.musicSheet.Subtitle = new Label(this.trimString(finalSubtitle));
+        }
+        if (finalComposer) {
+            let overrideSheetComposer: boolean = false;
+            if (!this.musicSheet.Composer) {
+                overrideSheetComposer = true;
+            } else {
+                // check if we have more lines in existing composer label
+                //   we should only take the existing label if it has less lines,
+                //   since the credit labels are more likely to be the rendering intention than the metadata
+                const creditComposerLines: number = (finalComposer.match("\n") ?? []).length + 1;
+                const sheetComposerLines: number = (this.musicSheet.Composer.text.match("\n") ?? []).length + 1;
+                if (creditComposerLines >= sheetComposerLines) {
+                    overrideSheetComposer = true;
+                }
+            }
+            if (overrideSheetComposer) {
+                this.musicSheet.Composer = new Label(this.trimString(finalComposer));
+            }
         }
     }
 
