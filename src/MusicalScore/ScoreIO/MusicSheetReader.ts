@@ -620,7 +620,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         const creditYGiven: boolean = creditY !== undefined && creditY !== null;
                         const creditYInfo: number = creditYGiven ? parseFloat(creditY) : Number.MIN_VALUE;
                         if ((creditYGiven && creditYInfo > systemYCoordinates) || isSubtitleOrComposer) {
-                            if (!finalTitle && !this.musicSheet.Title && !isSubtitleOrComposer) {
+                            if (!finalTitle && !isSubtitleOrComposer) {
                                 // only take largest font size label
                                 // const creditSize: string = creditChild.attribute("font-size")?.value;
                                 // if (creditSize) {
