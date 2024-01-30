@@ -402,6 +402,8 @@ export class EngravingRules {
     public RenderCopyright: boolean;
     public RenderPartNames: boolean;
     public RenderPartAbbreviations: boolean;
+    /** Whether two render system labels on page 2+. This doesn't affect the default endless PageFormat. */
+    public RenderSystemLabelsAfterFirstPage: boolean;
     public RenderFingerings: boolean;
     public RenderMeasureNumbers: boolean;
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
@@ -834,6 +836,7 @@ export class EngravingRules {
         this.RenderCopyright = false;
         this.RenderPartNames = true;
         this.RenderPartAbbreviations = true;
+        this.RenderSystemLabelsAfterFirstPage = true;
         this.RenderFingerings = true;
         this.RenderMeasureNumbers = true;
         this.RenderMeasureNumbersOnlyAtSystemStart = false;
