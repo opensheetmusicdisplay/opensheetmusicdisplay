@@ -2,7 +2,7 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>test_crescendo_multi-instrument</work-title>
+    <work-title>test_wedge_crescendo_multi-instrument</work-title>
     </work>
   <identification>
     <encoding>
@@ -35,7 +35,7 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="646" default-y="1735.69" justify="center" valign="top" font-family="ZapfChancery Light" font-size="29.94">test_crescendo_multi-instrument</credit-words>
+    <credit-words default-x="646" default-y="1735.69" justify="center" valign="top" font-family="ZapfChancery Light" font-size="29.94">test_wedge_crescendo_multi-instrument</credit-words>
     </credit>
   <part-list>
     <part-group type="start" number="1">

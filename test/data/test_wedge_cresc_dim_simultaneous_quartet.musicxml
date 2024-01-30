@@ -2,7 +2,7 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>test_cresc_dim_simultaneous_quartet</work-title>
+    <work-title>test_wedge_cresc_dim_simultaneous_quartet</work-title>
     </work>
   <identification>
     <encoding>
@@ -41,7 +41,7 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="600" default-y="1611.43" justify="center" valign="top" font-size="22">test_cresc_dim_simultaneous_quartet</credit-words>
+    <credit-words default-x="600" default-y="1611.43" justify="center" valign="top" font-size="22">test_wedge_cresc_dim_simultaneous_quartet</credit-words>
     </credit>
   <part-list>
     <part-group type="start" number="1">
