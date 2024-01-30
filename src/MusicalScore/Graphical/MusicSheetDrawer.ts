@@ -324,7 +324,8 @@ export abstract class MusicSheetDrawer {
         for (const systemLine of musicSystem.SystemLines) {
             this.drawSystemLineObject(systemLine);
         }
-        if (musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0]) {
+        if (this.rules.RenderSystemLabelsAfterFirstPage ||
+            musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0]) {
             for (const label of musicSystem.Labels) {
                 label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
             }
