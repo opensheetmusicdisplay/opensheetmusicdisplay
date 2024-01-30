@@ -42,9 +42,6 @@
   <credit page="1">
     <credit-words default-x="680" default-y="1680" justify="center" valign="top" font-size="24">An die ferne Geliebte</credit-words>
     </credit>
-  <credit page="1">
-    <credit-words default-x="680" default-y="80" justify="center" valign="bottom" font-size="8">Copyright © 2002 Recordare LLC</credit-words>
-    </credit>
   <part-list>
     <score-part id="P1">
       <part-name>Voice</part-name>

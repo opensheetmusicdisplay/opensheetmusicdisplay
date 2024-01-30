@@ -2,8 +2,6 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <identification>
-    <rights>Franz Schubert: An die Musik
-(Mélisande on http://www.musescore.com)</rights>
     <encoding>
       <software>MuseScore 2.3.2</software>
       <encoding-date>2018-08-13</encoding-date>
@@ -44,10 +42,6 @@
     </credit>
   <credit page="1">
     <credit-words default-x="595.24" default-y="1626.98" justify="center" valign="top" font-family="Times New Roman" font-size="24">An die Musik</credit-words>
-    </credit>
-  <credit page="1">
-    <credit-words default-x="595.24" default-y="113.379" justify="center" valign="bottom" font-size="8">Franz Schubert: An die Musik
-(Mélisande on http://www.musescore.com)</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">
