@@ -607,6 +607,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
                     creditChildren = credit.elements("credit-words");
                     for (const creditChild of creditChildren) {
+                        const creditChildValue: string = creditChild.value?.trim();
+                        if (creditChildValue === "Copyright ©") {
+                            continue; // this seems to be a MuseScore default, useless
+                        }
                         const creditJustify: string = creditChild.attribute("justify")?.value;
                         if (creditJustify === "right") {
                             isComposer = true;
@@ -630,7 +634,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                 //         finalTitle = creditChild.value;
                                 //     }
                                 // }
-                                finalTitle = creditChild.value;
+                                finalTitle = creditChildValue;
                                 // if (!finalTitle) {
                                 //     finalTitle = creditChild.value;
                                 // } else {
@@ -638,9 +642,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                 // }
                             } else if (isComposer || creditJustify === "right") {
                                 if (!finalComposer) {
-                                    finalComposer = creditChild.value?.trim();
+                                    finalComposer = creditChildValue;
                                 } else {
-                                    finalComposer += "\n" + creditChild.value?.trim();
+                                    finalComposer += "\n" + creditChildValue;
                                 }
                             } else if (isSubtitle || creditJustify !== "right" && creditJustify !== "left") {
                                 // if (largestCreditYInfo < creditYInfo) {
@@ -653,14 +657,14 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                 //     }
                                 // } else {
                                 if (finalSubtitle) {
-                                    finalSubtitle += "\n" + creditChild.value;
+                                    finalSubtitle += "\n" + creditChildValue;
                                 } else {
-                                    finalSubtitle = creditChild.value;
+                                    finalSubtitle = creditChildValue;
                                 }
                                 // }
                             } else if (creditJustify === "left") {
                                 if (!this.musicSheet.Lyricist) {
-                                    this.musicSheet.Lyricist = new Label(this.trimString(creditChild.value));
+                                    this.musicSheet.Lyricist = new Label(creditChildValue);
                                 }
                                 break;
                             }
