@@ -37,13 +37,7 @@
     <credit-words default-x="80" default-y="1522" justify="left" valign="bottom" font-size="12">Aloys Jeitteles</credit-words>
     </credit>
   <credit page="1">
-    <credit-words default-x="1280" default-y="1522" justify="right" valign="bottom" font-size="12">Ludwig van Beethoven</credit-words>
-    </credit>
-  <credit page="1">
     <credit-words default-x="680" default-y="1680" justify="center" valign="top" font-size="24">An die ferne Geliebte</credit-words>
-    </credit>
-  <credit page="1">
-    <credit-words default-x="680" default-y="80" justify="center" valign="bottom" font-size="8">Copyright © 2002 Recordare LLC</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">

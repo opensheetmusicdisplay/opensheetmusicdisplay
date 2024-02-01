@@ -2387,12 +2387,16 @@ export abstract class MusicSheetCalculator {
         }
         if (this.graphicalMusicSheet.Subtitle && this.rules.RenderTitle && this.rules.RenderSubtitle) {
             const subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
-            //subtitle.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
+            // subtitle.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
             subtitle.PositionAndShape.Parent = page.PositionAndShape;
             const relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
             //relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2; // half of first staffline width
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
+            const lines: number = subtitle.TextLines?.length;
+            if (lines > 1) { // Don't want to affect existing behavior. but this doesn't check bboxes for clip
+                relative.y += subtitle.PositionAndShape.BorderBottom * (lines - 1) / (lines);
+            }
             subtitle.PositionAndShape.RelativePosition = relative;
             page.Labels.push(subtitle);
         }

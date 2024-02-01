@@ -44,9 +44,6 @@
     <credit-words default-x="600" default-y="1640" justify="center" valign="top" font-family="Times New Roman" font-size="22.0128">Various Chord Tests
 </credit-words>
     </credit>
-  <credit page="1">
-    <credit-words default-x="600" default-y="114.286" justify="center" valign="bottom" font-size="8">Copyright © </credit-words>
-    </credit>
   <part-list>
     <score-part id="P1">
       <part-name>Piano</part-name>
