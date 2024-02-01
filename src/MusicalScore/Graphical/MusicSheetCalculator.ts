@@ -2387,7 +2387,7 @@ export abstract class MusicSheetCalculator {
         }
         if (this.graphicalMusicSheet.Subtitle && this.rules.RenderTitle && this.rules.RenderSubtitle) {
             const subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
-            //subtitle.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
+            // subtitle.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
             subtitle.PositionAndShape.Parent = page.PositionAndShape;
             const relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
