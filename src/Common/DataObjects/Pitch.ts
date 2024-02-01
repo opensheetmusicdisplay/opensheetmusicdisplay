@@ -438,12 +438,12 @@ export class Pitch {
     }
 
     /** A short representation of the note like A4 (A, octave 4), Ab5 or C#4. */
-    public ToStringShort(octaveShift: number = 0): string {
+    public ToStringShort(octaveOffset: number = 0): string {
         let accidentalString: string = Pitch.accidentalVexflow(this.accidental);
         if (!accidentalString) {
             accidentalString = "";
         }
-        const octave: number = this.octave + octaveShift;
+        const octave: number = this.octave + octaveOffset;
         return Pitch.getNoteEnumString(this.fundamentalNote) + accidentalString + octave;
     }
 

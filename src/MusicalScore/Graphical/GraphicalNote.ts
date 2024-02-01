@@ -71,4 +71,11 @@ export class GraphicalNote extends GraphicalObject {
     public static FromNote(note: Note, rules: EngravingRules): GraphicalNote {
       return rules.NoteToGraphicalNoteMap.getValue(note.NoteToGraphicalNoteObjectId);
     }
+
+    public ToStringShort(octaveOffset: number = 0): string {
+      return this.sourceNote?.ToStringShort(octaveOffset);
+    }
+    public get ToStringShortGet(): string {
+      return this.ToStringShort(0);
+    }
 }
