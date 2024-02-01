@@ -2394,7 +2394,7 @@ export abstract class MusicSheetCalculator {
             //relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2; // half of first staffline width
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
             const lines: number = subtitle.TextLines?.length;
-            if (lines > 1) { //Don't want to affect existing behavior. but this doesn't check bboxes for clip
+            if (lines > 1) { // Don't want to affect existing behavior. but this doesn't check bboxes for clip
                 relative.y += subtitle.PositionAndShape.BorderBottom * (lines - 1) / (lines);
             }
             subtitle.PositionAndShape.RelativePosition = relative;
