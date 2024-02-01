@@ -36,6 +36,12 @@ export class EngravingRules {
     public SheetAuthorHeight: number;
     public SheetCopyrightHeight: number;
     public SheetCopyrightMargin: number;
+    /** Whether to use the (deprecated) OSMD < 1.8.6 way of parsing and displaying subtitles and composer,
+     * which did not read multiple lines from XML credit-words tags.
+     * Option will probably be removed soon.
+     * @deprecated
+     */
+    public SheetComposerSubtitleUseLegacyParsing: boolean;
     public CompactMode: boolean;
     public PagePlacementEnum: PagePlacementEnum;
     public PageHeight: number;
@@ -505,6 +511,7 @@ export class EngravingRules {
         this.SheetAuthorHeight = 2.0;
         this.SheetCopyrightHeight = 1.5;
         this.SheetCopyrightMargin = 2.0;
+        this.SheetComposerSubtitleUseLegacyParsing = false;
 
         // Staff sizing Variables
         this.CompactMode = false;
