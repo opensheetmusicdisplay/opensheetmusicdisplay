@@ -3,6 +3,7 @@
 
 ### Bug Fixes
 
+* **Crescendo**: Fix wrong wedge startX in certain multi-instrument scores (further) ([#1480](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1480), [PR #1506](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/pull/1506)) ([c2a6def](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c2a6def46b8f622b8e51a7d13415fb01caec8a1b))
 * **PageFormat:** Fix page 2+ system labels (e.g. part abbreviation) not rendered. Add EngravingRule RenderSystemLabelsAfterFirstPage (PR [#1507](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1507)). (does not affect default endless format) ([70013be](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/70013be7402e4625cbd9057a3c3fc36860b9b4a9))
 * **Subtitle + Composer:** Read and display multiline subtitles and composer lines from XML credit-words tags correctly (PR [#1508](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1508)). Add EngravingRule SheetComposerSubtitleUseLegacyParsing ([71e9576](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/71e95764bc4b48bad2d87566e8190b58ada35e26))
 
