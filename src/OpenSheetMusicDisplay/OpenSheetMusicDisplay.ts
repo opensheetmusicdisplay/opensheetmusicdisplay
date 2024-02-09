@@ -13,7 +13,7 @@ import { MXLHelper } from "../Common/FileIO/Mxl";
 import { AJAX } from "./AJAX";
 import log from "loglevel";
 import { DrawingParametersEnum, DrawingParameters, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
-import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions } from "./OSMDOptions";
+import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions, ColorOptions } from "./OSMDOptions";
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { Dictionary } from "typescript-collections";
@@ -447,8 +447,26 @@ export class OpenSheetMusicDisplay {
         if (options.coloringEnabled !== undefined) {
             this.rules.ColoringEnabled = options.coloringEnabled;
         }
-        if (options.colorStemsLikeNoteheads !== undefined) {
-            this.rules.ColorStemsLikeNoteheads = options.colorStemsLikeNoteheads;
+        const colorOptions: ColorOptions = options.colorOptions;
+        if (colorOptions){
+            if (colorOptions.stems !== undefined) {
+                this.rules.ColorOptions.stems = colorOptions.stems;
+            }
+            if (colorOptions.beams !== undefined) {
+                this.rules.ColorOptions.beams = colorOptions.beams;
+            }
+            if (colorOptions.flags !== undefined) {
+                this.rules.ColorOptions.flags = colorOptions.flags;
+            }
+            if (colorOptions.rests !== undefined) {
+                this.rules.ColorOptions.rests = colorOptions.rests;
+            }
+            if (colorOptions.slurs !== undefined) {
+                this.rules.ColorOptions.slurs = colorOptions.slurs;
+            }
+            if (colorOptions.flags !== undefined) {
+                this.rules.ColorOptions.flags = colorOptions.flags;
+            }
         }
         if (options.disableCursor) {
             this.drawingParameters.drawCursors = false;
@@ -636,14 +654,16 @@ export class OpenSheetMusicDisplay {
             this.rules.ColoringMode = ColoringModes.XML;
             return;
         }
-        const noteIndices: NoteEnum[] = [NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B];
-        let colorSetString: string[];
-        if (options.coloringMode === ColoringModes.CustomColorSet) {
-            if (!options.coloringSetCustom || options.coloringSetCustom.length !== 8) {
+        // validate coloringSetCustom array
+        if (options.coloringMode === ColoringModes.CustomColorSet || options.coloringMode === ColoringModes.ColorByInstrument) {
+            if (options.coloringMode === ColoringModes.CustomColorSet && (!options.coloringSetCustom || options.coloringSetCustom.length !== 8)) {
                 throw new Error("Invalid amount of colors: With coloringModes.customColorSet, " +
                     "you have to provide a coloringSetCustom parameter (array) with 8 strings (C to B, rest note).");
             }
-            // validate strings input
+            if (options.coloringMode === ColoringModes.ColorByInstrument && (!options.coloringSetCustom || !options.coloringSetCustom.length)) {
+                throw new Error("Invalid coloringSetCustom: With coloringModes.colorByInstrument, " +
+                    "you have to provide a coloringSetCustom parameter (array) with at least one color.");
+            }
             for (const colorString of options.coloringSetCustom) {
                 const regExp: RegExp = /^\#[0-9a-fA-F]{6}$/;
                 if (!regExp.test(colorString)) {
@@ -651,19 +671,32 @@ export class OpenSheetMusicDisplay {
                         "One of the color strings in options.coloringSetCustom was not a valid HTML Hex color:\n" + colorString);
                 }
             }
-            colorSetString = options.coloringSetCustom;
-        } else if (options.coloringMode === ColoringModes.AutoColoring) {
+        }
+        const coloringSetCurrent: Dictionary<NoteEnum | number, string> = new Dictionary<NoteEnum | number, string>();
+        const noteIndices: NoteEnum[] = [NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B];
+        let colorSetString: string[] = options.coloringSetCustom;
+        if (options.coloringMode === ColoringModes.ColorByInstrument) {
+            for (let i: number = 0; i < colorSetString.length; i++) {
+                coloringSetCurrent.setValue(i, colorSetString[i]);
+            }
+        }
+        else if (options.coloringMode === ColoringModes.CustomColorSet) {
+            for (let i: number = 0; i < noteIndices.length; i++) {
+                coloringSetCurrent.setValue(noteIndices[i], colorSetString[i]);
+            }
+            coloringSetCurrent.setValue(-1, colorSetString.last());
+        }
+        else if (options.coloringMode === ColoringModes.AutoColoring) {
             colorSetString = [];
             const keys: string[] = Object.keys(AutoColorSet);
             for (let i: number = 0; i < keys.length; i++) {
                 colorSetString.push(AutoColorSet[keys[i]]);
             }
-        } // for both cases:
-        const coloringSetCurrent: Dictionary<NoteEnum | number, string> = new Dictionary<NoteEnum | number, string>();
-        for (let i: number = 0; i < noteIndices.length; i++) {
-            coloringSetCurrent.setValue(noteIndices[i], colorSetString[i]);
+            for (let i: number = 0; i < noteIndices.length; i++) {
+                coloringSetCurrent.setValue(noteIndices[i], colorSetString[i]);
+            }
+            coloringSetCurrent.setValue(-1, colorSetString.last()); // index 7. Unfortunately -1 is not a NoteEnum value, so we can't put it into noteIndices
         }
-        coloringSetCurrent.setValue(-1, colorSetString.last()); // index 7. Unfortunately -1 is not a NoteEnum value, so we can't put it into noteIndices
         this.rules.ColoringSetCurrent = coloringSetCurrent;
         this.rules.ColoringMode = options.coloringMode;
     }

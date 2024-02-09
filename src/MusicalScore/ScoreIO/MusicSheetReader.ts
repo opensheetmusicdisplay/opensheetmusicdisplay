@@ -24,6 +24,7 @@ import {RepetitionCalculator} from "./MusicSymbolModules/RepetitionCalculator";
 import {EngravingRules} from "../Graphical/EngravingRules";
 import { ReaderPluginManager } from "./ReaderPluginManager";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
+import { ColoringModes } from "../Graphical/DrawingParameters";
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
@@ -231,6 +232,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
                 currentInstrument.createStaves(instrumentNumberOfStaves);
                 instrumentReaders.push(new InstrumentReader(this.pluginManager, this.repetitionInstructionReader, xmlMeasureList, currentInstrument));
+                if (this.rules.ColoringMode === ColoringModes.ColorByInstrument){
+                    const colorArray: Array<string> = Array.from(this.rules.ColoringSetCurrent.values());
+                    currentInstrument.Color = colorArray[instrumentReaders.length-1];
+                }
                 if (this.repetitionInstructionReader) {
                     this.repetitionInstructionReader.xmlMeasureList[counter] = xmlMeasureList;
                 }

@@ -341,7 +341,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             coloringMode: isFunctionTestAutoColoring ? 2 : 0,
             // eslint-disable-next-line max-len
             coloringSetCustom: isFunctionTestAutoColoring ? ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"] : undefined,
-            colorStemsLikeNoteheads: isFunctionTestAutoColoring,
+            colorOptions: {
+                stems: isFunctionTestAutoColoring
+            },
             drawingParameters: defaultOrCompactTightMode, // note: default resets all EngravingRules. could be solved differently
             drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
             drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,

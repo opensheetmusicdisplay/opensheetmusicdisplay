@@ -972,7 +972,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             (<any>vfBeam).render_options.beam_width = 3;
                             (<any>vfBeam).render_options.partial_beam_length = 4;
                         }
-                        if (stemColors.length >= 2 && this.rules.ColorBeams) {
+                        if (stemColors.length >= 2 && this.rules.ColorOptions.beams) {
                             beamColor = stemColors[0];
                             for (const stemColor of stemColors) {
                                 if (stemColor !== beamColor) {

@@ -28,6 +28,7 @@ export class Instrument extends InstrumentalGroup {
     private nameLabel: Label;
     private idString: string;
     private id: number;
+    private color: string;
     private hasLyrics: boolean = false;
     private hasChordSymbols: boolean = false;
     private playbackTranspose: number;
@@ -71,6 +72,12 @@ export class Instrument extends InstrumentalGroup {
     }
     public get IdString(): string {
         return this.idString;
+    }
+    public get Color(): string {
+        return this.color;
+    }
+    public set Color(value: string) {
+        this.color = value;
     }
     public get Id(): number {
         return this.id;

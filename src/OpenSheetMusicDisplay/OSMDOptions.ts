@@ -37,16 +37,16 @@ export interface IOSMDOptions {
     autoResize?: boolean;
     /** Render Backend, will be SVG if given undefined, "SVG" or "svg", otherwise Canvas. */
     backend?: string;
-    /** Defines the mode that is used for coloring: XML (0), Boomwhacker(1), CustomColorSet (2). Default XML.
-     *  If coloringMode.CustomColorSet (2) is chosen, a coloringSetCustom parameter must be added.
+    /** Defines the mode that is used for coloring: XML (0), Boomwhacker (1), CustomColorSet (2), ColorByInstrument (3). Default XML.
+     *  If CustomColorSet (2) or ColorByInstrument (3) is chosen, a coloringSetCustom parameter must be added.
      */
     coloringMode?: ColoringModes;
     /** Set of 8 colors for automatic coloring of 7 notes from C to B + rest note in HTML form (e.g. "#00ff00" for green).  */
     coloringSetCustom?: string[];
+    /** Options for color inheritance based on graphic object class type (stems, rests, slurs, ties, dynamics). */
+    colorOptions?: ColorOptions;
     /** Whether to enable coloring noteheads and stems, depending on coloringMode. */
     coloringEnabled?: boolean;
-    /** Whether to color the stems of notes the same as their noteheads. Default false. */
-    colorStemsLikeNoteheads?: boolean;
     /** Dark mode (black background, white notes). Simply sets defaultColorMusic and EngravingRules.PageBackgroundColor. */
     darkMode?: boolean;
     /** Default color for all musical elements including key signature etc. Can be used for dark mode etc. Default undefined. */
@@ -312,6 +312,20 @@ export class OSMDOptions {
             return BackendType.SVG;
         }
     }
+}
+
+/** Whether to color the graphic objects, inheriting from parent notehead or instrument color. */
+export interface ColorOptions {
+    /** Whether to color the stems of notes the same as their noteheads. Default false. */
+    stems?: boolean;
+    /** Whether to color the beams. Default false. */
+    beams?: boolean;
+    /** Whether to color the flags of notes the same as their noteheads. Default false. */
+    flags?: boolean;
+    /** Whether to color the rests. Default false. */
+    rests?: boolean;
+    /** Whether to color the slurs. Default false. */
+    slurs?: boolean;
 }
 
 export interface AutoBeamOptions {

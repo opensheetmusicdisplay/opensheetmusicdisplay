@@ -60,23 +60,31 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
 
             sourceNoteNoteheadColor = note.sourceNote.NoteheadColor;
             noteheadColor = sourceNoteNoteheadColor;
-            // Switch between XML colors and automatic coloring
-            if (this.rules.ColoringMode === ColoringModes.AutoColoring ||
-                this.rules.ColoringMode === ColoringModes.CustomColorSet) {
+            // Switch between color modes
+            if (this.rules.ColoringMode === ColoringModes.AutoColoring) {
                 if (note.sourceNote.isRest()) {
+                    noteheadColor = defaultColorRest;
+                } else {
+                    const fundamentalNote: NoteEnum = note.sourceNote.Pitch.FundamentalNote;
+                    noteheadColor = this.rules.ColoringSetCurrent.getValue(fundamentalNote);
+                }
+            }
+            else if (this.rules.ColoringMode === ColoringModes.CustomColorSet) {
+                if (this.rules.ColorOptions.rests && note.sourceNote.isRest()) {
                     noteheadColor = this.rules.ColoringSetCurrent.getValue(-1);
                 } else {
                     const fundamentalNote: NoteEnum = note.sourceNote.Pitch.FundamentalNote;
                     noteheadColor = this.rules.ColoringSetCurrent.getValue(fundamentalNote);
                 }
             }
-            if (!note.sourceNote.PrintObject) {
-                noteheadColor = transparentColor; // transparent
-            } else if (!noteheadColor // revert transparency after PrintObject was set to false, then true again
-                || noteheadColor === "#000000" // questionable, because you might want to set specific notes to black,
-                                               // but unfortunately some programs export everything explicitly as black
-                ) {
-                noteheadColor = this.rules.DefaultColorNotehead;
+            else if (this.rules.ColoringMode === ColoringModes.ColorByInstrument){
+                const instrumentIndex: number = this.parentVoiceEntry.ParentSourceStaffEntry.ParentStaff.ParentInstrument.Id;
+                const colorIndex: number = instrumentIndex % this.rules.ColoringSetCurrent.size();
+                if (!this.rules.ColorOptions.rests && note.sourceNote.isRest()) {
+                    noteheadColor = defaultColorRest;
+                } else {
+                    noteheadColor = this.rules.ColoringSetCurrent.getValue(colorIndex);
+                }
             }
 
             // DEBUG runtime coloring test
@@ -95,14 +103,22 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     noteheadColor = defaultColorRest;
                 }
             }
-            if (noteheadColor && note.sourceNote.PrintObject) {
+            if (!note.sourceNote.PrintObject) {
+                noteheadColor = transparentColor; // transparent
+            } else if (!noteheadColor // revert transparency after PrintObject was set to false, then true again
+                || noteheadColor === "#000000" // questionable, because you might want to set specific notes to black,
+                                               // but unfortunately some programs export everything explicitly as black
+                ) {
+                noteheadColor = this.rules.DefaultColorNotehead;
+            }
+            if (noteheadColor) {
                 note.sourceNote.NoteheadColorCurrentlyRendered = noteheadColor;
             } else if (!noteheadColor) {
                 continue;
             }
 
             // color notebeam if all noteheads have same color and stem coloring enabled
-            if (this.rules.ColoringEnabled && note.sourceNote.NoteBeam && this.rules.ColorBeams) {
+            if (this.rules.ColoringEnabled && note.sourceNote.NoteBeam && this.rules.ColorOptions.beams) {
                 const beamNotes: Note[] = note.sourceNote.NoteBeam.Notes;
                 let colorBeam: boolean = true;
                 for (let j: number = 0; j < beamNotes.length; j++) {
@@ -151,7 +167,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 || stemColor === "#000000") { // see above, noteheadColor === "#000000"
                 stemColor = defaultColorStem;
             }
-            if (this.rules.ColorStemsLikeNoteheads && noteheadColor) {
+            if (this.rules.ColorOptions.stems && noteheadColor) {
                 // condition could be even more fine-grained by only recoloring if there was no custom StemColor set. will be more complex though
                 stemColor = noteheadColor;
                 setVoiceEntryStemColor = true;
@@ -174,7 +190,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 this.parentVoiceEntry.StemColor = stemColor; // this shouldn't be set by DefaultColorStem
             }
             vfStaveNote.setStemStyle(stemStyle);
-            if (vfStaveNote.flag && vfStaveNote.setFlagStyle && this.rules.ColorFlags) {
+            if (vfStaveNote.flag && vfStaveNote.setFlagStyle && this.rules.ColorOptions.flags) {
                 vfStaveNote.setFlagStyle(stemStyle);
             }
         }
