@@ -191,7 +191,9 @@ export class EngravingRules {
     public TupletNumberUseShowNoneXMLValue: boolean;
     public LabelMarginBorderFactor: number;
     public TupletVerticalLineLength: number;
+    /** Whether to show tuplet numbers (and brackets) in tabs. Brackets can be disabled via TabTupletsBracketed. */
     public TupletNumbersInTabs: boolean;
+    /** Whether to show brackets in tab tuplets. To not render tab tuplets entirely, set TupletNumbersInTabs = false. */
     public TabTupletsBracketed: boolean;
     public TabTupletYOffsetBottom: number;
     /** Additional offset applied to top tuplets (added to TabTupletYOffset).
