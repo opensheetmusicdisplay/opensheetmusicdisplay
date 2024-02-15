@@ -111,6 +111,15 @@ export class Note {
      */
     public NoteToGraphicalNoteObjectId: number; // used with EngravingRules.NoteToGraphicalNoteMap
 
+    public ToStringShort(octaveOffset: number = 0): string {
+        if (!this.Pitch || this.isRest()) {
+            return "rest"; // Pitch is undefined for rest notes
+        }
+        return this.Pitch?.ToStringShort(octaveOffset);
+    }
+    public get ToStringShortGet(): string {
+        return this.ToStringShort(0);
+    }
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
     }
@@ -291,6 +300,9 @@ export class Note {
             ) { return true; }
         }
         return false;
+    }
+    public hasTabEffects(): boolean {
+        return false; // override in TabNote
     }
 }
 

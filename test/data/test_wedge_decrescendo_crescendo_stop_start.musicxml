@@ -2,7 +2,7 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>test_decrescendo_crescendo_stop_start</work-title>
+    <work-title>test_wedge_decrescendo_crescendo_stop_start</work-title>
     </work>
   <identification>
     <encoding>
@@ -35,7 +35,7 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="646" default-y="1749.85" justify="center" valign="top" font-family="Edwin" font-size="22">test_decrescendo_crescendo_stop_start</credit-words>
+    <credit-words default-x="646" default-y="1749.85" justify="center" valign="top" font-family="Edwin" font-size="22">test_wedge_decrescendo_crescendo_stop_start</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">

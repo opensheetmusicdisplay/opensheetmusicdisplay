@@ -1,3 +1,28 @@
+## [1.8.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.5...1.8.6) (2024-02-02)
+
+
+### Bug Fixes
+
+* **Crescendo**: Fix wrong wedge startX in certain multi-instrument scores (further) ([#1480](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1480), [PR #1506](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/pull/1506)) ([c2a6def](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c2a6def46b8f622b8e51a7d13415fb01caec8a1b))
+* **PageFormat:** Fix page 2+ system labels (e.g. part abbreviation) not rendered. Add EngravingRule RenderSystemLabelsAfterFirstPage (PR [#1507](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1507)). (does not affect default endless format) ([70013be](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/70013be7402e4625cbd9057a3c3fc36860b9b4a9))
+* **Subtitle + Composer:** Read and display multiline subtitles and composer lines from XML credit-words tags correctly (PR [#1508](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1508)). Add EngravingRule SheetComposerSubtitleUseLegacyParsing ([71e9576](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/71e95764bc4b48bad2d87566e8190b58ada35e26))
+
+**Note that to restore the old behavior (subtitle and composer as in OSMD <= 1.8.5), you can use the deprecated option `osmd.EngravingRules.SheetComposerSubtitleUseLegacyParsing = true`**, but we recommend adapting your MusicXML files instead, as this option might be removed soon.
+* **SVG Export:** Fix key signature rendered black instead of invisible in some systems by adding visibility="hidden" to the SVG group. ([ec6c209](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ec6c2099dd421c51991d18a93cf597f4d4089d30))
+* **SVG Export:** Fix time signature potentially rendered black instead of invisible in some systems by adding visibility="hidden" to the SVG group. ([354d92d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/354d92d4099970a76bbaa6dd4b5375dc0edd85ab))
+* **Test:** Fix karma-webpack 5.0.1 incompatibility (npm test). Delete karma-webpack patch (dev dependency) (PR [#1509](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1509)) ([7fa22db](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7fa22dbb999e8677df68d438564397e1a367762b))
+
+
+### Features
+
+* **Lyrics:** **Make scores with lyrics shorter and more evenly spaced** by improving long lyrics padding ([#1394](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1394), PR [#1395](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1395), PR [#1474](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1474)) ([975c5ee](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/975c5ee45163ab4ecd1d6084221ffab73fdfd570)).
+
+*See [PR #1474](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/pull/1474#issuecomment-1922538022) for settings you can fine-tune.*
+* **Note:** add ToStringShortGet and ToStringShort() to Note and GraphicalNote ([#1510](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1510)), shortcut for Pitch.ToStringShort ([4221ce3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4221ce38cca997babad644a45a5af6abf34f6ff5))
+* **Pitch:** Add ToStringShort method that returns a short string like "F[#4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/4)" (F#, octave 4). Add getter, e.g. gNote.sourceNote.Pitch?.ToStringShortGet ([#1510](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1510)) ([45bdb20](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/45bdb206a61031ef19e4b5d61d98ca2500b0c878))
+
+
+
 ## [1.8.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.4...1.8.5) (2024-01-09)
 
 

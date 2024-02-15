@@ -43,10 +43,6 @@
     <credit-type>title</credit-type>
     <credit-words default-x="600.24" default-y="1611.63" justify="center" valign="top" font-size="22">test_beam_svg_double</credit-words>
     </credit>
-  <credit page="1">
-    <credit-type>composer</credit-type>
-    <credit-words default-x="1114.75" default-y="1511.63" justify="right" valign="top">Composer</credit-words>
-    </credit>
   <part-list>
     <score-part id="P1">
       <part-name>Piano</part-name>

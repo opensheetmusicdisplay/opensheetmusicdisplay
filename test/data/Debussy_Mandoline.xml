@@ -59,9 +59,6 @@
     <lyric-font font-family="Times New Roman" font-size="10"/>
   </defaults>
   <credit page="1">
-    <credit-words default-x="680" default-y="79" font-size="9" halign="center" justify="right" letter-spacing="0.1" valign="bottom">Copyright © 2002 Recordare LLC</credit-words>
-  </credit>
-  <credit page="1">
     <credit-words default-x="680" default-y="1640" font-size="24" justify="center" letter-spacing="0.03" valign="top">Mandoline</credit-words>
   </credit>
   <credit page="1">

@@ -911,6 +911,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // created them brand new. Is this needed? And more importantly,
         // should the old beams be removed manually by the notes?
         this.vfbeams = {};
+        if (this.isTabMeasure && !this.rules.TabBeamsRendered) {
+            return; // fixes tab beams rendered in test_slide_glissando when TabBeamsRendered = false
+        }
         const beamedNotes: StaveNote[] = []; // already beamed notes, will be ignored by this.autoBeamNotes()
         for (const voiceID in this.beams) {
             if (this.beams.hasOwnProperty(voiceID)) {
@@ -1216,11 +1219,24 @@ export class VexFlowMeasure extends GraphicalMeasure {
                       const bracketed: boolean = tuplet.shouldBeBracketed(
                         this.rules.TupletsBracketedUseXMLValue,
                         this.rules.TupletsBracketed,
-                        this.rules.TripletsBracketed
+                        this.rules.TripletsBracketed,
+                        this.isTabMeasure,
+                        this.rules.TabTupletsBracketed
                       );
                       let location: number = VF.Tuplet.LOCATION_TOP;
                       if (tuplet.tupletLabelNumberPlacement === PlacementEnum.Below) {
                           location = VF.Tuplet.LOCATION_BOTTOM;
+                      }
+                      let yOffset: number = 0;
+                      if (this.isTabMeasure) {
+                        yOffset = this.rules.TabTupletYOffsetBottom * 10;
+                        if (location === VF.Tuplet.LOCATION_TOP) {
+                            yOffset = this.rules.TabTupletYOffsetTop * -10;
+                            const firstNote: Note = tuplet.Notes[0][0];
+                            if (firstNote?.hasTabEffects()) {
+                                yOffset -= this.rules.TabTupletYOffsetEffects * 10;
+                            }
+                        }
                       }
                       const vftuplet: VF.Tuplet = new VF.Tuplet(tupletStaveNotes,
                         {
@@ -1229,6 +1245,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                           notes_occupied: notesOccupied,
                           num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
                           ratioed: this.rules.TupletsRatioed,
+                          y_offset: yOffset,
                         });
                       vftuplets.push(vftuplet);
                     } else {

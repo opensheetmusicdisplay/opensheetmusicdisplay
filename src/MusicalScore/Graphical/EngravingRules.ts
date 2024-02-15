@@ -36,6 +36,12 @@ export class EngravingRules {
     public SheetAuthorHeight: number;
     public SheetCopyrightHeight: number;
     public SheetCopyrightMargin: number;
+    /** Whether to use the (deprecated) OSMD < 1.8.6 way of parsing and displaying subtitles and composer,
+     * which did not read multiple lines from XML credit-words tags.
+     * Option will probably be removed soon.
+     * @deprecated
+     */
+    public SheetComposerSubtitleUseLegacyParsing: boolean;
     public CompactMode: boolean;
     public PagePlacementEnum: PagePlacementEnum;
     public PageHeight: number;
@@ -63,6 +69,7 @@ export class EngravingRules {
     public AutoBeamNotes: boolean;
     /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
     public AutoBeamOptions: AutoBeamOptions;
+    /** Whether to automatically generate new beams for tabs. Also see TabBeamsRendered for existing XML beams. */
     public AutoBeamTabs: boolean;
     public BeamWidth: number;
     public BeamSpaceWidth: number;
@@ -184,7 +191,17 @@ export class EngravingRules {
     public TupletNumberUseShowNoneXMLValue: boolean;
     public LabelMarginBorderFactor: number;
     public TupletVerticalLineLength: number;
+    /** Whether to show tuplet numbers (and brackets) in tabs. Brackets can be disabled via TabTupletsBracketed. */
     public TupletNumbersInTabs: boolean;
+    /** Whether to show brackets in tab tuplets. To not render tab tuplets entirely, set TupletNumbersInTabs = false. */
+    public TabTupletsBracketed: boolean;
+    public TabTupletYOffsetBottom: number;
+    /** Additional offset applied to top tuplets (added to TabTupletYOffset).
+     * You could apply a negative offset if the piece doesn't have effects like bends,
+     * which often take some vertical space.
+     */
+    public TabTupletYOffsetTop: number;
+    public TabTupletYOffsetEffects: number;
     public TabBeamsRendered: boolean;
     public TabKeySignatureRendered: boolean;
     /** Whether space should be reserved as if there was a key signature.
@@ -402,6 +419,8 @@ export class EngravingRules {
     public RenderCopyright: boolean;
     public RenderPartNames: boolean;
     public RenderPartAbbreviations: boolean;
+    /** Whether two render system labels on page 2+. This doesn't affect the default endless PageFormat. */
+    public RenderSystemLabelsAfterFirstPage: boolean;
     public RenderFingerings: boolean;
     public RenderMeasureNumbers: boolean;
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
@@ -503,6 +522,7 @@ export class EngravingRules {
         this.SheetAuthorHeight = 2.0;
         this.SheetCopyrightHeight = 1.5;
         this.SheetCopyrightMargin = 2.0;
+        this.SheetComposerSubtitleUseLegacyParsing = false;
 
         // Staff sizing Variables
         this.CompactMode = false;
@@ -660,7 +680,11 @@ export class EngravingRules {
         this.TupletNumberUseShowNoneXMLValue = true;
         this.LabelMarginBorderFactor = 0.1;
         this.TupletVerticalLineLength = 0.5;
-        this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
+        this.TupletNumbersInTabs = true; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
+        this.TabTupletYOffsetBottom = 1.0; // OSMD units
+        this.TabTupletYOffsetTop = -3.5; // -3.5 is fine if you don't have effects like bends on top. Otherwise, e.g. -2 avoids overlaps.
+        this.TabTupletYOffsetEffects = 1.5;
+        this.TabTupletsBracketed = true;
         this.TabBeamsRendered = true;
         this.TabKeySignatureRendered = false; // standard not to render for tab scores
         this.TabKeySignatureSpacingAdded = true; // false only works for tab-only scores, as it will prevent vertical x-alignment.
@@ -834,6 +858,7 @@ export class EngravingRules {
         this.RenderCopyright = false;
         this.RenderPartNames = true;
         this.RenderPartAbbreviations = true;
+        this.RenderSystemLabelsAfterFirstPage = true;
         this.RenderFingerings = true;
         this.RenderMeasureNumbers = true;
         this.RenderMeasureNumbersOnlyAtSystemStart = false;
