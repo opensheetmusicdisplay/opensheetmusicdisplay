@@ -45,6 +45,11 @@ if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageF
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
 }
+const useWhiteTabNumberBackground = true;
+// use white instead of transparent background for tab numbers for PNG export.
+//   can fix black rectangles displayed, depending on your image viewer / program.
+//   though this is unnecessary if your image viewer displays transparent as white
+
 let pageFormat;
 
 if (!mode) {
@@ -244,6 +249,11 @@ async function init () {
     // osmdInstance.EngravingRules.DistanceBetweenVerticalSystemLines = 0.15; // 0.35 is default
     // for more options check EngravingRules.ts (though not all of these are meant and fully supported to be changed at will)
 
+    if (useWhiteTabNumberBackground && backend === "png") {
+        osmdInstance.EngravingRules.pageBackgroundColor = "#FFFFFF";
+        // fix for tab number having black background depending on image viewer
+        //   otherwise, the rectangle is transparent, which can be displayed as black in certain programs
+    }
     if (DEBUG) {
         osmdInstance.setLogLevel("debug");
         // debug(`osmd PageFormat: ${osmdInstance.EngravingRules.PageFormat.width}x${osmdInstance.EngravingRules.PageFormat.height}`)
