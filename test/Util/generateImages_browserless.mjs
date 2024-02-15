@@ -270,11 +270,17 @@ async function init () {
 
         await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {}, DEBUG);
 
-        if (osmdTestingMode && !osmdTestingSingleMode && sampleFilename.startsWith("Beethoven") && sampleFilename.includes("Geliebte")) {
-            // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
-            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {skyBottomLine: true}, DEBUG);
-            // generate one more testing image with GraphicalNote positions
-            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {boundingBoxes: "VexFlowGraphicalNote"}, DEBUG);
+        if (osmdTestingMode) {
+            if (!osmdTestingSingleMode && sampleFilename.startsWith("Beethoven") && sampleFilename.includes("Geliebte")) {
+                // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {skyBottomLine: true}, DEBUG);
+                // generate one more testing image with GraphicalNote positions
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {boundingBoxes: "VexFlowGraphicalNote"}, DEBUG);
+            } else if (sampleFilename.startsWith("test_tab_x-alignment_triplet_plus_bracket_below_above")) {
+                // generate one more testing image in dark mode
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {darkMode: true}, DEBUG);
+
+            }
         }
     }
 
@@ -362,6 +368,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             pageFormat: pageFormat, // reset by drawingparameters default,
             ...makeSkyBottomLineOptions()
         });
+        if (options.darkMode) {
+            osmdInstance.setOptions({darkMode: true}); // note that we set pageBackgroundColor above, so we need to overwrite it here.
+        }
         // note that loadDefaultValues() may be executed in setOptions with drawingParameters default
         //osmdInstance.EngravingRules.RenderSingleHorizontalStaffline = true; // to use this option here, place it after setOptions(), see above
         osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false; // this would override the command line options (--plain etc)
@@ -454,9 +463,10 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     for (let pageIndex = 0; pageIndex < Math.max(dataUrls.length, markupStrings.length); pageIndex++) {
         const pageNumberingString = `${pageIndex + 1}`;
         const skybottomlineString = includeSkyBottomLine ? "skybottomline_" : "";
+        const darkmodeString = options.darkMode ? "darkmode_" : "";
         const graphicalNoteBboxesString = drawBoundingBoxString ? "bbox" + drawBoundingBoxString + "_" : "";
         // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-        const pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${graphicalNoteBboxesString}${pageNumberingString}.${imageFormat}`;
+        const pageFilename = `${imageDir}/${sampleFilename}_${darkmodeString}${skybottomlineString}${graphicalNoteBboxesString}${pageNumberingString}.${imageFormat}`;
 
         if (imageFormat === "png") {
             const dataUrl = dataUrls[pageIndex];
