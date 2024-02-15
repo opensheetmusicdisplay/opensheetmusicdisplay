@@ -9,7 +9,7 @@ import {
     FillEmptyMeasuresWithWholeRests,
     SkyBottomLineBatchCalculatorBackendType
 } from "../../OpenSheetMusicDisplay/OSMDOptions";
-import { ColoringModes as ColoringMode } from "./DrawingParameters";
+import { ColoringModes as ColoringMode } from "../../Common/Enums/ColoringModes";
 import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum, AccidentalEnum } from "../../Common/DataObjects/Pitch";

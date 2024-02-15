@@ -1,4 +1,4 @@
-import { ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
+import { ColoringModes } from "../Common/Enums/ColoringModes";
 import { FontStyles } from "../Common/Enums/FontStyles";
 import { DrawingParametersEnum } from "../Common/Enums/DrawingParametersEnum";
 

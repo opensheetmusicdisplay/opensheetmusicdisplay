@@ -7,4 +7,4 @@ export enum DrawingParametersEnum {
     preview = "preview",
     thumbnail = "thumbnail",
 }
-// note that this is moved here from DrawingParameters to prevent an import chain to EngravingRules
+// note that this is moved here from DrawingParameters to prevent an import chain to EngravingRules etc
