@@ -69,6 +69,7 @@ export class EngravingRules {
     public AutoBeamNotes: boolean;
     /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
     public AutoBeamOptions: AutoBeamOptions;
+    /** Whether to automatically generate new beams for tabs. Also see TabBeamsRendered for existing XML beams. */
     public AutoBeamTabs: boolean;
     public BeamWidth: number;
     public BeamSpaceWidth: number;
@@ -190,7 +191,17 @@ export class EngravingRules {
     public TupletNumberUseShowNoneXMLValue: boolean;
     public LabelMarginBorderFactor: number;
     public TupletVerticalLineLength: number;
+    /** Whether to show tuplet numbers (and brackets) in tabs. Brackets can be disabled via TabTupletsBracketed. */
     public TupletNumbersInTabs: boolean;
+    /** Whether to show brackets in tab tuplets. To not render tab tuplets entirely, set TupletNumbersInTabs = false. */
+    public TabTupletsBracketed: boolean;
+    public TabTupletYOffsetBottom: number;
+    /** Additional offset applied to top tuplets (added to TabTupletYOffset).
+     * You could apply a negative offset if the piece doesn't have effects like bends,
+     * which often take some vertical space.
+     */
+    public TabTupletYOffsetTop: number;
+    public TabTupletYOffsetEffects: number;
     public TabBeamsRendered: boolean;
     public TabKeySignatureRendered: boolean;
     /** Whether space should be reserved as if there was a key signature.
@@ -669,7 +680,11 @@ export class EngravingRules {
         this.TupletNumberUseShowNoneXMLValue = true;
         this.LabelMarginBorderFactor = 0.1;
         this.TupletVerticalLineLength = 0.5;
-        this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
+        this.TupletNumbersInTabs = true; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
+        this.TabTupletYOffsetBottom = 1.0; // OSMD units
+        this.TabTupletYOffsetTop = -3.5; // -3.5 is fine if you don't have effects like bends on top. Otherwise, e.g. -2 avoids overlaps.
+        this.TabTupletYOffsetEffects = 1.5;
+        this.TabTupletsBracketed = true;
         this.TabBeamsRendered = true;
         this.TabKeySignatureRendered = false; // standard not to render for tab scores
         this.TabKeySignatureSpacingAdded = true; // false only works for tab-only scores, as it will prevent vertical x-alignment.
