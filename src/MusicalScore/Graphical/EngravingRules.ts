@@ -79,7 +79,9 @@ export class EngravingRules {
     public FlatBeamOffsetPerBeam: number;
     public ClefLeftMargin: number;
     public ClefRightMargin: number;
-    /** How many unique note positions a percussion score needs to have to not be rendered on one line. */
+    /** How many unique note positions a percussion score needs to have to not be rendered on one line.
+     * To always use 5 lines for percussion, set this to 0. (works unless the XML says <staff-lines>1)
+     */
     public PercussionOneLineCutoff: number;
     public PercussionForceVoicesOneLineCutoff: number;
     public PercussionUseXMLDisplayStep: boolean;
