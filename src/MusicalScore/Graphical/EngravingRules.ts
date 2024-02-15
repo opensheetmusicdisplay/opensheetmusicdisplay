@@ -69,6 +69,7 @@ export class EngravingRules {
     public AutoBeamNotes: boolean;
     /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
     public AutoBeamOptions: AutoBeamOptions;
+    /** Whether to automatically generate new beams for tabs. Also see TabBeamsRendered for existing XML beams. */
     public AutoBeamTabs: boolean;
     public BeamWidth: number;
     public BeamSpaceWidth: number;

@@ -911,8 +911,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // created them brand new. Is this needed? And more importantly,
         // should the old beams be removed manually by the notes?
         this.vfbeams = {};
-        if (this.isTabMeasure) {
-            return; // no beams in tabs
+        if (this.isTabMeasure && !this.rules.TabBeamsRendered) {
+            return; // fixes tab beams rendered in test_slide_glissando when TabBeamsRendered = false
         }
         const beamedNotes: StaveNote[] = []; // already beamed notes, will be ignored by this.autoBeamNotes()
         for (const voiceID in this.beams) {
