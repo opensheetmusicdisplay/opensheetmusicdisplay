@@ -911,6 +911,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // created them brand new. Is this needed? And more importantly,
         // should the old beams be removed manually by the notes?
         this.vfbeams = {};
+        if (this.isTabMeasure) {
+            return; // no beams in tabs
+        }
         const beamedNotes: StaveNote[] = []; // already beamed notes, will be ignored by this.autoBeamNotes()
         for (const voiceID in this.beams) {
             if (this.beams.hasOwnProperty(voiceID)) {
