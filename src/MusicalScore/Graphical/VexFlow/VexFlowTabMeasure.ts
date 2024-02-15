@@ -53,9 +53,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             }
         }
 
-        if (this.rules.TupletNumbersInTabs) { // default false, don't show tuplets in tab measures
-            this.finalizeTuplets();
-        }
+        this.finalizeTuplets(); // this is necessary for x-alignment even when we don't want to show tuplet brackets or numbers
 
         const voices: Voice[] = this.getVoicesWithinMeasure();
 

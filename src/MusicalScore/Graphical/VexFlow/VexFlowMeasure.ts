@@ -1219,11 +1219,24 @@ export class VexFlowMeasure extends GraphicalMeasure {
                       const bracketed: boolean = tuplet.shouldBeBracketed(
                         this.rules.TupletsBracketedUseXMLValue,
                         this.rules.TupletsBracketed,
-                        this.rules.TripletsBracketed
+                        this.rules.TripletsBracketed,
+                        this.isTabMeasure,
+                        this.rules.TabTupletsBracketed
                       );
                       let location: number = VF.Tuplet.LOCATION_TOP;
                       if (tuplet.tupletLabelNumberPlacement === PlacementEnum.Below) {
                           location = VF.Tuplet.LOCATION_BOTTOM;
+                      }
+                      let yOffset: number = 0;
+                      if (this.isTabMeasure) {
+                        yOffset = this.rules.TabTupletYOffsetBottom * 10;
+                        if (location === VF.Tuplet.LOCATION_TOP) {
+                            yOffset = this.rules.TabTupletYOffsetTop * -10;
+                            const firstNote: Note = tuplet.Notes[0][0];
+                            if (firstNote?.hasTabEffects()) {
+                                yOffset -= this.rules.TabTupletYOffsetEffects * 10;
+                            }
+                        }
                       }
                       const vftuplet: VF.Tuplet = new VF.Tuplet(tupletStaveNotes,
                         {
@@ -1232,6 +1245,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                           notes_occupied: notesOccupied,
                           num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
                           ratioed: this.rules.TupletsRatioed,
+                          y_offset: yOffset,
                         });
                       vftuplets.push(vftuplet);
                     } else {

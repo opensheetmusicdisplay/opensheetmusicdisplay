@@ -37,4 +37,8 @@ export class TabNote extends Note {
     public get VibratoStroke(): boolean {
         return this.vibratoStroke;
     }
+
+    public hasTabEffects(): boolean {
+        return this.bendArray?.length > 0 || this.vibratoStroke;
+    }
 }
