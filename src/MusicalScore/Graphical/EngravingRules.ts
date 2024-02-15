@@ -56,6 +56,7 @@ export class EngravingRules {
     public SystemRightMargin: number;
     public SystemLabelsRightMargin: number;
     public SystemComposerDistance: number;
+    public SystemLyricistDistance: number;
     public InstrumentLabelTextHeight: number;
     public MinimumDistanceBetweenSystems: number;
     public MinSkyBottomDistBetweenSystems: number;
@@ -550,6 +551,7 @@ export class EngravingRules {
         this.SystemRightMargin = 0.0;
         this.SystemLabelsRightMargin = 2.0;
         this.SystemComposerDistance = 2.0;
+        this.SystemLyricistDistance = 2.0;
         this.InstrumentLabelTextHeight = 2;
         this.MinimumDistanceBetweenSystems = 7.0;
         this.MinSkyBottomDistBetweenSystems = 5.0;
