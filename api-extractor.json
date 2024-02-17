@@ -1,0 +1,23 @@
+{
+    "mainEntryPointFilePath": "build/dist/src/index.d.ts",
+    "apiReport": {
+      "enabled": false
+    },
+    "docModel": {
+      "enabled": false
+    },
+    "dtsRollup": {
+      "enabled": true,
+      "untrimmedFilePath": "build/opensheetmusicdisplay.d.ts"
+    },
+    "messages": {
+      "extractorMessageReporting": {
+        "default": {
+          "logLevel": "none"
+        },
+        "ae-forgotten-export": {
+          "logLevel": "none"
+        }
+      }
+    }
+  }
