@@ -72,7 +72,7 @@ export class VexFlowConverter {
     public static durations(fraction: Fraction, isTuplet: boolean): string[] {
         const durations: string[] = [];
         const remainingFraction: Fraction = fraction.clone();
-        while (remainingFraction.RealValue > 0) {
+        while (remainingFraction.RealValue > 0.0001) { // essentially > 0, but using a small delta to prevent infinite loop
             const dur: number = remainingFraction.RealValue;
             // TODO consider long (dur=4) and maxima (dur=8), though Vexflow doesn't seem to support them
             if (dur >= 2) { // Breve
@@ -976,6 +976,8 @@ export class VexFlowConverter {
             duration: duration,
             positions: tabPositions,
         });
+        (vfnote as any).BackgroundColor = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules.PageBackgroundColor; // may be undefined
+        // this fixes background color for rects around tab numbers if PageBackgroundColor set or transparent color unsupported.
 
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);

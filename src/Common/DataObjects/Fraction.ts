@@ -64,7 +64,7 @@ export class Fraction {
       return 1;
     }
 
-    while (Math.abs(b) > 1e-8 && Math.abs(a) > 1e-8) { // essentially b > 0, accounts for floating point inaccuracies (0.000...01)
+    while (Math.abs(b) >= 1 && Math.abs(a) >= 1) { // accounts for floating point inaccuracies. smallest GCD is 1.
       // if we don't check a > 1e-8, we infinite loop for e.g. a = 2.666666666666667, b = 4. See #1478 (rare)
       if (a > b) {
         a -= b;
@@ -73,7 +73,10 @@ export class Fraction {
       }
     }
 
-    return Math.round(a); // prevent returning 4.000001 or something, though it doesn't happen for our samples
+    const result: number = Math.round(a); // prevent returning 4.000001 or something, though it doesn't happen for our samples
+    return Math.max(result, 1);
+    // return 1 instead of 0, which causes NaNs e.g. in GraphicalMusicSheet.GetInterpolatedIndexInVerticalContainers()
+    //   (though this case is rare anyways -> complex rhythms, see osmd #1511)
   }
 
   /**

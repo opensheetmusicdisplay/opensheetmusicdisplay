@@ -9,7 +9,7 @@ import {
     FillEmptyMeasuresWithWholeRests,
     SkyBottomLineBatchCalculatorBackendType
 } from "../../OpenSheetMusicDisplay/OSMDOptions";
-import { ColoringModes as ColoringMode } from "./DrawingParameters";
+import { ColoringModes as ColoringMode } from "../../Common/Enums/ColoringModes";
 import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum, AccidentalEnum } from "../../Common/DataObjects/Pitch";
@@ -56,6 +56,7 @@ export class EngravingRules {
     public SystemRightMargin: number;
     public SystemLabelsRightMargin: number;
     public SystemComposerDistance: number;
+    public SystemLyricistDistance: number;
     public InstrumentLabelTextHeight: number;
     public MinimumDistanceBetweenSystems: number;
     public MinSkyBottomDistBetweenSystems: number;
@@ -79,7 +80,9 @@ export class EngravingRules {
     public FlatBeamOffsetPerBeam: number;
     public ClefLeftMargin: number;
     public ClefRightMargin: number;
-    /** How many unique note positions a percussion score needs to have to not be rendered on one line. */
+    /** How many unique note positions a percussion score needs to have to not be rendered on one line.
+     * To always use 5 lines for percussion, set this to 0. (works unless the XML says <staff-lines>1)
+     */
     public PercussionOneLineCutoff: number;
     public PercussionForceVoicesOneLineCutoff: number;
     public PercussionUseXMLDisplayStep: boolean;
@@ -548,6 +551,7 @@ export class EngravingRules {
         this.SystemRightMargin = 0.0;
         this.SystemLabelsRightMargin = 2.0;
         this.SystemComposerDistance = 2.0;
+        this.SystemLyricistDistance = 2.0;
         this.InstrumentLabelTextHeight = 2;
         this.MinimumDistanceBetweenSystems = 7.0;
         this.MinSkyBottomDistBetweenSystems = 5.0;

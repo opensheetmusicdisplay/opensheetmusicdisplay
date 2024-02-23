@@ -19,7 +19,7 @@
 
 *See [PR #1474](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/pull/1474#issuecomment-1922538022) for settings you can fine-tune.*
 * **Note:** add ToStringShortGet and ToStringShort() to Note and GraphicalNote ([#1510](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1510)), shortcut for Pitch.ToStringShort ([4221ce3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4221ce38cca997babad644a45a5af6abf34f6ff5))
-* **Pitch:** Add ToStringShort method that returns a short string like "F[#4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/4)" (F#, octave 4). Add getter, e.g. gNote.sourceNote.Pitch?.ToStringShortGet ([#1510](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1510)) ([45bdb20](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/45bdb206a61031ef19e4b5d61d98ca2500b0c878))
+* **Pitch:** Add ToStringShort method that returns a short string like "F#4" (F#, octave 4). Add getter, e.g. gNote.sourceNote.Pitch?.ToStringShortGet ([#1510](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1510)) ([45bdb20](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/45bdb206a61031ef19e4b5d61d98ca2500b0c878))
 
 
 

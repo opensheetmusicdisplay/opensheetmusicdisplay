@@ -448,8 +448,19 @@ export class TabNote extends StemmableNote {
       }
       const tab_x = x + (note_glyph_width / 2) - (currentGlyphWidth / 2);
 
-      // FIXME: Magic numbers.
-      // ctx.clearRect(tab_x - 2, y - 3, glyph.getWidth() + 4, 6);
+      // VexFlowPatch: fix black instead of transparent rectangles around tab notes in certain scenarios
+      //   e.g. when EngravingRules.PageBackgroundColor set or image viewer displays transparent as black
+      if (this.BackgroundColor) {
+        ctx.save();
+        ctx.setFillStyle(this.BackgroundColor);
+        ctx.setLineWidth(0);
+        // FIXME: Magic numbers.
+        ctx.fillRect(tab_x - 2, y - 3, currentGlyphWidth + 4, 6);
+        ctx.restore();
+      } else {
+        // ctx.clearRect(tab_x - 2, y - 3, currentGlyphWidth + 4, 6);
+        // disabled by Severin in commit a15085ddb37d7678420d26a41beef31ad6aded3e, apparently for note highlighting
+      }
 
       if (glyph.code) {
         Glyph.renderGlyph(ctx, tab_x, y,

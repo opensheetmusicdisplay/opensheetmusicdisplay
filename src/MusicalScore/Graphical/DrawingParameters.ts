@@ -1,21 +1,7 @@
 import { EngravingRules } from "./EngravingRules";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-
-export enum ColoringModes {
-    XML = 0,
-    AutoColoring = 1,
-    CustomColorSet = 2
-}
-
-export enum DrawingParametersEnum {
-    allon = "allon",
-    compact = "compact",
-    compacttight = "compacttight",
-    default = "default",
-    leadsheet = "leadsheet",
-    preview = "preview",
-    thumbnail = "thumbnail",
-}
+import { DrawingParametersEnum } from "../../Common/Enums/DrawingParametersEnum";
+import { ColoringModes } from "../../Common/Enums/ColoringModes";
 
 /** Internal drawing/rendering parameters and broad modes like compact and thumbnail. Overlap with EngravingRules. */
 export class DrawingParameters {
