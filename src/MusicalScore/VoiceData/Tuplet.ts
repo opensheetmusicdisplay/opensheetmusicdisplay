@@ -28,7 +28,15 @@ export class Tuplet {
     public ShowNumberNoneGivenInXml: boolean;
 
     /** Determines whether the tuplet should be bracketed (arguments are EngravingRules). */
-    public shouldBeBracketed(useXmlValue: boolean, tupletsBracketed: boolean, tripletsBracketed: boolean): boolean {
+    public shouldBeBracketed(useXmlValue: boolean,
+        tupletsBracketed: boolean,
+        tripletsBracketed: boolean,
+        isTabMeasure: boolean = false,
+        tabTupletsBracketed: boolean = false,
+    ): boolean {
+        if (isTabMeasure) {
+            return tabTupletsBracketed;
+        }
         if (useXmlValue && this.BracketedXmlValue !== undefined) {
             return this.BracketedXmlValue;
         }

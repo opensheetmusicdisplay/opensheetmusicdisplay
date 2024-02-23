@@ -45,6 +45,11 @@ if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageF
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
 }
+const useWhiteTabNumberBackground = true;
+// use white instead of transparent background for tab numbers for PNG export.
+//   can fix black rectangles displayed, depending on your image viewer / program.
+//   though this is unnecessary if your image viewer displays transparent as white
+
 let pageFormat;
 
 if (!mode) {
@@ -244,6 +249,11 @@ async function init () {
     // osmdInstance.EngravingRules.DistanceBetweenVerticalSystemLines = 0.15; // 0.35 is default
     // for more options check EngravingRules.ts (though not all of these are meant and fully supported to be changed at will)
 
+    if (useWhiteTabNumberBackground && backend === "png") {
+        osmdInstance.EngravingRules.pageBackgroundColor = "#FFFFFF";
+        // fix for tab number having black background depending on image viewer
+        //   otherwise, the rectangle is transparent, which can be displayed as black in certain programs
+    }
     if (DEBUG) {
         osmdInstance.setLogLevel("debug");
         // debug(`osmd PageFormat: ${osmdInstance.EngravingRules.PageFormat.width}x${osmdInstance.EngravingRules.PageFormat.height}`)
@@ -260,11 +270,17 @@ async function init () {
 
         await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {}, DEBUG);
 
-        if (osmdTestingMode && !osmdTestingSingleMode && sampleFilename.startsWith("Beethoven") && sampleFilename.includes("Geliebte")) {
-            // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
-            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {skyBottomLine: true}, DEBUG);
-            // generate one more testing image with GraphicalNote positions
-            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {boundingBoxes: "VexFlowGraphicalNote"}, DEBUG);
+        if (osmdTestingMode) {
+            if (!osmdTestingSingleMode && sampleFilename.startsWith("Beethoven") && sampleFilename.includes("Geliebte")) {
+                // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {skyBottomLine: true}, DEBUG);
+                // generate one more testing image with GraphicalNote positions
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {boundingBoxes: "VexFlowGraphicalNote"}, DEBUG);
+            } else if (sampleFilename.startsWith("test_tab_x-alignment_triplet_plus_bracket_below_above")) {
+                // generate one more testing image in dark mode
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {darkMode: true}, DEBUG);
+
+            }
         }
     }
 
@@ -352,6 +368,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             pageFormat: pageFormat, // reset by drawingparameters default,
             ...makeSkyBottomLineOptions()
         });
+        if (options.darkMode) {
+            osmdInstance.setOptions({darkMode: true}); // note that we set pageBackgroundColor above, so we need to overwrite it here.
+        }
         // note that loadDefaultValues() may be executed in setOptions with drawingParameters default
         //osmdInstance.EngravingRules.RenderSingleHorizontalStaffline = true; // to use this option here, place it after setOptions(), see above
         osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false; // this would override the command line options (--plain etc)
@@ -444,9 +463,10 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     for (let pageIndex = 0; pageIndex < Math.max(dataUrls.length, markupStrings.length); pageIndex++) {
         const pageNumberingString = `${pageIndex + 1}`;
         const skybottomlineString = includeSkyBottomLine ? "skybottomline_" : "";
+        const darkmodeString = options.darkMode ? "darkmode_" : "";
         const graphicalNoteBboxesString = drawBoundingBoxString ? "bbox" + drawBoundingBoxString + "_" : "";
         // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-        const pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${graphicalNoteBboxesString}${pageNumberingString}.${imageFormat}`;
+        const pageFilename = `${imageDir}/${sampleFilename}_${darkmodeString}${skybottomlineString}${graphicalNoteBboxesString}${pageNumberingString}.${imageFormat}`;
 
         if (imageFormat === "png") {
             const dataUrl = dataUrls[pageIndex];

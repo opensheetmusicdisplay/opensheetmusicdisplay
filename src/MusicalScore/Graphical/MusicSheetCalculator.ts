@@ -2458,6 +2458,7 @@ export abstract class MusicSheetCalculator {
             // const endX: number = startX + lyricist.PositionAndShape.Size.width;
             // const currentMin: number = skyBottomLineCalculator.getSkyLineMinInRange(startX, endX);
 
+            relative.y -= this.rules.SystemLyricistDistance;
             relative.y += lyricist.PositionAndShape.BorderBottom;
             relative.y = Math.min(relative.y, composerRelativeY ?? Number.MAX_SAFE_INTEGER);
             // same height as composer label (at least not lower). ?? prevents undefined -> Math.min returns NaN

@@ -12,7 +12,9 @@ import { Cursor } from "./Cursor";
 import { MXLHelper } from "../Common/FileIO/Mxl";
 import { AJAX } from "./AJAX";
 import log from "loglevel";
-import { DrawingParametersEnum, DrawingParameters, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
+import { DrawingParameters } from "../MusicalScore/Graphical/DrawingParameters";
+import { DrawingParametersEnum } from "../Common/Enums/DrawingParametersEnum";
+import { ColoringModes } from "../Common/Enums/ColoringModes";
 import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions } from "./OSMDOptions";
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
@@ -29,7 +31,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "1.8.6-release"; // getter: this.Version
+    protected version: string = "1.8.7-release"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
