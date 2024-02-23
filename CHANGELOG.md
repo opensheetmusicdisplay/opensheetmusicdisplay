@@ -1,3 +1,15 @@
+## [1.8.7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.6...1.8.7) (2024-02-23)
+
+
+### Bug Fixes
+
+* **Fraction:** Return a minimum GCD of 1, preventing NaNs and wrong note x-positions in rare complex rhythms ([#1511](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1511)). Prevent a rare infinite loop that could have otherwise resulted after this change. ([84b94c3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/84b94c3cb1909672f94752f1658dd81d4fe4e4b9))
+* **Lyricist:** Fix collision for very long lyricist name with other elements (rare), apply same default offset as for composer (likely no effect if composer is present too, because of y-alignment) ([#1513](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1513)) ([764890c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/764890ce2263bdf5f1c3b72400ec086375352de7))
+* **Tabs:** Fix tab tuplet (triplet) x-alignment with classical staffs/instruments vertically, fix EngravingRules.TabBeamsRendered = false edge case showing beams ([#1515](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1515)). Add some EngravingRules. ([341f523](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/341f523383cd94ed835f0f736f51be7852e4fd41))
+* **Tabs:** Fix wrong tab number background color in dark mode / when PageBackgroundColor set ([#1514](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1514)), export tab background as white instead of transparent by default for PNG ([11c4446](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/11c4446d6db2f1a51a98160a5582dc4b67913465))
+
+
+
 ## [1.8.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.5...1.8.6) (2024-02-02)
 
 
