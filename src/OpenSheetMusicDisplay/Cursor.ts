@@ -281,10 +281,9 @@ export class Cursor {
         break;
     }
 
-    if (newWidth !== cursorElement.width) {
-      cursorElement.width = newWidth;
-      this.updateStyle(newWidth, this.cursorOptions);
-    }
+    // if (newWidth !== cursorElement.width) { // this `if` is unnecessary and prevents updating color
+    cursorElement.width = newWidth;
+    this.updateStyle(newWidth, this.cursorOptions);
   }
 
   /**
