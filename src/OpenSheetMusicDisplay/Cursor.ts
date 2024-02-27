@@ -286,6 +286,8 @@ export class Cursor {
     cursorElement.width = newWidth;
     if (this.cursorOptionsRendered !== this.cursorOptions) {
       this.updateStyle(newWidth, this.cursorOptions);
+      // only update style (creating new cursor element) if options changed.
+      //   For width, it seems to be enough to update cursorElement.width, see osmd#1519
     }
   }
 
