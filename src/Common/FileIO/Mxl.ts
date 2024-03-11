@@ -60,22 +60,31 @@ export class MXLHelper {
         const zip:  JSZip = new JSZip();
         // asynchronously load zip file and process it - with Promises
         return zip.loadAsync(data).then(
-            (_: any) => {
-                return zip.file("META-INF/container.xml").async("text");
-            },
-            (err: any) => {
-                // log jszip error. for some reason this isn't done in OSMD where this method is used.
-                log.error(err);
-                throw err;
-            }
-        ).then(
-            (content: string) => {
+            async (_: any) => {
+                let container: string = await zip.file("META-INF/container.xml").async("text");
+                if (!container.startsWith("<")) {
+                    const uint8Array: Uint8Array = await zip.file("META-INF/container.xml").async("uint8array");
+                    container = new TextDecoder("utf-8").decode(uint8Array);
+                }
+                if (!container.startsWith("<")) {
+                    // assume UTF-16
+                    const uint8Array: Uint8Array = await zip.file("META-INF/container.xml").async("uint8array");
+                    container = new TextDecoder("utf-16").decode(uint8Array);
+                }
                 const parser: DOMParser = new DOMParser();
-                const doc: Document = parser.parseFromString(content, "text/xml");
+                const doc: Document = parser.parseFromString(container, "text/xml");
                 const rootFile: string = doc.getElementsByTagName("rootfile")[0].getAttribute("full-path");
-                return zip.file(rootFile).async("text");
+                const xmlText: string = await zip.file(rootFile).async("text");
+
+                if (!xmlText.substring(0, 1).startsWith("<")) {
+                    // assume UTF-16
+                    const uint8Array: Uint8Array = await zip.file(rootFile).async("uint8array");
+                    return new TextDecoder("utf-16").decode(uint8Array);
+                }
+                return xmlText;
             },
             (err: any) => {
+                log.error(err);
                 throw err;
             }
         );

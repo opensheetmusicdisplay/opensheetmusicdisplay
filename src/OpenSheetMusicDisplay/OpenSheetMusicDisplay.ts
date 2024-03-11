@@ -106,7 +106,7 @@ export class OpenSheetMusicDisplay {
             const str: string = <string>content;
             const self: OpenSheetMusicDisplay = this;
             // console.log("substring: " + str.substr(0, 5));
-            if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
+            if (str.substring(0, 4) === "\x50\x4b\x03\x04") {
                 log.debug("[OSMD] This is a zip file, unpack it first: " + str);
                 // This is a zip file, unpack it first
                 return MXLHelper.MXLtoXMLstring(str).then(
@@ -120,16 +120,16 @@ export class OpenSheetMusicDisplay {
                 );
             }
             // Javascript loads strings as utf-16, which is wonderful BS if you want to parse UTF-8 :S
-            if (str.substr(0, 3) === "\uf7ef\uf7bb\uf7bf") {
-                log.debug("[OSMD] UTF with BOM detected, truncate first three bytes and pass along: " + str);
+            if (str.substring(0, 3) === "\uf7ef\uf7bb\uf7bf") {
+                log.debug("[OSMD] UTF with BOM detected, truncate first 3 bytes and pass along: " + str);
                 // UTF with BOM detected, truncate first three bytes and pass along
-                return self.load(str.substr(3));
+                return self.load(str.substring(3));
             }
             let trimmedStr: string = str;
             if (/^\s/.test(trimmedStr)) { // only trim if we need to. (end of string is irrelevant)
                 trimmedStr = trimmedStr.trim(); // trim away empty lines at beginning etc
             }
-            if (trimmedStr.substr(0, 6).includes("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
+            if (trimmedStr.substring(0, 6).includes("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
                 const modifiedXml: string = this.OnXMLRead(trimmedStr); // by default just returns trimmedStr unless a function options.OnXMLRead was set.
                 log.debug("[OSMD] Finally parsing XML content, length: " + modifiedXml.length);
                 // Parse the string representing an xml file
