@@ -1381,10 +1381,14 @@ export abstract class MusicSheetCalculator {
             useStaffEntryBorderLeft);
 
         const beginOfNextNote: Fraction = Fraction.plus(endAbsoluteTimestamp, maxNoteLength);
+        const placementFraction: Fraction = beginOfNextNote.clone();
+        if (graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.EndOffsetFraction) {
+            placementFraction.Add(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.EndOffsetFraction);
+        }
         // TODO for the last note of the piece (wedge ending after last note), this timestamp is incorrect, being after the last note
         //   but there's a workaround in getRelativePositionInStaffLineFromTimestamp() via the variable endAfterRightStaffEntry
         const nextNotePosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-            beginOfNextNote, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
+            placementFraction, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
             graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo);
         const wedgePadding: number = this.rules.SoftAccentWedgePadding;
         const staffEntryWidth: number = container.getFirstNonNullStaffEntry().PositionAndShape.Size.width; // staff entry widths for whole notes is too long

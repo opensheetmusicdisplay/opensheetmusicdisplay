@@ -25,6 +25,7 @@ export class ExpressionReader {
     private placement: PlacementEnum;
     private soundTempo: number;
     private soundDynamic: number;
+    private divisions: number;
     private offsetDivisions: number;
     private staffNumber: number;
     private globalStaffIndex: number;
@@ -50,6 +51,7 @@ export class ExpressionReader {
                                     currentMeasureIndex: number,
                                     ignoreDivisionsOffset: boolean): void {
         this.initialize();
+        this.divisions = divisions;
         const offsetNode: IXmlElement = xmlNode.element("offset");
         if (offsetNode !== undefined && !ignoreDivisionsOffset) {
             try {
@@ -251,7 +253,7 @@ export class ExpressionReader {
 
         dirContentNode = dirNode.element("wedge");
         if (dirContentNode) {
-            this.interpretWedge(dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
+            this.interpretWedge(directionNode, dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
             return;
         }
 
@@ -578,7 +580,8 @@ export class ExpressionReader {
         }
         return numberXml;
     }
-    private interpretWedge(wedgeNode: IXmlElement, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction, currentMeasureIndex: number): void {
+    private interpretWedge(directionNode: IXmlElement, wedgeNode: IXmlElement,
+        currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction, currentMeasureIndex: number): void {
         if (wedgeNode !== undefined && wedgeNode.hasAttributes && wedgeNode.attribute("default-x")) {
             this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
         }
@@ -603,6 +606,7 @@ export class ExpressionReader {
         //If current is used, when there is a system break it will mess up
         if (typeAttributeString === "stop") {
             this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml, inSourceMeasureCurrentFraction);
+            this.getMultiExpression.EndOffsetFraction = new Fraction(this.offsetDivisions, this.divisions * 4);
         } else {
             this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml);
         }
@@ -625,8 +629,9 @@ export class ExpressionReader {
             existingMultiExpression &&
             (existingMultiExpression.SourceMeasureParent !== currentMeasure ||
                 existingMultiExpression.numberXml !== numberXml ||
-                (existingMultiExpression.SourceMeasureParent === currentMeasure && existingMultiExpression.Timestamp !== timestamp))) {
+                (existingMultiExpression.SourceMeasureParent === currentMeasure && !existingMultiExpression.Timestamp.Equals(timestamp)))) {
                     this.getMultiExpression = existingMultiExpression = new MultiExpression(currentMeasure, Fraction.createFromFraction(timestamp));
+                    this.getMultiExpression.numberXml = numberXml;
             currentMeasure.StaffLinkedExpressions[this.globalStaffIndex].push(existingMultiExpression);
         }
         return existingMultiExpression;
