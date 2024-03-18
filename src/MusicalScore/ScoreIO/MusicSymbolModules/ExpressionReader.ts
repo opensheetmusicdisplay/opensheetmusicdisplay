@@ -251,7 +251,7 @@ export class ExpressionReader {
 
         dirContentNode = dirNode.element("wedge");
         if (dirContentNode) {
-            this.interpretWedge(directionNode, dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
+            this.interpretWedge(dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
             return;
         }
 
@@ -578,14 +578,7 @@ export class ExpressionReader {
         }
         return numberXml;
     }
-    private interpretWedge(directionNode: IXmlElement, wedgeNode: IXmlElement,
-        currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction, currentMeasureIndex: number): void {
-        let offset: number = 0;
-        const offsetXml: string = directionNode.element("offset")?.value;
-        if (offsetXml) {
-            offset = Number.parseFloat(offsetXml);
-        }
-        console.log(offset);
+    private interpretWedge(wedgeNode: IXmlElement, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction, currentMeasureIndex: number): void {
         if (wedgeNode !== undefined && wedgeNode.hasAttributes && wedgeNode.attribute("default-x")) {
             this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
         }
