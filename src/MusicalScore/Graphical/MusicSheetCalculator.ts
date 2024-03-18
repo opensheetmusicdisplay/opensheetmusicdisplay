@@ -1364,43 +1364,49 @@ export abstract class MusicSheetCalculator {
         }
 
         const endAbsoluteTimestamp: Fraction = Fraction.createFromFraction(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.AbsoluteTimestamp);
+
+        // const parentMeasure: GraphicalMeasure = container.getFirstNonNullStaffEntry().parentMeasure;
+        const endOfMeasure: number = endMeasure.PositionAndShape.AbsolutePosition.x + endMeasure.PositionAndShape.BorderRight;
+        let endPosInStaffLine: PointF2D = new PointF2D();
+        endPosInStaffLine.x = endOfMeasure - this.rules.WedgeHorizontalMargin;
         const container: VerticalGraphicalStaffEntryContainer = this.graphicalMusicSheet.GetVerticalContainerFromTimestamp(endAbsoluteTimestamp);
-        const parentMeasure: GraphicalMeasure = container.getFirstNonNullStaffEntry().parentMeasure;
-        const endOfMeasure: number = parentMeasure.PositionAndShape.AbsolutePosition.x + parentMeasure.PositionAndShape.BorderRight;
-        let maxNoteLength: Fraction = new Fraction(0, 0, 0);
-        for (const staffEntry of container.StaffEntries) {
-            const currentMaxLength: Fraction = staffEntry?.sourceStaffEntry?.calculateMaxNoteLength(false);
-            if ( currentMaxLength?.gt(maxNoteLength) ) {
-                maxNoteLength = currentMaxLength;
-            }
-        }
-        const useStaffEntryBorderLeft: boolean = !isSoftAccent &&
-            graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo;
-        const endPosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-            endAbsoluteTimestamp, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
-            useStaffEntryBorderLeft);
-
-        const beginOfNextNote: Fraction = Fraction.plus(endAbsoluteTimestamp, maxNoteLength);
-        // TODO for the last note of the piece (wedge ending after last note), this timestamp is incorrect, being after the last note
-        //   but there's a workaround in getRelativePositionInStaffLineFromTimestamp() via the variable endAfterRightStaffEntry
-        const nextNotePosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-            beginOfNextNote, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
-            graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo);
+        let staffEntryWidth: number = 0;
         const wedgePadding: number = this.rules.SoftAccentWedgePadding;
-        const staffEntryWidth: number = container.getFirstNonNullStaffEntry().PositionAndShape.Size.width; // staff entry widths for whole notes is too long
         const sizeFactor: number = this.rules.SoftAccentSizeFactor;
-        //const standardWidth: number = 2;
+        if (container) {
+            let maxNoteLength: Fraction = new Fraction(0, 0, 0);
+            for (const staffEntry of container?.StaffEntries) {
+                const currentMaxLength: Fraction = staffEntry?.sourceStaffEntry?.calculateMaxNoteLength(false);
+                if ( currentMaxLength?.gt(maxNoteLength) ) {
+                    maxNoteLength = currentMaxLength;
+                }
+            }
+            const useStaffEntryBorderLeft: boolean = !isSoftAccent &&
+                graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo;
+            endPosInStaffLine = this.getRelativePositionInStaffLineFromTimestamp(
+                endAbsoluteTimestamp, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
+                useStaffEntryBorderLeft);
 
-        //If the next note position is not on the next staffline
-        //extend close to the next note
-        if (isSoftAccent) {
-            //startPosInStaffline.x -= 1;
-            startPosInStaffline.x -= staffEntryWidth / 2 * sizeFactor + wedgePadding;
-            endPosInStaffLine.x = startPosInStaffline.x + staffEntryWidth / 2 * sizeFactor;
-        } else if (nextNotePosInStaffLine.x > endPosInStaffLine.x && nextNotePosInStaffLine.x < endOfMeasure) {
-            endPosInStaffLine.x += (nextNotePosInStaffLine.x - endPosInStaffLine.x) / this.rules.WedgeEndDistanceBetweenTimestampsFactor;
-        } else { //Otherwise extend to the end of the measure
-            endPosInStaffLine.x = endOfMeasure - this.rules.WedgeHorizontalMargin;
+            const beginOfNextNote: Fraction = Fraction.plus(endAbsoluteTimestamp, maxNoteLength);
+            // TODO for the last note of the piece (wedge ending after last note), this timestamp is incorrect, being after the last note
+            //   but there's a workaround in getRelativePositionInStaffLineFromTimestamp() via the variable endAfterRightStaffEntry
+            const nextNotePosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+                beginOfNextNote, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
+                graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo);
+            staffEntryWidth = container.getFirstNonNullStaffEntry().PositionAndShape.Size.width; // staff entry widths for whole notes is too long
+            //const standardWidth: number = 2;
+
+            //If the next note position is not on the next staffline
+            //extend close to the next note
+            if (isSoftAccent) {
+                //startPosInStaffline.x -= 1;
+                startPosInStaffline.x -= staffEntryWidth / 2 * sizeFactor + wedgePadding;
+                endPosInStaffLine.x = startPosInStaffline.x + staffEntryWidth / 2 * sizeFactor;
+            } else if (nextNotePosInStaffLine.x > endPosInStaffLine.x && nextNotePosInStaffLine.x < endOfMeasure) {
+                endPosInStaffLine.x += (nextNotePosInStaffLine.x - endPosInStaffLine.x) / this.rules.WedgeEndDistanceBetweenTimestampsFactor;
+            } else { //Otherwise extend to the end of the measure
+                endPosInStaffLine.x = endOfMeasure - this.rules.WedgeHorizontalMargin;
+            }
         }
 
         const startCollideBox: BoundingBox =

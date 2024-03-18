@@ -251,7 +251,7 @@ export class ExpressionReader {
 
         dirContentNode = dirNode.element("wedge");
         if (dirContentNode) {
-            this.interpretWedge(dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
+            this.interpretWedge(directionNode, dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
             return;
         }
 
@@ -578,7 +578,14 @@ export class ExpressionReader {
         }
         return numberXml;
     }
-    private interpretWedge(wedgeNode: IXmlElement, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction, currentMeasureIndex: number): void {
+    private interpretWedge(directionNode: IXmlElement, wedgeNode: IXmlElement,
+        currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction, currentMeasureIndex: number): void {
+        let offset: number = 0;
+        const offsetXml: string = directionNode.element("offset")?.value;
+        if (offsetXml) {
+            offset = Number.parseFloat(offsetXml);
+        }
+        console.log(offset);
         if (wedgeNode !== undefined && wedgeNode.hasAttributes && wedgeNode.attribute("default-x")) {
             this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
         }
@@ -602,11 +609,11 @@ export class ExpressionReader {
         //Ending needs to use previous fraction, not current.
         //If current is used, when there is a system break it will mess up
         if (typeAttributeString === "stop") {
-            this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml, inSourceMeasureCurrentFraction);
+            this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml);
         } else {
             this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml);
         }
-        this.addWedge(wedgeNode, currentMeasure, inSourceMeasureCurrentFraction);
+        this.addWedge(wedgeNode, currentMeasure, this.directionTimestamp.clone() ?? inSourceMeasureCurrentFraction);
         this.initialize();
     }
     private interpretRehearsalMark(
