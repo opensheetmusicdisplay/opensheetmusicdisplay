@@ -305,6 +305,8 @@ export class EngravingRules {
     public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
+    /** Whether to use the XML offset value for expressions, especially wedges (crescendo). See #1477 */
+    public UseEndOffsetForExpressions: boolean;
     public MoodTextHeight: number;
     public UnknownTextHeight: number;
     public ContinuousTempoTextHeight: number;
@@ -766,6 +768,7 @@ export class EngravingRules {
         this.TempoYSpacing = 0.5; // note this is correlated with MetronomeMarkYShift: one-sided change can cause collisions
         this.InstantaneousTempoTextHeight = 2.3;
         this.ContinuousDynamicTextHeight = 2.3;
+        this.UseEndOffsetForExpressions = true;
         this.MoodTextHeight = 2.3;
         this.UnknownTextHeight = 2.0;
         this.ContinuousTempoTextHeight = 2.3;
