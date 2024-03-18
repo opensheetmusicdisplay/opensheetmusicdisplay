@@ -1,3 +1,15 @@
+## [1.8.8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.7...1.8.8) (2024-03-18)
+
+
+### Bug Fixes
+
+* **Barline:** Add missing double bar line when location="right" is not supplied in MusicXML ([#1522](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1522)), which is non-mandatory. ([b1ed898](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b1ed8986606ffe0fcd71a832aa760a6c7429303d))
+* **Crescendo:** Fix wedge offset not used, changing end points of wedges ([#1525](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1525)) (decrescendo too) ([7226993](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7226993431b19d37b2b84449a340169c994383f6))
+* **Cursor:** Fix color not updated after setting osmd.cursor.CursorOptions.color and calling update(). Add osmd.Cursor getter ([f78ff0e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f78ff0e9d52e628a87af477510259b40c2e8ff2e))
+* **MXL:** Fix Sibelius-exported MXL files with UTF-16 encoding erroring on load due to a limitation in JSZip ([#1523](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1523)). ([1f11be7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1f11be767881984cabebd8f1101b686c3493ecae))
+
+
+
 ## [1.8.7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.6...1.8.7) (2024-02-23)
 
 
