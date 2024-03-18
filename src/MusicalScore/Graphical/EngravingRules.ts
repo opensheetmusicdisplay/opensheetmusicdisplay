@@ -306,7 +306,7 @@ export class EngravingRules {
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
     /** Whether to use the XML offset value for expressions, especially wedges (crescendo). See #1477 */
-    public UseEndOffsetForExpressions: number;
+    public UseEndOffsetForExpressions: boolean;
     public MoodTextHeight: number;
     public UnknownTextHeight: number;
     public ContinuousTempoTextHeight: number;
