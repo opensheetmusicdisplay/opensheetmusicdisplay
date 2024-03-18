@@ -1369,7 +1369,10 @@ export abstract class MusicSheetCalculator {
         const endOfMeasure: number = endMeasure.PositionAndShape.AbsolutePosition.x + endMeasure.PositionAndShape.BorderRight;
         let endPosInStaffLine: PointF2D = new PointF2D();
         endPosInStaffLine.x = endOfMeasure - this.rules.WedgeHorizontalMargin;
-        const container: VerticalGraphicalStaffEntryContainer = this.graphicalMusicSheet.GetVerticalContainerFromTimestamp(endAbsoluteTimestamp);
+        let container: VerticalGraphicalStaffEntryContainer = this.graphicalMusicSheet.GetVerticalContainerFromTimestamp(endAbsoluteTimestamp);
+        if (!container) {
+            container = this.graphicalMusicSheet.getOrCreateVerticalContainer(endAbsoluteTimestamp);
+        }
         let staffEntryWidth: number = 0;
         const wedgePadding: number = this.rules.SoftAccentWedgePadding;
         const sizeFactor: number = this.rules.SoftAccentSizeFactor;
@@ -1393,7 +1396,7 @@ export abstract class MusicSheetCalculator {
             const nextNotePosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
                 beginOfNextNote, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
                 graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo);
-            staffEntryWidth = container.getFirstNonNullStaffEntry().PositionAndShape.Size.width; // staff entry widths for whole notes is too long
+            staffEntryWidth = container.getFirstNonNullStaffEntry()?.PositionAndShape.Size.width ?? 0; // staff entry widths for whole notes is too long
             //const standardWidth: number = 2;
 
             //If the next note position is not on the next staffline
