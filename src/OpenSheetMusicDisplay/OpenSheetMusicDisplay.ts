@@ -15,7 +15,7 @@ import log from "loglevel";
 import { DrawingParameters } from "../MusicalScore/Graphical/DrawingParameters";
 import { DrawingParametersEnum } from "../Common/Enums/DrawingParametersEnum";
 import { ColoringModes } from "../Common/Enums/ColoringModes";
-import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions } from "./OSMDOptions";
+import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions, CursorType } from "./OSMDOptions";
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { Dictionary } from "typescript-collections";
@@ -31,7 +31,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "1.8.6-dev"; // getter: this.Version
+    protected version: string = "1.8.8-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -69,6 +69,9 @@ export class OpenSheetMusicDisplay {
     public get cursor(): Cursor { // lowercase for backwards compatibility since cursor -> cursors change
         return this.cursors[0];
     }
+    public get Cursor(): Cursor {
+        return this.cursor;
+    }
     public zoom: number = 1.0;
     protected zoomUpdated: boolean = false;
     /** Timeout in milliseconds used in osmd.load(string) when string is a URL. */
@@ -103,7 +106,7 @@ export class OpenSheetMusicDisplay {
             const str: string = <string>content;
             const self: OpenSheetMusicDisplay = this;
             // console.log("substring: " + str.substr(0, 5));
-            if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
+            if (str.startsWith("\x50\x4b\x03\x04")) {
                 log.debug("[OSMD] This is a zip file, unpack it first: " + str);
                 // This is a zip file, unpack it first
                 return MXLHelper.MXLtoXMLstring(str).then(
@@ -117,16 +120,16 @@ export class OpenSheetMusicDisplay {
                 );
             }
             // Javascript loads strings as utf-16, which is wonderful BS if you want to parse UTF-8 :S
-            if (str.substr(0, 3) === "\uf7ef\uf7bb\uf7bf") {
-                log.debug("[OSMD] UTF with BOM detected, truncate first three bytes and pass along: " + str);
+            if (str.startsWith("\uf7ef\uf7bb\uf7bf")) {
+                log.debug("[OSMD] UTF with BOM detected, truncate first 3 bytes and pass along: " + str);
                 // UTF with BOM detected, truncate first three bytes and pass along
-                return self.load(str.substr(3));
+                return self.load(str.substring(3));
             }
             let trimmedStr: string = str;
             if (/^\s/.test(trimmedStr)) { // only trim if we need to. (end of string is irrelevant)
                 trimmedStr = trimmedStr.trim(); // trim away empty lines at beginning etc
             }
-            if (trimmedStr.substr(0, 6).includes("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
+            if (trimmedStr.startsWith("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
                 const modifiedXml: string = this.OnXMLRead(trimmedStr); // by default just returns trimmedStr unless a function options.OnXMLRead was set.
                 log.debug("[OSMD] Finally parsing XML content, length: " + modifiedXml.length);
                 // Parse the string representing an xml file
@@ -623,7 +626,12 @@ export class OpenSheetMusicDisplay {
         if (options.cursorsOptions !== undefined) {
             this.cursorsOptions = options.cursorsOptions;
         } else {
-            this.cursorsOptions = [{type: 0, color: this.EngravingRules.DefaultColorCursor, alpha: 0.5, follow: true}];
+            this.cursorsOptions = [{
+                type: CursorType.Standard,
+                color: this.EngravingRules.DefaultColorCursor,
+                alpha: 0.5,
+                follow: true
+            }];
         }
         if (options.preferredSkyBottomLineBatchCalculatorBackend !== undefined) {
             this.rules.PreferredSkyBottomLineBatchCalculatorBackend = options.preferredSkyBottomLineBatchCalculatorBackend;

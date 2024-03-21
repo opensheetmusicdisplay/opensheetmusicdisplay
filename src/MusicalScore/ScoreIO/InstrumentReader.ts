@@ -466,8 +466,9 @@ export class InstrumentReader {
            }
           }
           const location: IXmlAttribute = xmlNode.attribute("location");
+          const locationValue: string = location?.value ?? "right"; // right is assumed by default in MusicXML spec, see #1522
           const isEndingBarline: boolean = (xmlNodeIndex === xmlMeasureListArr.length - 1);
-          if (isEndingBarline || (location && location.value === "right")) {
+          if (isEndingBarline || locationValue === "right") {
             const stringValue: string = xmlNode.element("bar-style")?.value;
             // TODO apparently we didn't anticipate bar-style not existing (the ? above was missing). how to handle?
             if (stringValue) {

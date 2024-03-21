@@ -1,3 +1,27 @@
+## [1.8.8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.7...1.8.8) (2024-03-18)
+
+
+### Bug Fixes
+
+* **Barline:** Add missing double bar line when location="right" is not supplied in MusicXML ([#1522](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1522)), which is non-mandatory. ([b1ed898](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b1ed8986606ffe0fcd71a832aa760a6c7429303d))
+* **Crescendo:** Fix wedge offset not used, changing end points of wedges ([#1525](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1525)) (decrescendo too) ([7226993](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7226993431b19d37b2b84449a340169c994383f6))
+* **Cursor:** Fix color not updated after setting osmd.cursor.CursorOptions.color and calling update(). Add osmd.Cursor getter ([f78ff0e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f78ff0e9d52e628a87af477510259b40c2e8ff2e))
+* **MXL:** Fix Sibelius-exported MXL files with UTF-16 encoding erroring on load due to a limitation in JSZip ([#1523](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1523)). ([1f11be7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1f11be767881984cabebd8f1101b686c3493ecae))
+
+
+
+## [1.8.7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.6...1.8.7) (2024-02-23)
+
+
+### Bug Fixes
+
+* **Fraction:** Return a minimum GCD of 1, preventing NaNs and wrong note x-positions in rare complex rhythms ([#1511](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1511)). Prevent a rare infinite loop that could have otherwise resulted after this change. ([84b94c3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/84b94c3cb1909672f94752f1658dd81d4fe4e4b9))
+* **Lyricist:** Fix collision for very long lyricist name with other elements (rare), apply same default offset as for composer (likely no effect if composer is present too, because of y-alignment) ([#1513](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1513)) ([764890c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/764890ce2263bdf5f1c3b72400ec086375352de7))
+* **Tabs:** Fix tab tuplet (triplet) x-alignment with classical staffs/instruments vertically, fix EngravingRules.TabBeamsRendered = false edge case showing beams ([#1515](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1515)). Add some EngravingRules. ([341f523](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/341f523383cd94ed835f0f736f51be7852e4fd41))
+* **Tabs:** Fix wrong tab number background color in dark mode / when PageBackgroundColor set ([#1514](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1514)), export tab background as white instead of transparent by default for PNG ([11c4446](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/11c4446d6db2f1a51a98160a5582dc4b67913465))
+
+
+
 ## [1.8.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.5...1.8.6) (2024-02-02)
 
 

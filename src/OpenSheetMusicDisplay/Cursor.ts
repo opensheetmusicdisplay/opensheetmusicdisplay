@@ -80,6 +80,7 @@ export class Cursor {
   public hidden: boolean = true;
   public currentPageNumber: number = 1;
   private cursorOptions: CursorOptions;
+  private cursorOptionsRendered: CursorOptions;
   private skipInvisibleNotes: boolean = true;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
@@ -281,9 +282,12 @@ export class Cursor {
         break;
     }
 
-    if (newWidth !== cursorElement.width) {
-      cursorElement.width = newWidth;
+    // if (newWidth !== cursorElement.width) { // this `if` is unnecessary and prevents updating color
+    cursorElement.width = newWidth;
+    if (this.cursorOptionsRendered !== this.cursorOptions) {
       this.updateStyle(newWidth, this.cursorOptions);
+      // only update style (creating new cursor element) if options changed.
+      //   For width, it seems to be enough to update cursorElement.width, see osmd#1519
     }
   }
 
@@ -355,6 +359,7 @@ export class Cursor {
     }
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, 1);
+    this.cursorOptionsRendered = {...this.cursorOptions}; // clone, otherwise !== doesn't work
     // Set the actual image
     this.cursorElement.src = c.toDataURL("image/png");
   }
