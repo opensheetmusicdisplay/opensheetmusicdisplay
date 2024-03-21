@@ -976,7 +976,10 @@ export class VexFlowConverter {
             duration: duration,
             positions: tabPositions,
         });
-        (vfnote as any).BackgroundColor = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules.PageBackgroundColor; // may be undefined
+        const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
+        if (rules.UsePageBackgroundColorForTabNotes) {
+            (vfnote as any).BackgroundColor = rules.PageBackgroundColor; // may be undefined
+        }
         // this fixes background color for rects around tab numbers if PageBackgroundColor set or transparent color unsupported.
 
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {

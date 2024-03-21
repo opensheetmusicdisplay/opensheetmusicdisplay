@@ -470,6 +470,7 @@ export class EngravingRules {
     public NewPageAtXMLNewPageAttribute: boolean;
     public PageFormat: PageFormat;
     public PageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
+    public UsePageBackgroundColorForTabNotes: boolean;
     public RenderSingleHorizontalStaffline: boolean;
     public RestoreCursorAfterRerender: boolean;
     public StretchLastSystemLine: boolean;
@@ -904,6 +905,7 @@ export class EngravingRules {
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
+        this.UsePageBackgroundColorForTabNotes = true;
         this.RenderSingleHorizontalStaffline = false;
         this.SpacingBetweenTextLines = 0;
 
