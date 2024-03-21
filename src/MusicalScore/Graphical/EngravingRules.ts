@@ -305,6 +305,8 @@ export class EngravingRules {
     public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
+    /** Whether to use the XML offset value for expressions, especially wedges (crescendo). See #1477 */
+    public UseEndOffsetForExpressions: boolean;
     public MoodTextHeight: number;
     public UnknownTextHeight: number;
     public ContinuousTempoTextHeight: number;
@@ -468,6 +470,7 @@ export class EngravingRules {
     public NewPageAtXMLNewPageAttribute: boolean;
     public PageFormat: PageFormat;
     public PageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
+    public UsePageBackgroundColorForTabNotes: boolean;
     public RenderSingleHorizontalStaffline: boolean;
     public RestoreCursorAfterRerender: boolean;
     public StretchLastSystemLine: boolean;
@@ -766,6 +769,7 @@ export class EngravingRules {
         this.TempoYSpacing = 0.5; // note this is correlated with MetronomeMarkYShift: one-sided change can cause collisions
         this.InstantaneousTempoTextHeight = 2.3;
         this.ContinuousDynamicTextHeight = 2.3;
+        this.UseEndOffsetForExpressions = true;
         this.MoodTextHeight = 2.3;
         this.UnknownTextHeight = 2.0;
         this.ContinuousTempoTextHeight = 2.3;
@@ -901,6 +905,7 @@ export class EngravingRules {
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
+        this.UsePageBackgroundColorForTabNotes = true;
         this.RenderSingleHorizontalStaffline = false;
         this.SpacingBetweenTextLines = 0;
 
