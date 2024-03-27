@@ -61,7 +61,7 @@ module.exports = {
       path.join(__dirname, "build"),
       path.join(__dirname, "demo"),
     ],
-    port: 8000,
+    port: 8002,
     compress: false,
   },
 };
