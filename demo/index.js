@@ -103,6 +103,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         transpose,
         transposeBtn,
         versionDiv;
+
+    window.samples = samples; // width-editor
     
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -504,10 +506,10 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         previousCursorBtn?.addEventListener("click", function () {
             openSheetMusicDisplay.cursor.previous();
         });
-        nextCursorBtn.addEventListener("click", function () {
+        nextCursorBtn?.addEventListener("click", function () {
             openSheetMusicDisplay.cursor.next();
         });
-        resetCursorBtn.addEventListener("click", function () {
+        resetCursorBtn?.addEventListener("click", function () {
             openSheetMusicDisplay.cursor.reset();
         });
         if (followCursorCheckbox) {
@@ -515,14 +517,14 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 openSheetMusicDisplay.FollowCursor = !openSheetMusicDisplay.FollowCursor;
             }
         }
-        hideCursorBtn.addEventListener("click", function () {
+        hideCursorBtn?.addEventListener("click", function () {
             if (openSheetMusicDisplay.cursor) {
                 openSheetMusicDisplay.cursor.hide();
             } else {
                 console.info("Can't hide cursor, as it was disabled (e.g. by drawingParameters).");
             }
         });
-        showCursorBtn.addEventListener("click", function () {
+        showCursorBtn?.addEventListener("click", function () {
             if (openSheetMusicDisplay.cursor) {
                 openSheetMusicDisplay.cursor.show();
             } else {
@@ -530,7 +532,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             }
         });
 
-        backendSelect.addEventListener("change", function (e) {
+        backendSelect?.addEventListener("change", function (e) {
             var value = e.target.value;
             var createNewOsmd = true;
 
@@ -625,9 +627,11 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         error();
         disable();
         var isCustom = typeof str === "string";
+        const samples = Object.values(window.samples);
         if (!isCustom) {
             if (selectSample) {
-                str = sampleFolder + selectSample.value;
+                // str = sampleFolder + selectSample.value;
+                str = sampleFolder + samples[0];
             } else {
                 if (samples && samples.length > 0) {
                     str = sampleFolder + samples[0];
@@ -765,7 +769,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     function onLoadingEnd(isCustom) {
         // Remove option from select
         if (!isCustom && custom.parentElement === selectSample) {
-            selectSample.removeChild(custom);
+            selectSample?.removeChild(custom);
         }
         // Enable controls again
         enable();

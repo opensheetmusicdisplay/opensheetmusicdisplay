@@ -19,64 +19,6 @@
     <%= htmlWebpackPlugin.options.title %>
 </h1>
 <div class="ui four column grid container" id="divControls" style="visibility: hidden; opacity: 0.0">
-    <div class="column">
-        <h3 class="ui header">Select a sample:</h3>
-        <select class="ui selection dropdown" id="selectSample" style="width:320px; height:38%; visibility: hidden"></select>
-    </div>
-    <div class="column" id="backend-select-div" style="visibility: hidden">
-        <h3 class="ui header">Render backend:</h3>
-        <select class="ui selection dropdown" id="backend-select" value="svg" style="height:38%; visibility: hidden;">
-            <option value="svg">SVG</option>
-            <option value="canvas">Canvas</option>
-        </select>
-    </div>
-    <div class="column">
-        <h3 class="ui header">Cursor controls:</h3>
-        <div>
-            <div class="ui vertical buttons">
-                <div class="ui animated fade button" id="show-cursor-btn">
-                    <div class="visible content">Show</div>
-                    <div class="hidden content">
-                        <i class="eye icon"></i>
-                    </div>
-                </div>
-                <div class="ui animated fade button" id="hide-cursor-btn">
-                    <div class="visible content">Hide</div>
-                    <div class="hidden content">
-                        <i class="eye slash icon"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="ui vertical buttons">
-                <div class="ui animated fade button" id="previous-cursor-btn">
-                    <div class="visible content">Previous</div>
-                    <div class="hidden content">
-                        <i class="arrow left icon"></i>
-                    </div>
-                </div>
-                <div class="ui animated fade button" id="next-cursor-btn">
-                    <div class="visible content">Next</div>
-                    <div class="hidden content">
-                        <i class="arrow right icon"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="ui vertical buttons">
-                <div class="ui animated fade button" id="reset-cursor-btn">
-                    <div class="visible content">Reset</div>
-                    <div class="hidden content">
-                        <i class="undo icon"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="item">
-                <div class="ui toggle checkbox">
-                    <input type="checkbox" name="public" id="follow-cursor-checkbox">
-                    <label>Follow Cursor</label>
-                </div>
-            </div>
-        </div>
-    </div>
     <div class="column" id="zoomControls">
         <h3 class="ui header">Zoom controls:</h3>
         <div class="ui buttons" id="zoomControlsButtons">
@@ -90,70 +32,12 @@
         <h4 class="ui header" id="zoom-str">???</h4>
     </div>
     <div class="column">
-        <h3 class="ui header">Show bounding box for:</h3>
-        <select class="ui selection dropdown" id="selectBounding" style="visibility: hidden;">
-            <option value="none">None</option>
-            <option value="all">All</option>
-            <option value="VexFlowMeasure">Measures</option>
-            <option value="VexFlowGraphicalNote">GraphicalNotes</option>
-            <option value="VexFlowVoiceEntry">VoiceEntries</option>
-            <option value="VexFlowStaffEntry">StaffEntries</option>
-            <option value="GraphicalLabel">Labels</option>
-            <option value="VexFlowStaffLine">StaffLines</option>
-            <option value="SystemLine">SystemLines</option>
-            <option value="StaffLineActivitySymbol">ActivitySymbols</option>
-            <option value="VexFlowContinuousDynamicExpression">DynamicExpressions</option>
-        </select>
-    </div>
-    <div class="column">
-        <h3 class="ui header">Show debug information:</h3>
-        <div class="ui relaxed list">
-            <div class="item">
-                <div class="ui toggle checkbox">
-                    <input type="checkbox" name="public" id="skylineDebug">
-                    <label>Skyline</label>
-                </div>
-            </div>
-            <div class="item">
-                <div class="ui toggle checkbox">
-                    <input type="checkbox" name="public" id="bottomlineDebug">
-                    <label>Bottomline</label>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="column">
-        <h3 class="ui header">Debug controls:</h3>
+        <h3 class="ui header">Rendering:</h3>
         <div>
             <div class="ui vertical buttons">
                 <div class="ui button" id="debug-re-render-btn">Re-render</div>
 
             </div>
-            <div class="ui vertical buttons">
-                <div class="ui button" id="debug-clear-btn">Clear</div>
-            </div>
-        </div>
-    </div>
-    <div class="column">
-        <h3 class="ui header">Page size:</h3>
-        <select class="ui selection dropdown" id="selectPageSize"  style="visibility: hidden;">
-            <option value="endless">endless</option>
-            <option value="A3 P">A3 Portrait</option>
-            <option value="A3 L">A3 Landscape</option>
-            <option value="A4 P">A4 Portrait</option>
-            <option value="A4 L">A4 Landscape</option>
-            <option value="A5 P">A5 Portrait</option>
-            <option value="A5 L">A5 Landscape</option>
-            <option value="Letter P">Letter Portrait</option>
-            <option value="Letter L">Letter Landscape</option>
-        </select>
-        <div class="ui button" id="print-pdf-btn">Create PDF</div>
-    </div>
-    <div class="column">
-        <h3 class="ui header">Transpose by Semitone(s):</h3>
-        <div class="ui action input">
-            <input type="number" id="transpose" value="0"/>
-            <button class="ui button" id="transpose-btn">Transpose</button>
         </div>
     </div>
 </div>
@@ -169,9 +53,6 @@
                 </div>
             </div>
             <h4 id="zoom-str-optional">???</h4>
-        </div>
-        <div class="column" id="print-pdf-btn-optional-column" style="opacity: 0.0; max-width: 25%;">
-            <div class="ui button" id="print-pdf-btn-optional">Create PDF</div>
         </div>
         <div class="column" id="selectPageSize-optional-column" style="opacity: 0.0; min-width: 35%">
             <div class="ui two column grid container">
