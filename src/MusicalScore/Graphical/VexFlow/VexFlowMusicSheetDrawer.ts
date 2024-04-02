@@ -116,6 +116,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawStaffLine(staffLine: StaffLine): void {
+        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const stafflineNode: Node = ctx.openGroup();
+        if (stafflineNode) {
+            (stafflineNode as SVGGElement).classList.add("staffline");
+            if (staffLine.ParentStaff) {
+                (stafflineNode as SVGGElement).id =
+                    `${staffLine.ParentStaff.ParentInstrument?.Name}${staffLine.ParentStaff.ParentInstrument?.Id}-${staffLine.ParentStaff?.Id}`;
+            }
+        }
         super.drawStaffLine(staffLine);
         const absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
         if (this.rules.RenderSlurs) {
@@ -124,6 +133,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (this.rules.RenderGlissandi) {
             this.drawGlissandi(staffLine as VexFlowStaffLine, absolutePos);
         }
+        ctx.closeGroup();
     }
 
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
@@ -465,15 +475,21 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
+        const ctx: Vex.IRenderContext = this.backend.getContext();
+        ctx.openGroup("brace");
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBrace = (brace as VexFlowInstrumentBrace);
-        vexBrace.draw(this.backend.getContext());
+        vexBrace.draw(ctx);
+        ctx.closeGroup();
     }
 
     protected drawGroupBracket(bracket: GraphicalObject, system: MusicSystem): void {
+        const ctx: Vex.IRenderContext = this.backend.getContext();
+        ctx.openGroup("bracket");
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBracket = (bracket as VexFlowInstrumentBracket);
-        vexBrace.draw(this.backend.getContext());
+        vexBrace.draw(ctx);
+        ctx.closeGroup();
     }
 
     protected drawOctaveShifts(staffLine: StaffLine): void {
