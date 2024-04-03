@@ -2364,6 +2364,16 @@ export abstract class MusicSheetCalculator {
     protected calculatePageLabels(page: GraphicalMusicPage): void {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
+        if (this.rules.RenderSingleHorizontalStaffline && this.rules.RenderTitle) {
+            //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
+            page.PositionAndShape.calculateBoundingBox(["VexFlowMeasure"]); // ignore measures
+            // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
+            //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
+            //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
+            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width; // doesn't seem to affect anything
+            // page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width; // doesn't seem to affect anything
+        }
+
         let firstSystemAbsoluteTopMargin: number = 10;
         let lastSystemAbsoluteBottomMargin: number = -1;
         if (page.MusicSystems.length > 0) {
@@ -2380,7 +2390,7 @@ export abstract class MusicSheetCalculator {
             const relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
             if (this.rules.RenderSingleHorizontalStaffline) {
-                relative.x = page.PositionAndShape.BorderMarginLeft + title.PositionAndShape.Size.width;
+                relative.x = Math.max(relative.x, title.PositionAndShape.Size.width);
             }
             //relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2; // half of first staffline width
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight;
@@ -2394,7 +2404,7 @@ export abstract class MusicSheetCalculator {
             const relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
             if (this.rules.RenderSingleHorizontalStaffline) {
-                relative.x = page.PositionAndShape.BorderMarginLeft + title.PositionAndShape.Size.width + subtitle.PositionAndShape.Size.width / 2;
+                relative.x = title.PositionAndShape.RelativePosition.x; //Math.max(relative.x, title.PositionAndShape.Size.width);
             }
             //relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2; // half of first staffline width
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
@@ -2422,9 +2432,9 @@ export abstract class MusicSheetCalculator {
             //relative.x = Math.min(this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin,
             //  firstStaffLineEndX); // awkward with 2-bar score
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin;
-            if (this.rules.RenderSingleHorizontalStaffline) {
-                relative.x = page.PositionAndShape.BorderMarginLeft + title.PositionAndShape.Size.width * 2;
-            }
+            // if (this.rules.RenderSingleHorizontalStaffline) {
+            //     relative.x = page.PositionAndShape.BorderMarginLeft + title.PositionAndShape.Size.width * 2;
+            // }
             //relative.x = firstStaffLine.PositionAndShape.Size.width;
             //when this is less, goes higher.
             //So 0 is top of the sheet, 22 or so is touching the music system margin
@@ -2487,13 +2497,14 @@ export abstract class MusicSheetCalculator {
             copyright.PositionAndShape.RelativePosition = relative;
             page.Labels.push(copyright);
         }
+        // we need to do this again to not cut off the title for short scores:
         if (this.rules.RenderSingleHorizontalStaffline && this.rules.RenderTitle) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
             page.PositionAndShape.calculateBoundingBox(["VexFlowMeasure"]); // ignore measures
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
-            // this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width; // doesn't seem to affect anything
+            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width; // doesn't seem to affect anything
             // page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width; // doesn't seem to affect anything
         }
     }
