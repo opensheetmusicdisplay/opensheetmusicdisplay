@@ -27,6 +27,12 @@ export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
     public static unit: number = 1.0;
     public SamplingUnit: number;
+    /** The container (div element) OSMD renders on. We need this e.g. to get horizontal scroll position. */
+    public Container: HTMLElement;
+    /** read-only value of current zoom level. (to set it, use osmd.Zoom = 1.2) */
+    public CurrentZoom: number;
+    public DisplayWidth: number;
+    public DisplayHeight: number;
     public StaccatoShorteningFactor: number;
     /** Height (size) of the sheet title. */
     public SheetTitleHeight: number;

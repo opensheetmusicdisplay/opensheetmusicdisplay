@@ -24,6 +24,7 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
+import { ClickListener } from "../Display/ClickListener";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -62,6 +63,8 @@ export class OpenSheetMusicDisplay {
         }
         this.backendType = BackendType.SVG; // default, can be changed by options
         this.setOptions(options);
+        this.rules.Container = this.container;
+        this.InteractionManager = new ClickListener(this);
     }
 
     private cursorsOptions: CursorOptions[] = [];
@@ -92,6 +95,8 @@ export class OpenSheetMusicDisplay {
     protected resizeHandlerAttached: boolean;
     protected followCursor: boolean;
     protected OnXMLRead: Function;
+
+    private InteractionManager: ClickListener;
 
     /**
      * Load a MusicXML file
@@ -265,6 +270,8 @@ export class OpenSheetMusicDisplay {
             });
         }
         this.zoomUpdated = false;
+        this.rules.DisplayWidth = this.container.clientWidth;
+        this.rules.DisplayHeight = this.container.clientHeight;
         this.rules.RenderCount++;
         //console.log("[OSMD] render finished");
     }
@@ -376,6 +383,16 @@ export class OpenSheetMusicDisplay {
     public clear(): void {
         this.drawer?.clear();
         this.reset(); // without this, resize will draw loaded sheet again
+    }
+
+    /** Dispose listeners created by OSMD */
+    public dispose(): void {
+        // if (this.disposeResizeListener) {
+        //     this.disposeResizeListener();
+        // }
+        if (this.InteractionManager) {
+            this.InteractionManager.Dispose();
+        }
     }
 
     /** Set OSMD rendering options using an IOSMDOptions object.
@@ -974,6 +991,7 @@ export class OpenSheetMusicDisplay {
     }
     public set Zoom(value: number) {
         this.zoom = value;
+        this.rules.CurrentZoom = value; // read-only informational getter (other than setting it here)
         this.zoomUpdated = true;
         if (this.graphic?.GetCalculator instanceof VexFlowMusicSheetCalculator) { // null and type check
             (this.graphic.GetCalculator as VexFlowMusicSheetCalculator).beamsNeedUpdate = this.zoomUpdated;
