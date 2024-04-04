@@ -49,7 +49,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: "demo/index.html",
       favicon: "demo/favicon.ico",
-      title: "OSMD Width Editor",
+      title: "OSMD Measure Width Editor",
     }),
     new CopyPlugin({
       patterns: [{ from: "test/Util/generateImages_browserless.mjs" }],
