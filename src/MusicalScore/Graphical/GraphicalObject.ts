@@ -6,6 +6,9 @@ export class GraphicalObject extends AClassHierarchyTrackable {
     protected boundingBox: BoundingBox;
 
     public get PositionAndShape(): BoundingBox {
+        // if (this.isInstanceOfClass("GraphicalMeasure")) { // can be useful for debug
+        //     console.log("get measure bbox");
+        // }
         return this.boundingBox;
     }
 
