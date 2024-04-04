@@ -929,7 +929,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             return;
         }
         // Add "Custom..." score
-        selectSample.appendChild(custom);
+        selectSample?.appendChild(custom);
         custom.selected = "selected";
         // Read dragged file
         var reader = new FileReader();
