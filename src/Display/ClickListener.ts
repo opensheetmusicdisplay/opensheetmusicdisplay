@@ -162,7 +162,7 @@ export class ClickListener {
         }
         this.currentMeasure.parentSourceMeasure.widthFactor -= 0.1;
         this.updateMeasureWidthDisplay();
-        this.osmd.render();
+        this.renderAndScrollBack();
     }
 
     private measurePlusListener(clickEvent: MouseEvent | TouchEvent): void {
@@ -172,7 +172,15 @@ export class ClickListener {
         }
         this.currentMeasure.parentSourceMeasure.widthFactor += 0.1;
         this.updateMeasureWidthDisplay();
+        this.renderAndScrollBack();
+    }
+
+    private renderAndScrollBack(): void {
+        // scroll back to the previous scrollX if we scrolled horizontally then re-rendered
+        //   (without this, after rendering, it "scrolled back" to the initial 0 horizontal scroll / reset scroll)
+        const currentScrollX: number = this.osmdContainer.scrollLeft;
         this.osmd.render();
+        this.osmdContainer.scrollLeft = currentScrollX;
     }
 
     private updateMeasureWidthDisplay(): void {
