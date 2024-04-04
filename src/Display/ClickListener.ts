@@ -1,9 +1,9 @@
 import { Dictionary } from "typescript-collections";
 import { PointF2D } from "../Common/DataObjects/PointF2D";
-import { MusicPartManagerIterator } from "../MusicalScore";
+import { GraphicalMeasure, MusicPartManagerIterator } from "../MusicalScore";
 import { EngravingRules } from "../MusicalScore/Graphical/EngravingRules";
 import { GraphicalVoiceEntry } from "../MusicalScore/Graphical/GraphicalVoiceEntry";
-import { OpenSheetMusicDisplay } from "../OpenSheetMusicDisplay";
+import { CursorType, OpenSheetMusicDisplay } from "../OpenSheetMusicDisplay";
 
 /** Listens for clicks and selects current measure etc.
  * This is similar to classes like SheetRenderingManager and WebSheetRenderingManager in the audio player,
@@ -99,9 +99,13 @@ export class ClickListener {
         // this.unitPosTouched(clickPosition, relativePositionX, relativePositionY);
         const nearestVoiceEntry: GraphicalVoiceEntry = this.osmd.GraphicSheet.GetNearestVoiceEntry(clickPosition);
         if (nearestVoiceEntry) {
-            this.osmd.cursor.show();
             this.osmd.cursor.iterator = new MusicPartManagerIterator(this.osmd.Sheet, nearestVoiceEntry.parentStaffEntry.getAbsoluteTimestamp());
+            this.osmd.cursor.CursorOptions.type = CursorType.CurrentArea;
+            this.osmd.cursor.show();
             this.osmd.cursor.update();
+            const currentMeasure: GraphicalMeasure = this.osmd.cursor.GNotesUnderCursor()[0]?.parentVoiceEntry.parentStaffEntry.parentMeasure;
+            const currentMeasureField: HTMLElement = document.getElementById("selected-measure-field");
+            currentMeasureField.innerHTML = `Selected Measure: ${currentMeasure?.MeasureNumber}`;
         }
     }
 

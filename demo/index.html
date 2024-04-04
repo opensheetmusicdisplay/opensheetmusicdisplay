@@ -21,7 +21,8 @@
 <div class="ui four column grid container" id="divControls" style="visibility: hidden; opacity: 0.0">
     <div class="column" id="zoomControls">
         <h3 class="ui header">Zoom controls:</h3>
-        <div class="ui buttons" id="zoomControlsButtons">
+        <div class="ui horizontal" id="zoomControlsButtons">
+            <div class="ui header button" id="zoom-str">???</div>
             <div class="ui button" id="zoom-in-btn">
                 <i class="search plus icon"></i>
             </div>
@@ -29,7 +30,6 @@
                 <i class="search minus icon"></i>
             </div>
         </div>
-        <h4 class="ui header" id="zoom-str">???</h4>
     </div>
     <div class="column">
         <h3 class="ui header">Rendering:</h3>
@@ -37,6 +37,24 @@
             <div class="ui vertical buttons">
                 <div class="ui button" id="debug-re-render-btn">Re-render</div>
 
+            </div>
+        </div>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Global Scale:</h3>
+        <div class="ui horizontal">
+                <div class="ui header button">100%</div>
+                <div class="ui button" id="scale-plus-btn">-</div>
+                <div class="ui button" id="scale-minus-btn">+</div>
+        </div>
+    </div>
+    <div class="column">
+        <h3 class="ui header" id="selected-measure-field">Selected Measure: -</h3>
+        <div class="column">
+            <div class="ui horizontal">
+                <div class="ui header button" id="measure-width-display">100%</div>
+                <div class="ui button" id="measure-width-minus-btn">-</div>
+                <div class="ui button" id="measure-width-plus-btn">+</div>
             </div>
         </div>
     </div>
