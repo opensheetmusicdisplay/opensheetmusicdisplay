@@ -296,13 +296,26 @@ export class BoundingBox {
     /**
      * This method calculates the BoundingBoxes
      */
-    public calculateBoundingBox(): void {
+    public calculateBoundingBox(ignoreClasses: string[] = []): void {
         if (this.childElements.length === 0) {
             return;
         }
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
             const childElement: BoundingBox = this.ChildElements[idx];
-            childElement.calculateBoundingBox();
+            let calculateChildBbox: boolean = true;
+            for (const classToIgnore of ignoreClasses) {
+                const gObject: GraphicalObject = childElement.DataObject as GraphicalObject;
+                if (gObject.isInstanceOfClass && gObject.isInstanceOfClass(classToIgnore)) {
+                    calculateChildBbox = false;
+                    break;
+                    // measure bbox gets calculated incorrectly, especially with RenderSingleHorizontalStaffline
+                    //   the correct width was previously set via MusicSystemBuilder.setMeasureWidth().
+                }
+            }
+            if (!calculateChildBbox) {
+                continue;
+            }
+            childElement.calculateBoundingBox(ignoreClasses);
         }
 
         // initialize with max/min values

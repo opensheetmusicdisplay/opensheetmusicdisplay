@@ -47,12 +47,21 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
      * @param ctx
      */
     public draw(ctx: Vex.IRenderContext): void {
+        const measureNode: SVGGElement = ctx.openGroup() as SVGGElement;
+        if (measureNode) {
+            measureNode.classList?.add("vf-measure");
+            measureNode.classList?.add("multi");
+            measureNode.id = `${this.MeasureNumber}`;
+        }
+
         // Draw stave lines
         this.stave.setContext(ctx).draw();
 
         this.multiRestElement.setStave(this.stave);
         this.multiRestElement.setContext(ctx);
         this.multiRestElement.draw();
+
+        ctx.closeGroup();
 
         // Draw vertical lines
         for (const connector of this.connectors) {
