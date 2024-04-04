@@ -14,6 +14,7 @@ export class ClickListener {
     private osmdContainer: HTMLElement;
     private osmd: OpenSheetMusicDisplay;
     private currentMeasure: GraphicalMeasure;
+    private lastMeasureClicked: GraphicalMeasure;
 
     protected EventCallbackMap: Dictionary<string, [HTMLElement|Document, EventListener]> =
                 new Dictionary<string, [HTMLElement|Document, EventListener]>();
@@ -123,6 +124,12 @@ export class ClickListener {
             const currentMeasureField: HTMLElement = document.getElementById("selected-measure-field");
             currentMeasureField.innerHTML = `Selected Measure: ${this.currentMeasure?.MeasureNumber}`;
             this.updateMeasureWidthDisplay();
+
+            if (this.lastMeasureClicked === this.currentMeasure) {
+                // toggle cursor (highlight / de-highlight)
+                this.toggleCursorListener();
+            }
+            this.lastMeasureClicked = this.currentMeasure;
         }
     }
 
@@ -182,7 +189,7 @@ export class ClickListener {
         this.renderAndScrollBack();
     }
 
-    private toggleCursorListener(clickEvent: MouseEvent | TouchEvent): void {
+    private toggleCursorListener(): void {
         if (this.osmd.cursor.hidden) {
             this.osmd.cursor.show();
         } else {
