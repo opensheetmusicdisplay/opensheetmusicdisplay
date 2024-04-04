@@ -115,6 +115,7 @@ export class ClickListener {
             this.currentMeasure = this.osmd.cursor.GNotesUnderCursor()[0]?.parentVoiceEntry.parentStaffEntry.parentMeasure;
             const currentMeasureField: HTMLElement = document.getElementById("selected-measure-field");
             currentMeasureField.innerHTML = `Selected Measure: ${this.currentMeasure?.MeasureNumber}`;
+            this.updateMeasureWidthDisplay();
         }
     }
 
@@ -159,7 +160,9 @@ export class ClickListener {
             console.log("no current measure selected. ignoring minus button");
             return;
         }
-        // this.currentMeasure.widthFactor += 0.1;
+        this.currentMeasure.parentSourceMeasure.widthFactor -= 0.1;
+        this.updateMeasureWidthDisplay();
+        this.osmd.render();
     }
 
     private measurePlusListener(clickEvent: MouseEvent | TouchEvent): void {
@@ -167,5 +170,15 @@ export class ClickListener {
             console.log("no current measure selected. ignoring plus button");
             return;
         }
+        this.currentMeasure.parentSourceMeasure.widthFactor += 0.1;
+        this.updateMeasureWidthDisplay();
+        this.osmd.render();
+    }
+
+    private updateMeasureWidthDisplay(): void {
+        const widthDisplay: HTMLElement = document.getElementById("measure-width-display");
+        const percent: number = this.currentMeasure.parentSourceMeasure.widthFactor * 100;
+        const percentString: string = percent.toFixed(0);
+        widthDisplay.innerHTML = `${percentString}%`;
     }
 }
