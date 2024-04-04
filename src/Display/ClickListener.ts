@@ -116,19 +116,19 @@ export class ClickListener {
         const nearestVoiceEntry: GraphicalVoiceEntry = this.osmd.GraphicSheet.GetNearestVoiceEntry(clickPosition);
         if (nearestVoiceEntry) {
             this.osmd.cursor.iterator = new MusicPartManagerIterator(this.osmd.Sheet, nearestVoiceEntry.parentStaffEntry.getAbsoluteTimestamp());
+            this.currentMeasure = this.osmd.cursor.GNotesUnderCursor()[0]?.parentVoiceEntry.parentStaffEntry.parentMeasure;
+            if (this.lastMeasureClicked === this.currentMeasure) {
+                this.toggleCursorListener(); // toggle cursor (highlight / de-highlight)
+                this.lastMeasureClicked = this.currentMeasure;
+                return; // could also use an else block instead, but increases indentation
+            }
             this.osmd.cursor.CursorOptions.type = CursorType.CurrentArea;
             this.osmd.cursor.CursorOptions.alpha = 0.1; // make this more transparent so that it's easier to judge the measure visually
             this.osmd.cursor.show();
             this.osmd.cursor.update();
-            this.currentMeasure = this.osmd.cursor.GNotesUnderCursor()[0]?.parentVoiceEntry.parentStaffEntry.parentMeasure;
             const currentMeasureField: HTMLElement = document.getElementById("selected-measure-field");
             currentMeasureField.innerHTML = `Selected Measure: ${this.currentMeasure?.MeasureNumber}`;
             this.updateMeasureWidthDisplay();
-
-            if (this.lastMeasureClicked === this.currentMeasure) {
-                // toggle cursor (highlight / de-highlight)
-                this.toggleCursorListener();
-            }
             this.lastMeasureClicked = this.currentMeasure;
         }
     }
