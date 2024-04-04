@@ -13,6 +13,7 @@ export class ClickListener {
     public rules: EngravingRules;
     private osmdContainer: HTMLElement;
     private osmd: OpenSheetMusicDisplay;
+    private currentMeasure: GraphicalMeasure;
 
     protected EventCallbackMap: Dictionary<string, [HTMLElement|Document, EventListener]> =
                 new Dictionary<string, [HTMLElement|Document, EventListener]>();
@@ -38,6 +39,13 @@ export class ClickListener {
         this.EventCallbackMap.setValue("mousedown", [this.osmdContainer, downEvent]);
         // this.EventCallbackMap.setValue("touchend", [this.osmdContainer, endTouchEvent]);
         // this.EventCallbackMap.setValue(this.moveEventName, [document, moveEvent]);
+
+        const measureMinusBtn: HTMLElement = document.getElementById("measure-width-minus-btn");
+        const measurePlusBtn: HTMLElement = document.getElementById("measure-width-plus-btn");
+        const measureMinusEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.measureMinusListener.bind(this);
+        measureMinusBtn.addEventListener("click", measureMinusEvent);
+        const measurePlusEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.measurePlusListener.bind(this);
+        measurePlusBtn.addEventListener("click", measurePlusEvent);
     }
 
     public getPositionInUnits(relativePositionX: number, relativePositionY: number): PointF2D {
@@ -101,11 +109,12 @@ export class ClickListener {
         if (nearestVoiceEntry) {
             this.osmd.cursor.iterator = new MusicPartManagerIterator(this.osmd.Sheet, nearestVoiceEntry.parentStaffEntry.getAbsoluteTimestamp());
             this.osmd.cursor.CursorOptions.type = CursorType.CurrentArea;
+            this.osmd.cursor.CursorOptions.alpha = 0.1; // make this more transparent so that it's easier to judge the measure visually
             this.osmd.cursor.show();
             this.osmd.cursor.update();
-            const currentMeasure: GraphicalMeasure = this.osmd.cursor.GNotesUnderCursor()[0]?.parentVoiceEntry.parentStaffEntry.parentMeasure;
+            this.currentMeasure = this.osmd.cursor.GNotesUnderCursor()[0]?.parentVoiceEntry.parentStaffEntry.parentMeasure;
             const currentMeasureField: HTMLElement = document.getElementById("selected-measure-field");
-            currentMeasureField.innerHTML = `Selected Measure: ${currentMeasure?.MeasureNumber}`;
+            currentMeasureField.innerHTML = `Selected Measure: ${this.currentMeasure?.MeasureNumber}`;
         }
     }
 
@@ -143,5 +152,20 @@ export class ClickListener {
             result[0].removeEventListener(eventName, result[1]);
         }
         this.EventCallbackMap.clear();
+    }
+
+    private measureMinusListener(clickEvent: MouseEvent | TouchEvent): void {
+        if (!this.currentMeasure) {
+            console.log("no current measure selected. ignoring minus button");
+            return;
+        }
+        // this.currentMeasure.widthFactor += 0.1;
+    }
+
+    private measurePlusListener(clickEvent: MouseEvent | TouchEvent): void {
+        if (!this.currentMeasure) {
+            console.log("no current measure selected. ignoring plus button");
+            return;
+        }
     }
 }
