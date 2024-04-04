@@ -88,6 +88,10 @@ export class ClickListener {
             x = clickEvent.pageX;
             y = clickEvent.pageY;
         }
+        if (y > this.osmdContainer.clientHeight) {
+            // e.g. scrollbar click: ignore
+            return;
+        }
         const clickMinusOffset: PointF2D = this.getOffsetCoordinates(x, y);
 
         // if (clickLength < this.DOUBLE_CLICK_WINDOW && clickLength > 0) { // double click
