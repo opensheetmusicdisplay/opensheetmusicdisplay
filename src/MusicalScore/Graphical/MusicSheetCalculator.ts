@@ -318,6 +318,7 @@ export abstract class MusicSheetCalculator {
             // minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
             let maxWidth: number = 0;
             let measures: GraphicalMeasure[];
+            let measureWidthFactor: number = 1;
             for (let i: number = 0; i < this.graphicalMusicSheet.MeasureList.length; i++) {
                 measures = this.graphicalMusicSheet.MeasureList[i];
                 let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
@@ -325,6 +326,10 @@ export abstract class MusicSheetCalculator {
                 if (minimumStaffEntriesWidth > maxWidth) {
                     maxWidth = minimumStaffEntriesWidth;
                 }
+                if (measures[i]?.parentSourceMeasure.widthFactor) { // GraphicalMeasure might be undefined (multi-rest)
+                    measureWidthFactor = measures[i].parentSourceMeasure.widthFactor;
+                }
+                minimumStaffEntriesWidth *= measureWidthFactor;
                 //console.log(`min width for measure ${measures[0].MeasureNumber}: ${minimumStaffEntriesWidth}`);
                 MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
                 // minLength = Math.max(minLength, minimumStaffEntriesWidth * 1.2 + maxInstructionsLength);
