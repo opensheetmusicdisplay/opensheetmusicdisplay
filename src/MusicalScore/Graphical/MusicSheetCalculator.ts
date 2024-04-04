@@ -326,8 +326,11 @@ export abstract class MusicSheetCalculator {
                 if (minimumStaffEntriesWidth > maxWidth) {
                     maxWidth = minimumStaffEntriesWidth;
                 }
-                if (measures[i]?.parentSourceMeasure.widthFactor) { // GraphicalMeasure might be undefined (multi-rest)
-                    measureWidthFactor = measures[i].parentSourceMeasure.widthFactor;
+                for (const verticalMeasure of measures) {
+                    if (verticalMeasure?.parentSourceMeasure.widthFactor) { // some of these GraphicalMeasures might be undefined (multi-rest)
+                        measureWidthFactor = verticalMeasure.parentSourceMeasure.widthFactor;
+                        break;
+                    }
                 }
                 minimumStaffEntriesWidth *= measureWidthFactor;
                 //console.log(`min width for measure ${measures[0].MeasureNumber}: ${minimumStaffEntriesWidth}`);
