@@ -42,10 +42,13 @@ export class ClickListener {
 
         const measureMinusBtn: HTMLElement = document.getElementById("measure-width-minus-btn");
         const measurePlusBtn: HTMLElement = document.getElementById("measure-width-plus-btn");
+        const toggleCursorBtn: HTMLElement = document.getElementById("toggle-cursor-btn");
         const measureMinusEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.measureMinusListener.bind(this);
         measureMinusBtn.addEventListener("click", measureMinusEvent);
         const measurePlusEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.measurePlusListener.bind(this);
         measurePlusBtn.addEventListener("click", measurePlusEvent);
+        const toggleCursorEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.toggleCursorListener.bind(this);
+        toggleCursorBtn.addEventListener("click", toggleCursorEvent);
     }
 
     public getPositionInUnits(relativePositionX: number, relativePositionY: number): PointF2D {
@@ -177,6 +180,14 @@ export class ClickListener {
         this.currentMeasure.parentSourceMeasure.widthFactor += 0.1;
         this.updateMeasureWidthDisplay();
         this.renderAndScrollBack();
+    }
+
+    private toggleCursorListener(clickEvent: MouseEvent | TouchEvent): void {
+        if (this.osmd.cursor.hidden) {
+            this.osmd.cursor.show();
+        } else {
+            this.osmd.cursor.hide();
+        }
     }
 
     private renderAndScrollBack(): void {
