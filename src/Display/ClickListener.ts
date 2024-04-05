@@ -6,6 +6,8 @@ import { OpenSheetMusicDisplay } from "../OpenSheetMusicDisplay/OpenSheetMusicDi
 import { GraphicalStaffEntry } from "../MusicalScore/Graphical/GraphicalStaffEntry";
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { CursorType } from "../OpenSheetMusicDisplay/OSMDOptions";
+import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
+// import { IXmlElement } from "../Common/FileIO/Xml";
 
 /** Listens for clicks and selects current measure etc.
  * This is similar to classes like SheetRenderingManager and WebSheetRenderingManager in the audio player,
@@ -17,6 +19,10 @@ export class ClickListener {
     private osmd: OpenSheetMusicDisplay;
     private currentMeasure: GraphicalMeasure;
     private lastMeasureClicked: GraphicalMeasure;
+    /** The MusicXML string loaded by OSMD, before modifications. */
+    private loadedXML: string;
+    /** The modified MusicXML with widthFactor and globalScale inserted. (-> download xml button) */
+    private modifiedXML: string;
 
     protected EventCallbackMap: Dictionary<string, [HTMLElement|Document, EventListener]> =
                 new Dictionary<string, [HTMLElement|Document, EventListener]>();
@@ -30,6 +36,11 @@ export class ClickListener {
 
     public init(): void {
         this.listenForInteractions();
+        // save the XML osmd loaded. note that the function is reset by osmd.setOptions() if not provided.
+        this.osmd.OnXMLRead = (fileString: string): string => {
+            this.loadedXML = fileString;
+            return fileString;
+        };
     }
 
     private listenForInteractions(): void {
@@ -46,12 +57,16 @@ export class ClickListener {
         const measureMinusBtn: HTMLElement = document.getElementById("measure-width-minus-btn");
         const measurePlusBtn: HTMLElement = document.getElementById("measure-width-plus-btn");
         const toggleCursorBtn: HTMLElement = document.getElementById("toggle-cursor-btn");
+        const downloadBtn: HTMLElement = document.getElementById("download-xml-btn");
+
         const measureMinusEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.measureMinusListener.bind(this);
         measureMinusBtn.addEventListener("click", measureMinusEvent);
         const measurePlusEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.measurePlusListener.bind(this);
         measurePlusBtn.addEventListener("click", measurePlusEvent);
         const toggleCursorEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.toggleCursorListener.bind(this);
         toggleCursorBtn.addEventListener("click", toggleCursorEvent);
+        const downloadXmlEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.downloadXmlListener.bind(this);
+        downloadBtn.addEventListener("click", downloadXmlEvent);
     }
 
     public getPositionInUnits(relativePositionX: number, relativePositionY: number): PointF2D {
@@ -209,6 +224,63 @@ export class ClickListener {
         const currentScrollX: number = this.osmdContainer.scrollLeft;
         this.osmd.render();
         this.osmdContainer.scrollLeft = currentScrollX;
+    }
+
+    private downloadXmlListener(): void {
+        // analogous to osmd.load()
+        const parser: DOMParser = new DOMParser();
+        const content: Document = parser.parseFromString(this.loadedXML, "application/xml");
+        const nodes: NodeList = content.childNodes;
+        this.modifyNodesRecursive(nodes);
+
+        const outerHTML: string = content.documentElement.outerHTML; // outer includes <score-partwise>, which inner doesn't
+        const encoding: string = "UTF-8";
+        const xmlHeader: string = `<?xml version="1.0" encoding="${encoding}"?>`;
+        this.modifiedXML = `${xmlHeader}\n${outerHTML}`;
+        console.log(this.modifiedXML);
+    }
+
+    private modifyNodesRecursive(nodes: NodeList): NodeList {
+        let scorePartwiseElement: Element;
+        for (let i: number = 0, length: number = nodes.length; i < length; i += 1) {
+            const node: Node = nodes[i];
+            if (node.nodeType !== Node.ELEMENT_NODE) {
+                console.log("non-element node"); // informational debug. TODO does this actually happen?
+                continue;
+            }
+            if (node.nodeName.toLowerCase() === "score-partwise") {
+                scorePartwiseElement = <Element>node;
+                scorePartwiseElement.setAttribute("osmdGlobalWidthFactor", "1.5");
+                // TODO set correct value
+            } else if (node.nodeName.toLowerCase() === "measure") {
+                const measureElement: Element = <Element>node;
+                const measureNumber: number = Number.parseInt(measureElement.getAttribute("number"), 10);
+                let foundMeasure: SourceMeasure;
+                for (const sheetMeasure of this.osmd.Sheet.SourceMeasures) {
+                    if (sheetMeasure.MeasureNumberXML === measureNumber) {
+                        foundMeasure = sheetMeasure;
+                        break;
+                    }
+                }
+                if (!foundMeasure) {
+                    console.log(`couldn't find measure ${measureNumber}`);
+                    return;
+                }
+                const widthFactor: number = foundMeasure.widthFactor;
+                measureElement.setAttribute("widthFactor", widthFactor.toString());
+            }
+            this.modifyNodesRecursive(node.childNodes);
+        }
+        // const score: IXmlElement = new IXmlElement(scorePartwiseElement);
+        // for (const nodeEntry of nodes.entries()) {
+        //     const node = nodeEntry[1];
+        //     if (node.nodeName === "measure") {
+        //         const number: string = node.attribute("number");
+        //     }
+        //     console.log(node);
+        // }
+
+        return nodes;
     }
 
     private updateMeasureWidthDisplay(): void {
