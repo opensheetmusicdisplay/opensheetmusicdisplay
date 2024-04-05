@@ -3,6 +3,7 @@ import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
 import * as jsPDF  from '../node_modules/jspdf/dist/jspdf.es.min';
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.umd.min';
 import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculator';
+import { beethovenSample64 } from './beethoven64';
 
 /*jslint browser:true */
 (function () {
@@ -591,7 +592,9 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             if (osmd.getLogLevel() < 2) { // debug or trace
                 console.log("[OSMD] selectSampleOnChange without param");
             }
-            selectSampleOnChange();
+            const base64Decode = base64EncodedString =>
+                new TextDecoder().decode(Uint8Array.from(atob(base64EncodedString), m => m.codePointAt(0)));
+            selectSampleOnChange(base64Decode(beethovenSample64));
         }
     }
 
