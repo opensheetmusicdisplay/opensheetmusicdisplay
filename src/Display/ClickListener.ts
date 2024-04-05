@@ -55,11 +55,17 @@ export class ClickListener {
         // this.EventCallbackMap.setValue("touchend", [this.osmdContainer, endTouchEvent]);
         // this.EventCallbackMap.setValue(this.moveEventName, [document, moveEvent]);
 
+        const sheetMinusBtn: HTMLElement = document.getElementById("sheet-minus-btn");
+        const sheetPlusBtn: HTMLElement = document.getElementById("sheet-plus-btn");
         const measureMinusBtn: HTMLElement = document.getElementById("measure-width-minus-btn");
         const measurePlusBtn: HTMLElement = document.getElementById("measure-width-plus-btn");
         const toggleCursorBtn: HTMLElement = document.getElementById("toggle-cursor-btn");
         const downloadBtn: HTMLElement = document.getElementById("download-xml-btn");
 
+        const sheetMinusWidthEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.sheetMinusWidthListener.bind(this);
+        sheetMinusBtn.addEventListener("click", sheetMinusWidthEvent);
+        const sheetPlusWidthEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.sheetPlusWidthListener.bind(this);
+        sheetPlusBtn.addEventListener("click", sheetPlusWidthEvent);
         const measureMinusEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.measureMinusListener.bind(this);
         measureMinusBtn.addEventListener("click", measureMinusEvent);
         const measurePlusEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.measurePlusListener.bind(this);
@@ -68,6 +74,10 @@ export class ClickListener {
         toggleCursorBtn.addEventListener("click", toggleCursorEvent);
         const downloadXmlEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.downloadXmlListener.bind(this);
         downloadBtn.addEventListener("click", downloadXmlEvent);
+    }
+
+    public SheetRendered(): void {
+        this.updateSheetFactorDisplay();
     }
 
     public getPositionInUnits(relativePositionX: number, relativePositionY: number): PointF2D {
@@ -194,7 +204,9 @@ export class ClickListener {
             console.log("no current measure selected. ignoring minus button");
             return;
         }
-        this.currentMeasure.parentSourceMeasure.WidthFactor -= 0.1;
+        let widthFactor: number = this.currentMeasure.parentSourceMeasure.WidthFactor;
+        widthFactor = Number.parseFloat((widthFactor - 0.1).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
+        this.currentMeasure.parentSourceMeasure.WidthFactor = widthFactor;
         this.updateMeasureWidthDisplay();
         this.renderAndScrollBack();
     }
@@ -209,6 +221,29 @@ export class ClickListener {
         this.currentMeasure.parentSourceMeasure.WidthFactor = widthFactor;
         this.updateMeasureWidthDisplay();
         this.renderAndScrollBack();
+    }
+
+    private sheetMinusWidthListener(): void {
+        let widthFactor: number = this.osmd.Sheet.MeasureWidthFactor;
+        widthFactor = Number.parseFloat((widthFactor - 0.1).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
+        this.osmd.Sheet.MeasureWidthFactor = widthFactor;
+        this.updateSheetFactorDisplay();
+        this.renderAndScrollBack();
+    }
+
+    private sheetPlusWidthListener(): void {
+        let widthFactor: number = this.osmd.Sheet.MeasureWidthFactor;
+        widthFactor = Number.parseFloat((widthFactor + 0.1).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
+        this.osmd.Sheet.MeasureWidthFactor = widthFactor;
+        this.updateSheetFactorDisplay();
+        this.renderAndScrollBack();
+    }
+
+    private updateSheetFactorDisplay(): void {
+        const factorElement: HTMLElement = document.getElementById("sheet-factor-display");
+        const percent: number = this.osmd.Sheet.MeasureWidthFactor * 100;
+        const percentString: string = percent.toFixed(0);
+        factorElement.innerHTML = `${percentString}%`;
     }
 
     private toggleCursorListener(): void {

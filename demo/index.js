@@ -650,9 +650,10 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             function () {
                 // This gives you access to the osmd object in the console. Do not use in production code
                 window.osmd = openSheetMusicDisplay;
-                openSheetMusicDisplay.zoom = zoom;
+                osmd.zoom = zoom;
                 //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
-                return openSheetMusicDisplay.render();
+                osmd.render();
+                osmd.InteractionManager.SheetRendered();
             },
             function (e) {
                 errorLoadingOrRenderingSheet(e, "rendering");
