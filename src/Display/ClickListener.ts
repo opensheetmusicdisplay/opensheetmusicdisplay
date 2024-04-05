@@ -78,6 +78,7 @@ export class ClickListener {
 
     public SheetRendered(): void {
         this.updateSheetFactorDisplay();
+        this.updateFilenameDisplay();
     }
 
     public getPositionInUnits(relativePositionX: number, relativePositionY: number): PointF2D {
@@ -244,6 +245,13 @@ export class ClickListener {
         const percent: number = this.osmd.Sheet.MeasureWidthFactor * 100;
         const percentString: string = percent.toFixed(0);
         factorElement.innerHTML = `${percentString}%`;
+    }
+
+    private updateFilenameDisplay(): void {
+        if (this.rules.Filename) {
+            const filenameElement: HTMLElement = document.getElementById("filename-display");
+            filenameElement.innerHTML = `${this.rules.Filename}`;
+        }
     }
 
     private toggleCursorListener(): void {
