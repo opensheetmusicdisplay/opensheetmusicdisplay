@@ -483,6 +483,10 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });
         osmd.EngravingRules.PageTopMargin = 0;
+        osmd.EngravingRules.PageBottomMargin = 0;
+        osmd.EngravingRules.RenderTitle = false;
+        osmd.EngravingRules.RenderLyricist = false;
+        osmd.EngravingRules.RenderComposer = false;
         osmd.TransposeCalculator = new TransposeCalculator(); // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
         //openSheetMusicDisplay.DrawSkyLine = true;
         //openSheetMusicDisplay.DrawBottomLine = true;
