@@ -688,7 +688,8 @@ export class GraphicalMusicSheet {
         // Search for StaffEntries in region
         for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
             const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
-            const entries: GraphicalStaffEntry[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalStaffEntry>(region, false);
+            const entries: GraphicalStaffEntry[] = graphicalMusicPage.PositionAndShape.
+                getObjectsInRegion<GraphicalStaffEntry>(region, false, "GraphicalStaffEntry");
             if (!entries || entries.length === 0) {
                 continue;
             } else {
