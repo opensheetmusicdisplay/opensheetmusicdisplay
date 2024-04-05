@@ -24,6 +24,8 @@ export class ClickListener {
     /** The modified MusicXML with widthFactor and globalScale inserted. (-> download xml button) */
     private modifiedXML: string;
     public filename: string;
+    private measureWidthInput: HTMLElement;
+    private globalScaleInput: HTMLElement;
 
     protected EventCallbackMap: Dictionary<string, [HTMLElement|Document, EventListener]> =
                 new Dictionary<string, [HTMLElement|Document, EventListener]>();
@@ -62,6 +64,8 @@ export class ClickListener {
         const toggleCursorBtn: HTMLElement = document.getElementById("toggle-cursor-btn");
         const downloadBtn: HTMLElement = document.getElementById("download-xml-btn");
 
+        this.measureWidthInput = document.getElementById("measure-width-display");
+        this.globalScaleInput = document.getElementById("sheet-factor-display");
         const sheetMinusWidthEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.sheetMinusWidthListener.bind(this);
         sheetMinusBtn.addEventListener("click", sheetMinusWidthEvent);
         const sheetPlusWidthEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.sheetPlusWidthListener.bind(this);
@@ -74,6 +78,11 @@ export class ClickListener {
         toggleCursorBtn.addEventListener("click", toggleCursorEvent);
         const downloadXmlEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.downloadXmlListener.bind(this);
         downloadBtn.addEventListener("click", downloadXmlEvent);
+        const measureInputEvent: (event: InputEvent) => void = this.measureInputListener.bind(this);
+        this.measureWidthInput.addEventListener("input", measureInputEvent);
+        const globalScaleInputEvent: (event: InputEvent) => void = this.globalScaleInputListener.bind(this);
+        this.globalScaleInput.addEventListener("input", globalScaleInputEvent);
+        (this.globalScaleInput as any).value = "100%"; // without this, it's not editable on loading the page
     }
 
     public SheetRendered(): void {
@@ -224,6 +233,54 @@ export class ClickListener {
         this.renderAndScrollBack();
     }
 
+    private measureInputListener(event: InputEvent): void {
+        if (event.inputType === "deleteContentBackward") {
+            return; // don't re-render on hitting delete key (e.g. 90% -> 9%)
+        }
+        if (!this.currentMeasure) {
+            console.log("no current measure selected. ignoring measure width input");
+            return;
+        }
+        const inputString: string = (this.measureWidthInput as any).value.replace("%","");
+        const inputValue: number = Number.parseFloat(inputString);
+        if (inputValue < 10) {
+            return; // doesn't make sense to set values < 10%. and you can still do it with the minus button.
+        }
+        if (typeof inputValue !== ("number") || isNaN(inputValue)) {
+            console.log("invalid measure width input");
+            return;
+        }
+        this.currentMeasure.parentSourceMeasure.WidthFactor = inputValue / 100;
+        this.renderAndScrollBack();
+    }
+
+    private globalScaleInputListener(event: InputEvent): void {
+        if (event.inputType === "deleteContentBackward") {
+            return; // don't re-render on hitting delete key (e.g. 90% -> 9%)
+        }
+        const inputString: string = (this.globalScaleInput as any).value.replace("%","");
+        if (inputString === "") {
+            return;
+        }
+        let inputValue: number = Number.parseFloat(inputString);
+        if (typeof inputValue !== ("number") || isNaN(inputValue)) {
+            console.log("invalid global scale input");
+            return;
+        }
+        if (inputValue < 50) {
+            console.log("global scale < 50 too low.");
+            if (inputValue >= 10) {
+                // reset to 50% to indicate that that's the minimum
+                inputValue = 50;
+                (this.globalScaleInput as any).value = "50%";
+            } else {
+                return; // doesn't make sense to set values < 50%, can crash OSMD
+            }
+        }
+        this.osmd.Sheet.MeasureWidthFactor = inputValue / 100;
+        this.renderAndScrollBack();
+    }
+
     private sheetMinusWidthListener(): void {
         let widthFactor: number = this.osmd.Sheet.MeasureWidthFactor;
         widthFactor = Number.parseFloat((widthFactor - 0.1).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
@@ -241,10 +298,9 @@ export class ClickListener {
     }
 
     private updateSheetFactorDisplay(): void {
-        const factorElement: HTMLElement = document.getElementById("sheet-factor-display");
         const percent: number = this.osmd.Sheet.MeasureWidthFactor * 100;
         const percentString: string = percent.toFixed(0);
-        factorElement.innerHTML = `${percentString}%`;
+        (this.globalScaleInput as any).value = `${percentString}%`;
     }
 
     private updateFilenameDisplay(): void {
@@ -341,9 +397,8 @@ export class ClickListener {
     }
 
     private updateMeasureWidthDisplay(): void {
-        const widthDisplay: HTMLElement = document.getElementById("measure-width-display");
         const percent: number = this.currentMeasure.parentSourceMeasure.WidthFactor * 100;
         const percentString: string = percent.toFixed(0);
-        widthDisplay.innerHTML = `${percentString}%`;
+        (this.measureWidthInput as any).value = `${percentString}%`;
     }
 }
