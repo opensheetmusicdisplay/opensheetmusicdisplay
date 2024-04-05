@@ -137,15 +137,21 @@ export class InstrumentReader {
     let lastNoteWasGrace: boolean = false;
     try {
       const measureNode: IXmlElement = this.xmlMeasureList[this.currentXmlMeasureIndex];
-      const widthFactorAttr: IXmlAttribute = measureNode.attribute("osmdWidthFactor"); // custom xml attribute
-      if (widthFactorAttr) {
-        currentMeasure.WidthFactor = Number.parseFloat(widthFactorAttr.value);
-      }
       const xmlMeasureListArr: IXmlElement[] = measureNode.elements();
+      let measureNumberXml: number;
       if (currentMeasure.Rules.UseXMLMeasureNumbers && !Number.isInteger(currentMeasure.MeasureNumberXML)) {
-        const measureNumberXml: number = parseInt(measureNode.attribute("number")?.value, 10);
+        measureNumberXml = parseInt(measureNode.attribute("number")?.value, 10);
         if (Number.isInteger(measureNumberXml)) {
             currentMeasure.MeasureNumberXML = measureNumberXml;
+        }
+      }
+      const widthFactorAttr: IXmlAttribute = measureNode.attribute("osmdWidthFactor"); // custom xml attribute
+      if (widthFactorAttr) {
+        const widthFactorValue: number = Number.parseFloat(widthFactorAttr.value);
+        if (typeof widthFactorValue === "number" && !isNaN(widthFactorValue)) {
+          currentMeasure.WidthFactor = widthFactorValue;
+        } else {
+          log.info(`xml parse: osmdWidthFactor invalid for measure ${measureNumberXml}`);
         }
       }
       let previousNode: IXmlElement; // needs a null check when accessed because of node index 0!

@@ -131,8 +131,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         // custom xml attribute, similar to osmdWidthFactor for individual measures
         if (globalWidthAttr) {
             const globalWidthValue: number = Number.parseFloat(globalWidthAttr.value);
-            if (typeof globalWidthValue === "number") {
+            if (typeof globalWidthValue === "number" && !isNaN(globalWidthValue)) {
                 this.musicSheet.MeasureWidthFactor = globalWidthValue;
+            } else {
+                log.info("xml parse: osmdMeasureWidthFactor invalid");
             }
         }
         if (!root) {
