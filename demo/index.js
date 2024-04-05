@@ -7,7 +7,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 /*jslint browser:true */
 (function () {
     "use strict";
-    var openSheetMusicDisplay;
+    var osmd;
     var sampleFolder = "",
         samples = {
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
@@ -376,8 +376,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             if (selectPageSize) {
                 selectPageSize.onchange = function (evt) {
                     var value = evt.target.value;
-                    openSheetMusicDisplay.setPageFormat(value);
-                    openSheetMusicDisplay.render();
+                    osmd.setPageFormat(value);
+                    osmd.render();
                 };
             }
         }
@@ -414,15 +414,15 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         if (skylineDebug) {
             skylineDebug.onclick = function () {
-                openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
-                openSheetMusicDisplay.render();
+                osmd.DrawSkyLine = !osmd.DrawSkyLine;
+                osmd.render();
             }
         }
 
         if (bottomlineDebug) {
             bottomlineDebug.onclick = function () {
-                openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
-                openSheetMusicDisplay.render();
+                osmd.DrawBottomLine = !osmd.DrawBottomLine;
+                osmd.render();
             }
         }
 
@@ -434,12 +434,12 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         if (debugClearBtn) {
             debugClearBtn.onclick = function () {
-                openSheetMusicDisplay.clear();
+                osmd.clear();
             }
         }
 
         // Create OSMD object and canvas
-        openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
+        osmd = new OpenSheetMusicDisplay(canvas, {
             autoResize: true,
             backend: backendType,
             //backend: "canvas",
@@ -482,53 +482,53 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             // tripletsBracketed: true,
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });
-        openSheetMusicDisplay.EngravingRules.PageTopMargin = 0;
-        openSheetMusicDisplay.TransposeCalculator = new TransposeCalculator(); // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
+        osmd.EngravingRules.PageTopMargin = 0;
+        osmd.TransposeCalculator = new TransposeCalculator(); // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
         //openSheetMusicDisplay.DrawSkyLine = true;
         //openSheetMusicDisplay.DrawBottomLine = true;
         //openSheetMusicDisplay.setDrawBoundingBox("GraphicalLabel", false);
-        openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to see more detailed control flow information in console
+        osmd.setLogLevel('info'); // set this to 'debug' if you want to see more detailed control flow information in console
         document.body.appendChild(canvas);
 
         if (versionDiv) {
-            versionDiv.innerHTML = "OSMD Version: " + openSheetMusicDisplay.Version.replace("-release", "").replace("-dev", "");
+            versionDiv.innerHTML = "OSMD Version: " + osmd.Version.replace("-release", "").replace("-dev", "");
         }
 
         window.addEventListener("keydown", function (e) {
             var event = window.event ? window.event : e;
             // left arrow key
             if (event.keyCode === 37) {
-                openSheetMusicDisplay.cursor.previous();
+                osmd.cursor.previous();
             }
             // right arrow key
             if (event.keyCode === 39) {
-                openSheetMusicDisplay.cursor.next();
+                osmd.cursor.next();
             }
         });
         previousCursorBtn?.addEventListener("click", function () {
-            openSheetMusicDisplay.cursor.previous();
+            osmd.cursor.previous();
         });
         nextCursorBtn?.addEventListener("click", function () {
-            openSheetMusicDisplay.cursor.next();
+            osmd.cursor.next();
         });
         resetCursorBtn?.addEventListener("click", function () {
-            openSheetMusicDisplay.cursor.reset();
+            osmd.cursor.reset();
         });
         if (followCursorCheckbox) {
             followCursorCheckbox.onclick = function () {
-                openSheetMusicDisplay.FollowCursor = !openSheetMusicDisplay.FollowCursor;
+                osmd.FollowCursor = !osmd.FollowCursor;
             }
         }
         hideCursorBtn?.addEventListener("click", function () {
-            if (openSheetMusicDisplay.cursor) {
-                openSheetMusicDisplay.cursor.hide();
+            if (osmd.cursor) {
+                osmd.cursor.hide();
             } else {
                 console.info("Can't hide cursor, as it was disabled (e.g. by drawingParameters).");
             }
         });
         showCursorBtn?.addEventListener("click", function () {
-            if (openSheetMusicDisplay.cursor) {
-                openSheetMusicDisplay.cursor.show();
+            if (osmd.cursor) {
+                osmd.cursor.show();
             } else {
                 console.info("Can't show cursor, as it was disabled (e.g. by drawingParameters).");
             }
@@ -542,11 +542,11 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 // clears the canvas element
                 canvas.innerHTML = "";
                 //openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value }); // resets EngravingRules
-                openSheetMusicDisplay.setOptions({backend: value});
-                openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to get more detailed control flow information
+                osmd.setOptions({backend: value});
+                osmd.setLogLevel('info'); // set this to 'debug' if you want to get more detailed control flow information
             } else {
                 // alternative, doesn't work yet, see setOptions():
-                openSheetMusicDisplay.setOptions({ backend: value });
+                osmd.setOptions({ backend: value });
             }
             console.log("[OSMD] selectSampleOnChange addEventListener change");
             // selectSampleOnChange();
@@ -554,8 +554,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if(transposeBtn && transpose){
             transposeBtn.onclick = function(){
                 var transposeValue = parseInt(transpose.value);
-                openSheetMusicDisplay.Sheet.Transpose = transposeValue;
-                openSheetMusicDisplay.updateGraphic();
+                osmd.Sheet.Transpose = transposeValue;
+                osmd.updateGraphic();
                 rerender();
             }
         }
@@ -564,7 +564,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         //   so we render twice at the start of the demo.
         //   maybe delay the first osmd render, e.g. when window ready?
         if (paramOpenUrl) {
-            if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace
+            if (osmd.getLogLevel() < 2) { // debug or trace
                 console.log("[OSMD] selectSampleOnChange with " + paramOpenUrl);
             }
             // DEBUG: cause an error for a certain sample, for testing
@@ -573,7 +573,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             // }
             selectSampleOnChange(paramOpenUrl);
         } else {
-            if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace
+            if (osmd.getLogLevel() < 2) { // debug or trace
                 console.log("[OSMD] selectSampleOnChange without param");
             }
             selectSampleOnChange();
@@ -622,7 +622,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
     function selectBoundingOnChange(evt) {
         var value = evt.target.value;
-        openSheetMusicDisplay.DrawBoundingBox = value;
+        osmd.DrawBoundingBox = value;
     }
 
     function selectSampleOnChange(str) {
@@ -646,10 +646,10 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         setSampleSpecificOptions(str, isCustom);
 
-        openSheetMusicDisplay.load(str).then(
+        osmd.load(str).then(
             function () {
                 // This gives you access to the osmd object in the console. Do not use in production code
-                window.osmd = openSheetMusicDisplay;
+                window.osmd = osmd;
                 osmd.zoom = zoom;
                 //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
                 osmd.render();
@@ -672,8 +672,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (!isCustom && str.includes("measuresToDraw")) { // set options for measuresToDraw sample
             // stash previously set range of measures to draw
             if (!measureToDrawRangeNeedsReset) { // only stash once, when measuresToDraw called multiple times in a row
-                minMeasureToDrawStashed = openSheetMusicDisplay.EngravingRules.MinMeasureToDrawIndex + 1;
-                maxMeasureToDrawStashed = openSheetMusicDisplay.EngravingRules.MaxMeasureToDrawIndex + 1;
+                minMeasureToDrawStashed = osmd.EngravingRules.MinMeasureToDrawIndex + 1;
+                maxMeasureToDrawStashed = osmd.EngravingRules.MaxMeasureToDrawIndex + 1;
             }
             measureToDrawRangeNeedsReset = true;
 
@@ -688,12 +688,12 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             //minMeasureToDraw = 1; // set your custom indexes here. Drawing only one measure can be a special case
             //maxMeasureToDraw = 1;
             console.log("drawing measures in the range: [" + minMeasureToDraw + "," + maxMeasureToDraw + "]");
-            openSheetMusicDisplay.setOptions({
+            osmd.setOptions({
                 drawFromMeasureNumber: minMeasureToDraw,
                 drawUpToMeasureNumber: maxMeasureToDraw
             });
         } else if (measureToDrawRangeNeedsReset) { // reset for other samples
-            openSheetMusicDisplay.setOptions({
+            osmd.setOptions({
                 drawFromMeasureNumber: minMeasureToDrawStashed,
                 drawUpToMeasureNumber: maxMeasureToDrawStashed
             });
@@ -701,13 +701,13 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         }
 
         if (!isCustom && str.includes("Test_Container_height")) {
-            drawingParametersStashed = openSheetMusicDisplay.drawingParameters.drawingParametersEnum;
-            openSheetMusicDisplay.setOptions({
+            drawingParametersStashed = osmd.drawingParameters.drawingParametersEnum;
+            osmd.setOptions({
                 drawingParameters: "compacttight"
             });
             drawingParametersNeedsReset = true;
         } else if (drawingParametersNeedsReset) {
-            openSheetMusicDisplay.setOptions({
+            osmd.setOptions({
                 drawingParameters: drawingParametersStashed
             });
             drawingParametersNeedsReset = false;
@@ -717,14 +717,14 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (!isCustom && str.includes("auto-custom-coloring")) { // set options for auto coloring sample
             autoCustomColoringOptionNeedsReset = true;
             //openSheetMusicDisplay.setOptions({coloringMode: 1}); // Auto-Coloring with pre-defined colors
-            openSheetMusicDisplay.setOptions({
+            osmd.setOptions({
                 coloringMode: 2, // custom coloring set. 0 would be XML, 1 autocoloring
                 coloringSetCustom: ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"],
                 // last color value of coloringSetCustom is for rest notes
                 colorStemsLikeNoteheads: true
             });
         } else if (autoCustomColoringOptionNeedsReset) {
-            openSheetMusicDisplay.setOptions({ // set default values. better would be to restore to stashed values, but unnecessarily complex for demo
+            osmd.setOptions({ // set default values. better would be to restore to stashed values, but unnecessarily complex for demo
                 coloringMode: 0,
                 colorStemsLikeNoteheads: false,
                 coloringSetCustom: null
@@ -732,30 +732,30 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             autoCustomColoringOptionNeedsReset = false;
         }
         if (!isCustom && str.includes("autobeam")) {
-            autobeamOptionStashedValue = openSheetMusicDisplay.EngravingRules.AutoBeamNotes; // stash previously set value, to restore later
+            autobeamOptionStashedValue = osmd.EngravingRules.AutoBeamNotes; // stash previously set value, to restore later
             autobeamOptionNeedsReset = true;
-            openSheetMusicDisplay.setOptions({ autoBeam: true });
+            osmd.setOptions({ autoBeam: true });
         } else if (autobeamOptionNeedsReset) {
-            openSheetMusicDisplay.setOptions({ autoBeam: autobeamOptionStashedValue });
+            osmd.setOptions({ autoBeam: autobeamOptionStashedValue });
             autobeamOptionNeedsReset = false;
         }
         if (!isCustom && str.includes("OSMD_Function_Test_System_and_Page_Breaks")) {
-            pageBreaksOptionStashedValue = openSheetMusicDisplay.EngravingRules.NewPageAtXMLNewPageAttribute;
-            systemBreaksOptionStashedValue = openSheetMusicDisplay.EngravingRules.NewSystemAtXMLNewSystemAttribute;
+            pageBreaksOptionStashedValue = osmd.EngravingRules.NewPageAtXMLNewPageAttribute;
+            systemBreaksOptionStashedValue = osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute;
             pageBreaksOptionNeedsReset = true;
-            openSheetMusicDisplay.setOptions({ newPageFromXML: true, newSystemFromXML: true });
+            osmd.setOptions({ newPageFromXML: true, newSystemFromXML: true });
         }
         else if (pageBreaksOptionNeedsReset) {
-            openSheetMusicDisplay.setOptions({ newPageFromXML: pageBreaksOptionStashedValue, newSystemFromXML: systemBreaksOptionStashedValue });
+            osmd.setOptions({ newPageFromXML: pageBreaksOptionStashedValue, newSystemFromXML: systemBreaksOptionStashedValue });
             pageBreaksOptionNeedsReset = false;
         }
         if (!isCustom && str.includes("Schubert_An_die_Musik")) { // TODO weird layout bug here with part names. but shouldn't be in score anyways
-            drawPartNamesOptionStashedValue = openSheetMusicDisplay.EngravingRules.RenderPartNames;
-            drawPartAbbreviationsStashedValue = openSheetMusicDisplay.EngravingRules.RenderPartAbbreviations;
-            openSheetMusicDisplay.setOptions({ drawPartNames: false, drawPartAbbreviations: false }); // TODO sets osmd.drawingParameters.DrawPartNames! also check EngravingRules.RenderPartAbbreviations, was false
+            drawPartNamesOptionStashedValue = osmd.EngravingRules.RenderPartNames;
+            drawPartAbbreviationsStashedValue = osmd.EngravingRules.RenderPartAbbreviations;
+            osmd.setOptions({ drawPartNames: false, drawPartAbbreviations: false }); // TODO sets osmd.drawingParameters.DrawPartNames! also check EngravingRules.RenderPartAbbreviations, was false
             drawPartNamesOptionNeedsReset = true;
         } else if (drawPartNamesOptionNeedsReset) {
-            openSheetMusicDisplay.setOptions({ drawPartNames: drawPartNamesOptionStashedValue, drawPartAbbreviations: drawPartAbbreviationsStashedValue });
+            osmd.setOptions({ drawPartNames: drawPartNamesOptionStashedValue, drawPartAbbreviations: drawPartAbbreviationsStashedValue });
             drawPartNamesOptionNeedsReset = false;
         }
     }
@@ -789,8 +789,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     function scale() {
         disable();
         window.setTimeout(function () {
-            openSheetMusicDisplay.Zoom = zoom;
-            openSheetMusicDisplay.render();
+            osmd.Zoom = zoom;
+            osmd.render();
             enable();
         }, 0);
     }
@@ -798,8 +798,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     function rerender() {
         disable();
         window.setTimeout(function () {
-            if (openSheetMusicDisplay.IsReadyToRender()) {
-                openSheetMusicDisplay.render();
+            if (osmd.IsReadyToRender()) {
+                osmd.render();
             } else {
                 console.log("[OSMD demo] Loses context!"); // TODO not sure that this message is reasonable, renders fine anyways. maybe vexflow context lost?
                 selectSampleOnChange(); // reload sample e.g. after osmd.clear()
@@ -853,22 +853,22 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
      * @param pdfName if no name is given, the composer and title of the piece will be used
      */
     async function createPdf(pdfName) {
-        if (openSheetMusicDisplay.backendType !== BackendType.SVG) {
+        if (osmd.backendType !== BackendType.SVG) {
             console.log("[OSMD] createPdf(): Warning: createPDF is only supported for SVG background for now, not for Canvas." +
                 " Please use osmd.setOptions({backendType: SVG}).");
             return;
         }
 
         if (pdfName === undefined) {
-            pdfName = openSheetMusicDisplay.sheet.FullNameString + ".pdf";
+            pdfName = osmd.sheet.FullNameString + ".pdf";
         }
 
-        const backends = openSheetMusicDisplay.drawer.Backends;
+        const backends = osmd.drawer.Backends;
         let svgElement = backends[0].getSvgElement();
 
         let pageWidth = 210;
         let pageHeight = 297;
-        const engravingRulesPageFormat = openSheetMusicDisplay.rules.PageFormat;
+        const engravingRulesPageFormat = osmd.rules.PageFormat;
         if (engravingRulesPageFormat && !engravingRulesPageFormat.IsUndefined) {
             pageWidth = engravingRulesPageFormat.width;
             pageHeight = engravingRulesPageFormat.height;
