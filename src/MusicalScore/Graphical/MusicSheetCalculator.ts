@@ -328,8 +328,8 @@ export abstract class MusicSheetCalculator {
                 }
                 const globalWidthFactor: number = this.graphicalMusicSheet.ParentMusicSheet.MeasureWidthFactor;
                 for (const verticalMeasure of measures) {
-                    if (verticalMeasure?.parentSourceMeasure.widthFactor) { // some of these GraphicalMeasures might be undefined (multi-rest)
-                        measureWidthFactor = verticalMeasure.parentSourceMeasure.widthFactor;
+                    if (verticalMeasure?.parentSourceMeasure.WidthFactor) { // some of these GraphicalMeasures might be undefined (multi-rest)
+                        measureWidthFactor = verticalMeasure.parentSourceMeasure.WidthFactor;
                         break;
                     }
                 }

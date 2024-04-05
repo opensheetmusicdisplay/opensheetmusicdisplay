@@ -69,7 +69,7 @@ export class SourceMeasure {
      * This will either be multiplicative with a sheet-wide widthFactor or override it, depending on settings.
      *   (TODO sheet-wide widthFactor not yet implemented)
      */
-    public widthFactor: number = 1;
+    public WidthFactor: number = 1;
 
     private measureNumber: number;
     public MeasureNumberXML: number;
