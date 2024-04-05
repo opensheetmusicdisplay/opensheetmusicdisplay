@@ -689,7 +689,8 @@ export class GraphicalMusicSheet {
         for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
             const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
             const entries: GraphicalStaffEntry[] = graphicalMusicPage.PositionAndShape.
-                getObjectsInRegion<GraphicalStaffEntry>(region, false, "GraphicalStaffEntry");
+                getObjectsInRegion<GraphicalStaffEntry>(region, false, GraphicalStaffEntry.name);
+                // note that "GraphicalStaffEntry" instead of GraphicalStaffEntry.name doesn't work with minified builds
             if (!entries || entries.length === 0) {
                 continue;
             } else {
@@ -725,7 +726,7 @@ export class GraphicalMusicSheet {
     }
 
     /** Returns nearest object of type T near clickPosition.
-     * E.g. GetNearestObject<GraphicalMeasure>(pos, "GraphicalMeasure") returns the nearest measure.
+     * E.g. GetNearestObject<GraphicalMeasure>(pos, GraphicalMeasure.name) returns the nearest measure.
      * Note that there is also GetNearestStaffEntry(), which has a bit more specific code for staff entries.
      * */
     public GetNearestObject<T extends GraphicalObject>(clickPosition: PointF2D, className: string): T {
