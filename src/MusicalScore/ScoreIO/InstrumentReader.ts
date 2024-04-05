@@ -139,7 +139,7 @@ export class InstrumentReader {
       const measureNode: IXmlElement = this.xmlMeasureList[this.currentXmlMeasureIndex];
       const widthFactorAttr: IXmlAttribute = measureNode.attribute("osmdWidthFactor"); // custom xml attribute
       if (widthFactorAttr) {
-        currentMeasure.widthFactor = Number.parseFloat(widthFactorAttr.value);
+        currentMeasure.WidthFactor = Number.parseFloat(widthFactorAttr.value);
       }
       const xmlMeasureListArr: IXmlElement[] = measureNode.elements();
       if (currentMeasure.Rules.UseXMLMeasureNumbers && !Number.isInteger(currentMeasure.MeasureNumberXML)) {
