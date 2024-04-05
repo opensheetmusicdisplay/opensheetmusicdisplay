@@ -137,6 +137,10 @@ export class InstrumentReader {
     let lastNoteWasGrace: boolean = false;
     try {
       const measureNode: IXmlElement = this.xmlMeasureList[this.currentXmlMeasureIndex];
+      const widthFactorAttr: IXmlAttribute = measureNode.attribute("osmdWidthFactor"); // custom xml attribute
+      if (widthFactorAttr) {
+        currentMeasure.widthFactor = Number.parseFloat(widthFactorAttr.value);
+      }
       const xmlMeasureListArr: IXmlElement[] = measureNode.elements();
       if (currentMeasure.Rules.UseXMLMeasureNumbers && !Number.isInteger(currentMeasure.MeasureNumberXML)) {
         const measureNumberXml: number = parseInt(measureNode.attribute("number")?.value, 10);

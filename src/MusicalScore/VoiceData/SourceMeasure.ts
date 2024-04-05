@@ -60,6 +60,16 @@ export class SourceMeasure {
     /** Whether the MusicXML says to print a new page (page break). See OSMDOptions.newPageFromXML */
     public printNewPageXml: boolean = false;
     public IsSystemStartMeasure: boolean = false;
+    /** The graphical measure width will be multiplied by this factor.
+     * E.g. factor 0.6 = 60% will make the measure only 60% as long as before.
+     * Note that this potentially causes issues by counteracting systems like lyrics overlap prevention,
+     * and if you give Vexflow too little width to render it will eventually cause other layout issues too.
+     * This factor is also read by a custom XML attribute osmdWidthFactor in the measure node,
+     *   e.g. <measure number="1" osmdWidthFactor="0.6">
+     * This will either be multiplicative with a sheet-wide widthFactor or override it, depending on settings.
+     *   (TODO sheet-wide widthFactor not yet implemented)
+     */
+    public widthFactor: number = 1;
 
     private measureNumber: number;
     public MeasureNumberXML: number;

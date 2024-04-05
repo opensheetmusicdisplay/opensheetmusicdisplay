@@ -339,16 +339,10 @@ export interface CursorOptions {
      * 4: Current measure to left of current notes
      */
     type: CursorType;
-    /**
-     * Color to draw the cursor
-     */
+    /** Color to draw the cursor */
     color: string;
-    /**
-     * alpha value to be used with color (0.0 transparent, 0.5 medium, 1.0 opaque).
-     */
+    /** alpha value to be used with color (0.0 transparent, 0.5 medium, 1.0 opaque). */
     alpha: number;
-    /**
-     * If true, this cursor will be followed.
-     */
+    /** If true, this cursor will be followed. */
     follow: boolean;
 }
