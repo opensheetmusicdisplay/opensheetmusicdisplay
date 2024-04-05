@@ -69,7 +69,7 @@ import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynam
 import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
-import { GraphicalChordSymbolContainer } from ".";
+import { GraphicalChordSymbolContainer } from "./GraphicalChordSymbolContainer";
 import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
 import { Voice } from "../VoiceData/Voice";
 import { TabNote } from "../VoiceData/TabNote";
@@ -2375,7 +2375,8 @@ export abstract class MusicSheetCalculator {
         // because the page is only available now
         if (this.rules.RenderSingleHorizontalStaffline && this.rules.RenderTitle) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
-            page.PositionAndShape.calculateBoundingBox(["VexFlowMeasure"]); // ignore measures
+            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures
+            // note: "GraphicalMeasure" instead of GraphicalMeasure.name doesn't work with minified builds (they change class names)
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
@@ -2509,7 +2510,7 @@ export abstract class MusicSheetCalculator {
         // we need to do this again to not cut off the title for short scores:
         if (this.rules.RenderSingleHorizontalStaffline && this.rules.RenderTitle) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
-            page.PositionAndShape.calculateBoundingBox(["VexFlowMeasure"]); // ignore measures
+            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
