@@ -193,7 +193,7 @@ export class ClickListener {
             console.log("no current measure selected. ignoring minus button");
             return;
         }
-        this.currentMeasure.parentSourceMeasure.widthFactor -= 0.1;
+        this.currentMeasure.parentSourceMeasure.WidthFactor -= 0.1;
         this.updateMeasureWidthDisplay();
         this.renderAndScrollBack();
     }
@@ -203,9 +203,9 @@ export class ClickListener {
             console.log("no current measure selected. ignoring plus button");
             return;
         }
-        let widthFactor: number = this.currentMeasure.parentSourceMeasure.widthFactor;
+        let widthFactor: number = this.currentMeasure.parentSourceMeasure.WidthFactor;
         widthFactor = Number.parseFloat((widthFactor + 0.1).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
-        this.currentMeasure.parentSourceMeasure.widthFactor = widthFactor;
+        this.currentMeasure.parentSourceMeasure.WidthFactor = widthFactor;
         this.updateMeasureWidthDisplay();
         this.renderAndScrollBack();
     }
@@ -266,7 +266,7 @@ export class ClickListener {
                     console.log(`couldn't find measure ${measureNumber}`);
                     return;
                 }
-                const widthFactor: number = foundMeasure.widthFactor;
+                const widthFactor: number = foundMeasure.WidthFactor;
                 measureElement.setAttribute("osmdWidthFactor", widthFactor.toString());
             }
             this.modifyNodesRecursive(node.childNodes);
@@ -285,7 +285,7 @@ export class ClickListener {
 
     private updateMeasureWidthDisplay(): void {
         const widthDisplay: HTMLElement = document.getElementById("measure-width-display");
-        const percent: number = this.currentMeasure.parentSourceMeasure.widthFactor * 100;
+        const percent: number = this.currentMeasure.parentSourceMeasure.WidthFactor * 100;
         const percentString: string = percent.toFixed(0);
         widthDisplay.innerHTML = `${percentString}%`;
     }
