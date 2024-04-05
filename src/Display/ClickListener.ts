@@ -241,7 +241,7 @@ export class ClickListener {
             console.log("no current measure selected. ignoring measure width input");
             return;
         }
-        const inputString: string = (this.measureWidthInput as any).value.replace("%","");
+        const inputString: string = (this.measureWidthInput as any).value.replace("%","").replace(",",".");
         const inputValue: number = Number.parseFloat(inputString);
         if (inputValue < 10) {
             return; // doesn't make sense to set values < 10%. and you can still do it with the minus button.
@@ -258,7 +258,7 @@ export class ClickListener {
         if (event.inputType === "deleteContentBackward") {
             return; // don't re-render on hitting delete key (e.g. 90% -> 9%)
         }
-        const inputString: string = (this.globalScaleInput as any).value.replace("%","");
+        const inputString: string = (this.globalScaleInput as any).value.replace("%","").replace(",",".");
         if (inputString === "") {
             return;
         }
