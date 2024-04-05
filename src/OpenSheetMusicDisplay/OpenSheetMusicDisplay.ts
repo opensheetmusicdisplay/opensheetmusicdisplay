@@ -94,7 +94,11 @@ export class OpenSheetMusicDisplay {
     protected autoResizeEnabled: boolean;
     protected resizeHandlerAttached: boolean;
     protected followCursor: boolean;
-    protected OnXMLRead: Function;
+    /** A function that is executed when the XML has been read.
+     * The return value will be used as the actual XML OSMD parses,
+     * so you can make modifications to the xml that OSMD will use.
+     * Note that this is (re-)set on osmd.setOptions as `{return xml}`, unless you specify the function in the options. */
+    public OnXMLRead: (xml: string) => string;
 
     private InteractionManager: ClickListener;
 
