@@ -946,5 +946,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         else {
             alert("No vaild .xml/.mxl/.musicxml file!");
         }
+        osmd.EngravingRules.Filename = filename;
     });
 }());

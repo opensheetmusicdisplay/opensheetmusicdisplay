@@ -23,6 +23,7 @@ export class ClickListener {
     private loadedXML: string;
     /** The modified MusicXML with widthFactor and globalScale inserted. (-> download xml button) */
     private modifiedXML: string;
+    public filename: string;
 
     protected EventCallbackMap: Dictionary<string, [HTMLElement|Document, EventListener]> =
                 new Dictionary<string, [HTMLElement|Document, EventListener]>();
@@ -237,7 +238,20 @@ export class ClickListener {
         const encoding: string = "UTF-8";
         const xmlHeader: string = `<?xml version="1.0" encoding="${encoding}"?>`;
         this.modifiedXML = `${xmlHeader}\n${outerHTML}`;
-        console.log(this.modifiedXML);
+        let filename: string = this.rules.Filename;
+        if (!filename) {
+            filename = "sample.musicxml";
+        }
+        this.downloadAsFile(this.modifiedXML, filename, encoding.toLowerCase());
+    }
+
+    private downloadAsFile(filecontent: string, filename: string, encoding: string): void {
+        const hidden_a: HTMLElement = document.createElement("a");
+        hidden_a.setAttribute("href", `data:text/plain;charset=${encoding},` + encodeURIComponent(filecontent));
+        hidden_a.setAttribute("download", filename);
+        document.body.appendChild(hidden_a);
+        hidden_a.click();
+        document.body.removeChild(hidden_a);
     }
 
     private modifyNodesRecursive(nodes: NodeList): NodeList {
@@ -245,12 +259,12 @@ export class ClickListener {
         for (let i: number = 0, length: number = nodes.length; i < length; i += 1) {
             const node: Node = nodes[i];
             if (node.nodeType !== Node.ELEMENT_NODE) {
-                console.log("non-element node"); // informational debug. TODO does this actually happen?
+                // e.g. text node (= 3. element node = 1 (enum value))
                 continue;
             }
             if (node.nodeName.toLowerCase() === "score-partwise") {
                 scorePartwiseElement = <Element>node;
-                scorePartwiseElement.setAttribute("osmdGlobalWidthFactor", "1.5");
+                scorePartwiseElement.setAttribute("osmdMeasureWidthFactor", this.osmd.Sheet.MeasureWidthFactor.toString());
                 // TODO set correct value
             } else if (node.nodeName.toLowerCase() === "measure") {
                 const measureElement: Element = <Element>node;

@@ -33,6 +33,8 @@ export class EngravingRules {
     public CurrentZoom: number;
     public DisplayWidth: number;
     public DisplayHeight: number;
+    /** File name of currently loaded XML file */
+    public Filename: string;
     public StaccatoShorteningFactor: number;
     /** Height (size) of the sheet title. */
     public SheetTitleHeight: number;
