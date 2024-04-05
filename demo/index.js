@@ -442,11 +442,16 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         osmd = new OpenSheetMusicDisplay(canvas, {
             autoResize: true,
             backend: backendType,
+            // defaultColorMusic: "#A7A09E", //myg
             //backend: "canvas",
             //cursorsOptions: [{type: 3, color: "#2bb8cd", alpha: 0.6, follow: true}], // highlight current measure instead of just a small vertical bar over approximate notes
+            defaultFontFamily: "trebuchet ms", //myg
             disableCursor: false,
+            drawCredits: false, //myg
             drawingParameters: compactMode ? "compact" : "default", // try compact (instead of default)
-            drawPartNames: true, // try false
+            drawMeasureNumbers: false, //myg
+            drawMetronomeMarks: false, //myg
+            drawPartNames: false, //myg
             // drawTitle: false,
             // drawSubtitle: false,
             drawFingerings: true,
@@ -482,8 +487,14 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             // tripletsBracketed: true,
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });
-        osmd.EngravingRules.PageTopMargin = 0;
-        osmd.EngravingRules.PageBottomMargin = 0;
+        // myg / notesheet-generator settings: (see OsmdGenerator)
+        osmd.EngravingRules.PageTopMargin = 4;
+        osmd.EngravingRules.PageBottomMargin = 4;
+        osmd.EngravingRules.PageLeftMargin = 6; // originally 4 in myg. fix Beethoven
+        osmd.EngravingRules.PageRightMargin = 4;
+        osmd.EngravingRules.AutoGenerateMultipleRestMeasuresFromRestMeasures = false;
+        osmd.EngravingRules.TupletNumberLimitConsecutiveRepetitions = false;
+        osmd.EngravingRules.ChordOverlapAllowedIntoNextMeasure = 5;
         osmd.EngravingRules.RenderTitle = false;
         osmd.EngravingRules.RenderLyricist = false;
         osmd.EngravingRules.RenderComposer = false;
