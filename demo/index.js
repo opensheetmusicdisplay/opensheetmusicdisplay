@@ -592,6 +592,7 @@ import { beethovenSample64 } from './beethoven64';
             if (osmd.getLogLevel() < 2) { // debug or trace
                 console.log("[OSMD] selectSampleOnChange without param");
             }
+            // selectSampleOnChange(); // tries to load from sample list, needs server/localhost
             const base64Decode = base64EncodedString =>
                 new TextDecoder().decode(Uint8Array.from(atob(base64EncodedString), m => m.codePointAt(0)));
             selectSampleOnChange(base64Decode(beethovenSample64));
