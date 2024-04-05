@@ -1,9 +1,11 @@
 import { Dictionary } from "typescript-collections";
 import { PointF2D } from "../Common/DataObjects/PointF2D";
-import { GraphicalMeasure, MusicPartManagerIterator } from "../MusicalScore";
 import { EngravingRules } from "../MusicalScore/Graphical/EngravingRules";
-import { GraphicalVoiceEntry } from "../MusicalScore/Graphical/GraphicalVoiceEntry";
-import { CursorType, OpenSheetMusicDisplay } from "../OpenSheetMusicDisplay";
+import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
+import { OpenSheetMusicDisplay } from "../OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import { GraphicalStaffEntry } from "../MusicalScore/Graphical/GraphicalStaffEntry";
+import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
+import { CursorType } from "../OpenSheetMusicDisplay/OSMDOptions";
 
 /** Listens for clicks and selects current measure etc.
  * This is similar to classes like SheetRenderingManager and WebSheetRenderingManager in the audio player,
@@ -113,9 +115,11 @@ export class ClickListener {
         // }
         const clickPosition: PointF2D = this.getPositionInUnits(relativePositionX, relativePositionY);
         // this.unitPosTouched(clickPosition, relativePositionX, relativePositionY);
-        const nearestVoiceEntry: GraphicalVoiceEntry = this.osmd.GraphicSheet.GetNearestVoiceEntry(clickPosition);
-        if (nearestVoiceEntry) {
-            this.osmd.cursor.iterator = new MusicPartManagerIterator(this.osmd.Sheet, nearestVoiceEntry.parentStaffEntry.getAbsoluteTimestamp());
+        const nearestStaffEntry: GraphicalStaffEntry = this.osmd.GraphicSheet.GetNearestStaffEntry(clickPosition);
+        // const nearestMeasure: GraphicalMeasure = this.osmd.GraphicSheet.GetNearestObject<GraphicalMeasure>(clickPosition, "GraphicalMeasure");
+        // const nearestMeasure: GraphicalMeasure = this.osmd.GraphicSheet.getClickedObjectOfType<GraphicalMeasure>(clickPosition);
+        if (nearestStaffEntry) {
+            this.osmd.cursor.iterator = new MusicPartManagerIterator(this.osmd.Sheet, nearestStaffEntry.getAbsoluteTimestamp());
             this.currentMeasure = this.osmd.cursor.GNotesUnderCursor()[0]?.parentVoiceEntry.parentStaffEntry.parentMeasure;
             if (this.lastMeasureClicked === this.currentMeasure) {
                 this.toggleCursorListener(); // toggle cursor (highlight / de-highlight)
