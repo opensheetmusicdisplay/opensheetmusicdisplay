@@ -188,7 +188,9 @@ export class ClickListener {
             console.log("no current measure selected. ignoring plus button");
             return;
         }
-        this.currentMeasure.parentSourceMeasure.widthFactor += 0.1;
+        let widthFactor: number = this.currentMeasure.parentSourceMeasure.widthFactor;
+        widthFactor = Number.parseFloat((widthFactor + 0.1).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
+        this.currentMeasure.parentSourceMeasure.widthFactor = widthFactor;
         this.updateMeasureWidthDisplay();
         this.renderAndScrollBack();
     }
