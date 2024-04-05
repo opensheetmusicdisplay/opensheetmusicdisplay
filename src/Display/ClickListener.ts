@@ -267,7 +267,7 @@ export class ClickListener {
                     return;
                 }
                 const widthFactor: number = foundMeasure.widthFactor;
-                measureElement.setAttribute("widthFactor", widthFactor.toString());
+                measureElement.setAttribute("osmdWidthFactor", widthFactor.toString());
             }
             this.modifyNodesRecursive(node.childNodes);
         }

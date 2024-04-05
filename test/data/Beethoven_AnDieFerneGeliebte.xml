@@ -103,7 +103,7 @@
   </part-list>
   <!--=========================================================-->
   <part id="P1">
-    <measure number="1" width="324" widthFactor="1.0">
+    <measure number="1" width="324" osmdWidthFactor="1.0">
       <print page-number="1">
         <system-layout>
           <system-margins>

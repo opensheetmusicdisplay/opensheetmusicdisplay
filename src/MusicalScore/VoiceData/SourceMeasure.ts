@@ -64,8 +64,8 @@ export class SourceMeasure {
      * E.g. factor 0.6 = 60% will make the measure only 60% as long as before.
      * Note that this potentially causes issues by counteracting systems like lyrics overlap prevention,
      * and if you give Vexflow too little width to render it will eventually cause other layout issues too.
-     * This factor is also read by a custom XML attribute widthFactor in the measure node,
-     *   e.g. <measure number="1" widthFactor="0.6">
+     * This factor is also read by a custom XML attribute osmdWidthFactor in the measure node,
+     *   e.g. <measure number="1" osmdWidthFactor="0.6">
      * This will either be multiplicative with a sheet-wide widthFactor or override it, depending on settings.
      *   (TODO sheet-wide widthFactor not yet implemented)
      */
