@@ -326,13 +326,14 @@ export abstract class MusicSheetCalculator {
                 if (minimumStaffEntriesWidth > maxWidth) {
                     maxWidth = minimumStaffEntriesWidth;
                 }
+                const globalWidthFactor: number = this.graphicalMusicSheet.ParentMusicSheet.MeasureWidthFactor;
                 for (const verticalMeasure of measures) {
                     if (verticalMeasure?.parentSourceMeasure.widthFactor) { // some of these GraphicalMeasures might be undefined (multi-rest)
                         measureWidthFactor = verticalMeasure.parentSourceMeasure.widthFactor;
                         break;
                     }
                 }
-                minimumStaffEntriesWidth *= measureWidthFactor;
+                minimumStaffEntriesWidth *= globalWidthFactor * measureWidthFactor;
                 //console.log(`min width for measure ${measures[0].MeasureNumber}: ${minimumStaffEntriesWidth}`);
                 MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
                 // minLength = Math.max(minLength, minimumStaffEntriesWidth * 1.2 + maxInstructionsLength);

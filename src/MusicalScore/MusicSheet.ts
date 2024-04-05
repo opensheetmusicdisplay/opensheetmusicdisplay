@@ -81,6 +81,14 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     // (*) private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
     /* Whether BPM info is present in the sheet. If it is set to false, each measure's BPM was set to a default of 120. */
     private hasBPMInfo: boolean;
+    /** Global factor / scale by which all measure widths will be scaled.
+     * (e.g. 0.7 = all measures are only 70% as long)
+     * This is similar to SourceMeasure.widthFactor,
+     *   which only applies to one measure and is multiplicative to the global factor.
+     *   (so if globalWidthFactor is 0.7 and measure.widthFactor is 0.7, that measure's length will be 49% as long)
+     * As with measure.widthFactor, use this with caution, as it can cause overlaps, especially with lyrics.
+     */
+    public MeasureWidthFactor: number = 1.0;
 
     /**
      * Get the global index within the music sheet for this staff.
