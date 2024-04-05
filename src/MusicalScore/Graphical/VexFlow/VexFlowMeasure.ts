@@ -622,6 +622,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param ctx
      */
     public draw(ctx: Vex.IRenderContext): void {
+        const measureNode: SVGGElement = ctx.openGroup() as SVGGElement;
+        if (measureNode) {
+            measureNode.classList?.add("vf-measure");
+            measureNode.id = `${this.MeasureNumber}`;
+        }
 
         // Draw stave lines
         this.stave.setContext(ctx).draw();
@@ -689,10 +694,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
             tie.setContext(ctx);
             tie.draw();
         }
+        ctx.closeGroup(); // close measure group
 
         // Draw vertical lines
         for (const connector of this.connectors) {
+            ctx.openGroup("connector");
             connector.setContext(ctx).draw();
+            ctx.closeGroup();
         }
         this.correctNotePositions();
     }

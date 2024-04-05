@@ -13,7 +13,7 @@ import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
 import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
 import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
-import { CursorOptions } from "./OSMDOptions";
+import { CursorOptions, CursorType } from "./OSMDOptions";
 import { BoundingBox } from "../MusicalScore/Graphical/BoundingBox";
 import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
 
@@ -250,25 +250,25 @@ export class Cursor {
     const cursorElement: HTMLImageElement = this.cursorElement;
     let newWidth: number = 0;
     switch (this.cursorOptions.type) {
-      case 1:
+      case CursorType.ThinLeft:
         cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
         newWidth = 5 * this.openSheetMusicDisplay.zoom;
         break;
-      case 2:
+      case CursorType.ShortThinTopLeft:
         cursorElement.style.top = ((y-2.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = (x * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.height = (1.5 * 10.0 * this.openSheetMusicDisplay.zoom);
         newWidth = 5 * this.openSheetMusicDisplay.zoom;
         break;
-      case 3:
+      case CursorType.CurrentArea:
         cursorElement.style.top = measurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
         cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
         cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
         newWidth = measurePositionAndShape.Size.width * 10 * this.openSheetMusicDisplay.zoom;
         break;
-      case 4:
+      case CursorType.CurrentAreaLeft:
         cursorElement.style.top = measurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
         cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
         cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
@@ -344,10 +344,10 @@ export class Cursor {
     // Generate the gradient
     const gradient: CanvasGradient = ctx.createLinearGradient(0, 0, this.cursorElement.width, 0);
     switch (this.cursorOptions.type) {
-      case 1:
-      case 2:
-      case 3:
-      case 4:
+      case CursorType.ThinLeft:
+      case CursorType.ShortThinTopLeft:
+      case CursorType.CurrentArea:
+      case CursorType.CurrentAreaLeft:
         gradient.addColorStop(1, this.cursorOptions.color);
         break;
       default:

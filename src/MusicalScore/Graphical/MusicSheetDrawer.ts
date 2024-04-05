@@ -439,7 +439,10 @@ export abstract class MusicSheetDrawer {
      * @param layer Number of the layer that the lyrics should be drawn in
      */
     protected drawDashes(lyricsDashes: GraphicalLabel[]): void {
-        lyricsDashes.forEach(dash => dash.SVGNode = this.drawLabel(dash, <number>GraphicalLayers.Notes));
+        lyricsDashes.forEach(dash => {
+            dash.SVGNode = this.drawLabel(dash, <number>GraphicalLayers.Notes);
+            (dash.SVGNode as SVGGElement)?.classList.add("dash");
+        });
     }
 
     // protected drawSlur(slur: GraphicalSlur, abs: PointF2D): void {
