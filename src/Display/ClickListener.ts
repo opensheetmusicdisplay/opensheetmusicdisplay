@@ -270,20 +270,20 @@ export class ClickListener {
         if (inputString === "") {
             return;
         }
-        let inputValue: number = Number.parseFloat(inputString);
+        const inputValue: number = Number.parseFloat(inputString);
         if (typeof inputValue !== ("number") || isNaN(inputValue)) {
             console.log("invalid global scale input");
             return;
         }
         if (inputValue < 50 || inputValue > 500) {
             console.log("global scale < 50 too low or > 300 too high.");
-            if (inputValue >= 10) {
-                // reset to 50% to indicate that that's the minimum
-                inputValue = 50;
-                (this.globalScaleInput as any).value = "50%";
-            } else {
+            // if (inputValue >= 10) {
+            //     // reset to 50% to indicate that that's the minimum
+            //     inputValue = 50;
+            //     (this.globalScaleInput as any).value = "50%"; // this can be irritating
+            // } else {
                 return; // doesn't make sense to set values < 50%, can crash OSMD
-            }
+            // }
         }
         this.osmd.Sheet.MeasureWidthFactor = inputValue / 100;
         this.renderAndScrollBack();
