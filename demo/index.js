@@ -672,7 +672,8 @@ import { beethovenSample64 } from './beethoven64';
                 osmd.zoom = zoom;
                 //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
                 osmd.render();
-                osmd.InteractionManager.SheetRendered();
+                osmd.InteractionManager?.SheetRendered();
+                osmd.InteractionManager?.NewSheetLoaded();
             },
             function (e) {
                 errorLoadingOrRenderingSheet(e, "rendering");

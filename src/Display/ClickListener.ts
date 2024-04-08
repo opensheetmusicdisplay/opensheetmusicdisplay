@@ -92,6 +92,12 @@ export class ClickListener {
         this.updateFilenameDisplay();
     }
 
+    /** Called when new sheet was loaded and rendered, e.g. via drag and drop. */
+    public NewSheetLoaded(): void {
+        this.currentMeasure = undefined;
+        this.updateSelectedMeasureField("-");
+    }
+
     public getPositionInUnits(relativePositionX: number, relativePositionY: number): PointF2D {
         const position: PointF2D = new PointF2D(relativePositionX, relativePositionY);
         if (this.rules.RenderSingleHorizontalStaffline) {
@@ -168,11 +174,14 @@ export class ClickListener {
             this.osmd.cursor.CursorOptions.alpha = 0.1; // make this more transparent so that it's easier to judge the measure visually
             this.osmd.cursor.show();
             this.osmd.cursor.update();
-            const currentMeasureField: HTMLElement = document.getElementById("selected-measure-field");
-            currentMeasureField.innerHTML = `Selected Measure: ${this.currentMeasure?.MeasureNumber}`;
+            this.updateSelectedMeasureField(this.currentMeasure?.MeasureNumber.toString());
             this.updateMeasureWidthDisplay();
             this.lastMeasureClicked = this.currentMeasure;
         }
+    }
+
+    private updateSelectedMeasureField(selectedMeasure: string): void {
+        document.getElementById("selected-measure-field").innerHTML = `Selected Measure: ${selectedMeasure}`;
     }
 
     private getOffsetCoordinates(clickX: number, clickY: number): PointF2D {
