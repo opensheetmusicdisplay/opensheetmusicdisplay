@@ -245,16 +245,13 @@ export class ClickListener {
     }
 
     private measureInputListener(event: InputEvent): void {
-        if (event.inputType === "deleteContentBackward") {
-            return; // don't re-render on hitting delete key (e.g. 90% -> 9%)
-        }
         if (!this.currentMeasure) {
             console.log("no current measure selected. ignoring measure width input");
             return;
         }
         const inputString: string = (this.measureWidthInput as any).value.replace("%","").replace(",",".");
         const inputValue: number = Number.parseFloat(inputString);
-        if (inputValue < 10) {
+        if (inputValue < 10 || inputValue > 500) {
             return; // doesn't make sense to set values < 10%. and you can still do it with the minus button.
         }
         if (typeof inputValue !== ("number") || isNaN(inputValue)) {
@@ -266,9 +263,9 @@ export class ClickListener {
     }
 
     private globalScaleInputListener(event: InputEvent): void {
-        if (event.inputType === "deleteContentBackward") {
-            return; // don't re-render on hitting delete key (e.g. 90% -> 9%)
-        }
+        // if (event.inputType === "deleteContentBackward") {
+        //     return; // don't re-render on hitting backspace (e.g. 90% -> 9%)
+        // }
         const inputString: string = (this.globalScaleInput as any).value.replace("%","").replace(",",".");
         if (inputString === "") {
             return;
@@ -278,8 +275,8 @@ export class ClickListener {
             console.log("invalid global scale input");
             return;
         }
-        if (inputValue < 50) {
-            console.log("global scale < 50 too low.");
+        if (inputValue < 50 || inputValue > 500) {
+            console.log("global scale < 50 too low or > 300 too high.");
             if (inputValue >= 10) {
                 // reset to 50% to indicate that that's the minimum
                 inputValue = 50;
