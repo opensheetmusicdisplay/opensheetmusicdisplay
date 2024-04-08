@@ -26,6 +26,8 @@ export class ClickListener {
     public filename: string;
     private measureWidthInput: HTMLElement;
     private globalScaleInput: HTMLElement;
+    /** Percentage steps for + and - buttons as decimal. E.g. 0.05 = 5% steps. */
+    public percentageStep: number = 0.05;
 
     protected EventCallbackMap: Dictionary<string, [HTMLElement|Document, EventListener]> =
                 new Dictionary<string, [HTMLElement|Document, EventListener]>();
@@ -215,7 +217,7 @@ export class ClickListener {
             return;
         }
         let widthFactor: number = this.currentMeasure.parentSourceMeasure.WidthFactor;
-        widthFactor = Number.parseFloat((widthFactor - 0.1).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
+        widthFactor = Number.parseFloat((widthFactor - this.percentageStep).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
         this.currentMeasure.parentSourceMeasure.WidthFactor = widthFactor;
         this.updateMeasureWidthDisplay();
         this.renderAndScrollBack();
@@ -227,7 +229,7 @@ export class ClickListener {
             return;
         }
         let widthFactor: number = this.currentMeasure.parentSourceMeasure.WidthFactor;
-        widthFactor = Number.parseFloat((widthFactor + 0.1).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
+        widthFactor = Number.parseFloat((widthFactor + this.percentageStep).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
         this.currentMeasure.parentSourceMeasure.WidthFactor = widthFactor;
         this.updateMeasureWidthDisplay();
         this.renderAndScrollBack();
@@ -283,7 +285,7 @@ export class ClickListener {
 
     private sheetMinusWidthListener(): void {
         let widthFactor: number = this.osmd.Sheet.MeasureWidthFactor;
-        widthFactor = Number.parseFloat((widthFactor - 0.1).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
+        widthFactor = Number.parseFloat((widthFactor - this.percentageStep).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
         this.osmd.Sheet.MeasureWidthFactor = widthFactor;
         this.updateSheetFactorDisplay();
         this.renderAndScrollBack();
@@ -291,7 +293,7 @@ export class ClickListener {
 
     private sheetPlusWidthListener(): void {
         let widthFactor: number = this.osmd.Sheet.MeasureWidthFactor;
-        widthFactor = Number.parseFloat((widthFactor + 0.1).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
+        widthFactor = Number.parseFloat((widthFactor + this.percentageStep).toFixed(2)); // prevent e.g. 1.20000001 (float inaccuracy)
         this.osmd.Sheet.MeasureWidthFactor = widthFactor;
         this.updateSheetFactorDisplay();
         this.renderAndScrollBack();
@@ -364,7 +366,6 @@ export class ClickListener {
             if (node.nodeName.toLowerCase() === "score-partwise") {
                 scorePartwiseElement = <Element>node;
                 scorePartwiseElement.setAttribute("osmdMeasureWidthFactor", this.osmd.Sheet.MeasureWidthFactor.toString());
-                // TODO set correct value
             } else if (node.nodeName.toLowerCase() === "measure") {
                 const measureElement: Element = <Element>node;
                 const measureNumber: number = Number.parseInt(measureElement.getAttribute("number"), 10);
