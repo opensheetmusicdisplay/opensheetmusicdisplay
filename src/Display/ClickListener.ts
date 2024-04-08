@@ -369,9 +369,17 @@ export class ClickListener {
                 // e.g. text node (= 3. element node = 1 (enum value))
                 continue;
             }
+            const delta: number = 0.00001; // delta for floating point inaccuracy tolerance
             if (node.nodeName.toLowerCase() === "score-partwise") {
                 scorePartwiseElement = <Element>node;
                 scorePartwiseElement.setAttribute("osmdMeasureWidthFactor", this.osmd.Sheet.MeasureWidthFactor.toString());
+                if (Math.abs(this.osmd.Sheet.MeasureWidthFactor - 1.0) < delta) {
+                    // basically if factor === 1.0, just catching floating point inaccuracy, e.g. 1.0000001
+                    //   note that we technically don't need to do that, the factor is rounded already via toFixed()
+
+                    // delete attribute: we don't need or want "widthFactor='1.0'" (100%) in the XML
+                    scorePartwiseElement.removeAttribute("osmdMeasureWidthFactor");
+                }
             } else if (node.nodeName.toLowerCase() === "measure") {
                 const measureElement: Element = <Element>node;
                 const measureNumber: number = Number.parseInt(measureElement.getAttribute("number"), 10);
@@ -388,6 +396,9 @@ export class ClickListener {
                 }
                 const widthFactor: number = foundMeasure.WidthFactor;
                 measureElement.setAttribute("osmdWidthFactor", widthFactor.toString());
+                if (Math.abs(widthFactor - 1.0) < delta) {
+                    measureElement.removeAttribute("osmdWidthFactor");
+                }
             }
             this.modifyNodesRecursive(node.childNodes);
         }
