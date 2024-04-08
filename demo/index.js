@@ -810,7 +810,8 @@ import { beethovenSample64 } from './beethoven64';
         disable();
         window.setTimeout(function () {
             osmd.Zoom = zoom;
-            osmd.render();
+            osmd.InteractionManager?.ZoomChanged();
+            // osmd.render();
             enable();
         }, 0);
     }

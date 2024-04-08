@@ -87,15 +87,21 @@ export class ClickListener {
         (this.globalScaleInput as any).value = "100%"; // without this, it's not editable on loading the page
     }
 
+    // Called in index.js
     public SheetRendered(): void {
         this.updateSheetFactorDisplay();
         this.updateFilenameDisplay();
     }
 
-    /** Called when new sheet was loaded and rendered, e.g. via drag and drop. */
+    /** Called in index.js when new sheet was loaded and rendered, e.g. via drag and drop. */
     public NewSheetLoaded(): void {
         this.currentMeasure = undefined;
         this.updateSelectedMeasureField("-");
+    }
+
+    // Called in index.js
+    public ZoomChanged(): void {
+        this.renderAndScrollBack();
     }
 
     public getPositionInUnits(relativePositionX: number, relativePositionY: number): PointF2D {
@@ -331,7 +337,11 @@ export class ClickListener {
         //   (without this, after rendering, it "scrolled back" to the initial 0 horizontal scroll / reset scroll)
         const currentScrollX: number = this.osmdContainer.scrollLeft;
         this.osmd.render();
-        this.osmdContainer.scrollLeft = currentScrollX;
+        this.scrollTo(currentScrollX);
+    }
+
+    public scrollTo(value: number): void {
+        this.osmdContainer.scrollLeft = value;
     }
 
     private downloadXmlListener(): void {
