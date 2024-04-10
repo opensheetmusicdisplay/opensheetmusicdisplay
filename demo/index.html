@@ -34,9 +34,12 @@
     <div class="column">
         <h3 class="ui header">Rendering:</h3>
         <div>
-            <div class="ui horizontal buttons">
-                <div class="ui button" id="debug-re-render-btn">Re-render</div>
-                <div class="ui button" id="toggle-cursor-btn" style="margin-left: 8px">Cursor</div>
+            <div class="ui horizontal">
+                <!-- <div class="ui button" id="debug-re-render-btn">Re-render</div> -->
+                <div class="ui toggle checkbox">
+                    <input type="checkbox" name="toggle-cursor" id="toggle-cursor-btn" checked="true"/>
+                    <label title="Highlight modified measures in grey">Highlight Changes</label>
+                </div>
             </div>
         </div>
     </div>

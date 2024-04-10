@@ -5,8 +5,10 @@ import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
 import { OpenSheetMusicDisplay } from "../OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { GraphicalStaffEntry } from "../MusicalScore/Graphical/GraphicalStaffEntry";
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
-import { CursorType } from "../OpenSheetMusicDisplay/OSMDOptions";
+import { CursorOptions, CursorType } from "../OpenSheetMusicDisplay/OSMDOptions";
 import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
+import { Cursor } from "../OpenSheetMusicDisplay/Cursor";
+import { Fraction } from "../Common/DataObjects/Fraction";
 // import { IXmlElement } from "../Common/FileIO/Xml";
 
 /** Listens for clicks and selects current measure etc.
@@ -26,8 +28,21 @@ export class ClickListener {
     public filename: string;
     private measureWidthInput: HTMLElement;
     private globalScaleInput: HTMLElement;
+    private toggleHighlightsBtn: HTMLInputElement;
     /** Percentage steps for + and - buttons as decimal. E.g. 0.05 = 5% steps. */
     public percentageStep: number = 0.05;
+    public currentMeasureCursorOptions: CursorOptions = {
+        type: CursorType.CurrentArea,
+        alpha: 0.1, // more transparent than default so that it's easier to judge the measure visually
+        color: "#0f0",
+        follow: false
+    };
+    public modifiedMeasuresCursorOptions: CursorOptions = {
+        type: CursorType.CurrentArea,
+        alpha: 0.3, // more transparent than default so that it's easier to judge the measure visually
+        color: "#f0ebdf", // grey
+        follow: false
+    };
 
     protected EventCallbackMap: Dictionary<string, [HTMLElement|Document, EventListener]> =
                 new Dictionary<string, [HTMLElement|Document, EventListener]>();
@@ -63,7 +78,7 @@ export class ClickListener {
         const sheetPlusBtn: HTMLElement = document.getElementById("sheet-plus-btn");
         const measureMinusBtn: HTMLElement = document.getElementById("measure-width-minus-btn");
         const measurePlusBtn: HTMLElement = document.getElementById("measure-width-plus-btn");
-        const toggleCursorBtn: HTMLElement = document.getElementById("toggle-cursor-btn");
+        this.toggleHighlightsBtn = (document.getElementById("toggle-cursor-btn") as HTMLInputElement);
         const downloadBtn: HTMLElement = document.getElementById("download-xml-btn");
 
         this.measureWidthInput = document.getElementById("measure-width-display");
@@ -76,8 +91,8 @@ export class ClickListener {
         measureMinusBtn.addEventListener("click", measureMinusEvent);
         const measurePlusEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.measurePlusListener.bind(this);
         measurePlusBtn.addEventListener("click", measurePlusEvent);
-        const toggleCursorEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.toggleCursorListener.bind(this);
-        toggleCursorBtn.addEventListener("click", toggleCursorEvent);
+        const toggleHighlightsEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.toggleHighlightsListener.bind(this);
+        this.toggleHighlightsBtn?.addEventListener("click", toggleHighlightsEvent);
         const downloadXmlEvent: (clickEvent: MouseEvent | TouchEvent) => void = this.downloadXmlListener.bind(this);
         downloadBtn.addEventListener("click", downloadXmlEvent);
         const measureInputEvent: (event: InputEvent) => void = this.measureInputListener.bind(this);
@@ -97,6 +112,31 @@ export class ClickListener {
     public NewSheetLoaded(): void {
         this.currentMeasure = undefined;
         this.updateSelectedMeasureField("-");
+        this.resetCursors();
+        this.toggleHighlightsListener(); // highlight modified measures if button/slider checked
+    }
+
+    public resetCursors(): void {
+        const cursorsOptions: CursorOptions[] = [];
+        // add measure cursor
+        cursorsOptions.push(this.currentMeasureCursorOptions);
+        // add one cursor per measure to show which measures are modified
+        for (let i: number = 1; i <= this.osmd.GraphicSheet.MeasureList.length; i++) {
+            cursorsOptions.push({...this.modifiedMeasuresCursorOptions}); // copy, not reference
+        }
+        this.osmd.cursorsOptions = cursorsOptions;
+        this.osmd.enableOrDisableCursors(true);
+        // set each cursor to its measure's position
+        for (let i: number = 1; i < this.osmd.GraphicSheet.MeasureList.length; i++) {
+            const measureCursor: Cursor = this.osmd.cursors[i];
+            const timestamp: Fraction = this.osmd.GraphicSheet.MeasureList[i][0]?.parentSourceMeasure.AbsoluteTimestamp;
+            if (!timestamp) {
+                console.log(`measure ${i} doesn't exist. skipping cursor.`);
+                continue;
+            }
+            measureCursor.iterator = new MusicPartManagerIterator(this.osmd.Sheet, timestamp);
+            measureCursor.update();
+        }
     }
 
     // Called in index.js
@@ -170,20 +210,23 @@ export class ClickListener {
         // const nearestMeasure: GraphicalMeasure = this.osmd.GraphicSheet.getClickedObjectOfType<GraphicalMeasure>(clickPosition);
         if (nearestStaffEntry) {
             this.osmd.cursor.iterator = new MusicPartManagerIterator(this.osmd.Sheet, nearestStaffEntry.getAbsoluteTimestamp());
-            this.currentMeasure = this.osmd.cursor.GNotesUnderCursor()[0]?.parentVoiceEntry.parentStaffEntry.parentMeasure;
+            this.currentMeasure = this.getCursorCurrentMeasure(this.osmd.cursor);
             if (this.lastMeasureClicked === this.currentMeasure) {
-                this.toggleCursorListener(); // toggle cursor (highlight / de-highlight)
+                this.toggleCurrentMeasureHighlight(); // toggle cursor (highlight / de-highlight)
                 this.lastMeasureClicked = this.currentMeasure;
                 return; // could also use an else block instead, but increases indentation
             }
-            this.osmd.cursor.CursorOptions.type = CursorType.CurrentArea;
-            this.osmd.cursor.CursorOptions.alpha = 0.1; // make this more transparent so that it's easier to judge the measure visually
+            this.osmd.cursor.CursorOptions = this.currentMeasureCursorOptions; // set alpha etc
             this.osmd.cursor.show();
             this.osmd.cursor.update();
             this.updateSelectedMeasureField(this.currentMeasure?.MeasureNumber.toString());
             this.updateMeasureWidthDisplay();
             this.lastMeasureClicked = this.currentMeasure;
         }
+    }
+
+    private getCursorCurrentMeasure(cursor: Cursor): GraphicalMeasure {
+        return cursor.GNotesUnderCursor()[0]?.parentVoiceEntry.parentStaffEntry.parentMeasure;
     }
 
     private updateSelectedMeasureField(selectedMeasure: string): void {
@@ -236,6 +279,7 @@ export class ClickListener {
         this.currentMeasure.parentSourceMeasure.WidthFactor = widthFactor;
         this.updateMeasureWidthDisplay();
         this.renderAndScrollBack();
+        this.MeasureWidthChanged();
     }
 
     private measurePlusListener(clickEvent: MouseEvent | TouchEvent): void {
@@ -248,6 +292,7 @@ export class ClickListener {
         this.currentMeasure.parentSourceMeasure.WidthFactor = widthFactor;
         this.updateMeasureWidthDisplay();
         this.renderAndScrollBack();
+        this.MeasureWidthChanged();
     }
 
     private measureInputListener(event: InputEvent): void {
@@ -266,6 +311,46 @@ export class ClickListener {
         }
         this.currentMeasure.parentSourceMeasure.WidthFactor = inputValue / 100;
         this.renderAndScrollBack();
+        this.MeasureWidthChanged();
+    }
+
+    public MeasureWidthChanged(): void {
+        if (this.toggleHighlightsBtn.checked) {
+            this.highlightMeasureIfModified(this.currentMeasure);
+        }
+    }
+
+    public highlightMeasureIfModified(measure: GraphicalMeasure): void {
+        // check if current measure has a cursor
+        let measureCursor: Cursor;
+        for (let i: number = 1; i < this.osmd.cursors.length; i++) {
+            const cursor: Cursor = this.osmd.cursors[i];
+            if (this.getCursorCurrentMeasure(cursor) === measure) {
+                measureCursor = cursor;
+                break;
+            }
+        }
+        if (measureCursor) {
+            if (measure.parentSourceMeasure.WidthFactor === 1.0) {
+                // remove highlight / cursor
+                measureCursor.hide();
+                return;
+            } else if (measureCursor.hidden) {
+                measureCursor.show();
+                return;
+            }
+        }
+    }
+
+    public highlightAllModifiedMeasures(): void {
+        for (const verticalMeasures of this.osmd.GraphicSheet.MeasureList) {
+            for (const measure of verticalMeasures) {
+                if (!measure) {
+                    continue; // multi-rest
+                }
+                this.highlightMeasureIfModified(measure);
+            }
+        }
     }
 
     private globalScaleInputListener(event: InputEvent): void {
@@ -324,11 +409,22 @@ export class ClickListener {
         }
     }
 
-    private toggleCursorListener(): void {
-        if (this.osmd.cursor.hidden) {
-            this.osmd.cursor.show();
+    private toggleHighlightsListener(): void {
+        const enabled: boolean = this.toggleHighlightsBtn.checked;
+        if (enabled) {
+            this.highlightAllModifiedMeasures();
         } else {
+            for (let i: number = 1; i < this.osmd.cursors.length; i++) {
+                this.osmd.cursors[i].hide();
+            }
+        }
+    }
+
+    private toggleCurrentMeasureHighlight(toggleOff: boolean = false): void {
+        if (toggleOff || !this.osmd.cursor.hidden) {
             this.osmd.cursor.hide();
+        } else {
+            this.osmd.cursor.show();
         }
     }
 
