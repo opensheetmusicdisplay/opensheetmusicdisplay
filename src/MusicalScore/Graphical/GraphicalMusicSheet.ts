@@ -230,6 +230,19 @@ export class GraphicalMusicSheet {
         return undefined; // shouldn't happen
     }
 
+    public findGraphicalMeasureByMeasureNumber(measureNumber: number, staffIndex: number): GraphicalMeasure {
+        // start with index = measureNumber, as a piece with a pickup measure starts with measure number 0
+        for (let i: number = measureNumber; i >= 0; i--) {
+            if (this.MeasureList[i]) {
+                const measure: GraphicalMeasure = this.MeasureList[i][staffIndex];
+                if (measure?.MeasureNumber === measureNumber) {
+                    return measure;
+                }
+            }
+        }
+        return undefined;
+    }
+
     /**
      * Search the MeasureList for a certain GraphicalStaffEntry with the given SourceStaffEntry,
      * at a certain verticalIndex (eg a corresponding Staff), starting at a specific horizontalIndex (eg specific GraphicalMeasure).
