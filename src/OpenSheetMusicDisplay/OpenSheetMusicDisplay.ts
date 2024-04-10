@@ -67,7 +67,8 @@ export class OpenSheetMusicDisplay {
         this.InteractionManager = new ClickListener(this);
     }
 
-    private cursorsOptions: CursorOptions[] = [];
+    /** Options from which OSMD creates cursors in enableOrDisableCursors(). */
+    public cursorsOptions: CursorOptions[] = [];
     public cursors: Cursor[] = [];
     public get cursor(): Cursor { // lowercase for backwards compatibility since cursor -> cursors change
         return this.cursors[0];
