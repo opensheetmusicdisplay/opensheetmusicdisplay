@@ -439,4 +439,13 @@ export class Cursor {
   public set CursorOptions(value: CursorOptions) {
     this.cursorOptions = value;
   }
+
+  /** Hides and removes the cursor element, deletes object variables. */
+  public Dispose(): void {
+    this.hide();
+    this.container.removeChild(this.cursorElement);
+    this.rules = undefined;
+    this.openSheetMusicDisplay = undefined;
+    this.cursorOptions = undefined;
+  }
 }
