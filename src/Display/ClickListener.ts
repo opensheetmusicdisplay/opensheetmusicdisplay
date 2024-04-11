@@ -39,8 +39,8 @@ export class ClickListener {
     };
     public modifiedMeasuresCursorOptions: CursorOptions = {
         type: CursorType.CurrentArea,
-        alpha: 0.3, // more transparent than default so that it's easier to judge the measure visually
-        color: "#f0ebdf", // grey
+        alpha: 0.4, // more transparent than default so that it's easier to judge the measure visually
+        color: "#f0ebdf", // grey // "#5055df", // blue-ish
         follow: false
     };
 
