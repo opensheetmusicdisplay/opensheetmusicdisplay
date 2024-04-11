@@ -10,6 +10,7 @@ import {Tuplet} from "../../VoiceData/Tuplet";
 import {GraphicalVoiceEntry} from "../GraphicalVoiceEntry";
 import {Voice} from "../../VoiceData/Voice";
 import {VexFlowMeasure} from "./VexFlowMeasure";
+import { BoundingBox } from "../BoundingBox";
 
 // type StemmableNote = VF.StemmableNote;
 
@@ -70,7 +71,22 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
     }
 
     public format(): void {
-        // like most of the following methods, not necessary / can be simplified for MultiRestMeasure.
+        // like most of the following methods, generally not necessary / can be simplified for MultiRestMeasure.
+        // but making a sensible bounding box for the StaffEntry / VoiceEntry / GraphicalNote helps click detection: (see #506)
+        for (const staffEntry of this.staffEntries) {
+            // place virtual position in middle
+            const measureWidthExInstructions: number = this.PositionAndShape.Size.width - this.beginInstructionsWidth;
+            staffEntry.PositionAndShape.RelativePosition.x = this.PositionAndShape.Size.width / 2 + this.beginInstructionsWidth / 3;
+            staffEntry.PositionAndShape.RelativePosition.y = 0; // alternative: 1 or this.PositionAndShape.Size.height / 2;
+            //   but seems like most staffentries are anchored to top line
+            // BorderLeft etc will be set by child elements -> note (also for VoiceEntry)
+            const noteBbox: BoundingBox = staffEntry.graphicalVoiceEntries[0]?.notes[0]?.PositionAndShape;
+            noteBbox.BorderLeft = -measureWidthExInstructions / 3;
+            noteBbox.BorderRight = measureWidthExInstructions / 3;
+            noteBbox.BorderTop = 1; // TODO somehow this doesn't move the upper edge of the rectangle downwards as it does for non-multirest entries
+            noteBbox.BorderBottom = 3;
+            staffEntry.PositionAndShape.calculateBoundingBox();
+        }
     }
 
     /**

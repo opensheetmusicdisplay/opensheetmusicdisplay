@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<score-partwise version="2.0">
+<score-partwise version="2.0" osmdMeasureWidthFactor="1.0">
   <work>
     <work-number>Op. 98</work-number>
     <work-title>An die ferne Geliebte (Page 1)</work-title>
@@ -103,7 +103,7 @@
   </part-list>
   <!--=========================================================-->
   <part id="P1">
-    <measure number="1" width="324">
+    <measure number="1" width="324" osmdWidthFactor="1.0">
       <print page-number="1">
         <system-layout>
           <system-margins>

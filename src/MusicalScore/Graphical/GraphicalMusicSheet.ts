@@ -230,6 +230,19 @@ export class GraphicalMusicSheet {
         return undefined; // shouldn't happen
     }
 
+    public findGraphicalMeasureByMeasureNumber(measureNumber: number, staffIndex: number): GraphicalMeasure {
+        // start with index = measureNumber, as a piece with a pickup measure starts with measure number 0
+        for (let i: number = measureNumber; i >= 0; i--) {
+            if (this.MeasureList[i]) {
+                const measure: GraphicalMeasure = this.MeasureList[i][staffIndex];
+                if (measure?.MeasureNumber === measureNumber) {
+                    return measure;
+                }
+            }
+        }
+        return undefined;
+    }
+
     /**
      * Search the MeasureList for a certain GraphicalStaffEntry with the given SourceStaffEntry,
      * at a certain verticalIndex (eg a corresponding Staff), starting at a specific horizontalIndex (eg specific GraphicalMeasure).
@@ -688,7 +701,9 @@ export class GraphicalMusicSheet {
         // Search for StaffEntries in region
         for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
             const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
-            const entries: GraphicalStaffEntry[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalStaffEntry>(region, false);
+            const entries: GraphicalStaffEntry[] = graphicalMusicPage.PositionAndShape.
+                getObjectsInRegion<GraphicalStaffEntry>(region, false, GraphicalStaffEntry.name);
+                // note that "GraphicalStaffEntry" instead of GraphicalStaffEntry.name doesn't work with minified builds
             if (!entries || entries.length === 0) {
                 continue;
             } else {
@@ -722,6 +737,60 @@ export class GraphicalMusicSheet {
         // throw new ArgumentException("No staff entry found");
         return undefined;
     }
+
+    /** Returns nearest object of type T near clickPosition.
+     * E.g. GetNearestObject<GraphicalMeasure>(pos, GraphicalMeasure.name) returns the nearest measure.
+     * Note that there is also GetNearestStaffEntry(), which has a bit more specific code for staff entries.
+     * */
+    public GetNearestObject<T extends GraphicalObject>(clickPosition: PointF2D, className: string): T {
+        const initialSearchArea: number = 10;
+        const foundEntries: T[] = [];
+        // Prepare search area
+        const region: BoundingBox = new BoundingBox(undefined);
+        region.BorderLeft = clickPosition.x - initialSearchArea;
+        region.BorderTop = clickPosition.y - initialSearchArea;
+        region.BorderRight = clickPosition.x + initialSearchArea;
+        region.BorderBottom = clickPosition.y + initialSearchArea;
+        region.AbsolutePosition = new PointF2D(0, 0);
+        // Search for StaffEntries in region
+        for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
+            const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
+            const entries: T[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<T>(region, false, className);
+            if (!entries || entries.length === 0) {
+                continue;
+            } else {
+                for (let idx2: number = 0, len2: number = entries.length; idx2 < len2; ++idx2) {
+                    const entry: T = entries[idx2];
+                    foundEntries.push(entry);
+                }
+            }
+        }
+        // Get closest entry
+        let closest: T = undefined;
+        for (let idx: number = 0, len: number = foundEntries.length; idx < len; ++idx) {
+            const foundEntry: T = foundEntries[idx];
+            if (closest === undefined) {
+                closest = foundEntry;
+            } else {
+                // if (!foundEntry.relInMeasureTimestamp) {
+                // relInMeasureTimestamp doesn't necessarily exist on generic type T, as it does on GraphicalStaffEntry
+                //     continue;
+                // }
+                const deltaNew: number = this.CalculateDistance(foundEntry.PositionAndShape.AbsolutePosition, clickPosition);
+                const deltaOld: number = this.CalculateDistance(closest.PositionAndShape.AbsolutePosition, clickPosition);
+                if (deltaNew < deltaOld) {
+                    closest = foundEntry;
+                }
+            }
+        }
+        if (closest) {
+            return closest;
+        }
+        // TODO No object of type T was found. Feedback?
+        // throw new ArgumentException(`No object of type ${className} found`);
+        return undefined;
+    }
+
 
     public GetPossibleCommentAnchor(clickPosition: PointF2D): SourceStaffEntry {
         const entry: GraphicalStaffEntry = this.GetNearestStaffEntry(clickPosition);

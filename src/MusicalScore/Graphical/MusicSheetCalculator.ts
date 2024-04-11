@@ -69,7 +69,7 @@ import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynam
 import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
-import { GraphicalChordSymbolContainer } from ".";
+import { GraphicalChordSymbolContainer } from "./GraphicalChordSymbolContainer";
 import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
 import { Voice } from "../VoiceData/Voice";
 import { TabNote } from "../VoiceData/TabNote";
@@ -318,6 +318,7 @@ export abstract class MusicSheetCalculator {
             // minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
             let maxWidth: number = 0;
             let measures: GraphicalMeasure[];
+            let measureWidthFactor: number = 1;
             for (let i: number = 0; i < this.graphicalMusicSheet.MeasureList.length; i++) {
                 measures = this.graphicalMusicSheet.MeasureList[i];
                 let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
@@ -325,6 +326,14 @@ export abstract class MusicSheetCalculator {
                 if (minimumStaffEntriesWidth > maxWidth) {
                     maxWidth = minimumStaffEntriesWidth;
                 }
+                const globalWidthFactor: number = this.graphicalMusicSheet.ParentMusicSheet.MeasureWidthFactor;
+                for (const verticalMeasure of measures) {
+                    if (verticalMeasure?.parentSourceMeasure.WidthFactor) { // some of these GraphicalMeasures might be undefined (multi-rest)
+                        measureWidthFactor = verticalMeasure.parentSourceMeasure.WidthFactor;
+                        break;
+                    }
+                }
+                minimumStaffEntriesWidth *= globalWidthFactor * measureWidthFactor;
                 //console.log(`min width for measure ${measures[0].MeasureNumber}: ${minimumStaffEntriesWidth}`);
                 MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
                 // minLength = Math.max(minLength, minimumStaffEntriesWidth * 1.2 + maxInstructionsLength);
@@ -2364,9 +2373,12 @@ export abstract class MusicSheetCalculator {
     protected calculatePageLabels(page: GraphicalMusicPage): void {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
-        if (this.rules.RenderSingleHorizontalStaffline && this.rules.RenderTitle) {
+
+        // fix SVG width and sheet width for single line scores being 32767 or 32787
+        if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
-            page.PositionAndShape.calculateBoundingBox(["VexFlowMeasure"]); // ignore measures
+            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures, whose bounding boxes somehow get messed up otherwise
+            // note: "GraphicalMeasure" instead of GraphicalMeasure.name doesn't work with minified builds (they change class names)
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
@@ -2498,9 +2510,10 @@ export abstract class MusicSheetCalculator {
             page.Labels.push(copyright);
         }
         // we need to do this again to not cut off the title for short scores:
-        if (this.rules.RenderSingleHorizontalStaffline && this.rules.RenderTitle) {
+        //   (and fix SVG width and sheet width for single line scores being 32767 or 32787)
+        if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
-            page.PositionAndShape.calculateBoundingBox(["VexFlowMeasure"]); // ignore measures
+            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures, whose bounding boxes somehow get messed up otherwise
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
