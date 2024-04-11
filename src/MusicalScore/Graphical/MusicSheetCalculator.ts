@@ -2373,7 +2373,7 @@ export abstract class MusicSheetCalculator {
     protected calculatePageLabels(page: GraphicalMusicPage): void {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
-        if (this.rules.RenderSingleHorizontalStaffline && this.rules.RenderTitle) {
+        if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
             page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures
             // note: "GraphicalMeasure" instead of GraphicalMeasure.name doesn't work with minified builds (they change class names)
@@ -2508,7 +2508,7 @@ export abstract class MusicSheetCalculator {
             page.Labels.push(copyright);
         }
         // we need to do this again to not cut off the title for short scores:
-        if (this.rules.RenderSingleHorizontalStaffline && this.rules.RenderTitle) {
+        if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
             page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
