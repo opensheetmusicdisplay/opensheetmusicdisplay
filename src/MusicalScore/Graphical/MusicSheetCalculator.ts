@@ -2373,9 +2373,11 @@ export abstract class MusicSheetCalculator {
     protected calculatePageLabels(page: GraphicalMusicPage): void {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
-        if (this.rules.RenderSingleHorizontalStaffline && this.rules.RenderTitle) {
+
+        // fix SVG width and sheet width for single line scores being 32767 or 32787
+        if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
-            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures
+            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures, whose bounding boxes somehow get messed up otherwise
             // note: "GraphicalMeasure" instead of GraphicalMeasure.name doesn't work with minified builds (they change class names)
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
@@ -2508,9 +2510,10 @@ export abstract class MusicSheetCalculator {
             page.Labels.push(copyright);
         }
         // we need to do this again to not cut off the title for short scores:
-        if (this.rules.RenderSingleHorizontalStaffline && this.rules.RenderTitle) {
+        //   (and fix SVG width and sheet width for single line scores being 32767 or 32787)
+        if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
-            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures
+            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures, whose bounding boxes somehow get messed up otherwise
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
