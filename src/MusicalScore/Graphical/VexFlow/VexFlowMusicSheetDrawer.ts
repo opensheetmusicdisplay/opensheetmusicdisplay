@@ -570,7 +570,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                                                      graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.Start.y);
                 const end: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.End.x,
                                                    graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.End.y);
-                this.drawLine(start, end, line.colorHex ?? "#000000", line.Width);
+                line.SVGelement = this.drawLine(start, end, line.colorHex ?? "#000000", line.Width);
                 // the null check for colorHex is not strictly necessary anymore, but the previous default color was red.
             }
         }
