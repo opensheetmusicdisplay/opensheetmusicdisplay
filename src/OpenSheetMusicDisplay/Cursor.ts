@@ -130,6 +130,7 @@ export class Cursor {
     return <VexFlowStaffEntry>this.graphic.findGraphicalStaffEntryFromMeasureList(staffIndex, measureIndex, voiceEntry.ParentSourceStaffEntry);
   }
 
+  /** Moves the cursor to the current position of the iterator (visually), e.g. after next(). */
   public update(): void {
     if (this.hidden || this.hidden === undefined || this.hidden === null) {
       return;
