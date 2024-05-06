@@ -821,7 +821,7 @@ export class OpenSheetMusicDisplay {
         if (enable) {
             for (let i: number = 0; i < this.cursorsOptions.length; i++){
                 // save previous cursor state
-                const hidden: boolean = this.cursors[i]?.Hidden;
+                const hidden: boolean = this.cursors[i]?.Hidden ?? true;
                 const previousIterator: MusicPartManagerIterator = this.cursors[i]?.Iterator;
                 this.cursors[i]?.hide();
 
