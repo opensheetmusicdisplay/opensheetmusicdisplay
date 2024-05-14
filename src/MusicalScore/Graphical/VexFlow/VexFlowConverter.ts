@@ -261,7 +261,8 @@ export class VexFlowConverter {
         const accidentals: string[] = [];
         const baseNoteLength: Fraction = baseNote.graphicalNoteLength;
         const isTuplet: boolean = baseNote.sourceNote.NoteTuplet !== undefined;
-        let duration: string = VexFlowConverter.durations(baseNoteLength, isTuplet)[0];
+        const durations: string[] = VexFlowConverter.durations(baseNoteLength, isTuplet);
+        let duration: string = durations[0];
         if (baseNote.sourceNote.TypeLength !== undefined &&
             baseNote.sourceNote.TypeLength !== baseNoteLength &&
             baseNote.sourceNote.TypeLength.RealValue !== 0) {

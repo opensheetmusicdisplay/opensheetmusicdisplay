@@ -273,7 +273,7 @@ export class InstrumentReader {
           let noteDuration: Fraction = new Fraction(0, 1);
           let normalNotes: number = 2;
           let typeDuration: Fraction = undefined;
-          let isTuplet: boolean = false;
+          // let isTuplet: boolean = false; // unused now
           if (xmlNode.element("duration")) {
             noteDivisions = parseInt(xmlNode.element("duration").value, 10);
             if (!isNaN(noteDivisions)) {
@@ -289,7 +289,7 @@ export class InstrumentReader {
                 if (time?.element("normal-notes")) {
                   normalNotes = parseInt(time.element("normal-notes").value, 10);
                 }
-                isTuplet = true;
+                // isTuplet = true;
               }
             } else {
               const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
@@ -390,9 +390,6 @@ export class InstrumentReader {
           // }
           if (this.activeRhythm) {
             // (*) this.musicSheet.SheetPlaybackSetting.Rhythm = this.activeRhythm.Rhythm;
-          }
-          if (!isTuplet && !isGraceNote) {
-            noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
           }
           const dots: number = xmlNode.elements("dot").length;
           this.currentVoiceGenerator.read(
@@ -1244,23 +1241,32 @@ export class InstrumentReader {
    * @returns {Fraction}
    */
   private getNoteDurationForTuplet(xmlNode: IXmlElement): Fraction {
-    let duration: Fraction = new Fraction(0, 1);
-    const typeDuration: Fraction = this.getNoteDurationFromTypeNode(xmlNode);
-    if (xmlNode.element("time-modification")) {
-      const time: IXmlElement = xmlNode.element("time-modification");
-      if (time) {
-        if (time.element("actual-notes") !== undefined && time.element("normal-notes")) {
-          const actualNotes: IXmlElement = time.element("actual-notes");
-          const normalNotes: IXmlElement = time.element("normal-notes");
-          if (actualNotes !== undefined && normalNotes) {
-            const actual: number = parseInt(actualNotes.value, 10);
-            const normal: number = parseInt(normalNotes.value, 10);
-            duration = new Fraction(normal * typeDuration.Numerator, actual * typeDuration.Denominator);
-          }
-        }
-      }
-    }
-    return duration;
+    const durationNode: IXmlElement = xmlNode.element("duration");
+    const durationValue: number = Number.parseInt(durationNode.value, 10);
+    return new Fraction(durationValue, this.divisions * 4);
+    // old method: calculate duration from type, tuplet normal notes etc. this was way more complex and inaccurate
+    // let duration: Fraction = new Fraction(0, 1);
+    // const typeDuration: Fraction = this.getNoteDurationFromTypeNode(xmlNode);
+    // // ^ TODO we need to respect dots for typeDuration. This is much more complicated than just taking duration from XML.
+    // if (xmlNode.element("time-modification")) {
+    //   const time: IXmlElement = xmlNode.element("time-modification");
+    //   if (time) {
+    //     if (time.element("actual-notes") !== undefined && time.element("normal-notes")) {
+    //       const actualNotes: IXmlElement = time.element("actual-notes");
+    //       const normalNotes: IXmlElement = time.element("normal-notes");
+    //       const normalDot: boolean = time.element("normal-dot") ? true : false;
+    //       if (actualNotes !== undefined && normalNotes) {
+    //         const actual: number = parseInt(actualNotes.value, 10);
+    //         let normal: number = parseInt(normalNotes.value, 10);
+    //         if (normalDot) {
+    //           normal *= 1.5;
+    //         }
+    //         duration = new Fraction(normal * typeDuration.Numerator + typeDuration.WholeValue, actual * typeDuration.Denominator);
+    //       }
+    //     }
+    //   }
+    // }
+    // return duration;
   }
 
   private readExpressionStaffNumber(xmlNode: IXmlElement): number {
