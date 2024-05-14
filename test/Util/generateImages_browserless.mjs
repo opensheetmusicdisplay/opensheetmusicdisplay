@@ -199,6 +199,7 @@ async function init () {
 
     const sampleDirFilenames = FS.readdirSync(sampleDir);
     let samplesToProcess = []; // samples we want to process/generate pngs of, excluding the filtered out files/filenames
+    const fileEndingRegex = "^.*(([.]xml)|([.]musicxml)|([.]mxl))$";
     for (const sampleFilename of sampleDirFilenames) {
         if (osmdTestingMode && filterRegex === "allSmall") {
             if (sampleFilename.match("^(Actor)|(Gounod)")) { // TODO maybe filter by file size instead
@@ -206,8 +207,7 @@ async function init () {
                 continue;
             }
         }
-        // eslint-disable-next-line no-useless-escape
-        if (sampleFilename.match("^.*(\.xml)|(\.musicxml)|(\.mxl)$")) {
+        if (sampleFilename.match(fileEndingRegex)) {
             // debug('found musicxml/mxl: ' + sampleFilename)
             samplesToProcess.push(sampleFilename);
         } else {
@@ -218,7 +218,7 @@ async function init () {
     // filter samples to process by regex if given
     if (filterRegex && filterRegex !== "" && filterRegex !== "all" && !(osmdTestingMode && filterRegex === "allSmall")) {
         debug("filtering samples for regex: " + filterRegex, DEBUG);
-        samplesToProcess = samplesToProcess.filter((filename) => filename.match(filterRegex));
+        samplesToProcess = samplesToProcess.filter((filename) => filename.match(filterRegex) && filename.match(fileEndingRegex));
         debug(`found ${samplesToProcess.length} matches: `, DEBUG);
         for (let i = 0; i < samplesToProcess.length; i++) {
             debug(samplesToProcess[i], DEBUG);
