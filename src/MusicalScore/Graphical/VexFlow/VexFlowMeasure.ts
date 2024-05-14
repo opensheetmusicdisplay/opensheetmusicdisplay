@@ -1529,13 +1529,16 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         if (fingeringInstructions.length > numberOfFingerings) { // likely multiple instructions per note given (e.g. Sibelius)
             // assign fingerings to notes
+            let unassignedFingeringIndex: number = 0;
             for (const note of voiceEntry.notes) {
                 if (!note.sourceNote.Fingering) {
-                    note.sourceNote.Fingering = fingeringInstructions.pop();
-                    numberOfFingerings++;
-                    if (fingeringInstructions.length === 0) {
+                    if (unassignedFingeringIndex > fingeringInstructions.length - 1) {
                         break;
                     }
+                    note.sourceNote.Fingering = fingeringInstructions[unassignedFingeringIndex];
+                    unassignedFingeringIndex++;
+                } else {
+                    unassignedFingeringIndex++; // we already assigned this fingering to a note, skip.
                 }
             }
         }
