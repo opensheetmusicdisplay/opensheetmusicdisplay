@@ -199,7 +199,7 @@ export class Cursor {
       //   }
       // }
     }
-    if (!musicSystem) {
+    if (!musicSystem?.StaffLines[0]) {
       return;
     }
 
