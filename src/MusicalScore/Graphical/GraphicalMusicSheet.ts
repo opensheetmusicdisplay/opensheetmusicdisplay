@@ -1016,6 +1016,7 @@ export class GraphicalMusicSheet {
             let fraction: number;
             let interpolatedXPosition: number;
             if (currentTimeStamp < nextSystemLeftBorderTimeStamp && previousStaffEntryMusicSystem.StaffLines[0]) {
+                // previousStaffEntryMusicSystem.StaffLines[0]: fix for drawing range set (previous system not rendered)
                 currentMusicSystem = previousStaffEntryMusicSystem;
                 const previousStaffEntryPositionX: number = previousStaffEntry.PositionAndShape.AbsolutePosition.x;
                 const previousSystemRightBorderX: number = currentMusicSystem.GetRightBorderAbsoluteXPosition();
