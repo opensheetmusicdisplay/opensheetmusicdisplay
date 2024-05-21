@@ -217,11 +217,14 @@ export class OpenSheetMusicDisplay {
         // this.graphic.GetCalculator.clearSystemsAndMeasures(); // maybe?
         // this.graphic.GetCalculator.clearRecreatedObjects();
 
-        // drawing range: check if pickup measure and start Measure > 1
-        if (this.Sheet.SourceMeasures[0].ImplicitMeasure &&
-            this.rules.MinMeasureToDrawNumber > 1
-        ) {
-            this.rules.MinMeasureToDrawIndex = this.rules.MinMeasureToDrawNumber; // -1 for index, +1 for pickup
+        // drawing range: check if pickup measure and start or end measure number > 1
+        if (this.Sheet.SourceMeasures[0].ImplicitMeasure) {
+            if (this.rules.MinMeasureToDrawNumber > 1) {
+                this.rules.MinMeasureToDrawIndex = this.rules.MinMeasureToDrawNumber; // -1 for index, +1 for pickup
+            }
+            if (this.rules.MaxMeasureToDrawNumber > 0) {
+                this.rules.MaxMeasureToDrawIndex = this.rules.MaxMeasureToDrawNumber; // -1 for index, +1 for pickup
+            }
         }
 
         // Set page width
