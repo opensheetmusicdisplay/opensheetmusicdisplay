@@ -386,8 +386,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             }
         }
         this.currentMeasure.ImplicitMeasure = this.checkIfMeasureIsImplicit(maxInstrumentDuration, activeRhythm);
-        if (!this.currentMeasure.ImplicitMeasure) {
+        if (!this.currentMeasure.ImplicitMeasure || sourceMeasureCounter > 0) {
             sourceMeasureCounter++;
+            // for a starting pickup measure (measure number 0), we shouldn't increment,
+            //   but we need to for any implicit measure afterwards, otherwise we'll have the same measure number twice.
         }
         this.currentMeasure.Duration = maxInstrumentDuration; // can be 1/1 in a 4/4 time signature
         // if (this.currentMeasure.Duration.Numerator === 0) {
