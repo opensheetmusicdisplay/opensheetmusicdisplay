@@ -275,6 +275,12 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 divControls.style.display = "none";
             }
         }
+        // detect mobile portrait mode (small screen -> reduce zoom etc)
+        const portrait = window.matchMedia("(orientation: portrait)").matches;
+        // console.log(`is portrait mode: ${portrait}`);
+        if (portrait) {
+            zoom = 0.70;
+        }
 
         const optionalControls = document.getElementById('optionalControls');
         if (optionalControls) {
