@@ -1,7 +1,9 @@
 p {
   margin: 0px 8px 8px 8px;
 }
-
+.portraitCollapsible{
+  display: none;
+}
 /* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
 @media (max-width: 500px) {
   #divControls {
@@ -10,6 +12,50 @@ p {
   }
   #backend-select-div {
     display: none
+  }
+
+  .hideOnPotrait{
+    display: none
+  }
+  
+  /* style collapsibles */
+  .portraitCollapsible{
+    display: inline;
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+    padding: 18px;
+    width: fit-content;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 15px;
+
+  }
+  .collapsible:after {
+    content: '\2304'; /* Unicode character for "plus" sign (+) */
+    font-size: 13px;
+    color: white;
+    float: right;
+    margin-left: 5px;
+  }
+
+  .active:after {
+    content: "\2304"; /* Unicode character for "minus" sign (-) */
+    font-size: 13px;
+    color: 444;
+    float: right;
+    margin-left: 5px;
+  }
+  .active, .collapsible:hover {
+    background-color: #ccc;
+  }
+  .collapsibleContent{
+    padding: 18px 18px;
+    display: none;
+    overflow: hidden;
+    background-color: #f1f1f1;
+    width: fit-content;
   }
 }
 

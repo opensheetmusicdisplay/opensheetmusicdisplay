@@ -280,6 +280,20 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         // console.log(`is portrait mode: ${portrait}`);
         if (portrait) {
             zoom = 0.70;
+
+            // set collapsible behavior
+            var coll = document.getElementsByClassName("portraitCollapsible");
+            for (var i = 0; i < coll.length; i++) {
+            coll[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var content = this.nextElementSibling;
+                if (content.style.display === "block") {
+                content.style.display = "none";
+                } else {
+                content.style.display = "block";
+                }
+            });
+            } 
         }
 
         const optionalControls = document.getElementById('optionalControls');
