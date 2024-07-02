@@ -5,7 +5,8 @@ p {
 /* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
 @media (max-width: 500px) {
   #divControls {
-    flex-direction: column
+    flex-direction: column;
+    margin-left: 10px
   }
   #backend-select-div {
     display: none
