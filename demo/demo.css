@@ -2,6 +2,16 @@ p {
   margin: 0px 8px 8px 8px;
 }
 
+/* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
+@media (max-width: 500px) {
+  #divControls {
+    flex-direction: column
+  }
+  #backend-select-div {
+    display: none
+  }
+}
+
 /* the select widths are not used for some reason, even if we don't set the style in index.html */
 select {
   width: 100px;

@@ -12,20 +12,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.min.js" type="text/javascript"></script>    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.css" media="all" rel="stylesheet"/>
     <link rel="icon" href="./favicon.ico?" type="image/x-icon"/>
+    <link rel="stylesheet" href="./demo.css"/>
 </head>
 <body>
 <h1 class="ui centered header" id="header" style="opacity: 0.0">
     <img src="./favicon.ico?" class="ui image">
     <%= htmlWebpackPlugin.options.title %>
 </h1>
-<div class="ui four column grid container" id="divControls" style="visibility: hidden; opacity: 0.0">
+<!-- TODO we should add class="ui four column grid container" for divControls for non-mobile mode again.
+ probably in index.js -->
+<div id="divControls" style="visibility: hidden; opacity: 0.0; display: flex; max-width: 100%">
     <div class="column">
         <h3 class="ui header">Select a sample:</h3>
-        <select class="ui selection dropdown" id="selectSample" style="width:320px; height:38%; visibility: hidden"></select>
+        <select class="ui selection dropdown" id="selectSample" style="visibility: hidden"></select>
     </div>
     <div class="column" id="backend-select-div" style="visibility: hidden">
         <h3 class="ui header">Render backend:</h3>
-        <select class="ui selection dropdown" id="backend-select" value="svg" style="height:38%; visibility: hidden;">
+        <select class="ui selection dropdown" id="backend-select" value="svg" style="visibility: hidden;">
             <option value="svg">SVG</option>
             <option value="canvas">Canvas</option>
         </select>
@@ -89,7 +92,7 @@
         </div>
         <h4 class="ui header" id="zoom-str">???</h4>
     </div>
-    <div class="column">
+    <div class="column" id="selectBoundingDiv">
         <h3 class="ui header">Show bounding box for:</h3>
         <select class="ui selection dropdown" id="selectBounding" style="visibility: hidden;">
             <option value="none">None</option>
