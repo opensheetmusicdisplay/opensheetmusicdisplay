@@ -284,6 +284,23 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             divControls.classList.remove("column");
             divControls.classList.remove("grid");
             divControls.classList.remove("container");
+
+            // collapsible behavior
+            var coll = document.getElementsByClassName("portraitCollapsible");
+            for (var i = 0; i < coll.length; i++) {
+                var content = coll[i].nextElementSibling;
+                content.style.display = "none";
+
+            coll[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var content = this.nextElementSibling;
+                if (content.style.display === "block") {
+                content.style.display = "none";
+                } else {
+                content.style.display = "block";
+                }
+            });
+            } 
         }
 
         const optionalControls = document.getElementById('optionalControls');
