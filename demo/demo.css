@@ -10,15 +10,35 @@ p {
 /* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
 @media (max-width: 500px) {
   #divControls {
-    display:flex;
     flex-direction: column;
     margin-left: 10px
   }
   #backend-select-div {
     display: none
   }
+  #selectSampleContainer{
+    background-color: #eee;
+    width: fit-content;
+    order: -1;
+  }
+  #selectSampleTitle{
+    background-color: #dbdbdb;
+    text-align: center;
+  }
+  #selectSample{
+    text-align: center;
+  }
   #zoomControls{
-    order: 0;
+    order: -1;
+    display: inline;
+
+  }
+  #zoomControlsButtons{
+    display: inline;
+  }
+  #print-pdf-btn{
+    display:block;
+    width: fit-content;
   }
 
   .hide-on-portrait{
