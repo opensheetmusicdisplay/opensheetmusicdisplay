@@ -217,6 +217,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         error_tr = document.getElementById("error-tr");
         zoomDivs = [];
         zoomDivs.push(document.getElementById("zoom-str"));
+        zoomDivs.push(document.getElementById("zoom-str-portrait"));
         zoomDivs.push(document.getElementById("zoom-str-optional"));
         custom = document.createElement("option");
         selectSample = document.getElementById("selectSample");
@@ -284,6 +285,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             divControls.classList.remove("column");
             divControls.classList.remove("grid");
             divControls.classList.remove("container");
+            document.getElementById("zoom-str").style.display = "none";
 
             // collapsible behavior
             var coll = document.getElementsByClassName("portraitCollapsible");

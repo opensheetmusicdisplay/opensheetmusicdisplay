@@ -7,6 +7,9 @@ p {
 .portraitCollapsible{
   display: none;
 }
+.show-on-portrait{
+  display: none;
+}
 /* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
 @media (max-width: 500px) {
   #divControls {
@@ -17,9 +20,11 @@ p {
     display: none
   }
   #selectSampleContainer{
+    margin-bottom: 18px;
+
     background-color: #eee;
     width: fit-content;
-    order: -1;
+    order: -2;
   }
   #selectSampleTitle{
     background-color: #dbdbdb;
@@ -30,21 +35,39 @@ p {
   }
   #zoomControls{
     order: -1;
-    display: inline;
-
+    display:inline;
+    width: fit-content;
   }
   #zoomControlsButtons{
     display: inline;
+    float:left
+  }
+  #zoom-str-portrait{
+    margin-left: 10px;
+    font-size: 15px;
+    font-weight: bolder;
+    float:left
   }
   #print-pdf-btn{
     display:block;
     width: fit-content;
   }
 
+  #zoom-in-btn{
+    margin-right: 5px;
+    display: inline;
+  }
+  #zoom-out-btn{
+    display: inline;
+
+  }
+
   .hide-on-portrait{
     display: none;    
   }
-  
+  .show-on-portrait{
+    display: block;
+  }
   /* style collapsibles */
   .portraitCollapsible{
     margin-top: 8px;
