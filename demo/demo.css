@@ -1,62 +1,76 @@
 p {
   margin: 0px 8px 8px 8px;
 }
+:root{
+  --port-collapsible-fontsize: 17px;
+}
 .portraitCollapsible{
   display: none;
 }
 /* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
 @media (max-width: 500px) {
   #divControls {
+    display:flex;
     flex-direction: column;
     margin-left: 10px
   }
   #backend-select-div {
     display: none
   }
+  #zoomControls{
+    order: 0;
+  }
 
-  .hideOnPotrait{
-    display: none
+  .hide-on-portrait{
+    display: none;    
   }
   
   /* style collapsibles */
   .portraitCollapsible{
+    margin-top: 8px;
+    margin-left: -4px;
+    font-weight: 550;
     display: inline;
-    background-color: #eee;
-    color: #444;
+    background-color: transparent;
+    color: #000000;
     cursor: pointer;
-    padding: 18px;
     width: fit-content;
     border: none;
     text-align: left;
     outline: none;
-    font-size: 15px;
+    font-size: var(--port-collapsible-fontsize);
 
   }
-  .collapsible:after {
-    content: '\2304'; /* Unicode character for "plus" sign (+) */
-    font-size: 13px;
-    color: white;
+  .portraitCollapsible:after {
+    text-align: center;
+    content: '\002B';
+    background-color: #eee;
+    width: 20px;
+    font-size: port-collapsible-fontsize;
+    color: #acacac;
     float: right;
     margin-left: 5px;
   }
 
   .active:after {
-    content: "\2304"; /* Unicode character for "minus" sign (-) */
-    font-size: 13px;
+    content: "v"; 
+    font-size: port-collapsible-fontsize;
     color: 444;
     float: right;
     margin-left: 5px;
   }
   .active, .collapsible:hover {
-    background-color: #ccc;
+    background-color: #eee;
   }
   .collapsibleContent{
-    padding: 18px 18px;
-    display: none;
+    padding: 10px 10px;
     overflow: hidden;
-    background-color: #f1f1f1;
     width: fit-content;
   }
+}
+
+#header{
+  margin-top: 4px;
 }
 
 /* the select widths are not used for some reason, even if we don't set the style in index.html */

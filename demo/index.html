@@ -34,7 +34,7 @@
         </select>
     </div>
     <div class="column">
-        <h3 class="ui header hideOnPortrait">Cursor controls:</h3>
+        <h3 class="ui header hide-on-portrait">Cursor controls:</h3>
         <button type="button" class ="portraitCollapsible" id="cursor-collapse-button">Cursor Controls</button>
         <div class="collapsibleContent">
             <div class="ui vertical buttons">
@@ -94,8 +94,9 @@
         <h4 class="ui header" id="zoom-str">???</h4>
     </div>
     <div class="column" id="selectBoundingDiv">
-        <h3 class="ui header">Show bounding box for:</h3>
-        <select class="ui selection dropdown" id="selectBounding" style="visibility: hidden;">
+        <h3 class="ui header hide-on-portrait">Show bounding box for:</h3>
+        <button type="button" class ="portraitCollapsible">Show bounding box for</button>
+        <select class="ui selection dropdown collapsibleContent" id="selectBounding" style="visibility: hidden;">
             <option value="none">None</option>
             <option value="all">All</option>
             <option value="VexFlowMeasure">Measures</option>
@@ -110,8 +111,9 @@
         </select>
     </div>
     <div class="column">
-        <h3 class="ui header">Show debug information:</h3>
-        <div class="ui relaxed list">
+        <h3 class="ui header hide-on-portrait">Show debug information:</h3>
+        <button type="button" class ="portraitCollapsible">Show debug information</button>
+        <div class="ui relaxed list collapsibleContent">
             <div class="item">
                 <div class="ui toggle checkbox">
                     <input type="checkbox" name="public" id="skylineDebug">
@@ -127,9 +129,10 @@
         </div>
     </div>
     <div class="column">
-        <h3 class="ui header">Debug controls:</h3>
+        <h3 class="ui header hide-on-portrait">Debug controls:</h3>
+        <button type="button" class ="portraitCollapsible">Debug controls</button>
         <div>
-            <div class="ui vertical buttons">
+            <div class="ui vertical buttons collapsibleContent">
                 <div class="ui button" id="debug-re-render-btn">Re-render</div>
 
             </div>
@@ -139,8 +142,9 @@
         </div>
     </div>
     <div class="column">
-        <h3 class="ui header">Page size:</h3>
-        <select class="ui selection dropdown" id="selectPageSize"  style="visibility: hidden;">
+        <h3 class="ui header hide-on-portrait">Page size:</h3>
+        <button type="button" class ="portraitCollapsible">Page size</button>
+        <select class="ui selection dropdown collapsibleContent" id="selectPageSize"  style="visibility: hidden;">
             <option value="endless">endless</option>
             <option value="A3 P">A3 Portrait</option>
             <option value="A3 L">A3 Landscape</option>
@@ -154,8 +158,9 @@
         <div class="ui button" id="print-pdf-btn">Create PDF</div>
     </div>
     <div class="column">
-        <h3 class="ui header">Transpose by Semitone(s):</h3>
-        <div class="ui action input">
+        <h3 class="ui header hide-on-portrait">Transpose by Semitone(s):</h3>
+        <button type="button" class ="portraitCollapsible">Transpose by Semitone(s)</button>
+        <div class="ui action input collapsibleContent">
             <input type="number" id="transpose" value="0"/>
             <button class="ui button" id="transpose-btn">Transpose</button>
         </div>

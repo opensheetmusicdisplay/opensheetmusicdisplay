@@ -281,9 +281,12 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (portrait) {
             zoom = 0.70;
 
-            // set collapsible behavior
+            // collapsible behavior
             var coll = document.getElementsByClassName("portraitCollapsible");
             for (var i = 0; i < coll.length; i++) {
+                var content = coll[i].nextElementSibling;
+                content.style.display = "none";
+
             coll[i].addEventListener("click", function() {
                 this.classList.toggle("active");
                 var content = this.nextElementSibling;
