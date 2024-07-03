@@ -279,7 +279,11 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         const portrait = window.matchMedia("(orientation: portrait)").matches;
         // console.log(`is portrait mode: ${portrait}`);
         if (portrait) {
-            zoom = 0.70;
+            zoom = 0.60; // ~60% is good for iPhone SE (browser simulated device dimensions)
+            divControls.classList.remove("four");
+            divControls.classList.remove("column");
+            divControls.classList.remove("grid");
+            divControls.classList.remove("container");
         }
 
         const optionalControls = document.getElementById('optionalControls');

@@ -19,9 +19,8 @@
     <img src="./favicon.ico?" class="ui image">
     <%= htmlWebpackPlugin.options.title %>
 </h1>
-<!-- TODO we should add class="ui four column grid container" for divControls for non-mobile mode again.
- probably in index.js -->
-<div id="divControls" style="visibility: hidden; opacity: 0.0; display: flex; max-width: 100%">
+<!-- in portrait/mobile mode, "four column grid container" is removed from divControls in index.js -->
+<div class="ui four column grid container" id="divControls" style="visibility: hidden; opacity: 0.0; display: flex; max-width: 100%">
     <div class="column">
         <h3 class="ui header">Select a sample:</h3>
         <select class="ui selection dropdown" id="selectSample" style="visibility: hidden"></select>
