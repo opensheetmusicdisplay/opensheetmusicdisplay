@@ -21,10 +21,12 @@ p {
   }
   #selectSampleContainer{
     margin-bottom: 18px;
-
+    align-self: center;
+    margin-right: 10px;
     background-color: #eee;
-    width: fit-content;
+    width: 95%;
     order: -2;
+    align-content: center;
   }
   #selectSampleTitle{
     background-color: #dbdbdb;
@@ -34,9 +36,11 @@ p {
     text-align: center;
   }
   #zoomControls{
-    order: -1;
     display:inline;
+    order: 1;
     width: fit-content;
+    margin-top: 10px;
+    float:left;
   }
   #zoomControlsButtons{
     display: inline;
@@ -49,6 +53,7 @@ p {
     float:left
   }
   #print-pdf-btn{
+    order:1;
     display:block;
     width: fit-content;
   }
@@ -61,7 +66,7 @@ p {
     display: inline;
 
   }
-
+  
   .hide-on-portrait{
     display: none;    
   }
@@ -87,7 +92,7 @@ p {
   .portraitCollapsible:after {
     text-align: center;
     content: '\002B';
-    background-color: #eee;
+    background-color: #d6d6d6;
     width: 20px;
     font-size: port-collapsible-fontsize;
     color: #acacac;
@@ -96,20 +101,34 @@ p {
   }
 
   .active:after {
-    content: "v"; 
+    content: "\2212"; 
     font-size: port-collapsible-fontsize;
-    color: 444;
+    color: #acacac;
     float: right;
     margin-left: 5px;
   }
   .active, .collapsible:hover {
-    background-color: #eee;
+    background-color: #d6d6d6;
   }
   .collapsibleContent{
     padding: 10px 10px;
     overflow: hidden;
     width: fit-content;
   }
+  .advanced-setting{
+    padding-left:5px;
+    background-color: #eee;
+    margin-right: 10px;
+  }
+
+  #advanced-settings-btn{
+    margin-right: 10px;
+    width:fit-content;
+    float:left;
+    display:inline;
+  }
+
+  
 }
 
 #header{

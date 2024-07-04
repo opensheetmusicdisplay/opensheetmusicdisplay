@@ -297,12 +297,35 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 this.classList.toggle("active");
                 var content = this.nextElementSibling;
                 if (content.style.display === "block") {
-                content.style.display = "none";
+                    content.style.display = "none";
                 } else {
-                content.style.display = "block";
+                    content.style.display = "block";
                 }
             });
-            } 
+            }
+            var adSetBtn = document.getElementById("advanced-settings-btn");
+            
+            var advSettings = document.getElementsByClassName("advanced-setting");
+            for(var i = 0; i < advSettings.length; i++){
+                var element = advSettings[i];
+                element.style.display = "none";
+            }
+
+            adSetBtn.addEventListener("click", function() {
+                this.classList.toggle("active");
+                for(var i = 0; i < advSettings.length; i++){
+                    var element = advSettings[i];
+                    if (element.style.display === "block") {
+                        element.style.display = "none";
+                    } else {
+                        element.style.display = "block";
+                    }
+                }
+
+
+            }); 
+            
+            
         }
 
         const optionalControls = document.getElementById('optionalControls');
