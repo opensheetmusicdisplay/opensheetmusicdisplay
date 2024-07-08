@@ -3,6 +3,7 @@ p {
 }
 :root{
   --port-collapsible-fontsize: 17px;
+  --settings-margin: 10px;
 }
 .portraitCollapsible{
   display: none;
@@ -10,19 +11,31 @@ p {
 .show-on-portrait{
   display: none;
 }
+/* the select widths are not used for some reason, even if we don't set the style in index.html */
+select {
+  width: 100px;
+  margin: 2px 8px 8px 8px;
+}
+
+#selectSample {
+  width: 320px;
+}
+
+#selectBounding {
+  width: 80%;
+}
 /* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
 @media (max-width: 500px) {
   #divControls {
-    flex-direction: column;
-    margin-left: 10px
+    margin-left: 10px;
+    margin-right: 10px;
+    flex-wrap: wrap;
   }
-  #backend-select-div {
-    display: none
-  }
+
   #selectSampleContainer{
+    margin:auto;
     margin-bottom: 18px;
     align-self: center;
-    margin-right: 10px;
     background-color: #eee;
     width: 95%;
     order: -2;
@@ -34,13 +47,18 @@ p {
   }
   #selectSample{
     text-align: center;
+    display:block;
+    margin:auto;
+    margin-bottom: 10px;
   }
   #zoomControls{
-    display:inline;
-    order: 1;
+    order: 0;
     width: fit-content;
-    margin-top: 10px;
+    display: block;
     float:left;
+    margin-bottom: 5px;
+    margin-left: var(--settings-margin);
+
   }
   #zoomControlsButtons{
     display: inline;
@@ -115,19 +133,27 @@ p {
     overflow: hidden;
     width: fit-content;
   }
+
+
+  #advanced-settings-btn{
+    margin-left: auto;
+    width:fit-content;
+    display: block;
+    float:right;
+    order:1;
+    margin-top: 25px;
+    margin-right: var(--settings-margin);
+  }
   .advanced-setting{
     padding-left:5px;
     background-color: #eee;
     margin-right: 10px;
+    order:1;
+    display: block;
+    width: 100%;
+    margin-right: var(--settings-margin);
+    margin-left: var(--settings-margin);
   }
-
-  #advanced-settings-btn{
-    margin-right: 10px;
-    width:fit-content;
-    float:left;
-    display:inline;
-  }
-
   
 }
 
@@ -135,19 +161,7 @@ p {
   margin-top: 4px;
 }
 
-/* the select widths are not used for some reason, even if we don't set the style in index.html */
-select {
-  width: 100px;
-  margin: 2px 8px 8px 8px;
-}
 
-#selectSample {
-  width: 320px;
-}
-
-#selectBounding {
-  width: 80%;
-}
 
 .bignum {
   width: 1em;

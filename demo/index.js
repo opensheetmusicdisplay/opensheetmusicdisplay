@@ -305,6 +305,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             }
             var adSetBtn = document.getElementById("advanced-settings-btn");
             
+            
             var advSettings = document.getElementsByClassName("advanced-setting");
             for(var i = 0; i < advSettings.length; i++){
                 var element = advSettings[i];
