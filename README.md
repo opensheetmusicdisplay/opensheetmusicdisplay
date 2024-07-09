@@ -103,6 +103,7 @@ Features already available in early access:
 Features in the making, potentially available in future:
 * Native reference implementations / example projects (Kotlin/Android, Swift/iOS, React Native, etc)
 * Annotations (Add custom text, music symbols, etc. to the score and export to and import from XML)
+* and more (we're always working on OSMD improvements or additional features, just look at our release history / changelog!)
 
 Besides the early access features, you can get other perks like a personal postcard from the team in Vienna. Check them out at [our GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
 
