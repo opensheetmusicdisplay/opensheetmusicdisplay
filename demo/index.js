@@ -76,6 +76,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         // HTML Elements in the page
         divControls,
         zoomControls,
+        zoomControlsButtons,
         header,
         err,
         error_tr,
@@ -255,6 +256,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         transpose = document.getElementById('transpose');
         transposeBtn = document.getElementById('transpose-btn');
         versionDiv = document.getElementById('versionDiv');
+        zoomControlsButtons = document.getElementById('zoomControlsButtons')
 
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
@@ -286,6 +288,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             divControls.classList.remove("grid");
             divControls.classList.remove("container");
             document.getElementById("zoom-str").style.display = "none";
+
+            zoomControlsButtons.style.display = "flex"
 
             // collapsible behavior
             var coll = document.getElementsByClassName("portraitCollapsible");

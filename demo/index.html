@@ -32,7 +32,7 @@
             <option value="canvas">Canvas</option>
         </select>
     </div>
-        <button type="button" class="show-on-portrait" id="advanced-settings-btn" >Advanced settings</button>
+        <button type="button" class="show-on-portrait" id="advanced-settings-btn" >&#x2699</button>
 
         <div class="column advanced-setting">
             <h3 class="ui header hide-on-portrait">Cursor controls:</h3>
@@ -83,7 +83,7 @@
             </div>
         </div>
         <div class="column" id="zoomControls">
-            <h3 class="ui header">Zoom controls:</h3>
+            <h3 class="ui header hide-on-portrait">Zoom controls:</h3>
             <div class="ui buttons" id="zoomControlsButtons">
                 <div class="ui button" id="zoom-in-btn">
                     <i class="search plus icon"></i>
@@ -91,9 +91,9 @@
                 <div class="ui button" id="zoom-out-btn">
                     <i class="search minus icon"></i>
                 </div>
-
+                <div class="ui show-on-portrait" id="zoom-str-portrait">???</div>
             </div>
-            <div class="ui show-on-portrait" id="zoom-str-portrait">???</div>
+
             <h4 class="ui header hide-on-portrait" id="zoom-str">???</h4>
 
         </div>
@@ -161,9 +161,9 @@
             </select>
             <div class="ui button" id="print-pdf-btn">Create PDF</div>
         </div>
-        <div class="column advanced-setting">
+        <div class="column advanced-setting" >
             <h3 class="ui header hide-on-portrait">Transpose by Semitone(s):</h3>
-            <button type="button" class ="portraitCollapsible">Transpose by Semitone(s)</button>
+            <button type="button" class ="portraitCollapsible" id="last-adv-setting">Transpose by Semitone(s)</button>
             <div class="ui action input collapsibleContent">
                 <input type="number" id="transpose" value="0"/>
                 <button class="ui button" id="transpose-btn">Transpose</button>

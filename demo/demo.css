@@ -27,6 +27,7 @@ select {
 /* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
 @media (max-width: 500px) {
   #divControls {
+    position:relative;
     margin-left: 10px;
     margin-right: 10px;
     flex-wrap: wrap;
@@ -52,39 +53,39 @@ select {
     margin-bottom: 10px;
   }
   #zoomControls{
+    background-color: #eee;
+    position:absolute;
     order: 0;
-    width: fit-content;
-    display: block;
-    float:left;
-    margin-bottom: 5px;
-    margin-left: var(--settings-margin);
-
+    left:50%;
+    transform: translateX(-50%);
+    margin-top: 100px;
   }
   #zoomControlsButtons{
     display: inline;
     float:left
   }
+
+  #zoom-in-btn{
+    display: inline;
+    order: 1;
+  }
   #zoom-str-portrait{
-    margin-left: 10px;
+    margin-left: 40px;
+    margin-right:40px;
+    align-self: center;
     font-size: 15px;
     font-weight: bolder;
-    float:left
+    order: 0;
+  }  
+  #zoom-out-btn{
+    display: inline;
+    order:-1;
   }
   #print-pdf-btn{
     order:1;
     display:block;
     width: fit-content;
   }
-
-  #zoom-in-btn{
-    margin-right: 5px;
-    display: inline;
-  }
-  #zoom-out-btn{
-    display: inline;
-
-  }
-  
   .hide-on-portrait{
     display: none;    
   }
@@ -118,7 +119,7 @@ select {
     margin-left: 5px;
   }
 
-  .active:after {
+  .portraitCollapsible.active:after {
     content: "\2212"; 
     font-size: port-collapsible-fontsize;
     color: #acacac;
@@ -133,17 +134,23 @@ select {
     overflow: hidden;
     width: fit-content;
   }
-
-
   #advanced-settings-btn{
+    transform: rotate(22.5deg);
     margin-left: auto;
     width:fit-content;
     display: block;
+    border:none;
     float:right;
     order:1;
-    margin-top: 25px;
     margin-right: var(--settings-margin);
+    background-color: transparent;
+    font-size: xx-large;
   }
+  #advanced-settings-btn.active{
+    transform: rotate(0deg);
+    margin-bottom: 20px;
+  }
+
   .advanced-setting{
     padding-left:5px;
     background-color: #eee;
@@ -154,7 +161,15 @@ select {
     margin-right: var(--settings-margin);
     margin-left: var(--settings-margin);
   }
-  
+  #cursor-collapse-button{
+    margin-top: 5px;
+  }
+  #last-adv-setting{
+    padding-bottom: 5px;
+  }
+  .ui.buttons{
+    border-radius: 0;
+  }
 }
 
 #header{
