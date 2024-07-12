@@ -4,6 +4,9 @@ p {
 :root{
   --port-collapsible-fontsize: 17px;
   --settings-margin: 10px;
+  --theme-color-dark: #d25701;
+  --theme-color-medium:#ffeee2;
+  --theme-color-light: #fdf6f2;
 }
 .portraitCollapsible{
   display: none;
@@ -34,40 +37,55 @@ select {
   }
 
   #selectSampleContainer{
+    border-width: 20px;
     margin:auto;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
+    margin-top: 10px;
     align-self: center;
-    background-color: #eee;
+    background-color: var(--theme-color-light);
     width: 95%;
     order: -2;
     align-content: center;
+    border: 1px solid var(--theme-color-dark);
+    border-radius: 5px 5px 0px 0px;
   }
   #selectSampleTitle{
-    background-color: #dbdbdb;
+    margin-top: 1px;
+    border-radius: 5px 5px 0px 0px;
+    background-color: var(--theme-color-medium);
     text-align: center;
+    color: var(--theme-color-dark);
   }
   #selectSample{
     text-align: center;
     display:block;
     margin:auto;
     margin-bottom: 10px;
+    color: var(--theme-color-dark);
+    background-color: white;
+    border: 1px solid var(--theme-color-dark);
   }
   #zoomControls{
-    background-color: #eee;
+    background-color: var(--theme-color-light);
     position:absolute;
     order: 0;
     left:50%;
     transform: translateX(-50%);
-    margin-top: 100px;
+    margin-top: 118px;
+    border-radius: 5px;
+    border: 1px solid var(--theme-color-dark);
   }
   #zoomControlsButtons{
     display: inline;
-    float:left
+    float:left;
   }
 
   #zoom-in-btn{
     display: inline;
     order: 1;
+    border-radius: 0px 5px 5px 0px;
+    background-color: #ffe6d2;
+    
   }
   #zoom-str-portrait{
     margin-left: 40px;
@@ -76,15 +94,21 @@ select {
     font-size: 15px;
     font-weight: bolder;
     order: 0;
+    color: var(--theme-color-dark);
   }  
   #zoom-out-btn{
     display: inline;
     order:-1;
+    border-radius: 5px 0px 0px 5px;
+    background-color: #ffe6d2;
   }
   #print-pdf-btn{
     order:1;
     display:block;
     width: fit-content;
+    color: var(--theme-color-dark);
+    background-color: var(--theme-color-medium);
+    border: 1px solid var(--theme-color-dark);
   }
   .hide-on-portrait{
     display: none;    
@@ -99,7 +123,7 @@ select {
     font-weight: 550;
     display: inline;
     background-color: transparent;
-    color: #000000;
+    color: var(--theme-color-dark);
     cursor: pointer;
     width: fit-content;
     border: none;
@@ -111,10 +135,9 @@ select {
   .portraitCollapsible:after {
     text-align: center;
     content: '\002B';
-    background-color: #d6d6d6;
     width: 20px;
     font-size: port-collapsible-fontsize;
-    color: #acacac;
+    color: var(--theme-color-dark);
     float: right;
     margin-left: 5px;
   }
@@ -122,13 +145,13 @@ select {
   .portraitCollapsible.active:after {
     content: "\2212"; 
     font-size: port-collapsible-fontsize;
-    color: #acacac;
     float: right;
     margin-left: 5px;
   }
   .active, .collapsible:hover {
-    background-color: #d6d6d6;
+    background-color: var(--theme-color-medium);
   }
+
   .collapsibleContent{
     padding: 10px 10px;
     overflow: hidden;
@@ -137,14 +160,15 @@ select {
   #advanced-settings-btn{
     transform: rotate(22.5deg);
     margin-left: auto;
+    margin-right: var(--settings-margin);
     width:fit-content;
     display: block;
     border:none;
     float:right;
     order:1;
-    margin-right: var(--settings-margin);
     background-color: transparent;
     font-size: xx-large;
+    color: var(--theme-color-dark);
   }
   #advanced-settings-btn.active{
     transform: rotate(0deg);
@@ -153,26 +177,49 @@ select {
 
   .advanced-setting{
     padding-left:5px;
-    background-color: #eee;
+    background-color: var(--theme-color-light);
     margin-right: 10px;
     order:1;
     display: block;
     width: 100%;
     margin-right: var(--settings-margin);
     margin-left: var(--settings-margin);
+    border-right: 1px solid var(--theme-color-dark);
+    border-left: 1px solid var(--theme-color-dark);
   }
-  #cursor-collapse-button{
+  #first-adv-setting{
     margin-top: 5px;
+    border-top: 1px solid var(--theme-color-dark);
+    border-radius: 5px 5px 0px 0px;  
+
   }
   #last-adv-setting{
     padding-bottom: 5px;
+    border-bottom: 1px solid var(--theme-color-dark);
+    border-radius: 0px 0px 5px 5px;  
   }
-  .ui.buttons{
-    border-radius: 0;
+  .search{
+    color:#d25701; 
+  }
+
+  .ui.selection.dropdown{
+    background-color: white;
+    border: 1px solid var(--theme-color-dark);
+    color: var(--theme-color-dark);
+  }
+
+  .ui.selection.dropdown:focus{
+    border: 1px solid var(--theme-color-dark);
+  }
+  .ui.toggle.checkbox label, .ui.toggle.checkbox .active{
+    color: var(--theme-color-dark);
+  }
+  .ui.toggle.checkbox.focus{
+    color: var(--theme-color-dark);
   }
 }
 
-#header{
+#selection{
   margin-top: 4px;
 }
 

@@ -34,9 +34,9 @@
     </div>
         <button type="button" class="show-on-portrait" id="advanced-settings-btn" >&#x2699</button>
 
-        <div class="column advanced-setting">
+        <div class="column advanced-setting" id="first-adv-setting">
             <h3 class="ui header hide-on-portrait">Cursor controls:</h3>
-            <button type="button" class ="portraitCollapsible" id="cursor-collapse-button">Cursor controls</button>
+            <button type="button" class ="portraitCollapsible">Cursor controls</button>
             <div class="collapsibleContent">
                 <div class="ui vertical buttons">
                     <div class="ui animated fade button" id="show-cursor-btn">
@@ -86,10 +86,10 @@
             <h3 class="ui header hide-on-portrait">Zoom controls:</h3>
             <div class="ui buttons" id="zoomControlsButtons">
                 <div class="ui button" id="zoom-in-btn">
-                    <i class="search plus icon"></i>
+                    <i class="search plus icon" style="margin: 0px"></i>
                 </div>
                 <div class="ui button" id="zoom-out-btn">
-                    <i class="search minus icon"></i>
+                    <i class="search minus icon" style="margin: 0px"></i>
                 </div>
                 <div class="ui show-on-portrait" id="zoom-str-portrait">???</div>
             </div>
@@ -161,9 +161,9 @@
             </select>
             <div class="ui button" id="print-pdf-btn">Create PDF</div>
         </div>
-        <div class="column advanced-setting" >
+        <div class="column advanced-setting"id="last-adv-setting" >
             <h3 class="ui header hide-on-portrait">Transpose by Semitone(s):</h3>
-            <button type="button" class ="portraitCollapsible" id="last-adv-setting">Transpose by Semitone(s)</button>
+            <button type="button" class ="portraitCollapsible">Transpose by Semitone(s)</button>
             <div class="ui action input collapsibleContent">
                 <input type="number" id="transpose" value="0"/>
                 <button class="ui button" id="transpose-btn">Transpose</button>
