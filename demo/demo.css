@@ -7,6 +7,7 @@ p {
   --theme-color-dark: #d25701;
   --theme-color-medium:#ffeee2;
   --theme-color-light: #fdf6f2;
+  --theme-color-focus: #faddc9;
 }
 .portraitCollapsible{
   display: none;
@@ -38,28 +39,31 @@ select {
 }
 .ui.action.input:not([class*="left action"]) > input {
   border-color: var(--theme-color-dark);
+  border-right: 1px solid var(--theme-color-dark) !important;
+  border-radius: 5px !important;
   color: var(--theme-color-dark);
 }
 .ui.vertical.buttons .button:first-child {
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
-  border-radius: 5px;
-  border-bottom-left-radius: 0px;
-  border-bottom-right-radius: 0px;
-
   border-left:1px solid var(--theme-color-dark);
 }
+
 .button:last-child {
   margin-bottom: 0px;
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
   border-top-left-radius: 5px;
 }
+.ui.buttons > .ui.button:not(.basic):not(.inverted):active, .ui.buttons:not(.basic):not(.inverted) > .button:active, .ui.action.input > .button:focus, .button:active, .ui.action.input > .button:active{
+  color: var(--theme-color-dark);
+  background-color: var(--theme-color-focus);
+  accent-color: var(--theme-color-focus);
+}
 .ui.animated.button .hidden.content{
   margin: 0px;
 }
 .ui.button{
-
   color: var(--theme-color-dark);
   background-color: var(--theme-color-medium);
   border: 1px solid var(--theme-color-dark);
@@ -69,7 +73,18 @@ select {
 .ui.toggle.checkbox {
   accent-color: var(--theme-color-dark);
 }
-
+.ui.toggle.checkbox input:checked ~ label {
+  color: var(--theme-color-dark) !important;
+}
+.ui.toggle.checkbox input:focus, .ui.checkbox input[type="checkbox"]:focus, [type="checkbox"]:focus, input:focus, .ui.toggle.checkbox:focus, .ui.list > .item:focus, .ui.list:focus, .ui.checkbox:focus, Element:focus{
+  color: var(--theme-color-dark);
+  background-color: var(--theme-color-focus);
+  accent-color: var(--theme-color-focus);
+  caret-color: var(--theme-color-dark);
+  lighting-color: var(--theme-color-dark);
+  text-decoration-color: var(--theme-color-dark);
+  -moz-text-decoration-color: var(--theme-color-dark);
+}
   #divControls {
     position:relative;
     margin-left: 10px;
@@ -176,23 +191,23 @@ select {
   }
 .portraitCollapsible:after {
     text-align: center;
-    content: '\002B';
-    width: 20px;
-    font-size: port-collapsible-fontsize;
+    content: ' ';
+    padding: 10px;
+    background: url('resources/arrow-right-s-fill.svg') 50% no-repeat ;
     color: var(--theme-color-dark);
     float: right;
-    margin-left: 5px;
+    margin-left: 3px;
   }
 
   .portraitCollapsible.active:after {
-    content: "\2212"; 
+    content: ' ';
+    padding: 10px;
+    background: url('resources/arrow-down-s-fill.svg') 50% no-repeat ;
     font-size: port-collapsible-fontsize;
     float: right;
-    margin-left: 5px;
+    margin-left: 3px;
   }
-  .active, .collapsible:hover {
-    background-color: var(--theme-color-medium);
-  }
+
 
   .collapsibleContent{
     padding: 10px 10px;
@@ -205,6 +220,7 @@ select {
     margin-right: var(--settings-margin);
     width:fit-content;
     display: block;
+    background: url('resources/settings-5-line.svg') 50% no-repeat ;
     border:none;
     float:right;
     order:1;
@@ -212,6 +228,7 @@ select {
     font-size: xx-large;
     color: var(--theme-color-dark);
     order:-1;
+    margin-bottom: 20px;
   }
   #advanced-settings-btn.active{
     transform: rotate(0deg);
@@ -264,6 +281,7 @@ select {
   #transpose-btn{
     margin-top: 5px;
     border-radius: 5px;
+
   }
 }
 
