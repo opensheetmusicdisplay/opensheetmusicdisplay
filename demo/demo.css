@@ -2,12 +2,14 @@ p {
   margin: 0px 8px 8px 8px;
 }
 :root{
-  --port-collapsible-fontsize: 17px;
-  --settings-margin: 10px;
+  --port-collapsible-fontsize: 1.2em;
+  --settings-margin: 0.7em;
   --theme-color-dark: #d25701;
   --theme-color-medium:#ffeee2;
   --theme-color-light: #fdf6f2;
   --theme-color-focus: #faddc9;
+  --desktop-div-controls-border-size: 2px;
+  --desktop-font-size:13px;
 }
 .portraitCollapsible{
   display: none;
@@ -28,11 +30,6 @@ select {
 #selectBounding {
   width: 80%;
 }
-
-
-/* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
-@media (max-width: 500px) {
-/* general styling */
 
 .ui.input{
   border-color: var(--theme-color-dark);
@@ -85,11 +82,122 @@ select {
   text-decoration-color: var(--theme-color-dark);
   -moz-text-decoration-color: var(--theme-color-dark);
 }
+/* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
+/* general styling */
+
+
+
+@media (max-width: 500px) {
+    .show-on-portrait{
+    display: block;
+  }
+  .hide-on-portrait{
+    display: none !important;    
+  }
   #divControls {
     position:relative;
     margin-left: 10px;
     margin-right: 10px;
-    flex-wrap: wrap;
+  }
+
+.portraitCollapsible:after {
+    text-align: center;
+    content: ' ';
+    padding: 10px;
+    background: url('resources/arrow-right-s-fill.svg') 50% no-repeat ;
+    color: var(--theme-color-dark);
+    float: right;
+    margin-left: 3px;
+  }
+
+  #advanced-settings-btn{
+    transform: rotate(22.5deg);
+    margin-left: auto;
+    margin-right: var(--settings-margin);
+    width:fit-content;
+    display: block;
+    background: url('resources/settings-5-line.svg') 50% no-repeat ;
+    border:none;
+    float:right;
+    order:1;
+    background-color: transparent;
+    font-size: xx-large;
+    color: var(--theme-color-dark);
+    order:-1;
+    margin-bottom: 20px;
+  }
+  #advanced-settings-btn.active{
+    transform: rotate(0deg);
+    margin-bottom: 20px;
+  }
+
+
+
+  .portraitCollapsible.active:after {
+    content: ' ';
+    padding: 10px;
+    background: url('resources/arrow-down-s-fill.svg') 50% no-repeat ;
+    font-size: port-collapsible-fontsize;
+    float: right;
+    margin-left: 3px;
+  }
+  /* style collapsibles */
+
+  #zoomControls{
+    position:absolute;
+    display: flex;
+    left:50%;
+    transform: translateX(-50%);
+  }
+  #cursorControls{
+    margin-top: 5px;
+    border-top: 1px solid var(--theme-color-dark);
+    border-radius: 5px 5px 0px 0px;  
+    order:-1;
+  }
+  .portraitCollapsible{
+    display: inline;
+  }
+}  
+  .portraitCollapsible{
+    margin-top: 8px;
+    margin-left: -4px;
+    font-weight: 550;
+    background-color: transparent;
+    color: var(--theme-color-dark);
+    cursor: pointer;
+    width: fit-content;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: var(--port-collapsible-fontsize);
+
+  }
+  .collapsibleContent{
+    padding: 5px 5px;
+    overflow: hidden;
+    width: fit-content;
+  }
+
+  #last-adv-setting{
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--theme-color-dark);
+    border-radius: 0px 0px 5px 5px;  
+    order:1;
+  }
+
+
+  .advanced-setting{
+    padding-left:0.45em;
+    background-color: var(--theme-color-light);
+    margin-right: 0.7em;
+    order:0;
+    display: block;
+    width: 100%;
+    margin-right: var(--settings-margin);
+    margin-left: var(--settings-margin);
+    border-right: 0.07em solid var(--theme-color-dark);
+    border-left: 0.07em solid var(--theme-color-dark);
   }
 
   #selectSampleContainer{
@@ -116,24 +224,19 @@ select {
     text-align: center;
     display:block;
     margin:auto;
-    margin-bottom: 10px;
+    margin-bottom: 0.7em;
     color: var(--theme-color-dark);
     background-color: white;
     border: 1px solid var(--theme-color-dark);
   }
-  #zoomControls{
+
+  #zoomControlsButtons{
+
     background-color: var(--theme-color-light);
-    position:absolute;
     order: 0;
-    left:50%;
-    transform: translateX(-50%);
+    border: 1px solid var(--theme-color-dark);
     margin-top: 118px;
     border-radius: 5px;
-    border: 1px solid var(--theme-color-dark);
-  }
-  #zoomControlsButtons{
-    display: inline;
-    float:left;
   }
 
   #zoom-in-btn{
@@ -167,98 +270,6 @@ select {
     background-color: var(--theme-color-medium);
     border: 1px solid var(--theme-color-dark);
   }
-  .hide-on-portrait{
-    display: none;    
-  }
-  .show-on-portrait{
-    display: block;
-  }
-  /* style collapsibles */
-  .portraitCollapsible{
-    margin-top: 8px;
-    margin-left: -4px;
-    font-weight: 550;
-    display: inline;
-    background-color: transparent;
-    color: var(--theme-color-dark);
-    cursor: pointer;
-    width: fit-content;
-    border: none;
-    text-align: left;
-    outline: none;
-    font-size: var(--port-collapsible-fontsize);
-
-  }
-.portraitCollapsible:after {
-    text-align: center;
-    content: ' ';
-    padding: 10px;
-    background: url('resources/arrow-right-s-fill.svg') 50% no-repeat ;
-    color: var(--theme-color-dark);
-    float: right;
-    margin-left: 3px;
-  }
-
-  .portraitCollapsible.active:after {
-    content: ' ';
-    padding: 10px;
-    background: url('resources/arrow-down-s-fill.svg') 50% no-repeat ;
-    font-size: port-collapsible-fontsize;
-    float: right;
-    margin-left: 3px;
-  }
-
-
-  .collapsibleContent{
-    padding: 10px 10px;
-    overflow: hidden;
-    width: fit-content;
-  }
-  #advanced-settings-btn{
-    transform: rotate(22.5deg);
-    margin-left: auto;
-    margin-right: var(--settings-margin);
-    width:fit-content;
-    display: block;
-    background: url('resources/settings-5-line.svg') 50% no-repeat ;
-    border:none;
-    float:right;
-    order:1;
-    background-color: transparent;
-    font-size: xx-large;
-    color: var(--theme-color-dark);
-    order:-1;
-    margin-bottom: 20px;
-  }
-  #advanced-settings-btn.active{
-    transform: rotate(0deg);
-    margin-bottom: 20px;
-  }
-
-  .advanced-setting{
-    padding-left:5px;
-    background-color: var(--theme-color-light);
-    margin-right: 10px;
-    order:0;
-    display: block;
-    width: 100%;
-    margin-right: var(--settings-margin);
-    margin-left: var(--settings-margin);
-    border-right: 1px solid var(--theme-color-dark);
-    border-left: 1px solid var(--theme-color-dark);
-  }
-  #first-adv-setting{
-    margin-top: 5px;
-    border-top: 1px solid var(--theme-color-dark);
-    border-radius: 5px 5px 0px 0px;  
-    order:-1;
-  }
-  #last-adv-setting{
-    padding-bottom: 5px;
-    border-bottom: 1px solid var(--theme-color-dark);
-    border-radius: 0px 0px 5px 5px;  
-    order:1;
-  }
   .search{
     color:#d25701; 
   }
@@ -282,6 +293,120 @@ select {
     margin-top: 5px;
     border-radius: 5px;
 
+  }
+
+@media only screen and (min-width: 992px){
+  #fixed{
+    height: 100%;
+    width:100%;
+    position: fixed;
+    z-index: 1;
+  }
+  #header{
+    background-color: white;
+    padding-bottom: 5px;
+    margin-bottom: -2px;
+    border-bottom: black solid 3px;
+  }
+  #divControls{
+    background-color: var(--theme-color-light);
+    height: 100%;
+    width: 400px !important;
+    columns: 1;
+    margin-right: auto;
+    font-size: var(--desktop-font-size);
+    padding-bottom: 5%;
+    border-top: black solid 3px;
+    border-right: black solid 2px;
+    display:block;
+    padding-bottom: 200px;
+  }
+  .advanced-setting{
+    margin-left: 20px;
+    margin-right: 20px;
+    padding-left: 10px;
+    font-size: 0.8em;
+    height:fit-content;
+    border-width: var(--desktop-div-controls-border-size);
+  }
+  #zoomControls{
+    display: flex;
+    position:relative;
+    border-top: var(--desktop-div-controls-border-size) solid var(--theme-color-dark);
+    border-left: var(--desktop-div-controls-border-size) solid var(--theme-color-dark);
+    border-right: var(--desktop-div-controls-border-size) solid var(--theme-color-dark);
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-top: 20px;
+    border-radius: 5px 5px 0px 0px;
+    order:-1;
+    width: 100%;
+  }
+
+  
+  #zoomControlsButtons{
+  margin: auto;
+  margin-top: 5px;
+  }
+
+
+  #selectSampleContainer{
+    position: relative;
+    display:none;
+  }
+  .collapsibleContent{
+    font-size: var(--desktop-font-size);
+    padding-left: 4px;
+  }
+  /* #osmdCanvasDiv{
+    margin-top: 5%;
+  } */
+  #transpose-btn{
+    border-radius: 0px 5px 5px 0px;
+    margin-top: 0;
+  }
+  #transpose{
+    border-radius: 5px 0px 0px 5px !important;
+  }
+  #last-adv-setting{
+    border-width: var(--desktop-div-controls-border-size);
+  }
+
+  h3.ui.header{
+    margin-top: 3px !important;
+    margin-left: -4px;
+    margin-bottom: 0px;
+    font-weight: 550;
+    background-color: transparent;
+    color: var(--theme-color-dark);
+    cursor: pointer;
+    width: fit-content;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: var(--desktop-font-size);
+  }
+  .ui.selection{
+    max-width:0.1em;
+    max-height: 0.001em;
+  }
+  .ui.input{
+    font-size: var(--desktop-font-size);
+    max-width: fit-content;
+    max-height: 6em;
+  }
+
+  .ui.button{
+    font-size: var(--desktop-font-size);
+  }
+  .ui.vertical.buttons .button {
+    font-size: var(--desktop-font-size);
+  }
+  .ui.checkbox{
+    font-size: var(--desktop-font-size);
+  }
+  select{
+    margin-left: 4px;
   }
 }
 

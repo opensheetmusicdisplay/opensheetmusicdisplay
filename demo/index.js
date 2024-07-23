@@ -235,7 +235,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (horizontalScrolling) {
             canvas.style.overflowX = 'auto'; // enable horizontal scrolling
         }
-        //canvas.id = 'osmdCanvasDiv';
+        canvas.id = 'osmdCanvasDiv';
         //canvas.style.overflowX = 'auto'; // enable horizontal scrolling
         previousCursorBtn = document.getElementById("previous-cursor-btn");
         nextCursorBtn = document.getElementById("next-cursor-btn");
@@ -283,13 +283,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         // console.log(`is portrait mode: ${portrait}`);
         if (portrait) {
             zoom = 0.60; // ~60% is good for iPhone SE (browser simulated device dimensions)
-            divControls.classList.remove("four");
-            divControls.classList.remove("column");
-            divControls.classList.remove("grid");
-            divControls.classList.remove("container");
-            document.getElementById("zoom-str").style.display = "none";
 
-            zoomControlsButtons.style.display = "flex"
+
 
             // collapsible behavior
             var coll = document.getElementsByClassName("portraitCollapsible");
@@ -326,12 +321,9 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                         element.style.display = "block";
                     }
                 }
-
-
             }); 
-            
-            
         }
+
 
         const optionalControls = document.getElementById('optionalControls');
         if (optionalControls) {
