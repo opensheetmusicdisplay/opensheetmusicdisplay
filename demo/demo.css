@@ -7,6 +7,7 @@ p {
   --theme-color-dark: #d25701;
   --theme-color-medium:#ffeee2;
   --theme-color-light: #fdf6f2;
+  --theme-color-very-light: #fffefe;
   --theme-color-focus: #faddc9;
   --thick-border-size: 2px;
   --desktop-font-size:1.8vh;
@@ -313,7 +314,7 @@ select {
     background-color: white;
     padding-bottom: 5px;
     margin-bottom: -2px;
-    border-bottom: black solid 3px;
+    /*border-bottom: grey solid 2px;*/
     width: 100%;
     z-index: 2;
     margin-top: 0;
@@ -322,30 +323,29 @@ select {
     display:inline-block;
   }
   #divControls{
-    background-color: white;
+    background-color: var(--theme-color-very-light);
     height: 100%;
     width: var(--desktop-divControls-width) !important;
     margin-right: auto;
     font-size: var(--desktop-font-size);
     padding-bottom: 5%;
-    border-top: black solid 3px;
-    border-right: black solid 2px;
+    border-top: var(--theme-color-dark) solid 2px;
+    border-right: var(--theme-color-dark) solid 2px;
     display:block;
     padding-bottom: 10%;
-    top:78px;
+    top:79px;
   }
   #slideControlsButton{
     content: ' ';
     background: url('resources/arrow-left-s-line.svg') 50% no-repeat var(--theme-color-light);
     width:15px;
     height: 30px;
-    margin-left: calc(var(--desktop-divControls-width) - 2px);
+    margin-left: calc(var(--desktop-divControls-width) - 1px);
     position: fixed;
     order:1;
     z-index: 1;
-    border: black solid 2px;
-    border-width: 0px 2px 2px 2px;
-    top:80px;
+    border: var(--theme-color-dark) solid 1px;
+    top:79px;
   }
 
   #selectSampleContainer{
@@ -383,6 +383,7 @@ select {
     margin-right: 20px;
     flex-grow: 2;
     border-width: var(--thick-border-size);
+    overflow: visible;
   }
 
   .advanced-setting{
@@ -400,7 +401,7 @@ select {
     margin-right: 20px;
     order:-1;
     width: 100%;
-    margin-top: 10px;
+    margin-top: 7.5px;
   }
   #zoomControlsButtons{
   margin: auto;
@@ -420,13 +421,19 @@ select {
   /* #osmdCanvasDiv{
     margin-top: 5%;
   } */
+  #transposeInput{
+    max-width: 75% !important;
+    margin-right: -150px;
+  }
   #transpose-btn{
     border-radius: 0px 5px 5px 0px;
     margin-top: 0;
   }
   #transpose{
     border-radius: 5px 0px 0px 5px !important;
+    max-width: 30%;
   }
+
   #last-adv-setting{
     border-width: var(--thick-border-size);
   }
