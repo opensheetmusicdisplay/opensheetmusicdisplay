@@ -15,17 +15,22 @@
     <link rel="stylesheet" href="./demo.css"/>
 </head>
 <body>
-<div id="fixed">
-    <h1 class="ui centered header" id="header" style="opacity: 0.0">
+<div style="display: flex; flex-direction: column;">
+    <div class="column" id="selectSampleContainer">
+        <h3 class="ui header" id="selectSampleTitle">Select a sample:</h3>
+        <select class="ui selection dropdown" id="selectSample" style="visibility: hidden"></select>
+    </div>
+    <h1 class="ui centered header fixed" id="header" style="opacity: 0.0">
         <img src="./favicon.ico?" class="ui image">
         <%= htmlWebpackPlugin.options.title %>
     </h1>
-    <!-- in portrait/mobile mode, "four column grid container" is removed from divControls in index.js -->
-    <div class="ui" id="divControls" style="visibility: hidden; opacity: 0.0; display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
-        <div class="column" id="selectSampleContainer">
-            <h3 class="ui header" id="selectSampleTitle">Select a sample:</h3>
-            <select class="ui selection dropdown" id="selectSample" style="visibility: hidden"></select>
-        </div>
+
+</div>
+
+<!-- in portrait/mobile mode, "four column grid container" is removed from divControls in index.js -->
+ <div id="slideContainer">
+        <div class="ui fixed" id="divControls" style="visibility: hidden; opacity: 0.0; display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
+
         <div class="column hide-on-portrait advanced-setting" id="backend-select-div" style="visibility: hidden">
             <h3 class="ui header">Render backend:</h3>
             <select class="ui selection dropdown" id="backend-select" value="svg" style="visibility: hidden;">
@@ -169,9 +174,13 @@
                 </div>
             </div>
 
-
     </div>
-</div>
+    <button class="hide-on-portrait fixed" id="slideControlsButton" onclick="slideButtonClicked()"></button>
+
+ </div>
+
+
+
 <div id="optionalControls" style="opacity: 0.0; width: 95%; display: block">
     <div class="ui three column grid container" style="padding: 10px; margin-right: auto; margin-left: auto" id="optionalControlsColumnContainer">
         <div class="column" id="zoomControlsButtons-optional-column" style="min-width: 30%; opacity: 0.0">

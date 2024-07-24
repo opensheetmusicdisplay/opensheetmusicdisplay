@@ -324,6 +324,30 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             }); 
         }
 
+        var slideButton = document.getElementById("slideControlsButton");
+        slideButton.onclick=function slideButtonClicked(){
+            var slideContainer = document.getElementById("slideContainer");
+            slideContainer.addEventListener("animationend", function(e){
+                e.preventDefault();
+
+                if(slideContainer.style.animationName == "slide-left"){
+                    divControls.style.display = "none";
+                }
+            });
+
+            if(divControls.style.display == "none"){
+                divControls.style.display = "flex";
+                slideContainer.style.animation = "0.7s slide-right";
+                slideContainer.style.animationFillMode = "forwards"
+                slideButton.style.background = "url('resources/arrow-left-s-line.svg') 50% no-repeat var(--theme-color-light)"
+                return;
+            }
+            slideContainer.style.animation = "0.7s slide-left"
+            slideContainer.style.animationFillMode = "forwards"
+            slideButton.style.background = "url('resources/arrow-right-s-line.svg') 50% no-repeat var(--theme-color-light)"
+
+
+        }
 
         const optionalControls = document.getElementById('optionalControls');
         if (optionalControls) {
