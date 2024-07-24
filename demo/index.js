@@ -76,6 +76,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         // HTML Elements in the page
         divControls,
         zoomControls,
+        zoomControlsButtons,
         header,
         err,
         error_tr,
@@ -217,6 +218,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         error_tr = document.getElementById("error-tr");
         zoomDivs = [];
         zoomDivs.push(document.getElementById("zoom-str"));
+        zoomDivs.push(document.getElementById("zoom-str-portrait"));
         zoomDivs.push(document.getElementById("zoom-str-optional"));
         custom = document.createElement("option");
         selectSample = document.getElementById("selectSample");
@@ -233,7 +235,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (horizontalScrolling) {
             canvas.style.overflowX = 'auto'; // enable horizontal scrolling
         }
-        //canvas.id = 'osmdCanvasDiv';
+        canvas.id = 'osmdCanvasDiv';
         //canvas.style.overflowX = 'auto'; // enable horizontal scrolling
         previousCursorBtn = document.getElementById("previous-cursor-btn");
         nextCursorBtn = document.getElementById("next-cursor-btn");
@@ -254,6 +256,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         transpose = document.getElementById('transpose');
         transposeBtn = document.getElementById('transpose-btn');
         versionDiv = document.getElementById('versionDiv');
+        zoomControlsButtons = document.getElementById('zoomControlsButtons')
 
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
@@ -274,6 +277,76 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             if (divControls) {
                 divControls.style.display = "none";
             }
+        }
+        // detect mobile portrait mode (small screen -> reduce zoom etc)
+        const portrait = window.matchMedia("(orientation: portrait)").matches;
+        // console.log(`is portrait mode: ${portrait}`);
+        if (portrait) {
+            zoom = 0.60; // ~60% is good for iPhone SE (browser simulated device dimensions)
+
+
+
+            // collapsible behavior
+            var coll = document.getElementsByClassName("portraitCollapsible");
+            for (var i = 0; i < coll.length; i++) {
+                var content = coll[i].nextElementSibling;
+                content.style.display = "none";
+
+            coll[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var content = this.nextElementSibling;
+                if (content.style.display === "block") {
+                    content.style.display = "none";
+                } else {
+                    content.style.display = "block";
+                }
+            });
+            }
+            var adSetBtn = document.getElementById("advanced-settings-btn");
+            
+            
+            var advSettings = document.getElementsByClassName("advanced-setting");
+            for(var i = 0; i < advSettings.length; i++){
+                var element = advSettings[i];
+                element.style.display = "none";
+            }
+
+            adSetBtn.addEventListener("click", function() {
+                this.classList.toggle("active");
+                for(var i = 0; i < advSettings.length; i++){
+                    var element = advSettings[i];
+                    if (element.style.display === "block") {
+                        element.style.display = "none";
+                    } else {
+                        element.style.display = "block";
+                    }
+                }
+            }); 
+        }
+
+        var slideButton = document.getElementById("slideControlsButton");
+        slideButton.onclick=function slideButtonClicked(){
+            var slideContainer = document.getElementById("slideContainer");
+            slideContainer.addEventListener("animationend", function(e){
+                e.preventDefault();
+
+                if(slideContainer.style.animationName == "slide-left"){
+                    divControls.style.display = "none";
+                }
+            });
+
+            if(divControls.style.display == "none"){
+                divControls.style.display = "flex";
+                slideContainer.style.animation = "0.7s slide-right";
+                slideContainer.style.animationFillMode = "forwards"
+                slideButton.style.background = "url('resources/arrow-left-s-line.svg') 50% no-repeat var(--theme-color-light)"
+                return;
+            }
+            slideContainer.style.animation = "0.7s slide-left"
+            slideContainer.style.animationFillMode = "forwards"
+            slideButton.style.background = "url('resources/arrow-right-s-line.svg') 50% no-repeat var(--theme-color-light)"
+
+
         }
 
         const optionalControls = document.getElementById('optionalControls');
@@ -479,6 +552,14 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             // tripletsBracketed: true,
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });
+        if (portrait) {
+            // reduce title labels/text size etc. as well. E.g. for Mozart string quartet, title wouldn't fit line width otherwise
+            openSheetMusicDisplay.EngravingRules.SheetTitleHeight *= 0.7; // see Mozart String Quartet
+            // reducing size for subtitle/composer/lyricist is probably unnecessary and makes them too small:
+            // openSheetMusicDisplay.EngravingRules.SheetSubtitleHeight *= 0.9;
+            // openSheetMusicDisplay.EngravingRules.SheetComposerHeight *= 0.9;
+            // openSheetMusicDisplay.EngravingRules.SheetAuthorHeight *= 0.9; // affects lyricist label, maybe should be renamed
+        }
         openSheetMusicDisplay.TransposeCalculator = new TransposeCalculator(); // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
         //openSheetMusicDisplay.DrawSkyLine = true;
         //openSheetMusicDisplay.DrawBottomLine = true;

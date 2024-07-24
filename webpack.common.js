@@ -48,7 +48,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: 'demo/index.html',
             favicon: 'demo/favicon.ico',
-            title: 'OpenSheetMusicDisplay Demo'
+            title: 'OSMD Demo'
         })
     ],
     devServer: {
