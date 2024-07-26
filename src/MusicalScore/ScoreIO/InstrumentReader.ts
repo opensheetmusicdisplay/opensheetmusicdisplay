@@ -273,11 +273,18 @@ export class InstrumentReader {
           let noteDuration: Fraction = new Fraction(0, 1);
           let normalNotes: number = 2;
           let typeDuration: Fraction = undefined;
+          const restNote: boolean = xmlNode.element("rest") !== undefined;
           // let isTuplet: boolean = false; // unused now
           if (xmlNode.element("duration")) {
             noteDivisions = parseInt(xmlNode.element("duration").value, 10);
             if (!isNaN(noteDivisions)) {
               noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
+              if (restNote && noteDuration.RealValue > this.ActiveRhythm?.Rhythm.RealValue) {
+                // bug in Virtual Sheet Music Playground and potentially other exporters
+                //   that assigns 4 quarters (whole note) duration to full measure rest in 2/4 measures
+                // note that this.ActiveRhythm can be undefined in some test samples
+                noteDuration = this.ActiveRhythm.Rhythm.clone();
+              }
               if (noteDivisions === 0) {
                 noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
               } else {
@@ -299,7 +306,6 @@ export class InstrumentReader {
             }
           }
 
-          const restNote: boolean = xmlNode.element("rest") !== undefined;
           //log.info("New note found!", noteDivisions, noteDuration.toString(), restNote);
 
           const notationsNode: IXmlElement = xmlNode.combinedElement("notations"); // select all notation nodes

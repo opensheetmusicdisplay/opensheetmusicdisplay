@@ -440,8 +440,10 @@ export class SourceMeasure {
             for (let j: number = 0; j < musicSheet.Instruments[i].Staves.length; j++) {
                 const lastStaffEntry: SourceStaffEntry = this.getLastSourceStaffEntryForInstrument(inSourceMeasureInstrumentIndex + j);
                 if (lastStaffEntry !== undefined && lastStaffEntry.Timestamp) {
-                    if (instrumentDuration.lt(Fraction.plus(lastStaffEntry.Timestamp, lastStaffEntry.calculateMaxNoteLength()))) {
-                        instrumentDuration = Fraction.plus(lastStaffEntry.Timestamp, lastStaffEntry.calculateMaxNoteLength());
+                    const lastStaffEntryDuration: Fraction = lastStaffEntry.calculateMaxNoteLength(false);
+                    // untilEndOfTie = false: don't set measure duration until end of tie, which could be in next measure!
+                    if (instrumentDuration.lt(Fraction.plus(lastStaffEntry.Timestamp, lastStaffEntryDuration))) {
+                        instrumentDuration = Fraction.plus(lastStaffEntry.Timestamp, lastStaffEntryDuration);
                     }
                 }
             }
