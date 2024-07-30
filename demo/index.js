@@ -281,7 +281,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         // detect mobile portrait mode (small screen -> reduce zoom etc)
         const portrait = window.matchMedia("(orientation: portrait)").matches;
         // console.log(`is portrait mode: ${portrait}`);
-        if (portrait) {
+        if (window.outerWidth < 768) {
             zoom = 0.60; // ~60% is good for iPhone SE (browser simulated device dimensions)
 
 
@@ -324,6 +324,25 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             }); 
         }
 
+
+                if(slideContainer.style.animationName == "slide-left"){
+                    divControls.style.display = "block";
+                }
+            });
+
+            if(divControls.style.display == "block"){
+                divControls.style.display = "flex";
+                slideContainer.style.animation = "0.7s slide-right";
+                slideContainer.style.animationFillMode = "forwards"
+                slideButton.style.background = "url('resources/arrow-left-s-line.svg') 50% no-repeat var(--theme-color-light)"
+                return;
+            }
+            slideContainer.style.animation = "0.7s slide-left"
+            slideContainer.style.animationFillMode = "forwards"
+            slideButton.style.background = "url('resources/arrow-right-s-line.svg') 50% no-repeat var(--theme-color-light)"
+
+
+        }
 
         const optionalControls = document.getElementById('optionalControls');
         if (optionalControls) {
