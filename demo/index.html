@@ -15,24 +15,40 @@
     <link rel="stylesheet" href="./demo.css"/>
 </head>
 <body>
-<div id="fixed">
-    <h1 class="ui centered header" id="header" style="opacity: 0.0">
+<div style="display: flex; flex-direction: column;">
+    <div class="column" id="selectSampleContainer">
+        <h3 class="ui header" id="selectSampleTitle">Select a sample:</h3>
+        <select class="ui selection dropdown" id="selectSample" style="visibility: hidden"></select>
+    </div>
+    <h1 class="ui centered header fixed" id="header" style="opacity: 0.0">
         <img src="./favicon.ico?" class="ui image">
         <%= htmlWebpackPlugin.options.title %>
     </h1>
-    <!-- in portrait/mobile mode, "four column grid container" is removed from divControls in index.js -->
-    <div class="ui" id="divControls" style="visibility: hidden; opacity: 0.0; display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
-        <div class="column" id="selectSampleContainer">
-            <h3 class="ui header" id="selectSampleTitle">Select a sample:</h3>
-            <select class="ui selection dropdown" id="selectSample" style="visibility: hidden"></select>
+
+</div>
+
+<!-- in portrait/mobile mode, "four column grid container" is removed from divControls in index.js -->
+<div id="slideContainer">
+    <div class="ui fixed" id="divControls" style="visibility: hidden; opacity: 0.0; display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
+        <div class="column" id="zoomControls">
+            <div class="ui buttons" id="zoomControlsButtons">
+                <div class="ui button" id="zoom-in-btn">
+                    <i class="search plus icon" style="margin: 0px"></i>
+                </div>
+                <div class="ui button" id="zoom-out-btn">
+                    <i class="search minus icon" style="margin: 0px"></i>
+                </div>
+                <div class="ui" id="zoom-str-portrait">???</div>
+            </div>
         </div>
-        <div class="column hide-on-portrait advanced-setting" id="backend-select-div" style="visibility: hidden">
-            <h3 class="ui header">Render backend:</h3>
-            <select class="ui selection dropdown" id="backend-select" value="svg" style="visibility: hidden;">
-                <option value="svg">SVG</option>
-                <option value="canvas">Canvas</option>
-            </select>
-        </div>
+        <div class="ui" id="advancedSettings" style="display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
+            <div class="column hide-on-portrait advanced-setting" id="backend-select-div" style="visibility: hidden">
+                <h3 class="ui header">Render backend:</h3>
+                <select class="ui selection dropdown" id="backend-select" value="svg" style="visibility: hidden;">
+                    <option value="svg">SVG</option>
+                    <option value="canvas">Canvas</option>
+                </select>
+            </div>
             <button type="button" class="show-on-portrait" id="advanced-settings-btn" ><img src="resources/list-settings-fill.png"></button>
 
             <div class="column advanced-setting" id="cursorControls">
@@ -83,19 +99,8 @@
                     </div>
                 </div>
             </div>
-            <div class="column" id="zoomControls">
-                <div class="ui buttons" id="zoomControlsButtons">
-                    <div class="ui button" id="zoom-in-btn">
-                        <i class="search plus icon" style="margin: 0px"></i>
-                    </div>
-                    <div class="ui button" id="zoom-out-btn">
-                        <i class="search minus icon" style="margin: 0px"></i>
-                    </div>
-                    <div class="ui" id="zoom-str-portrait">???</div>
-                </div>
 
 
-            </div>
             <div class="column advanced-setting" id="selectBoundingDiv">
                 <h3 class="ui header hide-on-portrait">Show bounding box for:</h3>
                 <button type="button" class ="portraitCollapsible show-on-portrait">Show bounding box for</button>
@@ -163,15 +168,20 @@
             <div class="column advanced-setting">
                 <h3 class="ui header hide-on-portrait">Transpose by Semitone(s):</h3>
                 <button type="button" class ="portraitCollapsible show-on-portrait">Transpose by Semitone(s)</button>
-                <div class="ui action input collapsibleContent">
+                <div class="ui action input collapsibleContent" id="transposeInput">
                     <input type="number" id="transpose" value="0"/>
                     <button class="ui button" id="transpose-btn">Transpose</button>
                 </div>
             </div>
-
-
+        </div>
     </div>
+    <button class="hide-on-portrait fixed" id="slideControlsButton" onclick="slideButtonClicked()"></button>    
 </div>
+
+
+
+
+
 <div id="optionalControls" style="opacity: 0.0; width: 95%; display: block">
     <div class="ui three column grid container" style="padding: 10px; margin-right: auto; margin-left: auto" id="optionalControlsColumnContainer">
         <div class="column" id="zoomControlsButtons-optional-column" style="min-width: 30%; opacity: 0.0">
