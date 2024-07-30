@@ -281,7 +281,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         // detect mobile portrait mode (small screen -> reduce zoom etc)
         const portrait = window.matchMedia("(orientation: portrait)").matches;
         // console.log(`is portrait mode: ${portrait}`);
-        if (portrait) {
+        if (window.outerWidth < 768) {
             zoom = 0.60; // ~60% is good for iPhone SE (browser simulated device dimensions)
 
 
@@ -331,11 +331,11 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 e.preventDefault();
 
                 if(slideContainer.style.animationName == "slide-left"){
-                    divControls.style.display = "none";
+                    divControls.style.display = "block";
                 }
             });
 
-            if(divControls.style.display == "none"){
+            if(divControls.style.display == "block"){
                 divControls.style.display = "flex";
                 slideContainer.style.animation = "0.7s slide-right";
                 slideContainer.style.animationFillMode = "forwards"

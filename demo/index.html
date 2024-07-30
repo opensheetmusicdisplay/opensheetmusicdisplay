@@ -28,16 +28,27 @@
 </div>
 
 <!-- in portrait/mobile mode, "four column grid container" is removed from divControls in index.js -->
- <div id="slideContainer">
-        <div class="ui fixed" id="divControls" style="visibility: hidden; opacity: 0.0; display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
-
-        <div class="column hide-on-portrait advanced-setting" id="backend-select-div" style="visibility: hidden">
-            <h3 class="ui header">Render backend:</h3>
-            <select class="ui selection dropdown" id="backend-select" value="svg" style="visibility: hidden;">
-                <option value="svg">SVG</option>
-                <option value="canvas">Canvas</option>
-            </select>
+<div id="slideContainer">
+    <div class="ui fixed" id="divControls" style="visibility: hidden; opacity: 0.0; display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
+        <div class="column" id="zoomControls">
+            <div class="ui buttons" id="zoomControlsButtons">
+                <div class="ui button" id="zoom-in-btn">
+                    <i class="search plus icon" style="margin: 0px"></i>
+                </div>
+                <div class="ui button" id="zoom-out-btn">
+                    <i class="search minus icon" style="margin: 0px"></i>
+                </div>
+                <div class="ui" id="zoom-str-portrait">???</div>
+            </div>
         </div>
+        <div class="ui" id="advancedSettings" style="display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
+            <div class="column hide-on-portrait advanced-setting" id="backend-select-div" style="visibility: hidden">
+                <h3 class="ui header">Render backend:</h3>
+                <select class="ui selection dropdown" id="backend-select" value="svg" style="visibility: hidden;">
+                    <option value="svg">SVG</option>
+                    <option value="canvas">Canvas</option>
+                </select>
+            </div>
             <button type="button" class="show-on-portrait" id="advanced-settings-btn" ><img src="resources/list-settings-fill.png"></button>
 
             <div class="column advanced-setting" id="cursorControls">
@@ -88,19 +99,8 @@
                     </div>
                 </div>
             </div>
-            <div class="column" id="zoomControls">
-                <div class="ui buttons" id="zoomControlsButtons">
-                    <div class="ui button" id="zoom-in-btn">
-                        <i class="search plus icon" style="margin: 0px"></i>
-                    </div>
-                    <div class="ui button" id="zoom-out-btn">
-                        <i class="search minus icon" style="margin: 0px"></i>
-                    </div>
-                    <div class="ui" id="zoom-str-portrait">???</div>
-                </div>
 
 
-            </div>
             <div class="column advanced-setting" id="selectBoundingDiv">
                 <h3 class="ui header hide-on-portrait">Show bounding box for:</h3>
                 <button type="button" class ="portraitCollapsible show-on-portrait">Show bounding box for</button>
@@ -173,11 +173,12 @@
                     <button class="ui button" id="transpose-btn">Transpose</button>
                 </div>
             </div>
-
+        </div>
     </div>
-    <button class="hide-on-portrait fixed" id="slideControlsButton" onclick="slideButtonClicked()"></button>
+    <button class="hide-on-portrait fixed" id="slideControlsButton" onclick="slideButtonClicked()"></button>    
+</div>
 
- </div>
+
 
 
 
