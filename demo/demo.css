@@ -142,7 +142,7 @@ select {
   align-content: center;
   border: 2px solid var(--theme-color-dark);
   border-radius: 5px 5px 0px 0px;
-  width:90%
+  width:90%;
 }
 #selectSampleTitle{
   margin-top: 1px;
@@ -221,9 +221,11 @@ select {
 .ui.toggle.checkbox.focus{
   color: var(--theme-color-dark);
 }
+#transpose{
+  border-radius: 5px 0px 0px 5px !important;
+}
 #transpose-btn{
-  margin-top: 5px;
-  border-radius: 5px;
+  border-radius: 0px 5px 5px 0px;
 
 }
 .ui.button:hover{
@@ -248,49 +250,42 @@ select {
   }
   #advancedSettings{
     width: 100%;
-  }
-.portraitCollapsible:after {
-    text-align: center;
-    content: ' ';
-    padding: 10px;
-    background: url('resources/arrow-right-s-fill.svg') 50% no-repeat ;
-    color: var(--theme-color-dark);
-    float: right;
-    margin-left: 3px;
+    position: fixed !important;
+    z-index: 2;
+    opacity: 95%;
+    padding-top:50px;
+    top:0;
+    left:50%;
+    transform: translate(-50%, 0%);
+    height:100%;
+    padding-bottom: 10px;
+    background-color: #ffffff9f;
   }
 
+
   #advanced-settings-btn{
+    position: fixed;
+    top: 15px;
+    right: 15px;
+
     transform: rotate(22.5deg);
-    margin-left: auto;
-    margin-right: var(--settings-margin);
     width:fit-content;
     display: block;
-    background: url('resources/settings-5-line.svg') 50% no-repeat ;
+    background: url('resources/settings-5-fill.svg') 50% no-repeat ;
     border:none;
-    float:right;
-    order:1;
     background-color: transparent;
     font-size: xx-large;
     color: var(--theme-color-dark);
-    order:-1;
-    margin-bottom: 20px;
+    z-index: 3;
   }
   #advanced-settings-btn.active{
     transform: rotate(0deg);
-    margin-bottom: 20px;
   }
   #header{
     order:-1;
     margin-top: 0%;
   }
-  .portraitCollapsible.active:after {
-    content: ' ';
-    padding: 10px;
-    background: url('resources/arrow-down-s-fill.svg') 50% no-repeat ;
-    font-size: port-collapsible-fontsize;
-    float: right;
-    margin-left: 3px;
-  }
+
   #zoomControls{
     position:absolute;
     z-index: 2;
@@ -305,6 +300,9 @@ select {
   }
   .portraitCollapsible{
     display: inline;
+  }
+  #osmdCanvasDiv{
+    margin-top: 40px;
   }
 }  
 
@@ -325,6 +323,7 @@ select {
 
   #divControls{
     background-color: var(--theme-color-very-light);
+    opacity: 95% !important;
     height: 100%;
     width: var(--desktop-divControls-width) !important;
     margin-right: auto;
@@ -359,8 +358,7 @@ select {
     align-items: center;
     border-radius: 5px;
     border-width: var(--thick-border-size);
-    margin-bottom: 0;
-
+    margin-bottom: 0px;
   }
   #selectSampleTitle{
     height:100%;
@@ -429,12 +427,7 @@ select {
     max-width: 75% !important;
     margin-right: -150px;
   }
-  #transpose-btn{
-    border-radius: 0px 5px 5px 0px;
-    margin-top: 0;
-  }
   #transpose{
-    border-radius: 5px 0px 0px 5px !important;
     max-width: 30%;
   }
 

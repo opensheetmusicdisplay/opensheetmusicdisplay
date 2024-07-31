@@ -284,42 +284,18 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (window.outerWidth < 768) {
             zoom = 0.60; // ~60% is good for iPhone SE (browser simulated device dimensions)
 
-
-
-            // collapsible behavior
-            var coll = document.getElementsByClassName("portraitCollapsible");
-            for (var i = 0; i < coll.length; i++) {
-                var content = coll[i].nextElementSibling;
-                content.style.display = "none";
-
-            coll[i].addEventListener("click", function() {
-                this.classList.toggle("active");
-                var content = this.nextElementSibling;
-                if (content.style.display === "block") {
-                    content.style.display = "none";
-                } else {
-                    content.style.display = "block";
-                }
-            });
-            }
             var adSetBtn = document.getElementById("advanced-settings-btn");
             
             
-            var advSettings = document.getElementsByClassName("advanced-setting");
-            for(var i = 0; i < advSettings.length; i++){
-                var element = advSettings[i];
-                element.style.display = "none";
-            }
+            var advSettings = document.getElementById("advancedSettings");
+            advSettings.style.display = "none";
 
             adSetBtn.addEventListener("click", function() {
                 this.classList.toggle("active");
-                for(var i = 0; i < advSettings.length; i++){
-                    var element = advSettings[i];
-                    if (element.style.display === "block") {
-                        element.style.display = "none";
-                    } else {
-                        element.style.display = "block";
-                    }
+                if (advSettings.style.display === "flex") {
+                    advSettings.style.display = "none";
+                } else {
+                    advSettings.style.display = "flex";
                 }
             }); 
         }
