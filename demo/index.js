@@ -281,7 +281,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         // detect mobile portrait mode (small screen -> reduce zoom etc)
         const portrait = window.matchMedia("(orientation: portrait)").matches;
         // console.log(`is portrait mode: ${portrait}`);
-        if (window.outerWidth < 768) {
+        if (window.outerWidth < 500 || window.outerHeight < 500) {
             zoom = 0.60; // ~60% is good for iPhone SE (browser simulated device dimensions)
 
             var adSetBtn = document.getElementById("advanced-settings-btn");

@@ -2,8 +2,8 @@ p {
   margin: 0px 8px 8px 8px;
 }
 :root{
-  --port-collapsible-fontsize: 1.2em;
-  --settings-margin: 0.7em;
+  --settings-header-fontsize: 1.2em; 
+  --settings-margin: 0.7em; /* the left and right margins between the advanced setting and its container*/
   --theme-color-dark: #d25701;
   --theme-color-medium:#ffeee2;
   --theme-color-light: #fdf6f2;
@@ -11,12 +11,10 @@ p {
   --theme-color-focus: #faddc9;
   --controls-border-color: #d25701;
   --thick-border-size: 2px;
-  --desktop-font-size:1.5vh;
+  --desktop-font-size:1.5vh; /* for desktop and ipad*/
   --desktop-divControls-width:360px;
 }
-.portraitCollapsible{
-  display: none;
-}
+
 .show-on-portrait{
   display: none;
 }
@@ -90,19 +88,18 @@ select {
 
 
 
-.portraitCollapsible{
-  margin-top: 8px;
-  margin-left: -4px;
-  font-weight: 550;
+.settingsHeader{
+  margin-top: 8px !important;
+  margin-bottom: 0px !important;
+  font-weight: 550 !important;
   background-color: transparent;
-  color: var(--theme-color-dark);
+  color: var(--theme-color-dark) !important;
   cursor: pointer;
   width: fit-content;
   border: none;
   text-align: left;
   outline: none;
-  font-size: var(--port-collapsible-fontsize);
-
+  font-size: var(--settings-header-fontsize) !important;
 }
 .collapsibleContent{
   padding: 5px 5px;
@@ -235,7 +232,7 @@ select {
 
 /* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
 /* general styling */
-@media (max-width: 500px){
+@media (max-width: 500px) or (max-height: 500px){
     .show-on-portrait{
     display: block;
   }
@@ -298,16 +295,73 @@ select {
     border-radius: 5px 5px 0px 0px;  
     order:-1;
   }
-  .portraitCollapsible{
-    display: inline;
-  }
+
   #osmdCanvasDiv{
     margin-top: 40px;
   }
+
+  /* Mobile landscape mode */
+  @media (orientation: landscape){
+    #advancedSettings{
+      background-color: var(--theme-color-light);
+      border-width: var(--thick-border-size);
+      height:fit-content;
+      top:50%;
+      left:50%;
+      transform: translate(-50%,-50%);
+      border: var(--theme-color-dark) var(--thick-border-size) solid;
+      border-radius: 10px;
+      min-height: 95% !important;
+      max-height: 100%;
+      max-width: 98% !important;
+      padding-top: 0;
+    }
+    .advanced-setting{
+      width:fit-content;
+      max-width:300px;
+      display: inline-block;
+      margin:0;
+      margin-right: 20px;
+      border:0;
+    }
+    #selectBounding{
+      width:60%;
+    }
+    #cursorControls{
+      margin-top: 0;
+      border:0;
+    }
+    #last-adv-setting{
+      border:0;
+    }
+    body{
+      font-size: 12px;
+    }
+    #selectSampleContainer{
+      width: 400px;
+      margin-left: 20px;
+      border-radius: 5px;
+    }
+    #zoomControls{
+      position:absolute;
+      top:-80px;
+      left:unset;
+      right: -80px;
+    }
+    #osmdCanvasDiv{
+      margin-top: -20px;
+    }
+    #print-pdf-btn{
+      display:inline-block;
+      position: absolute;
+    }
+  }
 }  
 
+
+
 /* PC and Ipad */
-@media only screen and (min-width: 768px){
+@media only screen and (min-width: 768px) and (min-height: 768px){
   .ui.fixed{
     position: fixed !important;
     z-index: 1;
