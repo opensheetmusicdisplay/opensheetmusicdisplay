@@ -284,8 +284,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (window.outerWidth < 768) {
             zoom = 0.60; // ~60% is good for iPhone SE (browser simulated device dimensions)
 
-
-
             // collapsible behavior
             var coll = document.getElementsByClassName("portraitCollapsible");
             for (var i = 0; i < coll.length; i++) {
@@ -303,7 +301,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             });
             }
             var adSetBtn = document.getElementById("advanced-settings-btn");
-            
             
             var advSettings = document.getElementsByClassName("advanced-setting");
             for(var i = 0; i < advSettings.length; i++){
@@ -325,28 +322,28 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         }
 
         var slideButton = document.getElementById("slideControlsButton");
-        slideButton.onclick=function slideButtonClicked(){
-            var slideContainer = document.getElementById("slideContainer");
-            slideContainer.addEventListener("animationend", function(e){
-                e.preventDefault();
-
-                if(slideContainer.style.animationName == "slide-left"){
-                    divControls.style.display = "block";
+        if (slideButton) {
+            slideButton.onclick=function slideButtonClicked(){
+                var slideContainer = document.getElementById("slideContainer");
+                slideContainer.addEventListener("animationend", function(e){
+                    e.preventDefault();
+    
+                    if(slideContainer.style.animationName == "slide-left"){
+                        divControls.style.display = "block";
+                    }
+                });
+    
+                if(divControls.style.display == "block"){
+                    divControls.style.display = "flex";
+                    slideContainer.style.animation = "0.7s slide-right";
+                    slideContainer.style.animationFillMode = "forwards"
+                    slideButton.style.background = "url('resources/arrow-left-s-line.svg') 50% no-repeat var(--theme-color-light)"
+                    return;
                 }
-            });
-
-            if(divControls.style.display == "block"){
-                divControls.style.display = "flex";
-                slideContainer.style.animation = "0.7s slide-right";
+                slideContainer.style.animation = "0.7s slide-left"
                 slideContainer.style.animationFillMode = "forwards"
-                slideButton.style.background = "url('resources/arrow-left-s-line.svg') 50% no-repeat var(--theme-color-light)"
-                return;
+                slideButton.style.background = "url('resources/arrow-right-s-line.svg') 50% no-repeat var(--theme-color-light)"
             }
-            slideContainer.style.animation = "0.7s slide-left"
-            slideContainer.style.animationFillMode = "forwards"
-            slideButton.style.background = "url('resources/arrow-right-s-line.svg') 50% no-repeat var(--theme-color-light)"
-
-
         }
 
         const optionalControls = document.getElementById('optionalControls');
