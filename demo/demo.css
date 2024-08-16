@@ -86,10 +86,6 @@ select {
   -moz-text-decoration-color: var(--theme-color-dark);
 }
 
-
-
-
-
 .portraitCollapsible{
   margin-top: 8px;
   margin-left: -4px;
@@ -116,7 +112,6 @@ select {
   border-radius: 0px 0px 5px 5px;  
   order:1;
 }
-
 
 .advanced-setting{
   padding-left:0.45em;
@@ -335,6 +330,11 @@ select {
     display:block;
     padding-bottom: 10%;
     top:79px;
+    opacity: 0.5;
+  }
+
+  #divControls:hover {
+    opacity: 0.95;
   }
 
   #slideControlsButton{

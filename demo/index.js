@@ -267,9 +267,12 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             ];
             for (var i=0; i<elementsToEnable.length; i++) {
                 if (elementsToEnable[i]) { // make sure this element is not null/exists in the index.html, e.g. github.io demo has different index.html
-                    if (elementsToEnable[i].style) {
-                        elementsToEnable[i].style.visibility = defaultVisibilityValue;
-                        elementsToEnable[i].style.opacity = 1.0;
+                    const elementToEnable = elementsToEnable[i];
+                    if (elementToEnable.style) {
+                        elementToEnable.style.visibility = defaultVisibilityValue;
+                        if (elementToEnable.style.opacity === 0) {
+                            elementToEnable.style.opacity = 1.0;
+                        }
                     }
                 }
             }
