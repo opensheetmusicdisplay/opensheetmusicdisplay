@@ -226,6 +226,13 @@ select {
   background-color: var(--theme-color-focus);
 }
 
+/* mobile: no hover, no mouse, just touch */
+@media (hover: none) {
+  #divControls {
+    opacity: 0.95; /* see the other #divControls opacity settings: can't switch it on hover like with a mouse setup */
+  }
+}
+
 /* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
 /* general styling */
 @media (max-width: 500px){
