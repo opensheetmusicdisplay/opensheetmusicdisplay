@@ -37,6 +37,7 @@ import { NoteType } from "../../VoiceData/NoteType";
 import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { GraphicalTie } from "../GraphicalTie";
 import { Note } from "../../VoiceData/Note";
+import { TabNote } from "../../VoiceData/TabNote";
 
 // type StemmableNote = VF.StemmableNote;
 
@@ -721,7 +722,19 @@ export class VexFlowMeasure extends GraphicalMeasure {
     // correct position / bounding box (note.setIndex() needs to have been called)
     public correctNotePositions(): void {
         if (this.isTabMeasure) {
-            return;
+            for (const voice of this.getVoicesWithinMeasure()) {
+                for (const ve of voice.VoiceEntries) {
+                    for (const note of ve.Notes) {
+                        const tabNote: TabNote = note as TabNote;
+                        const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
+                        if (tabNote.StringNumberTab >= 0) {
+                            gNote.parentVoiceEntry.PositionAndShape.RelativePosition.y =
+                                (tabNote.StringNumberTab - 1) * this.rules.TabStaffInterlineHeightForBboxes;
+                        }
+                    }
+                }
+            }
+            return; // don't do the below y position adaptations meant for non-tab notes
         }
         for (const voice of this.getVoicesWithinMeasure()) {
             for (const ve of voice.VoiceEntries) {
