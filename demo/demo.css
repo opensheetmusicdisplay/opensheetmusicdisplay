@@ -385,6 +385,7 @@ select {
   }
   #selectSample{
     width: 100% !important;
+    min-height: 3em;
     margin-top: 0px;
     margin-bottom: 0;
     min-width: 70%;
