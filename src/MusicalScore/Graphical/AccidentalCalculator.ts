@@ -66,7 +66,7 @@ export class AccidentalCalculator {
         const isInCurrentAlterationsToKeyList: boolean = this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) >= 0;
         if (this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey)) {
             if (isInCurrentAlterationsToKeyList) {
-                this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
+                this.clearCurrentAlterationsOf(pitchKey);
             }
             if (this.currentInMeasureNoteAlterationsDict.getValue(pitchKey) !== pitch.AccidentalHalfTones) {
                 if (this.keySignatureNoteAlterationsDict.containsKey(pitchKey) &&
@@ -91,6 +91,13 @@ export class AccidentalCalculator {
                 if (this.isAlterAmbiguousAccidental(pitch.Accidental) && ! pitch.AccidentalXml) {
                     return; // only display accidental if it was given as an accidental in the XML
                 }
+                if (pitch.Accidental === AccidentalEnum.NATURAL && inMeasureAlterationAccidental !== AccidentalEnum.NATURAL) {
+                    // If a natural is added, clear alterations on the same pitch for the current measure.
+                    this.currentInMeasureNoteAlterationsDict.remove(pitchKey);
+                    if (this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) >= 0) {
+                        this.clearCurrentAlterationsOf(pitchKey);
+                    }
+                }
                 MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
             }
         } else { // pitchkey not in measure dict:
@@ -107,11 +114,15 @@ export class AccidentalCalculator {
                 if (isInCurrentAlterationsToKeyList) {
                     // we need here a AccidentalEnum.NATURAL now to get it rendered - AccidentalEnum.NONE would not be rendered
                     pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL);
-                    this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
+                    this.clearCurrentAlterationsOf(pitchKey);
                     MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
                 }
             }
         }
+    }
+
+    private clearCurrentAlterationsOf(pitchKey: number): void {
+        this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
     }
 
     private isAlterAmbiguousAccidental(accidental: AccidentalEnum): boolean {
