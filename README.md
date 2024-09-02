@@ -98,10 +98,11 @@ Also, **OSMD is a renderer, not an interactive sheet music editor.** Rendering t
 It would be great if free software were sustainable on its own. But to keep on improving and developing OpenSheetMusicDisplay we need your support. Your monthly sponsorship subscription - especially if you are already actively using OSMD - would mean everything to us - it’s a stable way of enabling us to continue our work, and improve and expand OSMD.<br>
 Features already available in early access:
 * OSMD Audio Player
+* Native modules + example projects (React Native, Kotlin/Android, Swift/iOS) - NEW!
 * Jianpu Display (Numbered Musical Notation), with playback
 
 Features in the making, potentially available in future:
-* Native reference implementations / example projects (Kotlin/Android, Swift/iOS, React Native, etc)
+
 * Annotations (Add custom text, music symbols, etc. to the score and export to and import from XML)
 * and more (we're always working on OSMD improvements or additional features, just look at our release history / [changelog](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/CHANGELOG.md)!)
 
