@@ -81,11 +81,13 @@ export class AccidentalCalculator {
                 if (pitch.Accidental === AccidentalEnum.NONE) {
                     if (Math.abs(inMeasureAlterationAccidental) === 0.5) {
                         // fix to remember quartersharp and quarterflat and not make them natural on following notes
-                        pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NONE);
+                        pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NONE,
+                            undefined, false, pitch.OctaveShiftApplied);
                     } else {
                         // If an AccidentalEnum.NONE is given, it would not be rendered.
                         // We need here to convert to a AccidentalEnum.NATURAL:
-                        pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL);
+                        pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL,
+                            undefined, false, pitch.OctaveShiftApplied);
                     }
                 }
                 if (this.isAlterAmbiguousAccidental(pitch.Accidental) && ! pitch.AccidentalXml) {
@@ -106,7 +108,8 @@ export class AccidentalCalculator {
             } else {
                 if (isInCurrentAlterationsToKeyList) {
                     // we need here a AccidentalEnum.NATURAL now to get it rendered - AccidentalEnum.NONE would not be rendered
-                    pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL);
+                    pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL,
+                        undefined, false, pitch.OctaveShiftApplied);
                     this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
                     MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
                 }

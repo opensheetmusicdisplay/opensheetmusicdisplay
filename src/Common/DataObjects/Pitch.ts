@@ -48,6 +48,7 @@ export class Pitch {
     // private _sourceFundamentalNote: NoteEnum;
     // private _sourceAccidental: AccidentalEnum = AccidentalEnum.NONE;
     private octave: number;
+    public OctaveShiftApplied: boolean;
     private fundamentalNote: NoteEnum;
     private accidental: AccidentalEnum = AccidentalEnum.NONE;
     private accidentalXml: string;
@@ -200,7 +201,8 @@ export class Pitch {
     }
 
     constructor(fundamentalNote: NoteEnum, octave: number, accidental: AccidentalEnum,
-        accidentalXml: string = undefined, isRest: boolean = false) {
+        accidentalXml: string = undefined, isRest: boolean = false,
+        octaveShiftApplied: boolean = undefined) {
         this.fundamentalNote = fundamentalNote;
         this.octave = octave;
         this.accidental = accidental;
@@ -210,6 +212,7 @@ export class Pitch {
         if (!isRest) {
             this.frequency = Pitch.calcFrequency(this);
         }
+        this.OctaveShiftApplied = octaveShiftApplied;
     }
 
     /** Turns an AccidentalEnum into half tone steps for pitch calculation.
