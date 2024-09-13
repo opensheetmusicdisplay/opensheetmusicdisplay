@@ -530,7 +530,7 @@ export abstract class MusicSheetDrawer {
      * @param layer Layer to draw to
      * @param type Type of element to show bounding boxes for as string.
      */
-    private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = "all"): void {
+    private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = "all", drawClassName: boolean = false): void {
         const dataObjectString: string = (startBox.DataObject.constructor as any).name; // only works with non-minified build or sourcemap
         let typeMatch: boolean = false;
         if (type === "all") {
@@ -562,7 +562,11 @@ export abstract class MusicSheetDrawer {
             // }
         }
         if (typeMatch || dataObjectString === type) {
-            this.drawBoundingBox(startBox, undefined, true, dataObjectString, layer);
+            let labelText: string = undefined;
+            if (drawClassName) {
+                labelText = dataObjectString;
+            }
+            this.drawBoundingBox(startBox, undefined, true, labelText, layer);
         }
         layer++;
         startBox.ChildElements.forEach(bb => this.drawBoundingBoxes(bb, layer, type));
@@ -597,7 +601,9 @@ export abstract class MusicSheetDrawer {
         const rectNode: Node = this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, color, 0.5);
         if (labelText) {
             const label: Label = new Label(labelText);
-            this.renderLabel(new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules),
+            const gLabel: GraphicalLabel = new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules);
+            gLabel.setLabelPositionAndShapeBorders(); // this is necessary for it to render (gLabel.TextLines to be set).
+            this.renderLabel(gLabel,
                 layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
             // theoretically we should return the nodes from renderLabel here as well, so they can also be removed later
         }
