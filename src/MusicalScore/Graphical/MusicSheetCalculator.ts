@@ -872,6 +872,7 @@ export abstract class MusicSheetCalculator {
                         // (re-)color notes
                         for (const staffEntry of graphicalMeasure.staffEntries) {
                             for (const gve of staffEntry.graphicalVoiceEntries) {
+                                gve.applyCustomNoteheads();
                                 gve.color();
                             }
                         }
