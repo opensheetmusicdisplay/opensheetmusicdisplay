@@ -267,9 +267,12 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             ];
             for (var i=0; i<elementsToEnable.length; i++) {
                 if (elementsToEnable[i]) { // make sure this element is not null/exists in the index.html, e.g. github.io demo has different index.html
-                    if (elementsToEnable[i].style) {
-                        elementsToEnable[i].style.visibility = defaultVisibilityValue;
-                        elementsToEnable[i].style.opacity = 1.0;
+                    const elementToEnable = elementsToEnable[i];
+                    if (elementToEnable.style) {
+                        elementToEnable.style.visibility = defaultVisibilityValue;
+                        if (elementToEnable.style.opacity === 0) {
+                            elementToEnable.style.opacity = 1.0;
+                        }
                     }
                 }
             }
@@ -285,8 +288,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             zoom = 0.60; // ~60% is good for iPhone SE (browser simulated device dimensions)
 
             var adSetBtn = document.getElementById("advanced-settings-btn");
-            
-            
+
             var advSettings = document.getElementById("advancedSettings");
             advSettings.style.display = "none";
 
@@ -301,28 +303,28 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         }
 
         var slideButton = document.getElementById("slideControlsButton");
-        slideButton.onclick=function slideButtonClicked(){
-            var slideContainer = document.getElementById("slideContainer");
-            slideContainer.addEventListener("animationend", function(e){
-                e.preventDefault();
-
-                if(slideContainer.style.animationName == "slide-left"){
-                    divControls.style.display = "block";
+        if (slideButton) {
+            slideButton.onclick=function slideButtonClicked(){
+                var slideContainer = document.getElementById("slideContainer");
+                slideContainer.addEventListener("animationend", function(e){
+                    e.preventDefault();
+    
+                    if(slideContainer.style.animationName == "slide-left"){
+                        divControls.style.display = "block";
+                    }
+                });
+    
+                if(divControls.style.display == "block"){
+                    divControls.style.display = "flex";
+                    slideContainer.style.animation = "0.7s slide-right";
+                    slideContainer.style.animationFillMode = "forwards"
+                    slideButton.style.background = "url('resources/arrow-left-s-line.svg') 50% no-repeat var(--theme-color-light)"
+                    return;
                 }
-            });
-
-            if(divControls.style.display == "block"){
-                divControls.style.display = "flex";
-                slideContainer.style.animation = "0.7s slide-right";
+                slideContainer.style.animation = "0.7s slide-left"
                 slideContainer.style.animationFillMode = "forwards"
-                slideButton.style.background = "url('resources/arrow-left-s-line.svg') 50% no-repeat var(--theme-color-light)"
-                return;
+                slideButton.style.background = "url('resources/arrow-right-s-line.svg') 50% no-repeat var(--theme-color-light)"
             }
-            slideContainer.style.animation = "0.7s slide-left"
-            slideContainer.style.animationFillMode = "forwards"
-            slideButton.style.background = "url('resources/arrow-right-s-line.svg') 50% no-repeat var(--theme-color-light)"
-
-
         }
 
         const optionalControls = document.getElementById('optionalControls');

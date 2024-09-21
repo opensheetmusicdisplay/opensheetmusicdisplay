@@ -227,6 +227,10 @@ export class Clef extends StaveModifier {
         glyphScale = 23;
         glyphOffset = -12;
         break;
+      case 3: // 3-string tab, e.g. Cuban Tres, see #596
+        glyphScale = 16;
+        glyphOffset = -18;
+        break;
       default:
         throw new Vex.RERR('ClefError', `Invalid number of lines: ${numLines}`);
     }

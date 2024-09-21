@@ -70,6 +70,10 @@ export class Note {
     private slurs: Slur[] = [];
     private playbackInstrumentId: string = undefined;
     private notehead: Notehead = undefined;
+    /** Custom notehead vexflow code. E.g. "vb" = quarter, "v1d" = whole, "v53" = half, etc. - see tables.js
+     * Set this before render() (e.g. after load, before first render).
+     */
+    public CustomNoteheadVFCode: string;
     /** States whether the note should be displayed. False if xmlNode.attribute("print-object").value = "no". */
     private printObject: boolean = true;
     /** The Arpeggio this note is part of. */

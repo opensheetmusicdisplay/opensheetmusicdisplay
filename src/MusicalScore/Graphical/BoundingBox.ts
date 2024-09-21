@@ -443,7 +443,7 @@ export class BoundingBox {
             - Math.max(this.AbsolutePosition.x + this.borderLeft, psi.absolutePosition.x + psi.borderLeft);
         const overlapHeight: number = Math.min(this.AbsolutePosition.y + this.borderBottom, psi.absolutePosition.y + psi.borderBottom)
             - Math.max(this.AbsolutePosition.y + this.borderTop, psi.absolutePosition.y + psi.borderTop);
-        if (overlapWidth > 0 && overlapHeight > 0) {
+        if (overlapWidth >= 0 && overlapHeight >= 0) {
             return true;
         }
         return false;

@@ -114,7 +114,6 @@ select {
   order:1;
 }
 
-
 .advanced-setting{
   padding-left:0.45em;
   background-color: var(--theme-color-light);
@@ -228,6 +227,13 @@ select {
 .ui.button:hover{
   height: fit-content;
   background-color: var(--theme-color-focus);
+}
+
+/* mobile: no hover, no mouse, just touch */
+@media (hover: none) {
+  #divControls {
+    opacity: 0.95; /* see the other #divControls opacity settings: can't switch it on hover like with a mouse setup */
+  }
 }
 
 /* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
@@ -388,6 +394,11 @@ select {
     display:block;
     padding-bottom: 10%;
     top:79px;
+    opacity: 0.5;
+  }
+
+  #divControls:hover {
+    opacity: 0.95;
   }
 
   #slideControlsButton{
@@ -430,6 +441,7 @@ select {
   }
   #selectSample{
     width: 100% !important;
+    min-height: 3em;
     margin-top: 0px;
     margin-bottom: 0;
     min-width: 70%;

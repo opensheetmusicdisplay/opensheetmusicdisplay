@@ -40,7 +40,9 @@
     "test:visual:singletest": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven",
     "fix-memory-limit": "cross-env NODE_OPTIONS=--max_old_space_size=4096"
   },
-
+  "pre-commit": [
+    "lint"
+  ],
   "files": [
     "build/dist/src",
     "build/opensheetmusicdisplay.min.js",
