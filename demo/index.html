@@ -53,7 +53,8 @@
             </div>
 
             <div class="column advanced-setting" id="cursorControls">
-                <h3 class="ui header settingsHeader">Cursor controls:</h3>
+                <h3 class="ui header hide-on-portrait">Cursor controls:</h3>
+                <button type="button show-on-portrait" class ="portraitCollapsible">Cursor controls</button>
                 <div class="collapsibleContent">
                     <div class="ui vertical buttons">
                         <div class="ui animated fade button" id="show-cursor-btn">
@@ -102,7 +103,8 @@
 
 
             <div class="column advanced-setting" id="selectBoundingDiv">
-                <h3 class="ui header settingsHeader">Show bounding box for:</h3>
+                <h3 class="ui header hide-on-portrait">Show bounding box for:</h3>
+                <button type="button" class ="portraitCollapsible show-on-portrait">Show bounding box for</button>
                 <select class="ui selection dropdown collapsibleContent" id="selectBounding" style="visibility: hidden;">
                     <option value="none">None</option>
                     <option value="all">All</option>
@@ -118,7 +120,8 @@
                 </select>
             </div>
             <div class="column advanced-setting">
-                <h3 class="ui header settingsHeader">Show debug information:</h3>
+                <h3 class="ui header hide-on-portrait">Show debug information:</h3>
+                <button type="button" class ="portraitCollapsible show-on-portrait">Show debug information</button>
                 <div class="ui relaxed list">
                     <div class="item">
                         <div class="ui toggle checkbox">
@@ -135,7 +138,8 @@
                 </div>
             </div>
             <div class="column advanced-setting">
-                <h3 class="ui header settingsHeader">Debug controls:</h3>
+                <h3 class="ui header hide-on-portrait">Debug controls:</h3>
+                <button type="button" class ="portraitCollapsible show-on-portrait">Debug controls</button>
                 <div>
                     <div class="ui vertical buttons collapsibleContent">
                         <div class="ui button" id="debug-re-render-btn">Re-render</div>
@@ -147,7 +151,8 @@
                 </div>
             </div>
             <div class="column advanced-setting" id="last-adv-setting">
-                <h3 class="ui header settingsHeader">Page size:</h3>
+                <h3 class="ui header hide-on-portrait">Page size:</h3>
+                <button type="button" class ="portraitCollapsible show-on-portrait" style="width: 100%;">Page size</button>
                 <select class="ui selection dropdown collapsibleContent" id="selectPageSize"  style="visibility: hidden;">
                     <option value="endless">endless</option>
                     <option value="A3 P">A3 Portrait</option>
@@ -162,7 +167,8 @@
                 <div class="ui button" id="print-pdf-btn">Create PDF</div>
             </div>
             <div class="column advanced-setting">
-                <h3 class="ui header settingsHeader">Transpose by Semitone(s):</h3>
+                <h3 class="ui header hide-on-portrait">Transpose by Semitone(s):</h3>
+                <button type="button" class ="portraitCollapsible show-on-portrait">Transpose by Semitone(s)</button>
                 <div class="ui action input collapsibleContent" id="transposeInput">
                     <input type="number" id="transpose" value="0"/>
                     <button class="ui button" id="transpose-btn">Transpose</button>
