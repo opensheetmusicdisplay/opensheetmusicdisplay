@@ -57,7 +57,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         return this.completeNumberOfStaves;
     }
 
-    private static doCalculationsAfterDurationHasBeenSet(instrumentReaders: InstrumentReader[]): void {
+    public static doCalculationsAfterDurationHasBeenSet(instrumentReaders: InstrumentReader[]): void {
         for (const instrumentReader of instrumentReaders) {
             instrumentReader.doCalculationsAfterDurationHasBeenSet();
         }
@@ -184,7 +184,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 this.checkIfRhythmInstructionsAreSetAndEqual(instrumentReaders);
                 this.checkSourceMeasureForNullEntries();
                 sourceMeasureCounter = this.setSourceMeasureDuration(instrumentReaders, sourceMeasureCounter);
-                MusicSheetReader.doCalculationsAfterDurationHasBeenSet(instrumentReaders);
+                //MusicSheetReader.doCalculationsAfterDurationHasBeenSet(instrumentReaders);
+                // commented out because it's only open tie deletion, which works incorrectly, see #1530
                 this.currentMeasure.AbsoluteTimestamp = this.currentFraction.clone();
                 this.musicSheet.SheetErrors.finalizeMeasure(this.currentMeasure.MeasureNumber);
                 this.currentFraction.Add(this.currentMeasure.Duration);

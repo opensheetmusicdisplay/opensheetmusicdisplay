@@ -290,6 +290,7 @@ export class VoiceGenerator {
     }
   }
 
+  /** Check/delete open ties that don't exceed measure duration. Currently unused as it's incorrect, see below. */
   public checkOpenTies(): void {
     const openTieDict: { [key: number]: Tie } = this.openTieDict;
     for (const key in openTieDict) {
@@ -298,6 +299,8 @@ export class VoiceGenerator {
         if (Fraction.plus(tie.StartNote.ParentStaffEntry.Timestamp, tie.Duration)
           .lt(tie.StartNote.SourceMeasure.Duration)) {
           delete openTieDict[key];
+          // TODO the assumption that an open tie can be deleted if it doesn't exceed the measure duration is incorrect,
+          //   see #1530 or Mozart K570 measure 42, simplified into test sample test_tie_missing_k570.musicxml
         }
       }
     }
