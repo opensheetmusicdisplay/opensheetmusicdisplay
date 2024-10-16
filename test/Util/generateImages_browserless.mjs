@@ -32,7 +32,7 @@ function sleep (ms) {
 
 // global variables
 //   (without these being global, we'd have to pass many of these values to the generateSampleImage function)
-// eslint-disable-next-line prefer-const
+// eslint-disable-next-line prefer-const, max-len
 let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 12);
 imageFormat = imageFormat?.toLowerCase();
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
@@ -471,6 +471,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const darkmodeString = options.darkMode ? "darkmode_" : "";
         const graphicalNoteBboxesString = drawBoundingBoxString ? "bbox" + drawBoundingBoxString + "_" : "";
         // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
+        // eslint-disable-next-line max-len
         const pageFilename = `${imageDir}/${sampleFilename}_${darkmodeString}${skybottomlineString}${graphicalNoteBboxesString}${pageNumberingString}.${imageFormat}`;
 
         if (imageFormat === "png") {

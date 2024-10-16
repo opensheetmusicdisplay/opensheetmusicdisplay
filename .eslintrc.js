@@ -30,14 +30,14 @@ module.exports = {
     ],
     "overrides": [
         {
-          "files": ["test/Util/*.js"],
+          "files": ["test/Util/*.js", "test/Util/*.mjs"],
           "rules": {
             "@typescript-eslint/explicit-function-return-type": "off",
             "@typescript-eslint/typedef": "off",
           }
         }
     ],
-    "ignorePatterns": ["webpack*.js","karma.conf.js","*.mjs"],
+    "ignorePatterns": ["webpack*.js","karma.conf.js"],
     "rules": {
         "@typescript-eslint/dot-notation": "error",
         "@typescript-eslint/explicit-function-return-type": "error",
