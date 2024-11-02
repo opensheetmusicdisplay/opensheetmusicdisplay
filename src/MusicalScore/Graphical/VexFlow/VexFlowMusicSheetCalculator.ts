@@ -554,7 +554,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let elongationFactorForMeasureWidth: number = 1;
 
     for (const measure of measuresVertical) {
-      if (!measure || measure.staffEntries.length === 0) {
+      if (!measure || measure.staffEntries.length === 0 || !measure.isVisible()) {
         continue;
       }
 
