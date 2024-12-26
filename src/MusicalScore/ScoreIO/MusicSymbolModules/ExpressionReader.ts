@@ -162,6 +162,16 @@ export class ExpressionReader {
                 inSourceMeasureCurrentFraction: Fraction, inSourceMeasurePreviousFraction: Fraction = undefined): void {
         let isTempoInstruction: boolean = false;
         let isDynamicInstruction: boolean = false;
+
+        const timestampFraction: Fraction = inSourceMeasureCurrentFraction.clone();
+        const offsetNode: IXmlElement = directionNode.element("offset");
+        if (offsetNode?.value) {
+          const offsetValue: number = Number.parseInt(offsetNode.value, 10);
+          timestampFraction.Add(new Fraction(offsetValue, 4 * this.divisions));
+        }
+        // this.directionTimestamp = timestampFraction.clone();
+        //   this could be correct, but leads to odd differences with Musescore for elements like dim. and wedges.
+
         const n: IXmlElement = directionNode.element("sound");
         if (n) {
             const tempoAttr: IXmlAttribute = n.attribute("tempo");
@@ -203,7 +213,7 @@ export class ExpressionReader {
             if (beatUnit !== undefined && bpm) {
                 const useCurrentFractionForPositioning: boolean = (dirContentNode.hasAttributes && dirContentNode.attribute("default-x") !== undefined);
                 if (useCurrentFractionForPositioning) {
-                    this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
+                    this.directionTimestamp = Fraction.createFromFraction(timestampFraction);
                 }
                 const bpmNumber: number = parseFloat(bpm.value);
                 this.createNewTempoExpressionIfNeeded(currentMeasure);
@@ -233,7 +243,7 @@ export class ExpressionReader {
         dirContentNode = dirNode.element("dynamics");
         if (dirContentNode) {
             const fromNotation: boolean = directionNode.element("notations") !== undefined;
-            this.interpretInstantaneousDynamics(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction, fromNotation);
+            this.interpretInstantaneousDynamics(dirContentNode, currentMeasure, timestampFraction, fromNotation);
             return;
         }
 
@@ -246,7 +256,7 @@ export class ExpressionReader {
                     new InstantaneousTempoExpression(dirContentNode.value, this.placement, this.staffNumber, this.soundTempo, this.currentMultiTempoExpression);
                 this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
             } else if (!isDynamicInstruction) {
-                this.interpretWords(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction);
+                this.interpretWords(dirContentNode, currentMeasure, timestampFraction);
             }
             return;
         }
@@ -819,7 +829,7 @@ export class ExpressionReader {
         }
 
         // create unknown:
-        const unknownMultiExpression: MultiExpression = this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+        const unknownMultiExpression: MultiExpression = this.createNewMultiExpressionIfNeeded(currentMeasure, -1, inSourceMeasureCurrentFraction);
         // check here first if there might be a tempo expression doublette:
         if (currentMeasure.TempoExpressions.length > 0) {
             for (let idx: number = 0, len: number = currentMeasure.TempoExpressions.length; idx < len; ++idx) {
