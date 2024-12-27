@@ -128,6 +128,11 @@ export class EngravingRules {
     public DistanceOffsetBetweenTwoHorizontallyCrossedWedges: number;
     public WedgeMinLength: number;
     public WedgeEndDistanceBetweenTimestampsFactor: number;
+    /** Whether an accent should by default be placed above the note if its note stem is above. Default false (below).
+     * Applies to accents (>/^), staccato (.), pizzicato (+), mainly (in our samples)
+     * Note that this can be overwritten if the MusicXML says "placement='below'".
+     */
+    public ArticulationAboveNoteForStemUp: boolean;
     public SoftAccentWedgePadding: number;
     public SoftAccentSizeFactor: number;
     public DistanceBetweenAdjacentDynamics: number;
@@ -642,6 +647,7 @@ export class EngravingRules {
         this.DistanceOffsetBetweenTwoHorizontallyCrossedWedges = 0.3;
         this.WedgeMinLength = 2.0;
         this.WedgeEndDistanceBetweenTimestampsFactor = 1.75;
+        this.ArticulationAboveNoteForStemUp = false;
         this.SoftAccentWedgePadding = 0.4;
         this.SoftAccentSizeFactor = 0.6;
         this.DistanceBetweenAdjacentDynamics = 0.75;
