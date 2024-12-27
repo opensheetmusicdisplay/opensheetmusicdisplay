@@ -39,7 +39,7 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number,
                 measure: SourceMeasure) {
         super(placement);
-        super.parentMeasure = measure;
+        this.parentMeasure = measure;
         this.dynamicEnum = DynamicEnum[dynamicExpression.toLowerCase()];
         this.soundDynamic = soundDynamics;
         this.staffNumber = staffNumber;

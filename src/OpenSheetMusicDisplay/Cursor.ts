@@ -17,9 +17,7 @@ import { CursorOptions, CursorType } from "./OSMDOptions";
 import { BoundingBox } from "../MusicalScore/Graphical/BoundingBox";
 import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
 
-/**
- * A cursor which can iterate through the music sheet.
- */
+/** A cursor which can iterate through the music sheet. */
 export class Cursor {
   constructor(container: HTMLElement, openSheetMusicDisplay: OpenSheetMusicDisplay, cursorOptions: CursorOptions) {
     this.container = container;
@@ -92,9 +90,7 @@ export class Cursor {
     this.hide();
   }
 
-  /**
-   * Make the cursor visible
-   */
+  /** Make the cursor visible. */
   public show(): void {
     this.hidden = false;
     //this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
@@ -134,6 +130,7 @@ export class Cursor {
     return <VexFlowStaffEntry>this.graphic.findGraphicalStaffEntryFromMeasureList(staffIndex, measureIndex, voiceEntry.ParentSourceStaffEntry);
   }
 
+  /** Moves the cursor to the current position of the iterator (visually), e.g. after next(). */
   public update(): void {
     if (this.hidden || this.hidden === undefined || this.hidden === null) {
       return;
@@ -202,7 +199,7 @@ export class Cursor {
       //   }
       // }
     }
-    if (!musicSystem) {
+    if (!musicSystem?.StaffLines[0]) {
       return;
     }
 
@@ -291,9 +288,7 @@ export class Cursor {
     }
   }
 
-  /**
-   * Hide the cursor
-   */
+  /** Hide the cursor. */
   public hide(): void {
     // Hide the actual cursor element
     this.cursorElement.style.display = "none";
@@ -305,31 +300,26 @@ export class Cursor {
     this.hidden = true;
   }
 
-  /**
-   * Go to previous entry
-   */
+  /** Go to previous entry / note / vertical position. */
    public previous(): void {
     this.iterator.moveToPreviousVisibleVoiceEntry(false);
     this.update();
   }
 
-  /**
-   * Go to next entry
-   */
+  /** Go to next entry / note / vertical position. */
   public next(): void {
     this.iterator.moveToNextVisibleVoiceEntry(false); // moveToNext() would not skip notes in hidden (visible = false) parts
     this.update();
   }
 
-  /**
-   * reset cursor to start
-   */
+  /** reset cursor to start position (start of sheet or osmd.Sheet.SelectionStart if set). */
   public reset(): void {
     this.resetIterator();
     //this.iterator.moveToNext();
     this.update();
   }
 
+  /** updates cursor style (visually), e.g. cursor.cursorOptions.type or .color. */
   private updateStyle(width: number, cursorOptions: CursorOptions = undefined): void {
     if (cursorOptions !== undefined) {
       this.cursorOptions = cursorOptions;

@@ -554,7 +554,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let elongationFactorForMeasureWidth: number = 1;
 
     for (const measure of measuresVertical) {
-      if (!measure || measure.staffEntries.length === 0) {
+      if (!measure || measure.staffEntries.length === 0 || !measure.isVisible()) {
         continue;
       }
 
@@ -865,20 +865,23 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     const firstMeasureNumber: number = this.graphicalMusicSheet.MeasureList[0][0].MeasureNumber; // 0 for pickup, 1 otherwise
     const measureNumber: number = Math.max(measure.MeasureNumber - firstMeasureNumber, 0);
-    const staffNumber: number = 0;
-    const vfStave: VF.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure)?.getVFStave();
-    if (!vfStave) { // potentially multi measure rest
-      return;
+    // const staffNumber: number = 0;
+    for (const gMeasure of this.graphicalMusicSheet.MeasureList[measureNumber]) {
+      const vfStave: VF.Stave = (gMeasure as VexFlowMeasure)?.getVFStave();
+      if (!vfStave || !gMeasure.isVisible()) { // potentially multi measure rest
+        continue;
+      }
+      const yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
+      let xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
+      if (measure.IsSystemStartMeasure) {
+        xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;
+      }
+      // const section: VF.StaveSection = new VF.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
+      // (vfStave as any).modifiers.push(section);
+      const fontSize: number = this.rules.RehearsalMarkFontSize;
+      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
+      return; // only draw one rehearsal mark at top (visible) instrument
     }
-    const yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
-    let xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
-    if (measure.IsSystemStartMeasure) {
-      xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;
-    }
-    // const section: VF.StaveSection = new VF.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
-    // (vfStave as any).modifiers.push(section);
-    const fontSize: number = this.rules.RehearsalMarkFontSize;
-    (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
   }
 
   /**

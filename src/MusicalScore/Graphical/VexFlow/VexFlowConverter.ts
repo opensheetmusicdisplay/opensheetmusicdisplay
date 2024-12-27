@@ -261,7 +261,8 @@ export class VexFlowConverter {
         const accidentals: string[] = [];
         const baseNoteLength: Fraction = baseNote.graphicalNoteLength;
         const isTuplet: boolean = baseNote.sourceNote.NoteTuplet !== undefined;
-        let duration: string = VexFlowConverter.durations(baseNoteLength, isTuplet)[0];
+        const durations: string[] = VexFlowConverter.durations(baseNoteLength, isTuplet);
+        let duration: string = durations[0];
         if (baseNote.sourceNote.TypeLength !== undefined &&
             baseNote.sourceNote.TypeLength !== baseNoteLength &&
             baseNote.sourceNote.TypeLength.RealValue !== 0) {
@@ -688,6 +689,16 @@ export class VexFlowConverter {
                 (<any>keyProps[i]).code = "v81";
             }
         }
+        // too early for this to be set, unless we read the custom notehead from XML, so this might be useful in future:
+        //   (currently, custom notehead is set in VexFlowVoiceEntry.applyCustomNoteheads(), which happens after load(), unlike this)
+        // for (let i: number = 0; i < notes.length; i++) {
+        //     const note: VexFlowGraphicalNote = notes[i] as VexFlowGraphicalNote;
+        //     if (note.sourceNote.CustomNoteheadVFCode) {
+        //         // (vfnote as any).customGlyphs[i] = note.CustomNoteheadVFCode;
+        //         const keyProps: Object[] = vfnote.getKeyProps();
+        //         (<any>keyProps[i]).code = note.sourceNote.CustomNoteheadVFCode;
+        //     }
+        // }
 
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             vfnote.addDotToAll();
@@ -704,8 +715,20 @@ export class VexFlowConverter {
         for (const articulation of gNote.sourceNote.ParentVoiceEntry.Articulations) {
             let vfArtPosition: number = VF.Modifier.Position.ABOVE;
 
-            if (vfnote.getStemDirection() === VF.Stem.UP) {
-                vfArtPosition = VF.Modifier.Position.BELOW;
+            if (vfnote.getStemDirection() === VF.Stem.UP && !rules.ArticulationAboveNoteForStemUp) {
+                // set accents (>/^) and other articulations above note instead of below (if conditions met).
+                //   Applies to accents (>/^), staccato (.), pizzicato (+), mainly (in our samples).
+                //   Note that this can look bad for some piano score in the left hand,
+                //   which we try to check below, though some xmls make it hard to detect the left hand
+                //   by using one piano instrument per staffline instead of uniting both hands in one instrument. (e.g. An die Musik)
+                const parentMeasure: GraphicalMeasure = gNote.parentVoiceEntry.parentStaffEntry.parentMeasure;
+                if (parentMeasure?.ParentStaff.ParentInstrument.Staves.length !== 2 ||
+                    parentMeasure.ParentStaff.Id !== 1) {
+                        // don't do this for piano left hand. See Schubert An die Musik left hand: looks bad with accents below
+                        vfArtPosition = VF.Modifier.Position.BELOW;
+                    }
+                    // this "piano left hand check" could be extended to also match old scores using 1 instrument per hand,
+                    //   but this can get complicated especially if there's also e.g. a voice instrument above. (e.g. Schubert An die Musik)
             }
             let vfArt: VF.Articulation = undefined;
             const articulationEnum: ArticulationEnum = articulation.articulationEnum;

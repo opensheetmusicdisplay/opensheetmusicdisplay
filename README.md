@@ -89,23 +89,24 @@ Also, **OSMD is a renderer, not an interactive sheet music editor.** Rendering t
   * [Browse through our Issues](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues?&q=is%3Aissue)
   * [Open a new issue](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/new/choose) (may be moved to Discussions).
 
-## Sponsor OSMD
+## Sponsor OSMD and get early access to the audio player and more
 
 <a href="https://github.com/sponsors/opensheetmusicdisplay/" alt="OSMD on Github Sponsors">
 <!--img src="https://user-images.githubusercontent.com/33069673/104042293-99ccfa80-51da-11eb-9dc9-fac075a33224.png" height="200" alt="OSMD on Github Sponsors"--><img src="https://user-images.githubusercontent.com/33069673/109203612-a9150100-77a4-11eb-9b91-6692850dccab.png" style="max-width: 100%; max-height: 100vh; width: auto; margin: auto;">
 </a><br>
 
 It would be great if free software were sustainable on its own. But to keep on improving and developing OpenSheetMusicDisplay we need your support. Your monthly sponsorship subscription - especially if you are already actively using OSMD - would mean everything to us - it’s a stable way of enabling us to continue our work, and improve and expand OSMD.<br>
-New features currently in the making are:
+Features already available in early access:
 * OSMD Audio Player
-* Transposing Plugin
+* Native modules + example projects (React Native, Kotlin/Android, Swift/iOS) - NEW!
+* Jianpu Display (Numbered Musical Notation), with playback
+
+Features in the making, potentially available in future:
+
 * Annotations (Add custom text, music symbols, etc. to the score and export to and import from XML)
+* and more (we're always working on OSMD improvements or additional features, just look at our release history / [changelog](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/CHANGELOG.md)!)
 
-Our awesome sponsors get awesome perks, like:
-* Early Access to features like the Audio Player and a transposition plugin for OSMD
-* A postcard from Vienna
-
-and others. Check them out at [our GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
+Besides the early access features, you can get other perks like a personal postcard from the team in Vienna. Check them out at [our GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
 
 <p align="left">
   <img title="OSMD Sponsor perks like this t-shirt" src="https://user-images.githubusercontent.com/33069673/106322343-084f2680-6276-11eb-985b-3aaa483db206.jpg" width="35%">

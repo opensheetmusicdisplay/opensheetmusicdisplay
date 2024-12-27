@@ -458,7 +458,9 @@ export class TabNote extends StemmableNote {
         ctx.fillRect(tab_x - 2, y - 3, currentGlyphWidth + 4, 6);
         ctx.restore();
       } else {
-        // ctx.clearRect(tab_x - 2, y - 3, currentGlyphWidth + 4, 6);
+        // clear rectangle around tab note so that stafflines are interrupted
+        //   this can cause black rectangles if the SVG displayer can't display transparent rectangles correctly.
+        ctx.clearRect(tab_x - 2, y - 3, currentGlyphWidth + 4, 6);
         // disabled by Severin in commit a15085ddb37d7678420d26a41beef31ad6aded3e, apparently for note highlighting
       }
 

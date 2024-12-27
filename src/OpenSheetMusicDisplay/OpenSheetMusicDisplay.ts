@@ -31,7 +31,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "1.8.8-dev"; // getter: this.Version
+    protected version: string = "1.8.9-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -206,16 +206,24 @@ export class OpenSheetMusicDisplay {
         }
     }
 
-    /**
-     * Render the music sheet in the container
-     */
+    /** Render the loaded music sheet to the container. */
     public render(): void {
         if (!this.graphic) {
-            throw new Error("OpenSheetMusicDisplay: Before rendering a music sheet, please load a MusicXML file");
+            throw new Error("OSMD: Before render, please load a MusicXML file");
         }
         this.drawer?.clear(); // clear canvas before setting width
         // this.graphic.GetCalculator.clearSystemsAndMeasures(); // maybe?
         // this.graphic.GetCalculator.clearRecreatedObjects();
+
+        // drawing range: check if pickup measure and start or end measure number > 1
+        if (this.Sheet.SourceMeasures[0].ImplicitMeasure) {
+            if (this.rules.MinMeasureToDrawNumber > 1) {
+                this.rules.MinMeasureToDrawIndex = this.rules.MinMeasureToDrawNumber; // -1 for index, +1 for pickup
+            }
+            if (this.rules.MaxMeasureToDrawNumber > 0) {
+                this.rules.MaxMeasureToDrawIndex = this.rules.MaxMeasureToDrawNumber; // -1 for index, +1 for pickup
+            }
+        }
 
         // Set page width
         let width: number = this.container.offsetWidth;
@@ -577,11 +585,16 @@ export class OpenSheetMusicDisplay {
         if (options.defaultFontStyle) {
             this.rules.DefaultFontStyle = options.defaultFontStyle; // e.g. FontStyles.Bold
         }
-        if (options.drawUpToMeasureNumber) {
-            this.rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber - 1;
+        if (options.drawUpToMeasureNumber >= 0) {
+            this.rules.MaxMeasureToDrawIndex = Math.max(options.drawUpToMeasureNumber - 1, 0);
+            this.rules.MaxMeasureToDrawNumber = options.drawUpToMeasureNumber;
         }
-        if (options.drawFromMeasureNumber) {
-            this.rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;
+        if (options.drawFromMeasureNumber >= 0) {
+            this.rules.MinMeasureToDrawIndex = Math.max(options.drawFromMeasureNumber - 1, 0);
+            this.rules.MinMeasureToDrawNumber = options.drawFromMeasureNumber;
+            // if there's a pickup measure (index and number 0), the start index might need to be + 1
+            //   depending on which measure you start rendering from (measure 2 for example, instead of 0),
+            //   so it is currently useful to store this option value separately from the index, to readjust the index.
         }
         if (options.drawUpToPageNumber) {
             this.rules.MaxPageToDrawNumber = options.drawUpToPageNumber;
@@ -821,7 +834,7 @@ export class OpenSheetMusicDisplay {
         if (enable) {
             for (let i: number = 0; i < this.cursorsOptions.length; i++){
                 // save previous cursor state
-                const hidden: boolean = this.cursors[i]?.Hidden;
+                const hidden: boolean = this.cursors[i]?.Hidden ?? true;
                 const previousIterator: MusicPartManagerIterator = this.cursors[i]?.Iterator;
                 this.cursors[i]?.hide();
 

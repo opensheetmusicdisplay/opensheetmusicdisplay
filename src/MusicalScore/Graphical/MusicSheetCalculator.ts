@@ -872,6 +872,7 @@ export abstract class MusicSheetCalculator {
                         // (re-)color notes
                         for (const staffEntry of graphicalMeasure.staffEntries) {
                             for (const gve of staffEntry.graphicalVoiceEntries) {
+                                gve.applyCustomNoteheads();
                                 gve.color();
                             }
                         }
@@ -2374,7 +2375,7 @@ export abstract class MusicSheetCalculator {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
 
-        // fix SVG width and sheet width for single line scores being 32767 or 32787
+        // fix width of SVG, sheet and horizontal scroll bar being too long (~32767 = SheetMaximumWidth) for single line scores
         if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
             page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures, whose bounding boxes somehow get messed up otherwise
@@ -2382,7 +2383,9 @@ export abstract class MusicSheetCalculator {
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
-            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width; // doesn't seem to affect anything
+
+            // limit SVG and scroll bar width so it's not ~32767 (SheetMaximumWidth):
+            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width;
             // page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width; // doesn't seem to affect anything
         }
 
@@ -2510,14 +2513,16 @@ export abstract class MusicSheetCalculator {
             page.Labels.push(copyright);
         }
         // we need to do this again to not cut off the title for short scores:
-        //   (and fix SVG width and sheet width for single line scores being 32767 or 32787)
+        //   (and fix SVG and horizontal scroll bar width)
         if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
             page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures, whose bounding boxes somehow get messed up otherwise
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
-            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width; // doesn't seem to affect anything
+
+            // limit SVG and scroll bar width so it's not ~32767 (SheetMaximumWidth):
+            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width;
             // page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width; // doesn't seem to affect anything
         }
     }
@@ -3110,6 +3115,9 @@ export abstract class MusicSheetCalculator {
                             const label: Label = new Label(fingering.value, alignment);
                             const gLabel: GraphicalLabel = new GraphicalLabel(
                                 label, this.rules.FingeringTextSize, label.textAlignment, this.rules, line.PositionAndShape);
+                            if (fingering.fontFamily) {
+                                label.fontFamily = fingering.fontFamily;
+                            }
                             const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
                             const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
                             let skybottomFurthest: number = undefined;

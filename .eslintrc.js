@@ -30,7 +30,7 @@ module.exports = {
     ],
     "overrides": [
         {
-          "files": ["test/Util/*.js"],
+          "files": ["test/Util/*.js", "test/Util/*.mjs"],
           "rules": {
             "@typescript-eslint/explicit-function-return-type": "off",
             "@typescript-eslint/typedef": "off",

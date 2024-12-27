@@ -61,6 +61,9 @@ export class OctaveShift {
         if (!pitch) {
             return undefined;
         }
+        if (pitch.OctaveShiftApplied) {
+            return pitch;
+        }
         let result: number = pitch.Octave;
         switch (octaveShiftValue) {
             case OctaveEnum.VA8:
@@ -79,7 +82,9 @@ export class OctaveShift {
             default:
                 result += 0;
         }
-        return new Pitch(pitch.FundamentalNote, result, pitch.Accidental);
+        const octaveShiftPitch: Pitch = new Pitch(pitch.FundamentalNote, result, pitch.Accidental);
+        octaveShiftPitch.OctaveShiftApplied = true;
+        return octaveShiftPitch;
     }
 }
 

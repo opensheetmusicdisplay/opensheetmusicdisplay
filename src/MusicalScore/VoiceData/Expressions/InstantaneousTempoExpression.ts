@@ -14,6 +14,7 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
             label = " = " + soundTempo;
         }*/
         super(label, placement, staffNumber, parentMultiTempoExpression);
+        this.parentMeasure = parentMultiTempoExpression.SourceMeasureParent;
         this.isMetronomeMark = isMetronomeMark;
         this.setTempoAndTempoType(soundTempo);
     }

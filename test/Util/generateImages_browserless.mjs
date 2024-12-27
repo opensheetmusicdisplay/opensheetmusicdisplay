@@ -35,7 +35,7 @@ function sleep (ms) {
 
 // global variables
 //   (without these being global, we'd have to pass many of these values to the generateSampleImage function)
-// eslint-disable-next-line prefer-const
+// eslint-disable-next-line prefer-const, max-len
 let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, pageZoom, maxWidth, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 14);
 imageFormat = imageFormat?.toLowerCase();
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
@@ -206,6 +206,7 @@ async function init () {
 
     const sampleDirFilenames = FS.readdirSync(sampleDir);
     let samplesToProcess = []; // samples we want to process/generate pngs of, excluding the filtered out files/filenames
+    const fileEndingRegex = "^.*(([.]xml)|([.]musicxml)|([.]mxl))$";
     for (const sampleFilename of sampleDirFilenames) {
         if (osmdTestingMode && filterRegex === "allSmall") {
             if (sampleFilename.match("^(Actor)|(Gounod)")) { // TODO maybe filter by file size instead
@@ -213,8 +214,7 @@ async function init () {
                 continue;
             }
         }
-        // eslint-disable-next-line no-useless-escape
-        if (sampleFilename.match("^.*(\.xml)|(\.musicxml)|(\.mxl)$")) {
+        if (sampleFilename.match(fileEndingRegex)) {
             // debug('found musicxml/mxl: ' + sampleFilename)
             samplesToProcess.push(sampleFilename);
         } else {
@@ -225,7 +225,7 @@ async function init () {
     // filter samples to process by regex if given
     if (filterRegex && filterRegex !== "" && filterRegex !== "all" && !(osmdTestingMode && filterRegex === "allSmall")) {
         debug("filtering samples for regex: " + filterRegex, DEBUG);
-        samplesToProcess = samplesToProcess.filter((filename) => filename.match(filterRegex));
+        samplesToProcess = samplesToProcess.filter((filename) => filename.match(filterRegex) && filename.match(fileEndingRegex));
         debug(`found ${samplesToProcess.length} matches: `, DEBUG);
         for (let i = 0; i < samplesToProcess.length; i++) {
             debug(samplesToProcess[i], DEBUG);
@@ -382,6 +382,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isTestWedgeMultilineCrescendo = sampleFilename.includes("test_wedge_multiline_crescendo");
         const isTestWedgeMultilineDecrescendo = sampleFilename.includes("test_wedge_multiline_decrescendo");
         const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
+        const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
         osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
@@ -443,6 +444,10 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             osmdInstance.EngravingRules.TabKeySignatureSpacingAdded = false;
             osmdInstance.EngravingRules.TabTimeSignatureSpacingAdded = false;
             // more compact rendering. These are basically just aesthetic options, as a showcase.
+        }
+        if (isTestFingeringLeft) {
+            osmdInstance.EngravingRules.FingeringPosition = 2;
+            osmdInstance.EngravingRules.FingeringPositionFromXML = false;
         }
     }
 
