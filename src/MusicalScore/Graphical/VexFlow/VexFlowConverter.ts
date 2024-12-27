@@ -728,8 +728,10 @@ export class VexFlowConverter {
                 if (rules.ArticulationAboveNoteForStemUp) {
                     const parentMeasure: GraphicalMeasure = gNote.parentVoiceEntry.parentStaffEntry.parentMeasure;
                     const parentStaff: Staff = parentMeasure?.ParentStaff;
-                    if (parentStaff?.ParentInstrument.Staves.length !== 2 ||
-                        parentStaff !== parentStaff.ParentInstrument.Staves[1]) {
+                    const staves: Staff[] = parentStaff?.ParentInstrument.Staves;
+                    // if not piano left hand / last staffline of system:
+                    if (staves.length === 1 ||
+                        staves.length === 2 && parentStaff !== staves[1]) {
                             // don't do this for piano left hand. See Schubert An die Musik left hand: looks bad with accents below
                             vfArtPosition = VF.Modifier.Position.ABOVE;
                     }
