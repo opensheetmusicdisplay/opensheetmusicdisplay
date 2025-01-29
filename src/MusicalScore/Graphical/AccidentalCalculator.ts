@@ -6,6 +6,7 @@ import {NoteEnum} from "../../Common/DataObjects/Pitch";
 import { Dictionary } from "typescript-collections";
 // import { Dictionary } from "typescript-collections/dist/lib";
 import { MusicSheetCalculator } from "./MusicSheetCalculator";
+import { Tie } from "../VoiceData/Tie";
 
 /**
  * Compute the accidentals for notes according to the current key instruction
@@ -63,6 +64,12 @@ export class AccidentalCalculator {
             this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.Accidental);
             this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
         }*/
+
+        const tie: Tie = graphicalNote.sourceNote.NoteTie;
+        if (tie && graphicalNote.sourceNote !== tie.StartNote) {
+            return; // don't add accidentals on continued tie note
+            // note that continued tie notes may incorrectly use the same pitch object, with the same accidentalXml value.
+        }
 
         const isInCurrentAlterationsToKeyList: boolean = this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) >= 0;
         if (this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey)) {
