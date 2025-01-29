@@ -15,6 +15,7 @@ export class AccidentalCalculator {
     private currentAlterationsComparedToKeyInstructionList: number[] = [];
     private currentInMeasureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
     private activeKeyInstruction: KeyInstruction;
+    public Transpose: number; // set in MusicSheetCalculator
 
     public get ActiveKeyInstruction(): KeyInstruction {
         return this.activeKeyInstruction;
@@ -94,6 +95,11 @@ export class AccidentalCalculator {
                     return; // only display accidental if it was given as an accidental in the XML
                 }
                 MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
+            } else if (pitch.AccidentalXml && this.Transpose === 0 && !isInCurrentAlterationsToKeyList) {
+                // courtesy accidental
+                //   without the !isInCurrentAlterationsToKeyList check, we get a double natural in Dichterliebe measure 9.
+                MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
+                // if transpose !== 0 (we're transposing), the courtesy accidental might not be appropriate here.
             }
         } else { // pitchkey not in measure dict:
             if (pitch.Accidental !== AccidentalEnum.NONE) {
