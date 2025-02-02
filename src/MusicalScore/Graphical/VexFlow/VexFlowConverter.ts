@@ -964,6 +964,8 @@ export class VexFlowConverter {
         let duration: string = VexFlowConverter.durations(frac, isTuplet)[0];
         let numDots: number = 0;
         let tabVibrato: boolean = false;
+        const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
+        let isXNotehead: boolean = false;
         for (const note of gve.notes) {
             const tabNote: TabNote = note.sourceNote as TabNote;
             let tabPosition: {str: number, fret: number} = {str: tabNote.StringNumberTab, fret: tabNote.FretNumber};
@@ -971,6 +973,10 @@ export class VexFlowConverter {
                 log.info(`invalid tab note: ${note.sourceNote.Pitch.ToString()} in measure ${gve.parentStaffEntry.parentMeasure.MeasureNumber}` +
                     ", likely missing XML string+fret number.");
                 tabPosition = {str: 1, fret: 0}; // random safe values, otherwise it's both undefined for invalid notes
+            }
+            if (rules.TabUseXNoteheadShapeForTabNote && note.sourceNote.Notehead?.Shape === NoteHeadShape.X) {
+                (tabPosition as any).fret = "x";
+                isXNotehead = true;
             }
             tabPositions.push(tabPosition);
             if (tabNote.BendArray) {
@@ -1008,7 +1014,12 @@ export class VexFlowConverter {
             duration: duration,
             positions: tabPositions,
         });
-        const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
+        if (isXNotehead) {
+            // (vfnote as any).render_options.fretScale = rules.TabXNoteheadScale; // doesn't work, is overwritten later
+            (vfnote as any).render_options.scale = rules.TabXNoteheadScale; // VexFlowPatch
+            (vfnote as any).render_options.TabUseXNoteheadAlternativeGlyph = rules.TabUseXNoteheadAlternativeGlyph; // VexFlowPatch
+            vfnote.updateWidth(); // use .scale, update glyph
+        }
         if (rules.UsePageBackgroundColorForTabNotes) {
             (vfnote as any).BackgroundColor = rules.PageBackgroundColor; // may be undefined
         }

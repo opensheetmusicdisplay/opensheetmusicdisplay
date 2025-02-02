@@ -268,14 +268,17 @@ Flow.integerToNote.table = {
   11: 'B',
 };
 
-Flow.tabToGlyph = (fret, scale = 1.0) => {
+Flow.tabToGlyph = (fret, scale = 1.0, useAlternativeXGlyph = false) => {
   let glyph = null;
   let width = 0;
   let shift_y = 0;
 
   if (fret.toString().toUpperCase() === 'X') {
-    const glyphMetrics = new Glyph('v7f', Flow.DEFAULT_TABLATURE_FONT_SCALE).getMetrics();
     glyph = 'v7f';
+    if (useAlternativeXGlyph) { // VexFlowPatch
+      glyph = 'v3e'; // same as in classical notes
+    }
+    const glyphMetrics = new Glyph(glyph, Flow.DEFAULT_TABLATURE_FONT_SCALE * scale).getMetrics();
     width = glyphMetrics.width;
     shift_y = -glyphMetrics.height / 2;
   } else {

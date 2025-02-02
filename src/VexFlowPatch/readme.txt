@@ -91,9 +91,11 @@ fix rect() always using black color, ignoring attributes.stroke (ctx strokeStlye
 
 tables.js (custom addition):
 add inverted triangle notehead ('TI')
+use scale parameter for x tabnote, offer alternative x note glyph option
 
 tabnote.js (merged Vexflow 3.x):
 Add a context group for each tabnote, so that it can be found in the SVG DOM ("vf-tabnote")
+use scale parameter for x tabnote, offer alternative x note glyph option
 
 textbracket.js (custom fix):
 make sure text bracket doesn't go backwards+overlap (e.g. short octave bracket)

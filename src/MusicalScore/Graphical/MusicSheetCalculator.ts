@@ -2644,6 +2644,7 @@ export abstract class MusicSheetCalculator {
             for (let i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
                 const accidentalCalculator: AccidentalCalculator = new AccidentalCalculator();
                 accidentalCalculators.push(accidentalCalculator);
+                accidentalCalculator.Transpose = this.graphicalMusicSheet.ParentMusicSheet.Transpose;
                 if (firstSourceMeasure.FirstInstructionsStaffEntries[i]) {
                     for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
                         const abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];

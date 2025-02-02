@@ -226,6 +226,10 @@ export class EngravingRules {
      */
     public TabTimeSignatureSpacingAdded: boolean;
     public TabFingeringsRendered: boolean;
+    /** Use an X in tabs when the note has an X notehead, e.g. in the staff above in the classical notes, instead of the fret number */
+    public TabUseXNoteheadShapeForTabNote: boolean;
+    public TabUseXNoteheadAlternativeGlyph: boolean;
+    public TabXNoteheadScale: number;
 
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
@@ -715,6 +719,9 @@ export class EngravingRules {
         this.TabTimeSignatureRendered = false; // standard not to render for tab scores
         this.TabTimeSignatureSpacingAdded = true; // false only works for tab-only scores, as it will prevent vertical x-alignment.
         this.TabFingeringsRendered = false; // tabs usually don't show fingering. This can also be duplicated when you have a classical+tab score.
+        this.TabUseXNoteheadShapeForTabNote = true;
+        this.TabUseXNoteheadAlternativeGlyph = true;
+        this.TabXNoteheadScale = 0.9;
 
         // Slur and Tie variables
         this.SlurPlacementFromXML = true;
