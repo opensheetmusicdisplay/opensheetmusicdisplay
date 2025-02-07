@@ -116,6 +116,7 @@ export class EngravingRules {
     public SetWantedStemDirectionByXml: boolean;
     public GraceNoteScalingFactor: number;
     public GraceNoteXOffset: number;
+    /** Set this to e.g. -0.5 or -0.8 to put grace notes a lot closer to the main note. */
     public GraceNoteGroupXMargin: number;
     public WedgeOpeningLength: number;
     public WedgeMeasureEndOpeningLength: number;
@@ -127,6 +128,11 @@ export class EngravingRules {
     public DistanceOffsetBetweenTwoHorizontallyCrossedWedges: number;
     public WedgeMinLength: number;
     public WedgeEndDistanceBetweenTimestampsFactor: number;
+    /** Whether an accent should by default be placed above the note if its note stem is above. Default false (below).
+     * Applies to accents (>/^), staccato (.), pizzicato (+), mainly (in our samples)
+     * Note that this can be overwritten if the MusicXML says "placement='below'".
+     */
+    public ArticulationAboveNoteForStemUp: boolean;
     public SoftAccentWedgePadding: number;
     public SoftAccentSizeFactor: number;
     public DistanceBetweenAdjacentDynamics: number;
@@ -220,6 +226,10 @@ export class EngravingRules {
      */
     public TabTimeSignatureSpacingAdded: boolean;
     public TabFingeringsRendered: boolean;
+    /** Use an X in tabs when the note has an X notehead, e.g. in the staff above in the classical notes, instead of the fret number */
+    public TabUseXNoteheadShapeForTabNote: boolean;
+    public TabUseXNoteheadAlternativeGlyph: boolean;
+    public TabXNoteheadScale: number;
 
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
@@ -641,6 +651,7 @@ export class EngravingRules {
         this.DistanceOffsetBetweenTwoHorizontallyCrossedWedges = 0.3;
         this.WedgeMinLength = 2.0;
         this.WedgeEndDistanceBetweenTimestampsFactor = 1.75;
+        this.ArticulationAboveNoteForStemUp = false;
         this.SoftAccentWedgePadding = 0.4;
         this.SoftAccentSizeFactor = 0.6;
         this.DistanceBetweenAdjacentDynamics = 0.75;
@@ -708,6 +719,9 @@ export class EngravingRules {
         this.TabTimeSignatureRendered = false; // standard not to render for tab scores
         this.TabTimeSignatureSpacingAdded = true; // false only works for tab-only scores, as it will prevent vertical x-alignment.
         this.TabFingeringsRendered = false; // tabs usually don't show fingering. This can also be duplicated when you have a classical+tab score.
+        this.TabUseXNoteheadShapeForTabNote = true;
+        this.TabUseXNoteheadAlternativeGlyph = true;
+        this.TabXNoteheadScale = 0.9;
 
         // Slur and Tie variables
         this.SlurPlacementFromXML = true;

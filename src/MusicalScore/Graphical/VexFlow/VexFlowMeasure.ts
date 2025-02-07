@@ -1326,7 +1326,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         graceNotes.push(vfStaveNote);
                     }
                     const graceNoteGroup: VF.GraceNoteGroup = new VF.GraceNoteGroup(graceNotes, graceSlur);
-                    (graceNoteGroup as any).spacing = this.rules.GraceNoteGroupXMargin * 10;
+                    let xMargin: number = this.rules.GraceNoteGroupXMargin;
+                    if (graceNotes.length > 1) {
+                        xMargin /= 3; // prevent overlap. multiple grace notes end up closer to the main note.
+                    }
+                    (graceNoteGroup as any).spacing = xMargin * 10;
                     ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(0, graceNoteGroup);
                     graceGVoiceEntriesBefore = [];
                 }

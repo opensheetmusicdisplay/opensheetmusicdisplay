@@ -33,6 +33,7 @@ import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { GraphicalMeasure } from "../GraphicalMeasure";
+import { Staff } from "../../VoiceData/Staff";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -717,6 +718,26 @@ export class VexFlowConverter {
 
             if (vfnote.getStemDirection() === VF.Stem.UP) {
                 vfArtPosition = VF.Modifier.Position.BELOW;
+
+                // if rules.ArticulationAboveNoteForStemUp set:
+                // set accents (>/^) and other articulations above note instead of below (if conditions met).
+                //   Applies to accents (>/^), staccato (.), pizzicato (+), mainly (in our samples).
+                //   Note that this can look bad for some piano score in the left hand,
+                //   which we try to check below, though some xmls make it hard to detect the left hand
+                //   by using one piano instrument per staffline instead of uniting both hands in one instrument. (e.g. An die Musik)
+                if (rules.ArticulationAboveNoteForStemUp) {
+                    const parentMeasure: GraphicalMeasure = gNote.parentVoiceEntry.parentStaffEntry.parentMeasure;
+                    const parentStaff: Staff = parentMeasure?.ParentStaff;
+                    const staves: Staff[] = parentStaff?.ParentInstrument.Staves;
+                    // if not piano left hand / last staffline of system:
+                    if (staves.length === 1 ||
+                        staves.length === 2 && parentStaff !== staves[1]) {
+                            // don't do this for piano left hand. See Schubert An die Musik left hand: looks bad with accents below
+                            vfArtPosition = VF.Modifier.Position.ABOVE;
+                    }
+                    // this "piano left hand check" could be extended to also match old scores using 1 instrument per hand,
+                    //   but this can get complicated especially if there's also e.g. a voice instrument above. (e.g. Schubert An die Musik)
+                }
             }
             let vfArt: VF.Articulation = undefined;
             const articulationEnum: ArticulationEnum = articulation.articulationEnum;
@@ -943,6 +964,8 @@ export class VexFlowConverter {
         let duration: string = VexFlowConverter.durations(frac, isTuplet)[0];
         let numDots: number = 0;
         let tabVibrato: boolean = false;
+        const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
+        let isXNotehead: boolean = false;
         for (const note of gve.notes) {
             const tabNote: TabNote = note.sourceNote as TabNote;
             let tabPosition: {str: number, fret: number} = {str: tabNote.StringNumberTab, fret: tabNote.FretNumber};
@@ -950,6 +973,10 @@ export class VexFlowConverter {
                 log.info(`invalid tab note: ${note.sourceNote.Pitch.ToString()} in measure ${gve.parentStaffEntry.parentMeasure.MeasureNumber}` +
                     ", likely missing XML string+fret number.");
                 tabPosition = {str: 1, fret: 0}; // random safe values, otherwise it's both undefined for invalid notes
+            }
+            if (rules.TabUseXNoteheadShapeForTabNote && note.sourceNote.Notehead?.Shape === NoteHeadShape.X) {
+                (tabPosition as any).fret = "x";
+                isXNotehead = true;
             }
             tabPositions.push(tabPosition);
             if (tabNote.BendArray) {
@@ -987,7 +1014,12 @@ export class VexFlowConverter {
             duration: duration,
             positions: tabPositions,
         });
-        const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
+        if (isXNotehead) {
+            // (vfnote as any).render_options.fretScale = rules.TabXNoteheadScale; // doesn't work, is overwritten later
+            (vfnote as any).render_options.scale = rules.TabXNoteheadScale; // VexFlowPatch
+            (vfnote as any).render_options.TabUseXNoteheadAlternativeGlyph = rules.TabUseXNoteheadAlternativeGlyph; // VexFlowPatch
+            vfnote.updateWidth(); // use .scale, update glyph
+        }
         if (rules.UsePageBackgroundColorForTabNotes) {
             (vfnote as any).BackgroundColor = rules.PageBackgroundColor; // may be undefined
         }

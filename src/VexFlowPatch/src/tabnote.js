@@ -212,7 +212,11 @@ export class TabNote extends StemmableNote {
     for (let i = 0; i < this.positions.length; ++i) {
       let fret = this.positions[i].fret;
       if (this.ghost) fret = '(' + fret + ')';
-      const glyph = Flow.tabToGlyph(fret, this.render_options.scale);
+      const glyphScale = this.render_options.fretScale ?? this.render_options.scale;
+      const glyph = Flow.tabToGlyph(fret, glyphScale, this.render_options.TabUseXNoteheadAlternativeGlyph);
+      if (fret === 'x') {
+        glyph.isXGlyph = true;
+      }
       this.glyphs.push(glyph);
       this.width = Math.max(glyph.getWidth(), this.width);
     }
