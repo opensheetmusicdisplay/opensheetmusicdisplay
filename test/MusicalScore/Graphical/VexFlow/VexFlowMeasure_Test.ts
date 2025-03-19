@@ -10,7 +10,7 @@ import {SourceStaffEntry} from "../../../../src/MusicalScore/VoiceData/SourceSta
 import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 import {EngravingRules} from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { Staff } from "../../../../src/MusicalScore/VoiceData/Staff";
-import { Instrument } from "../../../../src";
+import { Instrument } from "../../../../src/MusicalScore/Instrument";
 
 describe("VexFlow Measure", () => {
 
