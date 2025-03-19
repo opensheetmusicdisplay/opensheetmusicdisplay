@@ -871,7 +871,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!vfStave || !gMeasure.isVisible()) { // potentially multi measure rest
         continue;
       }
-      const yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
+      let yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
+      if (gMeasure.parentSourceMeasure.isReducedToMultiRest) {
+        // we could add other conditions here where we want more offset to avoid collisions
+        yOffset += this.rules.RehearsalMarkYOffsetAddedForRehearsalMarks;
+      }
       let xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
       if (measure.IsSystemStartMeasure) {
         xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;

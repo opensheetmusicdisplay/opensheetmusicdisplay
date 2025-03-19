@@ -171,6 +171,8 @@ export class EngravingRules {
     public RehearsalMarkXOffsetSystemStartMeasure: number;
     public RehearsalMarkYOffset: number;
     public RehearsalMarkYOffsetDefault: number;
+    /** y offset added to avoid collisions of rehearsal marks (e.g. "A" or "Verse") with multiple measure rest numbers. */
+    public RehearsalMarkYOffsetAddedForRehearsalMarks: number;
     public RehearsalMarkFontSize: number;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
@@ -689,6 +691,7 @@ export class EngravingRules {
         this.RehearsalMarkXOffset = 0; // user defined
         this.RehearsalMarkXOffsetSystemStartMeasure = -20; // good test: Haydn Concertante
         this.RehearsalMarkYOffsetDefault = -15;
+        this.RehearsalMarkYOffsetAddedForRehearsalMarks = -12;
         this.RehearsalMarkYOffset = 0; // user defined
         this.RehearsalMarkFontSize = 10; // vexflow default: 12, too big with chord symbols
 
