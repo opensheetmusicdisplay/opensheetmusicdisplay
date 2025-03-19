@@ -324,6 +324,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param clef
      */
     public addClefAtEnd(clef: ClefInstruction, visible: boolean = true): void {
+        if (this.isTabMeasure) {
+            return; // we don't want clefs at end in tabs. See sample in #1592, measure 41
+        }
         const vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "small");
         if (!visible && this.stave.endClef) {
             return; // don't overwrite existing clef with invisible clef

@@ -2717,7 +2717,7 @@ export abstract class MusicSheetCalculator {
                                    staffEntryLinks: StaffEntryLink[]): GraphicalMeasure {
         const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.getStaffFromIndex(staffIndex);
         let measure: GraphicalMeasure = undefined;
-        if (activeClefs[staffIndex].ClefType === ClefEnum.TAB) {
+        if (activeClefs[staffIndex].ClefType === ClefEnum.TAB || staff.isTab) {
             staff.isTab = true;
             measure = MusicSheetCalculator.symbolFactory.createTabStaffMeasure(sourceMeasure, staff);
         } else if (sourceMeasure.multipleRestMeasures && this.rules.RenderMultipleRestMeasures) {
@@ -2784,7 +2784,8 @@ export abstract class MusicSheetCalculator {
                 // is there an inStaff ClefInstruction? -> update activeClef
                 for (let idx: number = 0, len: number = sourceStaffEntry.Instructions.length; idx < len; ++idx) {
                     const abstractNotationInstruction: AbstractNotationInstruction = sourceStaffEntry.Instructions[idx];
-                    if (abstractNotationInstruction instanceof ClefInstruction) {
+                    if (abstractNotationInstruction instanceof ClefInstruction && activeClefs[staffIndex]?.ClefType !== ClefEnum.TAB) {
+                        // if activeClef is TAB, changing it can make the current/next tab measure look like a classical measure. See #1592
                         activeClefs[staffIndex] = <ClefInstruction>abstractNotationInstruction;
                     }
                 }
@@ -2860,7 +2861,7 @@ export abstract class MusicSheetCalculator {
             const lastStaffEntry: SourceStaffEntry = sourceMeasure.LastInstructionsStaffEntries[staffIndex];
             for (let idx: number = 0, len: number = lastStaffEntry.Instructions.length; idx < len; ++idx) {
                 const abstractNotationInstruction: AbstractNotationInstruction = lastStaffEntry.Instructions[idx];
-                if (abstractNotationInstruction instanceof ClefInstruction) {
+                if (abstractNotationInstruction instanceof ClefInstruction && activeClefs[staffIndex]?.ClefType !== ClefEnum.TAB) {
                     activeClefs[staffIndex] = <ClefInstruction>abstractNotationInstruction;
                 }
             }

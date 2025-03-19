@@ -11,6 +11,7 @@ import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { Voice } from "../../VoiceData/Voice";
 import log from "loglevel";
+import { ClefInstruction } from "../../VoiceData/Instructions/ClefInstruction";
 
 export class VexFlowTabMeasure extends VexFlowMeasure {
     constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
@@ -131,4 +132,8 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
         //this.createArticulations();
         //this.createOrnaments();
     }
+
+     public addClefAtBegin(clef: ClefInstruction): void {
+        return; // we don't need clefs in tabs.
+     }
 }
