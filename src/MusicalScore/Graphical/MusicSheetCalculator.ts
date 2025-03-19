@@ -3110,6 +3110,23 @@ export abstract class MusicSheetCalculator {
                         if (placement === PlacementEnum.Below) {
                             fingerings.reverse();
                         }
+                        if (fingerings.length > 0) {
+                            let topNote: Note;
+                            for (const gve of gse.graphicalVoiceEntries) {
+                                for (const note of gve.notes) {
+                                    if (!topNote || note.sourceNote.Pitch?.getHalfTone() > topNote.Pitch?.getHalfTone()) {
+                                        topNote = note.sourceNote;
+                                    }
+                                }
+                            }
+                            if (fingerings[0].sourceNote === topNote && placement === PlacementEnum.Above ||
+                                fingerings[0].sourceNote !== topNote && placement === PlacementEnum.Below
+                            ) {
+                                // TODO more elegant solution: order fingerings in the order of each individual note.
+                                //   this is already a rare situation though, would be even more rare for this to matter, and more complex.
+                                fingerings.reverse();
+                            }
+                        }
                         for (let i: number = 0; i < fingerings.length; i++) {
                             const fingering: TechnicalInstruction = fingerings[i];
                             const alignment: TextAlignmentEnum =
