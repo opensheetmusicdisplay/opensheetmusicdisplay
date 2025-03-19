@@ -9,6 +9,8 @@ import {SourceMeasure} from "../../../../src/MusicalScore/VoiceData/SourceMeasur
 import {SourceStaffEntry} from "../../../../src/MusicalScore/VoiceData/SourceStaffEntry";
 import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 import {EngravingRules} from "../../../../src/MusicalScore/Graphical/EngravingRules";
+import { Staff } from "../../../../src/MusicalScore/VoiceData/Staff";
+import { Instrument } from "../../../../src";
 
 describe("VexFlow Measure", () => {
 
@@ -30,6 +32,7 @@ describe("VexFlow Measure", () => {
    it("Can have a single empty Measure", (done: Mocha.Done) => {
       const sheet: MusicSheet = new MusicSheet();
       sheet.Rules = new EngravingRules();
+      sheet.Staves.push(new Staff(new Instrument(0, "", sheet, null), 0));
       const measure: SourceMeasure = new SourceMeasure(1, sheet.Rules);
       measure.FirstInstructionsStaffEntries[0] = new SourceStaffEntry(undefined, undefined);
       sheet.addMeasure(measure);
