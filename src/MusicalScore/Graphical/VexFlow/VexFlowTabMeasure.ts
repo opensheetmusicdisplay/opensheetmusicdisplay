@@ -14,6 +14,8 @@ import log from "loglevel";
 import { ClefEnum, ClefInstruction } from "../../VoiceData/Instructions/ClefInstruction";
 
 export class VexFlowTabMeasure extends VexFlowMeasure {
+    private multiRestElement: any; // VexFlow: Element
+
     constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
         super(staff, sourceMeasure, staffLine);
         this.isTabMeasure = true;
@@ -138,5 +140,21 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             super.addClefAtBegin(clef);
         }
         // else return; // we don't need clefs in tabs.
+     }
+
+     public draw(ctx: Vex.IRenderContext): void {
+        super.draw(ctx);
+
+        // draw multi-measure rest: unlike a classical measure, this is not a VexFlowMultiRestMeasure class,
+        //   so we need to add the multiple measure rest element drawing here.
+        const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
+        if (sourceMeasure.multipleRestMeasures && this.rules.RenderMultipleRestMeasures) {
+            this.multiRestElement = new VF.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
+                        // number_line: 3
+            });
+            this.multiRestElement.setStave(this.stave);
+            this.multiRestElement.setContext(ctx);
+            this.multiRestElement.draw();
+        }
      }
 }
