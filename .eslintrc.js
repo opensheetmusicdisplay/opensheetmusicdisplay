@@ -27,6 +27,7 @@ module.exports = {
     "plugins": [
         "eslint-plugin-jsdoc",
         "eslint-plugin-no-null",
+        "@stylistic/eslint-plugin-ts",
         "@typescript-eslint",
         //"@typescript-eslint/tslint"
     ],
@@ -64,7 +65,7 @@ module.exports = {
                 }
             }
         ],
-        "@typescript-eslint/member-delimiter-style": [
+        "@stylistic/ts/member-delimiter-style": [
             "error",
             {
                 "multiline": {
@@ -93,14 +94,14 @@ module.exports = {
         "@typescript-eslint/no-unused-expressions": "error",
         "@typescript-eslint/no-var-requires": "error",
         "@typescript-eslint/prefer-namespace-keyword": "error",
-        "@typescript-eslint/quotes": [
+        "@stylistic/ts/quotes": [
             "error",
             "double",
             {
                 "avoidEscape": true
             }
         ],
-        "@typescript-eslint/semi": [
+        "@stylistic/ts/semi": [
             "error"
         ],
         "@typescript-eslint/typedef": [
@@ -114,7 +115,7 @@ module.exports = {
               "variableDeclaration": true
             }
         ],
-        "@typescript-eslint/type-annotation-spacing": "error",
+        "@stylistic/ts/type-annotation-spacing": "error",
         "brace-style": [
             "off",
             "1tbs"
