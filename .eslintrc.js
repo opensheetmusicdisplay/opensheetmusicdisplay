@@ -6,7 +6,7 @@ It represents the closest reasonable ESLint configuration to this
 project's original TSLint configuration.
 
 We recommend eventually switching this configuration to extend from
-the recommended rulesets in typescript-eslint. 
+the recommended rulesets in typescript-eslint.
 https://github.com/typescript-eslint/tslint-to-eslint-config/blob/master/docs/FAQs.md
 
 Happy linting! 💖
@@ -19,8 +19,10 @@ module.exports = {
     },
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "project": "tsconfig.json",
-        "sourceType": "module"
+        "project": "./tsconfig.json",
+        "sourceType": "module",
+        "ecmaVersion": 2020,
+        "tsconfigRootDir": __dirname,
     },
     "plugins": [
         "eslint-plugin-jsdoc",
@@ -37,7 +39,7 @@ module.exports = {
           }
         }
     ],
-    "ignorePatterns": ["webpack*.js","karma.conf.js"],
+    "ignorePatterns": ["webpack*.js","karma.conf.js","build/"],
     "rules": {
         "@typescript-eslint/dot-notation": "error",
         "@typescript-eslint/explicit-function-return-type": "error",
@@ -80,7 +82,7 @@ module.exports = {
         "@typescript-eslint/no-empty-function": "error",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-inferrable-types": "off",
-        "@typescript-eslint/no-parameter-properties": "error",
+        "@typescript-eslint/parameter-properties": "error",
         "@typescript-eslint/no-require-imports": "off",
         "@typescript-eslint/no-shadow": [
             "error",
