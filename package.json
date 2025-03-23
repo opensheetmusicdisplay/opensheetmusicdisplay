@@ -93,7 +93,6 @@
     "eslint-plugin-jsdoc": "^46.4.5",
     "eslint-plugin-no-null": "^1.0.2",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-standard": "^5.0.0",
     "html-webpack-plugin": "^5.5.0",
     "husky": "^9.1.7",
     "jquery": "^3.6.0",
