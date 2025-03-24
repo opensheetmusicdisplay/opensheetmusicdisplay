@@ -452,7 +452,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 selectPageSize.onchange = function (evt) {
                     var value = evt.target.value;
                     openSheetMusicDisplay.setPageFormat(value);
-                    openSheetMusicDisplay.render();
+                    renderAndScrollBack();
                 };
             }
         }
@@ -470,7 +470,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 osmd.setOptions({
                     darkMode: !osmd.EngravingRules.DarkModeEnabled // toggle to opposite of current value (on/off)
                 });
-                osmd.render();
+                renderAndScrollBack();
             }
         }
 
@@ -499,14 +499,14 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (skylineDebug) {
             skylineDebug.onclick = function () {
                 openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
-                openSheetMusicDisplay.render();
+                renderAndScrollBack();
             }
         }
 
         if (bottomlineDebug) {
             bottomlineDebug.onclick = function () {
                 openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
-                openSheetMusicDisplay.render();
+                renderAndScrollBack();
             }
         }
 
@@ -674,6 +674,23 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         }
     }
 
+    /** Re-render and scroll back to previous scroll bar y position in percent.
+     * If the document keeps the same height/length, the scroll bar position will basically be unchanged.
+     * If you just call render() instead of renderAndScrollBack(),
+     *   it will scroll you back to the top of the page, even if you were scrolled to the bottom before. */
+    function renderAndScrollBack() {
+        const previousScrollY = window.scrollY;
+        const previousScrollHeight = document.body.scrollHeight; // height of page
+        const previousScrollYPercent = previousScrollY / previousScrollHeight;
+        openSheetMusicDisplay.render();
+        const newScrollHeight = document.body.scrollHeight; // height of page
+        const newScrollY = newScrollHeight * previousScrollYPercent;
+        window.scrollTo({
+            top: newScrollY,
+            behavior: 'instant' // visually, there is no change in the scroll bar position, as it's the same as before.
+        })
+    }
+
     function findGetParameter(parameterName) {
         // special treatment for the openUrl parameter, because different systems attach different arguments to an URL.
         // because of CORS (cross-origin safety restrictions), you can only load an xml file from the same origin (server).
@@ -744,7 +761,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 window.osmd = openSheetMusicDisplay;
                 openSheetMusicDisplay.zoom = zoom;
                 //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
-                return openSheetMusicDisplay.render();
+                renderAndScrollBack();
             },
             function (e) {
                 errorLoadingOrRenderingSheet(e, "rendering");
@@ -881,7 +898,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         disable();
         window.setTimeout(function () {
             openSheetMusicDisplay.Zoom = zoom;
-            openSheetMusicDisplay.render();
+            renderAndScrollBack();
             enable();
         }, 0);
     }
@@ -890,7 +907,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         disable();
         window.setTimeout(function () {
             if (openSheetMusicDisplay.IsReadyToRender()) {
-                openSheetMusicDisplay.render();
+                renderAndScrollBack();
             } else {
                 console.log("[OSMD demo] Loses context!"); // TODO not sure that this message is reasonable, renders fine anyways. maybe vexflow context lost?
                 selectSampleOnChange(); // reload sample e.g. after osmd.clear()

@@ -777,10 +777,29 @@ export class OpenSheetMusicDisplay {
                     (this.graphic.GetCalculator as VexFlowMusicSheetCalculator).beamsNeedUpdate = true;
                 }
                 if (self.IsReadyToRender()) {
-                    self.render();
+                    self.renderAndScrollBack(); // just calling render() will scroll to the top of the page
                 }
             }
         );
+    }
+
+    /** Re-render and scroll back to previous scroll bar y position in percent.
+     * If the document keeps the same height/length, the scroll bar position will basically be unchanged.
+     * For example, if you scroll to the bottom of the page, resize by one pixel (or enable dark mode) and call this,
+     *   for the human eye there will be no detectable scrolling or change in the scroll position at all.
+     * If you just call render() instead of renderAndScrollBack(),
+     *   it will scroll you back to the top of the page, even if you were scrolled to the bottom before. */
+    public renderAndScrollBack(): void {
+        const previousScrollY: number = window.scrollY;
+        const previousScrollHeight: number = document.body.scrollHeight; // height of page
+        const previousScrollYPercent: number = previousScrollY / previousScrollHeight;
+        this.render();
+        const newScrollHeight: number = document.body.scrollHeight; // height of page
+        const newScrollY: number = newScrollHeight * previousScrollYPercent;
+        window.scrollTo({
+            top: newScrollY,
+            behavior: "instant" // visually, there is no change in the scroll bar position, as it's the same as before.
+        });
     }
 
     /**
