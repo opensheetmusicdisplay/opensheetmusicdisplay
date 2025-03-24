@@ -101,6 +101,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         debugClearBtn,
         selectPageSizes,
         printPdfBtns,
+        darkModeBtn,
         transpose,
         transposeBtn,
         versionDiv;
@@ -253,6 +254,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         printPdfBtns = [];
         printPdfBtns.push(document.getElementById("print-pdf-btn"));
         printPdfBtns.push(document.getElementById("print-pdf-btn-optional"));
+        darkModeBtn = document.getElementById("dark-mode-btn");
         transpose = document.getElementById('transpose');
         transposeBtn = document.getElementById('transpose-btn');
         versionDiv = document.getElementById('versionDiv');
@@ -457,6 +459,15 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 printPdfBtn.onclick = function () {
                     createPdf();
                 }
+            }
+        }
+
+        if (darkModeBtn) {
+            darkModeBtn.onclick = function() {
+                osmd.setOptions({
+                    darkMode: !osmd.EngravingRules.DarkModeEnabled // toggle to opposite of current value (on/off)
+                });
+                osmd.render();
             }
         }
 

@@ -557,9 +557,11 @@ export class OpenSheetMusicDisplay {
         if (options.darkMode) {
             this.rules.applyDefaultColorMusic("#FFFFFF");
             this.rules.PageBackgroundColor = "#000000";
+            this.rules.DarkModeEnabled = true;
         } else if (options.darkMode === false) { // not if undefined!
             this.rules.applyDefaultColorMusic("#000000");
             this.rules.PageBackgroundColor = undefined;
+            this.rules.DarkModeEnabled = false;
         }
         if (options.defaultColorMusic) {
             this.rules.applyDefaultColorMusic(options.defaultColorMusic);
