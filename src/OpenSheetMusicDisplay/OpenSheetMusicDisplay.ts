@@ -997,7 +997,7 @@ export class OpenSheetMusicDisplay {
             this.drawer.drawableBoundingBoxElement = value; // drawer is sometimes created anew, losing this value, so it's saved in OSMD now.
         }
         if (render) {
-            this.render(); // may create new Drawer.
+            this.renderAndScrollBack(); // may create new Drawer.
         }
     }
 
