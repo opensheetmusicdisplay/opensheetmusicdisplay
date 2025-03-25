@@ -704,6 +704,16 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             vfnote.addDotToAll();
         }
+
+        // Apply all MIDI pitch values to the noteheads
+        for (let n: number = 0; n < gve.notes.length; n++) {
+            const note: VexFlowGraphicalNote = gve.notes[n] as VexFlowGraphicalNote;
+            const pitch: Pitch | undefined = note.sourceNote?.Pitch;
+            if (pitch != null) {
+                (vfnote as any).note_heads[n].midi_pitch = Math.round(Pitch.calcFractionalKey(pitch.Frequency)).toString();
+            }
+        }
+
         return vfnote;
     }
 
