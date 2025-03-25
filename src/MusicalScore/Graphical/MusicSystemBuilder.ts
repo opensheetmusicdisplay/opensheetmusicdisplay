@@ -133,12 +133,14 @@ export class MusicSystemBuilder {
             if (graphicalMeasures[0]?.parentSourceMeasure?.multipleRestMeasures) {
                 totalMeasureWidth = this.rules.MultipleRestMeasureDefaultWidth; // default 4 (12 seems too large)
             }
+            const currentMeasureNumberInSystem: number = this.currentSystemParams.systemMeasures.length;
             const measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth < systemMaxWidth;
             const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && sourceMeasure.printNewPageXml;
             const impliedSystemBreak: boolean = doXmlPageBreak || // also create new system if doing page break
                 (this.rules.NewSystemAtXMLNewPageAttribute && sourceMeasure.printNewPageXml);
             const doXmlLineBreak: boolean = impliedSystemBreak ||
-                (this.rules.NewSystemAtXMLNewSystemAttribute && sourceMeasure.printNewSystemXml);
+                (this.rules.NewSystemAtXMLNewSystemAttribute && sourceMeasure.printNewSystemXml) ||
+                currentMeasureNumberInSystem === this.rules.RenderXMeasuresPerLineAkaSystem && currentMeasureNumberInSystem > 0;
             if (isSystemStartMeasure || (measureFitsInSystem && !doXmlLineBreak)) {
                 this.addMeasureToSystem(
                     graphicalMeasures, measureStartLine, measureEndLine, totalMeasureWidth,

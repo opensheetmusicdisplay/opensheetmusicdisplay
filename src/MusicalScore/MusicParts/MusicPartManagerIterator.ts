@@ -168,13 +168,12 @@ export class MusicPartManagerIterator {
             for (const entry of this.currentVoiceEntries) {
                 if (entry.ParentVoice.Parent.IdString === instrument.IdString) {
                     this.getVisibleEntries(entry, voiceEntries);
-                    return voiceEntries;
                 }
             }
-        } else {
-            for (const entry of this.currentVoiceEntries) {
-                this.getVisibleEntries(entry, voiceEntries);
-            }
+            return voiceEntries;
+        }
+        for (const entry of this.currentVoiceEntries) {
+            this.getVisibleEntries(entry, voiceEntries);
         }
         return voiceEntries;
     }

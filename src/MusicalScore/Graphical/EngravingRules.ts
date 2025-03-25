@@ -171,6 +171,8 @@ export class EngravingRules {
     public RehearsalMarkXOffsetSystemStartMeasure: number;
     public RehearsalMarkYOffset: number;
     public RehearsalMarkYOffsetDefault: number;
+    /** y offset added to avoid collisions of rehearsal marks (e.g. "A" or "Verse") with multiple measure rest numbers. */
+    public RehearsalMarkYOffsetAddedForRehearsalMarks: number;
     public RehearsalMarkFontSize: number;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
@@ -486,8 +488,12 @@ export class EngravingRules {
      * */
     public NewSystemAtXMLNewPageAttribute: boolean;
     public NewPageAtXMLNewPageAttribute: boolean;
+    /** Force OSMD to render only x measures per line/system, creating line breaks / system breaks. Disabled if set to 0. */
+    public RenderXMeasuresPerLineAkaSystem: number;
     public PageFormat: PageFormat;
     public PageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
+    /** Whether dark mode is enabled. This is read-only, to set this, please use osmd.setOptions({darkMode: true}). */
+    public DarkModeEnabled: boolean;
     public UsePageBackgroundColorForTabNotes: boolean;
     public RenderSingleHorizontalStaffline: boolean;
     public RestoreCursorAfterRerender: boolean;
@@ -689,6 +695,7 @@ export class EngravingRules {
         this.RehearsalMarkXOffset = 0; // user defined
         this.RehearsalMarkXOffsetSystemStartMeasure = -20; // good test: Haydn Concertante
         this.RehearsalMarkYOffsetDefault = -15;
+        this.RehearsalMarkYOffsetAddedForRehearsalMarks = -12;
         this.RehearsalMarkYOffset = 0; // user defined
         this.RehearsalMarkFontSize = 10; // vexflow default: 12, too big with chord symbols
 
@@ -922,6 +929,7 @@ export class EngravingRules {
         this.NewSystemAtXMLNewSystemAttribute = false;
         this.NewPageAtXMLNewPageAttribute = false;
         this.NewSystemAtXMLNewPageAttribute = false;
+        this.RenderXMeasuresPerLineAkaSystem = 0;
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
         this.IgnoreBracketsWords = true;
@@ -931,6 +939,7 @@ export class EngravingRules {
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
+        this.DarkModeEnabled = false;
         this.UsePageBackgroundColorForTabNotes = true;
         this.RenderSingleHorizontalStaffline = false;
         this.SpacingBetweenTextLines = 0;

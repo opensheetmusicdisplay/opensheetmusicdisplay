@@ -6,7 +6,7 @@ It represents the closest reasonable ESLint configuration to this
 project's original TSLint configuration.
 
 We recommend eventually switching this configuration to extend from
-the recommended rulesets in typescript-eslint. 
+the recommended rulesets in typescript-eslint.
 https://github.com/typescript-eslint/tslint-to-eslint-config/blob/master/docs/FAQs.md
 
 Happy linting! 💖
@@ -19,12 +19,15 @@ module.exports = {
     },
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "project": "tsconfig.json",
-        "sourceType": "module"
+        "project": "./tsconfig.json",
+        "sourceType": "module",
+        "ecmaVersion": 2020,
+        "tsconfigRootDir": __dirname,
     },
     "plugins": [
         "eslint-plugin-jsdoc",
         "eslint-plugin-no-null",
+        "@stylistic/eslint-plugin-ts",
         "@typescript-eslint",
         //"@typescript-eslint/tslint"
     ],
@@ -37,7 +40,7 @@ module.exports = {
           }
         }
     ],
-    "ignorePatterns": ["webpack*.js","karma.conf.js"],
+    "ignorePatterns": ["webpack*.js","karma.conf.js","build/","*.d.ts","demo/"],
     "rules": {
         "@typescript-eslint/dot-notation": "error",
         "@typescript-eslint/explicit-function-return-type": "error",
@@ -62,7 +65,7 @@ module.exports = {
                 }
             }
         ],
-        "@typescript-eslint/member-delimiter-style": [
+        "@stylistic/ts/member-delimiter-style": [
             "error",
             {
                 "multiline": {
@@ -80,7 +83,7 @@ module.exports = {
         "@typescript-eslint/no-empty-function": "error",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-inferrable-types": "off",
-        "@typescript-eslint/no-parameter-properties": "error",
+        "@typescript-eslint/parameter-properties": "error",
         "@typescript-eslint/no-require-imports": "off",
         "@typescript-eslint/no-shadow": [
             "error",
@@ -91,14 +94,14 @@ module.exports = {
         "@typescript-eslint/no-unused-expressions": "error",
         "@typescript-eslint/no-var-requires": "error",
         "@typescript-eslint/prefer-namespace-keyword": "error",
-        "@typescript-eslint/quotes": [
+        "@stylistic/ts/quotes": [
             "error",
             "double",
             {
                 "avoidEscape": true
             }
         ],
-        "@typescript-eslint/semi": [
+        "@stylistic/ts/semi": [
             "error"
         ],
         "@typescript-eslint/typedef": [
@@ -112,7 +115,7 @@ module.exports = {
               "variableDeclaration": true
             }
         ],
-        "@typescript-eslint/type-annotation-spacing": "error",
+        "@stylistic/ts/type-annotation-spacing": "error",
         "brace-style": [
             "off",
             "1tbs"

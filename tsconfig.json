@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "es2020",
     "esModuleInterop": true,
     "module": "commonjs",
     "moduleResolution": "node",
@@ -10,10 +10,12 @@
     "sourceMap": true,
     "typeRoots": ["./node_modules/@types"],
   },
+  "include": ["./.eslintrc.js", "./test/", "./src"],
   "exclude": [
     "node_modules",
     "dist",
     "demo",
-    "build"
+    "build",
+    "./src/VexFlowPatch/"
   ]
 }

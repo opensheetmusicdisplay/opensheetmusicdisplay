@@ -799,11 +799,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
-    // note: sometimes MeasureNumber is 0 here, e.g. in Christbaum, maybe because of pickup measure (auftakt)
-    const measureNumber: number = Math.max(metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber - 1, 0);
+    // note: measureNumber is 0 for pickup measure
+    const measureNumber: number = metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber;
     const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
-    const firstMetronomeMark: boolean = measureNumber === 0 && staffNumber === 0;
-    const vfMeasure: VexFlowMeasure = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure);
+    const vfMeasure: VexFlowMeasure =
+      this.graphicalMusicSheet.findGraphicalMeasureByMeasureNumber(measureNumber, staffNumber) as VexFlowMeasure;
+    const firstMetronomeMark: boolean = vfMeasure === this.graphicalMusicSheet.MeasureList[0][0];
+    // const vfMeasure: VexFlowMeasure = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure);
     if (vfMeasure.hasMetronomeMark) {
       return; // don't create more than one metronome mark per measure;
       // TODO some measures still seem to have two metronome marks, one less bold than the other (or not bold),
@@ -871,7 +873,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!vfStave || !gMeasure.isVisible()) { // potentially multi measure rest
         continue;
       }
-      const yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
+      let yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
+      if (gMeasure.parentSourceMeasure.isReducedToMultiRest) {
+        // we could add other conditions here where we want more offset to avoid collisions
+        yOffset += this.rules.RehearsalMarkYOffsetAddedForRehearsalMarks;
+      }
       let xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
       if (measure.IsSystemStartMeasure) {
         xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;
