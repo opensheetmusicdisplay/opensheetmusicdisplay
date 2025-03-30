@@ -35,7 +35,7 @@ export class StaveTempo extends StaveModifier {
   draw(stave, shift_x) {
     const ctx = stave.checkContext();
     this.setRendered();
-    ctx.openGroup("stavetempo");
+    ctx.openGroup("stavetempo"); // VexFlowPatch: open group
 
     const options = this.render_options;
     // FIXME: What does the '38' mean? Why 38? Is that supposed to
@@ -98,7 +98,7 @@ export class StaveTempo extends StaveModifier {
         ctx.fill();
       }
 
-      ctx.openGroup("bpm");
+      ctx.openGroup("bpm"); // VexFlowPatch: open group
       ctx.fillText(' = ' + bpm + (name ? ')' : ''), x + 3 * scale, y);
       ctx.closeGroup();
     }
