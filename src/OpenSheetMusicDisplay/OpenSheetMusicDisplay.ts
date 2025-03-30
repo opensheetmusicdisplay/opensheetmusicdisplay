@@ -209,7 +209,7 @@ export class OpenSheetMusicDisplay {
     /** Render the loaded music sheet to the container. */
     public render(): void {
         if (!this.graphic) {
-            throw new Error("OSMD: Before render, please load a MusicXML file");
+            throw new Error("OSMD: load() needs to be called before render()");
         }
         this.drawer?.clear(); // clear canvas before setting width
         // this.graphic.GetCalculator.clearSystemsAndMeasures(); // maybe?

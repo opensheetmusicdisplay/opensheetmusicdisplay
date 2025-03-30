@@ -72,6 +72,9 @@ stavesection.draw():
 adjust rectangle positioning, make height depend on text height
 fix rehearsal marks not rendered with canvas backend in browser
 
+stavetempo.js (custom addition):
+open a context group for vf-stavetempo, and one for its subgroup vf-bpm (for just the "= 150" text node)
+
 stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
 
