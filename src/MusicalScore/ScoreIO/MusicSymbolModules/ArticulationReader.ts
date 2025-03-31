@@ -215,6 +215,7 @@ export class ArticulationReader {
 
     const nodeFingerings: IXmlElement[] = technicalNode.elements("fingering");
     for (const nodeFingering of nodeFingerings) {
+      // if nodeFingerings.length > 1: isBulkFingering = true in MusicSheetCalculator
       const currentTechnicalInstruction: TechnicalInstruction = this.createTechnicalInstruction(nodeFingering, currentNote);
       currentTechnicalInstruction.type = TechnicalInstructionType.Fingering;
       if (!currentNote.Fingering) {

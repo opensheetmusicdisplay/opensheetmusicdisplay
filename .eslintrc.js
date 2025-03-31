@@ -40,7 +40,7 @@ module.exports = {
           }
         }
     ],
-    "ignorePatterns": ["webpack*.js","karma.conf.js","build/","*.d.ts","demo/"],
+    "ignorePatterns": ["webpack*.js","karma.conf.js","src/VexFlowPatch/","build/","*.d.ts","demo/"],
     "rules": {
         "@typescript-eslint/dot-notation": "error",
         "@typescript-eslint/explicit-function-return-type": "error",

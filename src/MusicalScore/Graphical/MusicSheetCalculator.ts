@@ -3107,10 +3107,13 @@ export abstract class MusicSheetCalculator {
                             //     }
                             // }
                         }
-                        if (placement === PlacementEnum.Below) {
-                            fingerings.reverse();
-                        }
                         if (fingerings.length > 0) {
+                            // const isBulkFingering: boolean = fingerings.last().sourceNote === fingerings[0].sourceNote;
+                            //   // bulk fingering = more than one fingering per note given in MusicXML. (some programs export like this sometimes)
+                            // console.log("isBulkFingering: " + isBulkFingering);
+                            if (placement === PlacementEnum.Below) {
+                                fingerings.reverse();
+                            }
                             let topNote: Note;
                             for (const gve of gse.graphicalVoiceEntries) {
                                 for (const note of gve.notes) {
@@ -3119,9 +3122,8 @@ export abstract class MusicSheetCalculator {
                                     }
                                 }
                             }
-                            if (fingerings[0].sourceNote === topNote && placement === PlacementEnum.Above ||
-                                fingerings[0].sourceNote !== topNote && placement === PlacementEnum.Below
-                            ) {
+                            if (fingerings[0].sourceNote === topNote && placement === PlacementEnum.Above) {
+                                // || fingerings[0].sourceNote === topNote && placement === PlacementEnum.Below && isBulkFingering // doesn't seem necessary
                                 // TODO more elegant solution: order fingerings in the order of each individual note.
                                 //   this is already a rare situation though, would be even more rare for this to matter, and more complex.
                                 fingerings.reverse();
