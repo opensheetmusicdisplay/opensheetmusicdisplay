@@ -1063,18 +1063,23 @@ export abstract class MusicSheetCalculator {
             for (const staffLine of musicSystem.StaffLines) {
                 const skybottomcalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
                 let minimumOffset: number = Number.MAX_SAFE_INTEGER; // only calculated if option set
+                let maximumOffset: number = Number.MIN_SAFE_INTEGER;
                 if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "staffline") {
                     // get the max y position of all chord symbols in the staffline in advance
                     const alignmentScopedStaffEntries: GraphicalStaffEntry[] = [];
                     for (const measure of staffLine.Measures) {
                         alignmentScopedStaffEntries.push(...measure.staffEntries);
                     }
-                    minimumOffset = this.calculateAlignedChordSymbolsOffset(alignmentScopedStaffEntries, skybottomcalculator);
+                    const { minOffset, maxOffset } = this.calculateAlignedChordSymbolsOffset(alignmentScopedStaffEntries, skybottomcalculator);
+                    minimumOffset = minOffset;
+                    maximumOffset = maxOffset;
                 }
                 for (let measureStafflineIndex: number = 0; measureStafflineIndex < staffLine.Measures.length; measureStafflineIndex++) {
                     const measure: GraphicalMeasure = staffLine.Measures[measureStafflineIndex];
                     if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "measure") {
-                        minimumOffset = this.calculateAlignedChordSymbolsOffset(measure.staffEntries, skybottomcalculator);
+                        const { minOffset, maxOffset } = this.calculateAlignedChordSymbolsOffset(measure.staffEntries, skybottomcalculator);
+                        minimumOffset = minOffset;
+                        maximumOffset = maxOffset;
                     }
                     let previousChordContainer: GraphicalChordSymbolContainer;
                     for (const staffEntry of measure.staffEntries) {
@@ -1147,10 +1152,10 @@ export abstract class MusicSheetCalculator {
                             const start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
                             const end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
                             const placement: PlacementEnum = graphicalChordContainer.GetChordSymbolContainer.Placement;
-                            if (!this.rules.ChordSymbolYAlignment || minimumOffset > 0) {
-                                if (placement === PlacementEnum.Below) {
-                                    minimumOffset = skybottomcalculator.getBottomLineMaxInRange(start, end);
-                                } else {
+                            if (!this.rules.ChordSymbolYAlignment || maximumOffset < 0 || minimumOffset > 0) {
+                                if (placement === PlacementEnum.Below && maximumOffset < 0) {
+                                    maximumOffset = skybottomcalculator.getBottomLineMaxInRange(start, end);
+                                } else if (placement === PlacementEnum.Above && minimumOffset > 0) {
                                     //minimumOffset = this.calculateAlignedChordSymbolsOffset([staffEntry], skybottomcalculator);
                                     minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end); // same as above, less code executed
                                 }
@@ -1167,11 +1172,11 @@ export abstract class MusicSheetCalculator {
                             }
                             const gLabel: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
                             if (placement === PlacementEnum.Below) {
-                                gLabel.PositionAndShape.RelativePosition.y += minimumOffset + yShift;
+                                gLabel.PositionAndShape.RelativePosition.y = maximumOffset + yShift;
                                 gLabel.setLabelPositionAndShapeBorders();
                                 gLabel.PositionAndShape.calculateBoundingBox();
                                 skybottomcalculator.updateBottomLineInRange(start, end,
-                                    this.rules.StaffHeight + minimumOffset + gLabel.PositionAndShape.BorderMarginBottom +
+                                    maximumOffset + gLabel.PositionAndShape.BorderMarginBottom +
                                     this.rules.ChordSymbolBottomMargin); // TODO somehow off without margin for I numeral
                             } else {
                                 gLabel.PositionAndShape.RelativePosition.y = minimumOffset + yShift;
@@ -1187,8 +1192,11 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    protected calculateAlignedChordSymbolsOffset(staffEntries: GraphicalStaffEntry[], sbc: SkyBottomLineCalculator): number {
-        let minimumOffset: number = Number.MAX_SAFE_INTEGER;
+    protected calculateAlignedChordSymbolsOffset(staffEntries: GraphicalStaffEntry[], sbc: SkyBottomLineCalculator):
+        {minOffset: number, maxOffset: number}
+    {
+        let minOffset: number = Number.MAX_SAFE_INTEGER;
+        let maxOffset: number = Number.MIN_SAFE_INTEGER;
         for (const staffEntry of staffEntries) {
             for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
                 const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
@@ -1199,10 +1207,15 @@ export abstract class MusicSheetCalculator {
                     start += (parentBbox.DataObject as GraphicalMeasure).beginInstructionsWidth;
                     end += (parentBbox.DataObject as GraphicalMeasure).beginInstructionsWidth;
                 }
-                minimumOffset = Math.min(minimumOffset, sbc.getSkyLineMinInRange(start, end));
+                const placement: PlacementEnum = graphicalChordContainer.GetChordSymbolContainer.Placement;
+                if (placement === PlacementEnum.Above) {
+                    minOffset = Math.min(minOffset, sbc.getSkyLineMinInRange(start, end));
+                } else if (placement === PlacementEnum.Below) {
+                    maxOffset = Math.max(maxOffset, sbc.getBottomLineMaxInRange(start, end));
+                }
             }
         }
-        return minimumOffset;
+        return {minOffset, maxOffset};
     }
 
     /**
