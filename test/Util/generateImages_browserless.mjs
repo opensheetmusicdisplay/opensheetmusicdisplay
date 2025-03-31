@@ -349,6 +349,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
         const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
         const isTestAlignRests = sampleFilename.includes("alignrests");
+        const isTestHeavyBarline = sampleFilename.includes("test_barline_heavy-heavy_mid_score");
         osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
@@ -420,6 +421,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         }
         if (isTestAlignRests) {
             osmdInstance.EngravingRules.AlignRests = 1; // true. 0 = false (default), 2 = auto
+        }
+        if (isTestHeavyBarline) {
+            osmdInstance.EngravingRules.AutoGenerateMultipleRestMeasuresFromRestMeasures = false;
         }
     }
 
