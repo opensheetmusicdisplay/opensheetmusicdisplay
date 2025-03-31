@@ -425,6 +425,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     case SystemLinesEnum.ThinBold:
                         this.stave.setEndBarType(VF.Barline.type.END);
                         break;
+                    case SystemLinesEnum.DoubleBold:
+                        this.stave.setEndBarType(8); // VexFlowPatch added
+                        break;
                     case SystemLinesEnum.None:
                         this.stave.setEndBarType(VF.Barline.type.NONE);
                         break;

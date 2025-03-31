@@ -53,6 +53,9 @@ prevent a bug where a modifier width is NaN, leading to a VexFlow error (fixed v
 stave.setSection(section, y, xOffset = 0, fontSize = 12):
 add xOffset, fontSize arguments (see stavesection.js) (merged vexflow 4.x)
 
+stavebarline.js (custom addition):
+support double_heavy barline (heavy-heavy in MusicXML)
+
 stavenote.js (custom addition):
 Fix stem/flag formatting. Instead of shifting notes by default, update the stem/flag rendering to render different voices aligned.
   Only offset if a note is the same voice, same note.

@@ -16,6 +16,7 @@ export class Barline extends StaveModifier {
       REPEAT_END: 5,
       REPEAT_BOTH: 6,
       NONE: 7,
+      DOUBLE_HEAVY: 8, // VexFlowPatch: support double heavy barline
     };
   }
 
@@ -23,6 +24,7 @@ export class Barline extends StaveModifier {
     return {
       single: Barline.type.SINGLE,
       double: Barline.type.DOUBLE,
+      doubleheavy: Barline.type.DOUBLE_HEAVY,
       end: Barline.type.END,
       repeatBegin: Barline.type.REPEAT_BEGIN,
       repeatEnd: Barline.type.REPEAT_END,
@@ -43,6 +45,7 @@ export class Barline extends StaveModifier {
     this.widths = {};
     this.widths[TYPE.SINGLE] = 5;
     this.widths[TYPE.DOUBLE] = 5;
+    this.widths[TYPE.DOUBLE_HEAVY] = 5;
     this.widths[TYPE.END] = 5;
     this.widths[TYPE.REPEAT_BEGIN] = 5;
     this.widths[TYPE.REPEAT_END] = 5;
@@ -52,6 +55,7 @@ export class Barline extends StaveModifier {
     this.paddings = {};
     this.paddings[TYPE.SINGLE] = 0;
     this.paddings[TYPE.DOUBLE] = 0;
+    this.paddings[TYPE.DOUBLE_HEAVY] = 0;
     this.paddings[TYPE.END] = 0;
     this.paddings[TYPE.REPEAT_BEGIN] = 15;
     this.paddings[TYPE.REPEAT_END] = 15;
@@ -68,6 +72,12 @@ export class Barline extends StaveModifier {
     this.layoutMetricsMap[TYPE.DOUBLE] = {
       xMin: -3,
       xMax: 1,
+      paddingLeft: 5,
+      paddingRight: 5,
+    };
+    this.layoutMetricsMap[TYPE.DOUBLE_HEAVY] = {
+      xMin: -5,
+      xMax: 4,
       paddingLeft: 5,
       paddingRight: 5,
     };
@@ -129,6 +139,9 @@ export class Barline extends StaveModifier {
       case Barline.type.DOUBLE:
         this.drawVerticalBar(stave, this.x, true);
         break;
+      case Barline.type.DOUBLE_HEAVY:
+        this.drawVerticalBar(stave, this.x, true, true);
+        break;
       case Barline.type.END:
         this.drawVerticalEndBar(stave, this.x);
         break;
@@ -154,14 +167,24 @@ export class Barline extends StaveModifier {
     }
   }
 
-  drawVerticalBar(stave, x, double_bar) {
+  drawVerticalBar(stave, x, double_bar, double_heavy) {
     stave.checkContext();
     const topY = stave.getTopLineTopY();
     const botY = stave.getBottomLineBottomY();
-    if (double_bar) {
-      stave.context.fillRect(x - 3, topY, 1, botY - topY);
+    let widthBar1 = 1;
+    let widthBar2 = 1;
+    let startXBar1 = x - 3;
+    let startXBar2 = x;
+    if (double_heavy) { // VexFlowPatch: support double heavy barline
+      widthBar1 = 3;
+      widthBar2 = 3;
+      startXBar1 = x - 5;
+      startXBar2 = x;
     }
-    stave.context.fillRect(x, topY, 1, botY - topY);
+    if (double_bar) {
+      stave.context.fillRect(startXBar1, topY, widthBar1, botY - topY);
+    }
+    stave.context.fillRect(startXBar2, topY, widthBar2, botY - topY);
   }
 
   drawVerticalEndBar(stave, x) {
