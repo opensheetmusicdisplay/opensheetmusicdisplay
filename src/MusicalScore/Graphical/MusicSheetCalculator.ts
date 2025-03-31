@@ -1152,10 +1152,12 @@ export abstract class MusicSheetCalculator {
                             const start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
                             const end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
                             const placement: PlacementEnum = graphicalChordContainer.GetChordSymbolContainer.Placement;
-                            if (!this.rules.ChordSymbolYAlignment || maximumOffset < 0 || minimumOffset > 0) {
-                                if (placement === PlacementEnum.Below && maximumOffset < 0) {
+                            if (placement === PlacementEnum.Below) {
+                                if (!this.rules.ChordSymbolYAlignment || maximumOffset < 0) {
                                     maximumOffset = skybottomcalculator.getBottomLineMaxInRange(start, end);
-                                } else if (placement === PlacementEnum.Above && minimumOffset > 0) {
+                                }
+                            } else if (placement === PlacementEnum.Above) {
+                                if (!this.rules.ChordSymbolYAlignment || minimumOffset > 0) {
                                     //minimumOffset = this.calculateAlignedChordSymbolsOffset([staffEntry], skybottomcalculator);
                                     minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end); // same as above, less code executed
                                 }
