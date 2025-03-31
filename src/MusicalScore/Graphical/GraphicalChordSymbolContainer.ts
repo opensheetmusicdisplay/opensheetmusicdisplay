@@ -6,6 +6,8 @@ import {GraphicalObject} from "./GraphicalObject";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {EngravingRules} from "./EngravingRules";
 import { KeyInstruction } from "../VoiceData/Instructions/KeyInstruction";
+import { PlacementEnum } from "../VoiceData/Expressions";
+import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 
 export class GraphicalChordSymbolContainer extends GraphicalObject {
     private chordSymbolContainer: ChordSymbolContainer;
@@ -28,7 +30,10 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     }
     private calculateLabel(textHeight: number, transposeHalftones: number, keyInstruction: KeyInstruction): void {
         const text: string = ChordSymbolContainer.calculateChordText(this.chordSymbolContainer, transposeHalftones, keyInstruction);
-        this.graphicalLabel = new GraphicalLabel(new Label(text), textHeight, this.rules.ChordSymbolTextAlignment, this.rules, this.boundingBox);
+        const placement: PlacementEnum = this.GetChordSymbolContainer.Placement;
+        const textAlignment: TextAlignmentEnum = placement === PlacementEnum.Above ?
+            this.rules.ChordSymbolTextAlignmentTop : this.rules.ChordSymbolTextAlignmentBottom;
+        this.graphicalLabel = new GraphicalLabel(new Label(text), textHeight, textAlignment, this.rules, this.boundingBox);
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(this.rules.ChordSymbolRelativeXOffset, 0.0);
         this.graphicalLabel.Label.colorDefault = this.rules.DefaultColorChordSymbol;
     }

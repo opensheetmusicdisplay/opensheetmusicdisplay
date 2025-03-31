@@ -1146,9 +1146,14 @@ export abstract class MusicSheetCalculator {
                             }
                             const start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
                             const end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
+                            const placement: PlacementEnum = graphicalChordContainer.GetChordSymbolContainer.Placement;
                             if (!this.rules.ChordSymbolYAlignment || minimumOffset > 0) {
-                                //minimumOffset = this.calculateAlignedChordSymbolsOffset([staffEntry], skybottomcalculator);
-                                minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end); // same as above, less code executed
+                                if (placement === PlacementEnum.Below) {
+                                    minimumOffset = skybottomcalculator.getBottomLineMaxInRange(start, end);
+                                } else {
+                                    //minimumOffset = this.calculateAlignedChordSymbolsOffset([staffEntry], skybottomcalculator);
+                                    minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end); // same as above, less code executed
+                                }
                             }
                             let yShift: number = 0;
                             if (i === 0) {
@@ -1157,12 +1162,23 @@ export abstract class MusicSheetCalculator {
                             } else {
                                 yShift += this.rules.ChordSymbolYPadding;
                             }
-                            yShift *= -1;
+                            if (placement !== PlacementEnum.Below) {
+                                yShift *= -1;
+                            }
                             const gLabel: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
-                            gLabel.PositionAndShape.RelativePosition.y = minimumOffset + yShift;
-                            gLabel.setLabelPositionAndShapeBorders();
-                            gLabel.PositionAndShape.calculateBoundingBox();
-                            skybottomcalculator.updateSkyLineInRange(start, end, minimumOffset + gLabel.PositionAndShape.BorderMarginTop);
+                            if (placement === PlacementEnum.Below) {
+                                gLabel.PositionAndShape.RelativePosition.y += minimumOffset + yShift;
+                                gLabel.setLabelPositionAndShapeBorders();
+                                gLabel.PositionAndShape.calculateBoundingBox();
+                                skybottomcalculator.updateBottomLineInRange(start, end,
+                                    this.rules.StaffHeight + minimumOffset + gLabel.PositionAndShape.BorderMarginBottom +
+                                    this.rules.ChordSymbolBottomMargin); // TODO somehow off without margin for I numeral
+                            } else {
+                                gLabel.PositionAndShape.RelativePosition.y = minimumOffset + yShift;
+                                gLabel.setLabelPositionAndShapeBorders();
+                                gLabel.PositionAndShape.calculateBoundingBox();
+                                skybottomcalculator.updateSkyLineInRange(start, end, minimumOffset + gLabel.PositionAndShape.BorderMarginTop);
+                            }
                             previousChordContainer = graphicalChordContainer;
                         }
                     }
