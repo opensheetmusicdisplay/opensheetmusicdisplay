@@ -236,20 +236,18 @@ export class NoteHead extends Note {
     if (this.style) {
       this.applyStyle(ctx);
     }
-    
+
     // Embed the `midiPitch` as a custom attribute there (required for matching purposes)
     if (this.midi_pitch != null) {
-      this.setAttribute(
-        'el',
-        this.context.openGroup(
-          'notehead',
-          this.getAttribute('id'),
-          {
-            midiPitch: this.midi_pitch
-          }
-        )
-      );
+      const groupCount = this.context.groups ? this.context.groups.length : 0;
+      if (groupCount > 0) {
+        const noteheadGroup = this.context.groups[groupCount - 1];
+        if (!noteheadGroup.hasAttribute('midiPitch')) {
+          noteheadGroup.setAttribute('midiPitch', this.midi_pitch.toString());
+        }
+      }
     }
+  
 
     if (this.note_type === 's') {
       const staveSpace = this.stave.getSpacingBetweenLines();
