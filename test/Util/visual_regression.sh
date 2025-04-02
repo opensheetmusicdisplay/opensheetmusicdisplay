@@ -136,13 +136,6 @@ function diff_image() {
   local current=$CURRENT/$name.png
   local diff=$DIFF/$name.png-temp
 
-  if [ ! -e "$current" ]
-  then
-    echo " Warning: $name.png missing in $CURRENT. Skipped." >$diff.warn
-    #((total--))
-    return
-  fi
-
   if [ ! -e "$blessed" ]
   then
     echo " Warning: $name.png doesn't exist in $BLESSED. Skipped." >$diff.warn
@@ -200,6 +193,22 @@ function wait_jobs () {
      wait $pid_to_wait  &> /dev/null
   done
 }
+
+# check all blessed images are also in current
+echo "checking blessed -> current"
+for image in $BLESSED/$files
+do
+  name=`basename $image .png`
+  current=$CURRENT/$name.png
+  if [ ! -e "$current" ]
+  then
+    $warnMsg=" Warning: $name.png missing in $CURRENT. Will be skipped."
+    echo $warnMsg
+    echo $warnMsg >$diff.warn
+    #((total--))
+  fi
+done
+echo "done checking blessed"
 
 count=0
 for image in $CURRENT/$files
