@@ -195,7 +195,6 @@ function wait_jobs () {
 }
 
 # check all blessed images are also in current
-echo "checking blessed -> current"
 for image in $BLESSED/$files
 do
   name=`basename $image .png`
@@ -208,7 +207,6 @@ do
     #((total--))
   fi
 done
-echo "done checking blessed"
 
 count=0
 for image in $CURRENT/$files
