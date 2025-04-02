@@ -323,6 +323,9 @@ export class MusicSystemBuilder {
             }
             for (let idx2: number = 0, len2: number = instrument.Staves.length; idx2 < len2; ++idx2) {
                 const staff: Staff = instrument.Staves[idx2];
+                if (!staff?.Visible) {
+                    continue;
+                }
                 staffList.push(staff);
             }
         }

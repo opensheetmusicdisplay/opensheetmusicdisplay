@@ -78,6 +78,9 @@ export abstract class MusicSystem extends GraphicalObject {
     public get StaffLines(): StaffLine[] {
         return this.staffLines;
     }
+    public set StaffLines(value: StaffLine[]) {
+        this.staffLines = value;
+    }
 
     public get GraphicalMeasures(): GraphicalMeasure[][] {
         return this.graphicalMeasures;
@@ -231,10 +234,10 @@ export abstract class MusicSystem extends GraphicalObject {
                 let firstStaffLine: StaffLine = undefined, lastStaffLine: StaffLine = undefined;
                 for (let idx2: number = 0, len2: number = this.staffLines.length; idx2 < len2; ++idx2) {
                     const staffLine: StaffLine = this.staffLines[idx2];
-                    if (staffLine.ParentStaff === instrument.Staves[0]) {
+                    if (staffLine.ParentStaff === instrument.Staves[0] && staffLine.ParentStaff.Visible) {
                         firstStaffLine = staffLine;
                     }
-                    if (staffLine.ParentStaff === instrument.Staves[instrument.Staves.length - 1]) {
+                    if (staffLine.ParentStaff === instrument.Staves[instrument.Staves.length - 1] && staffLine.ParentStaff.Visible) {
                         lastStaffLine = staffLine;
                     }
                 }
@@ -405,9 +408,14 @@ export abstract class MusicSystem extends GraphicalObject {
 
     public getBottomStaffLine(topStaffLine: StaffLine): StaffLine {
         const staves: Staff[] = topStaffLine.ParentStaff.ParentInstrument.Staves;
-        const last: Staff = staves[staves.length - 1];
+        let lastStaff: Staff;
+        for (let i: number = staves.length - 1; i >= 0; i--) {
+            if (staves[i]?.Visible) {
+                lastStaff = staves[i];
+            }
+        }
         for (const line of topStaffLine.ParentMusicSystem.staffLines) {
-            if (line.ParentStaff === last) {
+            if (line.ParentStaff === lastStaff) {
                 return line;
             }
         }

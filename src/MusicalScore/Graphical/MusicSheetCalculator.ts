@@ -1827,15 +1827,17 @@ export abstract class MusicSheetCalculator {
             const lastStaff: Staff = staffLine.ParentStaff.ParentInstrument.Staves[staffLine.ParentStaff.ParentInstrument.Staves.length - 1];
             if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== lastStaff) {
                 const nextStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) + 1];
-                const difference: number = nextStaffLine.PositionAndShape.RelativePosition.y -
-                    staffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
-                const border: number = graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
-
-                // take always into account the size of the Dynamic
-                if (bottomLineValue + border < this.rules.StaffHeight + difference / 2) {
-                    yPosition = this.rules.StaffHeight + difference / 2;
-                } else {
-                    yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
+                if (nextStaffLine) {
+                    // nextStaffLine can be undefined if one staff of an instrument (e.g. piano left hand) is invisible (Visible = false)
+                    const difference: number = nextStaffLine.PositionAndShape.RelativePosition.y -
+                        staffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
+                    const border: number = graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
+                    // take always into account the size of the Dynamic
+                    if (bottomLineValue + border < this.rules.StaffHeight + difference / 2) {
+                        yPosition = this.rules.StaffHeight + difference / 2;
+                    } else {
+                        yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
+                    }
                 }
             } else {
                 yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
@@ -2054,6 +2056,24 @@ export abstract class MusicSheetCalculator {
                 const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                 for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
                     const staffLine: StaffLine = musicSystem.StaffLines[idx3];
+                    if (!staffLine.ParentStaff.Visible) {
+                        staffLine.Measures.clear();
+                        // musicSystem.PositionAndShape.ChildElements = musicSystem.PositionAndShape.ChildElements.filter(
+                        //     (child) => child !== staffLine.PositionAndShape
+                        // );
+                    }
+                    // if (!staffLine) {
+                    //     continue;
+                    // }
+                    // if (!staffLine.ParentStaff.Visible) {
+                    //     musicSystem.StaffLines = musicSystem.StaffLines.slice(idx3);
+                    //     musicSystem.PositionAndShape.ChildElements = musicSystem.PositionAndShape.ChildElements.filter(
+                    //         (child) => child !== staffLine.PositionAndShape
+                    //     );
+                    //     musicSystem.PositionAndShape.calculateBoundingBox();
+                    //     idx3--;
+                    //     continue;
+                    // }
                     for (let idx4: number = 0, len4: number = staffLine.Measures.length; idx4 < len4; ++idx4) {
                         const graphicalMeasure: GraphicalMeasure = staffLine.Measures[idx4];
                         if (graphicalMeasure.FirstInstructionStaffEntry) {
