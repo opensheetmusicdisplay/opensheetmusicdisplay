@@ -242,7 +242,7 @@ export class NoteHead extends Note {
       const groupCount = this.context.groups ? this.context.groups.length : 0;
       if (groupCount > 0) {
         const noteheadGroup = this.context.groups[groupCount - 1];
-        if (!noteheadGroup.hasAttribute('midiPitch')) {
+        if (noteheadGroup != null) {
           noteheadGroup.setAttribute('midiPitch', this.midi_pitch.toString());
         }
       }
