@@ -114,13 +114,20 @@ export class StaveTie extends Element {
         id = this.first_note.getAttribute('id') + "-tie";
       }
 
+      const startTicks = this.first_note.startTicks.toString()
+      const endTicks = this.last_note.endTicks.toString()
+      const actualStartTicks = params.direction === 1 ? startTicks : endTicks
+      const actualEndTicks = params.direction === 1 ? endTicks : startTicks
+
       this.setAttribute('el', ctx.openGroup('stavetie', id, {
         xStart: (params.first_x_px + first_x_shift).toString(),
         xEnd: (params.last_x_px + last_x_shift).toString(),
         yStart: Math.min(first_y_px, last_y_px).toString(),
         yEnd: Math.max(first_y_px, last_y_px).toString(),
         x: this.notes.first_note.keys,
-        tieDir: params.direction.toString()
+        tieDir: params.direction.toString(),
+        startTicks: actualStartTicks,
+        endTicks: actualEndTicks, 
       }));
       ctx.beginPath();
       ctx.moveTo(params.first_x_px + first_x_shift, first_y_px);
