@@ -273,13 +273,20 @@ async function init () {
         if (osmdTestMode) {
             if (!osmdTestSingleMode && sampleFilename.startsWith("Beethoven") && sampleFilename.includes("Geliebte")) {
                 // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
-                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {skyBottomLine: true}, DEBUG);
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    skyBottomLine: true, fileNameAddition: "skyBottomLine"}, DEBUG);
                 // generate one more testing image with GraphicalNote positions
-                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {boundingBoxes: "VexFlowGraphicalNote"}, DEBUG);
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    drawBoundingBoxString: "VexFlowGraphicalNote", fileNameAddition: "bboxVexFlowGraphicalNote_"}, DEBUG);
             } else if (sampleFilename.startsWith("test_tab_x-alignment_triplet_plus_bracket_below_above")) {
                 // generate one more testing image in dark mode
                 await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {darkMode: true}, DEBUG);
-
+            } else if (sampleFilename.startsWith("JohannSebastianBach_PraeludiumInCDur")) {
+                // generate two more testing images, left hand only and right hand only
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    staffVisibility: { 0: true, 1: false}, fileNameAddition: "right_hand_only_"}, DEBUG);
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    staffVisibility: { 0: false, 1: true}, fileNameAddition: "left_hand_only_"}, DEBUG);
             }
         }
     }
@@ -304,22 +311,14 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     // debug('typeof loadParameter: ' + typeof loadParameter)
 
     if (osmdTestMode) {
-        setOsmdTestOptions(sampleFilename, options, osmdInstance);
+        options = setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance); // the method may modify the options object
     }
 
     try {
         debug("loading sample " + sampleFilename, DEBUG);
         await osmdInstance.load(loadParameter, sampleFilename); // if using load.then() without await, memory will not be freed up between renders
-
-        const isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
-        const isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
-        if (isTestOctaveShiftInvisibleInstrument) {
-            osmdInstance.Sheet.Instruments[0].Visible = false;
-        }
-        if (isTestInvisibleMeasureNotAffectingLayout) {
-            if (osmdInstance.Sheet.Instruments[1]) { // some systems can't handle ?. in this script (just a safety check anyways)
-                osmdInstance.Sheet.Instruments[1].Visible = false;
-            }
+        if (osmdTestMode) {
+            options = setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance); // the method may modify the options object
         }
     } catch (ex) {
         debug("couldn't load sample " + sampleFilename + ", skipping. Error: \n" + ex);
@@ -360,20 +359,11 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         }
     }
 
-    const includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
-    const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
-    let drawBoundingBoxString = options.boundingBoxes; // undefined is also a valid value: no bboxes
-    if (isTestEndClefStaffEntryBboxes) {
-        drawBoundingBoxString = "VexFlowStaffEntry";
-    }
     for (let pageIndex = 0; pageIndex < Math.max(dataUrls.length, markupStrings.length); pageIndex++) {
         const pageNumberingString = `${pageIndex + 1}`;
-        const skybottomlineString = includeSkyBottomLine ? "skybottomline_" : "";
-        const darkmodeString = options.darkMode ? "darkmode_" : "";
-        const graphicalNoteBboxesString = drawBoundingBoxString ? "bbox" + drawBoundingBoxString + "_" : "";
         // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-        // eslint-disable-next-line max-len
-        const pageFilename = `${imageDir}/${sampleFilename}_${darkmodeString}${skybottomlineString}${graphicalNoteBboxesString}${pageNumberingString}.${imageFormat}`;
+        const fileNameAddition = options.fileNameAddition ?? "";
+        const pageFilename = `${imageDir}/${sampleFilename}_${fileNameAddition}${pageNumberingString}.${imageFormat}`;
 
         if (imageFormat === "png") {
             const dataUrl = dataUrls[pageIndex];
@@ -443,10 +433,9 @@ function makeSkyBottomLineOptions() {
     }
 }
 
-function setOsmdTestOptions(sampleFilename, options, osmdInstance) {
+function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     // set sample-specific options for OSMD visual regression testing
     let includeSkyBottomLine = false;
-    let drawBoundingBoxString = options.boundingBoxes; // undefined is also a valid value: no bboxes
     const isFunctionTestAutobeam = sampleFilename.startsWith("OSMD_function_test_autobeam");
     const isFunctionTestAutoColoring = sampleFilename.startsWith("OSMD_function_test_auto-custom-coloring");
     const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith("OSMD_Function_Test_System_and_Page_Breaks");
@@ -469,7 +458,8 @@ function setOsmdTestOptions(sampleFilename, options, osmdInstance) {
     const isTestHeavyBarline = sampleFilename.includes("test_barline_heavy-heavy_mid_score");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
     if (isTestEndClefStaffEntryBboxes) {
-        drawBoundingBoxString = "VexFlowStaffEntry";
+        options.drawBoundingBoxString = "VexFlowStaffEntry";
+        options.fileNameAddition = "bbox" + options.drawBoundingBoxString + "_";
     }
     osmdInstance.setOptions({
         autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
@@ -489,14 +479,18 @@ function setOsmdTestOptions(sampleFilename, options, osmdInstance) {
     });
     if (options.darkMode) {
         osmdInstance.setOptions({darkMode: true}); // note that we set pageBackgroundColor above, so we need to overwrite it here.
+        options.fileNameAddition = "darkmode_";
     }
     // note that loadDefaultValues() may be executed in setOptions with drawingParameters default
     //osmdInstance.EngravingRules.RenderSingleHorizontalStaffline = true; // to use this option here, place it after setOptions(), see above
     osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false; // this would override the command line options (--plain etc)
-    includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
+    includeSkyBottomLine = options.skyBottomLine ?? false; // apparently es6 doesn't have ?? operator
     osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
     osmdInstance.drawBottomLine = includeSkyBottomLine;
-    osmdInstance.setDrawBoundingBox(drawBoundingBoxString, false); // false: don't render (now). also (re-)set if undefined!
+    if (includeSkyBottomLine) {
+        options.fileNameAddition = "skybottomline_";
+    }
+    osmdInstance.setDrawBoundingBox(options.drawBoundingBoxString, false); // false: don't render (now). also (re-)set if undefined!
     if (isTestFlatBeams) {
         osmdInstance.EngravingRules.FlatBeams = true;
         // osmdInstance.EngravingRules.FlatBeamOffset = 30;
@@ -540,6 +534,28 @@ function setOsmdTestOptions(sampleFilename, options, osmdInstance) {
     if (isTestHeavyBarline) {
         osmdInstance.EngravingRules.AutoGenerateMultipleRestMeasuresFromRestMeasures = false;
     }
+    return options;
+}
+
+function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
+    if (options.staffVisibility) {
+        for (const key of Object.keys(options.staffVisibility)) {
+            osmdInstance.Sheet.Instruments[0].Staves[key].Visible = options.staffVisibility[key];
+        }
+    }
+
+    const isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
+    const isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
+    if (isTestOctaveShiftInvisibleInstrument) {
+        osmdInstance.Sheet.Instruments[0].Visible = false;
+    }
+    if (isTestInvisibleMeasureNotAffectingLayout) {
+        if (osmdInstance.Sheet.Instruments[1]) { // some systems can't handle ?. in this script (just a safety check anyways)
+            osmdInstance.Sheet.Instruments[1].Visible = false;
+        }
+    }
+
+    return options;
 }
 
 init();
