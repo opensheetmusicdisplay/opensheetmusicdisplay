@@ -412,6 +412,7 @@ export abstract class MusicSystem extends GraphicalObject {
         for (let i: number = staves.length - 1; i >= 0; i--) {
             if (staves[i]?.Visible) {
                 lastStaff = staves[i];
+                break;
             }
         }
         for (const line of topStaffLine.ParentMusicSystem.staffLines) {
