@@ -635,6 +635,9 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 //openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value }); // resets EngravingRules
                 openSheetMusicDisplay.setOptions({backend: value});
                 openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to get more detailed control flow information
+                if (openSheetMusicDisplay.graphic) {
+                    openSheetMusicDisplay.renderAndScrollBack();
+                }
             } else {
                 // alternative, doesn't work yet, see setOptions():
                 openSheetMusicDisplay.setOptions({ backend: value });
