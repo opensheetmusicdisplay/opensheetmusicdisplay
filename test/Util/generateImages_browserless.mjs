@@ -280,7 +280,8 @@ async function init () {
                     drawBoundingBoxString: "VexFlowGraphicalNote", fileNameAddition: "bboxVexFlowGraphicalNote_"}, DEBUG);
             } else if (sampleFilename.startsWith("test_tab_x-alignment_triplet_plus_bracket_below_above")) {
                 // generate one more testing image in dark mode
-                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {darkMode: true}, DEBUG);
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    darkMode: true, fileNameAddition: "darkmode_"}, DEBUG);
             } else if (sampleFilename.startsWith("JohannSebastianBach_PraeludiumInCDur")) {
                 // generate two more testing images, left hand only and right hand only
                 await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
@@ -479,7 +480,6 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     });
     if (options.darkMode) {
         osmdInstance.setOptions({darkMode: true}); // note that we set pageBackgroundColor above, so we need to overwrite it here.
-        options.fileNameAddition = "darkmode_";
     }
     // note that loadDefaultValues() may be executed in setOptions with drawingParameters default
     //osmdInstance.EngravingRules.RenderSingleHorizontalStaffline = true; // to use this option here, place it after setOptions(), see above
