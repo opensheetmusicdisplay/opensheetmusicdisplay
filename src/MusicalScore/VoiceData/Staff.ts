@@ -50,4 +50,8 @@ export class Staff {
     public set StafflineCount(value: number) {
         this.stafflineCount = value;
     }
+    /** Checks whether Staff.Visible and Staff.ParentInstrument.Visible. */
+    public isVisible(): boolean {
+        return this.Visible && this.ParentInstrument.Visible;
+    }
 }

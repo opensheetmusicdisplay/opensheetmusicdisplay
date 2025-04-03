@@ -237,7 +237,7 @@ export class Cursor {
   private findVisibleGraphicalMeasure(measureIndex: number): GraphicalMeasure {
     for (let i: number = 0; i < this.graphic.NumberOfStaves; i++) {
       const measure: GraphicalMeasure = this.graphic.findGraphicalMeasure(this.iterator.CurrentMeasureIndex, i);
-      if (measure?.ParentStaff.ParentInstrument.Visible) {
+      if (measure?.ParentStaff.isVisible()) {
         return measure;
       }
     }

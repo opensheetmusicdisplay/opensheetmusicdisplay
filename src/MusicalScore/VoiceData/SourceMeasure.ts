@@ -622,7 +622,7 @@ export class SourceMeasure {
                 continue;
             }
             for (const staffEntry of container.StaffEntries) {
-                if (!staffEntry || !staffEntry.ParentStaff.ParentInstrument.Visible) {
+                if (!staffEntry || !staffEntry.ParentStaff.isVisible()) {
                     continue; // ignore notes in invisible instruments (instruments not shown)
                 }
                 if (staffEntry.ChordContainers.length > 0) {
