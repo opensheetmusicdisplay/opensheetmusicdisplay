@@ -123,6 +123,7 @@ export class Instrument extends InstrumentalGroup {
             return false;
         }
     }
+    /** Checks that Instrument.Visible and at least one staff visible. */
     public isVisible(): boolean {
         if (!this.Visible) {
             return false;
@@ -132,6 +133,7 @@ export class Instrument extends InstrumentalGroup {
                 return true; // at least one staff visible
             }
         }
+        return false;
     }
     public set Visible(value: boolean) {
         for (let idx: number = 0, len: number = this.Voices.length; idx < len; ++idx) {

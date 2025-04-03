@@ -476,7 +476,7 @@ export abstract class MusicSystem extends GraphicalObject {
         for (let idx: number = 0, len: number = instrumentalGroup.InstrumentalGroups.length; idx < len; ++idx) {
             const groupOrInstrument: InstrumentalGroup = instrumentalGroup.InstrumentalGroups[idx];
             if (groupOrInstrument instanceof Instrument) {
-                if ((<Instrument>groupOrInstrument).Visible === true) {
+                if ((<Instrument>groupOrInstrument).isVisible()) {
                     return <Instrument>groupOrInstrument;
                 }
                 continue;
@@ -491,7 +491,7 @@ export abstract class MusicSystem extends GraphicalObject {
         for (let i: number = instrumentalGroup.InstrumentalGroups.length - 1; i >= 0; i--) {
             groupOrInstrument = instrumentalGroup.InstrumentalGroups[i];
             if (groupOrInstrument instanceof Instrument) {
-                if ((<Instrument>groupOrInstrument).Visible === true) {
+                if ((<Instrument>groupOrInstrument).isVisible()) {
                     return <Instrument>groupOrInstrument;
                 }
                 continue;
