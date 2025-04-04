@@ -1693,12 +1693,14 @@ export abstract class MusicSheetCalculator {
 
                     if (withinCrossedBeam) {
                         const formerStaffLine: StaffLine = musicSystem.StaffLines[formerStaffLineIndex];
-                        const formerStaffLineMaxBottomLineValue: number = formerStaffLine.SkyBottomLineCalculator.
-                                                                          getBottomLineMaxInRange(upperStartX, upperEndX);
-                        const distanceBetweenStaffLines: number = staffLine.PositionAndShape.RelativePosition.y -
-                            formerStaffLine.PositionAndShape.RelativePosition.y;
-                        const relativeSkyLineHeight: number = distanceBetweenStaffLines - formerStaffLineMaxBottomLineValue;
-                        idealY = (relativeSkyLineHeight - this.rules.StaffHeight) / 2 + this.rules.StaffHeight;
+                        if (formerStaffLine) { // can be undefined if staff.Visible = false (e.g. piano)
+                            const formerStaffLineMaxBottomLineValue: number = formerStaffLine.SkyBottomLineCalculator.
+                                                                              getBottomLineMaxInRange(upperStartX, upperEndX);
+                            const distanceBetweenStaffLines: number = staffLine.PositionAndShape.RelativePosition.y -
+                                formerStaffLine.PositionAndShape.RelativePosition.y;
+                            const relativeSkyLineHeight: number = distanceBetweenStaffLines - formerStaffLineMaxBottomLineValue;
+                            idealY = (relativeSkyLineHeight - this.rules.StaffHeight) / 2 + this.rules.StaffHeight;
+                        }
                     }
                 }
             }
@@ -1807,14 +1809,15 @@ export abstract class MusicSheetCalculator {
             // if StaffLine part of multiStaff Instrument and not the first one, ideal yPosition middle of distance between Staves
             if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== staffLine.ParentStaff.ParentInstrument.Staves[0]) {
                 const formerStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) - 1];
-                const difference: number = staffLine.PositionAndShape.RelativePosition.y -
-                    formerStaffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
-
-                // take always into account the size of the Dynamic
-                if (skyLineValue > -difference / 2) {
-                    yPosition = -difference / 2;
-                } else {
-                    yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
+                if (formerStaffLine) { // can be undefined if staff.Visible = false (e.g. piano)
+                    const difference: number = staffLine?.PositionAndShape.RelativePosition.y -
+                        formerStaffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
+                    // take always into account the size of the Dynamic
+                    if (skyLineValue > -difference / 2) {
+                        yPosition = -difference / 2;
+                    } else {
+                        yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
+                    }
                 }
             } else {
                 yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
