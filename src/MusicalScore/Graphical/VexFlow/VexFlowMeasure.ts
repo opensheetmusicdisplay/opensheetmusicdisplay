@@ -693,7 +693,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // Draw ties
         for (const tie of this.vfTies) {
             if (tie instanceof VF.TabSlide) {
-                return; // rendered later in VexFlowMusicSheetDrawer.drawGlissandi(), when all staffline measures are rendered
+                continue; // rendered later in VexFlowMusicSheetDrawer.drawGlissandi(), when all staffline measures are rendered
             }
             tie.setContext(ctx);
             tie.draw();
