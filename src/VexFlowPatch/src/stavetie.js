@@ -84,6 +84,10 @@ export class StaveTie extends Element {
       throw new Vex.RERR('BadArguments', 'No Y-values to render');
     }
 
+    if (this.first_note == null || this.last_note == null) {
+      throw new Vex.RERR('BadArguments', 'No notes to render');
+    }
+
     const ctx = this.context;
     let cp1 = this.render_options.cp1;
     let cp2 = this.render_options.cp2;
