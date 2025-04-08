@@ -165,6 +165,8 @@ export class StaveTie extends Element {
     const first_note = this.first_note;
     const last_note = this.last_note;
 
+    if (!first_note || !last_note) return false;
+
     let first_x_px;
     let last_x_px;
     let first_ys;
