@@ -591,17 +591,19 @@ export class InstrumentReader {
    *  @return color in Vexflow format #[A]RGB or undefined for invalid xmlColorString
    */
   public parseXmlColor(xmlColorString: string): string {
-    if (!xmlColorString) {
-      return undefined;
-    }
+    return xmlColorString;
+    // previous implementation:
+    // if (!xmlColorString) {
+    //   return undefined;
+    // }
 
-    if (xmlColorString.length === 7) { // #RGB
-      return xmlColorString;
-    } else if (xmlColorString.length === 9) { // #ARGB
-      return "#" + xmlColorString.substr(3); // cut away alpha channel
-    } else {
-      return undefined; // invalid xml color
-    }
+    // if (xmlColorString.length === 7) { // #RGB
+    //   return xmlColorString;
+    // } else if (xmlColorString.length === 9) { // #ARGB
+    //   return "#" + xmlColorString.substr(3); // cut away alpha channel // why?
+    // } else {
+    //   return undefined; // invalid xml color
+    // }
   }
 
   public doCalculationsAfterDurationHasBeenSet(): void {
