@@ -25,6 +25,10 @@ export class VexFlowContinuousDynamicExpression extends GraphicalContinuousDynam
             this.label.Label.fontStyle = FontStyles.Italic;
             this.label.setLabelPositionAndShapeBorders();
             this.PositionAndShape.calculateBoundingBox();
+
+            if (continuousDynamic.ColorXML && this.rules.ExpressionsUseXMLColor) {
+                this.label.ColorXML = continuousDynamic.ColorXML;
+            }
         }
     }
 }

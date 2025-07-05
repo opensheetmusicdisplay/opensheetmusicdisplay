@@ -131,6 +131,14 @@ export class MultiExpression {
        }
        return fontStyle;
     }
+
+    public getColorXMLOfFirstEntry(): string {
+        let colorXML: string;
+        if (this.expressions.length) {
+            colorXML = this.expressions[0].expression.ColorXML;
+        }
+        return colorXML;
+     }
     //public getFirstEntry(staffLine: StaffLine, graphLabel: GraphicalLabel): AbstractGraphicalExpression {
     //    let indexOfFirstNotInstDynExpr: number = 0;
     //    if (this.expressions[0].expression instanceof InstantaneousDynamicExpression)
