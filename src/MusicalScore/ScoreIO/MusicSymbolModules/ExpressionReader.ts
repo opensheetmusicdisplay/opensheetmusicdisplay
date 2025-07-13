@@ -860,6 +860,7 @@ export class ExpressionReader {
         unknownExpression.fontStyle = fontStyle;
         unknownExpression.ColorXML = fontColor;
         unknownExpression.defaultYXml = defaultYXml;
+        unknownExpression.parentMeasure = currentMeasure;
         unknownMultiExpression.addExpression(unknownExpression, prefix);
         return false;
     }
