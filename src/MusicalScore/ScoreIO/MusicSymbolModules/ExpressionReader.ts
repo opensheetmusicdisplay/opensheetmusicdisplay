@@ -742,8 +742,9 @@ export class ExpressionReader {
                                        fontStyle: FontStyles,
                                        fontColor: string,
                                        defaultYXml: number = undefined): boolean {
-        if (InstantaneousTempoExpression.isInputStringInstantaneousTempo(stringTrimmed) ||
-            ContinuousTempoExpression.isInputStringContinuousTempo(stringTrimmed)) {
+        const isInstantaneousTempo: boolean = InstantaneousTempoExpression.isInputStringInstantaneousTempo(stringTrimmed);
+        const isContinuousTempo: boolean = ContinuousTempoExpression.isInputStringContinuousTempo(stringTrimmed);
+        if (isInstantaneousTempo || isContinuousTempo) {
             // first check if there is already a tempo expression with the same function
             if (currentMeasure.TempoExpressions.length > 0) {
                 for (let idx: number = 0, len: number = currentMeasure.TempoExpressions.length; idx < len; ++idx) {
@@ -757,7 +758,7 @@ export class ExpressionReader {
             }
             this.createNewTempoExpressionIfNeeded(currentMeasure); // TODO process fontStyle? (also for other expressions)
             this.currentMultiTempoExpression.CombinedExpressionsText = inputString;
-            if (InstantaneousTempoExpression.isInputStringInstantaneousTempo(stringTrimmed)) {
+            if (isInstantaneousTempo) {
                 const instantaneousTempoExpression: InstantaneousTempoExpression = new InstantaneousTempoExpression(  stringTrimmed,
                                                                                                                       this.placement,
                                                                                                                       this.staffNumber,
@@ -767,7 +768,7 @@ export class ExpressionReader {
                 this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, prefix);
                 return true;
             }
-            if (ContinuousTempoExpression.isInputStringContinuousTempo(stringTrimmed)) {
+            if (isContinuousTempo) {
                 const continuousTempoExpression: ContinuousTempoExpression = new ContinuousTempoExpression(
                     stringTrimmed,
                     this.placement,
