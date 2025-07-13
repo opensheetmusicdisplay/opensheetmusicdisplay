@@ -798,6 +798,10 @@ export abstract class MusicSheetCalculator {
                                                                 multiExpression.getFontstyleOfFirstEntry(),
                                                                 placement,
                                                                 fontHeight);
+        const colorXML: string = multiExpression.getColorXMLOfFirstEntry();
+        if (this.rules.ExpressionsUseXMLColor && colorXML) {
+            graphLabel.ColorXML = colorXML;
+        }
         if (this.rules.PlaceWordsInsideStafflineFromXml) {
             if (defaultYXml < 0 && defaultYXml > -50) { // within staffline
                 let newY: number = defaultYXml / 10; // OSMD units
