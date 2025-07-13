@@ -134,7 +134,7 @@ export class MultiExpression {
 
     public getColorXMLOfFirstEntry(): string {
         let colorXML: string;
-        if (this.expressions.length) {
+        if (this.expressions.length >= 1) {
             colorXML = this.expressions[0].expression.ColorXML;
         }
         return colorXML;
