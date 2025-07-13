@@ -460,6 +460,7 @@ export class EngravingRules {
     public RenderClefsAtBeginningOfStaffline: boolean;
     public RenderKeySignatures: boolean;
     public RenderTimeSignatures: boolean;
+    public RenderFirstTempoExpression: boolean;
     public RenderPedals: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
@@ -916,6 +917,7 @@ export class EngravingRules {
         this.RenderClefsAtBeginningOfStaffline = true;
         this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
+        this.RenderFirstTempoExpression = true;
         this.RenderPedals = true;
         this.ArticulationPlacementFromXML = true;
         this.BreathMarkDistance = 0.8;
