@@ -126,7 +126,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         for (const beamSVG of this.getBeamSVGs()) {
             beamSVG?.setAttribute(visibilityAttribute, visibilityString);
         }
-        // TODO make ledger lines invisible/visible. requires mapping from note to ledger lines / SVG elements
+        for (const ledgerSVG of this.getLedgerLineSVGs()) {
+            ledgerSVG?.setAttribute(visibilityAttribute, visibilityString);
+        }
 
         // usage example:
         // let voice = osmd.Sheet.Instruments[0].Voices[0];
@@ -176,5 +178,19 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             beamSVGs.push(newSVG);
         }
         return beamSVGs;
+    }
+
+    /** Gets the SVG path elements of the note's ledger lines. */
+    public getLedgerLineSVGs(): HTMLElement[] {
+        const ledgerSVGs: HTMLElement[] = [];
+        const idString: string = `vf-${this.getSVGId()}ledgers`;
+        const newSVG: HTMLElement = document.getElementById(idString);
+        if (!newSVG) {
+            return [];
+        }
+        for (const child of newSVG.childNodes) {
+            ledgerSVGs.push(child as HTMLElement);
+        }
+        return ledgerSVGs;
     }
 }
