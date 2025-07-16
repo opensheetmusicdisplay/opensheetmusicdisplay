@@ -113,6 +113,39 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return this.vfnote[0].getAttribute("id");
     }
 
+    /** Toggle visibility of the note, making it and its stem and beams invisible for `false`.
+     * (This only works with the default SVG backend, not with the Canvas backend/renderer)
+     */
+    public setVisible(visible: boolean): void {
+        const visibilityAttribute: string = "visibility";
+        const visibilityString: string = visible ? "visible" : "hidden";
+        this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
+        // instead of setAttribute, remove() also works, but isn't reversible.
+        this.getStemSVG()?.setAttribute(visibilityAttribute, visibilityString);
+        for (const beamSVG of this.getBeamSVGs()) {
+            beamSVG?.setAttribute(visibilityAttribute, visibilityString);
+        }
+        // TODO make ledger lines invisible/visible. requires mapping from note to ledger lines / SVG elements
+
+        // usage example:
+        // let voice = osmd.Sheet.Instruments[0].Voices[0];
+        // for (const ve of voice.VoiceEntries) {
+        //     for (const note of ve.Notes) {
+        //         const gNote = osmd.EngravingRules.GNote(note);
+        //         gNote?.setVisible(false);
+        //     }
+        // }
+        // this works similarly without SVG, but with needing to render again (thus not preferable):
+        // let voice = osmd.Sheet.Instruments[0].Voices[0];
+        // for (const ve of voice.VoiceEntries) {
+        //     for (const note of ve.Notes) {
+        //         note.PrintObject = false;
+        //     }
+        // }
+        // osmd.render();
+        // this currently also still leaves ledger lines visible.
+    }
+
     /**
      * Gets the SVGGElement containing this note, given the SVGRenderer is used.
      * This is for low-level rendering hacks and should be used with caution.
