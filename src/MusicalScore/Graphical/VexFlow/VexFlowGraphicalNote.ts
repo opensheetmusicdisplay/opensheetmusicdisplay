@@ -115,6 +115,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 
     /** Toggle visibility of the note, making it and its stem and beams invisible for `false`.
      * (This only works with the default SVG backend, not with the Canvas backend/renderer)
+     * To get a GraphicalNote from a Note, use osmd.EngravingRules.GNote(note).
      */
     public setVisible(visible: boolean): void {
         const visibilityAttribute: string = "visibility";
