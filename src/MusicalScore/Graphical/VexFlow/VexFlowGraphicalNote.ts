@@ -117,7 +117,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * (This only works with the default SVG backend, not with the Canvas backend/renderer)
      * To get a GraphicalNote from a Note, use osmd.EngravingRules.GNote(note).
      */
-    public setVisible(visible: boolean): void {
+    public setVisible(visible: boolean, applyToTies: boolean = false): void {
         const visibilityAttribute: string = "visibility";
         const visibilityString: string = visible ? "visible" : "hidden";
         this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
@@ -128,6 +128,11 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         }
         for (const ledgerSVG of this.getLedgerLineSVGs()) {
             ledgerSVG?.setAttribute(visibilityAttribute, visibilityString);
+        }
+        if (applyToTies) {
+            for (const tie of this.getTieSVGs()) {
+                tie?.setAttribute(visibilityAttribute, visibilityString);
+            }
         }
 
         // usage example:
@@ -184,13 +189,25 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public getLedgerLineSVGs(): HTMLElement[] {
         const ledgerSVGs: HTMLElement[] = [];
         const idString: string = `vf-${this.getSVGId()}ledgers`;
-        const newSVG: HTMLElement = document.getElementById(idString);
-        if (!newSVG) {
+        const groupSVG: HTMLElement = document.getElementById(idString);
+        if (!groupSVG) {
             return [];
         }
-        for (const child of newSVG.childNodes) {
+        for (const child of groupSVG.childNodes) {
             ledgerSVGs.push(child as HTMLElement);
         }
         return ledgerSVGs;
+    }
+
+    /** Gets the SVG path elements of the note's tie curve. */
+    public getTieSVGs(): HTMLElement[] {
+        const tieSVGs: HTMLElement[] = [];
+        // const idString: string = `vf-${this.getSVGId()}-tie`;
+        const ties: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${this.getSVGId()}-tie']`);
+        // TODO multiple ties have the same id sometimes, DOM elements are not supposed to have the same id, this is invalid HTML. But it works.
+        for (const tie of ties) {
+            tieSVGs.push(tie);
+        }
+        return tieSVGs;
     }
 }
