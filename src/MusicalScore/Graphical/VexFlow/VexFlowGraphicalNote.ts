@@ -199,10 +199,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return ledgerSVGs;
     }
 
-    /** Gets the SVG path elements of the note's tie curve. */
+    /** Gets the SVG path elements of the note's tie curves. */
     public getTieSVGs(): HTMLElement[] {
         const tieSVGs: HTMLElement[] = [];
-        // const idString: string = `vf-${this.getSVGId()}-tie`;
         const ties: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${this.getSVGId()}-tie']`);
         // TODO multiple ties have the same id sometimes, DOM elements are not supposed to have the same id, this is invalid HTML. But it works.
         for (const tie of ties) {
