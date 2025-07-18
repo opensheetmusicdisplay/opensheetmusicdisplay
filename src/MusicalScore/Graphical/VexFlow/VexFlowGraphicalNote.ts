@@ -121,13 +121,16 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {
         // default options:
         applyToLedgerLines: true,
+        applyToNotehead: true,
         applyToSlurs: true,
         applyToStem: true,
         applyToTies: true,
     }): void {
         const visibilityAttribute: string = "visibility";
         const visibilityString: string = visible ? "visible" : "hidden";
-        this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
+        if (visibilityOptions.applyToNotehead) {
+            this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
+        }
         // instead of setAttribute, remove() also works, but isn't reversible.
         if (visibilityOptions.applyToStem) {
             this.getStemSVG()?.setAttribute(visibilityAttribute, visibilityString);
@@ -232,6 +235,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 
 export interface VisibilityOptions {
     applyToLedgerLines?: boolean;
+    applyToNotehead?: boolean;
     applyToSlurs?: boolean;
     applyToStem?: boolean;
     applyToTies?: boolean;
