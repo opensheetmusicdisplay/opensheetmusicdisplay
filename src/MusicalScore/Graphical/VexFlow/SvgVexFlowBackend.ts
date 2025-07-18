@@ -190,6 +190,18 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
 
     public renderCurve(points: PointF2D[]): Node {
+
+        //Here we want to make sure all points are numbers. If not, we will use the previous point.
+        //This avoids the "<path> attribute d: Expeced number." SVG error.
+        for (let i: number = 0; i < points.length; i++) {
+            if (isNaN(points[i].x)) {
+                points[i].x = points[i - 1].x;
+            }
+            if (isNaN(points[i].y)) {
+                points[i].y = points[i - 1].y;
+            }
+        }
+
         const node: Node = this.ctx.openGroup("curve");
         this.ctx.beginPath();
         this.ctx.moveTo(points[0].x, points[0].y);
