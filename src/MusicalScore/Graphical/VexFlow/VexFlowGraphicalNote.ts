@@ -245,6 +245,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     }
 }
 
+/** Visibility options for VexFlowGraphicalNote.setVisible().
+ * E.g. if setVisible(false, {applyToTies: false}), everything about a note will be invisible except its ties.
+ * */
 export interface VisibilityOptions {
     applyToBeams?: boolean;
     applyToLedgerLines?: boolean;
