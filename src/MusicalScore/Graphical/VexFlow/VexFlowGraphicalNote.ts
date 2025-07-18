@@ -153,7 +153,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             }
         }
         if (visibilityOptions.applyToSlurs !== false) {
-            this.getSlurSVG()?.setAttribute(visibilityAttribute, visibilityString);
+            for (const slur of this.getSlurSVGs()) {
+                slur?.setAttribute(visibilityAttribute, visibilityString);
+            }
         }
 
         // usage example:
@@ -232,8 +234,14 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     }
 
     /** Gets the SVG path elements of the note's slur curve. */
-    public getSlurSVG(): HTMLElement {
-        return document.getElementById("vf-" + this.getSVGId() + "-slur");
+    public getSlurSVGs(): HTMLElement[] {
+        const slurSVGs: HTMLElement[] = [];
+        const slurs: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${this.getSVGId()}-slur']`);
+        // TODO multiple slurs have the same id sometimes, DOM elements are not supposed to have the same id, this is invalid HTML. But it works.
+        for (const slur of slurs) {
+            slurSVGs.push(slur);
+        }
+        return slurSVGs;
     }
 }
 
