@@ -7,6 +7,7 @@ import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {BackendType} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {EngravingRules} from "../EngravingRules";
+import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 
 export class VexFlowBackends {
   public static CANVAS: 0;
@@ -106,7 +107,7 @@ public abstract getContext(): Vex.IRenderContext;
 
   public abstract renderLine(start: PointF2D, stop: PointF2D, color: string, lineWidth: number, id?: string): Node;
 
-  public abstract renderCurve(points: PointF2D[]): Node;
+  public abstract renderCurve(points: PointF2D[], isSlur?: boolean, startNote?: VexFlowGraphicalNote): Node;
 
   public abstract renderPath(points: PointF2D[], fill: boolean, id?: string): Node;
 

@@ -117,7 +117,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * (This only works with the default SVG backend, not with the Canvas backend/renderer)
      * To get a GraphicalNote from a Note, use osmd.EngravingRules.GNote(note).
      */
-    public setVisible(visible: boolean, applyToTies: boolean = false): void {
+    public setVisible(visible: boolean, visibilityOptions?: VisibilityOptions): void {
         const visibilityAttribute: string = "visibility";
         const visibilityString: string = visible ? "visible" : "hidden";
         this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
@@ -129,10 +129,13 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         for (const ledgerSVG of this.getLedgerLineSVGs()) {
             ledgerSVG?.setAttribute(visibilityAttribute, visibilityString);
         }
-        if (applyToTies) {
+        if (visibilityOptions.applyToTies) {
             for (const tie of this.getTieSVGs()) {
                 tie?.setAttribute(visibilityAttribute, visibilityString);
             }
+        }
+        if (visibilityOptions.applyToSlurs) {
+            this.getSlurSVG()?.setAttribute(visibilityAttribute, visibilityString);
         }
 
         // usage example:
@@ -209,4 +212,14 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         }
         return tieSVGs;
     }
+
+    /** Gets the SVG path elements of the note's slur curve. */
+    public getSlurSVG(): HTMLElement {
+        return document.getElementById("vf-" + this.getSVGId() + "-slur");
+    }
+}
+
+export interface VisibilityOptions {
+    applyToTies?: boolean;
+    applyToSlurs?: boolean;
 }

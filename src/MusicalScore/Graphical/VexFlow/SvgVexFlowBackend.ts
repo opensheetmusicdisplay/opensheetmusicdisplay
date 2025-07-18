@@ -10,6 +10,7 @@ import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {BackendType} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {EngravingRules} from "../EngravingRules";
 import log from "loglevel";
+import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
@@ -189,8 +190,12 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         return node;
     }
 
-    public renderCurve(points: PointF2D[]): Node {
-        const node: Node = this.ctx.openGroup("curve");
+    public renderCurve(points: PointF2D[], isSlur?: boolean, startNote?: VexFlowGraphicalNote): Node {
+        let slurId: string = undefined;
+        if (isSlur && startNote) {
+            slurId = `${startNote.getSVGId()}-slur`;
+        }
+        const node: Node = this.ctx.openGroup("curve", slurId);
         this.ctx.beginPath();
         this.ctx.moveTo(points[0].x, points[0].y);
         this.ctx.bezierCurveTo(
