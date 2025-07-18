@@ -120,19 +120,25 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      */
     public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {
         // default options:
-        applyToTies: true,
+        applyToLedgerLines: true,
         applyToSlurs: true,
+        applyToStem: true,
+        applyToTies: true,
     }): void {
         const visibilityAttribute: string = "visibility";
         const visibilityString: string = visible ? "visible" : "hidden";
         this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
         // instead of setAttribute, remove() also works, but isn't reversible.
-        this.getStemSVG()?.setAttribute(visibilityAttribute, visibilityString);
+        if (visibilityOptions.applyToStem) {
+            this.getStemSVG()?.setAttribute(visibilityAttribute, visibilityString);
+        }
         for (const beamSVG of this.getBeamSVGs()) {
             beamSVG?.setAttribute(visibilityAttribute, visibilityString);
         }
-        for (const ledgerSVG of this.getLedgerLineSVGs()) {
-            ledgerSVG?.setAttribute(visibilityAttribute, visibilityString);
+        if (visibilityOptions.applyToLedgerLines) {
+            for (const ledgerSVG of this.getLedgerLineSVGs()) {
+                ledgerSVG?.setAttribute(visibilityAttribute, visibilityString);
+            }
         }
         if (visibilityOptions.applyToTies) {
             for (const tie of this.getTieSVGs()) {
@@ -225,6 +231,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 }
 
 export interface VisibilityOptions {
-    applyToTies?: boolean;
+    applyToLedgerLines?: boolean;
     applyToSlurs?: boolean;
+    applyToStem?: boolean;
+    applyToTies?: boolean;
 }
