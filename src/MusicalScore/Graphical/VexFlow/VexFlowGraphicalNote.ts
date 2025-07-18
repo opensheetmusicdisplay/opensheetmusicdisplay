@@ -114,10 +114,15 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     }
 
     /** Toggle visibility of the note, making it and its stem and beams invisible for `false`.
+     * By default, this will also hide the note's slurs and ties (see visibilityOptions).
      * (This only works with the default SVG backend, not with the Canvas backend/renderer)
      * To get a GraphicalNote from a Note, use osmd.EngravingRules.GNote(note).
      */
-    public setVisible(visible: boolean, visibilityOptions?: VisibilityOptions): void {
+    public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {
+        // default options:
+        applyToTies: true,
+        applyToSlurs: true,
+    }): void {
         const visibilityAttribute: string = "visibility";
         const visibilityString: string = visible ? "visible" : "hidden";
         this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
