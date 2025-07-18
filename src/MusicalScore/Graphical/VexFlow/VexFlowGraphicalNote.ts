@@ -120,6 +120,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      */
     public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {
         // default options:
+        applyToBeams: true,
         applyToLedgerLines: true,
         applyToNotehead: true,
         applyToSlurs: true,
@@ -128,27 +129,30 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     }): void {
         const visibilityAttribute: string = "visibility";
         const visibilityString: string = visible ? "visible" : "hidden";
-        if (visibilityOptions.applyToNotehead) {
+        if (visibilityOptions.applyToNotehead !== false) {
+            // !== false so that it also matches undefined (option not set).
             this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
         }
         // instead of setAttribute, remove() also works, but isn't reversible.
-        if (visibilityOptions.applyToStem) {
+        if (visibilityOptions.applyToStem !== false) {
             this.getStemSVG()?.setAttribute(visibilityAttribute, visibilityString);
         }
-        for (const beamSVG of this.getBeamSVGs()) {
-            beamSVG?.setAttribute(visibilityAttribute, visibilityString);
+        if (visibilityOptions.applyToBeams !== false) {
+            for (const beamSVG of this.getBeamSVGs()) {
+                beamSVG?.setAttribute(visibilityAttribute, visibilityString);
+            }
         }
-        if (visibilityOptions.applyToLedgerLines) {
+        if (visibilityOptions.applyToLedgerLines !== false) {
             for (const ledgerSVG of this.getLedgerLineSVGs()) {
                 ledgerSVG?.setAttribute(visibilityAttribute, visibilityString);
             }
         }
-        if (visibilityOptions.applyToTies) {
+        if (visibilityOptions.applyToTies !== false) {
             for (const tie of this.getTieSVGs()) {
                 tie?.setAttribute(visibilityAttribute, visibilityString);
             }
         }
-        if (visibilityOptions.applyToSlurs) {
+        if (visibilityOptions.applyToSlurs !== false) {
             this.getSlurSVG()?.setAttribute(visibilityAttribute, visibilityString);
         }
 
@@ -234,6 +238,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 }
 
 export interface VisibilityOptions {
+    applyToBeams?: boolean;
     applyToLedgerLines?: boolean;
     applyToNotehead?: boolean;
     applyToSlurs?: boolean;
