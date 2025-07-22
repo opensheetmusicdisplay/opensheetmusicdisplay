@@ -78,6 +78,7 @@
     "jsdom": "^19.0.0",
     "jszip": "3.10.1",
     "loglevel": "^1.8.0",
+    "minimatch": "^10.0.3",
     "typescript-collections": "^1.3.3",
     "vexflow": "1.2.93"
   },
