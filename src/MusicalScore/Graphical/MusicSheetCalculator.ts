@@ -951,6 +951,8 @@ export abstract class MusicSheetCalculator {
         }
         // calculate StaffEntry ChordSymbols
         this.calculateChordSymbols();
+        // calculate all LyricWords Positions
+        this.calculateLyricsPosition();
         if (!this.leadSheet) {
             // calculate all Instantaneous/Continuous Dynamics Expressions
             this.calculateDynamicExpressions();
@@ -974,9 +976,6 @@ export abstract class MusicSheetCalculator {
             this.calculateTempoExpressions();
         }
         this.calculateRehearsalMarks();
-
-        // calculate all LyricWords Positions
-        this.calculateLyricsPosition();
 
         // update all StaffLine's Borders
         // create temporary Object, just to call the methods (in order to avoid declaring them static)
