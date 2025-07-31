@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="./demo.css"/>
 </head>
 <body>
+
+
 <div style="display: flex; flex-direction: column;">
     <div class="column" id="selectSampleContainer">
         <h3 class="ui header" id="selectSampleTitle">Select a sample:</h3>
@@ -24,9 +26,61 @@
         <img src="./favicon.ico?" class="ui image">
         <%= htmlWebpackPlugin.options.title %>
     </h1>
-
 </div>
 
+<!-- style="visibility: hidden; opacity: 0.0" -->
+<div class="ui five column grid container" id="divControls">
+    <div class="column" id="zoomControls">
+        <h3 class="ui header">Zoom controls:</h3>
+        <div class="ui horizontal" id="zoomControlsButtons">
+            <div class="ui input style='width: 15%'" id="zoom-str">???</div>
+            <div class="ui button" id="zoom-out-btn">
+                <i class="search minus icon"></i>
+            </div>
+            <div class="ui button" id="zoom-in-btn">
+                <i class="search plus icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Rendering:</h3>
+        <div>
+            <div class="ui horizontal">
+                <!-- <div class="ui button" id="debug-re-render-btn">Re-render</div> -->
+                <div class="ui toggle checkbox">
+                    <input type="checkbox" name="toggle-cursor" id="toggle-cursor-btn" checked="true"/>
+                    <label title="Highlight modified measures in grey">Highlight Changes</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Global Scale:</h3>
+        <div class="ui horizontal">
+                <input class="ui input" id="sheet-factor-display" placeholder="100%" style="width: 25%"></input>
+                <div class="ui button" id="sheet-minus-btn">-</div>
+                <div class="ui button" id="sheet-plus-btn">+</div>
+        </div>
+    </div>
+    <div class="column">
+        <h3 class="ui header" id="selected-measure-field">Selected Measure: -</h3>
+        <div class="column">
+            <div class="ui horizontal">
+                <input class="ui input" id="measure-width-display" placeholder="100%" style="width: 25%"></input>
+                <div class="ui button" id="measure-width-minus-btn">-</div>
+                <div class="ui button" id="measure-width-plus-btn">+</div>
+            </div>
+        </div>
+    </div>
+    <div class="column">
+        <h3 class="ui header">XML</h3>
+        <div class="ui button" id="download-xml-btn">Download XML</div>
+        <div class="ui two column grid container">
+            <div class="column" style="width: 15%">File:  </div>
+            <div class="column" id="filename-display">sample.musicxml</div>
+        </div>
+    </div>
+</div>
 <!-- in portrait/mobile mode, "four column grid container" is removed from divControls in index.js -->
 <div id="slideContainer">
     <div class="ui fixed" id="divControls" style="visibility: hidden; display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
