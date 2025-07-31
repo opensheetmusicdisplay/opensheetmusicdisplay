@@ -63,7 +63,7 @@ export class GraphicalNote extends GraphicalObject {
     }
 
     public get ParentMusicPage(): GraphicalMusicPage {
-      return this.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentMusicSystem.Parent;
+      return this.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentMusicSystem?.Parent;
     }
 
     /** Get a GraphicalNote from a Note. Use osmd.rules as the second parameter (instance reference).

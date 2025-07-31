@@ -18,6 +18,7 @@ export class GraphicalLine {
     private end: PointF2D;
     private width: number;
     public colorHex: string; // will override styleId if not undefined
+    public SVGElement: Node;
 
     public get Start(): PointF2D {
         return this.start;

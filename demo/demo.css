@@ -1,7 +1,25 @@
 p {
   margin: 0px 8px 8px 8px;
 }
-
+:root{
+  --port-collapsible-fontsize: 1.2em;
+  --settings-margin: 0.7em;
+  --theme-color-dark: #d25701;
+  --theme-color-medium:#ffeee2;
+  --theme-color-light: #fdf6f2;
+  --theme-color-very-light: #fffefe;
+  --theme-color-focus: #faddc9;
+  --controls-border-color: #d25701;
+  --thick-border-size: 2px;
+  --desktop-font-size:1.5vh;
+  --desktop-divControls-width:360px;
+}
+.portraitCollapsible{
+  display: none;
+}
+.show-on-portrait{
+  display: none;
+}
 /* the select widths are not used for some reason, even if we don't set the style in index.html */
 select {
   width: 100px;
@@ -15,6 +33,483 @@ select {
 #selectBounding {
   width: 80%;
 }
+
+.ui.input{
+  border-color: var(--theme-color-dark);
+}
+.ui.action.input:not([class*="left action"]) > input {
+  border-color: var(--theme-color-dark);
+  border-right: 1px solid var(--theme-color-dark) !important;
+  border-radius: 5px !important;
+  color: var(--theme-color-dark);
+}
+.ui.vertical.buttons .button:first-child {
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-left:1px solid var(--theme-color-dark);
+}
+
+.button:last-child {
+  margin-bottom: 0px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-top-left-radius: 5px;
+}
+.ui.buttons > .ui.button:not(.basic):not(.inverted):active, .ui.buttons:not(.basic):not(.inverted) > .button:active, .ui.action.input > .button:focus, .button:active, .ui.action.input > .button:active{
+  color: var(--theme-color-dark);
+  background-color: var(--theme-color-focus);
+  accent-color: var(--theme-color-focus);
+}
+.ui.animated.button .hidden.content{
+  margin: 0px;
+}
+.ui.button{
+  color: var(--theme-color-dark);
+  background-color: var(--theme-color-medium);
+  border: 1px solid var(--theme-color-dark);
+  margin: 1px;
+  border-radius: 5px;
+}
+.ui.toggle.checkbox {
+  accent-color: var(--theme-color-dark);
+}
+.ui.toggle.checkbox input:checked ~ label {
+  color: var(--theme-color-dark) !important;
+}
+.ui.toggle.checkbox input:focus, .ui.checkbox input[type="checkbox"]:focus, [type="checkbox"]:focus, input:focus, .ui.toggle.checkbox:focus, .ui.list > .item:focus, .ui.list:focus, .ui.checkbox:focus, Element:focus{
+  color: var(--theme-color-dark);
+  background-color: var(--theme-color-focus);
+  accent-color: var(--theme-color-focus);
+  caret-color: var(--theme-color-dark);
+  lighting-color: var(--theme-color-dark);
+  text-decoration-color: var(--theme-color-dark);
+  -moz-text-decoration-color: var(--theme-color-dark);
+}
+
+.portraitCollapsible{
+  margin-top: 8px;
+  margin-left: -4px;
+  font-weight: 550;
+  background-color: transparent;
+  color: var(--theme-color-dark);
+  cursor: pointer;
+  width: fit-content;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: var(--port-collapsible-fontsize);
+
+}
+.collapsibleContent{
+  padding: 5px 5px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+#last-adv-setting{
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--theme-color-dark);
+  border-radius: 0px 0px 5px 5px;  
+  order:1;
+}
+
+.advanced-setting{
+  padding-left:0.45em;
+  background-color: var(--theme-color-light);
+  margin-right: 0.7em;
+  order:0;
+  display: block;
+  width: 100%;
+  margin-right: var(--settings-margin);
+  margin-left: var(--settings-margin);
+  border-right: var(--thick-border-size) solid var(--theme-color-dark);
+  border-left: var(--thick-border-size) solid var(--theme-color-dark);
+}
+
+#selectSampleContainer{
+  border-width: 20px;
+  margin:auto;
+  margin-bottom: 20px;
+  margin-top: 10px;
+  align-self: center;
+  background-color: var(--theme-color-light);
+  width: 95%;
+  align-content: center;
+  border: 2px solid var(--theme-color-dark);
+  border-radius: 5px 5px 0px 0px;
+  width:90%
+}
+#selectSampleTitle{
+  margin-top: 1px;
+  border-radius: 5px 5px 0px 0px;
+  background-color: var(--theme-color-medium);
+  text-align: center;
+  color: var(--theme-color-dark);
+}
+#selectSample{
+  text-align: center;
+  display:block;
+  margin:auto;
+  margin-bottom: 0.7em;
+  color: var(--theme-color-dark);
+  background-color: white;
+  border: 1px solid var(--theme-color-dark);
+  order:1;
+}
+
+#zoomControlsButtons{
+
+  background-color: var(--theme-color-light);
+  order: 0;
+  border: 2px solid var(--theme-color-dark);
+  margin-top: 0px;
+  border-radius: 5px;
+}
+
+#zoom-in-btn{
+  display: inline;
+  order: 1;
+  border-radius: 0px 5px 5px 0px;
+  background-color: #ffe6d2;
+  border:transparent;
+}
+#zoom-str-portrait{
+  margin-left: 20px;
+  margin-right:20px;
+  align-self: center;
+  font-size: 15px;
+  font-weight: bolder;
+  order: 0;
+  color: var(--theme-color-dark);
+}  
+#zoom-out-btn{
+  display: inline;
+  order:-1;
+  border-radius: 5px 0px 0px 5px;
+  border:transparent;
+  background-color: #ffe6d2;
+}
+#print-pdf-btn{
+  order:1;
+  display:block;
+  width: fit-content;
+  color: var(--theme-color-dark);
+  background-color: var(--theme-color-medium);
+  border: 1px solid var(--theme-color-dark);
+}
+.search{
+  color:#d25701; 
+}
+
+.ui.selection.dropdown{
+  background-color: white;
+  border: 1px solid var(--theme-color-dark);
+  color: var(--theme-color-dark);
+}
+
+.ui.selection.dropdown:focus{
+  border: 1px solid var(--theme-color-dark);
+}
+.ui.toggle.checkbox label, .ui.toggle.checkbox .active{
+  color: var(--theme-color-dark);
+}
+.ui.toggle.checkbox.focus{
+  color: var(--theme-color-dark);
+}
+#transpose-btn{
+  margin-top: 5px;
+  border-radius: 5px;
+
+}
+.ui.button:hover{
+  height: fit-content;
+  background-color: var(--theme-color-focus);
+}
+
+/* mobile: no hover, no mouse, just touch */
+@media (hover: none) {
+  #divControls {
+    opacity: 0.95; /* see the other #divControls opacity settings: can't switch it on hover like with a mouse setup */
+  }
+}
+
+/* mobile portrait mode: change layout (responsive) to be less cluttered, remove some elements */
+/* general styling */
+@media (max-width: 500px){
+    .show-on-portrait{
+    display: block;
+  }
+  .hide-on-portrait{
+    display: none !important;    
+  }
+  #divControls {
+    position:relative;
+    
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+  #advancedSettings{
+    width: 100%;
+  }
+.portraitCollapsible:after {
+    text-align: center;
+    content: ' ';
+    padding: 10px;
+    background: url('resources/arrow-right-s-fill.svg') 50% no-repeat ;
+    color: var(--theme-color-dark);
+    float: right;
+    margin-left: 3px;
+  }
+
+  #advanced-settings-btn{
+    transform: rotate(22.5deg);
+    margin-left: auto;
+    margin-right: var(--settings-margin);
+    width:fit-content;
+    display: block;
+    background: url('resources/settings-5-line.svg') 50% no-repeat ;
+    border:none;
+    float:right;
+    order:1;
+    background-color: transparent;
+    font-size: xx-large;
+    color: var(--theme-color-dark);
+    order:-1;
+    margin-bottom: 20px;
+  }
+  #advanced-settings-btn.active{
+    transform: rotate(0deg);
+    margin-bottom: 20px;
+  }
+  #header{
+    order:-1;
+    margin-top: 0%;
+  }
+  .portraitCollapsible.active:after {
+    content: ' ';
+    padding: 10px;
+    background: url('resources/arrow-down-s-fill.svg') 50% no-repeat ;
+    font-size: port-collapsible-fontsize;
+    float: right;
+    margin-left: 3px;
+  }
+  #zoomControls{
+    position:absolute;
+    z-index: 2;
+    left:50%;
+    transform: translateX(-50%);
+  }
+  #cursorControls{
+    margin-top: 5px;
+    border-top: var(--thick-border-size) solid var(--theme-color-dark);
+    border-radius: 5px 5px 0px 0px;  
+    order:-1;
+  }
+  .portraitCollapsible{
+    display: inline;
+  }
+}  
+
+/* PC and Ipad */
+@media only screen and (min-width: 768px){
+  .ui.fixed{
+    position: fixed !important;
+    z-index: 1;
+  }
+  #header{
+    background-color: white;
+    padding-bottom: 5px;
+    margin-bottom: -2px;
+    width: 100%;
+    z-index: 2;
+    margin-top: 0;
+  }
+
+  #divControls{
+    background-color: var(--theme-color-very-light);
+    height: 100%;
+    width: var(--desktop-divControls-width) !important;
+    margin-right: auto;
+    font-size: var(--desktop-font-size);
+    padding-bottom: 5%;
+    border-top: var(--controls-border-color) solid var(--thick-border-size);
+    border-right: var(--controls-border-color) solid var(--thick-border-size);
+    display:block;
+    padding-bottom: 10%;
+    top:79px;
+    opacity: 0.5;
+  }
+
+  #divControls:hover {
+    opacity: 0.95;
+  }
+
+  #slideControlsButton{
+    content: ' ';
+    background: url('resources/arrow-left-s-line.svg') 50% no-repeat var(--theme-color-light);
+    width:15px;
+    height: 30px;
+    margin-left: calc(var(--desktop-divControls-width) - 1px);
+    position: fixed;
+    order:1;
+    z-index: 1;
+    border: var(--controls-border-color) solid 1px;
+    top:79px;
+  }
+
+  #selectSampleContainer{
+    position: relative;
+    margin-top: 100px;
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+    border-width: var(--thick-border-size);
+    margin-bottom: 0;
+
+  }
+  #selectSampleTitle{
+    height:100%;
+    font-size: 20px;
+    margin-left: 0%;
+    margin-top: 0 !important;
+    padding-bottom: 15px;
+    border-radius: 5px 0px 0px 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 20px !important;
+    padding-bottom:20px;
+
+    flex-grow: 1;
+  }
+  #selectSample{
+    width: 100% !important;
+    min-height: 3em;
+    margin-top: 0px;
+    margin-bottom: 0;
+    min-width: 70%;
+    margin-left:20px;
+    margin-right: 20px;
+    flex-grow: 2;
+    border-width: var(--thick-border-size);
+    overflow: visible;
+  }
+  #advancedSettings{
+    background-color: var(--theme-color-light);
+    margin-left: 20px;
+    margin-right: 20px;
+    border-width: var(--thick-border-size);
+    height:fit-content;
+    margin-top: 10px;
+    border: var(--theme-color-dark) var(--thick-border-size) solid;
+    border-radius: 10px;
+    min-height: 98%;
+
+  }
+  .advanced-setting{
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 10px;
+    font-size: 0.8em;
+    border:0px;
+    background-color: transparent;
+  }
+  #zoomControls{
+    display: flex;
+    position:relative;
+    margin-left: 20px;
+    margin-right: 20px;
+    order:-1;
+    width: 100%;
+    margin-top: 7.5px;
+  }
+  #zoomControlsButtons{
+  margin: auto;
+  margin-top: 5px;
+  }
+
+  .collapsibleContent{
+    font-size: var(--desktop-font-size);
+    padding-left: 4px;
+  }
+  #transposeInput{
+    max-width: 75% !important;
+    margin-right: -150px;
+  }
+  #transpose-btn{
+    border-radius: 0px 5px 5px 0px;
+    margin-top: 0;
+  }
+  #transpose{
+    border-radius: 5px 0px 0px 5px !important;
+    max-width: 30%;
+  }
+
+  #last-adv-setting{
+    border-width: 0px;
+  }
+
+  h3.ui.header{
+    margin-top: 3px !important;
+    margin-left: -4px;
+    margin-bottom: 0px;
+    font-weight: 550;
+    background-color: transparent;
+    color: var(--theme-color-dark);
+    cursor: pointer;
+    width: fit-content;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: var(--desktop-font-size);
+  }
+  .ui.selection{
+    max-width:0.1em;
+    max-height: 0.001em;
+  }
+  .ui.input{
+    font-size: var(--desktop-font-size);
+    max-width: fit-content;
+    max-height: 6em;
+  }
+
+  .ui.button{
+    font-size: var(--desktop-font-size);
+  }
+  .ui.vertical.buttons .button {
+    font-size: var(--desktop-font-size);
+  }
+  .ui.checkbox{
+    font-size: var(--desktop-font-size);
+  }
+  select{
+    margin-left: 4px;
+  }
+}
+
+/*  Ipad only  */
+@media only screen and (min-width: 768px) and (hover: none){
+  #backend-select-div{
+    display:none !important;
+  }
+  #advancedSettings{
+    min-height: 90%;
+  }
+
+  #slideControlsButton{
+    top: 50%;
+    bottom: 50%;
+    width: 30px;
+    height: 60px;
+  }
+}
+
+
+#selection{
+  margin-top: 4px;
+}
+
 
 .bignum {
   width: 1em;
@@ -38,4 +533,21 @@ select {
 
 table {
     width: 100%;
+}
+
+@keyframes slide-left{
+  from{
+    margin-left: 0%;
+  }
+  to{
+    margin-left: calc(var(--desktop-divControls-width) * -1 + 6px);
+  }
+}
+@keyframes slide-right {
+  from{
+    margin-left: calc(var(--desktop-divControls-width) * -1 + 6px);
+  }
+  to{
+    margin-left: 0%;
+  }
 }

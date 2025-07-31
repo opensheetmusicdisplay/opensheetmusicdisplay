@@ -237,6 +237,18 @@ export class NoteHead extends Note {
       this.applyStyle(ctx);
     }
 
+    // Embed the `midiPitch` as a custom attribute there (required for matching purposes)
+    if (this.midi_pitch != null) {
+      const groupCount = this.context.groups ? this.context.groups.length : 0;
+      if (groupCount > 0) {
+        const noteheadGroup = this.context.groups[groupCount - 1];
+        if (noteheadGroup != null) {
+          noteheadGroup.setAttribute('midiPitch', this.midi_pitch.toString());
+        }
+      }
+    }
+  
+
     if (this.note_type === 's') {
       const staveSpace = this.stave.getSpacingBetweenLines();
       drawSlashNoteHead(ctx, this.duration, head_x, y, stem_direction, staveSpace);

@@ -64,6 +64,10 @@ export class GraphicalVoiceEntry extends GraphicalObject {
     //     return sortedArray;
     // }
 
+    public applyCustomNoteheads(): void {
+        // override
+    }
+
     /** (Re-)color notes and stems
      */
     public color(): void {

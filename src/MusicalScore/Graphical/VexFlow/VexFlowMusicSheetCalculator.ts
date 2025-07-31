@@ -554,7 +554,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let elongationFactorForMeasureWidth: number = 1;
 
     for (const measure of measuresVertical) {
-      if (!measure || measure.staffEntries.length === 0) {
+      if (!measure || measure.staffEntries.length === 0 || !measure.isVisible()) {
         continue;
       }
 
@@ -799,11 +799,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
-    // note: sometimes MeasureNumber is 0 here, e.g. in Christbaum, maybe because of pickup measure (auftakt)
-    const measureNumber: number = Math.max(metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber - 1, 0);
+    // note: measureNumber is 0 for pickup measure
+    const measureNumber: number = metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber;
     const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
-    const firstMetronomeMark: boolean = measureNumber === 0 && staffNumber === 0;
-    const vfMeasure: VexFlowMeasure = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure);
+    const vfMeasure: VexFlowMeasure =
+      this.graphicalMusicSheet.findGraphicalMeasureByMeasureNumber(measureNumber, staffNumber) as VexFlowMeasure;
+    const firstMetronomeMark: boolean = vfMeasure === this.graphicalMusicSheet.MeasureList[0][0];
+    // const vfMeasure: VexFlowMeasure = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure);
     if (vfMeasure.hasMetronomeMark) {
       return; // don't create more than one metronome mark per measure;
       // TODO some measures still seem to have two metronome marks, one less bold than the other (or not bold),
@@ -865,20 +867,27 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     const firstMeasureNumber: number = this.graphicalMusicSheet.MeasureList[0][0].MeasureNumber; // 0 for pickup, 1 otherwise
     const measureNumber: number = Math.max(measure.MeasureNumber - firstMeasureNumber, 0);
-    const staffNumber: number = 0;
-    const vfStave: VF.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure)?.getVFStave();
-    if (!vfStave) { // potentially multi measure rest
-      return;
+    // const staffNumber: number = 0;
+    for (const gMeasure of this.graphicalMusicSheet.MeasureList[measureNumber]) {
+      const vfStave: VF.Stave = (gMeasure as VexFlowMeasure)?.getVFStave();
+      if (!vfStave || !gMeasure.isVisible()) { // potentially multi measure rest
+        continue;
+      }
+      let yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
+      if (gMeasure.parentSourceMeasure.isReducedToMultiRest) {
+        // we could add other conditions here where we want more offset to avoid collisions
+        yOffset += this.rules.RehearsalMarkYOffsetAddedForRehearsalMarks;
+      }
+      let xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
+      if (measure.IsSystemStartMeasure) {
+        xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;
+      }
+      // const section: VF.StaveSection = new VF.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
+      // (vfStave as any).modifiers.push(section);
+      const fontSize: number = this.rules.RehearsalMarkFontSize;
+      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
+      return; // only draw one rehearsal mark at top (visible) instrument
     }
-    const yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
-    let xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
-    if (measure.IsSystemStartMeasure) {
-      xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;
-    }
-    // const section: VF.StaveSection = new VF.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
-    // (vfStave as any).modifiers.push(section);
-    const fontSize: number = this.rules.RehearsalMarkFontSize;
-    (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
   }
 
   /**

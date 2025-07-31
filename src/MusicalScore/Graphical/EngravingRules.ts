@@ -73,6 +73,7 @@ export class EngravingRules {
     public BetweenStaffDistance: number;
     public StaffHeight: number;
     public TabStaffInterlineHeight: number;
+    public TabStaffInterlineHeightForBboxes: number;
     public BetweenStaffLinesDistance: number;
     /** Whether to automatically beam notes that don't already have beams in XML. */
     public AutoBeamNotes: boolean;
@@ -123,6 +124,7 @@ export class EngravingRules {
     public SetWantedStemDirectionByXml: boolean;
     public GraceNoteScalingFactor: number;
     public GraceNoteXOffset: number;
+    /** Set this to e.g. -0.5 or -0.8 to put grace notes a lot closer to the main note. */
     public GraceNoteGroupXMargin: number;
     public WedgeOpeningLength: number;
     public WedgeMeasureEndOpeningLength: number;
@@ -134,6 +136,11 @@ export class EngravingRules {
     public DistanceOffsetBetweenTwoHorizontallyCrossedWedges: number;
     public WedgeMinLength: number;
     public WedgeEndDistanceBetweenTimestampsFactor: number;
+    /** Whether an accent should by default be placed above the note if its note stem is above. Default false (below).
+     * Applies to accents (>/^), staccato (.), pizzicato (+), mainly (in our samples)
+     * Note that this can be overwritten if the MusicXML says "placement='below'".
+     */
+    public ArticulationAboveNoteForStemUp: boolean;
     public SoftAccentWedgePadding: number;
     public SoftAccentSizeFactor: number;
     public DistanceBetweenAdjacentDynamics: number;
@@ -172,6 +179,8 @@ export class EngravingRules {
     public RehearsalMarkXOffsetSystemStartMeasure: number;
     public RehearsalMarkYOffset: number;
     public RehearsalMarkYOffsetDefault: number;
+    /** y offset added to avoid collisions of rehearsal marks (e.g. "A" or "Verse") with multiple measure rest numbers. */
+    public RehearsalMarkYOffsetAddedForRehearsalMarks: number;
     public RehearsalMarkFontSize: number;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
@@ -227,6 +236,10 @@ export class EngravingRules {
      */
     public TabTimeSignatureSpacingAdded: boolean;
     public TabFingeringsRendered: boolean;
+    /** Use an X in tabs when the note has an X notehead, e.g. in the staff above in the classical notes, instead of the fret number */
+    public TabUseXNoteheadShapeForTabNote: boolean;
+    public TabUseXNoteheadAlternativeGlyph: boolean;
+    public TabXNoteheadScale: number;
 
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
@@ -420,7 +433,14 @@ export class EngravingRules {
     public DefaultFontStyle: FontStyles;
     public DefaultVexFlowNoteFont: string;
     public MaxMeasureToDrawIndex: number;
+    /** The setting given in osmd.setOptions(), which may lead to a different index if there's a pickup measure. */
+    public MaxMeasureToDrawNumber: number;
     public MinMeasureToDrawIndex: number;
+    /** The setting given in osmd.setOptions(), which may lead to a different index if there's a pickup measure.
+     * If there's a pickup measure (measure 0), and we want to draw from measure number 2,
+     *   we need to skip measure index 0 (the pickup measure).
+     */
+    public MinMeasureToDrawNumber: number;
     public MaxPageToDrawNumber: number;
     public MaxSystemToDrawNumber: number;
 
@@ -476,8 +496,12 @@ export class EngravingRules {
      * */
     public NewSystemAtXMLNewPageAttribute: boolean;
     public NewPageAtXMLNewPageAttribute: boolean;
+    /** Force OSMD to render only x measures per line/system, creating line breaks / system breaks. Disabled if set to 0. */
+    public RenderXMeasuresPerLineAkaSystem: number;
     public PageFormat: PageFormat;
     public PageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
+    /** Whether dark mode is enabled. This is read-only, to set this, please use osmd.setOptions({darkMode: true}). */
+    public DarkModeEnabled: boolean;
     public UsePageBackgroundColorForTabNotes: boolean;
     public RenderSingleHorizontalStaffline: boolean;
     public RestoreCursorAfterRerender: boolean;
@@ -557,6 +581,8 @@ export class EngravingRules {
         // System Sizing and Label Variables
         this.StaffHeight = 4.0;
         this.TabStaffInterlineHeight = 1.1111;
+        this.TabStaffInterlineHeightForBboxes = 1.3; // bbox exactly on top tab line + 1.3 = 2nd line
+        //   if we also set TabStaffInterlineHeight to 1.3, tab scores get bigger. (because this affects StaffHeight)
         this.BetweenStaffLinesDistance = EngravingRules.unit;
         this.SystemLeftMargin = 0.0;
         this.SystemRightMargin = 0.0;
@@ -639,6 +665,7 @@ export class EngravingRules {
         this.DistanceOffsetBetweenTwoHorizontallyCrossedWedges = 0.3;
         this.WedgeMinLength = 2.0;
         this.WedgeEndDistanceBetweenTimestampsFactor = 1.75;
+        this.ArticulationAboveNoteForStemUp = false;
         this.SoftAccentWedgePadding = 0.4;
         this.SoftAccentSizeFactor = 0.6;
         this.DistanceBetweenAdjacentDynamics = 0.75;
@@ -676,6 +703,7 @@ export class EngravingRules {
         this.RehearsalMarkXOffset = 0; // user defined
         this.RehearsalMarkXOffsetSystemStartMeasure = -20; // good test: Haydn Concertante
         this.RehearsalMarkYOffsetDefault = -15;
+        this.RehearsalMarkYOffsetAddedForRehearsalMarks = -12;
         this.RehearsalMarkYOffset = 0; // user defined
         this.RehearsalMarkFontSize = 10; // vexflow default: 12, too big with chord symbols
 
@@ -706,6 +734,9 @@ export class EngravingRules {
         this.TabTimeSignatureRendered = false; // standard not to render for tab scores
         this.TabTimeSignatureSpacingAdded = true; // false only works for tab-only scores, as it will prevent vertical x-alignment.
         this.TabFingeringsRendered = false; // tabs usually don't show fingering. This can also be duplicated when you have a classical+tab score.
+        this.TabUseXNoteheadShapeForTabNote = true;
+        this.TabUseXNoteheadAlternativeGlyph = true;
+        this.TabXNoteheadScale = 0.9;
 
         // Slur and Tie variables
         this.SlurPlacementFromXML = true;
@@ -864,7 +895,9 @@ export class EngravingRules {
         this.DefaultFontStyle = FontStyles.Regular;
         this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
         this.MaxMeasureToDrawIndex = Number.MAX_VALUE;
+        this.MaxMeasureToDrawNumber = Number.MAX_VALUE;
         this.MinMeasureToDrawIndex = 0;
+        this.MinMeasureToDrawNumber = 0;
         this.MaxSystemToDrawNumber = Number.MAX_VALUE;
         this.MaxPageToDrawNumber = Number.MAX_VALUE;
         this.RenderComposer = true;
@@ -904,6 +937,7 @@ export class EngravingRules {
         this.NewSystemAtXMLNewSystemAttribute = false;
         this.NewPageAtXMLNewPageAttribute = false;
         this.NewSystemAtXMLNewPageAttribute = false;
+        this.RenderXMeasuresPerLineAkaSystem = 0;
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
         this.IgnoreBracketsWords = true;
@@ -913,6 +947,7 @@ export class EngravingRules {
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
+        this.DarkModeEnabled = false;
         this.UsePageBackgroundColorForTabNotes = true;
         this.RenderSingleHorizontalStaffline = true;
         this.SpacingBetweenTextLines = 0;

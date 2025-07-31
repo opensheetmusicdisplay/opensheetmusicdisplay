@@ -42,6 +42,22 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         return this.mVexFlowStaveNote;
     }
 
+    /** Apply custom noteheads from Note.CustomNoteheadVFCode. This should happen before color(). */
+    public applyCustomNoteheads(): void {
+        const vfStaveNote: any = (<VexFlowVoiceEntry>(this as any)).vfStaveNote;
+        if (!vfStaveNote) {
+            return;
+        }
+        for (let i: number = 0; i < this.notes.length; i++) {
+            const note: Note = this.notes[i].sourceNote;
+            if (vfStaveNote.note_heads) { // see VexFlowConverter, needs Vexflow PR
+                if (note.CustomNoteheadVFCode) {
+                    (vfStaveNote.note_heads[i] as any).glyph_code = note.CustomNoteheadVFCode;
+                }
+            }
+        }
+    }
+
     /** (Re-)color notes and stems by setting their Vexflow styles.
      * Could be made redundant by a Vexflow PR, but Vexflow needs more solid and permanent color methods/variables for that
      * See VexFlowConverter.StaveNote()

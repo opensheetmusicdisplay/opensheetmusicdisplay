@@ -168,13 +168,12 @@ export class MusicPartManagerIterator {
             for (const entry of this.currentVoiceEntries) {
                 if (entry.ParentVoice.Parent.IdString === instrument.IdString) {
                     this.getVisibleEntries(entry, voiceEntries);
-                    return voiceEntries;
                 }
             }
-        } else {
-            for (const entry of this.currentVoiceEntries) {
-                this.getVisibleEntries(entry, voiceEntries);
-            }
+            return voiceEntries;
+        }
+        for (const entry of this.currentVoiceEntries) {
+            this.getVisibleEntries(entry, voiceEntries);
         }
         return voiceEntries;
     }
@@ -533,6 +532,7 @@ export class MusicPartManagerIterator {
             const currentContainer: VerticalSourceStaffEntryContainer = this.currentMeasure.VerticalSourceStaffEntryContainers[this.currentVoiceEntryIndex];
             this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
             this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
+            this.currentRelativeInMeasureTimestamp = this.currentVerticalContainerInMeasureTimestamp;
             this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
             this.activateCurrentDynamicOrTempoInstructions();
             // re-check endReached
@@ -576,6 +576,7 @@ export class MusicPartManagerIterator {
             const currentContainer: VerticalSourceStaffEntryContainer = this.currentMeasure.VerticalSourceStaffEntryContainers[this.currentVoiceEntryIndex];
             this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
             this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
+            this.currentRelativeInMeasureTimestamp = this.currentVerticalContainerInMeasureTimestamp;
             this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
             const selectionEnd: Fraction = this.musicSheet.SelectionEnd;
             // TODO handle selectionEnd undefined, can happen in Beethoven Ferne Geliebte

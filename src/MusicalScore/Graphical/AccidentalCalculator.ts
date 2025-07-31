@@ -6,6 +6,7 @@ import {NoteEnum} from "../../Common/DataObjects/Pitch";
 import { Dictionary } from "typescript-collections";
 // import { Dictionary } from "typescript-collections/dist/lib";
 import { MusicSheetCalculator } from "./MusicSheetCalculator";
+import { Tie } from "../VoiceData/Tie";
 
 /**
  * Compute the accidentals for notes according to the current key instruction
@@ -15,6 +16,7 @@ export class AccidentalCalculator {
     private currentAlterationsComparedToKeyInstructionList: number[] = [];
     private currentInMeasureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
     private activeKeyInstruction: KeyInstruction;
+    public Transpose: number; // set in MusicSheetCalculator
 
     public get ActiveKeyInstruction(): KeyInstruction {
         return this.activeKeyInstruction;
@@ -63,6 +65,12 @@ export class AccidentalCalculator {
             this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
         }*/
 
+        const tie: Tie = graphicalNote.sourceNote.NoteTie;
+        if (tie && graphicalNote.sourceNote !== tie.StartNote) {
+            return; // don't add accidentals on continued tie note
+            // note that continued tie notes may incorrectly use the same pitch object, with the same accidentalXml value.
+        }
+
         const isInCurrentAlterationsToKeyList: boolean = this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) >= 0;
         if (this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey)) {
             if (isInCurrentAlterationsToKeyList) {
@@ -81,17 +89,24 @@ export class AccidentalCalculator {
                 if (pitch.Accidental === AccidentalEnum.NONE) {
                     if (Math.abs(inMeasureAlterationAccidental) === 0.5) {
                         // fix to remember quartersharp and quarterflat and not make them natural on following notes
-                        pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NONE);
+                        pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NONE,
+                            undefined, false, pitch.OctaveShiftApplied);
                     } else {
                         // If an AccidentalEnum.NONE is given, it would not be rendered.
                         // We need here to convert to a AccidentalEnum.NATURAL:
-                        pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL);
+                        pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL,
+                            undefined, false, pitch.OctaveShiftApplied);
                     }
                 }
                 if (this.isAlterAmbiguousAccidental(pitch.Accidental) && ! pitch.AccidentalXml) {
                     return; // only display accidental if it was given as an accidental in the XML
                 }
                 MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
+            } else if (pitch.AccidentalXml && this.Transpose === 0 && !isInCurrentAlterationsToKeyList) {
+                // courtesy accidental
+                //   without the !isInCurrentAlterationsToKeyList check, we get a double natural in Dichterliebe measure 9.
+                MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
+                // if transpose !== 0 (we're transposing), the courtesy accidental might not be appropriate here.
             }
         } else { // pitchkey not in measure dict:
             if (pitch.Accidental !== AccidentalEnum.NONE) {
@@ -106,7 +121,8 @@ export class AccidentalCalculator {
             } else {
                 if (isInCurrentAlterationsToKeyList) {
                     // we need here a AccidentalEnum.NATURAL now to get it rendered - AccidentalEnum.NONE would not be rendered
-                    pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL);
+                    pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL,
+                        undefined, false, pitch.OctaveShiftApplied);
                     this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
                     MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
                 }

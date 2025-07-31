@@ -212,7 +212,11 @@ export class TabNote extends StemmableNote {
     for (let i = 0; i < this.positions.length; ++i) {
       let fret = this.positions[i].fret;
       if (this.ghost) fret = '(' + fret + ')';
-      const glyph = Flow.tabToGlyph(fret, this.render_options.scale);
+      const glyphScale = this.render_options.fretScale ?? this.render_options.scale;
+      const glyph = Flow.tabToGlyph(fret, glyphScale, this.render_options.TabUseXNoteheadAlternativeGlyph);
+      if (fret === 'x') {
+        glyph.isXGlyph = true;
+      }
       this.glyphs.push(glyph);
       this.width = Math.max(glyph.getWidth(), this.width);
     }
@@ -458,7 +462,9 @@ export class TabNote extends StemmableNote {
         ctx.fillRect(tab_x - 2, y - 3, currentGlyphWidth + 4, 6);
         ctx.restore();
       } else {
-        // ctx.clearRect(tab_x - 2, y - 3, currentGlyphWidth + 4, 6);
+        // clear rectangle around tab note so that stafflines are interrupted
+        //   this can cause black rectangles if the SVG displayer can't display transparent rectangles correctly.
+        ctx.clearRect(tab_x - 2, y - 3, currentGlyphWidth + 4, 6);
         // disabled by Severin in commit a15085ddb37d7678420d26a41beef31ad6aded3e, apparently for note highlighting
       }
 
@@ -492,7 +498,15 @@ export class TabNote extends StemmableNote {
     const render_stem = this.beam == null && this.render_options.draw_stem;
 
     // VexFlowPatch: open group for tabnote, so that the SVG DOM has a named element for tabnote, like stavenote
-    this.context.openGroup('tabnote', this.getAttribute('id'), { xPos: this.getAbsoluteX().toString() });
+    this.context.openGroup(
+      'tabnote', 
+      this.getAttribute('id'), 
+      { 
+        xPos: this.getAbsoluteX().toString(),
+        startTicks: this.startTicks.toString(),
+        endTicks: this.endTicks.toString(),  
+      }
+    );
     this.drawPositions();
     this.drawStemThrough();
 

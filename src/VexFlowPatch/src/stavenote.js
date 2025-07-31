@@ -585,7 +585,8 @@ export class StaveNote extends StemmableNote {
       if (lastLine === null) {
         lastLine = line;
       } else {
-        if (Math.abs(lastLine - line) === 0.5) {
+        if (Math.abs(lastLine - line) < 1) {
+          // half line (0.5) or unison (0.0). see https://github.com/vexflow/vexflow/pull/212
           this.displaced = true;
           props.displaced = true;
 

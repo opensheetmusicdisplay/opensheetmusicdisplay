@@ -872,6 +872,7 @@ export abstract class MusicSheetCalculator {
                         // (re-)color notes
                         for (const staffEntry of graphicalMeasure.staffEntries) {
                             for (const gve of staffEntry.graphicalVoiceEntries) {
+                                gve.applyCustomNoteheads();
                                 gve.color();
                             }
                         }
@@ -2372,14 +2373,18 @@ export abstract class MusicSheetCalculator {
     protected calculatePageLabels(page: GraphicalMusicPage): void {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
+
+        // fix width of SVG, sheet and horizontal scroll bar being too long (~32767 = SheetMaximumWidth) for single line scores
         if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
-            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures
+            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures, whose bounding boxes somehow get messed up otherwise
             // note: "GraphicalMeasure" instead of GraphicalMeasure.name doesn't work with minified builds (they change class names)
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
-            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width; // doesn't seem to affect anything
+
+            // limit SVG and scroll bar width so it's not ~32767 (SheetMaximumWidth):
+            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width;
             // page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width; // doesn't seem to affect anything
         }
 
@@ -2507,13 +2512,16 @@ export abstract class MusicSheetCalculator {
             page.Labels.push(copyright);
         }
         // we need to do this again to not cut off the title for short scores:
+        //   (and fix SVG and horizontal scroll bar width)
         if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
-            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures
+            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures, whose bounding boxes somehow get messed up otherwise
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
-            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width; // doesn't seem to affect anything
+
+            // limit SVG and scroll bar width so it's not ~32767 (SheetMaximumWidth):
+            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width;
             // page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width; // doesn't seem to affect anything
         }
     }
@@ -2635,6 +2643,7 @@ export abstract class MusicSheetCalculator {
             for (let i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
                 const accidentalCalculator: AccidentalCalculator = new AccidentalCalculator();
                 accidentalCalculators.push(accidentalCalculator);
+                accidentalCalculator.Transpose = this.graphicalMusicSheet.ParentMusicSheet.Transpose;
                 if (firstSourceMeasure.FirstInstructionsStaffEntries[i]) {
                     for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
                         const abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
@@ -2707,7 +2716,7 @@ export abstract class MusicSheetCalculator {
                                    staffEntryLinks: StaffEntryLink[]): GraphicalMeasure {
         const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.getStaffFromIndex(staffIndex);
         let measure: GraphicalMeasure = undefined;
-        if (activeClefs[staffIndex].ClefType === ClefEnum.TAB) {
+        if (activeClefs[staffIndex].ClefType === ClefEnum.TAB || staff.isTab) {
             staff.isTab = true;
             measure = MusicSheetCalculator.symbolFactory.createTabStaffMeasure(sourceMeasure, staff);
         } else if (sourceMeasure.multipleRestMeasures && this.rules.RenderMultipleRestMeasures) {
@@ -2774,7 +2783,8 @@ export abstract class MusicSheetCalculator {
                 // is there an inStaff ClefInstruction? -> update activeClef
                 for (let idx: number = 0, len: number = sourceStaffEntry.Instructions.length; idx < len; ++idx) {
                     const abstractNotationInstruction: AbstractNotationInstruction = sourceStaffEntry.Instructions[idx];
-                    if (abstractNotationInstruction instanceof ClefInstruction) {
+                    if (abstractNotationInstruction instanceof ClefInstruction && activeClefs[staffIndex]?.ClefType !== ClefEnum.TAB) {
+                        // if activeClef is TAB, changing it can make the current/next tab measure look like a classical measure. See #1592
                         activeClefs[staffIndex] = <ClefInstruction>abstractNotationInstruction;
                     }
                 }
@@ -2850,7 +2860,7 @@ export abstract class MusicSheetCalculator {
             const lastStaffEntry: SourceStaffEntry = sourceMeasure.LastInstructionsStaffEntries[staffIndex];
             for (let idx: number = 0, len: number = lastStaffEntry.Instructions.length; idx < len; ++idx) {
                 const abstractNotationInstruction: AbstractNotationInstruction = lastStaffEntry.Instructions[idx];
-                if (abstractNotationInstruction instanceof ClefInstruction) {
+                if (abstractNotationInstruction instanceof ClefInstruction && activeClefs[staffIndex]?.ClefType !== ClefEnum.TAB) {
                     activeClefs[staffIndex] = <ClefInstruction>abstractNotationInstruction;
                 }
             }
@@ -3099,6 +3109,23 @@ export abstract class MusicSheetCalculator {
                         if (placement === PlacementEnum.Below) {
                             fingerings.reverse();
                         }
+                        if (fingerings.length > 0) {
+                            let topNote: Note;
+                            for (const gve of gse.graphicalVoiceEntries) {
+                                for (const note of gve.notes) {
+                                    if (!topNote || note.sourceNote.Pitch?.getHalfTone() > topNote.Pitch?.getHalfTone()) {
+                                        topNote = note.sourceNote;
+                                    }
+                                }
+                            }
+                            if (fingerings[0].sourceNote === topNote && placement === PlacementEnum.Above ||
+                                fingerings[0].sourceNote !== topNote && placement === PlacementEnum.Below
+                            ) {
+                                // TODO more elegant solution: order fingerings in the order of each individual note.
+                                //   this is already a rare situation though, would be even more rare for this to matter, and more complex.
+                                fingerings.reverse();
+                            }
+                        }
                         for (let i: number = 0; i < fingerings.length; i++) {
                             const fingering: TechnicalInstruction = fingerings[i];
                             const alignment: TextAlignmentEnum =
@@ -3106,6 +3133,9 @@ export abstract class MusicSheetCalculator {
                             const label: Label = new Label(fingering.value, alignment);
                             const gLabel: GraphicalLabel = new GraphicalLabel(
                                 label, this.rules.FingeringTextSize, label.textAlignment, this.rules, line.PositionAndShape);
+                            if (fingering.fontFamily) {
+                                label.fontFamily = fingering.fontFamily;
+                            }
                             const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
                             const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
                             let skybottomFurthest: number = undefined;

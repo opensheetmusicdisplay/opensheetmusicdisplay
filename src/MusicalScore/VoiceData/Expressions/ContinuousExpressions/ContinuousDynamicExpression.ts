@@ -8,7 +8,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
                 measure: SourceMeasure, numberXml: number,
                 label: string = "") {
         super(placement);
-        super.parentMeasure = measure;
+        this.parentMeasure = measure;
         this.NumberXml = numberXml;
         this.dynamicType = dynamicType;
         this.label = label;

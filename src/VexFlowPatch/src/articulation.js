@@ -283,14 +283,22 @@ export class Articulation extends Modifier {
       // delay code similar to ornament.js delayed variable handling
       const noteTickContext = note.getTickContext();
       const nextContext = TickContext.getNextContext(noteTickContext);
-      const noteX = note.getTickContext().getX();
-      if (nextContext) {
+      const noteX = noteTickContext.getX();
+      // TODO somehow for some samples there's a NextContext after the last note in the measure, see #1548,
+      //   so we ignore it if its x value is smaller (further left).
+      if (nextContext && nextContext.x > noteTickContext.x) {
           delayXShift = (nextContext.getX() - noteX) * this.breathMarkDistance;
       } else {
           const stave = note.getStave();
-          delayXShift = (stave.getX() + stave.getWidth() - noteX) * this.breathMarkDistance;
+          delayXShift = (stave.getX() + stave.getWidth() - noteX + stave.start_x) * this.breathMarkDistance;
       }
       x += delayXShift;
+      if (x > stave.end_x) {
+        // fix for going beyond end of measure in certain cases (see #1548)
+        //   TODO not sure why the metrics don't result in the correct x position, as we do consider end_x etc
+        const noteXAbsolute = stave.start_x + noteX;
+        x = noteXAbsolute + (stave.end_x - noteXAbsolute) * this.breathMarkDistance;
+      }
     }
     const x_shift = this.getXShift();
     if (x_shift) {

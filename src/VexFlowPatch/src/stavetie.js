@@ -84,6 +84,10 @@ export class StaveTie extends Element {
       throw new Vex.RERR('BadArguments', 'No Y-values to render');
     }
 
+    if (this.first_note == null || this.last_note == null) {
+      throw new Vex.RERR('BadArguments', 'No notes to render');
+    }
+
     const ctx = this.context;
     let cp1 = this.render_options.cp1;
     let cp2 = this.render_options.cp2;
@@ -114,13 +118,20 @@ export class StaveTie extends Element {
         id = this.first_note.getAttribute('id') + "-tie";
       }
 
+      const startTicks = this.first_note?.startTicks?.toString()
+      const endTicks = this.last_note?.endTicks?.toString()
+      const actualStartTicks = startTicks ? (params.direction === 1 ? startTicks : endTicks) : undefined
+      const actualEndTicks = endTicks ? (params.direction === 1 ? endTicks : startTicks) : undefined
+
       this.setAttribute('el', ctx.openGroup('stavetie', id, {
         xStart: (params.first_x_px + first_x_shift).toString(),
         xEnd: (params.last_x_px + last_x_shift).toString(),
         yStart: Math.min(first_y_px, last_y_px).toString(),
         yEnd: Math.max(first_y_px, last_y_px).toString(),
-        x: this.notes.first_note.keys,
-        tieDir: params.direction.toString()
+        x: this.notes.first_note?.keys ?? 0,
+        tieDir: params.direction.toString(),
+        startTicks: actualStartTicks ?? 0,
+        endTicks: actualEndTicks ?? 0, 
       }));
       ctx.beginPath();
       ctx.moveTo(params.first_x_px + first_x_shift, first_y_px);
@@ -153,6 +164,8 @@ export class StaveTie extends Element {
 
     const first_note = this.first_note;
     const last_note = this.last_note;
+
+    if (!first_note || !last_note) return false;
 
     let first_x_px;
     let last_x_px;

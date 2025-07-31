@@ -161,7 +161,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             const newEnd: PointF2D = new PointF2D(gGliss.Line.End.x + abs.x, gGliss.Line.End.y);
             // note that we do not add abs.y, because GraphicalGlissando.calculateLine() uses AbsolutePosition for y,
             //   because unfortunately RelativePosition seems imprecise.
-            this.drawLine(newStart, newEnd, gGliss.Color, gGliss.Width);
+            gGliss.Line.SVGElement = this.drawLine(newStart, newEnd, gGliss.Color, gGliss.Width);
         } else {
             const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;
             if (vfTie) {
@@ -570,7 +570,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                                                      graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.Start.y);
                 const end: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.End.x,
                                                    graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.End.y);
-                this.drawLine(start, end, line.colorHex ?? "#000000", line.Width);
+                line.SVGElement = this.drawLine(start, end, line.colorHex ?? "#000000", line.Width);
                 // the null check for colorHex is not strictly necessary anymore, but the previous default color was red.
             }
         }
