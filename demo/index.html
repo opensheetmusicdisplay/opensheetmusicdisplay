@@ -16,7 +16,7 @@
 </head>
 <body>
 
-
+<div style="display: flex; gap: 16px;">
 <div style="display: flex; flex-direction: column;">
     <div class="column" id="selectSampleContainer">
         <h3 class="ui header" id="selectSampleTitle">Select a sample:</h3>
@@ -29,7 +29,7 @@
 </div>
 
 <!-- style="visibility: hidden; opacity: 0.0" -->
-<div class="ui five column grid container" id="divControls">
+<div class="ui five column grid container" style="display: flex;flex-direction: column">
     <div class="column" id="zoomControls">
         <h3 class="ui header">Zoom controls:</h3>
         <div class="ui horizontal" id="zoomControlsButtons">
@@ -83,7 +83,7 @@
 </div>
 <!-- in portrait/mobile mode, "four column grid container" is removed from divControls in index.js -->
 <div id="slideContainer">
-    <div class="ui fixed" id="divControls" style="visibility: hidden; display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
+    <div class="ui fixed" id="divCon    trols" style="display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
         <div class="column" id="zoomControls">
             <div class="ui buttons" id="zoomControlsButtons">
                 <div class="ui button" id="zoom-in-btn">
@@ -271,6 +271,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 <div>
     <table cellspacing="0" style="max-width:700px;">

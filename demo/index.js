@@ -502,14 +502,14 @@ import { beethovenSample64 } from './beethoven64';
 
         if (skylineDebug) {
             skylineDebug.onclick = function () {
-                openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
+                osmd.DrawSkyLine = !osmd.DrawSkyLine;
                 renderAndScrollBack();
             }
         }
 
         if (bottomlineDebug) {
             bottomlineDebug.onclick = function () {
-                openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
+                osmd.DrawBottomLine = !osmd.DrawBottomLine;
                 renderAndScrollBack();
             }
         }
@@ -578,7 +578,7 @@ import { beethovenSample64 } from './beethoven64';
         });
         console.log(osmd);
         // myg / notesheet-generator settings: (see OsmdGenerator)
-        osmd.EngravingRules.PageTopMargin = 4;
+    osmd.EngravingRules.PageTopMargin = 4;
         osmd.EngravingRules.PageBottomMargin = 4;
         osmd.EngravingRules.PageLeftMargin = 6; // originally 4 in myg. fix Beethoven
         osmd.EngravingRules.PageRightMargin = 4;
@@ -591,13 +591,13 @@ import { beethovenSample64 } from './beethoven64';
         osmd.TransposeCalculator = new TransposeCalculator(); // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
         if (portrait) {
             // reduce title labels/text size etc. as well. E.g. for Mozart string quartet, title wouldn't fit line width otherwise
-            openSheetMusicDisplay.EngravingRules.SheetTitleHeight *= 0.7; // see Mozart String Quartet
+            osmd.EngravingRules.SheetTitleHeight *= 0.7; // see Mozart String Quartet
             // reducing size for subtitle/composer/lyricist is probably unnecessary and makes them too small:
             // openSheetMusicDisplay.EngravingRules.SheetSubtitleHeight *= 0.9;
             // openSheetMusicDisplay.EngravingRules.SheetComposerHeight *= 0.9;
             // openSheetMusicDisplay.EngravingRules.SheetAuthorHeight *= 0.9; // affects lyricist label, maybe should be renamed
         }
-        openSheetMusicDisplay.TransposeCalculator = new TransposeCalculator(); // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
+        osmd.TransposeCalculator = new TransposeCalculator(); // necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
         //openSheetMusicDisplay.DrawSkyLine = true;
         //openSheetMusicDisplay.DrawBottomLine = true;
         //openSheetMusicDisplay.setDrawBoundingBox("GraphicalLabel", false);
@@ -675,7 +675,7 @@ import { beethovenSample64 } from './beethoven64';
         }
 
         if (paramDarkMode) {
-            openSheetMusicDisplay.setOptions({darkMode: true});
+            osmd.setOptions({darkMode: true});
         }
         // TODO after selectSampleOnChange, the resize handler triggers immediately,
         //   so we render twice at the start of the demo.
@@ -708,7 +708,9 @@ import { beethovenSample64 } from './beethoven64';
         const previousScrollY = window.scrollY;
         const previousScrollHeight = document.body.scrollHeight; // height of page
         const previousScrollYPercent = previousScrollY / previousScrollHeight;
-        openSheetMusicDisplay.render();
+        console.log("Before render!");
+        osmd.render();
+        console.log("After render!");
         const newScrollHeight = document.body.scrollHeight; // height of page
         const newScrollY = newScrollHeight * previousScrollYPercent;
         window.scrollTo({
@@ -789,7 +791,9 @@ import { beethovenSample64 } from './beethoven64';
                 window.osmd = osmd;
                 osmd.zoom = zoom;
                 //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
+                console.log("Before render!");
                 osmd.render();
+                console.log("After render!");
                 osmd.InteractionManager?.SheetRendered();
                 osmd.InteractionManager?.NewSheetLoaded();
             },
