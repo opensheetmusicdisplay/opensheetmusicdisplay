@@ -210,7 +210,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         curvePointsInPixels.push(this.applyScreenTransformation(p2));
         curvePointsInPixels.push(this.applyScreenTransformation(p3));
         curvePointsInPixels.push(this.applyScreenTransformation(p4));
-        graphicalSlur.SVGElement = this.backend.renderCurve(curvePointsInPixels);
+        const startNote: VexFlowGraphicalNote = this.rules.GNote(graphicalSlur.slur.StartNote) as VexFlowGraphicalNote;
+        graphicalSlur.SVGElement = this.backend.renderCurve(curvePointsInPixels, true, startNote);
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {
@@ -528,11 +529,16 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected drawExpressions(staffline: StaffLine): void {
         // Draw all Expressions
         for (const abstractGraphicalExpression of staffline.AbstractExpressions) {
-            // Draw InstantaniousDynamics
+            // Draw InstantaneousDynamics
             if (abstractGraphicalExpression instanceof GraphicalInstantaneousDynamicExpression) {
                 this.drawInstantaneousDynamic((abstractGraphicalExpression as VexFlowInstantaneousDynamicExpression));
-                // Draw InstantaniousTempo
+                // Draw InstantaneousTempo
             } else if (abstractGraphicalExpression instanceof GraphicalInstantaneousTempoExpression) {
+                if (abstractGraphicalExpression.SourceExpression.parentMeasure?.MeasureNumber <= 1 &&
+                    !this.rules.RenderFirstTempoExpression
+                ) {
+                    continue;
+                }
                 const label: GraphicalLabel = (abstractGraphicalExpression as GraphicalInstantaneousTempoExpression).GraphicalLabel;
                 label.SVGNode = this.drawLabel(label, GraphicalLayers.Notes);
                 // Draw ContinuousDynamics

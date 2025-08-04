@@ -332,7 +332,7 @@ export abstract class MusicSheetDrawer {
         }
 
         const instruments: Instrument[] = this.graphicalMusicSheet.ParentMusicSheet.Instruments;
-        const instrumentsVisible: number = instruments.filter((instrument) => instrument.Visible).length;
+        const instrumentsVisible: number = instruments.filter((instrument) => instrument.isVisible()).length;
         for (const bracket of musicSystem.InstrumentBrackets) {
             this.drawInstrumentBrace(bracket, musicSystem);
         }

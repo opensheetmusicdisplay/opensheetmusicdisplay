@@ -263,7 +263,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     }
 
     public isVisible(): boolean {
-        return this.ParentStaff.ParentInstrument.Visible;
+        return this.ParentStaff.isVisible();
     }
 
     public getGraphicalMeasureDurationFromStaffEntries(): Fraction {

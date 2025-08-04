@@ -199,78 +199,77 @@ export class ExpressionReader {
                 isDynamicInstruction = true;
             }
         }
-        const dirNode: IXmlElement = directionNode.element("direction-type");
-        if (!dirNode) {
-            return;
-        }
-        let dirContentNode: IXmlElement = dirNode.element("metronome");
-        if (dirContentNode) {
-            const beatUnit: IXmlElement = dirContentNode.element("beat-unit");
-            // TODO check second "beat-unit", e.g. quarter = half
-            const dotted: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
-            const bpm: IXmlElement = dirContentNode.element("per-minute");
-            // TODO check print-object = false -> don't render invisible metronome mark
-            if (beatUnit !== undefined && bpm) {
-                const useCurrentFractionForPositioning: boolean = (dirContentNode.hasAttributes && dirContentNode.attribute("default-x") !== undefined);
-                if (useCurrentFractionForPositioning) {
-                    this.directionTimestamp = Fraction.createFromFraction(timestampFraction);
+        const dirNodes: IXmlElement[] = directionNode.elements("direction-type");
+        for (const dirNode of dirNodes) {
+            let dirContentNode: IXmlElement = dirNode.element("metronome");
+            if (dirContentNode) {
+                const beatUnit: IXmlElement = dirContentNode.element("beat-unit");
+                // TODO check second "beat-unit", e.g. quarter = half
+                const dotted: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
+                const bpm: IXmlElement = dirContentNode.element("per-minute");
+                // TODO check print-object = false -> don't render invisible metronome mark
+                if (beatUnit !== undefined && bpm) {
+                    const useCurrentFractionForPositioning: boolean = (dirContentNode.hasAttributes && dirContentNode.attribute("default-x") !== undefined);
+                    if (useCurrentFractionForPositioning) {
+                        this.directionTimestamp = Fraction.createFromFraction(timestampFraction);
+                    }
+                    const bpmNumber: number = parseFloat(bpm.value);
+                    this.createNewTempoExpressionIfNeeded(currentMeasure);
+                    const instantaneousTempoExpression: InstantaneousTempoExpression =
+                        new InstantaneousTempoExpression(undefined,
+                                                         this.placement,
+                                                         this.staffNumber,
+                                                         bpmNumber,
+                                                         this.currentMultiTempoExpression,
+                                                         true);
+                    instantaneousTempoExpression.parentMeasure = currentMeasure;
+                    this.soundTempo = bpmNumber;
+                    // make sure to take dotted beats into account
+                    currentMeasure.TempoInBPM = this.soundTempo * (dotted?1.5:1);
+                    if (this.musicSheet.DefaultStartTempoInBpm === 0) {
+                        this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
+                    }
+                    this.musicSheet.HasBPMInfo = true;
+                    instantaneousTempoExpression.dotted = dotted;
+                    instantaneousTempoExpression.beatUnit = beatUnit.value;
+                    this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
+                    this.currentMultiTempoExpression.CombinedExpressionsText = "test";
                 }
-                const bpmNumber: number = parseFloat(bpm.value);
-                this.createNewTempoExpressionIfNeeded(currentMeasure);
-                const instantaneousTempoExpression: InstantaneousTempoExpression =
-                    new InstantaneousTempoExpression(undefined,
-                                                     this.placement,
-                                                     this.staffNumber,
-                                                     bpmNumber,
-                                                     this.currentMultiTempoExpression,
-                                                     true);
-                instantaneousTempoExpression.parentMeasure = currentMeasure;
-                this.soundTempo = bpmNumber;
-                // make sure to take dotted beats into account
-                currentMeasure.TempoInBPM = this.soundTempo * (dotted?1.5:1);
-                if (this.musicSheet.DefaultStartTempoInBpm === 0) {
-                    this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
+                continue;
+            }
+
+            dirContentNode = dirNode.element("dynamics");
+            if (dirContentNode) {
+                const fromNotation: boolean = directionNode.element("notations") !== undefined;
+                this.interpretInstantaneousDynamics(dirContentNode, currentMeasure, timestampFraction, fromNotation);
+                continue;
+            }
+
+            dirContentNode = dirNode.element("words");
+            if (dirContentNode) {
+                if (isTempoInstruction) {
+                    this.createNewTempoExpressionIfNeeded(currentMeasure);
+                    this.currentMultiTempoExpression.CombinedExpressionsText = dirContentNode.value;
+                    const instantaneousTempoExpression: InstantaneousTempoExpression = new InstantaneousTempoExpression(
+                        dirContentNode.value, this.placement, this.staffNumber, this.soundTempo, this.currentMultiTempoExpression);
+                    this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
+                } else if (!isDynamicInstruction) {
+                    this.interpretWords(dirContentNode, currentMeasure, timestampFraction);
                 }
-                this.musicSheet.HasBPMInfo = true;
-                instantaneousTempoExpression.dotted = dotted;
-                instantaneousTempoExpression.beatUnit = beatUnit.value;
-                this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
-                this.currentMultiTempoExpression.CombinedExpressionsText = "test";
+                continue;
             }
-            return;
-        }
 
-        dirContentNode = dirNode.element("dynamics");
-        if (dirContentNode) {
-            const fromNotation: boolean = directionNode.element("notations") !== undefined;
-            this.interpretInstantaneousDynamics(dirContentNode, currentMeasure, timestampFraction, fromNotation);
-            return;
-        }
-
-        dirContentNode = dirNode.element("words");
-        if (dirContentNode) {
-            if (isTempoInstruction) {
-                this.createNewTempoExpressionIfNeeded(currentMeasure);
-                this.currentMultiTempoExpression.CombinedExpressionsText = dirContentNode.value;
-                const instantaneousTempoExpression: InstantaneousTempoExpression =
-                    new InstantaneousTempoExpression(dirContentNode.value, this.placement, this.staffNumber, this.soundTempo, this.currentMultiTempoExpression);
-                this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
-            } else if (!isDynamicInstruction) {
-                this.interpretWords(dirContentNode, currentMeasure, timestampFraction);
+            dirContentNode = dirNode.element("wedge");
+            if (dirContentNode) {
+                this.interpretWedge(directionNode, dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
+                continue;
             }
-            return;
-        }
 
-        dirContentNode = dirNode.element("wedge");
-        if (dirContentNode) {
-            this.interpretWedge(directionNode, dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
-            return;
-        }
-
-        dirContentNode = dirNode.element("rehearsal");
-        if (dirContentNode) {
-            this.interpretRehearsalMark(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
-            return;
+            dirContentNode = dirNode.element("rehearsal");
+            if (dirContentNode) {
+                this.interpretRehearsalMark(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
+                continue;
+            }
         }
     }
     /** Usually called at end of last measure. */
@@ -742,8 +741,9 @@ export class ExpressionReader {
                                        fontStyle: FontStyles,
                                        fontColor: string,
                                        defaultYXml: number = undefined): boolean {
-        if (InstantaneousTempoExpression.isInputStringInstantaneousTempo(stringTrimmed) ||
-            ContinuousTempoExpression.isInputStringContinuousTempo(stringTrimmed)) {
+        const isInstantaneousTempo: boolean = InstantaneousTempoExpression.isInputStringInstantaneousTempo(stringTrimmed);
+        const isContinuousTempo: boolean = ContinuousTempoExpression.isInputStringContinuousTempo(stringTrimmed);
+        if (isInstantaneousTempo || isContinuousTempo) {
             // first check if there is already a tempo expression with the same function
             if (currentMeasure.TempoExpressions.length > 0) {
                 for (let idx: number = 0, len: number = currentMeasure.TempoExpressions.length; idx < len; ++idx) {
@@ -757,7 +757,7 @@ export class ExpressionReader {
             }
             this.createNewTempoExpressionIfNeeded(currentMeasure); // TODO process fontStyle? (also for other expressions)
             this.currentMultiTempoExpression.CombinedExpressionsText = inputString;
-            if (InstantaneousTempoExpression.isInputStringInstantaneousTempo(stringTrimmed)) {
+            if (isInstantaneousTempo) {
                 const instantaneousTempoExpression: InstantaneousTempoExpression = new InstantaneousTempoExpression(  stringTrimmed,
                                                                                                                       this.placement,
                                                                                                                       this.staffNumber,
@@ -767,7 +767,7 @@ export class ExpressionReader {
                 this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, prefix);
                 return true;
             }
-            if (ContinuousTempoExpression.isInputStringContinuousTempo(stringTrimmed)) {
+            if (isContinuousTempo) {
                 const continuousTempoExpression: ContinuousTempoExpression = new ContinuousTempoExpression(
                     stringTrimmed,
                     this.placement,
@@ -859,6 +859,7 @@ export class ExpressionReader {
         unknownExpression.fontStyle = fontStyle;
         unknownExpression.ColorXML = fontColor;
         unknownExpression.defaultYXml = defaultYXml;
+        unknownExpression.parentMeasure = currentMeasure;
         unknownMultiExpression.addExpression(unknownExpression, prefix);
         return false;
     }

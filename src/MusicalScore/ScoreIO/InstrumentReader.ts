@@ -363,8 +363,10 @@ export class InstrumentReader {
             || (isGraceNote && !isChord)
             || (!isGraceNote && lastNoteWasGrace)
           ) {
-            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote && !isGraceNote,
+            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !isGraceNote,
                                                         isGraceNote, graceNoteSlash, graceSlur);
+            // we previously excluded rest notes from a voice's voice entry (!restNote && !isGraceNote),
+            //   but there seems to be no reason to. Rest notes also belong to a voice line. See #1612
           }
           if (!isGraceNote && !isChord) {
             previousFraction = currentFraction.clone();
@@ -591,17 +593,19 @@ export class InstrumentReader {
    *  @return color in Vexflow format #[A]RGB or undefined for invalid xmlColorString
    */
   public parseXmlColor(xmlColorString: string): string {
-    if (!xmlColorString) {
-      return undefined;
-    }
+    return xmlColorString;
+    // previous implementation:
+    // if (!xmlColorString) {
+    //   return undefined;
+    // }
 
-    if (xmlColorString.length === 7) { // #RGB
-      return xmlColorString;
-    } else if (xmlColorString.length === 9) { // #ARGB
-      return "#" + xmlColorString.substr(3); // cut away alpha channel
-    } else {
-      return undefined; // invalid xml color
-    }
+    // if (xmlColorString.length === 7) { // #RGB
+    //   return xmlColorString;
+    // } else if (xmlColorString.length === 9) { // #ARGB
+    //   return "#" + xmlColorString.substr(3); // cut away alpha channel // why?
+    // } else {
+    //   return undefined; // invalid xml color
+    // }
   }
 
   public doCalculationsAfterDurationHasBeenSet(): void {

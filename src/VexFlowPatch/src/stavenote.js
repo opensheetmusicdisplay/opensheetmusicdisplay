@@ -1123,6 +1123,11 @@ export class StaveNote extends StemmableNote {
     const style = { ...stave.getStyle() || {}, ...this.getLedgerLineStyle() || {} };
     this.applyStyle(ctx, style);
 
+    // VexFlowPatch: add group for ledger lines
+    const ledgerLinesDrawn = highest_line >= 6 || lowest_line <= 0;
+    if (ledgerLinesDrawn) {
+      ctx.openGroup('ledgers', this.getAttribute('id') + "ledgers");
+    }
     // Draw ledger lines below the staff:
     for (let line = 6; line <= highest_line; ++line) {
       const normal = (non_displaced_x !== null) && (line <= highest_non_displaced_line);
@@ -1135,6 +1140,9 @@ export class StaveNote extends StemmableNote {
       const normal = (non_displaced_x !== null) && (line >= lowest_non_displaced_line);
       const displaced = (displaced_x !== null) && (line >= lowest_displaced_line);
       drawLedgerLine(stave.getYForNote(line), normal, displaced);
+    }
+    if (ledgerLinesDrawn) {
+      ctx.closeGroup();
     }
 
     this.restoreStyle(ctx, style);

@@ -53,6 +53,9 @@ prevent a bug where a modifier width is NaN, leading to a VexFlow error (fixed v
 stave.setSection(section, y, xOffset = 0, fontSize = 12):
 add xOffset, fontSize arguments (see stavesection.js) (merged vexflow 4.x)
 
+stavebarline.js (custom addition):
+support double_heavy barline (heavy-heavy in MusicXML)
+
 stavenote.js (custom addition):
 Fix stem/flag formatting. Instead of shifting notes by default, update the stem/flag rendering to render different voices aligned.
   Only offset if a note is the same voice, same note.
@@ -60,7 +63,8 @@ Fix stem/flag formatting. Instead of shifting notes by default, update the stem/
 able to add svg node id+class to stem (merged vexflow 4.x)
 Save and restore noteheads (e.g. slash noteheads) in reset()
 preFormat() and getBoundingBox(): add paddingRight variable to allow for custom right padding (e.g. for long lyrics below note)
-allow notehead y_shift without 
+allow notehead y_shift without
+open group for ledger lines (SVG)
 
 staverepetition.js (fixed vexflow 4):
 add TO_CODA enum to type() and draw()
@@ -71,6 +75,9 @@ stavesection.js (half-fixed vexflow 4.x, collision, box not removable):
 stavesection.draw():
 adjust rectangle positioning, make height depend on text height
 fix rehearsal marks not rendered with canvas backend in browser
+
+stavetempo.js (custom addition):
+open a context group for vf-stavetempo, and one for its subgroup vf-bpm (for just the "= 150" text node)
 
 stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")

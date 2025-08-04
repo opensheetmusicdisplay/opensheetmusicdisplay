@@ -425,6 +425,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     case SystemLinesEnum.ThinBold:
                         this.stave.setEndBarType(VF.Barline.type.END);
                         break;
+                    case SystemLinesEnum.DoubleBold:
+                        this.stave.setEndBarType(8); // VexFlowPatch added
+                        break;
                     case SystemLinesEnum.None:
                         this.stave.setEndBarType(VF.Barline.type.NONE);
                         break;
@@ -742,6 +745,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for (const voice of this.getVoicesWithinMeasure()) {
             for (const ve of voice.VoiceEntries) {
                 for (const note of ve.Notes) {
+                    if (note.isRest()) {
+                        continue;
+                        // rest positions are already fine.
+                        // Doing the below for rests messes up the y-position calculation / bbox for non-rest note for some reason.
+                        //   they were not in the voice's voice entries until #1612, so it didn't matter.
+                    }
                     const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
                     if (!gNote?.vfnote) { // can happen were invisible, then multi rest measure. TODO fix multi rest measure not removed
                         return;

@@ -113,6 +113,70 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return this.vfnote[0].getAttribute("id");
     }
 
+    /** Toggle visibility of the note, making it and its stem and beams invisible for `false`.
+     * By default, this will also hide the note's slurs and ties (see visibilityOptions).
+     * (This only works with the default SVG backend, not with the Canvas backend/renderer)
+     * To get a GraphicalNote from a Note, use osmd.EngravingRules.GNote(note).
+     */
+    public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {
+        // default options:
+        applyToBeams: true,
+        applyToLedgerLines: true,
+        applyToNotehead: true,
+        applyToSlurs: true,
+        applyToStem: true,
+        applyToTies: true,
+    }): void {
+        const visibilityAttribute: string = "visibility";
+        const visibilityString: string = visible ? "visible" : "hidden";
+        if (visibilityOptions.applyToNotehead !== false) {
+            // !== false so that it also matches undefined (option not set).
+            this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
+        }
+        // instead of setAttribute, remove() also works, but isn't reversible.
+        if (visibilityOptions.applyToStem !== false) {
+            this.getStemSVG()?.setAttribute(visibilityAttribute, visibilityString);
+        }
+        if (visibilityOptions.applyToBeams !== false) {
+            for (const beamSVG of this.getBeamSVGs()) {
+                beamSVG?.setAttribute(visibilityAttribute, visibilityString);
+            }
+        }
+        if (visibilityOptions.applyToLedgerLines !== false) {
+            for (const ledgerSVG of this.getLedgerLineSVGs()) {
+                ledgerSVG?.setAttribute(visibilityAttribute, visibilityString);
+            }
+        }
+        if (visibilityOptions.applyToTies !== false) {
+            for (const tie of this.getTieSVGs()) {
+                tie?.setAttribute(visibilityAttribute, visibilityString);
+            }
+        }
+        if (visibilityOptions.applyToSlurs !== false) {
+            for (const slur of this.getSlurSVGs()) {
+                slur?.setAttribute(visibilityAttribute, visibilityString);
+            }
+        }
+
+        // usage example:
+        // let voice = osmd.Sheet.Instruments[0].Voices[0];
+        // for (const ve of voice.VoiceEntries) {
+        //     for (const note of ve.Notes) {
+        //         const gNote = osmd.EngravingRules.GNote(note);
+        //         gNote?.setVisible(false);
+        //     }
+        // }
+        // this works similarly without SVG, but with needing to render again (thus not preferable):
+        // let voice = osmd.Sheet.Instruments[0].Voices[0];
+        // for (const ve of voice.VoiceEntries) {
+        //     for (const note of ve.Notes) {
+        //         note.PrintObject = false;
+        //     }
+        // }
+        // osmd.render();
+        // this currently also still leaves ledger lines visible.
+    }
+
     /**
      * Gets the SVGGElement containing this note, given the SVGRenderer is used.
      * This is for low-level rendering hacks and should be used with caution.
@@ -143,4 +207,52 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         }
         return beamSVGs;
     }
+
+    /** Gets the SVG path elements of the note's ledger lines. */
+    public getLedgerLineSVGs(): HTMLElement[] {
+        const ledgerSVGs: HTMLElement[] = [];
+        const idString: string = `vf-${this.getSVGId()}ledgers`;
+        const groupSVG: HTMLElement = document.getElementById(idString);
+        if (!groupSVG) {
+            return [];
+        }
+        for (const child of groupSVG.childNodes) {
+            ledgerSVGs.push(child as HTMLElement);
+        }
+        return ledgerSVGs;
+    }
+
+    /** Gets the SVG path elements of the note's tie curves. */
+    public getTieSVGs(): HTMLElement[] {
+        const tieSVGs: HTMLElement[] = [];
+        const ties: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${this.getSVGId()}-tie']`);
+        // TODO multiple ties have the same id sometimes, DOM elements are not supposed to have the same id, this is invalid HTML. But it works.
+        for (const tie of ties) {
+            tieSVGs.push(tie);
+        }
+        return tieSVGs;
+    }
+
+    /** Gets the SVG path elements of the note's slur curve. */
+    public getSlurSVGs(): HTMLElement[] {
+        const slurSVGs: HTMLElement[] = [];
+        const slurs: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${this.getSVGId()}-slur']`);
+        // TODO multiple slurs have the same id sometimes, DOM elements are not supposed to have the same id, this is invalid HTML. But it works.
+        for (const slur of slurs) {
+            slurSVGs.push(slur);
+        }
+        return slurSVGs;
+    }
+}
+
+/** Visibility options for VexFlowGraphicalNote.setVisible().
+ * E.g. if setVisible(false, {applyToTies: false}), everything about a note will be invisible except its ties.
+ * */
+export interface VisibilityOptions {
+    applyToBeams?: boolean;
+    applyToLedgerLines?: boolean;
+    applyToNotehead?: boolean;
+    applyToSlurs?: boolean;
+    applyToStem?: boolean;
+    applyToTies?: boolean;
 }

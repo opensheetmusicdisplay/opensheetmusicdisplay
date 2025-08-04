@@ -8,11 +8,13 @@ export class Staff {
         this.parentInstrument = parentInstrument;
         this.id = instrumentStaffId;
         this.audible = true;
+        this.Visible = true;
         this.following = true;
     }
 
     public idInMusicSheet: number;
     public audible: boolean;
+    public Visible: boolean;
     public following: boolean;
     public isTab: boolean = false;
 
@@ -47,5 +49,9 @@ export class Staff {
     }
     public set StafflineCount(value: number) {
         this.stafflineCount = value;
+    }
+    /** Checks whether Staff.Visible and Staff.ParentInstrument.Visible. */
+    public isVisible(): boolean {
+        return this.Visible && this.ParentInstrument.Visible;
     }
 }

@@ -1,0 +1,216 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE score-partwise PUBLIC '-//Recordare//DTD MusicXML 4.0 Partwise//EN' 'http://www.musicxml.org/dtds/partwise.dtd'>
+<score-partwise version='4.0'>
+	<movement-title>test_fingering_reversed_rare_1587_bottom_staff</movement-title>
+	<identification>
+		<rights>Copyright © </rights>
+		<encoding>
+			<software>Sibelius 2025.3</software>
+			<software>Dolet 8.1 for Sibelius</software>
+			<encoding-date>2025-03-30</encoding-date>
+			<supports element='accidental' type='yes'/>
+			<supports element='transpose' type='yes'/>
+			<supports attribute='new-page' element='print' type='yes' value='yes'/>
+			<supports attribute='new-system' element='print' type='yes' value='yes'/>
+		</encoding>
+	</identification>
+	<defaults>
+		<scaling>
+			<millimeters>7.2</millimeters>
+			<tenths>40</tenths>
+		</scaling>
+		<concert-score/>
+		<page-layout>
+			<page-height>1650</page-height>
+			<page-width>1167</page-width>
+			<page-margins type='both'>
+				<left-margin>77.7778</left-margin>
+				<right-margin>77.7778</right-margin>
+				<top-margin>83.3333</top-margin>
+				<bottom-margin>83.3333</bottom-margin>
+			</page-margins>
+		</page-layout>
+		<system-layout>
+			<system-margins>
+				<left-margin>18.75</left-margin>
+				<right-margin>0</right-margin>
+			</system-margins>
+			<system-distance>92.5</system-distance>
+			<top-system-distance>70.9375</top-system-distance>
+		</system-layout>
+		<staff-layout>
+			<staff-distance>55</staff-distance>
+		</staff-layout>
+		<?DoletSibelius StaffJustificationPercentage=50?>
+		<appearance>
+			<line-width type='beam'>5</line-width>
+			<line-width type='heavy barline'>5</line-width>
+			<line-width type='leger'>1.25</line-width>
+			<line-width type='light barline'>1.5625</line-width>
+			<line-width type='slur middle'>2.1875</line-width>
+			<line-width type='slur tip'>0.625</line-width>
+			<line-width type='staff'>0.625</line-width>
+			<line-width type='stem'>0.625</line-width>
+			<line-width type='tie middle'>2.1875</line-width>
+			<line-width type='tie tip'>0.625</line-width>
+			<note-size type='grace'>60</note-size>
+			<note-size type='cue'>75</note-size>
+		</appearance>
+		<music-font font-family='Opus Std,engraved'/>
+		<word-font font-family='Times New Roman,serif'/>
+	</defaults>
+	<credit page='1'>
+		<credit-type>title</credit-type>
+		<credit-words default-x='584' default-y='1629' justify='center' valign='top' font-size='22.64'>test_fingering_reversed_rare_1587_bottom_staff</credit-words>
+	</credit>
+	<part-list>
+		<score-part id='P1'>
+			<part-name print-object='no'>[Piano] (a)</part-name>
+			<part-abbreviation print-object='no'>Pno.</part-abbreviation>
+			<group>score</group>
+			<score-instrument id='P1-I1'>
+				<instrument-name>Piano</instrument-name>
+				<instrument-abbreviation>Pno.</instrument-abbreviation>
+				<instrument-sound>keyboard.piano.grand</instrument-sound>
+			</score-instrument>
+			<midi-instrument id='P1-I1'>
+				<volume>79</volume>
+				<pan>-18</pan>
+			</midi-instrument>
+		</score-part>
+	</part-list>
+<!--=========================================================-->
+	<part id='P1'>
+		<measure number='1'>
+			<print>
+				<system-layout>
+					<system-margins>
+						<left-margin>18.75</left-margin>
+						<right-margin>0</right-margin>
+					</system-margins>
+					<top-system-distance>110.9375</top-system-distance>
+				</system-layout>
+				<staff-layout>
+					<?DoletSibelius JustifyAllStaves=true?>
+				</staff-layout>
+			</print>
+			<attributes>
+				<divisions>768</divisions>
+				<key>
+					<fifths>0</fifths>
+					<mode>major</mode>
+				</key>
+				<time>
+					<beats>3</beats>
+					<beat-type>4</beat-type>
+				</time>
+				<staves>2</staves>
+				<clef number='1'>
+					<sign>G</sign>
+					<line>2</line>
+				</clef>
+				<clef number='2'>
+					<sign>F</sign>
+					<line>4</line>
+				</clef>
+			</attributes>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>2304</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<dot/>
+				<stem>up</stem>
+				<staff>1</staff>
+				<notations>
+					<technical>
+						<fingering default-y='34' default-x='3'>1</fingering>
+						<fingering default-y='52' default-x='3'>3</fingering>
+						<fingering default-y='69' default-x='3'>5</fingering>
+					</technical>
+				</notations>
+			</note>
+			<note>
+				<chord/>
+				<pitch>
+					<step>E</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>2304</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<dot/>
+				<stem>up</stem>
+				<staff>1</staff>
+			</note>
+			<note>
+				<chord/>
+				<pitch>
+					<step>G</step>
+					<octave>4</octave>
+				</pitch>
+				<duration>2304</duration>
+				<voice>1</voice>
+				<type>half</type>
+				<dot/>
+				<stem>up</stem>
+				<staff>1</staff>
+			</note>
+			<backup>
+				<duration>2304</duration>
+			</backup>
+			<note>
+				<pitch>
+					<step>C</step>
+					<octave>3</octave>
+				</pitch>
+				<duration>2304</duration>
+				<voice>5</voice>
+				<type>half</type>
+				<dot/>
+				<stem>down</stem>
+				<staff>2</staff>
+				<notations>
+					<technical>
+						<fingering default-y='-60' default-x='3'>4</fingering>
+						<fingering default-y='-42' default-x='3'>2</fingering>
+						<fingering default-y='-25' default-x='3'>1</fingering>
+					</technical>
+				</notations>
+			</note>
+			<note>
+				<chord/>
+				<pitch>
+					<step>E</step>
+					<octave>3</octave>
+				</pitch>
+				<duration>2304</duration>
+				<voice>5</voice>
+				<type>half</type>
+				<dot/>
+				<stem>down</stem>
+				<staff>2</staff>
+			</note>
+			<note>
+				<chord/>
+				<pitch>
+					<step>G</step>
+					<octave>3</octave>
+				</pitch>
+				<duration>2304</duration>
+				<voice>5</voice>
+				<type>half</type>
+				<dot/>
+				<stem>down</stem>
+				<staff>2</staff>
+			</note>
+			<barline location='right'>
+				<bar-style>light-heavy</bar-style>
+			</barline>
+		</measure>
+	</part>
+<!--=========================================================-->
+</score-partwise>

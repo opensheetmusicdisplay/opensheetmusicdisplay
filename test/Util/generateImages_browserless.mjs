@@ -64,12 +64,12 @@ if (!mode) {
 
 async function init () {
     debug("init");
-
     const { default: osmdImport } = await import(osmdBuildDir + "/opensheetmusicdisplay.min.js");
     OSMD = osmdImport;
 
-    const osmdTestingMode = mode.includes("osmdtesting"); // can also be --debugosmdtesting
-    const osmdTestingSingleMode = mode.includes("osmdtestingsingle");
+    const osmdTestMode = mode.includes("osmdtesting"); // can also be --debugosmdtesting
+    const osmdTestSingleMode = mode.includes("osmdtestingsingle");
+
     const DEBUG = mode.startsWith("--debug");
     // const debugSleepTime = Number.parseInt(process.env.GENERATE_DEBUG_SLEEP_TIME) || 0; // 5000 works for me [sschmidTU]
     if (DEBUG) {
@@ -208,7 +208,7 @@ async function init () {
     let samplesToProcess = []; // samples we want to process/generate pngs of, excluding the filtered out files/filenames
     const fileEndingRegex = "^.*(([.]xml)|([.]musicxml)|([.]mxl))$";
     for (const sampleFilename of sampleDirFilenames) {
-        if (osmdTestingMode && filterRegex === "allSmall") {
+        if (osmdTestMode && filterRegex === "allSmall") {
             if (sampleFilename.match("^(Actor)|(Gounod)")) { // TODO maybe filter by file size instead
                 debug("filtering big file: " + sampleFilename, DEBUG);
                 continue;
@@ -223,7 +223,7 @@ async function init () {
     }
 
     // filter samples to process by regex if given
-    if (filterRegex && filterRegex !== "" && filterRegex !== "all" && !(osmdTestingMode && filterRegex === "allSmall")) {
+    if (filterRegex && filterRegex !== "" && filterRegex !== "all" && !(osmdTestMode && filterRegex === "allSmall")) {
         debug("filtering samples for regex: " + filterRegex, DEBUG);
         samplesToProcess = samplesToProcess.filter((filename) => filename.match(filterRegex) && filename.match(fileEndingRegex));
         debug(`found ${samplesToProcess.length} matches: `, DEBUG);
@@ -304,18 +304,26 @@ async function init () {
         const sampleFilename = samplesToProcess[i];
         debug("sampleFilename: " + sampleFilename, DEBUG);
 
-        await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {}, DEBUG);
+        await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {}, DEBUG);
 
-        if (osmdTestingMode) {
-            if (!osmdTestingSingleMode && sampleFilename.startsWith("Beethoven") && sampleFilename.includes("Geliebte")) {
+        if (osmdTestMode) {
+            if (!osmdTestSingleMode && sampleFilename.startsWith("Beethoven") && sampleFilename.includes("Geliebte")) {
                 // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
-                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {skyBottomLine: true}, DEBUG);
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    skyBottomLine: true, fileNameAddition: "skyBottomLine"}, DEBUG);
                 // generate one more testing image with GraphicalNote positions
-                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {boundingBoxes: "VexFlowGraphicalNote"}, DEBUG);
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    drawBoundingBoxString: "VexFlowGraphicalNote", fileNameAddition: "bboxVexFlowGraphicalNote_"}, DEBUG);
             } else if (sampleFilename.startsWith("test_tab_x-alignment_triplet_plus_bracket_below_above")) {
                 // generate one more testing image in dark mode
-                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {darkMode: true}, DEBUG);
-
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    darkMode: true, fileNameAddition: "darkmode_"}, DEBUG);
+            } else if (sampleFilename.startsWith("JohannSebastianBach_PraeludiumInCDur")) {
+                // generate two more testing images, left hand only and right hand only
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    staffVisibility: { 0: true, 1: false}, fileNameAddition: "right_hand_only_"}, DEBUG);
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    staffVisibility: { 0: false, 1: true}, fileNameAddition: "left_hand_only_"}, DEBUG);
             }
         }
     }
@@ -325,28 +333,8 @@ async function init () {
 
 // eslint-disable-next-line
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
-async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestingMode,
+async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestMode,
     options = {}, DEBUG = false) {
-
-    function makeSkyBottomLineOptions() {
-        const preference = skyBottomLinePreference ?? "";
-        if (preference === "--batch") {
-            return {
-                preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
-                skyBottomLineBatchCriteria: 0, // use batch algorithm only
-            };
-        } else if (preference === "--webgl") {
-            return {
-                preferredSkyBottomLineBatchCalculatorBackend: 1, // webgl
-                skyBottomLineBatchCriteria: 0, // use batch algorithm only
-            };
-        } else {
-            return {
-                preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
-                skyBottomLineBatchCriteria: Infinity, // use non-batch algorithm only
-            };
-        }
-    }
 
     const samplePath = directory + "/" + sampleFilename;
     let loadParameter = FS.readFileSync(samplePath);
@@ -359,116 +347,15 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     // debug('loadParameter: ' + loadParameter)
     // debug('typeof loadParameter: ' + typeof loadParameter)
 
-    // set sample-specific options for OSMD visual regression testing
-    let includeSkyBottomLine = false;
-    let drawBoundingBoxString;
-    let isTestOctaveShiftInvisibleInstrument;
-    let isTestInvisibleMeasureNotAffectingLayout;
-    if (osmdTestingMode) {
-        const isFunctionTestAutobeam = sampleFilename.startsWith("OSMD_function_test_autobeam");
-        const isFunctionTestAutoColoring = sampleFilename.startsWith("OSMD_function_test_auto-custom-coloring");
-        const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith("OSMD_Function_Test_System_and_Page_Breaks");
-        const isFunctionTestDrawingRange = sampleFilename.startsWith("OSMD_function_test_measuresToDraw_");
-        const defaultOrCompactTightMode = sampleFilename.startsWith("OSMD_Function_Test_Container_height") ? "compacttight" : "default";
-        const isTestFlatBeams = sampleFilename.startsWith("test_drum_tuplet_beams");
-        const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
-        const isTestPageBreakImpliesSystemBreak = sampleFilename.startsWith("test_pagebreak_implies_systembreak");
-        const isTestPageBottomMargin0 = sampleFilename.includes("PageBottomMargin0");
-        const isTestTupletBracketTupletNumber = sampleFilename.includes("test_tuplet_bracket_tuplet_number");
-        const isTestCajon2NoteSystem = sampleFilename.includes("test_cajon_2-note-system");
-        isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
-        const isTextOctaveShiftExtraGraphicalMeasure = sampleFilename.includes("test_octaveshift_extragraphicalmeasure");
-        isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
-        const isTestWedgeMultilineCrescendo = sampleFilename.includes("test_wedge_multiline_crescendo");
-        const isTestWedgeMultilineDecrescendo = sampleFilename.includes("test_wedge_multiline_decrescendo");
-        const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
-        const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
-        const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
-        const isTestAlignRests = sampleFilename.includes("alignrests");
-        osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
-        if (isTestEndClefStaffEntryBboxes) {
-            drawBoundingBoxString = "VexFlowStaffEntry";
-        } else {
-            drawBoundingBoxString = options.boundingBoxes; // undefined is also a valid value: no bboxes
-        }
-        osmdInstance.setOptions({
-            autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
-            coloringMode: isFunctionTestAutoColoring ? 2 : 0,
-            // eslint-disable-next-line max-len
-            coloringSetCustom: isFunctionTestAutoColoring ? ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"] : undefined,
-            colorStemsLikeNoteheads: isFunctionTestAutoColoring,
-            drawingParameters: defaultOrCompactTightMode, // note: default resets all EngravingRules. could be solved differently
-            drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
-            drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
-            newSystemFromXML: isFunctionTestSystemAndPageBreaks,
-            newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
-            newPageFromXML: isFunctionTestSystemAndPageBreaks,
-            pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
-            pageFormat: pageFormat, // reset by drawingparameters default,
-            ...makeSkyBottomLineOptions()
-        });
-        if (options.darkMode) {
-            osmdInstance.setOptions({darkMode: true}); // note that we set pageBackgroundColor above, so we need to overwrite it here.
-        }
-        // note that loadDefaultValues() may be executed in setOptions with drawingParameters default
-        //osmdInstance.EngravingRules.RenderSingleHorizontalStaffline = true; // to use this option here, place it after setOptions(), see above
-        osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false; // this would override the command line options (--plain etc)
-        includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
-        osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
-        osmdInstance.drawBottomLine = includeSkyBottomLine;
-        osmdInstance.setDrawBoundingBox(drawBoundingBoxString, false); // false: don't render (now). also (re-)set if undefined!
-        if (isTestFlatBeams) {
-            osmdInstance.EngravingRules.FlatBeams = true;
-            // osmdInstance.EngravingRules.FlatBeamOffset = 30;
-            osmdInstance.EngravingRules.FlatBeamOffset = 10;
-            osmdInstance.EngravingRules.FlatBeamOffsetPerBeam = 10;
-        } else {
-            osmdInstance.EngravingRules.FlatBeams = false;
-        }
-        if (isTestPageBottomMargin0) {
-            osmdInstance.EngravingRules.PageBottomMargin = 0;
-        }
-        if (isTestTupletBracketTupletNumber) {
-            osmdInstance.EngravingRules.TupletNumberLimitConsecutiveRepetitions = true;
-            osmdInstance.EngravingRules.TupletNumberMaxConsecutiveRepetitions = 2;
-            osmdInstance.EngravingRules.TupletNumberAlwaysDisableAfterFirstMax = true; // necessary to trigger bug
-        }
-        if (isTestCajon2NoteSystem) {
-            osmdInstance.EngravingRules.PercussionUseCajon2NoteSystem = true;
-        }
-        if (isTextOctaveShiftExtraGraphicalMeasure ||
-            isTestOctaveShiftInvisibleInstrument ||
-            isTestWedgeMultilineCrescendo ||
-            isTestWedgeMultilineDecrescendo) {
-            osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
-        }
-        if (isTestTabs4Strings) {
-            osmdInstance.EngravingRules.TabKeySignatureSpacingAdded = false;
-            osmdInstance.EngravingRules.TabTimeSignatureSpacingAdded = false;
-            // more compact rendering. These are basically just aesthetic options, as a showcase.
-        }
-        if (isTestFingeringLeft) {
-            osmdInstance.EngravingRules.FingeringPosition = 2;
-            osmdInstance.EngravingRules.FingeringPositionFromXML = false;
-        }
-        if (isTestArticulationAboveNote) {
-            osmdInstance.EngravingRules.ArticulationAboveNoteForStemUp = true;
-        }
-        if (isTestAlignRests) {
-            osmdInstance.EngravingRules.AlignRests = 1; // true. 0 = false (default), 2 = auto
-        }
+    if (osmdTestMode) {
+        options = setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance); // the method may modify the options object
     }
 
     try {
         debug("loading sample " + sampleFilename, DEBUG);
         await osmdInstance.load(loadParameter, sampleFilename); // if using load.then() without await, memory will not be freed up between renders
-        if (isTestOctaveShiftInvisibleInstrument) {
-            osmdInstance.Sheet.Instruments[0].Visible = false;
-        }
-        if (isTestInvisibleMeasureNotAffectingLayout) {
-            if (osmdInstance.Sheet.Instruments[1]) { // some systems can't handle ?. in this script (just a safety check anyways)
-                osmdInstance.Sheet.Instruments[1].Visible = false;
-            }
+        if (osmdTestMode) {
+            options = setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance); // the method may modify the options object
         }
     } catch (ex) {
         debug("couldn't load sample " + sampleFilename + ", skipping. Error: \n" + ex);
@@ -566,6 +453,151 @@ function debug (msg, debugEnabled = true) {
     if (debugEnabled) {
         console.log("[generateImages] " + msg);
     }
+}
+
+function makeSkyBottomLineOptions() {
+    // skyBottomLinePreference assumed to be globally set
+    const preference = skyBottomLinePreference ?? "";
+    if (preference === "--batch") {
+        return {
+            preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
+            skyBottomLineBatchCriteria: 0, // use batch algorithm only
+        };
+    } else if (preference === "--webgl") {
+        return {
+            preferredSkyBottomLineBatchCalculatorBackend: 1, // webgl
+            skyBottomLineBatchCriteria: 0, // use batch algorithm only
+        };
+    } else {
+        return {
+            preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
+            skyBottomLineBatchCriteria: Infinity, // use non-batch algorithm only
+        };
+    }
+}
+
+function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
+    // set sample-specific options for OSMD visual regression testing
+    let includeSkyBottomLine = false;
+    const isFunctionTestAutobeam = sampleFilename.startsWith("OSMD_function_test_autobeam");
+    const isFunctionTestAutoColoring = sampleFilename.startsWith("OSMD_function_test_auto-custom-coloring");
+    const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith("OSMD_Function_Test_System_and_Page_Breaks");
+    const isFunctionTestDrawingRange = sampleFilename.startsWith("OSMD_function_test_measuresToDraw_");
+    const defaultOrCompactTightMode = sampleFilename.startsWith("OSMD_Function_Test_Container_height") ? "compacttight" : "default";
+    const isTestFlatBeams = sampleFilename.startsWith("test_drum_tuplet_beams");
+    const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
+    const isTestPageBreakImpliesSystemBreak = sampleFilename.startsWith("test_pagebreak_implies_systembreak");
+    const isTestPageBottomMargin0 = sampleFilename.includes("PageBottomMargin0");
+    const isTestTupletBracketTupletNumber = sampleFilename.includes("test_tuplet_bracket_tuplet_number");
+    const isTestCajon2NoteSystem = sampleFilename.includes("test_cajon_2-note-system");
+    const isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
+    const isTextOctaveShiftExtraGraphicalMeasure = sampleFilename.includes("test_octaveshift_extragraphicalmeasure");
+    const isTestWedgeMultilineCrescendo = sampleFilename.includes("test_wedge_multiline_crescendo");
+    const isTestWedgeMultilineDecrescendo = sampleFilename.includes("test_wedge_multiline_decrescendo");
+    const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
+    const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
+    const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
+    const isTestAlignRests = sampleFilename.includes("alignrests");
+    const isTestHeavyBarline = sampleFilename.includes("test_barline_heavy-heavy_mid_score");
+    osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
+    if (isTestEndClefStaffEntryBboxes) {
+        options.drawBoundingBoxString = "VexFlowStaffEntry";
+        options.fileNameAddition = "bbox" + options.drawBoundingBoxString + "_";
+    }
+    osmdInstance.setOptions({
+        autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
+        coloringMode: isFunctionTestAutoColoring ? 2 : 0,
+        // eslint-disable-next-line max-len
+        coloringSetCustom: isFunctionTestAutoColoring ? ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"] : undefined,
+        colorStemsLikeNoteheads: isFunctionTestAutoColoring,
+        drawingParameters: defaultOrCompactTightMode, // note: default resets all EngravingRules. could be solved differently
+        drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
+        drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
+        newSystemFromXML: isFunctionTestSystemAndPageBreaks,
+        newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
+        newPageFromXML: isFunctionTestSystemAndPageBreaks,
+        pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
+        pageFormat: pageFormat, // reset by drawingparameters default,
+        ...makeSkyBottomLineOptions()
+    });
+    if (options.darkMode) {
+        osmdInstance.setOptions({darkMode: true}); // note that we set pageBackgroundColor above, so we need to overwrite it here.
+    }
+    // note that loadDefaultValues() may be executed in setOptions with drawingParameters default
+    //osmdInstance.EngravingRules.RenderSingleHorizontalStaffline = true; // to use this option here, place it after setOptions(), see above
+    osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false; // this would override the command line options (--plain etc)
+    includeSkyBottomLine = options.skyBottomLine ?? false; // apparently es6 doesn't have ?? operator
+    osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
+    osmdInstance.drawBottomLine = includeSkyBottomLine;
+    if (includeSkyBottomLine) {
+        options.fileNameAddition = "skybottomline_";
+    }
+    osmdInstance.setDrawBoundingBox(options.drawBoundingBoxString, false); // false: don't render (now). also (re-)set if undefined!
+    if (isTestFlatBeams) {
+        osmdInstance.EngravingRules.FlatBeams = true;
+        // osmdInstance.EngravingRules.FlatBeamOffset = 30;
+        osmdInstance.EngravingRules.FlatBeamOffset = 10;
+        osmdInstance.EngravingRules.FlatBeamOffsetPerBeam = 10;
+    } else {
+        osmdInstance.EngravingRules.FlatBeams = false;
+    }
+    if (isTestPageBottomMargin0) {
+        osmdInstance.EngravingRules.PageBottomMargin = 0;
+    }
+    if (isTestTupletBracketTupletNumber) {
+        osmdInstance.EngravingRules.TupletNumberLimitConsecutiveRepetitions = true;
+        osmdInstance.EngravingRules.TupletNumberMaxConsecutiveRepetitions = 2;
+        osmdInstance.EngravingRules.TupletNumberAlwaysDisableAfterFirstMax = true; // necessary to trigger bug
+    }
+    if (isTestCajon2NoteSystem) {
+        osmdInstance.EngravingRules.PercussionUseCajon2NoteSystem = true;
+    }
+    if (isTextOctaveShiftExtraGraphicalMeasure ||
+        isTestOctaveShiftInvisibleInstrument ||
+        isTestWedgeMultilineCrescendo ||
+        isTestWedgeMultilineDecrescendo) {
+        osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
+    }
+    if (isTestTabs4Strings) {
+        osmdInstance.EngravingRules.TabKeySignatureSpacingAdded = false;
+        osmdInstance.EngravingRules.TabTimeSignatureSpacingAdded = false;
+        // more compact rendering. These are basically just aesthetic options, as a showcase.
+    }
+    if (isTestFingeringLeft) {
+        osmdInstance.EngravingRules.FingeringPosition = 2;
+        osmdInstance.EngravingRules.FingeringPositionFromXML = false;
+    }
+    if (isTestArticulationAboveNote) {
+        osmdInstance.EngravingRules.ArticulationAboveNoteForStemUp = true;
+    }
+    if (isTestAlignRests) {
+        osmdInstance.EngravingRules.AlignRests = 1; // true. 0 = false (default), 2 = auto
+    }
+    if (isTestHeavyBarline) {
+        osmdInstance.EngravingRules.AutoGenerateMultipleRestMeasuresFromRestMeasures = false;
+    }
+    return options;
+}
+
+function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
+    if (options.staffVisibility) {
+        for (const key of Object.keys(options.staffVisibility)) {
+            osmdInstance.Sheet.Instruments[0].Staves[key].Visible = options.staffVisibility[key];
+        }
+    }
+
+    const isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
+    const isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
+    if (isTestOctaveShiftInvisibleInstrument) {
+        osmdInstance.Sheet.Instruments[0].Visible = false;
+    }
+    if (isTestInvisibleMeasureNotAffectingLayout) {
+        if (osmdInstance.Sheet.Instruments[1]) { // some systems can't handle ?. in this script (just a safety check anyways)
+            osmdInstance.Sheet.Instruments[1].Visible = false;
+        }
+    }
+
+    return options;
 }
 
 init();

@@ -13,7 +13,7 @@ export abstract class AbstractGraphicalExpression extends GraphicalObject {
     protected expression: AbstractExpression;
     /** EngravingRules for positioning */
     protected rules: EngravingRules;
-    protected parentMeasure: SourceMeasure;
+    public parentMeasure: SourceMeasure;
 
     constructor(parentStaffline: StaffLine, expression: AbstractExpression, measure: SourceMeasure) {
         super();

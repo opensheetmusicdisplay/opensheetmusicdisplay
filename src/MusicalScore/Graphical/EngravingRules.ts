@@ -150,7 +150,9 @@ export class EngravingRules {
     public BetweenDotsDistance: number;
     public OrnamentAccidentalScalingFactor: number;
     public ChordSymbolTextHeight: number;
-    public ChordSymbolTextAlignment: TextAlignmentEnum;
+    public ChordSymbolTextAlignmentTop: TextAlignmentEnum;
+    public ChordSymbolTextAlignmentBottom: TextAlignmentEnum;
+    public ChordSymbolBottomMargin: number;
     public ChordSymbolRelativeXOffset: number;
     /** Additional x-shift for short chord symbols (e.g. C, but not Eb/7), to appear more centered. */
     public ChordSymbolExtraXShiftForShortChordSymbols: number;
@@ -466,6 +468,7 @@ export class EngravingRules {
     public RenderClefsAtBeginningOfStaffline: boolean;
     public RenderKeySignatures: boolean;
     public RenderTimeSignatures: boolean;
+    public RenderFirstTempoExpression: boolean;
     public RenderPedals: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
@@ -679,7 +682,9 @@ export class EngravingRules {
         this.BetweenDotsDistance = 0.8;
         this.OrnamentAccidentalScalingFactor = 0.65;
         this.ChordSymbolTextHeight = 2.0;
-        this.ChordSymbolTextAlignment = TextAlignmentEnum.LeftBottom;
+        this.ChordSymbolTextAlignmentTop = TextAlignmentEnum.LeftBottom;
+        this.ChordSymbolTextAlignmentBottom = TextAlignmentEnum.LeftTop;
+        this.ChordSymbolBottomMargin = 0.6;
         this.ChordSymbolRelativeXOffset = -1.0;
         this.ChordSymbolExtraXShiftForShortChordSymbols = 0.3; // also see LyricsExtraXShiftForShortLyrics, same principle
         this.ChordSymbolExtraXShiftWidthThreshold = 2.0;
@@ -920,6 +925,7 @@ export class EngravingRules {
         this.RenderClefsAtBeginningOfStaffline = true;
         this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
+        this.RenderFirstTempoExpression = true;
         this.RenderPedals = true;
         this.ArticulationPlacementFromXML = true;
         this.BreathMarkDistance = 0.8;
