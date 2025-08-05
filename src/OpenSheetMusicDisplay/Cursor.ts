@@ -438,4 +438,45 @@ export class Cursor {
     this.openSheetMusicDisplay = undefined;
     this.cursorOptions = undefined;
   }
+
+  public nextMeasure(): void {
+    const startMeasure: SourceMeasure = this.Iterator.CurrentMeasure;
+    let previousTime: number = this.Iterator.currentTimeStamp.RealValue;
+    this.next();
+    let iterations: number = 0;
+    const maxIterations: number = 999;
+    while (this.Iterator.CurrentMeasure === startMeasure &&
+      this.Iterator.currentTimeStamp.RealValue !== previousTime &&
+      iterations < maxIterations // prevent infinite loop (not expected but for safety)
+    ) {
+      previousTime = this.Iterator.currentTimeStamp.RealValue;
+      this.next();
+      iterations++;
+    }
+  }
+
+  public previousMeasure(): void {
+    const startMeasure: SourceMeasure = this.Iterator.CurrentMeasure;
+    let previousTime: number = this.Iterator.currentTimeStamp.RealValue;
+    this.previous();
+    let iterations: number = 0;
+    const maxIterations: number = 999;
+    while (this.Iterator.CurrentMeasure === startMeasure &&
+      this.Iterator.currentTimeStamp.RealValue !== previousTime &&
+      iterations < maxIterations // prevent infinite loop (not expected but for safety)
+    ) {
+      previousTime = this.Iterator.currentTimeStamp.RealValue;
+      this.previous();
+      iterations++;
+    }
+
+    // move to start of measure
+    iterations = 0;
+    while (this.Iterator.CurrentRelativeInMeasureTimestamp.RealValue !== 0 &&
+      iterations < maxIterations
+    ) {
+      this.previous();
+      iterations++;
+    }
+  }
 }
