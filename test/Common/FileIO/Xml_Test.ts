@@ -53,7 +53,7 @@ describe("XML interface", () => {
                 TestUtils.createOpenSheetMusicDisplay(div);
             openSheetMusicDisplay.load(score);
             done();
-        }).timeout(30000);
+        }, 30000);
     }
 
     it("test IXmlElement", (done: Mocha.Done) => {
