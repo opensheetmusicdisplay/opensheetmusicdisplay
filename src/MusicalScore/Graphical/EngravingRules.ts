@@ -181,6 +181,8 @@ export class EngravingRules {
     public MeasureNumberLabelXOffset: number;
     /** Whether tuplets should display ratio (3:2 instead of 3 for triplet). Default false. */
     public TupletsRatioed: boolean;
+    /** Whether to show a ratio when the XML says "show-number: both". Otherwise uses the default TupletsRatioed. */
+    public TupletsRatioedUseXMLValue: boolean;
     /** Whether tuplets (except triplets) should be bracketed (e.g. |--5--| instead of 5). Default false.
      * Note that this doesn't affect triplets (|--3--|), which have their own setting TripletsBracketed.
      * If false, only tuplets given as bracketed in XML (bracket="yes") will be bracketed.
@@ -709,6 +711,7 @@ export class EngravingRules {
         this.MeasureNumberLabelOffset = 2;
         this.MeasureNumberLabelXOffset = -0.5;
         this.TupletsRatioed = false;
+        this.TupletsRatioedUseXMLValue = true;
         this.TupletsBracketed = false;
         this.TripletsBracketed = false; // special setting for triplets, overrides tuplet setting (for triplets only)
         this.TupletsBracketedUseXMLValue = true;

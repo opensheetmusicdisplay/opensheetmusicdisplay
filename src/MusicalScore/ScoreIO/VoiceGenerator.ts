@@ -714,6 +714,11 @@ export class VoiceGenerator {
           } else if (bracketAttr && bracketAttr.value === "no") {
             bracketedXmlValue = false;
           }
+          let ratioed: boolean = this.musicSheet.Rules.TupletsRatioed;
+          const showNumberAttr: Attr = tupletNode.attribute("show-number");
+          if (showNumberAttr && showNumberAttr.value === "both" && this.musicSheet.Rules.TupletsRatioedUseXMLValue) {
+            ratioed = true;
+          }
 
           const showNumberNoneGiven: boolean = this.readShowNumberNoneGiven(tupletNode);
 
@@ -733,10 +738,10 @@ export class VoiceGenerator {
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 throw new MusicSheetReadingException(errorMsg, undefined);
               }
-
             }
+
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
-            tuplet.Ratioed = this.musicSheet.Rules.TupletsRatioed;
+            tuplet.Ratioed = ratioed;
             tuplet.BracketedXmlValue = bracketedXmlValue;
             tuplet.ShowNumberNoneGivenInXml = showNumberNoneGiven;
             //Default to above
@@ -835,6 +840,11 @@ export class VoiceGenerator {
         } else if (bracketAttr && bracketAttr.value === "no") {
           bracketedXmlValue = false;
         }
+        let ratioed: boolean = this.musicSheet.Rules.TupletsRatioed;
+        const showNumberAttr: Attr = n.attribute("show-number");
+        if (showNumberAttr && showNumberAttr.value === "both" && this.musicSheet.Rules.TupletsRatioedUseXMLValue) {
+          ratioed = true;
+        }
         if (type === "start") {
           let tupletLabelNumber: number = 0;
           let timeModNode: IXmlElement = node.element("time-modification");
@@ -859,7 +869,7 @@ export class VoiceGenerator {
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
           if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
-            tuplet.Ratioed = this.musicSheet.Rules.TupletsRatioed;
+            tuplet.Ratioed = ratioed;
             tuplet.BracketedXmlValue = bracketedXmlValue;
             tuplet.ShowNumberNoneGivenInXml = showNumberNoneGiven;
             //Default to above
