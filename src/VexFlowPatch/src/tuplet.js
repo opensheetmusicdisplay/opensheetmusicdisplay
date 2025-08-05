@@ -336,9 +336,9 @@
      }
  
      // VexFlowPatch: add option to not render tuplet numbers
+     let x_offset = 0;
      if (this.RenderTupletNumber !== false) {
          // draw numerator glyphs
-         let x_offset = 0;
          this.numerator_glyphs.forEach(glyph => {
            glyph.render(this.context, notation_start_x + x_offset, this.y_pos + (this.point / 3) - 2);
            x_offset += glyph.getMetrics().width;
