@@ -1,3 +1,35 @@
+## [1.9.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.0...1.9.1) (2025-08-05)
+
+
+### Bug Fixes
+
+* **autoResize/Demo:** Fix scrolling back to the top of the page after autoResize and demo option changes ([#1316](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1316)). E.g. enabling dark mode or resizing doesn't change scroll position. ([82b7bd2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/82b7bd24416de3925d7ad771d6f924bacbf305b5))
+* **Barlines:** Support heavy-heavy barline in MusicXML (DoubleHeavy/DoubleBold) ([#1598](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1598)) ([13353db](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/13353dbe95ff1582b4b2613add18d838d2397af0))
+* **Color:** Fix color not applied for MoodExpression, UnknownExpression and ContinuousDynamicExpression ([#1610](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1610)) ([5337e4a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5337e4ac6f32c230a5ccf4fecc827c9e48d14929))
+* **Color:** Fix note and notehead color and transparency read incorrectly when alpha given ([#1602](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1602)) (length 9, e.g. [#12345600](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/12345600)) ([e1e7bd2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e1e7bd2139c7ca5ebc35d5885c8192b1b15bb68b))
+* **Cursor:** Fix Iterator.CurrentRelativeInMeasureTimestamp not updated correctly sometimes after cursor.previous() ([cde10c2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cde10c2281e457d102f9e826d092e0e0573a9cc9))
+* **Direction Nodes:** Read multiple direction-type elements within a direction node ([#1616](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1616)). Fixes e.g. an extra metronome mark or words direction not rendered. ([4b6c70c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4b6c70cb55a88712a38ac4c3e1238f585e7dcf9d))
+* **Fingering:** Fix fingerings reversed in rare situations in bottom staff ([#1587](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1587)) ([0a367e1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0a367e13a6b4441ffe5a510c469a4556be030e30))
+* **Tabs:** Fix TabSlide causing a return instead of continue in the draw method, e.g. skipping the draw of connectors and closing of SVG groups ([8f5f496](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8f5f4966f63323937b341901e6a98b14e5a476e0))
+* **Tuplet:** Fix access error if rules.TupletsRatioed = true used ([#1601](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1601)) ([90a2976](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/90a29760a4a14f4fc7c4ad96439358bee764f336))
+* **Voice:** Fix a voice's voice entries not including rest notes. Fixes rest notes not invisible when setting all notes of a voice invisible ([#1612](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1612)) ([24de99f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/24de99f83b4f49c77916ed21443ac5aebd9c5fe3))
+
+
+### Features
+
+* **ChordSymbols:** Allow chord symbols below staff, and with numerals only ([#1596](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1596)). Fix error when only numeral, not root given ([7139301](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/713930168655566b414d78e35bba6ac9cbb8ebb7))
+* **Cursor:** Add nextMeasure() and previousMeasure() as helper methods ([4357ac6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4357ac6ecb1ff539fe8abaa83a34f85c58403982))
+* **GraphicalNote:** Add function to make a note invisible (temporarily) without a re-render ([#1612](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1612)) ([93759fb](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/93759fbb1e4c09799c1394d0af4e265ec45b0b8b))
+* **GraphicalNote: Add getSlurSVG(). setVisible():** Add applyToSlurs option so slurs can be hidden. Make second parameter VisibilityOptions object ([#1612](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1612)) ([41be7b2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/41be7b20d4e91d5fd2570ac1779d15b713a7c848))
+* **GraphicalNote:** Able to get ledger line SVGs. Add group and ids to ledger line SVG nodes ([#1612](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1612)). Make them invisible on note.setVisible(false) ([c387eb4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c387eb43a794ba7782b2f24861901be6ae5f5d39))
+* **GraphicalNote:** Add getTieSVGs(). Make ties invisible in setVisible(false, true) ([#1612](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1612)) (2nd parameter is applyToTies) ([3d17922](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3d17922ecd9fbf6207563133dfefeca77d583d1e))
+* **Options:** Add option not to render first tempo expression (e.g. "Allegro"): Rules.RenderFirstTempoExpression = false ([#1611](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1611)) ([03a6a4b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/03a6a4bbed767cd49772ee9cd02f7b5974739fc3))
+* **Piano:** Able to show left hand only and right hand only ([#1599](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1599)). Add Staff.Visible attribute ([0d77f5e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0d77f5e36bed836c992ae896a3cc28e651f2c334))
+* **SVG:** Add SVG group for metronome mark (vf-stavetempo), and a subgroup for just the text (vf-bpm) ([7f99ccf](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7f99ccf4b51a9d272e27ffc706bfe458d7658ab2))
+* **Tuplet:** Add Tuplet.Ratioed field, so that the ratioed setting can also be changed per tuplet instead of via general TupletsRatioed rule ([#1601](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1601)) ([ad45fa5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ad45fa5c23ee267229f54e878bd0c2c48e1a7fbb))
+
+
+
 # [1.9.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.8.9...1.9.0) (2025-03-20)
 
 
