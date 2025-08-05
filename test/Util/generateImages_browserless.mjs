@@ -457,6 +457,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
     const isTestAlignRests = sampleFilename.includes("alignrests");
     const isTestHeavyBarline = sampleFilename.includes("test_barline_heavy-heavy_mid_score");
+    const isTestTupletRatioed = sampleFilename.includes("test_tuplet_ratioed");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
     if (isTestEndClefStaffEntryBboxes) {
         options.drawBoundingBoxString = "VexFlowStaffEntry";
@@ -533,6 +534,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestHeavyBarline) {
         osmdInstance.EngravingRules.AutoGenerateMultipleRestMeasuresFromRestMeasures = false;
+    }
+    if (isTestTupletRatioed) {
+        osmdInstance.EngravingRules.TupletsRatioed = true;
     }
     return options;
 }

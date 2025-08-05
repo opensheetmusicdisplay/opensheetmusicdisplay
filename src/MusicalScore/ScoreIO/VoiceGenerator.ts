@@ -736,6 +736,7 @@ export class VoiceGenerator {
 
             }
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
+            tuplet.Ratioed = this.musicSheet.Rules.TupletsRatioed;
             tuplet.BracketedXmlValue = bracketedXmlValue;
             tuplet.ShowNumberNoneGivenInXml = showNumberNoneGiven;
             //Default to above
@@ -858,6 +859,7 @@ export class VoiceGenerator {
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
           if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
+            tuplet.Ratioed = this.musicSheet.Rules.TupletsRatioed;
             tuplet.BracketedXmlValue = bracketedXmlValue;
             tuplet.ShowNumberNoneGivenInXml = showNumberNoneGiven;
             //Default to above

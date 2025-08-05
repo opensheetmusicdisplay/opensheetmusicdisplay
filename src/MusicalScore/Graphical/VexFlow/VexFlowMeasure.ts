@@ -1277,7 +1277,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                           location: location,
                           notes_occupied: notesOccupied,
                           num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
-                          ratioed: this.rules.TupletsRatioed,
+                          ratioed: tuplet.Ratioed,
                           y_offset: yOffset,
                         });
                       vftuplets.push(vftuplet);

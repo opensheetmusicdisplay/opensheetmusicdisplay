@@ -20,6 +20,7 @@ export class Tuplet {
     /** Notes contained in the tuplet, per VoiceEntry (list of VoiceEntries, which has a list of notes). */
     private notes: Note[][] = []; // TODO should probably be VoiceEntry[], not Note[][].
     private fractions: Fraction[] = [];
+    public Ratioed: boolean;
     /** Whether this tuplet has a bracket. (e.g. showing |--3--| or just 3 for a triplet) */
     private bracket: boolean;
     /** Boolean if 'bracket="no"' or "yes" was explicitly requested in the XML, otherwise undefined. */

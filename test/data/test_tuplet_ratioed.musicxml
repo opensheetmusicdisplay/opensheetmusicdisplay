@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+<work print-object="no">
+    <work-number></work-number>
+    <work-title  print-object="no">test_tuplet_ratioed</work-title>
+  </work><identification>
+ <creator type="composer"></creator>
+ <creator type="lyricist"></creator>
+
+   <encoding>
+     <supports attribute="new-system" element="print" type="yes" value="yes"/>
+     <supports attribute="new-page" element="print" type="yes" value="yes"/>
+   </encoding>
+ </identification>  <part-list>
+    <score-part id="P1">
+      <part-name> </part-name>
+      <score-instrument id="P1-I1">
+        <instrument-name>Snare Drum</instrument-name>
+      </score-instrument>
+      <midi-instrument id="P1-I1">
+        <midi-channel>10</midi-channel>
+        <midi-program>1</midi-program>
+        <midi-unpitched>38</midi-unpitched>
+      </midi-instrument>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+<print new-system="yes"/>
+      <attributes>
+        <divisions>480</divisions>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+           <sign>percussion</sign>
+        </clef>
+        <staff-details>
+          <staff-lines>5</staff-lines>
+        </staff-details>
+      </attributes>
+      <note>
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>200</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>5</normal-notes>
+        </time-modification>
+        <notations>
+          <tuplet number="1" type="start" bracket="no" show-number="both" />
+        </notations>
+<beam number="1">begin</beam>      </note>
+      <note>
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>200</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>5</normal-notes>
+        </time-modification>
+<beam number="1">continue</beam>      </note>
+      <note>
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>200</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>5</normal-notes>
+        </time-modification>
+<beam number="1">continue</beam>      </note>
+      <note>
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>200</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>5</normal-notes>
+        </time-modification>
+<beam number="1">continue</beam>      </note>
+      <note>
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>200</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>5</normal-notes>
+        </time-modification>
+<beam number="1">continue</beam>      </note>
+      <note>
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>200</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>5</normal-notes>
+        </time-modification>
+        <notations>
+          <tuplet number="1" type="stop"/>
+        </notations>
+<beam number="1">end</beam>      </note>
+      <note>
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>144</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>3</normal-notes>
+        </time-modification>
+        <notations>
+          <tuplet number="2" type="start" bracket="no" show-number="both" />
+        </notations>
+<beam number="1">begin</beam>      </note>
+      <note>
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>144</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>3</normal-notes>
+        </time-modification>
+<beam number="1">continue</beam>      </note>
+      <note>
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>144</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>3</normal-notes>
+        </time-modification>
+<beam number="1">continue</beam>      </note>
+      <note>
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>144</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>3</normal-notes>
+        </time-modification>
+<beam number="1">continue</beam>      </note>
+      <note>
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>144</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>3</normal-notes>
+        </time-modification>
+        <notations>
+          <tuplet number="2" type="stop"/>
+        </notations>
+<beam number="1">end</beam>      </note>
+    </measure>
+  </part>
+</score-partwise>
