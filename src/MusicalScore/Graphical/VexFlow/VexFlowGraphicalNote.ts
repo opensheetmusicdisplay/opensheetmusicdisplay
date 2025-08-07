@@ -291,7 +291,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return modifierSVGs;
     }
 
-    /** Change the color of a note (without re-rendering). See ColoringOptions for options like applyToBeams etc. */
+    /** Change the color of a note (without re-rendering). See ColoringOptions for options like applyToBeams etc.
+     * This requires the SVG backend (default, instead of canvas backend).
+     */
     public setColor(color: string, coloringOptions: ColoringOptions = {}): void {
         const applyToBeams: boolean = coloringOptions.applyToBeams ?? false; // default if option not given
         const applyToFlag: boolean = coloringOptions.applyToFlag ?? true;

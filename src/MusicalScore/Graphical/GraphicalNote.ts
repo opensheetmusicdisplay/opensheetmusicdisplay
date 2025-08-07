@@ -79,10 +79,18 @@ export class GraphicalNote extends GraphicalObject {
       return this.ToStringShort(0);
     }
 
+    /** Change the color of a note (without re-rendering). See ColoringOptions for options like applyToBeams etc.
+     * This requires the SVG backend (default, instead of canvas backend).
+     */
     public setColor(color: string, coloringOptions: ColoringOptions): void {
       // implemented in VexFlowGraphicalNote
     }
 
+    /** Toggle visibility of the note, making it and its stem and beams invisible for `false`.
+     * By default, this will also hide the note's slurs and ties (see visibilityOptions).
+     * (This only works with the default SVG backend, not with the Canvas backend/renderer)
+     * To get a GraphicalNote from a Note, use osmd.EngravingRules.GNote(note).
+     */
     public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {}): void {
       // implemented in VexFlowGraphicalNote
     }
