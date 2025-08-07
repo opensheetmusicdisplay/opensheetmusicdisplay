@@ -1,6 +1,6 @@
 import Vex from "vexflow";
 import VF = Vex.Flow;
-import {GraphicalNote} from "../GraphicalNote";
+import {ColoringOptions, GraphicalNote, VisibilityOptions} from "../GraphicalNote";
 import {Note} from "../../VoiceData/Note";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
@@ -118,41 +118,40 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * (This only works with the default SVG backend, not with the Canvas backend/renderer)
      * To get a GraphicalNote from a Note, use osmd.EngravingRules.GNote(note).
      */
-    public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {
-        // default options:
-        applyToBeams: true,
-        applyToLedgerLines: true,
-        applyToNotehead: true,
-        applyToSlurs: true,
-        applyToStem: true,
-        applyToTies: true,
-    }): void {
+    public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {}): void {
+        const applyToBeams: boolean = visibilityOptions.applyToBeams ?? true; // default option if not given
+        const applyToLedgerLines: boolean = visibilityOptions.applyToLedgerLines ?? true;
+        const applyToNotehead: boolean = visibilityOptions.applyToNotehead ?? true;
+        const applyToSlurs: boolean = visibilityOptions.applyToSlurs ?? true;
+        const applyToStem: boolean = visibilityOptions.applyToStem ?? true;
+        const applyToTies: boolean = visibilityOptions.applyToTies ?? true;
+
         const visibilityAttribute: string = "visibility";
         const visibilityString: string = visible ? "visible" : "hidden";
-        if (visibilityOptions.applyToNotehead !== false) {
-            // !== false so that it also matches undefined (option not set).
+        if (applyToNotehead) {
+            // so that it also matches undefined (option not set).
             this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
         }
         // instead of setAttribute, remove() also works, but isn't reversible.
-        if (visibilityOptions.applyToStem !== false) {
+        if (applyToStem) {
             this.getStemSVG()?.setAttribute(visibilityAttribute, visibilityString);
         }
-        if (visibilityOptions.applyToBeams !== false) {
+        if (applyToBeams) {
             for (const beamSVG of this.getBeamSVGs()) {
                 beamSVG?.setAttribute(visibilityAttribute, visibilityString);
             }
         }
-        if (visibilityOptions.applyToLedgerLines !== false) {
+        if (applyToLedgerLines) {
             for (const ledgerSVG of this.getLedgerLineSVGs()) {
                 ledgerSVG?.setAttribute(visibilityAttribute, visibilityString);
             }
         }
-        if (visibilityOptions.applyToTies !== false) {
+        if (applyToTies) {
             for (const tie of this.getTieSVGs()) {
                 tie?.setAttribute(visibilityAttribute, visibilityString);
             }
         }
-        if (visibilityOptions.applyToSlurs !== false) {
+        if (applyToSlurs) {
             for (const slur of this.getSlurSVGs()) {
                 slur?.setAttribute(visibilityAttribute, visibilityString);
             }
@@ -292,42 +291,17 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return modifierSVGs;
     }
 
-    public setColor(color: string, includeModifiers: boolean = true, includeBeams: boolean = false): void {
-        // stem:
-        const stem: HTMLElement = this.getStemSVG();
-        if (stem) {
-            stem.setAttribute("stroke", color);
-        }
-        // if (stem instanceof SVGGElement) {
-        //     stem.style.stroke = color;
-        // }
+    public setColor(color: string, coloringOptions: ColoringOptions = {}): void {
+        const applyToBeams: boolean = coloringOptions.applyToBeams ?? false; // default if option not given
+        const applyToFlag: boolean = coloringOptions.applyToFlag ?? true;
+        const applyToLedgerLines: boolean = coloringOptions.applyToLedgerLines ?? false;
+        const applyToModifiers: boolean = coloringOptions.applyToModifiers ?? true;
+        const applyToNoteheads: boolean = coloringOptions.applyToNoteheads ?? true;
+        const applyToSlurs: boolean = coloringOptions.applyToSlurs ?? false;
+        const applyToStem: boolean = coloringOptions.applyToStem ?? true;
+        const applyToTies: boolean = coloringOptions.applyToTies ?? false;
 
-        // notehead(s):
-        const noteheads: HTMLElement[] = this.getNoteheadSVGs();
-        for (const notehead of noteheads) {
-            for (const noteheadPath of notehead.children) {
-                noteheadPath.setAttribute("fill", color);
-            }
-        }
-
-        // flag:
-        const flag: HTMLElement = this.getFlagSVG();
-        if (flag) {
-            for (const flagPath of flag.children) {
-                flagPath.setAttribute("fill", color);
-            }
-        }
-
-        // modifiers, e.g. accidentals:
-        const modifiers: HTMLElement[] = this.getModifierSVGs();
-        for (const modifier of modifiers) {
-            for (const path of modifier.children) {
-                path.setAttribute("fill", color);
-            }
-        }
-
-        // beams:
-        if (includeBeams) {
+        if (applyToBeams) {
             const beams: HTMLElement[] = this.getBeamSVGs();
             for (const beam of beams) {
                 for (const beamPath of beam.children) {
@@ -335,17 +309,64 @@ export class VexFlowGraphicalNote extends GraphicalNote {
                 }
             }
         }
-    }
-}
 
-/** Visibility options for VexFlowGraphicalNote.setVisible().
- * E.g. if setVisible(false, {applyToTies: false}), everything about a note will be invisible except its ties.
- * */
-export interface VisibilityOptions {
-    applyToBeams?: boolean;
-    applyToLedgerLines?: boolean;
-    applyToNotehead?: boolean;
-    applyToSlurs?: boolean;
-    applyToStem?: boolean;
-    applyToTies?: boolean;
+        if (applyToFlag) {
+            const flag: HTMLElement = this.getFlagSVG();
+            if (flag) {
+                for (const flagPath of flag.children) {
+                    flagPath.setAttribute("fill", color);
+                }
+            }
+        }
+
+        if (applyToLedgerLines) {
+            const ledgerLines: HTMLElement[] = this.getLedgerLineSVGs();
+            for (const line of ledgerLines) {
+                line.setAttribute("stroke", color);
+            }
+        }
+
+        if (applyToModifiers) { // e.g. accidentals
+            const modifiers: HTMLElement[] = this.getModifierSVGs();
+            for (const modifier of modifiers) {
+                for (const path of modifier.children) {
+                    path.setAttribute("fill", color);
+                }
+            }
+        }
+
+        if (applyToNoteheads) {
+            const noteheads: HTMLElement[] = this.getNoteheadSVGs();
+            for (const notehead of noteheads) {
+                for (const noteheadPath of notehead.children) {
+                    noteheadPath.setAttribute("fill", color);
+                }
+            }
+        }
+
+        if (applyToSlurs) {
+            const slurs: HTMLElement[] = this.getSlurSVGs();
+            for (const slur of slurs) {
+                for (const path of slur.children) {
+                    path.setAttribute("fill", color);
+                }
+            }
+        }
+
+        if (applyToStem) {
+            const stem: HTMLElement = this.getStemSVG();
+            if (stem) {
+                stem.setAttribute("stroke", color);
+            }
+        }
+
+        if (applyToTies) {
+            const ties: HTMLElement[] = this.getTieSVGs();
+            for (const tie of ties) {
+                for (const path of tie.children) {
+                    path.setAttribute("fill", color);
+                }
+            }
+        }
+    }
 }

@@ -78,4 +78,35 @@ export class GraphicalNote extends GraphicalObject {
     public get ToStringShortGet(): string {
       return this.ToStringShort(0);
     }
+
+    public setColor(color: string, coloringOptions: ColoringOptions): void {
+      // implemented in VexFlowGraphicalNote
+    }
+
+    public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {}): void {
+      // implemented in VexFlowGraphicalNote
+    }
+}
+
+export interface ColoringOptions {
+  applyToBeams?: boolean;
+  applyToFlag?: boolean;
+  applyToLedgerLines?: boolean;
+  applyToModifiers?: boolean;
+  applyToNoteheads?: boolean;
+  applyToSlurs?: boolean;
+  applyToStem?: boolean;
+  applyToTies?: boolean;
+}
+
+/** Visibility options for VexFlowGraphicalNote.setVisible().
+ * E.g. if setVisible(false, {applyToTies: false}), everything about a note will be invisible except its ties.
+ * */
+export interface VisibilityOptions {
+  applyToBeams?: boolean;
+  applyToLedgerLines?: boolean;
+  applyToNotehead?: boolean;
+  applyToSlurs?: boolean;
+  applyToStem?: boolean;
+  applyToTies?: boolean;
 }
