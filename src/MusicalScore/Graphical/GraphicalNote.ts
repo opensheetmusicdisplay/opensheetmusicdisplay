@@ -88,6 +88,7 @@ export class GraphicalNote extends GraphicalObject {
     }
 }
 
+/** Coloring options for VexFlowGraphicalNote.setColor(). */
 export interface ColoringOptions {
   applyToBeams?: boolean;
   applyToFlag?: boolean;
