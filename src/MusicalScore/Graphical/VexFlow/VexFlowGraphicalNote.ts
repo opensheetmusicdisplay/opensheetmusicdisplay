@@ -190,7 +190,13 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 
     /** Gets the SVG path element of the note's stem. */
     public getStemSVG(): HTMLElement {
-        return document.getElementById("vf-" + this.getSVGId() + "-stem");
+        const groupOrPath: HTMLElement = document.getElementById("vf-" + this.getSVGId() + "-stem");
+        // whether we get the group node or path node depends on whether the note has a beam, for some reason (TODO)
+        if (groupOrPath?.children.length > 0) {
+            return groupOrPath.children[0] as HTMLElement;
+            // We want to return the same type of node every time, not a path node if no beam and a group node if it has a beam.
+        }
+        return groupOrPath;
         // more correct, but Vex.Prefix() is not in the definitions:
         //return document.getElementById((Vex as any).Prefix(this.getSVGId() + "-stem"));
     }
@@ -242,6 +248,93 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             slurSVGs.push(slur);
         }
         return slurSVGs;
+    }
+
+    public getNoteheadSVGs(): HTMLElement[] {
+        const vfNote: HTMLElement = this.getVFNoteSVG();
+        const noteheads: HTMLElement[] = [];
+        for (const noteChild of vfNote.children) {
+            if (noteChild.classList.contains("vf-notehead")) {
+                noteheads.push(noteChild as HTMLElement);
+            }
+        }
+        return noteheads;
+    }
+
+    public getFlagSVG(): HTMLElement {
+        const vfNote: HTMLElement = this.getVFNoteSVG();
+        for (const noteChild of vfNote.children) {
+            if (noteChild.classList.contains("vf-flag")) {
+                return noteChild as HTMLElement;
+            }
+        }
+        return undefined;
+    }
+
+    public getVFNoteSVG(): HTMLElement {
+        const note: SVGGElement = this.getSVGGElement();
+        for (const noteChild of note.children) {
+            if (noteChild.classList.contains("vf-note")) {
+                return noteChild as HTMLElement;
+            }
+        }
+        return undefined;
+    }
+
+    public getModifierSVGs(): HTMLElement[] {
+        const stavenote: SVGGElement = this.getSVGGElement();
+        const modifierSVGs: HTMLElement[] = [];
+        for (const noteChild of stavenote?.children) {
+            if (noteChild.classList.contains("vf-modifiers")) {
+                modifierSVGs.push(noteChild as HTMLElement);
+            }
+        }
+        return modifierSVGs;
+    }
+
+    public setColor(color: string, includeModifiers: boolean = true, includeBeams: boolean = false): void {
+        // stem:
+        const stem: HTMLElement = this.getStemSVG();
+        if (stem) {
+            stem.setAttribute("stroke", color);
+        }
+        // if (stem instanceof SVGGElement) {
+        //     stem.style.stroke = color;
+        // }
+
+        // notehead(s):
+        const noteheads: HTMLElement[] = this.getNoteheadSVGs();
+        for (const notehead of noteheads) {
+            for (const noteheadPath of notehead.children) {
+                noteheadPath.setAttribute("fill", color);
+            }
+        }
+
+        // flag:
+        const flag: HTMLElement = this.getFlagSVG();
+        if (flag) {
+            for (const flagPath of flag.children) {
+                flagPath.setAttribute("fill", color);
+            }
+        }
+
+        // modifiers, e.g. accidentals:
+        const modifiers: HTMLElement[] = this.getModifierSVGs();
+        for (const modifier of modifiers) {
+            for (const path of modifier.children) {
+                path.setAttribute("fill", color);
+            }
+        }
+
+        // beams:
+        if (includeBeams) {
+            const beams: HTMLElement[] = this.getBeamSVGs();
+            for (const beam of beams) {
+                for (const beamPath of beam.children) {
+                    beamPath.setAttribute("fill", color);
+                }
+            }
+        }
     }
 }
 

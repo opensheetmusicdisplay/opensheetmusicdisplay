@@ -536,6 +536,7 @@ export class StaveNote extends StemmableNote {
       if (notehead.isLedgerLinedRest) {
         this.hasLedgerLinedRest = true;
       }
+      notehead.id = this.stem.id = Vex.Prefix(`${this.getAttribute("id")}-stem${i}`);
 
       this.note_heads[i] = notehead;
     }

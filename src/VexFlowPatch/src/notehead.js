@@ -241,7 +241,7 @@ export class NoteHead extends Note {
       const staveSpace = this.stave.getSpacingBetweenLines();
       drawSlashNoteHead(ctx, this.duration, head_x, y, stem_direction, staveSpace);
     } else {
-      Glyph.renderGlyph(ctx, head_x, y, glyph_font_scale, this.glyph_code);
+      Glyph.renderGlyph(ctx, head_x, y, glyph_font_scale, this.glyph_code, this.id);
     }
 
     if (this.style) {
