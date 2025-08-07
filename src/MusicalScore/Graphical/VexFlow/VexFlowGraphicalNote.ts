@@ -298,6 +298,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         const applyToBeams: boolean = coloringOptions.applyToBeams ?? false; // default if option not given
         const applyToFlag: boolean = coloringOptions.applyToFlag ?? true;
         const applyToLedgerLines: boolean = coloringOptions.applyToLedgerLines ?? false;
+        const applyToLyrics: boolean = coloringOptions.applyToLyrics ?? false;
         const applyToModifiers: boolean = coloringOptions.applyToModifiers ?? true;
         const applyToNoteheads: boolean = coloringOptions.applyToNoteheads ?? true;
         const applyToSlurs: boolean = coloringOptions.applyToSlurs ?? false;
@@ -326,6 +327,16 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             const ledgerLines: HTMLElement[] = this.getLedgerLineSVGs();
             for (const line of ledgerLines) {
                 line.setAttribute("stroke", color);
+            }
+        }
+
+        if (applyToLyrics) {
+            const lyricsNodes: HTMLElement[] = this.getLyricsSVGs();
+            for (const lyricsNode of lyricsNodes) {
+                for (const textNode of lyricsNode.children) {
+                    textNode.setAttribute("stroke", color);
+                    textNode.setAttribute("fill", color);
+                }
             }
         }
 

@@ -79,6 +79,14 @@ export class GraphicalNote extends GraphicalObject {
       return this.ToStringShort(0);
     }
 
+    public getLyricsSVGs(): HTMLElement[] {
+      const lyricsEntries: HTMLElement[] = [];
+      for (const lyricsEntry of this.parentVoiceEntry?.parentStaffEntry.LyricsEntries) {
+        lyricsEntries.push(lyricsEntry.GraphicalLabel?.SVGNode as HTMLElement);
+      }
+      return lyricsEntries;
+    }
+
     /** Change the color of a note (without re-rendering). See ColoringOptions for options like applyToBeams etc.
      * This requires the SVG backend (default, instead of canvas backend).
      */
@@ -101,6 +109,7 @@ export interface ColoringOptions {
   applyToBeams?: boolean;
   applyToFlag?: boolean;
   applyToLedgerLines?: boolean;
+  applyToLyrics?: boolean;
   applyToModifiers?: boolean;
   applyToNoteheads?: boolean;
   applyToSlurs?: boolean;
