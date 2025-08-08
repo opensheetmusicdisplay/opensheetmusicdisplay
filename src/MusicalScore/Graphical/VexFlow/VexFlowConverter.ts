@@ -298,7 +298,7 @@ export class VexFlowConverter {
                         let previousVoiceEntry: VoiceEntry, followingVoiceEntry: VoiceEntry;
                         let pauseVEIndex: number = -1;
                         for (let i: number = 0; i < neighborGSEs.length; i++) {
-                            if (neighborGSEs[i]?.graphicalVoiceEntries[0].parentVoiceEntry === pauseVoiceEntry) {
+                            if (neighborGSEs[i]?.graphicalVoiceEntries[0]?.parentVoiceEntry === pauseVoiceEntry) {
                                 pauseVEIndex = i;
                                 break;
                             }
