@@ -1,3 +1,19 @@
+## [1.9.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.1...1.9.2) (2025-08-11)
+
+
+### Bug Fixes
+
+* **Error:** Fix a rare null error in VexFlowConverter (Killer Queen) ([8e964ea](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8e964eab0e5c4ad366d13f7fc70ab27545259895))
+
+
+### Features
+
+* **GraphicalNote:** Add function setColor() to be able to set color for notehead, stem, beams, accidentals, etc ([#1620](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1620)). Add helper functions getNoteheadSVGs, getFlagSVG, getModifierSVGs ([2f7857a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2f7857a3c216bf92532438751228cefda3f1d6b3))
+* **GraphicalNote:** Add option to color lyrics to setColor(). Add getLyricsSVGs() function ([#1620](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1620)) ([f393a3f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f393a3f3a70edbfcb24258c25ea056a4aba736cf))
+* **Tuplet:** Read ratioed value from tuplet attribute ("show-number: both" = true) ([#1601](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1601)) ([76d43ab](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/76d43abda6a9688c010882ab2ce969f9d4cae68c))
+
+
+
 ## [1.9.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.0...1.9.1) (2025-08-05)
 
 
