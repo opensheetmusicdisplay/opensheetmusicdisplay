@@ -111,14 +111,15 @@ export interface ColoringOptions {
   applyToLedgerLines?: boolean;
   applyToLyrics?: boolean;
   applyToModifiers?: boolean;
+  applyToMultiRestMeasure?: boolean;
+  /** Whether to apply the color to the number indicating how many measures the rest lasts (not the measure number). */
+  applyToMultiRestMeasureNumber?: boolean;
+  /** Whether to apply the color to the wide bar within the stafflines (looks about like `|----|`). */
+  applyToMultiRestMeasureRestBar?: boolean;
   applyToNoteheads?: boolean;
   applyToSlurs?: boolean;
   applyToStem?: boolean;
   applyToTies?: boolean;
-  applyToMultiRestMeasure?: boolean;
-  applyToMultiRestMeasureNumber?: boolean;
-  /** Whether to apply the color to the wide bar within the stafflines (looks about like `|----|`). */
-  applyToMultiRestMeasureRestBar?: boolean;
 }
 
 /** Visibility options for VexFlowGraphicalNote.setVisible().
