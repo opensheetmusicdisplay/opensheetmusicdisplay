@@ -14,7 +14,7 @@ import log from "loglevel";
 import { ClefEnum, ClefInstruction } from "../../VoiceData/Instructions/ClefInstruction";
 
 export class VexFlowTabMeasure extends VexFlowMeasure {
-    private multiRestElement: any; // VexFlow: Element
+    public multiRestElement: any; // VexFlow: Element
 
     constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
         super(staff, sourceMeasure, staffLine);

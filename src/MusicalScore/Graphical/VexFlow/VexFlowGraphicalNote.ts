@@ -10,6 +10,7 @@ import {OctaveEnum, OctaveShift} from "../../VoiceData/Expressions/ContinuousExp
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
 import { EngravingRules } from "../EngravingRules";
+import { VexFlowMultiRestMeasure } from "./VexFlowMultiRestMeasure";
 
 /**
  * The VexFlow version of a [[GraphicalNote]].
@@ -252,9 +253,11 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public getNoteheadSVGs(): HTMLElement[] {
         const vfNote: HTMLElement = this.getVFNoteSVG();
         const noteheads: HTMLElement[] = [];
-        for (const noteChild of vfNote.children) {
-            if (noteChild.classList.contains("vf-notehead")) {
-                noteheads.push(noteChild as HTMLElement);
+        if (vfNote?.children?.length) {
+            for (const noteChild of vfNote.children) {
+                if (noteChild.classList.contains("vf-notehead")) {
+                    noteheads.push(noteChild as HTMLElement);
+                }
             }
         }
         return noteheads;
@@ -262,17 +265,22 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 
     public getFlagSVG(): HTMLElement {
         const vfNote: HTMLElement = this.getVFNoteSVG();
-        for (const noteChild of vfNote.children) {
-            if (noteChild.classList.contains("vf-flag")) {
-                return noteChild as HTMLElement;
+        if (vfNote?.children?.length) {
+            for (const noteChild of vfNote.children) {
+                if (noteChild.classList.contains("vf-flag")) {
+                    return noteChild as HTMLElement;
+                }
             }
         }
         return undefined;
     }
 
     public getVFNoteSVG(): HTMLElement {
+        if (this.parentVoiceEntry.parentStaffEntry.parentMeasure.isMultiRestMeasure()) {
+            return this.parentVoiceEntry.parentStaffEntry.parentMeasure.multiRestElement;
+        }
         const note: SVGGElement = this.getSVGGElement();
-        for (const noteChild of note.children) {
+        for (const noteChild of note?.children) {
             if (noteChild.classList.contains("vf-note")) {
                 return noteChild as HTMLElement;
             }
@@ -283,9 +291,11 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public getModifierSVGs(): HTMLElement[] {
         const stavenote: SVGGElement = this.getSVGGElement();
         const modifierSVGs: HTMLElement[] = [];
-        for (const noteChild of stavenote?.children) {
-            if (noteChild.classList.contains("vf-modifiers")) {
-                modifierSVGs.push(noteChild as HTMLElement);
+        if (stavenote?.children?.length) {
+            for (const noteChild of stavenote?.children) {
+                if (noteChild.classList.contains("vf-modifiers")) {
+                    modifierSVGs.push(noteChild as HTMLElement);
+                }
             }
         }
         return modifierSVGs;
@@ -304,6 +314,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         const applyToSlurs: boolean = coloringOptions.applyToSlurs ?? false;
         const applyToStem: boolean = coloringOptions.applyToStem ?? true;
         const applyToTies: boolean = coloringOptions.applyToTies ?? false;
+        const applyToMultiRestMeasure: boolean = coloringOptions.applyToMultiRestMeasure ?? true;
 
         if (applyToBeams) {
             const beams: HTMLElement[] = this.getBeamSVGs();
@@ -336,6 +347,24 @@ export class VexFlowGraphicalNote extends GraphicalNote {
                 for (const textNode of lyricsNode.children) {
                     textNode.setAttribute("stroke", color);
                     textNode.setAttribute("fill", color);
+                }
+            }
+        }
+
+        if (applyToMultiRestMeasure) {
+            if (this.parentVoiceEntry.parentStaffEntry.parentMeasure instanceof VexFlowMultiRestMeasure) {
+                const measure: VexFlowMultiRestMeasure = this.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMultiRestMeasure;
+                const svgElement: SVGGElement = measure.multiRestElementSVG;
+                if (svgElement?.children?.length) {
+                    for (const child of svgElement.children) { // wide bar, and number above
+                        if (child.children?.length) { // vf-timesignature (multi-rest number)
+                            for (const subChild of child.children) {
+                                subChild.setAttribute("fill", color);
+                            }
+                        } else {
+                            child.setAttribute("fill", color);
+                        }
+                    }
                 }
             }
         }

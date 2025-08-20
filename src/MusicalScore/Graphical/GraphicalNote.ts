@@ -115,6 +115,7 @@ export interface ColoringOptions {
   applyToSlurs?: boolean;
   applyToStem?: boolean;
   applyToTies?: boolean;
+  applyToMultiRestMeasure?: boolean;
 }
 
 /** Visibility options for VexFlowGraphicalNote.setVisible().
