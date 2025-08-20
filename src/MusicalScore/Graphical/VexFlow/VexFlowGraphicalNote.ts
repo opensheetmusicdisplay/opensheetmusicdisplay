@@ -315,6 +315,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         const applyToStem: boolean = coloringOptions.applyToStem ?? true;
         const applyToTies: boolean = coloringOptions.applyToTies ?? false;
         const applyToMultiRestMeasure: boolean = coloringOptions.applyToMultiRestMeasure ?? true;
+        const applyToMultiRestMeasureNumber: boolean = coloringOptions.applyToMultiRestMeasureNumber ?? true;
+        const applyToMultiRestMeasureRestBar: boolean = coloringOptions.applyToMultiRestMeasureRestBar ?? true;
 
         if (applyToBeams) {
             const beams: HTMLElement[] = this.getBeamSVGs();
@@ -358,11 +360,15 @@ export class VexFlowGraphicalNote extends GraphicalNote {
                 if (svgElement?.children?.length) {
                     for (const child of svgElement.children) { // wide bar, and number above
                         if (child.children?.length) { // vf-timesignature (multi-rest number)
-                            for (const subChild of child.children) {
-                                subChild.setAttribute("fill", color);
+                            if (applyToMultiRestMeasureNumber) {
+                                for (const subChild of child.children) {
+                                    subChild.setAttribute("fill", color);
+                                }
                             }
                         } else {
-                            child.setAttribute("fill", color);
+                            if (applyToMultiRestMeasureRestBar) {
+                                child.setAttribute("fill", color);
+                            }
                         }
                     }
                 }

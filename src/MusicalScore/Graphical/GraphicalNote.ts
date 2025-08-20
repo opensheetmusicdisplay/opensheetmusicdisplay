@@ -116,6 +116,9 @@ export interface ColoringOptions {
   applyToStem?: boolean;
   applyToTies?: boolean;
   applyToMultiRestMeasure?: boolean;
+  applyToMultiRestMeasureNumber?: boolean;
+  /** Whether to apply the color to the wide bar within the stafflines (looks about like `|----|`). */
+  applyToMultiRestMeasureRestBar?: boolean;
 }
 
 /** Visibility options for VexFlowGraphicalNote.setVisible().
