@@ -760,10 +760,9 @@ export class EngravingRules {
         this.SlurMaximumYControlPointDistance = undefined;
 
         // Glissandi
-        this.GlissandoNoteOffset = 0.5;
+        this.GlissandoNoteOffset = 0.3;
         this.GlissandoStafflineStartMinimumWidth = 1;
         this.GlissandoStafflineStartYDistanceToNote = 0.8; // just crossing the line above/below end note. should be similar to tab slide angle.
-        this.GlissandoStafflineEndOffset = 1;
         this.GlissandoDefaultWidth = 0.1;
 
         // Repetitions
