@@ -26,7 +26,7 @@ module.exports = {
         test: /\.ts$/,
         loader: "ts-loader",
         // loader: 'awesome-typescript-loader',
-        exclude: /(node_modules|bower_components)/,
+        exclude: /(node_modules|bower_components|test)/,
       },
       {
         test: /\.glsl$/,

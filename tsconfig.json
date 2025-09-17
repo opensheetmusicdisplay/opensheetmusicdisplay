@@ -8,6 +8,7 @@
     "outDir": "build/dist",
     "declaration": true,
     "sourceMap": true,
+    "types": ["node", "jest", "mocha"],
     "typeRoots": ["./node_modules/@types"],
   },
   "include": ["./.eslintrc.js", "./test/", "./src"],

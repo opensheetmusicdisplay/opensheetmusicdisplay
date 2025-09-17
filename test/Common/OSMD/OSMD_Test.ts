@@ -189,7 +189,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                 }
             }
         );
-    }).timeout(5000);
+    }, 5000);
 
     it("load invalid URL", (done: Mocha.Done) => {
         const url: string = "https://www.afjkhfjkauu2ui3z2uiu.com";
@@ -207,7 +207,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                 }
             }
         );
-    }).timeout(5000);
+    }, 5000);
 
     it("load invalid XML string", (done: Mocha.Done) => {
         const xml: string = "<?xml";

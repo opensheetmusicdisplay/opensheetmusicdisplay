@@ -364,6 +364,8 @@ export class ExpressionReader {
                 try {
                     if (pedalNode.attribute("line")?.value === "yes") {
                         line = true;
+                        // fix: Enforce that pedal mark is also shown when pedal line is drawn
+                        sign = true;
                     } else if (pedalNode.attribute("line")?.value === "no"){
                         line = false;
                         //No line implies sign
