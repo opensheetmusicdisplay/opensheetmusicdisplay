@@ -950,6 +950,9 @@ export abstract class MusicSheetCalculator {
         if (!this.leadSheet) {
             this.calculateOrnaments();
         }
+        // calculate all LyricWords Positions
+        this.calculateLyricsPosition();
+
         // calculate StaffEntry ChordSymbols
         this.calculateChordSymbols();
         if (!this.leadSheet) {
@@ -975,9 +978,6 @@ export abstract class MusicSheetCalculator {
             this.calculateTempoExpressions();
         }
         this.calculateRehearsalMarks();
-
-        // calculate all LyricWords Positions
-        this.calculateLyricsPosition();
 
         // update all StaffLine's Borders
         // create temporary Object, just to call the methods (in order to avoid declaring them static)
