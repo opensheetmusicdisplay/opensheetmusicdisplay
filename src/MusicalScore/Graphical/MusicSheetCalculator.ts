@@ -3137,14 +3137,6 @@ export abstract class MusicSheetCalculator {
                             if (fingering.fontFamily) {
                                 label.fontFamily = fingering.fontFamily;
                             }
-                            const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
-                            const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
-                            let skybottomFurthest: number = undefined;
-                            if (placement === PlacementEnum.Above) {
-                                skybottomFurthest = skybottomcalculator.getSkyLineMinInRange(marginLeft, marginRight);
-                            } else {
-                                skybottomFurthest = skybottomcalculator.getBottomLineMaxInRange(marginLeft, marginRight);
-                            }
                             let yShift: number = 0;
                             if (i === 0) {
                                 yShift += this.rules.FingeringOffsetY;
@@ -3157,10 +3149,18 @@ export abstract class MusicSheetCalculator {
                             if (placement === PlacementEnum.Above) {
                                 yShift *= -1;
                             }
-                            gLabel.PositionAndShape.RelativePosition.y += skybottomFurthest + yShift;
                             gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX;
                             gLabel.setLabelPositionAndShapeBorders();
                             gLabel.PositionAndShape.calculateBoundingBox();
+                            const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
+                            const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
+                            let skybottomFurthest: number = undefined;
+                            if (placement === PlacementEnum.Above) {
+                                skybottomFurthest = skybottomcalculator.getSkyLineMinInRange(marginLeft, marginRight);
+                            } else {
+                                skybottomFurthest = skybottomcalculator.getBottomLineMaxInRange(marginLeft, marginRight);
+                            }
+                            gLabel.PositionAndShape.RelativePosition.y += skybottomFurthest + yShift;
                             gse.FingeringEntries.push(gLabel);
                             const start: number = gLabel.PositionAndShape.RelativePosition.x + gLabel.PositionAndShape.BorderLeft;
                             //start -= line.PositionAndShape.RelativePosition.x;
