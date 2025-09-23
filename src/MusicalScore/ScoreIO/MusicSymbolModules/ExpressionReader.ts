@@ -364,8 +364,6 @@ export class ExpressionReader {
                 try {
                     if (pedalNode.attribute("line")?.value === "yes") {
                         line = true;
-                        // fix: Enforce that pedal mark is also shown when pedal line is drawn
-                        sign = true;
                     } else if (pedalNode.attribute("line")?.value === "no"){
                         line = false;
                         //No line implies sign
@@ -534,8 +532,21 @@ export class ExpressionReader {
             }
         }
     }
+    private isNumber(str: string): boolean {
+        if (typeof str !== "string") {
+            return false; // ensure it's a string
+        }
+        const num: number = Number(str);
+        return !isNaN(num);
+    }
     private interpretWords(wordsNode: IXmlElement, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction): void {
-        const text: string = wordsNode.value;
+        let text: string = wordsNode.value;
+        if (this.isNumber(text)) {
+            /* Fix for piano fingering being displayed as a word.
+             * We want to ensure that words added to notes are broken down into individual characters,
+             * and displayed vertically as finger placement for a note. */
+            text = text.split("").join("\n");
+        }
         if (currentMeasure.Rules.IgnoreBracketsWords && (
             /^\(\s*\)$/.test(text) || /^\[\s*\]$/.test(text) // (*) and [*]
         )) { // regex: brackets with arbitrary white space in-between
