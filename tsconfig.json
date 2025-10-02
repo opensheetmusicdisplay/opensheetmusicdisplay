@@ -2,18 +2,16 @@
   "compilerOptions": {
     "target": "es2020",
     "esModuleInterop": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "es2020",
+    "moduleResolution": "bundler",
     "noUnusedLocals": true,
     "outDir": "build/dist",
     "declaration": true,
-    "sourceMap": true,
-    "types": ["node", "jest", "mocha"],
-    "typeRoots": ["./node_modules/@types"],
+    "allowJs": true
   },
-  "include": ["./.eslintrc.js", "./test/", "./src"],
+  "include": ["./.eslintrc.js", "./src/**/*.ts"],
   "exclude": [
-    "node_modules",
+    "node_modules/**/*",
     "dist",
     "demo",
     "build",
