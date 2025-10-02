@@ -1,6 +1,6 @@
 {
-  "name": "opensheetmusicdisplay",
-  "version": "1.9.0",
+  "name": "@my-groove/opensheetmusicdisplay",
+  "version": "1.9.0-mg3",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
   "main": "build/dist/src/index.js",
   "types": "build/dist/src/index.d.ts",
@@ -55,7 +55,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
+    "url": "https://github.com/my-groove/osmd"
   },
   "keywords": [
     "sheet",

@@ -10,7 +10,7 @@ import {
     SkyBottomLineBatchCalculatorBackendType
 } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "../../Common/Enums/ColoringModes";
-import { Dictionary } from "typescript-collections";
+import { Dictionary } from "typescript-collections/dist/lib";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum, AccidentalEnum } from "../../Common/DataObjects/Pitch";
 import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/VoiceData/ChordSymbolContainer";

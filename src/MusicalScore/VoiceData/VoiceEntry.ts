@@ -9,7 +9,7 @@ import {OrnamentContainer} from "./OrnamentContainer";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {OrnamentEnum} from "./OrnamentContainer";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
-import { Dictionary } from "typescript-collections";
+import { Dictionary } from "typescript-collections/dist/lib";
 import {Arpeggio} from "./Arpeggio";
 import { SourceMeasure } from "./SourceMeasure";
 import { Articulation } from "./Articulation";

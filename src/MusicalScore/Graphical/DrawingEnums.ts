@@ -1,6 +1,4 @@
-// import * as Collections from "typescript-collections";
-// import Collections = require("typescript-collections");
-import { Dictionary } from "typescript-collections";
+import { Dictionary } from "typescript-collections/dist/lib";
 
 /**
  * The supported styles to draw a rectangle on the music sheet

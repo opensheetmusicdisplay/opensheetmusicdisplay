@@ -1,4 +1,4 @@
-import { Dictionary } from "typescript-collections";
+import { Dictionary } from "typescript-collections/dist/lib";
 
 declare global {
     interface Array<T> {

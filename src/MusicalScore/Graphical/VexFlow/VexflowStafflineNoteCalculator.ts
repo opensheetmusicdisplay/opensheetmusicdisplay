@@ -2,7 +2,7 @@ import { IStafflineNoteCalculator } from "../../Interfaces/IStafflineNoteCalcula
 import { GraphicalNote } from "../GraphicalNote";
 import { Pitch, NoteEnum } from "../../../Common/DataObjects/Pitch";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
-import { Dictionary } from "typescript-collections";
+import { Dictionary } from "typescript-collections/dist/lib";
 import { EngravingRules } from "../EngravingRules";
 import { ClefEnum } from "../../VoiceData/Instructions/ClefInstruction";
 import { StemDirectionType, VoiceEntry } from "../../VoiceData/VoiceEntry";
