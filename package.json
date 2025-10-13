@@ -12,7 +12,7 @@
     "test:watch": "karma start --no-single-run --auto-watch --browsers ChromeNoSecurity",
     "prebuild": "npm-run-all prebuildVexflow",
     "prebuildVexflow": "ncp src/VexFlowPatch/src/ node_modules/vexflow/src/",
-    "prepare": "npm-run-all husky build",
+    "prepare": "npm-run-all husky-safe build",
     "build": "npm-run-all lint build:webpack",
     "build:webpack": "webpack --progress --config webpack.prod.js",
     "build:webpack-dev": "webpack --progress --config webpack.dev.js",
