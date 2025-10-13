@@ -351,7 +351,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     // calculateMeasureWidthFromLyrics() will be called from MusicSheetCalculator after this
-    return minStaffEntriesWidth;
+    return Math.max(minStaffEntriesWidth, 18);
   }
 
   private calculateElongationFactor(containers: (GraphicalLyricEntry|GraphicalChordSymbolContainer)[], staffEntry: GraphicalStaffEntry, lastEntryDict: any,

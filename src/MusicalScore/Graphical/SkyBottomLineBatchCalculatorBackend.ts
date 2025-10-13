@@ -61,7 +61,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
         this.maxWidth = Math.max(...this.measures.map(measure => {
             let width: number = measure.getVFStave().getWidth();
             if (!(width > 0) && !measure.IsExtraGraphicalMeasure) {
-                log.warn("SkyBottomLineBatchCalculatorBackend: width not > 0 in measure " + measure.MeasureNumber);
+                // log.warn("SkyBottomLineBatchCalculatorBackend: width not > 0 in measure " + measure.MeasureNumber);
                 width = 50;
             }
             return width;
