@@ -1,6 +1,6 @@
 {
   "name": "opensheetmusicdisplay",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
   "main": "build/opensheetmusicdisplay.min.js",
   "types": "build/dist/src/index.d.ts",
@@ -18,6 +18,10 @@
     "build:webpack-dev": "webpack --progress --config webpack.dev.js",
     "build:webpack-sourcemap": "webpack --progress --config webpack.sourcemap.js",
     "build:package": "./scripts/build-package.sh",
+    "release": "./scripts/release.sh",
+    "release:patch": "./scripts/release.sh patch",
+    "release:minor": "./scripts/release.sh minor",
+    "release:major": "./scripts/release.sh major",
     "husky": "husky",
     "husky-safe": "husky || true",
     "start": "webpack-dev-server --progress --config webpack.dev.js",
