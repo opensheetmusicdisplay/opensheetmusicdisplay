@@ -349,7 +349,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // all voices that belong to one stave are collectively added to create a common context in VexFlow.
       formatter.joinVoices(voices);
     }
-
+    // pickup measures should be small
+    if (parentSourceMeasure?.ImplicitMeasure && parentSourceMeasure?.MeasureNumber === 0) {
+      return minStaffEntriesWidth;
+    }
     // calculateMeasureWidthFromLyrics() will be called from MusicSheetCalculator after this
     return Math.max(minStaffEntriesWidth, 18);
   }
