@@ -77,6 +77,8 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public ShowTimeSignature: boolean = true;
     public ShowKeySignature: boolean = true;
     public isTabMeasure: boolean = false;
+    /** Only exists on multiple rest measure (VexFlowMultiRestMeasure). See isMultiRestMeasure() function. */
+    public multiRestElement: any;
 
     public get ParentStaff(): Staff {
         return this.parentStaff;
@@ -264,6 +266,10 @@ export abstract class GraphicalMeasure extends GraphicalObject {
 
     public isVisible(): boolean {
         return this.ParentStaff.isVisible();
+    }
+
+    public isMultiRestMeasure(): boolean {
+        return this.multiRestElement !== undefined;
     }
 
     public getGraphicalMeasureDurationFromStaffEntries(): Fraction {

@@ -19,7 +19,8 @@ import { BoundingBox } from "../BoundingBox";
  *  Even though most of those functions aren't needed, apparently you can't remove the layoutStaffEntry function.
  */
 export class VexFlowMultiRestMeasure extends VexFlowMeasure {
-    private multiRestElement: any; // VexFlow: Element
+    public multiRestElement: any; // VexFlow: Element
+    public multiRestElementSVG: SVGGElement;
 
     constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
         super(staff, sourceMeasure, staffLine);
@@ -58,9 +59,12 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
         // Draw stave lines
         this.stave.setContext(ctx).draw();
 
+        this.multiRestElementSVG = ctx.openGroup("multirest") as SVGGElement;
         this.multiRestElement.setStave(this.stave);
         this.multiRestElement.setContext(ctx);
         this.multiRestElement.draw();
+        this.multiRestElement.id = `vf-multi${this.MeasureNumber}`;
+        ctx.closeGroup();
 
         ctx.closeGroup();
 

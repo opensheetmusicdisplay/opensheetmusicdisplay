@@ -816,7 +816,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         let paperHeight: number = 0;
         let topSystemDistance: number = 0;
         try {
-            const defi: string = root.element("defaults").element("page-layout").element("page-height").value;
+            const defi: string = root.element("defaults")?.element("page-layout")?.element("page-height").value ?? "0";
             paperHeight = parseFloat(defi);
         } catch (e) {
             log.info("MusicSheetReader.computeSystemYCoordinates(): couldn't find page height, not reading title/composer.");
