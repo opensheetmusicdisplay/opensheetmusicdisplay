@@ -280,8 +280,12 @@ export class Cursor {
         break;
     }
 
+
     // if (newWidth !== cursorElement.width) { // this `if` is unnecessary and prevents updating color
     cursorElement.width = newWidth;
+    const heightAttribute: number = this.cursorOptions.type === CursorType.ShortThinTopLeft ? 1.5 : height;
+    cursorElement.style.height = `${heightAttribute * 10.0 * this.openSheetMusicDisplay.zoom}px`;
+
     if (this.cursorOptionsRendered !== this.cursorOptions) {
       this.updateStyle(newWidth, this.cursorOptions);
       // only update style (creating new cursor element) if options changed.
