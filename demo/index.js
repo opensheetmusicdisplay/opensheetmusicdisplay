@@ -10,8 +10,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var openSheetMusicDisplay;
     var sampleFolder = "",
         samples = {
-            "F minor n º1": "1078.musicxml",
             "Hanon no 1": "496.musicxml",
+            "F minor n º1": "1078.musicxml",
             "Op 9 2 w anacrusis": "1103-3.musicxml",
             "Sample": "1346.musicxml",
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",

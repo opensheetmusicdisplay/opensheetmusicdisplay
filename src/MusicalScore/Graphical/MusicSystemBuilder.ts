@@ -399,26 +399,37 @@ export class MusicSystemBuilder {
      * @param measureList
      */
     protected initializeActiveInstructions(measureList: GraphicalMeasure[]): void {
-        const firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
-        if (firstSourceMeasure) {
-            this.visibleStaffIndices = this.graphicalMusicSheet.getVisibleStavesIndicesFromSourceMeasure(measureList);
-            for (let i: number = 0, len: number = this.visibleStaffIndices.length; i < len; i++) {
-                const staffIndex: number = this.visibleStaffIndices[i];
-                const graphicalMeasure: GraphicalMeasure = this.graphicalMusicSheet
-                    .getGraphicalMeasureFromSourceMeasureAndIndex(firstSourceMeasure, staffIndex);
-                this.activeClefs[i] = <ClefInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[0];
-                graphicalMeasure.InitiallyActiveClef = this.activeClefs[i]; // TODO ClefInstruction.copy? doesn't exist
-                const firstKeyInstruction: KeyInstruction = <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1];
-                if (firstKeyInstruction) {
-                    let keyInstruction: KeyInstruction = KeyInstruction.copy(firstKeyInstruction);
-                    keyInstruction = this.transposeKeyInstruction(keyInstruction, graphicalMeasure);
-                    this.activeKeys[i] = keyInstruction;
-                }
-                const firstRhythmInstruction: RhythmInstruction = <RhythmInstruction>
-                    firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[2];
-                // if (firstRhythmInstruction) {
-                this.activeRhythm[i] = firstRhythmInstruction;
+        const startVisibleSourceMeasure: SourceMeasure = measureList && measureList[0]
+            ? measureList[0].parentSourceMeasure
+            : this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
+        if (!startVisibleSourceMeasure) {
+            return;
+        }
+        this.visibleStaffIndices = this.graphicalMusicSheet.getVisibleStavesIndicesFromSourceMeasure(measureList);
+
+        for (let i: number = 0, len: number = this.visibleStaffIndices.length; i < len; i++) {
+            this.activeClefs[i] = undefined;
+            this.activeKeys[i] = undefined;
+            this.activeRhythm[i] = undefined;
+        }
+
+        const sourceMeasures: SourceMeasure[] = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures;
+        const startIndex: number = startVisibleSourceMeasure.measureListIndex ?? sourceMeasures.indexOf(startVisibleSourceMeasure);
+        const lastIndexBeforeStart: number = Math.max(0, startIndex - 1);
+
+        for (let m: number = 0; m <= lastIndexBeforeStart; m++) {
+            const srcMeasure: SourceMeasure = sourceMeasures[m];
+            if (!srcMeasure) {
+                continue;
             }
+            this.updateActiveClefs(srcMeasure, []);
+        }
+
+        for (let i: number = 0, len: number = this.visibleStaffIndices.length; i < len; i++) {
+            const staffIndex: number = this.visibleStaffIndices[i];
+            const gm: GraphicalMeasure = this.graphicalMusicSheet
+                .getGraphicalMeasureFromSourceMeasureAndIndex(startVisibleSourceMeasure, staffIndex);
+            gm.InitiallyActiveClef = this.activeClefs[i];
         }
     }
 
@@ -596,7 +607,9 @@ export class MusicSystemBuilder {
      * @param graphicalMeasures
      */
     protected updateActiveClefs(measure: SourceMeasure, graphicalMeasures: GraphicalMeasure[]): void {
-        for (let visStaffIdx: number = 0, len: number = graphicalMeasures.length; visStaffIdx < len; visStaffIdx++) {
+        for (let visStaffIdx: number = 0, len: number = (graphicalMeasures && graphicalMeasures.length > 0)
+            ? graphicalMeasures.length
+            : this.visibleStaffIndices?.length || 0; visStaffIdx < len; visStaffIdx++) {
             const staffIndex: number = this.visibleStaffIndices[visStaffIdx];
             const firstEntry: SourceStaffEntry = measure.FirstInstructionsStaffEntries[staffIndex];
             if (firstEntry) {
