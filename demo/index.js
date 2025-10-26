@@ -10,6 +10,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var openSheetMusicDisplay;
     var sampleFolder = "",
         samples = {
+            "F minor n º1": "1078.musicxml",
+            "Hanon no 1": "496.musicxml",
             "Op 9 2 w anacrusis": "1103-3.musicxml",
             "Sample": "1346.musicxml",
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
@@ -106,7 +108,13 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         darkModeBtn,
         transpose,
         transposeBtn,
-        versionDiv;
+        versionDiv,
+        measureFromInput,
+        measureToInput,
+        applyMeasureRangeBtn,
+        resetMeasureRangeBtn,
+        measureRangeStatus,
+        measureRangeText;
     
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -261,6 +269,12 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         transpose = document.getElementById('transpose');
         transposeBtn = document.getElementById('transpose-btn');
         versionDiv = document.getElementById('versionDiv');
+        measureFromInput = document.getElementById('measureFrom');
+        measureToInput = document.getElementById('measureTo');
+        applyMeasureRangeBtn = document.getElementById('apply-measure-range-btn');
+        resetMeasureRangeBtn = document.getElementById('reset-measure-range-btn');
+        measureRangeStatus = document.getElementById('measure-range-status');
+        measureRangeText = document.getElementById('measure-range-text');
         zoomControlsButtons = document.getElementById('zoomControlsButtons')
 
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
@@ -656,6 +670,42 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             }
         }
 
+        if(applyMeasureRangeBtn && measureFromInput && measureToInput){
+            applyMeasureRangeBtn.onclick = function(){
+                var fromMeasure = parseInt(measureFromInput.value) || 1;
+                var toMeasure = parseInt(measureToInput.value) || Number.MAX_SAFE_INTEGER;
+                
+                if(fromMeasure > toMeasure){
+                    console.log("[OSMD] Warning: From measure cannot be greater than To measure. Swapping values.");
+                    var temp = fromMeasure;
+                    fromMeasure = toMeasure;
+                    toMeasure = temp;
+                }
+                
+                console.log("Applying measure range: [" + fromMeasure + ", " + (toMeasure === Number.MAX_SAFE_INTEGER ? "All" : toMeasure) + "]");
+                openSheetMusicDisplay.setOptions({
+                    drawFromMeasureNumber: fromMeasure,
+                    drawUpToMeasureNumber: toMeasure === Number.MAX_SAFE_INTEGER ? undefined : toMeasure
+                });
+                updateMeasureRangeStatus(fromMeasure, toMeasure);
+                renderAndScrollBack();
+            }
+        }
+
+        if(resetMeasureRangeBtn){
+            resetMeasureRangeBtn.onclick = function(){
+                console.log("Resetting to show all measures");
+                measureFromInput.value = "";
+                measureToInput.value = "";
+                openSheetMusicDisplay.setOptions({
+                    drawFromMeasureNumber: 1,
+                    drawUpToMeasureNumber: undefined
+                });
+                updateMeasureRangeStatus(1, Number.MAX_SAFE_INTEGER);
+                renderAndScrollBack();
+            }
+        }
+
         if (paramDarkMode) {
             openSheetMusicDisplay.setOptions({darkMode: true});
         }
@@ -695,6 +745,21 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             top: newScrollY,
             behavior: 'instant' // visually, there is no change in the scroll bar position, as it's the same as before.
         })
+    }
+
+    function updateMeasureRangeStatus(fromMeasure, toMeasure) {
+        if (measureRangeStatus && measureRangeText) {
+            var statusText;
+            if (toMeasure === Number.MAX_SAFE_INTEGER) {
+                statusText = "Showing all measures";
+            } else if (fromMeasure === toMeasure) {
+                statusText = "Showing measure " + fromMeasure;
+            } else {
+                statusText = "Showing measures " + fromMeasure + " to " + toMeasure;
+            }
+            measureRangeText.textContent = statusText;
+            measureRangeStatus.style.display = "block";
+        }
     }
 
     function findGetParameter(parameterName) {
@@ -897,6 +962,22 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (!isCustom && custom.parentElement === selectSample) {
             selectSample.removeChild(custom);
         }
+        
+        // Update measure range inputs with current sheet info
+        if (openSheetMusicDisplay && openSheetMusicDisplay.Sheet && openSheetMusicDisplay.Sheet.SourceMeasures) {
+            var totalMeasures = openSheetMusicDisplay.Sheet.SourceMeasures.length;
+            if (measureToInput) {
+                measureToInput.placeholder = totalMeasures.toString();
+                measureToInput.max = totalMeasures;
+            }
+            if (measureFromInput) {
+                measureFromInput.max = totalMeasures;
+            }
+            
+            // Initialize status message
+            updateMeasureRangeStatus(1, Number.MAX_SAFE_INTEGER);
+        }
+        
         // Enable controls again
         enable();
     }

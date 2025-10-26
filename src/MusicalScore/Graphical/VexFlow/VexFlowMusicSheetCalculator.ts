@@ -350,7 +350,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       formatter.joinVoices(voices);
     }
     // pickup measures should be small
-    if (parentSourceMeasure?.ImplicitMeasure && parentSourceMeasure?.MeasureNumber === 0) {
+    if (parentSourceMeasure?.ImplicitMeasure) {
       return minStaffEntriesWidth;
     }
     // calculateMeasureWidthFromLyrics() will be called from MusicSheetCalculator after this

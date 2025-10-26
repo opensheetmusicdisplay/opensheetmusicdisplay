@@ -167,6 +167,34 @@
                 <div class="ui button" id="dark-mode-btn">Dark mode</div>
             </div>
             <div class="column advanced-setting">
+                <h3 class="ui header hide-on-portrait">Measure Range:</h3>
+                <button type="button" class="portraitCollapsible show-on-portrait">Measure Range</button>
+                <div class="collapsibleContent">
+                    <div class="ui two column grid">
+                        <div class="column">
+                            <div class="ui labeled input">
+                                <div class="ui label">From</div>
+                                <input type="number" id="measureFrom" placeholder="1" min="1" />
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="ui labeled input">
+                                <div class="ui label">To</div>
+                                <input type="number" id="measureTo" placeholder="All" min="1" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ui vertical buttons" style="margin-top: 10px;">
+                        <div class="ui button" id="apply-measure-range-btn">Apply Range</div>
+                        <div class="ui button" id="reset-measure-range-btn">Show All</div>
+                    </div>
+                    <div class="ui small message" id="measure-range-status" style="margin-top: 10px; display: none;">
+                        <div class="header">Current Range</div>
+                        <p id="measure-range-text">Showing all measures</p>
+                    </div>
+                </div>
+                </div>
+                <div class="column advanced-setting">
                 <h3 class="ui header hide-on-portrait">Transpose by Semitone(s):</h3>
                 <button type="button" class ="portraitCollapsible show-on-portrait">Transpose by Semitone(s)</button>
                 <div class="ui action input collapsibleContent" id="transposeInput">
