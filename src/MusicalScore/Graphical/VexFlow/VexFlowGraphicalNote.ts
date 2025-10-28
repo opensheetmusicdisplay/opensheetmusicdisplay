@@ -254,7 +254,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         const vfNote: HTMLElement = this.getVFNoteSVG();
         const noteheads: HTMLElement[] = [];
         if (vfNote?.children?.length) {
-            for (const noteChild of vfNote.children) {
+            for (const noteChild of Array.from(vfNote.children)) {
                 if (noteChild.classList.contains("vf-notehead")) {
                     noteheads.push(noteChild as HTMLElement);
                 }
@@ -266,7 +266,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public getFlagSVG(): HTMLElement {
         const vfNote: HTMLElement = this.getVFNoteSVG();
         if (vfNote?.children?.length) {
-            for (const noteChild of vfNote.children) {
+            for (const noteChild of Array.from(vfNote.children)) {
                 if (noteChild.classList.contains("vf-flag")) {
                     return noteChild as HTMLElement;
                 }
@@ -280,9 +280,11 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             return this.parentVoiceEntry.parentStaffEntry.parentMeasure.multiRestElement;
         }
         const note: SVGGElement = this.getSVGGElement();
-        for (const noteChild of note?.children) {
-            if (noteChild.classList.contains("vf-note")) {
-                return noteChild as HTMLElement;
+        if (note?.children) {
+            for (const noteChild of Array.from(note.children)) {
+                if (noteChild.classList.contains("vf-note")) {
+                    return noteChild as HTMLElement;
+                }
             }
         }
         return undefined;
@@ -292,7 +294,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         const stavenote: SVGGElement = this.getSVGGElement();
         const modifierSVGs: HTMLElement[] = [];
         if (stavenote?.children?.length) {
-            for (const noteChild of stavenote?.children) {
+            for (const noteChild of Array.from(stavenote.children)) {
                 if (noteChild.classList.contains("vf-modifiers")) {
                     modifierSVGs.push(noteChild as HTMLElement);
                 }
