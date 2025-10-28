@@ -1057,12 +1057,11 @@ export class OpenSheetMusicDisplay {
     }
     //#endregion
 
-    public blurVoice(voiceId: number, opacity: number = 0.3): void {
+    public blurVoice(voiceId: number, opacity: number = 0.2): void {
         if (!this.sheet || !this.graphic) {
             return;
         }
 
-        let noteCount: number = 0;
         for (const instrument of this.sheet.Instruments) {
             for (const staff of instrument.Staves) {
                 for (const voice of staff.Voices) {
@@ -1072,7 +1071,29 @@ export class OpenSheetMusicDisplay {
                                 const gNote: GraphicalNote = this.rules.GNote(note);
                                 if (gNote) {
                                     gNote.setOpacity(opacity);
-                                    noteCount++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public blurAllVoicesExceptVoice(voiceId: number, opacity: number = 0.2): void {
+        if (!this.sheet || !this.graphic) {
+            return;
+        }
+
+        for (const instrument of this.sheet.Instruments) {
+            for (const staff of instrument.Staves) {
+                for (const voice of staff.Voices) {
+                    if (voice.VoiceId !== voiceId) {
+                        for (const voiceEntry of voice.VoiceEntries) {
+                            for (const note of voiceEntry.Notes) {
+                                const gNote: GraphicalNote = this.rules.GNote(note);
+                                if (gNote) {
+                                    gNote.setOpacity(opacity);
                                 }
                             }
                         }
@@ -1087,7 +1108,6 @@ export class OpenSheetMusicDisplay {
             return;
         }
 
-        let noteCount: number = 0;
         for (const instrument of this.sheet.Instruments) {
             for (const staff of instrument.Staves) {
                 for (const voice of staff.Voices) {
@@ -1096,7 +1116,6 @@ export class OpenSheetMusicDisplay {
                             const gNote: GraphicalNote = this.rules.GNote(note);
                             if (gNote) {
                                 gNote.setOpacity(1.0);
-                                noteCount++;
                             }
                         }
                     }
