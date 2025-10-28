@@ -1080,7 +1080,7 @@ export class OpenSheetMusicDisplay {
         }
     }
 
-    public blurAllVoicesExceptVoice(voiceId: number, opacity: number = 0.2): void {
+    public blurVoices(voiceIds: number[], opacity: number = 0.2): void {
         if (!this.sheet || !this.graphic) {
             return;
         }
@@ -1088,7 +1088,30 @@ export class OpenSheetMusicDisplay {
         for (const instrument of this.sheet.Instruments) {
             for (const staff of instrument.Staves) {
                 for (const voice of staff.Voices) {
-                    if (voice.VoiceId !== voiceId) {
+                    if (voiceIds?.includes(voice.VoiceId)) {
+                        for (const voiceEntry of voice.VoiceEntries) {
+                            for (const note of voiceEntry.Notes) {
+                                const gNote: GraphicalNote = this.rules.GNote(note);
+                                if (gNote) {
+                                    gNote.setOpacity(opacity);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public blurAllVoicesExceptVoices(voiceIds: number[], opacity: number = 0.2): void {
+        if (!this.sheet || !this.graphic) {
+            return;
+        }
+
+        for (const instrument of this.sheet.Instruments) {
+            for (const staff of instrument.Staves) {
+                for (const voice of staff.Voices) {
+                    if (!voiceIds?.includes(voice.VoiceId)) {
                         for (const voiceEntry of voice.VoiceEntries) {
                             for (const note of voiceEntry.Notes) {
                                 const gNote: GraphicalNote = this.rules.GNote(note);

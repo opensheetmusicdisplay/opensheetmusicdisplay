@@ -282,6 +282,16 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         applyBlurBtn = document.getElementById('apply-blur-btn');
         resetOpacityBtn = document.getElementById('reset-opacity-btn');
 
+        // Create an additional "Focus Voice" button (blur all except selected voice) if not present
+        var focusVoiceBtn = document.getElementById('focus-voice-btn');
+        if (!focusVoiceBtn && applyBlurBtn && applyBlurBtn.parentElement) {
+            focusVoiceBtn = document.createElement('div');
+            focusVoiceBtn.id = 'focus-voice-btn';
+            focusVoiceBtn.className = 'ui button';
+            focusVoiceBtn.textContent = 'Focus Voice';
+            applyBlurBtn.parentElement.appendChild(focusVoiceBtn);
+        }
+
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
         showDebugControls = paramDebugControls !== '0';
@@ -734,7 +744,34 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 // Convert 0-indexed input (0, 1, 2...) to 1-indexed voice IDs (1, 2, 3...)
                 var actualVoiceId = voiceIndex + 1;
                 console.log("Applying blur - Voice Index: " + voiceIndex + ", Voice ID: " + actualVoiceId + ", Opacity: " + opacity);
-                openSheetMusicDisplay.blurVoice(actualVoiceId, opacity);
+                openSheetMusicDisplay.blurVoices([actualVoiceId], opacity);
+            }
+        }
+
+        if (focusVoiceBtn) {
+            focusVoiceBtn.onclick = function () {
+                var voiceIndex = null;
+                var opacity = 0.3;
+
+                if (blurVoiceInput.value) {
+                    voiceIndex = parseInt(blurVoiceInput.value);
+                    if (isNaN(voiceIndex)) {
+                        console.log("Invalid voice index");
+                        return;
+                    }
+                } else {
+                    console.log("Please enter a voice index");
+                    return;
+                }
+
+                if (blurOpacityInput.value) {
+                    opacity = parseFloat(blurOpacityInput.value);
+                }
+
+                var actualVoiceId = voiceIndex + 1;
+                console.log("Focusing voice - Voice Index: " + voiceIndex + ", Voice ID: " + actualVoiceId + ", Blur Opacity: " + opacity);
+                openSheetMusicDisplay.resetOpacity();
+                openSheetMusicDisplay.blurAllVoicesExceptVoices([actualVoiceId], opacity);
             }
         }
 
