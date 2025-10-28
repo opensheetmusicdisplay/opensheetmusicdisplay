@@ -331,6 +331,8 @@ select {
     width: var(--desktop-divControls-width) !important;
     margin-right: auto;
     font-size: var(--desktop-font-size);
+    overflow-y: auto;
+    max-height: 100vh;
     padding-bottom: 5%;
     border-top: var(--controls-border-color) solid var(--thick-border-size);
     border-right: var(--controls-border-color) solid var(--thick-border-size);

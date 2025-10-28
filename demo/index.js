@@ -10,9 +10,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var openSheetMusicDisplay;
     var sampleFolder = "",
         samples = {
-            "Hanon no 1": "496.musicxml",
-            "F minor n º1": "1078.musicxml",
-            "Op 9 2 w anacrusis": "1103-3.musicxml",
             "Sample": "1346.musicxml",
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
@@ -114,7 +111,11 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         applyMeasureRangeBtn,
         resetMeasureRangeBtn,
         measureRangeStatus,
-        measureRangeText;
+        measureRangeText,
+        blurVoiceInput,
+        blurOpacityInput,
+        applyBlurBtn,
+        resetOpacityBtn;
     
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -275,7 +276,11 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         resetMeasureRangeBtn = document.getElementById('reset-measure-range-btn');
         measureRangeStatus = document.getElementById('measure-range-status');
         measureRangeText = document.getElementById('measure-range-text');
-        zoomControlsButtons = document.getElementById('zoomControlsButtons')
+        zoomControlsButtons = document.getElementById('zoomControlsButtons');
+        blurVoiceInput = document.getElementById('blurVoice');
+        blurOpacityInput = document.getElementById('blurOpacity');
+        applyBlurBtn = document.getElementById('apply-blur-btn');
+        resetOpacityBtn = document.getElementById('reset-opacity-btn');
 
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
@@ -703,6 +708,40 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 });
                 updateMeasureRangeStatus(1, Number.MAX_SAFE_INTEGER);
                 renderAndScrollBack();
+            }
+        }
+
+        if (applyBlurBtn) {
+            applyBlurBtn.onclick = function () {
+                var voiceIndex = null;
+                var opacity = 0.3;
+
+                if (blurVoiceInput.value) {
+                    voiceIndex = parseInt(blurVoiceInput.value);
+                    if (isNaN(voiceIndex)) {
+                        console.log("Invalid voice index");
+                        return;
+                    }
+                } else {
+                    console.log("Please enter a voice index");
+                    return;
+                }
+
+                if (blurOpacityInput.value) {
+                    opacity = parseFloat(blurOpacityInput.value);
+                }
+
+                // Convert 0-indexed input (0, 1, 2...) to 1-indexed voice IDs (1, 2, 3...)
+                var actualVoiceId = voiceIndex + 1;
+                console.log("Applying blur - Voice Index: " + voiceIndex + ", Voice ID: " + actualVoiceId + ", Opacity: " + opacity);
+                openSheetMusicDisplay.blurVoice(actualVoiceId, opacity);
+            }
+        }
+
+        if (resetOpacityBtn) {
+            resetOpacityBtn.onclick = function () {
+                console.log("Resetting opacity for all notes");
+                openSheetMusicDisplay.resetOpacity();
             }
         }
 

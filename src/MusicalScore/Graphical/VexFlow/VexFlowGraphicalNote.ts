@@ -1,6 +1,6 @@
 import Vex from "vexflow";
 import VF = Vex.Flow;
-import {ColoringOptions, GraphicalNote, VisibilityOptions} from "../GraphicalNote";
+import { ColoringOptions, GraphicalNote, VisibilityOptions } from "../GraphicalNote";
 import {Note} from "../../VoiceData/Note";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
@@ -415,6 +415,76 @@ export class VexFlowGraphicalNote extends GraphicalNote {
                 for (const path of tie.children) {
                     path.setAttribute("fill", color);
                 }
+            }
+        }
+    }
+
+    public setOpacity(opacity: number): void {
+        const beams: HTMLElement[] = this.getBeamSVGs();
+        for (const beam of beams) {
+            for (const beamPath of beam.children) {
+                beamPath.setAttribute("opacity", opacity.toString());
+            }
+        }
+
+        const flag: HTMLElement = this.getFlagSVG();
+        if (flag) {
+            for (const flagPath of flag.children) {
+                flagPath.setAttribute("opacity", opacity.toString());
+            }
+        }
+
+        const ledgerLines: HTMLElement[] = this.getLedgerLineSVGs();
+        for (const line of ledgerLines) {
+            line.setAttribute("opacity", opacity.toString());
+        }
+
+        if (this.parentVoiceEntry.parentStaffEntry.parentMeasure instanceof VexFlowMultiRestMeasure) {
+            const measure: VexFlowMultiRestMeasure = this.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMultiRestMeasure;
+            const svgElement: SVGGElement = measure.multiRestElementSVG;
+            if (svgElement?.children?.length) {
+                for (const child of svgElement.children) {
+                    if (child.children?.length) {
+                        for (const subChild of child.children) {
+                            subChild.setAttribute("opacity", opacity.toString());
+                        }
+                    } else {
+                        child.setAttribute("opacity", opacity.toString());
+                    }
+                }
+            }
+        }
+
+        const modifiers: HTMLElement[] = this.getModifierSVGs();
+        for (const modifier of modifiers) {
+            for (const path of modifier.children) {
+                path.setAttribute("opacity", opacity.toString());
+            }
+        }
+
+        const noteheads: HTMLElement[] = this.getNoteheadSVGs();
+        for (const notehead of noteheads) {
+            for (const noteheadPath of notehead.children) {
+                noteheadPath.setAttribute("opacity", opacity.toString());
+            }
+        }
+
+        const slurs: HTMLElement[] = this.getSlurSVGs();
+        for (const slur of slurs) {
+            for (const path of slur.children) {
+                path.setAttribute("opacity", opacity.toString());
+            }
+        }
+
+        const stem: HTMLElement = this.getStemSVG();
+        if (stem) {
+            stem.setAttribute("opacity", opacity.toString());
+        }
+
+        const ties: HTMLElement[] = this.getTieSVGs();
+        for (const tie of ties) {
+            for (const path of tie.children) {
+                path.setAttribute("opacity", opacity.toString());
             }
         }
     }

@@ -102,6 +102,10 @@ export class GraphicalNote extends GraphicalObject {
     public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {}): void {
       // implemented in VexFlowGraphicalNote
     }
+
+  public setOpacity(opacity: number): void {
+    // implemented in VexFlowGraphicalNote
+  }
 }
 
 /** Coloring options for VexFlowGraphicalNote.setColor(). */

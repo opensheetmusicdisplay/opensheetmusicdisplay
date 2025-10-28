@@ -24,6 +24,7 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
+import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -1055,4 +1056,52 @@ export class OpenSheetMusicDisplay {
         return this.version;
     }
     //#endregion
+
+    public blurVoice(voiceId: number, opacity: number = 0.3): void {
+        if (!this.sheet || !this.graphic) {
+            return;
+        }
+
+        let noteCount: number = 0;
+        for (const instrument of this.sheet.Instruments) {
+            for (const staff of instrument.Staves) {
+                for (const voice of staff.Voices) {
+                    if (voice.VoiceId === voiceId) {
+                        for (const voiceEntry of voice.VoiceEntries) {
+                            for (const note of voiceEntry.Notes) {
+                                const gNote: GraphicalNote = this.rules.GNote(note);
+                                if (gNote) {
+                                    gNote.setOpacity(opacity);
+                                    noteCount++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public resetOpacity(): void {
+        if (!this.sheet || !this.graphic) {
+            return;
+        }
+
+        let noteCount: number = 0;
+        for (const instrument of this.sheet.Instruments) {
+            for (const staff of instrument.Staves) {
+                for (const voice of staff.Voices) {
+                    for (const voiceEntry of voice.VoiceEntries) {
+                        for (const note of voiceEntry.Notes) {
+                            const gNote: GraphicalNote = this.rules.GNote(note);
+                            if (gNote) {
+                                gNote.setOpacity(1.0);
+                                noteCount++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
