@@ -34,6 +34,8 @@ import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
 export class OpenSheetMusicDisplay {
     protected version: string = "1.9.2-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
+    private lastMinMeasureToDrawIndex: number = 0;
+    private lastMaxMeasureToDrawIndex: number = Number.MAX_SAFE_INTEGER;
 
     /**
      * Creates and attaches an OpenSheetMusicDisplay object to an HTML element container.<br>
@@ -250,6 +252,16 @@ export class OpenSheetMusicDisplay {
         //if (isNaN(width) || width === 0) {
         //    return;
         //}
+
+        // Rebuild measures when drawing range changed so state like 8va spans is seeded correctly
+        const currentMinIndex: number = this.rules.MinMeasureToDrawIndex;
+        const currentMaxIndex: number = this.rules.MaxMeasureToDrawIndex;
+        if (this.lastMinMeasureToDrawIndex !== currentMinIndex || this.lastMaxMeasureToDrawIndex !== currentMaxIndex) {
+            this.graphic.Initialize();
+            this.graphic.GetCalculator.prepareGraphicalMusicSheet();
+            this.lastMinMeasureToDrawIndex = currentMinIndex;
+            this.lastMaxMeasureToDrawIndex = currentMaxIndex;
+        }
 
         // Calculate again
         this.graphic.reCalculate();

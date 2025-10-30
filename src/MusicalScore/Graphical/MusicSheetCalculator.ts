@@ -163,6 +163,38 @@ export abstract class MusicSheetCalculator {
             openOctaveShifts.push(undefined);
         }
 
+        const startMeasureIndex: number = this.rules.MinMeasureToDrawIndex;
+        if (startMeasureIndex > 0) {
+            const sourceMeasures: SourceMeasure[] = musicSheet.SourceMeasures;
+            const lastSourceMeasure: SourceMeasure = sourceMeasures[sourceMeasures.length - 1];
+            const sheetEndTimestamp: Fraction = Fraction.plus(lastSourceMeasure.AbsoluteTimestamp, lastSourceMeasure.Duration);
+            for (let staffIndex: number = 0; staffIndex < completeNumberOfStaves; staffIndex++) {
+                let openShift: OctaveShift = undefined;
+                let openShiftStart: Fraction = undefined;
+                let openShiftEnd: Fraction = undefined;
+                for (let m: number = 0; m < startMeasureIndex; m++) {
+                    const sm: SourceMeasure = sourceMeasures[m];
+                    const expressions: MultiExpression[] = sm.StaffLinkedExpressions[staffIndex];
+                    if (!expressions) { continue; }
+                    for (let e: number = 0; e < expressions.length; e++) {
+                        const multi: MultiExpression = expressions[e];
+                        if (multi.OctaveShiftStart) {
+                            openShift = multi.OctaveShiftStart;
+                            openShiftStart = openShift.ParentStartMultiExpression.AbsoluteTimestamp;
+                            openShiftEnd = openShift.ParentEndMultiExpression?.AbsoluteTimestamp ?? sheetEndTimestamp;
+                        } else if (multi.OctaveShiftEnd && openShift && multi.OctaveShiftEnd === openShift) {
+                            openShift = undefined;
+                            openShiftStart = undefined;
+                            openShiftEnd = undefined;
+                        }
+                    }
+                }
+                if (openShift) {
+                    openOctaveShifts[staffIndex] = new OctaveShiftParams(openShift, openShiftStart, openShiftEnd);
+                }
+            }
+        }
+
         // go through all SourceMeasures (taking into account normal SourceMusicParts and Repetitions)
         for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {
             const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
