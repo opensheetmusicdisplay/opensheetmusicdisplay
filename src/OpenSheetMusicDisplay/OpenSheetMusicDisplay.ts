@@ -25,6 +25,9 @@ import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartMa
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
 import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
+import { Fraction } from "../Common/DataObjects/Fraction";
+import { MultiExpression } from "../MusicalScore/VoiceData/Expressions/MultiExpression";
+import { OctaveShift } from "../MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -815,6 +818,46 @@ export class OpenSheetMusicDisplay {
         });
     }
 
+    public getActiveOctaveShift(timestamp: Fraction, staffIndex: number, measureIndex: number): OctaveShift | undefined {
+        if (!this.sheet || !this.sheet.SourceMeasures?.[measureIndex]) {
+            return undefined;
+        }
+        const measure: MusicSheet["SourceMeasures"][number] = this.sheet.SourceMeasures[measureIndex];
+        const measureStart: Fraction = measure.AbsoluteTimestamp;
+        const measureEnd: Fraction = Fraction.plus(measureStart, measure.Duration);
+        let absTs: Fraction = timestamp;
+        if (timestamp.lt(measureStart) || timestamp.gt(measureEnd)) {
+            absTs = Fraction.plus(measureStart, timestamp);
+        }
+        const sourceMeasures: MusicSheet["SourceMeasures"] = this.sheet.SourceMeasures;
+        const lastSourceMeasure: MusicSheet["SourceMeasures"][number] = sourceMeasures[sourceMeasures.length - 1];
+        const sheetEndTs: Fraction = Fraction.plus(lastSourceMeasure.AbsoluteTimestamp, lastSourceMeasure.Duration);
+        for (let m: number = 0; m < sourceMeasures.length; m++) {
+            const sm: MusicSheet["SourceMeasures"][number] = sourceMeasures[m];
+            const expressions: MultiExpression[] = sm.StaffLinkedExpressions?.[staffIndex];
+            if (!expressions) {
+                continue;
+            }
+            for (let i: number = 0; i < expressions.length; i++) {
+                const multi: MultiExpression = expressions[i];
+                const shift: OctaveShift = multi.OctaveShiftStart || multi.OctaveShiftEnd;
+                if (!shift) {
+                    continue;
+                }
+                const start: Fraction = shift.ParentStartMultiExpression?.AbsoluteTimestamp;
+                const end: Fraction = shift.ParentEndMultiExpression?.AbsoluteTimestamp ?? sheetEndTs;
+                if (start && start.lte(absTs) && !end.lt(absTs)) {
+                    return shift;
+                }
+            }
+        }
+        return undefined;
+    }
+
+    public hasActiveOctaveShift(timestamp: Fraction, staffIndex: number, measureIndex: number): boolean {
+        return this.getActiveOctaveShift(timestamp, staffIndex, measureIndex) !== undefined;
+    }
+
     /**
      * Helper function for managing window's onResize events
      * @param startCallback is the function called when resizing starts
@@ -1159,3 +1202,4 @@ export class OpenSheetMusicDisplay {
         }
     }
 }
+
