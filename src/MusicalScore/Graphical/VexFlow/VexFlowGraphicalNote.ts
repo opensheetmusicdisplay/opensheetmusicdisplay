@@ -188,6 +188,64 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return this.vfnote[0].getAttribute("el");
     }
 
+    private hoverHandler?: (event: MouseEvent) => void;
+    private clickHandler?: (event: MouseEvent) => void;
+    private mouseLeaveHandler?: (event: MouseEvent) => void;
+
+    public setHoverHandler(handler: (event: MouseEvent) => void): void {
+        const svgElement: SVGGElement = this.getSVGGElement();
+        if (!svgElement) {
+            return;
+        }
+        this.removeHoverHandler();
+        this.hoverHandler = handler;
+        svgElement.style.cursor = "pointer";
+        svgElement.addEventListener("mouseenter", this.hoverHandler);
+        svgElement.addEventListener("mousemove", this.hoverHandler);
+        this.mouseLeaveHandler = (): void => {
+            // Handler can manage its own hide logic
+        };
+        svgElement.addEventListener("mouseleave", this.mouseLeaveHandler);
+    }
+
+    public removeHoverHandler(): void {
+        const svgElement: SVGGElement = this.getSVGGElement();
+        if (!svgElement || !this.hoverHandler) {
+            return;
+        }
+        svgElement.removeEventListener("mouseenter", this.hoverHandler);
+        svgElement.removeEventListener("mousemove", this.hoverHandler);
+        if (this.mouseLeaveHandler) {
+            svgElement.removeEventListener("mouseleave", this.mouseLeaveHandler);
+        }
+        svgElement.style.cursor = "";
+        this.hoverHandler = undefined;
+        this.mouseLeaveHandler = undefined;
+    }
+
+    public setClickHandler(handler: (event: MouseEvent) => void): void {
+        const svgElement: SVGGElement = this.getSVGGElement();
+        if (!svgElement) {
+            return;
+        }
+        this.removeClickHandler();
+        this.clickHandler = handler;
+        svgElement.addEventListener("click", this.clickHandler);
+        svgElement.style.cursor = "pointer";
+    }
+
+    public removeClickHandler(): void {
+        const svgElement: SVGGElement = this.getSVGGElement();
+        if (!svgElement || !this.clickHandler) {
+            return;
+        }
+        svgElement.removeEventListener("click", this.clickHandler);
+        if (!this.hoverHandler) {
+            svgElement.style.cursor = "";
+        }
+        this.clickHandler = undefined;
+    }
+
     /** Gets the SVG path element of the note's stem. */
     public getStemSVG(): HTMLElement {
         const groupOrPath: HTMLElement = document.getElementById("vf-" + this.getSVGId() + "-stem");

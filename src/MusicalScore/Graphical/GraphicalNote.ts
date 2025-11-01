@@ -106,6 +106,30 @@ export class GraphicalNote extends GraphicalObject {
   public setOpacity(opacity: number): void {
     // implemented in VexFlowGraphicalNote
   }
+
+  public setHoverHandler(handler: (event: MouseEvent) => void): void {
+    // implemented in VexFlowGraphicalNote
+  }
+
+  public removeHoverHandler(): void {
+    // implemented in VexFlowGraphicalNote
+  }
+
+  public setClickHandler(handler: (event: MouseEvent) => void): void {
+    // implemented in VexFlowGraphicalNote
+  }
+
+  public removeClickHandler(): void {
+    // implemented in VexFlowGraphicalNote
+  }
+
+  public hasOrnaments(): boolean {
+    return this.parentVoiceEntry?.parentVoiceEntry?.OrnamentContainer !== undefined;
+  }
+
+  public isGraceNote(): boolean {
+    return this.parentVoiceEntry?.parentVoiceEntry?.IsGrace === true;
+  }
 }
 
 /** Coloring options for VexFlowGraphicalNote.setColor(). */
