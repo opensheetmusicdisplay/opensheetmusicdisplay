@@ -28,6 +28,8 @@ import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
 import { Fraction } from "../Common/DataObjects/Fraction";
 import { MultiExpression } from "../MusicalScore/VoiceData/Expressions/MultiExpression";
 import { OctaveShift } from "../MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { GraphicalLyricEntry } from "../MusicalScore/Graphical/GraphicalLyricEntry";
+import { GraphicalChordSymbolContainer } from "../MusicalScore/Graphical/GraphicalChordSymbolContainer";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -399,6 +401,30 @@ export class OpenSheetMusicDisplay {
     /** States whether the render() function can be safely called. */
     public IsReadyToRender(): boolean {
         return this.graphic !== undefined;
+    }
+
+    /**
+     * Gets all lyric entries across all pages and measures.
+     * Useful for adding hover/click handlers to lyrics.
+     * Returns empty array if sheet is not loaded or rendered.
+     */
+    public getAllLyricEntries(): GraphicalLyricEntry[] {
+        if (!this.graphic) {
+            return [];
+        }
+        return this.graphic.getAllLyricEntries();
+    }
+
+    /**
+     * Gets all chord symbol containers across all pages and measures.
+     * Useful for adding hover/click handlers to harmony symbols.
+     * Returns empty array if sheet is not loaded or rendered.
+     */
+    public getAllChordSymbolContainers(): GraphicalChordSymbolContainer[] {
+        if (!this.graphic) {
+            return [];
+        }
+        return this.graphic.getAllChordSymbolContainers();
     }
 
     /** Clears what OSMD has drawn on its canvas. */

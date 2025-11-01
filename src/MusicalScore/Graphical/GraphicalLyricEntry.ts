@@ -6,6 +6,8 @@ import {Label} from "../Label";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import { EngravingRules } from "./EngravingRules";
+import { VoiceEntry } from "../VoiceData/VoiceEntry";
+import { Note } from "../VoiceData/Note";
 
 /**
  * The graphical counterpart of a [[LyricsEntry]]
@@ -76,5 +78,29 @@ export class GraphicalLyricEntry {
     }
     public set StaffEntryParent(value: GraphicalStaffEntry) {
         this.graphicalStaffEntry = value;
+    }
+
+    /**
+     * Gets the VoiceEntry associated with this lyric.
+     * The VoiceEntry contains all notes in the chord at this timestamp.
+     */
+    public getVoiceEntry(): VoiceEntry {
+        return this.lyricsEntry.Parent;
+    }
+
+    /**
+     * Gets all notes in the chord associated with this lyric.
+     * Returns an empty array if no notes are associated.
+     */
+    public getChordNotes(): Note[] {
+        return this.lyricsEntry.Parent?.Notes || [];
+    }
+
+    /**
+     * Checks if this lyric is associated with a chord (multiple notes).
+     */
+    public isChord(): boolean {
+        const notes: Note[] = this.lyricsEntry.Parent?.Notes;
+        return notes ? notes.length > 1 : false;
     }
 }

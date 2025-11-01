@@ -10,6 +10,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var openSheetMusicDisplay;
     var sampleFolder = "",
         samples = {
+            "Lead Sheet with chords": "1181.musicxml",
             "Test 8va": "1851-3.musicxml",
             "Sample 2": "1346 2.musicxml",
             "Sample": "1346.musicxml",
@@ -926,6 +927,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             }
         ).then(
             function () {
+                addClickHandlersToChordSymbols();
                 return onLoadingEnd(isCustom);
             }, function (e) {
                 errorLoadingOrRenderingSheet(e, "loading");
@@ -1058,6 +1060,102 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         
         // Enable controls again
         enable();
+    }
+
+    /**
+     * Example: Add click handlers to chord symbols (harmony symbols)
+     */
+    function addClickHandlersToChordSymbols() {
+        if (!openSheetMusicDisplay || !openSheetMusicDisplay.graphic) {
+            return;
+        }
+
+        // Only works with SVG backend
+        if (openSheetMusicDisplay.backendType !== BackendType.SVG) {
+            console.log("[OSMD demo] Chord symbol click handlers only work with SVG backend");
+            return;
+        }
+
+        // Wait a bit for SVG elements to be fully rendered in the DOM
+        setTimeout(function () {
+            const chordSymbols = openSheetMusicDisplay.getAllChordSymbolContainers();
+            let chordsWithHandlers = 0;
+            let chordsWithoutSVG = 0;
+
+            console.log("[OSMD demo] Found " + chordSymbols.length + " chord symbol containers");
+
+            for (const chordContainer of chordSymbols) {
+                const graphicalLabel = chordContainer.GraphicalLabel;
+
+                // Check if SVG node exists - SVG elements are Element, not HTMLElement
+                if (!graphicalLabel.SVGNode) {
+                    chordsWithoutSVG++;
+                    continue;
+                }
+
+                // SVG elements are Element instances, not HTMLElement
+                var svgElement = graphicalLabel.SVGNode;
+                if (!(svgElement instanceof Element)) {
+                    chordsWithoutSVG++;
+                    continue;
+                }
+
+                // Add click handler using GraphicalLabel method
+                graphicalLabel.setClickHandler(function (event) {
+                    const chordData = chordContainer.GetChordSymbolContainer;
+                    const chordText = graphicalLabel.Label.text;
+
+                    console.log("Chord symbol clicked:", {
+                        chordText: chordText,
+                        rootPitch: chordData.RootPitch ? chordData.RootPitch.ToString() : "N/A",
+                        chordKind: chordData.ChordKind !== undefined ? chordData.ChordKind.toString() : "N/A",
+                        bassPitch: chordData.BassPitch ? chordData.BassPitch.ToString() : "N/A",
+                        placement: chordData.Placement !== undefined ? chordData.Placement.toString() : "N/A"
+                    });
+
+                    // Example: highlight the chord symbol on click
+                    // SVGNode might be a group (g) or text element
+                    var targetElement = graphicalLabel.SVGNode;
+                    var textElements = targetElement.querySelectorAll("text");
+
+                    // If it's a text element itself, include it
+                    if (targetElement.nodeName === 'text' || targetElement.tagName === 'text') {
+                        if (textElements.length === 0) {
+                            textElements = [targetElement];
+                        }
+                    }
+
+                    var isHighlighted = false;
+                    if (textElements.length > 0) {
+                        var firstFill = textElements[0].getAttribute("fill");
+                        isHighlighted = firstFill === "#FF6B6B" || firstFill === "rgb(255, 107, 107)";
+                    }
+
+                    if (isHighlighted) {
+                        // Reset text fill
+                        for (var i = 0; i < textElements.length; i++) {
+                            textElements[i].setAttribute("fill", "");
+                        }
+                    } else {
+                        // Set text fill color
+                        for (var i = 0; i < textElements.length; i++) {
+                            textElements[i].setAttribute("fill", "#FF6B6B");
+                        }
+                    }
+                });
+
+                chordsWithHandlers++;
+            }
+
+            if (chordsWithHandlers > 0) {
+                console.log("[OSMD demo] Added click handlers to " + chordsWithHandlers + " chord symbols");
+            } else {
+                console.log("[OSMD demo] No chord symbols with SVG nodes found");
+                if (chordsWithoutSVG > 0) {
+                    console.log("[OSMD demo] " + chordsWithoutSVG + " chord symbols found but without SVG nodes");
+                }
+            }
+        }, 100); // Small delay to ensure SVG is fully rendered
     }
 
     function logCanvasSize() {

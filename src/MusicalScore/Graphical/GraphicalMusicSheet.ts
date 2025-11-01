@@ -26,6 +26,8 @@ import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import { MusicSheetDrawer } from "./MusicSheetDrawer";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalObject } from "./GraphicalObject";
+import { GraphicalLyricEntry } from "./GraphicalLyricEntry";
+import { GraphicalChordSymbolContainer } from "./GraphicalChordSymbolContainer";
 // import { VexFlowMusicSheetDrawer } from "./VexFlow/VexFlowMusicSheetDrawer";
 // import { SvgVexFlowBackend } from "./VexFlow/SvgVexFlowBackend"; // causes build problem with npm start
 
@@ -631,6 +633,46 @@ export class GraphicalMusicSheet {
 
     public domToSvg(point: PointF2D): PointF2D {
         return this.domToSvgTransform(point, true);
+    }
+
+    /**
+     * Gets all lyric entries across all pages and measures.
+     * Useful for adding hover/click handlers to lyrics.
+     */
+    public getAllLyricEntries(): GraphicalLyricEntry[] {
+        const allLyrics: GraphicalLyricEntry[] = [];
+        for (const page of this.MusicPages) {
+            for (const system of page.MusicSystems) {
+                for (const staffLine of system.StaffLines) {
+                    for (const measure of staffLine.Measures) {
+                        for (const staffEntry of measure.staffEntries) {
+                            allLyrics.push(...staffEntry.LyricsEntries);
+                        }
+                    }
+                }
+            }
+        }
+        return allLyrics;
+    }
+
+    /**
+     * Gets all chord symbol containers across all pages and measures.
+     * Useful for adding hover/click handlers to harmony symbols.
+     */
+    public getAllChordSymbolContainers(): GraphicalChordSymbolContainer[] {
+        const allChords: GraphicalChordSymbolContainer[] = [];
+        for (const page of this.MusicPages) {
+            for (const system of page.MusicSystems) {
+                for (const staffLine of system.StaffLines) {
+                    for (const measure of staffLine.Measures) {
+                        for (const staffEntry of measure.staffEntries) {
+                            allChords.push(...staffEntry.graphicalChordContainers);
+                        }
+                    }
+                }
+            }
+        }
+        return allChords;
     }
 
     public svgToDom(point: PointF2D): PointF2D {

@@ -46,6 +46,70 @@ export class GraphicalLabel extends Clickable {
         return `${this.label.text} (${this.boundingBox.RelativePosition.x},${this.boundingBox.RelativePosition.y})`;
     }
 
+    private hoverHandler?: (event: MouseEvent) => void;
+    private clickHandler?: (event: MouseEvent) => void;
+    private mouseLeaveHandler?: (event: MouseEvent) => void;
+
+    public setHoverHandler(handler: (event: MouseEvent) => void): void {
+        if (!this.SVGNode || !(this.SVGNode instanceof Element)) {
+            return;
+        }
+        this.removeHoverHandler();
+        this.hoverHandler = handler;
+        const svgElement: Element = this.SVGNode as Element;
+        if (svgElement instanceof SVGElement) {
+            svgElement.style.cursor = "pointer";
+        }
+        svgElement.addEventListener("mouseenter", this.hoverHandler);
+        svgElement.addEventListener("mousemove", this.hoverHandler);
+        this.mouseLeaveHandler = (): void => {
+            // Handler can manage its own hide logic
+        };
+        svgElement.addEventListener("mouseleave", this.mouseLeaveHandler);
+    }
+
+    public removeHoverHandler(): void {
+        if (!this.SVGNode || !(this.SVGNode instanceof Element) || !this.hoverHandler) {
+            return;
+        }
+        const svgElement: Element = this.SVGNode as Element;
+        svgElement.removeEventListener("mouseenter", this.hoverHandler);
+        svgElement.removeEventListener("mousemove", this.hoverHandler);
+        if (this.mouseLeaveHandler) {
+            svgElement.removeEventListener("mouseleave", this.mouseLeaveHandler);
+        }
+        if (svgElement instanceof SVGElement) {
+            svgElement.style.cursor = "";
+        }
+        this.hoverHandler = undefined;
+        this.mouseLeaveHandler = undefined;
+    }
+
+    public setClickHandler(handler: (event: MouseEvent) => void): void {
+        if (!this.SVGNode || !(this.SVGNode instanceof Element)) {
+            return;
+        }
+        this.removeClickHandler();
+        this.clickHandler = handler;
+        const svgElement: Element = this.SVGNode as Element;
+        svgElement.addEventListener("click", this.clickHandler);
+        if (svgElement instanceof SVGElement) {
+            svgElement.style.cursor = "pointer";
+        }
+    }
+
+    public removeClickHandler(): void {
+        if (!this.SVGNode || !(this.SVGNode instanceof Element) || !this.clickHandler) {
+            return;
+        }
+        const svgElement: Element = this.SVGNode as Element;
+        svgElement.removeEventListener("click", this.clickHandler);
+        if (!this.hoverHandler && svgElement instanceof SVGElement) {
+            svgElement.style.cursor = "";
+        }
+        this.clickHandler = undefined;
+    }
+
     /**
      * Calculate GraphicalLabel's Borders according to its Alignment
      * Create also the text-lines and their offsets here
