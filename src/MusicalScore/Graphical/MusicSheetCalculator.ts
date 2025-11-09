@@ -1964,35 +1964,41 @@ export abstract class MusicSheetCalculator {
 
     protected calculateTempoExpressionsForMultiTempoExpression(sourceMeasure: SourceMeasure, multiTempoExpression: MultiTempoExpression,
                                                                measureIndex: number): void {
-        // calculate absolute Timestamp
-        const absoluteTimestamp: Fraction = Fraction.plus(sourceMeasure.AbsoluteTimestamp, multiTempoExpression.Timestamp);
-        const measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[measureIndex];
         let relative: PointF2D = new PointF2D();
 
         if (multiTempoExpression.ContinuousTempo || multiTempoExpression.InstantaneousTempo) {
-            // TempoExpressions always on the first visible System's StaffLine // TODO is it though?
-            if (this.rules.MinMeasureToDrawIndex > 0) {
-                return; // assuming that the tempo is always in measure 1 (idx 0), adding the expression causes issues when we don't draw measure 1
-            }
-            if (!measures[0]) {
+            const minMeasureToDrawIndex: number = this.rules.MinMeasureToDrawIndex;
+            const maxMeasureToDrawIndex: number = this.rules.MaxMeasureToDrawIndex;
+
+            const targetMeasureIndex: number = Math.max(measureIndex, minMeasureToDrawIndex);
+            if (targetMeasureIndex > maxMeasureToDrawIndex) {
                 return;
             }
-            let staffLine: StaffLine = measures[0].ParentStaffLine;
-            let firstVisibleMeasureX: number = measures[0].PositionAndShape.RelativePosition.x;
+
+            const targetMeasures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[targetMeasureIndex];
+            if (!targetMeasures || targetMeasures.length === 0) {
+                return;
+            }
+
+            let staffLine: StaffLine = targetMeasures[0].ParentStaffLine;
+            let firstVisibleMeasureX: number = targetMeasures[0].PositionAndShape.RelativePosition.x;
             let verticalIndex: number = 0;
-            for (let j: number = 0; j < measures.length; j++) {
-                if (!measures[j].ParentStaffLine || measures[j].ParentStaffLine.Measures.length === 0) {
+            for (let j: number = 0; j < targetMeasures.length; j++) {
+                if (!targetMeasures[j].ParentStaffLine || targetMeasures[j].ParentStaffLine.Measures.length === 0) {
                     continue;
                 }
 
-                if (measures[j].ParentStaffLine.Measures.length > 0) {
-                    staffLine = measures[j].ParentStaffLine;
-                    firstVisibleMeasureX = measures[j].PositionAndShape.RelativePosition.x;
+                if (targetMeasures[j].ParentStaffLine.Measures.length > 0) {
+                    staffLine = targetMeasures[j].ParentStaffLine;
+                    firstVisibleMeasureX = targetMeasures[j].PositionAndShape.RelativePosition.x;
                     verticalIndex = j;
                     break;
                 }
             }
-            relative = this.getRelativePositionInStaffLineFromTimestamp(absoluteTimestamp,
+
+            const targetSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[targetMeasureIndex];
+            const timestampForPositioning: Fraction = targetSourceMeasure.AbsoluteTimestamp;
+            relative = this.getRelativePositionInStaffLineFromTimestamp(timestampForPositioning,
                                                                         verticalIndex,
                                                                         staffLine,
                                                                         staffLine.isPartOfMultiStaffInstrument(),

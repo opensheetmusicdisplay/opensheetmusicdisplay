@@ -138,6 +138,30 @@ export class MusicPartManagerIterator {
         return this.jumpResponsibleRepetition;
     }
 
+    public getTempo(): number | undefined {
+        const tempoExpr: MultiTempoExpression = this.currentTempoChangingExpression || this.activeTempoExpression;
+        if (tempoExpr) {
+            if (tempoExpr.InstantaneousTempo) {
+                return tempoExpr.InstantaneousTempo.TempoInBpm;
+            }
+            if (tempoExpr.ContinuousTempo) {
+                const endTimestamp: Fraction = tempoExpr.ContinuousTempo.AbsoluteEndTimestamp;
+                if (endTimestamp && this.currentTimeStamp.lte(endTimestamp)) {
+                    const interpolatedTempo: number = tempoExpr.ContinuousTempo.getInterpolatedTempo(this.currentTimeStamp);
+                    if (interpolatedTempo > 0) {
+                        return interpolatedTempo;
+                    }
+                }
+            }
+        }
+
+        if (this.currentMeasure?.TempoInBPM > 0) {
+            return this.currentMeasure.TempoInBPM;
+        }
+
+        return undefined;
+    }
+
     /**
      * Creates a clone of this iterator which has the same actual position.
      */

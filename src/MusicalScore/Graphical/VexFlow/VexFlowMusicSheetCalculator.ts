@@ -802,12 +802,30 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
-    // note: measureNumber is 0 for pickup measure
     const measureNumber: number = metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber;
     const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
-    const vfMeasure: VexFlowMeasure =
+    const minMeasureToDrawIndex: number = this.rules.MinMeasureToDrawIndex;
+    const maxMeasureToDrawIndex: number = this.rules.MaxMeasureToDrawIndex;
+
+    let vfMeasure: VexFlowMeasure =
       this.graphicalMusicSheet.findGraphicalMeasureByMeasureNumber(measureNumber, staffNumber) as VexFlowMeasure;
-    const firstMetronomeMark: boolean = vfMeasure === this.graphicalMusicSheet.MeasureList[0][0];
+
+    if (!vfMeasure) {
+      return;
+    }
+
+    if (vfMeasure.MeasureNumber < minMeasureToDrawIndex + 1) {
+      vfMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex]?.[staffNumber] as VexFlowMeasure;
+      if (!vfMeasure) {
+        return;
+      }
+    }
+
+    if (vfMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) {
+      return;
+    }
+
+    const firstMetronomeMark: boolean = vfMeasure === this.graphicalMusicSheet.MeasureList[0]?.[0];
     // const vfMeasure: VexFlowMeasure = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure);
     if (vfMeasure.hasMetronomeMark) {
       return; // don't create more than one metronome mark per measure;

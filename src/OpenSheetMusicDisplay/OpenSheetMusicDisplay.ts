@@ -30,6 +30,7 @@ import { MultiExpression } from "../MusicalScore/VoiceData/Expressions/MultiExpr
 import { OctaveShift } from "../MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { GraphicalLyricEntry } from "../MusicalScore/Graphical/GraphicalLyricEntry";
 import { GraphicalChordSymbolContainer } from "../MusicalScore/Graphical/GraphicalChordSymbolContainer";
+import { MultiTempoExpression } from "../MusicalScore/VoiceData/Expressions/MultiTempoExpression";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -882,6 +883,62 @@ export class OpenSheetMusicDisplay {
 
     public hasActiveOctaveShift(timestamp: Fraction, staffIndex: number, measureIndex: number): boolean {
         return this.getActiveOctaveShift(timestamp, staffIndex, measureIndex) !== undefined;
+    }
+
+    public getBPMTempoFromTimestamp(timestamp: Fraction, measureIndex: number): number | undefined {
+        if (!this.sheet || !this.sheet.SourceMeasures?.[measureIndex]) {
+            return undefined;
+        }
+        const measure: MusicSheet["SourceMeasures"][number] = this.sheet.SourceMeasures[measureIndex];
+        const measureStart: Fraction = measure.AbsoluteTimestamp;
+        const measureEnd: Fraction = Fraction.plus(measureStart, measure.Duration);
+        let absTs: Fraction = timestamp;
+        if (timestamp.lt(measureStart) || timestamp.gt(measureEnd)) {
+            absTs = Fraction.plus(measureStart, timestamp);
+        }
+
+        const tempoExpressions: MultiTempoExpression[] = this.sheet.TimestampSortedTempoExpressionsList;
+        let activeTempoExpression: MultiTempoExpression | undefined;
+
+        for (let i: number = tempoExpressions.length - 1; i >= 0; i--) {
+            const tempoExpr: MultiTempoExpression = tempoExpressions[i];
+            const exprStart: Fraction = tempoExpr.AbsoluteTimestamp;
+
+            if (exprStart.gt(absTs)) {
+                continue;
+            }
+
+            if (tempoExpr.InstantaneousTempo) {
+                activeTempoExpression = tempoExpr;
+                break;
+            }
+
+            if (tempoExpr.ContinuousTempo) {
+                const exprEnd: Fraction = tempoExpr.ContinuousTempo.AbsoluteEndTimestamp;
+                if (absTs.lte(exprEnd)) {
+                    activeTempoExpression = tempoExpr;
+                    break;
+                }
+            }
+        }
+
+        if (activeTempoExpression) {
+            if (activeTempoExpression.InstantaneousTempo) {
+                return activeTempoExpression.InstantaneousTempo.TempoInBpm;
+            }
+            if (activeTempoExpression.ContinuousTempo) {
+                const interpolatedTempo: number = activeTempoExpression.ContinuousTempo.getInterpolatedTempo(absTs);
+                if (interpolatedTempo > 0) {
+                    return interpolatedTempo;
+                }
+            }
+        }
+
+        if (measure.TempoInBPM > 0) {
+            return measure.TempoInBPM;
+        }
+
+        return undefined;
     }
 
     /**
