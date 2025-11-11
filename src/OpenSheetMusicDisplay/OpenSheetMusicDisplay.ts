@@ -98,6 +98,7 @@ export class OpenSheetMusicDisplay {
     protected graphic: GraphicalMusicSheet;
     protected drawingParameters: DrawingParameters;
     protected rules: EngravingRules;
+    private staffOpacityOverrides: Map<number, number> = new Map();
     protected autoResizeEnabled: boolean;
     protected resizeHandlerAttached: boolean;
     protected followCursor: boolean;
@@ -296,6 +297,7 @@ export class OpenSheetMusicDisplay {
                 cursor.update();
             });
         }
+        this.reapplyStaffOpacityOverrides();
         this.zoomUpdated = false;
         this.rules.RenderCount++;
         //console.log("[OSMD] render finished");
@@ -791,6 +793,7 @@ export class OpenSheetMusicDisplay {
         this.graphic = undefined;
         this.zoom = 1.0;
         this.rules.RenderCount = 0;
+        this.staffOpacityOverrides.clear();
     }
 
     /**
@@ -1272,6 +1275,24 @@ export class OpenSheetMusicDisplay {
     }
     //#endregion
 
+    /**
+     * Lowers the opacity of every rendered instance of the staff that matches the provided global staff index.
+     * A staff can appear on multiple systems/pages; all of them are updated in-place via the SVG DOM.
+     * @param staffIndex Global staff index (`Staff.idInMusicSheet`)
+     * @param opacity Target opacity in the range [0, 1]
+     */
+    public blurStaff(staffIndex: number, opacity: number = 0.3): void {
+        this.setStaffOpacity(staffIndex, opacity, 0.3);
+    }
+
+    /**
+     * Restores the opacity of a staff (across all systems/pages) back to 1.0.
+     * @param staffIndex Global staff index (`Staff.idInMusicSheet`)
+     */
+    public restoreStaff(staffIndex: number): void {
+        this.setStaffOpacity(staffIndex, 1.0, 1.0);
+    }
+
     public blurVoice(voiceId: number, opacity: number = 0.2): void {
         if (!this.sheet || !this.graphic) {
             return;
@@ -1361,5 +1382,94 @@ export class OpenSheetMusicDisplay {
             }
         }
     }
-}
 
+    private setStaffOpacity(staffIndex: number, opacity: number, fallbackOpacity: number): void {
+        if (!this.isValidStaffIndex(staffIndex)) {
+            return;
+        }
+        const resolvedOpacity: number = this.clampOpacity(opacity, fallbackOpacity);
+        if (resolvedOpacity >= 1) {
+            this.staffOpacityOverrides.delete(staffIndex);
+        } else {
+            this.staffOpacityOverrides.set(staffIndex, resolvedOpacity);
+        }
+        this.applyOpacityToStaffElements(staffIndex, resolvedOpacity);
+    }
+
+    private applyOpacityToStaffElements(staffIndex: number, opacity: number): void {
+        const stafflineElements: SVGGElement[] = this.getStafflineElements(staffIndex);
+        if (stafflineElements.length === 0) {
+            return;
+        }
+        const opacityString: string = opacity.toString();
+        for (const stafflineElement of stafflineElements) {
+            if (opacity >= 1) {
+                stafflineElement.style.removeProperty("opacity");
+            } else {
+                stafflineElement.style.opacity = opacityString;
+            }
+        }
+    }
+
+    private getStafflineElements(staffIndex: number): SVGGElement[] {
+        if (!Number.isFinite(staffIndex) || staffIndex < 0) {
+            return [];
+        }
+        const selector: string = `.staffline[data-staff-index="${staffIndex}"]`;
+        const elements: SVGGElement[] = [];
+        const visitedRoots: Set<Element> = new Set();
+        const seenElements: Set<SVGGElement> = new Set();
+        const addMatches: (root: ParentNode) => void = (root: ParentNode): void => {
+            const matches: NodeListOf<SVGGElement> = root.querySelectorAll<SVGGElement>(selector);
+            for (const match of matches) {
+                if (seenElements.has(match)) {
+                    continue;
+                }
+                seenElements.add(match);
+                elements.push(match);
+            }
+        };
+
+        if (this.drawer?.Backends?.length) {
+            for (const backend of this.drawer.Backends) {
+                const rootElement: HTMLElement = backend.getRenderElement();
+                if (!rootElement || visitedRoots.has(rootElement)) {
+                    continue;
+                }
+                addMatches(rootElement);
+                visitedRoots.add(rootElement);
+            }
+        }
+
+        if (this.container && !visitedRoots.has(this.container)) {
+            addMatches(this.container);
+        }
+
+        return elements;
+    }
+
+    private isValidStaffIndex(staffIndex: number): boolean {
+        if (!Number.isFinite(staffIndex) || staffIndex < 0) {
+            return false;
+        }
+        if (!this.sheet) {
+            return true;
+        }
+        return staffIndex < this.sheet.getCompleteNumberOfStaves();
+    }
+
+    private clampOpacity(opacity: number, fallbackOpacity: number): number {
+        const fallback: number = Number.isFinite(fallbackOpacity) ? fallbackOpacity : 1.0;
+        const candidate: number = Number.isFinite(opacity) ? opacity : fallback;
+        return Math.min(1, Math.max(0, candidate));
+    }
+
+    private reapplyStaffOpacityOverrides(): void {
+        if (this.staffOpacityOverrides.size === 0) {
+            return;
+        }
+        for (const [staffIndex, storedOpacity] of this.staffOpacityOverrides.entries()) {
+            this.applyOpacityToStaffElements(staffIndex, storedOpacity);
+        }
+    }
+}

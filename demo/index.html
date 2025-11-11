@@ -237,6 +237,29 @@
                     </div>
                 </div>
             </div>
+            <div class="column advanced-setting">
+                <h3 class="ui header hide-on-portrait">Staff Blur:</h3>
+                <button type="button" class="portraitCollapsible show-on-portrait">Staff Blur</button>
+                <div class="collapsibleContent" style="margin-top: 10px;">
+                    <div class="ui labeled input">
+                        <div class="ui label">Staff Index</div>
+                        <input type="number" id="staffIndex" placeholder="0" min="0" />
+                    </div>
+                    <div class="ui labeled input" style="margin-top: 10px;">
+                        <div class="ui label">Opacity</div>
+                        <input type="number" id="staffOpacity" value="0.3" min="0" max="1" step="0.1" />
+                    </div>
+                    <div class="ui vertical buttons" style="margin-top: 10px;">
+                        <div class="ui button" id="blur-staff-btn">Blur Staff</div>
+                        <div class="ui button" id="restore-staff-btn">Restore Staff</div>
+                    </div>
+                    <div class="ui vertical buttons" style="margin-top: 10px;">
+                        <div class="ui button" id="blur-staff-0-btn">Blur Staff 0</div>
+                        <div class="ui button" id="blur-staff-1-btn">Blur Staff 1</div>
+                        <div class="ui button" id="restore-all-staves-btn">Restore All Staves</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <button class="hide-on-portrait fixed" id="slideControlsButton" onclick="slideButtonClicked()"></button>    

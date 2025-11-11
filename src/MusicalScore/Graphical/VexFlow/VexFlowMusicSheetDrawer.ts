@@ -34,6 +34,7 @@ import { GraphicalGlissando } from "../GraphicalGlissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { SvgVexFlowBackend } from "./SvgVexFlowBackend";
+import { Staff } from "../../VoiceData/Staff";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -119,10 +120,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         const ctx: Vex.IRenderContext = this.backend.getContext();
         const stafflineNode: Node = ctx.openGroup();
         if (stafflineNode) {
-            (stafflineNode as SVGGElement).classList.add("staffline");
-            if (staffLine.ParentStaff) {
-                (stafflineNode as SVGGElement).id =
-                    `${staffLine.ParentStaff.ParentInstrument?.Name}${staffLine.ParentStaff.ParentInstrument?.Id}-${staffLine.ParentStaff?.Id}`;
+            const stafflineElement: SVGGElement = stafflineNode as SVGGElement;
+            stafflineElement.classList.add("staffline");
+            const parentStaff: Staff = staffLine.ParentStaff;
+            if (parentStaff) {
+                stafflineElement.id =
+                    `${parentStaff.ParentInstrument?.Name}${parentStaff.ParentInstrument?.Id}-${parentStaff?.Id}`;
+                if (parentStaff.idInMusicSheet !== undefined && parentStaff.idInMusicSheet !== null) {
+                    stafflineElement.setAttribute("data-staff-index", parentStaff.idInMusicSheet.toString());
+                }
             }
         }
         super.drawStaffLine(staffLine);

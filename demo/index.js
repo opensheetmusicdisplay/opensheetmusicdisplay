@@ -124,7 +124,14 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         updateTempoBtn,
         logTempoBtn,
         tempoStatus,
-        tempoStatusText;
+        tempoStatusText,
+        staffIndexInput,
+        staffOpacityInput,
+        blurStaffBtn,
+        restoreStaffBtn,
+        blurStaff0Btn,
+        blurStaff1Btn,
+        restoreAllStavesBtn;
     
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -295,6 +302,13 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         logTempoBtn = document.getElementById('log-tempo-btn');
         tempoStatus = document.getElementById('tempo-status');
         tempoStatusText = document.getElementById('tempo-status-text');
+        staffIndexInput = document.getElementById('staffIndex');
+        staffOpacityInput = document.getElementById('staffOpacity');
+        blurStaffBtn = document.getElementById('blur-staff-btn');
+        restoreStaffBtn = document.getElementById('restore-staff-btn');
+        blurStaff0Btn = document.getElementById('blur-staff-0-btn');
+        blurStaff1Btn = document.getElementById('blur-staff-1-btn');
+        restoreAllStavesBtn = document.getElementById('restore-all-staves-btn');
 
         // Create an additional "Focus Voice" button (blur all except selected voice) if not present
         var focusVoiceBtn = document.getElementById('focus-voice-btn');
@@ -846,6 +860,59 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             }
         }
 
+        if (blurStaffBtn && staffIndexInput && staffOpacityInput) {
+            blurStaffBtn.onclick = function () {
+                var staffIndex = parseInt(staffIndexInput.value);
+                var opacity = parseFloat(staffOpacityInput.value) || 0.3;
+
+                if (isNaN(staffIndex)) {
+                    console.log("[OSMD] Please enter a valid staff index");
+                    return;
+                }
+
+                console.log("[OSMD] Blurring staff " + staffIndex + " with opacity " + opacity);
+                openSheetMusicDisplay.blurStaff(staffIndex, opacity);
+            };
+        }
+
+        if (restoreStaffBtn && staffIndexInput) {
+            restoreStaffBtn.onclick = function () {
+                var staffIndex = parseInt(staffIndexInput.value);
+
+                if (isNaN(staffIndex)) {
+                    console.log("[OSMD] Please enter a valid staff index");
+                    return;
+                }
+
+                console.log("[OSMD] Restoring staff " + staffIndex);
+                openSheetMusicDisplay.restoreStaff(staffIndex);
+            };
+        }
+
+        if (blurStaff0Btn) {
+            blurStaff0Btn.onclick = function () {
+                var opacity = staffOpacityInput ? parseFloat(staffOpacityInput.value) || 0.3 : 0.3;
+                console.log("[OSMD] Blurring staff 0 with opacity " + opacity);
+                openSheetMusicDisplay.blurStaff(0, opacity);
+            };
+        }
+
+        if (blurStaff1Btn) {
+            blurStaff1Btn.onclick = function () {
+                var opacity = staffOpacityInput ? parseFloat(staffOpacityInput.value) || 0.3 : 0.3;
+                console.log("[OSMD] Blurring staff 1 with opacity " + opacity);
+                openSheetMusicDisplay.blurStaff(1, opacity);
+            };
+        }
+
+        if (restoreAllStavesBtn) {
+            restoreAllStavesBtn.onclick = function () {
+                console.log("[OSMD] Restoring all staves");
+                openSheetMusicDisplay.restoreStaff(0);
+                openSheetMusicDisplay.restoreStaff(1);
+            };
+        }
+
         if (paramDarkMode) {
             openSheetMusicDisplay.setOptions({darkMode: true});
         }
@@ -1216,6 +1283,35 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         console.log("\n[OSMD] After updateTempo(" + newTempo + "):");
         logTempoChanges();
+    }
+
+    function demoHandModeToggle() {
+        if (!openSheetMusicDisplay || !openSheetMusicDisplay.Sheet) {
+            return;
+        }
+
+        var firstInstrument = openSheetMusicDisplay.Sheet.Instruments && openSheetMusicDisplay.Sheet.Instruments[0];
+        if (!firstInstrument || !firstInstrument.Staves || firstInstrument.Staves.length < 2) {
+            console.log("[OSMD] Hand mode toggle demo: Sheet does not have 2 staves (piano format), skipping demo");
+            return;
+        }
+
+        console.log("\n[OSMD] Hand Mode Toggle Demo");
+        console.log("==============================");
+        console.log("Available hand modes:");
+        console.log("  - 'left-hand-only': Blurs right hand staff and voices");
+        console.log("  - 'right-hand-only': Blurs left hand staff and voices");
+        console.log("  - 'both-hands': Shows both hands (default)");
+        console.log("\nCurrent hand mode: " + currentHandMode);
+        console.log("\nYou can toggle hand modes using the UI buttons:");
+        console.log("  - Left Hand Only button");
+        console.log("  - Right Hand Only button");
+        console.log("  - Both Hands button");
+        console.log("\nOr programmatically:");
+        console.log("  currentHandMode = 'left-hand-only'; applyHandMode();");
+        console.log("  currentHandMode = 'right-hand-only'; applyHandMode();");
+        console.log("  currentHandMode = 'both-hands'; applyHandMode();");
+        console.log("==============================");
     }
 
     /**
