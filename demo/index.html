@@ -220,6 +220,23 @@
                     </div>
                 </div>
             </div>
+            <div class="column advanced-setting">
+                <h3 class="ui header hide-on-portrait">Update Tempo:</h3>
+                <button type="button" class="portraitCollapsible show-on-portrait">Update Tempo</button>
+                <div class="collapsibleContent" style="margin-top: 10px;">
+                    <div class="ui labeled input">
+                        <div class="ui label">BPM</div>
+                        <input type="number" id="tempoBPM" placeholder="120" min="1" />
+                    </div>
+                    <div class="ui vertical buttons" style="margin-top: 10px;">
+                        <div class="ui button" id="update-tempo-btn">Update Tempo</div>
+                        <div class="ui button" id="log-tempo-btn">Log Tempos</div>
+                    </div>
+                    <div class="ui small message" id="tempo-status" style="margin-top: 10px; display: none;">
+                        <p id="tempo-status-text"></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <button class="hide-on-portrait fixed" id="slideControlsButton" onclick="slideButtonClicked()"></button>    

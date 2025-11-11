@@ -10,6 +10,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var openSheetMusicDisplay;
     var sampleFolder = "",
         samples = {
+            // "Summer Time": "summertime.musicxml",
             "Lead Sheet with chords": "1181.musicxml",
             "Test 8va": "1851-3.musicxml",
             "Sample 2": "1346 2.musicxml",
@@ -118,7 +119,12 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         blurVoiceInput,
         blurOpacityInput,
         applyBlurBtn,
-        resetOpacityBtn;
+        resetOpacityBtn,
+        tempoBPMInput,
+        updateTempoBtn,
+        logTempoBtn,
+        tempoStatus,
+        tempoStatusText;
     
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -284,6 +290,11 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         blurOpacityInput = document.getElementById('blurOpacity');
         applyBlurBtn = document.getElementById('apply-blur-btn');
         resetOpacityBtn = document.getElementById('reset-opacity-btn');
+        tempoBPMInput = document.getElementById('tempoBPM');
+        updateTempoBtn = document.getElementById('update-tempo-btn');
+        logTempoBtn = document.getElementById('log-tempo-btn');
+        tempoStatus = document.getElementById('tempo-status');
+        tempoStatusText = document.getElementById('tempo-status-text');
 
         // Create an additional "Focus Voice" button (blur all except selected voice) if not present
         var focusVoiceBtn = document.getElementById('focus-voice-btn');
@@ -785,6 +796,56 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             }
         }
 
+        if (updateTempoBtn && tempoBPMInput) {
+            updateTempoBtn.onclick = function () {
+                var newBPM = parseFloat(tempoBPMInput.value);
+                if (isNaN(newBPM) || newBPM <= 0) {
+                    console.log("[OSMD] Invalid BPM value");
+                    if (tempoStatus && tempoStatusText) {
+                        tempoStatusText.textContent = "Invalid BPM value";
+                        tempoStatus.style.display = "block";
+                    }
+                    return;
+                }
+
+                var oldTempo = openSheetMusicDisplay.Sheet ? openSheetMusicDisplay.Sheet.getExpressionsStartTempoInBPM() : 0;
+                if (oldTempo === 0) {
+                    if (openSheetMusicDisplay.Sheet && openSheetMusicDisplay.Sheet.SourceMeasures.length > 0) {
+                        oldTempo = openSheetMusicDisplay.Sheet.SourceMeasures[0].TempoInBPM;
+                    }
+                    if (oldTempo === 0) {
+                        console.log("[OSMD] No tempo information found in sheet");
+                        if (tempoStatus && tempoStatusText) {
+                            tempoStatusText.textContent = "No tempo information found in sheet";
+                            tempoStatus.style.display = "block";
+                        }
+                        return;
+                    }
+                }
+
+                console.log("[OSMD] Updating tempo from " + oldTempo + " to " + newBPM + " BPM");
+                openSheetMusicDisplay.updateTempo(newBPM);
+
+                if (tempoStatus && tempoStatusText) {
+                    var hasExpressions = openSheetMusicDisplay.Sheet && openSheetMusicDisplay.Sheet.TimestampSortedTempoExpressionsList.length > 0;
+                    var message = "Updated tempo from " + oldTempo + " to " + newBPM + " BPM";
+                    if (!hasExpressions) {
+                        message += " (Note: Metronome marks only appear when tempo expressions exist in the sheet)";
+                    }
+                    tempoStatusText.textContent = message;
+                    tempoStatus.style.display = "block";
+                }
+
+                logTempoChanges();
+            }
+        }
+
+        if (logTempoBtn) {
+            logTempoBtn.onclick = function () {
+                logTempoChanges();
+            }
+        }
+
         if (paramDarkMode) {
             openSheetMusicDisplay.setOptions({darkMode: true});
         }
@@ -921,6 +982,9 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 // openSheetMusicDisplay.Sheet.Instruments[0].Staves[1].Visible = false;
                 //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
                 renderAndScrollBack();
+
+                // Test updateTempo functionality
+                testUpdateTempo();
             },
             function (e) {
                 errorLoadingOrRenderingSheet(e, "rendering");
@@ -1056,10 +1120,102 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             
             // Initialize status message
             updateMeasureRangeStatus(1, Number.MAX_SAFE_INTEGER);
+
+            // Update tempo input with current initial tempo
+            if (tempoBPMInput) {
+                var initialTempo = openSheetMusicDisplay.Sheet.getExpressionsStartTempoInBPM();
+                if (initialTempo > 0) {
+                    tempoBPMInput.value = initialTempo;
+                    tempoBPMInput.placeholder = initialTempo.toString();
+                } else {
+                    tempoBPMInput.value = "";
+                    tempoBPMInput.placeholder = "No tempo";
+                }
+            }
         }
         
         // Enable controls again
         enable();
+    }
+
+    function logTempoChanges() {
+        if (!openSheetMusicDisplay || !openSheetMusicDisplay.Sheet) {
+            console.log("[OSMD] No sheet loaded");
+            return;
+        }
+
+        console.log("=== Tempo Changes in Sheet ===");
+        var tempoExpressions = openSheetMusicDisplay.Sheet.TimestampSortedTempoExpressionsList;
+
+        if (tempoExpressions.length === 0) {
+            console.log("No tempo expressions found");
+            console.log("Measure tempos:");
+            var measuresWithTempo = 0;
+            for (var m = 0; m < openSheetMusicDisplay.Sheet.SourceMeasures.length && m < 10; m++) {
+                var measure = openSheetMusicDisplay.Sheet.SourceMeasures[m];
+                if (measure.TempoInBPM > 0) {
+                    console.log("  Measure " + measure.MeasureNumber + ": " + measure.TempoInBPM + " BPM");
+                    measuresWithTempo++;
+                }
+            }
+            if (measuresWithTempo === 0) {
+                console.log("  No measure tempos found");
+            }
+        } else {
+            console.log("Found " + tempoExpressions.length + " tempo expression(s):");
+            for (var i = 0; i < tempoExpressions.length; i++) {
+                var tempoExpr = tempoExpressions[i];
+                var measureNum = tempoExpr.SourceMeasureParent.MeasureNumber;
+                var timestamp = tempoExpr.AbsoluteTimestamp.RealValue.toFixed(2);
+
+                if (tempoExpr.InstantaneousTempo) {
+                    console.log("  [" + i + "] Measure " + measureNum + " (timestamp: " + timestamp + "): " +
+                        tempoExpr.InstantaneousTempo.TempoInBpm + " BPM (Instantaneous)");
+                }
+                if (tempoExpr.ContinuousTempo) {
+                    console.log("  [" + i + "] Measure " + measureNum + " (timestamp: " + timestamp + "): " +
+                        tempoExpr.ContinuousTempo.StartTempo + " -> " + tempoExpr.ContinuousTempo.EndTempo +
+                        " BPM (Continuous)");
+                }
+            }
+        }
+
+        var initialTempo = openSheetMusicDisplay.Sheet.getExpressionsStartTempoInBPM();
+        var firstMeasureTempo = openSheetMusicDisplay.Sheet.SourceMeasures.length > 0 ?
+            openSheetMusicDisplay.Sheet.SourceMeasures[0].TempoInBPM : 0;
+        var userStartTempo = openSheetMusicDisplay.Sheet.userStartTempoInBPM;
+        console.log("Initial tempo (from expressions): " + initialTempo + " BPM");
+        if (firstMeasureTempo > 0) {
+            console.log("First measure tempo: " + firstMeasureTempo + " BPM");
+        }
+        if (userStartTempo > 0 && userStartTempo !== initialTempo) {
+            console.log("User start tempo: " + userStartTempo + " BPM");
+        }
+        console.log("==============================");
+    }
+
+    function testUpdateTempo() {
+        if (!openSheetMusicDisplay || !openSheetMusicDisplay.Sheet) {
+            return;
+        }
+
+        var initialTempo = openSheetMusicDisplay.Sheet.getExpressionsStartTempoInBPM();
+        if (initialTempo === 0) {
+            console.log("[OSMD] No tempo information found in sheet, skipping tempo update test");
+            return;
+        }
+
+        console.log("\n[OSMD] Testing updateTempo() - Current initial tempo: " + initialTempo + " BPM");
+        logTempoChanges();
+
+        // Test: Change from current tempo to 120 BPM (or 90 if current is 120)
+        var newTempo = initialTempo === 120 ? 90 : 120;
+        console.log("\n[OSMD] Updating tempo from " + initialTempo + " to " + newTempo + " BPM...");
+
+        openSheetMusicDisplay.updateTempo(newTempo);
+
+        console.log("\n[OSMD] After updateTempo(" + newTempo + "):");
+        logTempoChanges();
     }
 
     /**

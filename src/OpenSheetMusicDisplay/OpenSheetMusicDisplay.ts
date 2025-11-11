@@ -941,6 +941,83 @@ export class OpenSheetMusicDisplay {
         return undefined;
     }
 
+    public updateTempo(newInitialBPM: number, render: boolean = true): void {
+        if (!this.sheet) {
+            return;
+        }
+
+        let oldInitialTempo: number = this.sheet.getExpressionsStartTempoInBPM();
+        if (oldInitialTempo === 0) {
+            if (this.sheet.SourceMeasures.length > 0 && this.sheet.SourceMeasures[0].TempoInBPM > 0) {
+                oldInitialTempo = this.sheet.SourceMeasures[0].TempoInBPM;
+            } else {
+                return;
+            }
+        }
+
+        if (oldInitialTempo === newInitialBPM) {
+            return;
+        }
+
+        const ratio: number = newInitialBPM / oldInitialTempo;
+
+        for (const tempoExpr of this.sheet.TimestampSortedTempoExpressionsList) {
+            if (tempoExpr.InstantaneousTempo) {
+                tempoExpr.InstantaneousTempo.TempoInBpm *= ratio;
+            }
+            if (tempoExpr.ContinuousTempo) {
+                tempoExpr.ContinuousTempo.StartTempo *= ratio;
+                tempoExpr.ContinuousTempo.EndTempo *= ratio;
+            }
+        }
+
+        for (const measure of this.sheet.SourceMeasures) {
+            if (measure.TempoInBPM > 0) {
+                measure.TempoInBPM *= ratio;
+            }
+        }
+
+        if (this.sheet.TimestampSortedTempoExpressionsList.length === 0) {
+            this.sheet.userStartTempoInBPM *= ratio;
+        }
+
+        if (render && this.graphic && this.drawer) {
+            this.updateMetronomeMarksInSVG(ratio);
+        } else if (render) {
+            this.render();
+        }
+    }
+
+    private updateMetronomeMarksInSVG(ratio: number): void {
+        if (!this.drawer || !this.drawer.Backends) {
+            return;
+        }
+
+        const backends: VexFlowBackend[] = this.drawer.Backends;
+        for (const backend of backends) {
+            const renderElement: HTMLElement = backend.getRenderElement?.();
+            if (renderElement) {
+                const bpmGroups: NodeListOf<Element> = renderElement.querySelectorAll("g.vf-bpm");
+                if (bpmGroups) {
+                    for (const bpmGroup of bpmGroups) {
+                        const textNodes: NodeListOf<Element> = bpmGroup.querySelectorAll("text");
+                        if (textNodes) {
+                            for (const textNode of textNodes) {
+                                const textContent: string = textNode.textContent || "";
+                                const match: RegExpMatchArray | null = textContent.match(/ = (\d+)/);
+                                if (match && match[1]) {
+                                    const oldBpm: number = parseFloat(match[1]);
+                                    const newBpm: number = Math.round(oldBpm * ratio);
+                                    textNode.textContent = textContent.replace(/ = \d+/, " = " + newBpm);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Helper function for managing window's onResize events
      * @param startCallback is the function called when resizing starts
