@@ -262,11 +262,6 @@ export interface IOSMDOptions {
      */
     cursorsOptions?: CursorOptions[];
     /**
-     * Color for the cursor. Applied via CSS on top of a transparent image.
-     * This overrides the color in cursorsOptions if set.
-     */
-    cursorColor?: string;
-    /**
      * Defines which skyline and bottom-line batch calculation algorithm to use.
      */
     preferredSkyBottomLineBatchCalculatorBackend?: SkyBottomLineBatchCalculatorBackendType;
@@ -350,9 +345,4 @@ export interface CursorOptions {
     alpha: number;
     /** If true, this cursor will be followed. */
     follow: boolean;
-    /**
-     * Optional width (in pixels at zoom 1.0) for CursorType.Standard.
-     * Ignored for other cursor types.
-     */
-    width?: number;
 }
