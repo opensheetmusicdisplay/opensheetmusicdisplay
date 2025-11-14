@@ -28,16 +28,18 @@ export class Cursor {
     // set cursor id
     // TODO add this for the OSMD object as well and refactor this into a util method?
     let id: number = 0;
-    this.cursorElementId = "cursorImg-0";
+    this.cursorElementId = "cursorDiv-0";
     // find unique cursor id in document
     while (document.getElementById(this.cursorElementId)) {
       id++;
       this.cursorElementId = `cursorImg-${id}`;
     }
 
-    const curs: HTMLElement = document.createElement("img");
+    const curs: HTMLElement = document.createElement("div");
     curs.id = this.cursorElementId;
     curs.style.position = "absolute";
+    curs.style.pointerEvents = "none";
+    curs.classList.add("osmd-cursor");
     if (this.cursorOptions.follow === true) {
       this.wantedZIndex = "-1";
       curs.style.zIndex = this.wantedZIndex;
@@ -45,7 +47,7 @@ export class Cursor {
       this.wantedZIndex = "-2";
       curs.style.zIndex = this.wantedZIndex;
     }
-    this.cursorElement = <HTMLImageElement>curs;
+    this.cursorElement = curs;
     this.container.appendChild(curs);
   }
 
@@ -60,7 +62,7 @@ export class Cursor {
   }
 
   private container: HTMLElement;
-  public cursorElement: HTMLImageElement;
+  public cursorElement: HTMLElement;
   /** a unique id of the cursor's HTMLElement in the document.
    * Should be constant between re-renders and backend changes,
    * but different between different OSMD objects on the same page.
@@ -245,44 +247,47 @@ export class Cursor {
   }
 
   public updateWidthAndStyle(measurePositionAndShape: BoundingBox, x: number, y: number, height: number): void {
-    const cursorElement: HTMLImageElement = this.cursorElement;
+    const cursorElement: HTMLElement = this.cursorElement;
     let newWidth: number = 0;
     switch (this.cursorOptions.type) {
+      case CursorType.Standard: {
+        const zoom: number = this.openSheetMusicDisplay.zoom;
+        const centerPx: number = x * 10.0 * zoom;
+        const defaultWidth: number = 3 * 10.0; // 30px at zoom 1.0
+        newWidth = defaultWidth * zoom;
+        cursorElement.style.top = (y * 10.0 * zoom) + "px";
+        cursorElement.style.left = (centerPx - newWidth / 2) + "px";
+        break;
+      }
       case CursorType.ThinLeft:
         cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
         newWidth = 5 * this.openSheetMusicDisplay.zoom;
         break;
       case CursorType.ShortThinTopLeft:
         cursorElement.style.top = ((y-2.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = (x * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.height = (1.5 * 10.0 * this.openSheetMusicDisplay.zoom);
         newWidth = 5 * this.openSheetMusicDisplay.zoom;
         break;
       case CursorType.CurrentArea:
         cursorElement.style.top = measurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
-        cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom + "px";
         newWidth = measurePositionAndShape.Size.width * 10 * this.openSheetMusicDisplay.zoom;
         break;
       case CursorType.CurrentAreaLeft:
         cursorElement.style.top = measurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
-        cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom + "px";
         newWidth = (x-measurePositionAndShape.AbsolutePosition.x) * 10 * this.openSheetMusicDisplay.zoom;
         break;
         default:
         cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
         newWidth = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
         break;
     }
 
 
-    // if (newWidth !== cursorElement.width) { // this `if` is unnecessary and prevents updating color
-    cursorElement.width = newWidth;
+    cursorElement.style.width = `${newWidth}px`;
     const heightAttribute: number = this.cursorOptions.type === CursorType.ShortThinTopLeft ? 1.5 : height;
     cursorElement.style.height = `${heightAttribute * 10.0 * this.openSheetMusicDisplay.zoom}px`;
 
@@ -325,38 +330,14 @@ export class Cursor {
   }
 
   /** updates cursor style (visually), e.g. cursor.cursorOptions.type or .color. */
-  private updateStyle(width: number, cursorOptions: CursorOptions = undefined): void {
+  private updateStyle(_width: number, cursorOptions: CursorOptions = undefined): void {
     if (cursorOptions !== undefined) {
       this.cursorOptions = cursorOptions;
     }
-    // Create a dummy canvas to generate the gradient for the cursor
-    // FIXME This approach needs to be improved
-    const c: HTMLCanvasElement = document.createElement("canvas");
-    c.width = this.cursorElement.width;
-    c.height = 1;
-    const ctx: CanvasRenderingContext2D = c.getContext("2d");
-    ctx.globalAlpha = this.cursorOptions.alpha;
-    // Generate the gradient
-    const gradient: CanvasGradient = ctx.createLinearGradient(0, 0, this.cursorElement.width, 0);
-    switch (this.cursorOptions.type) {
-      case CursorType.ThinLeft:
-      case CursorType.ShortThinTopLeft:
-      case CursorType.CurrentArea:
-      case CursorType.CurrentAreaLeft:
-        gradient.addColorStop(1, this.cursorOptions.color);
-        break;
-      default:
-        gradient.addColorStop(0, "white"); // it was: "transparent"
-        gradient.addColorStop(0.2, this.cursorOptions.color);
-        gradient.addColorStop(0.8, this.cursorOptions.color);
-        gradient.addColorStop(1, "white"); // it was: "transparent"
-      break;
-    }
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, 1);
     this.cursorOptionsRendered = {...this.cursorOptions}; // clone, otherwise !== doesn't work
-    // Set the actual image
-    this.cursorElement.src = c.toDataURL("image/png");
+    // Clear inline styles so consumers can define cursor visuals via CSS
+    this.cursorElement.style.background = "";
+    this.cursorElement.style.opacity = "";
   }
 
   public get Iterator(): MusicPartManagerIterator {
