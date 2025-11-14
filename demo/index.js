@@ -100,6 +100,14 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         followCursorCheckbox,
         showCursorBtn,
         hideCursorBtn,
+        cursorColorPicker,
+        cursorColorInput,
+        cursorColorPresets,
+        cursorOpacitySlider,
+        cursorOpacityValue,
+        cursorTypeSelect,
+        cursorWidthSlider,
+        cursorWidthValue,
         backendSelect,
         backendSelectDiv,
         debugReRenderBtn,
@@ -272,6 +280,14 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
+        cursorColorPicker = document.getElementById("cursor-color-picker");
+        cursorColorInput = document.getElementById("cursor-color-input");
+        cursorColorPresets = document.querySelectorAll(".cursor-color-preset");
+        cursorOpacitySlider = document.getElementById("cursor-opacity-slider");
+        cursorOpacityValue = document.getElementById("cursor-opacity-value");
+        cursorTypeSelect = document.getElementById("cursor-type-select");
+        cursorWidthSlider = document.getElementById("cursor-width-slider");
+        cursorWidthValue = document.getElementById("cursor-width-value");
         backendSelect = document.getElementById("backend-select");
         backendSelectDiv = document.getElementById("backend-select-div");
         debugReRenderBtn = document.getElementById("debug-re-render-btn");
@@ -684,6 +700,124 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             }
         });
 
+        // Cursor options update functionality
+        function updateCursorOptions() {
+            if (!openSheetMusicDisplay) {
+                return;
+            }
+
+            var color = cursorColorPicker ? cursorColorPicker.value : "#33e02f";
+            var opacity = cursorOpacitySlider ? parseFloat(cursorOpacitySlider.value) : 0.5;
+            var cursorType = cursorTypeSelect ? parseInt(cursorTypeSelect.value, 10) : 0;
+            var widthValue = cursorWidthSlider ? parseFloat(cursorWidthSlider.value) : 30;
+
+            if (cursorOpacityValue) {
+                cursorOpacityValue.textContent = opacity.toFixed(2);
+            }
+            if (cursorWidthSlider) {
+                cursorWidthSlider.disabled = cursorType !== 0;
+            }
+            if (cursorWidthValue) {
+                cursorWidthValue.textContent = cursorType === 0 ? Math.round(widthValue) + "px" : "n/a";
+            }
+
+            var cursorOption = {
+                type: cursorType,
+                color: color,
+                alpha: opacity,
+                follow: true
+            };
+            if (cursorType === 0 && widthValue > 0) {
+                cursorOption.width = widthValue;
+            }
+
+            openSheetMusicDisplay.setOptions({ cursorsOptions: [cursorOption] });
+            if (openSheetMusicDisplay.graphic) {
+                openSheetMusicDisplay.render();
+            }
+        }
+
+        function updateCursorColor(color) {
+            if (!color || !color.match(/^#[0-9A-Fa-f]{6}$/)) {
+                return; // Invalid color format
+            }
+            // Update both inputs to stay in sync
+            if (cursorColorPicker) {
+                cursorColorPicker.value = color;
+            }
+            if (cursorColorInput) {
+                cursorColorInput.value = color;
+            }
+            // Apply the color via updateCursorOptions
+            updateCursorOptions();
+        }
+
+        if (cursorColorPicker) {
+            cursorColorPicker.addEventListener("input", function (e) {
+                updateCursorColor(e.target.value);
+            });
+        }
+
+        if (cursorColorInput) {
+            cursorColorInput.addEventListener("change", function (e) {
+                var color = e.target.value.trim();
+                if (color && color.match(/^#[0-9A-Fa-f]{6}$/)) {
+                    updateCursorColor(color);
+                } else {
+                    // Reset to current picker value if invalid
+                    if (cursorColorPicker) {
+                        e.target.value = cursorColorPicker.value;
+                    }
+                }
+            });
+            cursorColorInput.addEventListener("keypress", function (e) {
+                if (e.key === "Enter") {
+                    var color = e.target.value.trim();
+                    if (color && color.match(/^#[0-9A-Fa-f]{6}$/)) {
+                        updateCursorColor(color);
+                    } else {
+                        // Reset to current picker value if invalid
+                        if (cursorColorPicker) {
+                            e.target.value = cursorColorPicker.value;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Preset color buttons
+        if (cursorColorPresets && cursorColorPresets.length > 0) {
+            cursorColorPresets.forEach(function (presetBtn) {
+                presetBtn.addEventListener("click", function () {
+                    var color = this.getAttribute("data-color");
+                    if (color) {
+                        updateCursorColor(color);
+                    }
+                });
+            });
+        }
+
+        // Opacity slider
+        if (cursorOpacitySlider) {
+            cursorOpacitySlider.addEventListener("input", function () {
+                updateCursorOptions();
+            });
+        }
+
+        // Cursor width slider (Standard type only)
+        if (cursorWidthSlider) {
+            cursorWidthSlider.addEventListener("input", function () {
+                updateCursorOptions();
+            });
+        }
+
+        // Cursor type selector
+        if (cursorTypeSelect) {
+            cursorTypeSelect.addEventListener("change", function () {
+                updateCursorOptions();
+            });
+        }
+
         backendSelect.addEventListener("change", function (e) {
             var value = e.target.value;
             var createNewOsmd = true;
@@ -1046,6 +1180,10 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 // This gives you access to the osmd object in the console. Do not use in production code
                 window.osmd = openSheetMusicDisplay;
                 openSheetMusicDisplay.zoom = zoom;
+                // Initialize cursor options if controls are available
+                if (cursorColorPicker || cursorOpacitySlider || cursorTypeSelect) {
+                    updateCursorOptions();
+                }
                 // openSheetMusicDisplay.Sheet.Instruments[0].Staves[1].Visible = false;
                 //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
                 renderAndScrollBack();

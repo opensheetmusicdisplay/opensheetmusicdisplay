@@ -698,6 +698,19 @@ export class OpenSheetMusicDisplay {
                 follow: true
             }];
         }
+        // apply cursorColor to all cursors if specified
+        if (options.cursorColor !== undefined) {
+            for (let i: number = 0; i < this.cursorsOptions.length; i++) {
+                this.cursorsOptions[i].color = options.cursorColor;
+            }
+            // update existing cursors if they exist
+            for (let i: number = 0; i < this.cursors.length; i++) {
+                if (this.cursors[i]) {
+                    this.cursors[i].CursorOptions.color = options.cursorColor;
+                    this.cursors[i].update();
+                }
+            }
+        }
         if (options.preferredSkyBottomLineBatchCalculatorBackend !== undefined) {
             this.rules.PreferredSkyBottomLineBatchCalculatorBackend = options.preferredSkyBottomLineBatchCalculatorBackend;
         }
