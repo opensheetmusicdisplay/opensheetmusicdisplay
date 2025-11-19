@@ -226,9 +226,10 @@ export class Cursor {
     if (this.openSheetMusicDisplay.FollowCursor && this.cursorOptions.follow) {
       if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
         const diff: number = this.cursorElement.getBoundingClientRect().top;
-        this.cursorElement.scrollIntoView({ behavior: diff < 1000 ? "smooth" : "auto", block: "center" });
+        // this.cursorElement.scrollIntoView({behavior: diff < 1000 ? "smooth" : "auto", block: "center"});
+        this.cursorElement.scrollIntoView({ behavior: diff < 1000 ? "smooth" : "auto", block: "start" });
       } else {
-        this.cursorElement.scrollIntoView({ behavior: "smooth", inline: "center" });
+        this.cursorElement.scrollIntoView({behavior: "smooth", inline: "center"});
       }
     }
     // Show cursor
