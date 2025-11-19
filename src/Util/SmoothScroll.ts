@@ -40,16 +40,13 @@ export class SmoothScroll {
         }
 
         const elemRect: DOMRect = element.getBoundingClientRect();
-        let parentRect: DOMRect;
         let parentClientWidth: number;
         let parentClientHeight: number;
 
         if (parent instanceof Window) {
-            parentRect = { left: 0, top: 0 } as DOMRect; // Relative to viewport
             parentClientWidth = window.innerWidth;
             parentClientHeight = window.innerHeight;
         } else {
-            parentRect = parent.getBoundingClientRect();
             parentClientWidth = parent.clientWidth;
             parentClientHeight = parent.clientHeight;
         }
@@ -57,26 +54,64 @@ export class SmoothScroll {
         // Calculate target Y (Vertical)
         let targetY: number = startY;
         if (options.block) {
-            const relTop: number = elemRect.top - parentRect.top;
+            // Re-calculate current rects just in case (though not strictly necessary if we trust startY/startX)
+            // Actually, better: Calculate relative position to DOCUMENT for absolute targeting.
+            // element.getBoundingClientRect().top includes current scroll offset of the viewport if parent is window,
+            // or includes current scroll offset of the parent if parent is an element?
+            // No, getBoundingClientRect() is always relative to the viewport.
+
+            // So to get the absolute position in the document (or scrollable container content):
+            // Absolute Top = element.getBoundingClientRect().top + window.scrollY (if parent is window)
+            // Relative Top to Container = element.getBoundingClientRect().top - parent.getBoundingClientRect().top + parent.scrollTop
+
+            const elementTopRelative: number = elemRect.top;
+            let parentTopRelative: number;
+            let currentScrollTop: number;
+
+            if (parent instanceof Window) {
+                parentTopRelative = 0;
+                currentScrollTop = window.scrollY;
+            } else {
+                parentTopRelative = parent.getBoundingClientRect().top;
+                currentScrollTop = parent.scrollTop;
+            }
+
+            // This is the position of the element relative to the top of the SCROLLABLE CONTENT
+            const elementTopAbsolute: number = elementTopRelative - parentTopRelative + currentScrollTop;
+
             if (options.block === "start") {
-                targetY = startY + relTop;
+                targetY = elementTopAbsolute;
             } else if (options.block === "center") {
-                targetY = startY + relTop - (parentClientHeight / 2) + (elemRect.height / 2);
+                targetY = elementTopAbsolute - (parentClientHeight / 2) + (elemRect.height / 2);
             } else if (options.block === "end") {
-                targetY = startY + relTop - parentClientHeight + elemRect.height;
+                targetY = elementTopAbsolute - parentClientHeight + elemRect.height;
             }
         }
 
         // Calculate target X (Horizontal)
         let targetX: number = startX;
         if (options.inline) {
-            const relLeft: number = elemRect.left - parentRect.left;
+            const elementLeftRelative: number = elemRect.left;
+            let parentLeftRelative: number;
+            let currentScrollLeft: number;
+
+            if (parent instanceof Window) {
+                parentLeftRelative = 0;
+                currentScrollLeft = window.scrollX;
+            } else {
+                parentLeftRelative = parent.getBoundingClientRect().left;
+                currentScrollLeft = parent.scrollLeft;
+            }
+
+            // This is the position of the element relative to the left of the SCROLLABLE CONTENT
+            const elementLeftAbsolute: number = elementLeftRelative - parentLeftRelative + currentScrollLeft;
+
             if (options.inline === "start") {
-                targetX = startX + relLeft;
+                targetX = elementLeftAbsolute;
             } else if (options.inline === "center") {
-                targetX = startX + relLeft - (parentClientWidth / 2) + (elemRect.width / 2);
+                targetX = elementLeftAbsolute - (parentClientWidth / 2) + (elemRect.width / 2);
             } else if (options.inline === "end") {
-                targetX = startX + relLeft - parentClientWidth + elemRect.width;
+                targetX = elementLeftAbsolute - parentClientWidth + elemRect.width;
             }
         }
 

@@ -225,8 +225,16 @@ export class Cursor {
     this.updateWidthAndStyle(measurePositionAndShape, x, y, height);
 
     if (this.openSheetMusicDisplay.FollowCursor && this.cursorOptions.follow) {
+      // Optimization: Don't scroll if the cursor is still visible and we haven't moved vertically?
+      // Actually, the standard logic allows horizontal scrolling too.
+      // But standard OSMD only scrolls vertically unless it's single horizontal staffline.
+
       if (this.cursorOptions.followCursorPolyfill) {
         if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
+           // For vertical scrolling, we can check if we are already in view or if the Y position changed significantly?
+           // But SmoothScroll.scrollIntoView has a check: "If already at target, do nothing"
+           // However, that check is inside the polyfill. We can prevent the call here if we want.
+
            SmoothScroll.scrollIntoView(this.cursorElement, { block: "start", duration: 400 });
         } else {
            SmoothScroll.scrollIntoView(this.cursorElement, { inline: "center", duration: 400 });
