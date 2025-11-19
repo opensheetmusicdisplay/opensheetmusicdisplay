@@ -16,6 +16,7 @@ import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure
 import { CursorOptions, CursorType } from "./OSMDOptions";
 import { BoundingBox } from "../MusicalScore/Graphical/BoundingBox";
 import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
+import { SmoothScroll } from "../Util/SmoothScroll";
 
 /** A cursor which can iterate through the music sheet. */
 export class Cursor {
@@ -224,7 +225,13 @@ export class Cursor {
     this.updateWidthAndStyle(measurePositionAndShape, x, y, height);
 
     if (this.openSheetMusicDisplay.FollowCursor && this.cursorOptions.follow) {
-      if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
+      if (this.cursorOptions.followCursorPolyfill) {
+        if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
+           SmoothScroll.scrollIntoView(this.cursorElement, { block: "start", duration: 400 });
+        } else {
+           SmoothScroll.scrollIntoView(this.cursorElement, { inline: "center", duration: 400 });
+        }
+      } else if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
         const diff: number = this.cursorElement.getBoundingClientRect().top;
         // this.cursorElement.scrollIntoView({behavior: diff < 1000 ? "smooth" : "auto", block: "center"});
         this.cursorElement.scrollIntoView({ behavior: diff < 1000 ? "smooth" : "auto", block: "start" });

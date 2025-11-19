@@ -80,6 +80,12 @@ export interface IOSMDOptions {
     disableCursor?: boolean;
     /** Follow Cursor: Scroll the page when cursor.next() is called and the cursor moves into a new system outside of the current view frame. */
     followCursor?: boolean;
+    /**
+     * If true, use a JavaScript-based smooth scroll polyfill instead of the native scrollIntoView.
+     * This can fix choppy scrolling on some mobile devices (e.g. iOS Safari).
+     * Default is false.
+     */
+    followCursorPolyfill?: boolean;
     /** Broad Parameters like compact or preview mode.
      * Also try "compacttight", which is like compact but also reduces margins.
      * To see what this mode does and maybe adjust the spacing parameters yourself instead of using the mode,
@@ -345,4 +351,10 @@ export interface CursorOptions {
     alpha: number;
     /** If true, this cursor will be followed. */
     follow: boolean;
+    /**
+     * If true, use a JavaScript-based smooth scroll polyfill instead of the native scrollIntoView.
+     * This can fix choppy scrolling on some mobile devices (e.g. iOS Safari).
+     * Default is false.
+     */
+    followCursorPolyfill?: boolean;
 }

@@ -695,7 +695,8 @@ export class OpenSheetMusicDisplay {
                 type: CursorType.Standard,
                 color: this.EngravingRules.DefaultColorCursor,
                 alpha: 0.5,
-                follow: true
+                follow: true,
+                followCursorPolyfill: options.followCursorPolyfill
             }];
         }
         if (options.preferredSkyBottomLineBatchCalculatorBackend !== undefined) {
