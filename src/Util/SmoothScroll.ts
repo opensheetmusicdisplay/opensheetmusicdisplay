@@ -14,6 +14,8 @@ export class SmoothScroll {
         duration?: number;
         block?: "start" | "center" | "end";
         inline?: "start" | "center" | "end";
+        offsetY?: number;
+        offsetX?: number;
     } = {}): void {
         const parent: HTMLElement | Window = SmoothScroll.getScrollParent(element);
         if (!parent) {
@@ -80,11 +82,11 @@ export class SmoothScroll {
             const elementTopAbsolute: number = elementTopRelative - parentTopRelative + currentScrollTop;
 
             if (options.block === "start") {
-                targetY = elementTopAbsolute;
+                targetY = elementTopAbsolute - (options.offsetY || 0);
             } else if (options.block === "center") {
-                targetY = elementTopAbsolute - (parentClientHeight / 2) + (elemRect.height / 2);
+                targetY = elementTopAbsolute - (parentClientHeight / 2) + (elemRect.height / 2) - (options.offsetY || 0);
             } else if (options.block === "end") {
-                targetY = elementTopAbsolute - parentClientHeight + elemRect.height;
+                targetY = elementTopAbsolute - parentClientHeight + elemRect.height + (options.offsetY || 0);
             }
         }
 
@@ -107,11 +109,11 @@ export class SmoothScroll {
             const elementLeftAbsolute: number = elementLeftRelative - parentLeftRelative + currentScrollLeft;
 
             if (options.inline === "start") {
-                targetX = elementLeftAbsolute;
+                targetX = elementLeftAbsolute - (options.offsetX || 0);
             } else if (options.inline === "center") {
-                targetX = elementLeftAbsolute - (parentClientWidth / 2) + (elemRect.width / 2);
+                targetX = elementLeftAbsolute - (parentClientWidth / 2) + (elemRect.width / 2) - (options.offsetX || 0);
             } else if (options.inline === "end") {
-                targetX = elementLeftAbsolute - parentClientWidth + elemRect.width;
+                targetX = elementLeftAbsolute - parentClientWidth + elemRect.width + (options.offsetX || 0);
             }
         }
 

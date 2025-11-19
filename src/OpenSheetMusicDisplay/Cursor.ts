@@ -235,7 +235,9 @@ export class Cursor {
            // But SmoothScroll.scrollIntoView has a check: "If already at target, do nothing"
            // However, that check is inside the polyfill. We can prevent the call here if we want.
 
-           SmoothScroll.scrollIntoView(this.cursorElement, { block: "start", duration: 400 });
+          // Mimic scroll-margin-top: 8em. 1em ~ 16px usually, so 8em ~ 128px.
+          // This keeps some context above the cursor.
+          SmoothScroll.scrollIntoView(this.cursorElement, { block: "start", duration: 400, offsetY: 128 });
         } else {
            SmoothScroll.scrollIntoView(this.cursorElement, { inline: "center", duration: 400 });
         }
