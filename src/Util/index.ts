@@ -3,3 +3,4 @@
 //export * from "./BaseIdClass";
 export * from "./CollectionUtil";
 export * from "./PSMath";
+export * from "./SmoothScroll";

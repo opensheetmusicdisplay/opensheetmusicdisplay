@@ -691,12 +691,16 @@ export class OpenSheetMusicDisplay {
         if (options.cursorsOptions !== undefined) {
             this.cursorsOptions = options.cursorsOptions;
         } else {
+            // Preserve existing polyfill setting if not explicitly overridden
+            const existingPolyfill: boolean = this.cursorsOptions?.[0]?.followCursorPolyfill;
+            const newPolyfill: boolean = options.followCursorPolyfill !== undefined ? options.followCursorPolyfill : existingPolyfill;
+
             this.cursorsOptions = [{
                 type: CursorType.Standard,
                 color: this.EngravingRules.DefaultColorCursor,
                 alpha: 0.5,
                 follow: true,
-                followCursorPolyfill: options.followCursorPolyfill
+                followCursorPolyfill: newPolyfill
             }];
         }
         if (options.preferredSkyBottomLineBatchCalculatorBackend !== undefined) {
