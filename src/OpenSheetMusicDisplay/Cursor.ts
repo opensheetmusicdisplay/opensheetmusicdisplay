@@ -225,10 +225,10 @@ export class Cursor {
 
     if (this.openSheetMusicDisplay.FollowCursor && this.cursorOptions.follow) {
       if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
-        // use "auto" to allow CSS scroll-behavior to control smoothness
-        this.cursorElement.scrollIntoView({ behavior: "auto", block: "start" });
+        const diff: number = this.cursorElement.getBoundingClientRect().top;
+        this.cursorElement.scrollIntoView({ behavior: diff < 1000 ? "smooth" : "auto", block: "center" });
       } else {
-        this.cursorElement.scrollIntoView({ behavior: "auto", inline: "center" });
+        this.cursorElement.scrollIntoView({ behavior: "smooth", inline: "center" });
       }
     }
     // Show cursor
