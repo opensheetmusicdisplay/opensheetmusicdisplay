@@ -32,7 +32,7 @@ import { TemposCalculator } from "../MusicalScore/ScoreIO/MusicSymbolModules/Tem
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "1.9.2-dev"; // getter: this.Version
+    protected version: string = "1.9.3-release"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
