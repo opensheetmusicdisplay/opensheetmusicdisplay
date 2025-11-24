@@ -480,6 +480,10 @@ export class SourceMeasure {
         return false;
     }
 
+    public beginsWithRepetition(): boolean {
+        return this.beginsWithLineRepetition() || this.beginsWithWordRepetition();
+    }
+
     public beginsWithLineRepetition(): boolean {
         for (let idx: number = 0, len: number = this.FirstRepetitionInstructions.length; idx < len; ++idx) {
             const instr: RepetitionInstruction = this.FirstRepetitionInstructions[idx];

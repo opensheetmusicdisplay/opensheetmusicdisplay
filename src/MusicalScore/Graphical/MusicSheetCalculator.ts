@@ -59,7 +59,7 @@ import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AbstractGraphicalInstruction } from "./AbstractGraphicalInstruction";
 import { GraphicalInstantaneousTempoExpression } from "./GraphicalInstantaneousTempoExpression";
-import { InstantaneousTempoExpression, TempoEnum } from "../VoiceData/Expressions/InstantaneousTempoExpression";
+import { InstantaneousTempoExpression, TempoType } from "../VoiceData/Expressions/InstantaneousTempoExpression";
 import { ContinuousTempoExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousTempoExpression";
 import { FontStyles } from "../../Common/Enums/FontStyles";
 import { AbstractTempoExpression } from "../VoiceData/Expressions/AbstractTempoExpression";
@@ -2027,7 +2027,7 @@ export abstract class MusicSheetCalculator {
                     }
                     // in case of metronome mark:
                     if (this.rules.MetronomeMarksDrawn) {
-                        if ((entry.Expression as InstantaneousTempoExpression).Enum === TempoEnum.metronomeMark) {
+                        if ((entry.Expression as InstantaneousTempoExpression).TempoType === TempoType.metronomeMark) {
                             this.createMetronomeMark((entry.Expression as InstantaneousTempoExpression));
                             continue;
                         }

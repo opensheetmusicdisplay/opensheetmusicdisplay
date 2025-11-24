@@ -1,6 +1,5 @@
 import {AbstractTempoExpression} from "./AbstractTempoExpression";
 import {PlacementEnum} from "./AbstractExpression";
-import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {MultiTempoExpression} from "./MultiTempoExpression";
 
@@ -141,7 +140,10 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         "alla breve",
     ];
 
-    private tempoEnum: TempoEnum;
+    public TempoType: TempoType;
+    public InstTempo: InstTempo;
+    /** This is `none` unless `TempoType` is `change`. */
+    public ChangeSubType: ChangeSubType;
     private tempoInBpm: number;
 
     // Must refactor: In c# use 'out' arguments
@@ -174,48 +176,49 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
     //    }
     //    return TempoEnum.none;
     //}
-    public static getDefaultValueForTempoType(tempoEnum: TempoEnum): number {
-        switch (tempoEnum) {
-            case TempoEnum.larghissimo:
+    public static getDefaultValueForInstTempo(instTempo: InstTempo): number {
+        switch (instTempo) {
+            case InstTempo.larghissimo:
                 return 20;
-            case TempoEnum.grave:
+            case InstTempo.grave:
                 return 30;
-            case TempoEnum.lento:
+            case InstTempo.lento:
                 return 48;
-            case TempoEnum.largo:
+            case InstTempo.largo:
                 return 52;
-            case TempoEnum.larghetto:
+            case InstTempo.larghetto:
                 return 63;
-            case TempoEnum.adagio:
+            case InstTempo.adagio:
                 return 70;
-            case TempoEnum.adagietto:
+            case InstTempo.adagietto:
                 return 75;
-            case TempoEnum.andanteModerato:
+            case InstTempo.andanteModerato:
                 return 88;
-            case TempoEnum.andante:
+            case InstTempo.andante:
                 return 92;
-            case TempoEnum.andantino:
+            case InstTempo.andantino:
                 return 96;
-            case TempoEnum.moderato:
+            case InstTempo.moderato:
                 return 106;
-            case TempoEnum.allegretto:
+            case InstTempo.allegretto:
                 return 112;
-            case TempoEnum.allegroModerato:
+            case InstTempo.allegroModerato:
                 return 118;
-            case TempoEnum.allegro:
+            case InstTempo.allegro:
                 return 130;
-            case TempoEnum.vivace:
+            case InstTempo.vivace:
                 return 140;
-            case TempoEnum.vivacissimo:
+            case InstTempo.vivacissimo:
                 return 155;
-            case TempoEnum.allegrissimo:
+            case InstTempo.allegrissimo:
                 return 170;
-            case TempoEnum.presto:
+            case InstTempo.presto:
                 return 184;
-            case TempoEnum.prestissimo:
+            case InstTempo.prestissimo:
                 return 200;
             default:
-                throw new ArgumentOutOfRangeException("tempoEnum");
+                return 60;
+                //throw new ArgumentOutOfRangeException("instTempo");
         }
     }
     public static isInputStringInstantaneousTempo(inputString: string): boolean {
@@ -262,9 +265,6 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
     public set StaffNumber(value: number) {
         this.staffNumber = value;
     }
-    public get Enum(): TempoEnum {
-        return this.tempoEnum;
-    }
     public get TempoInBpm(): number {
         return this.tempoInBpm;
     }
@@ -283,176 +283,162 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
     private setTempoAndTempoType(soundTempo: number): void {
         if (!this.label) {
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.metronomeMark;
+            this.TempoType = TempoType.metronomeMark;
             return;
         }
         if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoLarghissimo, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.larghissimo);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.larghissimo);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.larghissimo;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoGrave, this.label)) {
+            this.InstTempo = InstTempo.larghissimo;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoGrave, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.grave);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.grave);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.grave;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoLento, this.label)) {
+            this.InstTempo = InstTempo.grave;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoLento, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.lento);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.lento);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.lento;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoLargo, this.label)) {
+            this.InstTempo = InstTempo.lento;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoLargo, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.largo);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.largo);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.largo;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoLarghetto, this.label)) {
+            this.InstTempo = InstTempo.largo;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoLarghetto, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.larghetto);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.larghetto);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.larghetto;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAdagio, this.label)) {
+            this.InstTempo = InstTempo.larghetto;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAdagio, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.adagio);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.adagio);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.adagio;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAdagietto, this.label)) {
+            this.InstTempo = InstTempo.adagio;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAdagietto, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.adagietto);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.adagietto);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.adagietto;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAndanteModerato, this.label)) {
+            this.InstTempo = InstTempo.adagietto;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAndanteModerato, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.andanteModerato);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.andanteModerato);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.andanteModerato;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAndante, this.label)) {
+            this.InstTempo = InstTempo.andanteModerato;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAndante, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.andante);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.andante);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.andante;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAndantino, this.label)) {
+            this.InstTempo = InstTempo.andante;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAndantino, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.andantino);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.andantino);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.andantino;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoModerato, this.label)) {
+            this.InstTempo = InstTempo.andantino;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoModerato, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.moderato);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.moderato);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.moderato;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAllegretto, this.label)) {
+            this.InstTempo = InstTempo.moderato;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAllegretto, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.allegretto);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.allegretto);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.allegretto;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAllegroModerato, this.label)) {
+            this.InstTempo = InstTempo.allegretto;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAllegroModerato, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.allegroModerato);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.allegroModerato);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.allegroModerato;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAllegro, this.label)) {
+            this.InstTempo = InstTempo.allegroModerato;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAllegro, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.allegro);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.allegro);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.allegro;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoVivace, this.label)) {
+            this.InstTempo = InstTempo.allegro;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoVivace, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.vivace);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.vivace);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.vivace;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoVivacissimo, this.label)) {
+            this.InstTempo = InstTempo.vivace;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoVivacissimo, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.vivacissimo);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.vivacissimo);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.vivacissimo;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAllegrissimo, this.label)) {
+            this.InstTempo = InstTempo.vivacissimo;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAllegrissimo, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.allegrissimo);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.allegrissimo);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.allegrissimo;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoPresto, this.label)) {
+            this.InstTempo = InstTempo.allegrissimo;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoPresto, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.presto);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.presto);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.presto;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoPrestissimo, this.label)) {
+            this.InstTempo = InstTempo.presto;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoPrestissimo, this.label)) {
             if (soundTempo === 0) {
-                soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.prestissimo);
+                soundTempo = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.prestissimo);
             }
             this.tempoInBpm = soundTempo;
-            this.tempoEnum = TempoEnum.prestissimo;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAddons, this.label)) {
+            this.InstTempo = InstTempo.prestissimo;
+            this.TempoType = TempoType.inst;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoAddons, this.label)) {
             this.tempoInBpm = 0;
-            this.tempoEnum = TempoEnum.addon;
-            return;
-        }
-        if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoChangesGeneral, this.label)) {
+            this.TempoType = TempoType.addon;
+        } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoChangesGeneral, this.label)) {
             this.tempoInBpm = 0;
-            this.tempoEnum = TempoEnum.changes;
-            return;
+            this.TempoType = TempoType.change;
         }
     }
 }
 
-export enum TempoEnum {
-    none,
+export enum TempoType {
+    none = 0,
+    metronomeMark,
+    inst,
+    change,
+    addon,
+}
+
+export enum InstTempo {
+    // none, // TODO @nocheckin reactivate
     larghissimo,
     grave,
     lento,
@@ -473,7 +459,11 @@ export enum TempoEnum {
     presto,
     prestissimo,
     lastRealTempo,
-    addon,
-    changes,
-    metronomeMark
+}
+
+export enum ChangeSubType {
+    none = 0,
+    atempo,
+    doppioMovimento,
+    tempoprimo,
 }

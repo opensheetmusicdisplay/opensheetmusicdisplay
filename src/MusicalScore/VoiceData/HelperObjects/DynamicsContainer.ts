@@ -3,6 +3,7 @@ import {InstantaneousDynamicExpression} from "../Expressions/InstantaneousDynami
 import {MultiExpression} from "../Expressions/MultiExpression";
 
 export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
+
     constructor(dynamicExpression: ContinuousDynamicExpression|InstantaneousDynamicExpression, staffNumber: number) {
         if (dynamicExpression instanceof ContinuousDynamicExpression) {
             this.continuousDynamicExpression = dynamicExpression;
@@ -10,6 +11,10 @@ export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
             this.instantaneousDynamicExpression = dynamicExpression;
         }
         this.staffNumber = staffNumber;
+    }
+
+    public static Compare(a: DynamicsContainer, b: DynamicsContainer): number {
+        return a.parMultiExpression().AbsoluteTimestamp.CompareTo(b.parMultiExpression().AbsoluteTimestamp);
     }
 
     public continuousDynamicExpression: ContinuousDynamicExpression;
@@ -24,8 +29,5 @@ export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
             return this.instantaneousDynamicExpression.ParentMultiExpression;
         }
         return undefined;
-    }
-    public CompareTo(other: DynamicsContainer): number {
-        return this.parMultiExpression().AbsoluteTimestamp.CompareTo(other.parMultiExpression().AbsoluteTimestamp);
     }
 }

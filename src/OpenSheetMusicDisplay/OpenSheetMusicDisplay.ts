@@ -24,6 +24,7 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
+import { TemposCalculator } from "../MusicalScore/ScoreIO/MusicSymbolModules/TemposCalculator";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -173,7 +174,8 @@ export class OpenSheetMusicDisplay {
             return Promise.reject(new Error("OpenSheetMusicDisplay: Document is not a valid 'partwise' MusicXML"));
         }
         const score: IXmlElement = new IXmlElement(scorePartwiseElement);
-        const reader: MusicSheetReader = new MusicSheetReader(undefined, this.rules);
+        const temposCalculator: TemposCalculator = new TemposCalculator();
+        const reader: MusicSheetReader = new MusicSheetReader([temposCalculator], this.rules);
         this.sheet = reader.createMusicSheet(score, tempTitle);
         if (this.sheet === undefined) {
             // error loading sheet, probably already logged, do nothing

@@ -89,6 +89,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
      * As with measure.widthFactor, use this with caution, as it can cause overlaps, especially with lyrics.
      */
     public MeasureWidthFactor: number = 1.0;
+    public IgnoreTempoInstructions: boolean = false;
 
     /**
      * Get the global index within the music sheet for this staff.
@@ -112,6 +113,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
     public get DynListStaves(): DynamicsContainer[][] {
         return this.dynListStaves;
+    }
+    public set TimestampSortedTempoExpressionsList(value: MultiTempoExpression[]) {
+        this.timestampSortedTempoExpressionsList = value;
     }
     public get TimestampSortedTempoExpressionsList(): MultiTempoExpression[] {
         return this.timestampSortedTempoExpressionsList;

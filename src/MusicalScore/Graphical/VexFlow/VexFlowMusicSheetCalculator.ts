@@ -46,7 +46,7 @@ import { GraphicalSlur } from "../GraphicalSlur";
 import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
-import { InstantaneousTempoExpression, TempoEnum } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
+import { InstantaneousTempoExpression, TempoType } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
@@ -822,7 +822,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let yShift: number = this.rules.MetronomeMarkYShift;
     let hasExpressionsAboveStaffline: boolean = false;
     for (const expression of metronomeExpression.parentMeasure.TempoExpressions) {
-      const isMetronomeExpression: boolean = expression.InstantaneousTempo?.Enum === TempoEnum.metronomeMark;
+      const isMetronomeExpression: boolean = expression.InstantaneousTempo?.TempoType === TempoType.metronomeMark;
       if (expression.getPlacementOfFirstEntry() === PlacementEnum.Above &&
           !isMetronomeExpression) {
         hasExpressionsAboveStaffline = true;

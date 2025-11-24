@@ -16,18 +16,23 @@ export class ContinuousTempoExpression extends AbstractTempoExpression {
         this.setTempoType();
     }
 
-    private static listContinuousTempoFaster: string[] = ["accelerando", "piu mosso", "poco piu", "stretto"];
+    private static listContinuousTempoFaster: string[] = ["accelerando", "accel", "piu mosso", "poco piu", "stretto"];
     private static listContinuousTempoSlower: string[] = [
         "poco meno", "meno mosso", "piu lento", "calando", "allargando", "rallentando", "ritardando",
         "ritenuto", "ritard.", "ritard", "rit.", "rit", "riten.", "riten",
     ];
+    // TODO rit. is currently an InstantaneousTempoExpression (listInstantaneousTempoChangesGeneral)
     private absoluteEndTimestamp: Fraction;
+    public AbsoluteTimeSpan: number;
     private tempoType: ContinuousTempoType;
     private startTempo: number;
     private endTempo: number;
 
     public static isInputStringContinuousTempo(inputString: string): boolean {
         if (!inputString) { return false; }
+        if (inputString.endsWith(".")) {
+            inputString = inputString.substring(0, inputString.length - 1);
+        }
         return (
             ContinuousTempoExpression.isStringInStringList(ContinuousTempoExpression.listContinuousTempoFaster, inputString)
             || ContinuousTempoExpression.isStringInStringList(ContinuousTempoExpression.listContinuousTempoSlower, inputString)
@@ -58,11 +63,15 @@ export class ContinuousTempoExpression extends AbstractTempoExpression {
     public set EndTempo(value: number) {
         this.endTempo = value;
     }
+    public get AbsoluteStartTimestamp(): Fraction {
+        return Fraction.plus(this.parentMultiTempoExpression.SourceMeasureParent.AbsoluteTimestamp, this.parentMultiTempoExpression.Timestamp);
+    }
     public get AbsoluteEndTimestamp(): Fraction {
         return this.absoluteEndTimestamp;
     }
     public set AbsoluteEndTimestamp(value: Fraction) {
         this.absoluteEndTimestamp = value;
+        this.AbsoluteTimeSpan = Fraction.minus(this.AbsoluteEndTimestamp, this.AbsoluteStartTimestamp).RealValue;
     }
     public get AbsoluteTimestamp(): Fraction {
         return this.ParentMultiTempoExpression.AbsoluteTimestamp;
@@ -89,6 +98,10 @@ export class ContinuousTempoExpression extends AbstractTempoExpression {
         } else if (ContinuousTempoExpression.isStringInStringList(ContinuousTempoExpression.listContinuousTempoSlower, this.label)) {
             this.tempoType = ContinuousTempoType.ritardando;
         }
+    }
+
+    public getTempoFactor(inputString: string = this.Label): number {
+        return 1; // tempo factors are only necessary in audio player
     }
 }
 

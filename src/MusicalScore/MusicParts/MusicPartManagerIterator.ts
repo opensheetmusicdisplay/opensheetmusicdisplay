@@ -21,6 +21,7 @@ export class MusicPartManagerIterator {
         try {
             this.frontReached = true;
             this.musicSheet = musicSheet;
+            this.currentBpm = musicSheet.userStartTempoInBPM;
             this.currentVoiceEntries = undefined;
             this.frontReached = false;
             for (const rep of this.musicSheet.Repetitions) {
@@ -276,6 +277,18 @@ export class MusicPartManagerIterator {
             this.currentTimeStamp = new Fraction(99999, 1);
             this.currentMeasure = this.musicSheet.SourceMeasures.last();
         }
+        if (this.CurrentTempoChangingExpression !== undefined && !this.musicSheet.IgnoreTempoInstructions) {
+            if (this.CurrentTempoChangingExpression.InstantaneousTempo !== undefined) {
+                // only adapt to new instantaneous exp if it has changed
+                if (!this.musicSheet.IgnoreTempoInstructions) { // e.g. user set fixed tempo via UI
+                    // ToDo QuarterBpm:
+                    const newBpm: number = this.CurrentTempoChangingExpression.InstantaneousTempo.TempoInBpm;
+                    if (newBpm > 0) {
+                        this.currentBpm = newBpm;
+                    }
+                }
+            }
+        }
     }
     public moveToNextVisibleVoiceEntry(notesOnly: boolean): void {
         while (!this.endReached) {
@@ -441,12 +454,10 @@ export class MusicPartManagerIterator {
     private activateCurrentDynamicOrTempoInstructions(): void {
         const timeSortedDynamics: DynamicsContainer[] = this.musicSheet.TimestampSortedDynamicExpressionsList;
         while (
-          this.currentDynamicEntryIndex > 0 && (
+            this.currentDynamicEntryIndex > 0 && (
             this.currentDynamicEntryIndex >= timeSortedDynamics.length ||
-            this.CurrentSourceTimestamp.lte(timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp)
-          )
-        ) {
-            this.currentDynamicEntryIndex--;
+            timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp.gte(this.CurrentSourceTimestamp))) {
+                this.currentDynamicEntryIndex--;
         }
         while (
           this.currentDynamicEntryIndex < timeSortedDynamics.length &&
@@ -469,7 +480,7 @@ export class MusicPartManagerIterator {
             }
             this.currentDynamicEntryIndex++;
         }
-        this.currentDynamicChangingExpressions = [];
+        this.currentDynamicChangingExpressions.length = 0;
         for (let staffIndex: number = 0; staffIndex < this.activeDynamicExpressions.length; staffIndex++) {
             if (this.activeDynamicExpressions[staffIndex]) {
                 let startTime: Fraction;
@@ -478,7 +489,7 @@ export class MusicPartManagerIterator {
                     const continuousDynamic: ContinuousDynamicExpression = <ContinuousDynamicExpression>this.activeDynamicExpressions[staffIndex];
                     startTime = continuousDynamic.StartMultiExpression.AbsoluteTimestamp;
                     endTime = continuousDynamic.EndMultiExpression.AbsoluteTimestamp;
-                    if (startTime.lte(this.CurrentSourceTimestamp) && this.CurrentSourceTimestamp.lte(endTime)) {
+                    if (this.CurrentSourceTimestamp.gte(startTime) && this.CurrentSourceTimestamp.lte(endTime)) {
                         this.currentDynamicChangingExpressions.push(new DynamicsContainer(continuousDynamic, staffIndex));
                     }
                 } else {
@@ -493,7 +504,7 @@ export class MusicPartManagerIterator {
 
         while (this.currentTempoEntryIndex > 0 && (
           this.currentTempoEntryIndex >= timeSortedTempoExpressions.length
-          || this.CurrentSourceTimestamp.lte(timeSortedTempoExpressions[this.currentTempoEntryIndex].AbsoluteTimestamp)
+          || timeSortedTempoExpressions[this.currentTempoEntryIndex].AbsoluteTimestamp.gte(this.CurrentSourceTimestamp)
         )) {
             this.currentTempoEntryIndex--;
         }
@@ -518,7 +529,7 @@ export class MusicPartManagerIterator {
             if (this.activeTempoExpression.ContinuousTempo) {
                 endTime = this.activeTempoExpression.ContinuousTempo.AbsoluteEndTimestamp;
             }
-            if (   this.activeTempoExpression.AbsoluteTimestamp.lte(this.CurrentSourceTimestamp)
+            if (   this.CurrentSourceTimestamp.gte(this.activeTempoExpression.AbsoluteTimestamp)
                 || this.CurrentSourceTimestamp.lte(endTime)
             ) {
                 this.currentTempoChangingExpression = this.activeTempoExpression;
