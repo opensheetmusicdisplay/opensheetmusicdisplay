@@ -89,6 +89,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
      * As with measure.widthFactor, use this with caution, as it can cause overlaps, especially with lyrics.
      */
     public MeasureWidthFactor: number = 1.0;
+    /** Ignore tempo instructions like metronome numbers, e.g. because a bpm was set in the UI */
     public IgnoreTempoInstructions: boolean = false;
 
     /**
