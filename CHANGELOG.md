@@ -3,7 +3,7 @@
 
 ### Bug Fixes
 
-* **Iterator:** Set Iterator.CurrentBpm correctly ([#1628](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1628)). ([0fe1516](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0fe1516c86afad592f9eadf48777a08e5759b799))
+* **Cursor/Iterator:** Set (cursor.)Iterator.CurrentBpm correctly ([#1628](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1628)). ([0fe1516](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0fe1516c86afad592f9eadf48777a08e5759b799))
 * **setColor:** Correctly apply setColor() to multiple rest measures (multi-measure rest) and fix error ([#1622](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1622)). Add SVG group for multi-rest measures. ([c59e81c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c59e81c80190496c9a1921a29bb04652a234ec93))
 
 
