@@ -9,7 +9,7 @@ import { SvgVexFlowBackend } from "./../MusicalScore/Graphical/VexFlow/SvgVexFlo
 import { CanvasVexFlowBackend } from "./../MusicalScore/Graphical/VexFlow/CanvasVexFlowBackend";
 import { MusicSheet } from "./../MusicalScore/MusicSheet";
 import { Cursor } from "./Cursor";
-import { MXLHelper } from "../Common/FileIO/Mxl";
+import { MXLFile, MXLHelper } from "../Common/FileIO/Mxl";
 import { AJAX } from "./AJAX";
 import log from "loglevel";
 import { DrawingParameters } from "../MusicalScore/Graphical/DrawingParameters";
@@ -101,16 +101,33 @@ export class OpenSheetMusicDisplay {
 
     /**
      * Load a MusicXML file
-     * @param content is either the url of a file, or the root node of a MusicXML document, or the string content of a .xml/.mxl file
+     * @param content is either the url of a file, or the root node of a MusicXML document,
+     *   or the string content of a .xml/.mxl file, or a file blob.
      * @param tempTitle is used as the title for the piece if there is no title in the XML.
      */
-    public load(content: string | Document, tempTitle: string = "Untitled Score"): Promise<{}> {
+    public load(content: string | Document | Blob, tempTitle: string = "Untitled Score"): Promise<{}> {
         // Warning! This function is asynchronous! No error handling is done here.
         this.reset();
-        //console.log("typeof content: " + typeof content);
-        if (typeof content === "string") {
+        const self: OpenSheetMusicDisplay = this;
+        if (content instanceof Blob) {
+            const mxlFile: MXLFile = new MXLFile(content);
+            // check if this is a zip / mxl file
+            return mxlFile.tryUnzip().then(() => {
+                if (mxlFile.unzipSuccessful) {
+                    return mxlFile.getXmlString().then((xmlString) => {
+                        return self.load(xmlString);
+                    });
+                } else {
+                    // not a zip
+                    if (content instanceof Blob) { // always true. unfortunately need to check again for linter
+                        return content.text().then((blobString) => {
+                            return self.load(blobString);
+                        });
+                    }
+                }
+            });
+        } else if (typeof content === "string") {
             const str: string = <string>content;
-            const self: OpenSheetMusicDisplay = this;
             // console.log("substring: " + str.substr(0, 5));
             if (str.startsWith("\x50\x4b\x03\x04")) {
                 log.debug("[OSMD] This is a zip file, unpack it first: " + str);
