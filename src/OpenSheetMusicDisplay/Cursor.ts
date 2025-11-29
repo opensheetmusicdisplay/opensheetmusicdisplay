@@ -83,6 +83,7 @@ export class Cursor {
   private cursorOptions: CursorOptions;
   private cursorOptionsRendered: CursorOptions;
   private skipInvisibleNotes: boolean = true;
+  private previousY: number | undefined;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
@@ -231,13 +232,18 @@ export class Cursor {
 
       if (this.cursorOptions.followCursorPolyfill) {
         if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
-           // For vertical scrolling, we can check if we are already in view or if the Y position changed significantly?
-           // But SmoothScroll.scrollIntoView has a check: "If already at target, do nothing"
-           // However, that check is inside the polyfill. We can prevent the call here if we want.
+          // Only scroll if Y position changed (i.e., system change).
+          // This prevents "bonkers" vertical scrolling when advancing cursor horizontally within the same system.
+          const yChanged: boolean = this.previousY === undefined || Math.abs(this.previousY - y) > 0.1;
 
-          // Mimic scroll-margin-top: 8em. 1em ~ 16px usually, so 8em ~ 128px.
-          // This keeps some context above the cursor.
-          SmoothScroll.scrollIntoView(this.cursorElement, { block: "start", duration: 400, offsetY: 128 });
+          if (yChanged) {
+             // Mimic scroll-margin-top: 8em. 1em ~ 16px usually, so 8em ~ 128px.
+             // This keeps some context above the cursor.
+             SmoothScroll.scrollIntoView(this.cursorElement, { block: "start", duration: 400, offsetY: 128 });
+          }
+
+          // Update previous Y position for next comparison
+          this.previousY = y;
         } else {
            SmoothScroll.scrollIntoView(this.cursorElement, { inline: "center", duration: 400 });
         }
@@ -325,6 +331,7 @@ export class Cursor {
     //    this.openSheetMusicDisplay.render();
     //}
     this.hidden = true;
+    this.previousY = undefined; // Reset Y tracking when hiding
   }
 
   /** Go to previous entry / note / vertical position. */
