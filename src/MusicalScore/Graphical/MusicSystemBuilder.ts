@@ -973,7 +973,12 @@ export class MusicSystemBuilder {
             this.currentSystemParams.currentSystemFixWidth, this.currentSystemParams.currentSystemVarWidth
         );
         if (systemEndsPart) {
-            scalingFactor = Math.min(scalingFactor, this.rules.LastSystemMaxScalingFactor);
+            // If StretchLastSystemLine is false, don't stretch the last system at all
+            if (!this.rules.StretchLastSystemLine) {
+                scalingFactor = 1.0;
+            } else {
+                scalingFactor = Math.min(scalingFactor, this.rules.LastSystemMaxScalingFactor);
+            }
         }
         const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
         for (let visStaffIdx: number = 0, len: number = currentSystem.StaffLines.length; visStaffIdx < len; ++visStaffIdx) {
