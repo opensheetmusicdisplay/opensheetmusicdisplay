@@ -225,7 +225,8 @@ export class Cursor {
     const measurePositionAndShape: BoundingBox = visibleMeasure.PositionAndShape;
     this.updateWidthAndStyle(measurePositionAndShape, x, y, height);
 
-    if (this.openSheetMusicDisplay.FollowCursor && this.cursorOptions.follow) {
+    // skip followCursor scrolling if cursor is at the initial/first position to avoid unwanted scrolling on load/reset
+    if (this.openSheetMusicDisplay.FollowCursor && this.cursorOptions.follow && !iterator.FrontReached) {
       // Optimization: Don't scroll if the cursor is still visible and we haven't moved vertically?
       // Actually, the standard logic allows horizontal scrolling too.
       // But standard OSMD only scrolls vertically unless it's single horizontal staffline.
