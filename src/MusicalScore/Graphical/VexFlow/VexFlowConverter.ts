@@ -205,6 +205,8 @@ export class VexFlowConverter {
         switch (notehead.Shape) {
             case NoteHeadShape.NORMAL:
                 return "";
+            case NoteHeadShape.NONE:
+                return ""; // none noteheads are invisible, handled via transparency
             case NoteHeadShape.DIAMOND:
                 return codeStart + "D" + codeFilled;
             case NoteHeadShape.TRIANGLE:

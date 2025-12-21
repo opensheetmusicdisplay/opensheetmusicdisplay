@@ -47,6 +47,7 @@ import { AccidentalCalculator } from "./AccidentalCalculator";
 import { MidiInstrument } from "../VoiceData/Instructions/ClefInstruction";
 import { Staff } from "../VoiceData/Staff";
 import { OctaveShift } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { NoteHeadShape } from "../VoiceData/Notehead";
 import log from "loglevel";
 import { Dictionary } from "typescript-collections";
 import { GraphicalLyricEntry } from "./GraphicalLyricEntry";
@@ -3844,10 +3845,17 @@ export abstract class MusicSheetCalculator {
         const beam: Beam = voiceEntry.Notes[0].NoteBeam;
         if (beam) {
             // if there is a beam, find any already set stemDirection in the beam:
+            // Skip hidden notes (notehead="none") when determining beam direction
             for (const note of beam.Notes) {
                 // if (note.ParentVoiceEntry === voiceEntry) {
                 //     continue; // this could cause a misreading, also potentially in cross-staf beams, in any case it's unnecessary.
                 //} else if
+
+                // Skip notes with NONE notehead - they shouldn't influence beam direction
+                if (note.Notehead?.Shape === NoteHeadShape.NONE) {
+                    continue;
+                }
+
                 if (note.ParentVoiceEntry.WantedStemDirection !== StemDirectionType.Undefined) {
                     if (note.ParentVoiceEntry.ParentSourceStaffEntry.ParentStaff.Id === voiceEntry.ParentSourceStaffEntry.ParentStaff.Id) {
                         // set the stem direction
