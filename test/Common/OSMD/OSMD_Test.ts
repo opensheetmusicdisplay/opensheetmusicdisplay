@@ -407,4 +407,79 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         });
     });
 
+    describe("cursor with notehead none (invisible notes)", () => {
+        let osmd: OpenSheetMusicDisplay;
+
+        beforeEach((done: Mocha.Done) => {
+            const div: HTMLElement = TestUtils.getDivElement(document);
+            osmd = TestUtils.createOpenSheetMusicDisplay(div);
+            const score: Document = TestUtils.getScore("test_cursor_skip_notehead_none.musicxml");
+            osmd.load(score).then(
+                (_: {}) => {
+                    osmd.render();
+                    done();
+                },
+                done
+            ).catch(done);
+        });
+
+        it("should skip entries where all notes have notehead none when SkipInvisibleNotes is true", () => {
+            osmd.cursors[0].SkipInvisibleNotes = true;
+            osmd.cursors[0].show();
+
+            // Start at first visible note (C4 in treble clef reads as C4 = 60)
+            chai.expect(osmd.cursors[0].Iterator.currentTimeStamp.RealValue).to.equal(0);
+            const firstNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
+            chai.expect(firstNotes.length).to.be.greaterThan(0);
+            const firstHalfTone: number = firstNotes[0].halfTone;
+
+            // Move to next - should skip the D4 (notehead none) and go to next visible note
+            osmd.cursors[0].next();
+            const secondNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
+            chai.expect(secondNotes.length).to.be.greaterThan(0);
+            const secondHalfTone: number = secondNotes[0].halfTone;
+            // Second note should be different from first (skipped the invisible note)
+            chai.expect(secondHalfTone).to.not.equal(firstHalfTone);
+
+            // Move to next - should skip another notehead none entry and reach the final measure
+            osmd.cursors[0].next();
+            const thirdNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
+            chai.expect(thirdNotes.length).to.be.greaterThan(0);
+            const thirdHalfTone: number = thirdNotes[0].halfTone;
+            // Third note should be different from second
+            chai.expect(thirdHalfTone).to.not.equal(secondHalfTone);
+        });
+
+        it("should not skip entries with notehead none when SkipInvisibleNotes is false", () => {
+            osmd.cursors[0].SkipInvisibleNotes = false;
+            osmd.cursors[0].show();
+
+            // Start at first note
+            chai.expect(osmd.cursors[0].Iterator.currentTimeStamp.RealValue).to.equal(0);
+            const firstNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
+            chai.expect(firstNotes.length).to.be.greaterThan(0);
+
+            // Move through all 4 notes in measure 1 (including the invisible ones)
+            osmd.cursors[0].next();
+            const secondNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
+            chai.expect(secondNotes.length).to.be.greaterThan(0);
+
+            osmd.cursors[0].next();
+            const thirdNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
+            chai.expect(thirdNotes.length).to.be.greaterThan(0);
+
+            osmd.cursors[0].next();
+            const fourthNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
+            chai.expect(fourthNotes.length).to.be.greaterThan(0);
+
+            // One more next should move to measure 2
+            osmd.cursors[0].next();
+            const fifthNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
+            chai.expect(fifthNotes.length).to.be.greaterThan(0);
+
+            // Verify we've advanced 5 times total (4 notes in measure 1 + 1 in measure 2)
+            chai.expect(osmd.cursors[0].Iterator.currentTimeStamp.RealValue).to.be.greaterThan(0);
+        });
+    });
+
 });

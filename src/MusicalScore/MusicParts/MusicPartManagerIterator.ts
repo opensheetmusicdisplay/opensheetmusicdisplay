@@ -15,6 +15,7 @@ import {MultiTempoExpression} from "../VoiceData/Expressions/MultiTempoExpressio
 import {AbstractExpression} from "../VoiceData/Expressions/AbstractExpression";
 import log from "loglevel";
 import { MusicSheet } from "../MusicSheet";
+import { NoteHeadShape } from "../VoiceData/Notehead";
 
 export class MusicPartManagerIterator {
     constructor(musicSheet: MusicSheet, startTimestamp?: Fraction, endTimestamp?: Fraction) {
@@ -634,7 +635,7 @@ export class MusicPartManagerIterator {
         if (entry.ParentVoice.Visible) {
             let anyNoteVisible: boolean = false;
             for (const note of entry.Notes) {
-                if (note.PrintObject) {
+                if (note.PrintObject && note.Notehead?.Shape !== NoteHeadShape.NONE) {
                     anyNoteVisible = true;
                     break;
                 }
