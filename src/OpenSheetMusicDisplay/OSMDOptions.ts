@@ -30,6 +30,11 @@ export interface IOSMDOptions {
      * which is nonstandard.
      */
     alignRests?: AlignRestOption | number;
+    /** Whether to calculate rest positions to avoid collisions with notes in multi-voice scores.
+     *  When true (default), rests are vertically shifted to avoid overlapping with notes in other voices.
+     *  When false, rests stay at their default centered position on the staff.
+     */
+    calculateMultiVoiceRestCollisions?: boolean;
     /** Whether to automatically create beams for notes that don't have beams set in XML. */
     autoBeam?: boolean;
     /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */

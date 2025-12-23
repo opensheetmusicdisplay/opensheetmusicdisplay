@@ -343,7 +343,7 @@ export class VexFlowConverter {
                     // affects VexFlowStaffEntry.calculateXPosition()
                 }
                 //If we have more than one visible voice entry, shift the rests so no collision occurs
-                if (note.sourceNote.ParentStaff.Voices.length > 1) {
+                if (rules.CalculateMultiVoiceRestCollisions && note.sourceNote.ParentStaff.Voices.length > 1) {
                     const staffGves: GraphicalVoiceEntry[] = note.parentVoiceEntry.parentStaffEntry.graphicalVoiceEntries;
                     //Find all visible voice entries (don't want invisible rests/notes causing visible shift)
                     const restVoiceId: number = note.parentVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId;

@@ -404,6 +404,11 @@ export class EngravingRules {
      * Currently not recommended because rests are now positioned to avoid collisions with notes. */
     public AlignRests: AlignRestOption; // 0 = false, 1 = true, 2 = auto
     public RestCollisionYPadding: number;
+    /** Whether to calculate rest positions to avoid collisions with notes in multi-voice scores.
+     *  When true, rests are vertically shifted to avoid overlapping with notes in other voices.
+     *  When false, rests stay at their default position. Default true.
+     */
+    public CalculateMultiVoiceRestCollisions: boolean;
     public FillEmptyMeasuresWithWholeRest: FillEmptyMeasuresWithWholeRests | number;
     public ArpeggiosGoAcrossVoices: boolean;
     public RenderArpeggios: boolean;
@@ -879,6 +884,7 @@ export class EngravingRules {
         // Render options (whether to render specific or invisible elements)
         this.AlignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
         this.RestCollisionYPadding = 0.0; // 1.0 = half distance between staff lines (e.g. E to F). will be rounded to whole numbers.
+        this.CalculateMultiVoiceRestCollisions = true; // whether to shift rests to avoid collisions with notes in multi-voice scores
         this.FillEmptyMeasuresWithWholeRest = FillEmptyMeasuresWithWholeRests.No;
         this.ArpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
         this.RenderArpeggios = true;

@@ -11,6 +11,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var sampleFolder = "",
         samples = {
             // "Summer Time": "summertime.musicxml",
+            "Rests in weird places": "2239-2.musicxml",
             "Lead Sheet with chords": "1181.musicxml",
             "Test 8va": "1851-3.musicxml",
             "Sample 2": "1346 2.musicxml",
@@ -620,7 +621,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             pageFormat: pageFormat,
             pageBackgroundColor: pageBackgroundColor,
             renderSingleHorizontalStaffline: singleHorizontalStaffline
-
+            
             // tupletsBracketed: true, // creates brackets for all tuplets except triplets, even when not set by xml
             // tripletsBracketed: true,
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)

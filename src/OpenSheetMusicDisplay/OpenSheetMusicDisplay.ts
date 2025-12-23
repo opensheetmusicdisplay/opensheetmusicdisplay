@@ -504,6 +504,9 @@ export class OpenSheetMusicDisplay {
         if (options.alignRests !== undefined) {
             this.rules.AlignRests = options.alignRests;
         }
+        if (options.calculateMultiVoiceRestCollisions !== undefined) {
+            this.rules.CalculateMultiVoiceRestCollisions = options.calculateMultiVoiceRestCollisions;
+        }
         if (options.coloringMode !== undefined) {
             this.setColoringMode(options);
         }
