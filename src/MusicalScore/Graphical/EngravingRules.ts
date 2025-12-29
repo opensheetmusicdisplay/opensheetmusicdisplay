@@ -156,6 +156,11 @@ export class EngravingRules {
     public ChordSymbolYPadding: number;
     public ChordSymbolYAlignment: boolean;
     public ChordSymbolYAlignmentScope: string;
+    /** Whether to use the offset element in MusicXML harmony elements to adjust chord symbol X position.
+     * When true, chord symbols with an offset are positioned at the correct rhythmic position.
+     * When false, the offset is ignored (legacy behavior). Default true.
+     */
+    public ChordSymbolUseXmlOffset: boolean;
     /** Offset to start of measure (barline) when chord symbol is on whole measure rest.
      * An offset of 0 would place the chord symbol directly above the barline, so the default is ~1.2.
      */
@@ -693,6 +698,7 @@ export class EngravingRules {
         this.ChordSymbolYPadding = 0.0;
         this.ChordSymbolYAlignment = true;
         this.ChordSymbolYAlignmentScope = "staffline"; // "measure" or "staffline"
+        this.ChordSymbolUseXmlOffset = true;
         this.ChordSymbolWholeMeasureRestXOffset = 0;
         this.ChordSymbolWholeMeasureRestXOffsetMeasure1 = -2.0;
         this.ChordAccidentalTexts = new Dictionary<AccidentalEnum, string>();

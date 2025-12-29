@@ -1157,7 +1157,35 @@ export abstract class MusicSheetCalculator {
                             }
                             const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
                             const parentBbox: BoundingBox = gps.Parent; // usually the staffEntry (bbox), but sometimes measure (for whole measure rests)
+
                             if (parentBbox.DataObject instanceof GraphicalMeasure) {
+                                // For chords on whole measure rests, find the X position from corresponding notes on other staves
+                                // at the same timestamp (e.g., chord on bass clef whole rest should align with notes on treble clef)
+                                if (this.rules.ChordSymbolUseXmlOffset) {
+                                    let positionFound: boolean = false;
+                                    for (const otherStaffLine of musicSystem.StaffLines) {
+                                        if (otherStaffLine === staffLine) {
+                                            continue; // skip current staff line, look at other staves
+                                        }
+                                        // Find the corresponding measure in the other staff line
+                                        if (measureStafflineIndex < otherStaffLine.Measures.length) {
+                                            const otherMeasure: GraphicalMeasure = otherStaffLine.Measures[measureStafflineIndex];
+                                            for (const otherSe of otherMeasure.staffEntries) {
+                                                if (otherSe.relInMeasureTimestamp.RealValue === staffEntry.relInMeasureTimestamp.RealValue &&
+                                                    otherSe.graphicalVoiceEntries.length > 0) {
+                                                    // Found a staff entry with notes at the same timestamp on another staff
+                                                    gps.RelativePosition.x = otherSe.PositionAndShape.RelativePosition.x +
+                                                        this.rules.ChordSymbolRelativeXOffset;
+                                                    positionFound = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        if (positionFound) {
+                                            break;
+                                        }
+                                    }
+                                }
                                 if (staffEntry.relInMeasureTimestamp.RealValue === 0) {
                                     gps.RelativePosition.x = Math.max(measure.beginInstructionsWidth, gps.RelativePosition.x);
                                     // beginInstructionsWidth wasn't set correctly before this

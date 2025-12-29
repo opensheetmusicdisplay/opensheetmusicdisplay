@@ -513,6 +513,25 @@ export class InstrumentReader {
           this.currentStaff = this.instrument.Staves[noteStaff - 1];
           // new chord, could be second chord on same staffentry/note
           const musicTimestamp: Fraction = currentFraction.clone();
+          // Apply offset if present (e.g. <offset>-16</offset> shifts the chord earlier)
+          if (this.musicSheet.Rules.ChordSymbolUseXmlOffset) {
+            const offsetNode: IXmlElement = xmlNode.element("offset");
+            if (offsetNode) {
+              try {
+                const offsetDivisions: number = parseInt(offsetNode.value, 10);
+                if (!isNaN(offsetDivisions)) {
+                  const offsetFraction: Fraction = new Fraction(offsetDivisions, 4 * this.divisions);
+                  musicTimestamp.Add(offsetFraction);
+                  if (musicTimestamp.IsNegative()) {
+                    musicTimestamp.Numerator = 0;
+                    musicTimestamp.Denominator = 1;
+                  }
+                }
+              } catch (ex) {
+                log.debug("InstrumentReader.readNextXmlMeasure: Error parsing harmony offset", ex);
+              }
+            }
+          }
           this.currentStaffEntry = this.currentMeasure.findOrCreateStaffEntry(
               musicTimestamp, this.inSourceMeasureInstrumentIndex + noteStaff - 1, this.currentStaff).staffEntry;
           this.currentStaffEntry.ChordContainers.push(ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey));
