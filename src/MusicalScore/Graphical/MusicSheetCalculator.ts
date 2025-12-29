@@ -3263,8 +3263,15 @@ export abstract class MusicSheetCalculator {
                             if (fingering.fontFamily) {
                                 label.fontFamily = fingering.fontFamily;
                             }
-                            const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
-                            const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
+                            // Use both the label's margins AND the staff entry's bounds to ensure we capture
+                            // the note's actual skyline height even in dense layouts
+                            const labelMarginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
+                            const labelMarginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
+                            const staffEntryLeft: number = staffEntryPositionX + gse.PositionAndShape.BorderLeft;
+                            const staffEntryRight: number = staffEntryPositionX + gse.PositionAndShape.BorderRight;
+                            // Expand the range to capture notes properly in dense layouts
+                            const marginLeft: number = Math.min(labelMarginLeft, staffEntryLeft);
+                            const marginRight: number = Math.max(labelMarginRight, staffEntryRight);
                             let skybottomFurthest: number = undefined;
                             if (placement === PlacementEnum.Above) {
                                 skybottomFurthest = skybottomcalculator.getSkyLineMinInRange(marginLeft, marginRight);

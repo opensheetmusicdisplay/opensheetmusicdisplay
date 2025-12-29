@@ -11,6 +11,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var sampleFolder = "",
         samples = {
             // "Summer Time": "summertime.musicxml",
+            "Fingerings are oddly positioned": "1168-3.musicxml",
             "Chords but the chords are weirdly positioned": "836.musicxml",
             "Rests in weird places": "2239-2.musicxml",
             "Lead Sheet with chords": "1181.musicxml",
