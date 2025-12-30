@@ -285,7 +285,8 @@ export enum FillEmptyMeasuresWithWholeRests {
 
 export enum BackendType {
     SVG = 0,
-    Canvas = 1
+    Canvas = 1,
+    Phaser = 2
 }
 
 export enum SkyBottomLineBatchCalculatorBackendType {
@@ -309,6 +310,8 @@ export class OSMDOptions {
     public static BackendTypeFromString(value: string): BackendType {
         if (value && value.toLowerCase() === "canvas") {
             return BackendType.Canvas;
+        } else if (value && value.toLowerCase() === "phaser") {
+            return BackendType.Phaser;
         } else {
             return BackendType.SVG;
         }

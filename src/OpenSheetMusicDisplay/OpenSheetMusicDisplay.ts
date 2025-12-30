@@ -93,6 +93,8 @@ export class OpenSheetMusicDisplay {
     protected autoResizeEnabled: boolean;
     protected resizeHandlerAttached: boolean;
     protected followCursor: boolean;
+    /** External Phaser backend factory function */
+    public phaserBackendFactory: ((rules: EngravingRules, page: GraphicalMusicPage) => VexFlowBackend) | undefined;
     /** A function that is executed when the XML has been read.
      * The return value will be used as the actual XML OSMD parses,
      * so you can make modifications to the xml that OSMD will use.
@@ -915,8 +917,15 @@ export class OpenSheetMusicDisplay {
         let backend: VexFlowBackend;
         if (type === undefined || type === BackendType.SVG) {
             backend = new SvgVexFlowBackend(this.rules);
-        } else {
+        } else if (type === BackendType.Canvas) {
             backend = new CanvasVexFlowBackend(this.rules);
+        } else if (type === BackendType.Phaser) {
+            // Phaser backend must be created externally and set via drawer.Backends
+            // This is because it requires a Phaser.Scene reference which cannot be
+            // automatically instantiated here.
+            throw new Error("Phaser backend must be created externally with a Phaser.Scene and assigned to drawer.Backends");
+        } else {
+            backend = new CanvasVexFlowBackend(this.rules); // fallback to Canvas
         }
         backend.graphicalMusicPage = page; // the page the backend renders on. needed to identify DOM element to extract image/SVG
         backend.initialize(this.container, this.zoom);
