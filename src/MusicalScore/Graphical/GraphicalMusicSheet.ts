@@ -902,6 +902,13 @@ export class GraphicalMusicSheet {
                 if (!entry || !entry.sourceStaffEntry.ParentStaff.isVisible()) {
                     continue;
                 }
+                // Skip entries that only have chord containers but no voice entries (notes).
+                // These are created for harmony offset positioning (commit 22bb9ed, v1.9.49)
+                // and don't have valid X positions for cursor/timing calculations.
+                // See: calculateXPositionFromTimestamp relies on staff entries with actual notes.
+                if (entry.graphicalVoiceEntries.length === 0 && entry.graphicalChordContainers?.length > 0) {
+                    continue;
+                }
                 if (!staffEntry) {
                     staffEntry = entry;
                 } else if (entry.PositionAndShape && staffEntry.PositionAndShape) {
