@@ -920,10 +920,17 @@ export class OpenSheetMusicDisplay {
         } else if (type === BackendType.Canvas) {
             backend = new CanvasVexFlowBackend(this.rules);
         } else if (type === BackendType.Phaser) {
-            // Phaser backend must be created externally and set via drawer.Backends
-            // This is because it requires a Phaser.Scene reference which cannot be
-            // automatically instantiated here.
-            throw new Error("Phaser backend must be created externally with a Phaser.Scene and assigned to drawer.Backends");
+            // Use the external phaserBackendFactory if provided
+            if (this.phaserBackendFactory) {
+                backend = this.phaserBackendFactory(this.rules, page);
+                backend.graphicalMusicPage = page;
+                // Phaser backend handles its own initialization, but we still set the zoom
+                backend.initialize(null, this.zoom); // null container since Phaser manages its own scene
+                return backend;
+            } else {
+                throw new Error("Phaser backend requires phaserBackendFactory to be set. " +
+                    "Set osmd.phaserBackendFactory = (rules, page) => new PhaserVexFlowBackend(rules, scene)");
+            }
         } else {
             backend = new CanvasVexFlowBackend(this.rules); // fallback to Canvas
         }
