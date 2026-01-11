@@ -1,9 +1,12 @@
 {
-  "name": "opensheetmusicdisplay",
-  "version": "1.9.3",
-  "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
+  "name": "@museflow-ai/opensheetmusicdisplay",
+  "version": "1.9.3-museflow.1",
+  "description": "MuseFlow fork of OpenSheetMusicDisplay with Phaser backend support.",
   "main": "build/opensheetmusicdisplay.min.js",
   "types": "build/dist/src/index.d.ts",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay ./src",
     "eslint": "eslint -c .eslintrc.js --ext .ts .",
@@ -54,7 +57,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
+    "url": "https://github.com/museflow-ai/opensheetmusicdisplay"
   },
   "keywords": [
     "sheet",
@@ -65,9 +68,9 @@
   "author": "PhonicScore",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
+    "url": "https://github.com/museflow-ai/opensheetmusicdisplay/issues"
   },
-  "homepage": "https://opensheetmusicdisplay.org",
+  "homepage": "https://github.com/museflow-ai/opensheetmusicdisplay",
   "dependencies": {
     "@types/vexflow": "^1.2.38",
     "jszip": "3.10.1",

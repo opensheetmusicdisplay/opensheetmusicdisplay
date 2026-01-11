@@ -1,0 +1,52 @@
+name: Publish to GitHub Packages
+
+on:
+  push:
+    branches:
+      - main
+      - museflow-backend
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type (patch, minor, or specific version like 1.9.3-museflow.2)'
+        required: false
+        default: 'patch'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@museflow-ai'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Bump version (manual dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [[ "${{ github.event.inputs.version_bump }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            npm version ${{ github.event.inputs.version_bump }} --no-git-tag-version
+          else
+            npm version ${{ github.event.inputs.version_bump }} --no-git-tag-version --preid museflow
+          fi
+
+      - name: Publish to GitHub Packages
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
