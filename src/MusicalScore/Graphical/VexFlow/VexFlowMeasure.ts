@@ -1402,6 +1402,28 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     // if denominator === 0, addTickable() below goes into an infinite loop.
                     // continue; // previous solution, but can lead to valid notes skipped, further problems, see #1073
                 }
+
+                // Fix tick values for tuplet notes to ensure cross-voice alignment.
+                // VexFlow calculates ticks based on note type and time-modification, but when
+                // different voices use different normal-type values in their tuplets, the calculated
+                // ticks can differ even for notes at the same timestamp. We use graphicalNoteLength
+                // (which represents the actual musical duration) to calculate correct tick values.
+                if (voiceEntry.notes.length > 0 && voiceEntry.notes[0].sourceNote) {
+                    const sourceNote: Note = voiceEntry.notes[0].sourceNote;
+                    if (sourceNote.NoteTuplet) {
+                        const graphicalLength: Fraction = voiceEntry.notes[0].graphicalNoteLength;
+                        // Calculate ticks using VexFlow Fraction to preserve precision.
+                        // graphicalLength.RealValue is the note length as a fraction of a whole note.
+                        // VF.RESOLUTION (e.g., 16384) is the number of ticks for a whole note.
+                        // We use Fraction arithmetic to avoid floating-point precision issues.
+                        const vfTicks: VF.Fraction = vexFlowVoiceEntry.vfStaveNote.getTicks();
+                        vfTicks.numerator = graphicalLength.Numerator * VF.RESOLUTION;
+                        vfTicks.denominator = graphicalLength.Denominator;
+                        // Simplify the fraction to reduce large numbers
+                        vfTicks.simplify();
+                    }
+                }
+
                 if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
                     // GhostNote, don't add modifiers like in-measure clefs
                     this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
