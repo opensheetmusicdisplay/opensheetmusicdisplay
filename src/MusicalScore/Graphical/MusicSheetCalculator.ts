@@ -1910,7 +1910,7 @@ export abstract class MusicSheetCalculator {
             relative.x = left - graphLabel.PositionAndShape.BorderMarginLeft;
         }
         if (left < staffLine.PositionAndShape.BorderMarginLeft) {
-            const rightShift: number = staffLine.PositionAndShape.BorderMarginLeft - left;
+            const rightShift: number = staffLine.PositionAndShape.BorderMarginLeft - left + this.rules.LabelXOffsetForStafflineLeftOverflowCheck;
             left += rightShift;
             relative.x += rightShift;
         }
@@ -1998,7 +1998,7 @@ export abstract class MusicSheetCalculator {
 
             // const addAtLastList: GraphicalObject[] = [];
             for (const entry of multiTempoExpression.EntriesList) {
-                let textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom;
+                let textAlignment: TextAlignmentEnum = this.rules.TempoExpressionTextAlignment;
                 if (this.rules.CompactMode) {
                     textAlignment = TextAlignmentEnum.LeftBottom;
                 }

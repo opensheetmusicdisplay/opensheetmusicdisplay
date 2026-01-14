@@ -850,7 +850,7 @@ export class ExpressionReader {
                 }
             }
         }
-        let textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom;
+        let textAlignment: TextAlignmentEnum = this.musicSheet.Rules.UnknownExpressionTextAlignment;
         if (this.musicSheet.Rules.CompactMode) {
             textAlignment = TextAlignmentEnum.LeftBottom;
         }

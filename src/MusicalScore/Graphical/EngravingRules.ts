@@ -244,6 +244,9 @@ export class EngravingRules {
     public RepetitionEndingLineYLowerOffset: number;
     public RepetitionEndingLineYUpperOffset: number;
     public VoltaOffset: number;
+    public LabelXOffsetForStafflineLeftOverflowCheck: number;
+    public TempoExpressionTextAlignment: TextAlignmentEnum;
+    public UnknownExpressionTextAlignment: TextAlignmentEnum;
     /** Default alignment of lyrics.
      * Left alignments will extend text to the right of the bounding box,
      * which facilitates spacing by extending measure width.
@@ -782,6 +785,15 @@ export class EngravingRules {
         this.RepetitionEndingLineYLowerOffset = 0.5;
         this.RepetitionEndingLineYUpperOffset = 0.3;
         this.VoltaOffset = 2.5;
+
+        // <direction><word> nodes text alignment
+        /** X offset applied after label was moved to not overflow the staffline to the left.
+         * Without this offset, simply removing the overflow is usually too strict, moving it too far unnecessarily.
+         * e.g. see Beethoven Geliebte sample ("Ziemlich langsam")
+         */
+        this.LabelXOffsetForStafflineLeftOverflowCheck = -2;
+        this.TempoExpressionTextAlignment = TextAlignmentEnum.CenterBottom;
+        this.UnknownExpressionTextAlignment = TextAlignmentEnum.CenterBottom;
 
         // Lyrics
         this.LyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
