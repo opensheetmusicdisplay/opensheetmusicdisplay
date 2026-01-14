@@ -1912,6 +1912,7 @@ export abstract class MusicSheetCalculator {
         if (left < staffLine.PositionAndShape.BorderMarginLeft) {
             const rightShift: number = staffLine.PositionAndShape.BorderMarginLeft - left + this.rules.LabelXOffsetForStafflineLeftOverflowCheck;
             left += rightShift;
+            right += rightShift;
             relative.x += rightShift;
         }
 
