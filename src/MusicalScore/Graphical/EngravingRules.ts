@@ -791,7 +791,7 @@ export class EngravingRules {
         this.VoltaOffset = 2.5;
 
         // <direction><word> nodes text alignment
-        this.LabelXOffsetForStafflineLeftOverflowCheck = -2;
+        this.LabelXOffsetForStafflineLeftOverflowCheck = -1.2; // see Beethoven Geliebte, Function Test Brooke
         this.TempoExpressionTextAlignment = TextAlignmentEnum.CenterBottom;
         this.UnknownExpressionTextAlignment = TextAlignmentEnum.CenterBottom;
 
