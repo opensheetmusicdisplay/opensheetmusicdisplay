@@ -244,6 +244,10 @@ export class EngravingRules {
     public RepetitionEndingLineYLowerOffset: number;
     public RepetitionEndingLineYUpperOffset: number;
     public VoltaOffset: number;
+    /** X offset applied after label was moved to not overflow the staffline to the left.
+     * Without this offset, simply removing the overflow is usually too strict, moving it too far unnecessarily.
+     * e.g. see Beethoven Geliebte sample ("Ziemlich langsam")
+     */
     public LabelXOffsetForStafflineLeftOverflowCheck: number;
     public TempoExpressionTextAlignment: TextAlignmentEnum;
     public UnknownExpressionTextAlignment: TextAlignmentEnum;
@@ -787,10 +791,6 @@ export class EngravingRules {
         this.VoltaOffset = 2.5;
 
         // <direction><word> nodes text alignment
-        /** X offset applied after label was moved to not overflow the staffline to the left.
-         * Without this offset, simply removing the overflow is usually too strict, moving it too far unnecessarily.
-         * e.g. see Beethoven Geliebte sample ("Ziemlich langsam")
-         */
         this.LabelXOffsetForStafflineLeftOverflowCheck = -2;
         this.TempoExpressionTextAlignment = TextAlignmentEnum.CenterBottom;
         this.UnknownExpressionTextAlignment = TextAlignmentEnum.CenterBottom;
