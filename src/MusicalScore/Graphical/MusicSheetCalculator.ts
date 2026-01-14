@@ -1909,6 +1909,11 @@ export abstract class MusicSheetCalculator {
             left = right - graphLabel.PositionAndShape.MarginSize.width;
             relative.x = left - graphLabel.PositionAndShape.BorderMarginLeft;
         }
+        if (left < staffLine.PositionAndShape.BorderMarginLeft) {
+            const rightShift: number = staffLine.PositionAndShape.BorderMarginLeft - left;
+            left += rightShift;
+            relative.x += rightShift;
+        }
 
         // find allowed position (where the Label can be positioned) from Sky- BottomLine
         let drawingHeight: number;
