@@ -1909,6 +1909,12 @@ export abstract class MusicSheetCalculator {
             left = right - graphLabel.PositionAndShape.MarginSize.width;
             relative.x = left - graphLabel.PositionAndShape.BorderMarginLeft;
         }
+        if (left < staffLine.PositionAndShape.BorderMarginLeft) {
+            const rightShift: number = staffLine.PositionAndShape.BorderMarginLeft - left + this.rules.LabelXOffsetForStafflineLeftOverflowCheck;
+            left += rightShift;
+            right += rightShift;
+            relative.x += rightShift;
+        }
 
         // find allowed position (where the Label can be positioned) from Sky- BottomLine
         let drawingHeight: number;
@@ -1993,7 +1999,7 @@ export abstract class MusicSheetCalculator {
 
             // const addAtLastList: GraphicalObject[] = [];
             for (const entry of multiTempoExpression.EntriesList) {
-                let textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom;
+                let textAlignment: TextAlignmentEnum = this.rules.TempoExpressionTextAlignment;
                 if (this.rules.CompactMode) {
                     textAlignment = TextAlignmentEnum.LeftBottom;
                 }
