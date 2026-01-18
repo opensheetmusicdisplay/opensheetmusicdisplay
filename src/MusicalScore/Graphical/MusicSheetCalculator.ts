@@ -1418,7 +1418,7 @@ export abstract class MusicSheetCalculator {
             if (staffEntry?.sourceStaffEntry.ParentStaff !== staffLine.ParentStaff) {
                 // note: null check handles rare cases of undefined staffEntries, e.g. in test_wedge_cresc_dim_simultaneous_quartet.musicxml
                 continue;
-                // don't let notes in other staffs (not the wedge's staff) affect the wedge length
+                // don't let notes in other staffs (not the wedge's staff) affect the wedge length (see #1477)
             }
             const currentMaxLength: Fraction = staffEntry?.sourceStaffEntry?.calculateMaxNoteLength(false);
             if ( currentMaxLength?.gt(maxNoteLength) ) {
