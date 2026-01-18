@@ -1415,6 +1415,10 @@ export abstract class MusicSheetCalculator {
         const endOfMeasure: number = parentMeasure.PositionAndShape.AbsolutePosition.x + parentMeasure.PositionAndShape.BorderRight;
         let maxNoteLength: Fraction = new Fraction(0, 0, 0);
         for (const staffEntry of container.StaffEntries) {
+            if (staffEntry?.sourceStaffEntry.ParentStaff !== staffLine.ParentStaff) {
+                // note: null check handles rare cases of undefined staffEntries, e.g. in test_wedge_cresc_dim_simultaneous_quartet.musicxml
+                continue;
+            }
             const currentMaxLength: Fraction = staffEntry?.sourceStaffEntry?.calculateMaxNoteLength(false);
             if ( currentMaxLength?.gt(maxNoteLength) ) {
                 maxNoteLength = currentMaxLength;
