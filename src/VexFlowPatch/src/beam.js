@@ -871,6 +871,17 @@ export class Beam extends Element {
   postFormat() {
     if (this.postFormatted) return;
 
+    // Fix beams changing on re-render: Reset stem extensions to base values before recalculating. (VexFlowPatch, #1636)
+    //   This ensures idempotent (unchanging) beam rendering when beams are recreated
+    //   but notes/stems are reused (the extensions won't accumulate).
+    //   Before this fix, beams could change their slopes (e.g. start y value) on each call of render().
+    //   Note that this causes a regression in Schumann - Dichterliebe measure 6, but might be because sample xml is messy
+    for (const note of this.notes) {
+      if (note.stem && note.getStemExtension) {
+        note.stem.setExtension(note.getStemExtension());
+      }
+    }
+
     // Calculate a smart slope if we're not forcing the beams to be flat.
     if (this.notes[0].getCategory() === 'tabnotes' || this.render_options.flat_beams) {
       this.calculateFlatSlope();
