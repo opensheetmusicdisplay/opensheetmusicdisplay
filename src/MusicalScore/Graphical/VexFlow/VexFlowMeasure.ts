@@ -528,6 +528,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         voltaType = VF.Volta.type.END;
                     }
                     break;
+                case AlignmentType.Mid:
+                    voltaType = VF.Volta.type.MID;
+                    break;
                 default:
                     break;
             }

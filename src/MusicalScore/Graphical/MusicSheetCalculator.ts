@@ -20,7 +20,7 @@ import { Articulation } from "../VoiceData/Articulation";
 import { Tuplet } from "../VoiceData/Tuplet";
 import { MusicSystem } from "./MusicSystem";
 import { GraphicalTie } from "./GraphicalTie";
-import { RepetitionInstruction } from "../VoiceData/Instructions/RepetitionInstruction";
+import { RepetitionInstruction, RepetitionInstructionEnum, AlignmentType } from "../VoiceData/Instructions/RepetitionInstruction";
 import { MultiExpression, MultiExpressionEntry } from "../VoiceData/Expressions/MultiExpression";
 import { StaffEntryLink } from "../VoiceData/StaffEntryLink";
 import { MusicSystemBuilder } from "./MusicSystemBuilder";
@@ -3746,8 +3746,37 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateWordRepetitionInstructions(): void {
+        // Track currently active volta spans (can have multiple nested or sequential)
+        // Each span tracks: startMeasure index, endingIndices
+        const activeVoltaSpans: {startMeasure: number, endingIndices: number[]}[] = [];
+
         for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+
+            // Check if this measure has a Begin or End ending instruction
+            let hasBeginEnding: boolean = false;
+            let hasEndEnding: boolean = false;
+            let beginEndingIndices: number[] = undefined;
+
+            for (const instruction of sourceMeasure.FirstRepetitionInstructions) {
+                if (instruction.type === RepetitionInstructionEnum.Ending && instruction.alignment === AlignmentType.Begin) {
+                    hasBeginEnding = true;
+                    beginEndingIndices = instruction.endingIndices;
+                }
+            }
+
+            for (const instruction of sourceMeasure.LastRepetitionInstructions) {
+                if (instruction.type === RepetitionInstructionEnum.Ending && instruction.alignment === AlignmentType.End) {
+                    hasEndEnding = true;
+                }
+            }
+
+            // If this is a Begin ending, start tracking a new volta span
+            if (hasBeginEnding) {
+                activeVoltaSpans.push({startMeasure: i, endingIndices: beginEndingIndices});
+            }
+
+            // Process all regular instructions
             for (let idx: number = 0, len: number = sourceMeasure.FirstRepetitionInstructions.length; idx < len; ++idx) {
                 const instruction: RepetitionInstruction = sourceMeasure.FirstRepetitionInstructions[idx];
                 this.calculateWordRepetitionInstruction(instruction, i);
@@ -3755,6 +3784,25 @@ export abstract class MusicSheetCalculator {
             for (let idx: number = 0, len: number = sourceMeasure.LastRepetitionInstructions.length; idx < len; ++idx) {
                 const instruction: RepetitionInstruction = sourceMeasure.LastRepetitionInstructions[idx];
                 this.calculateWordRepetitionInstruction(instruction, i);
+            }
+
+            // If this measure has no Begin or End ending but we have active volta spans,
+            // and this measure is AFTER the start of the span (not the same measure),
+            // then add a MID volta
+            if (!hasBeginEnding && !hasEndEnding && activeVoltaSpans.length > 0) {
+                // Use the most recent active span
+                const activeSpan: {startMeasure: number, endingIndices: number[]} = activeVoltaSpans[activeVoltaSpans.length - 1];
+                if (i > activeSpan.startMeasure) {
+                    const midInstruction: RepetitionInstruction = new RepetitionInstruction(
+                        i, RepetitionInstructionEnum.Ending, AlignmentType.Mid, undefined, activeSpan.endingIndices
+                    );
+                    this.calculateWordRepetitionInstruction(midInstruction, i);
+                }
+            }
+
+            // If this is an End ending, close the active volta span
+            if (hasEndEnding && activeVoltaSpans.length > 0) {
+                activeVoltaSpans.pop();
             }
         }
     }
