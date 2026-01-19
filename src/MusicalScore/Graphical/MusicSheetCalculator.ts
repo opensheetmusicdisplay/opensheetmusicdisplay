@@ -3798,12 +3798,30 @@ export abstract class MusicSheetCalculator {
                 if (!this.graphicalMusicSheet.MeasureList[i] || !this.graphicalMusicSheet.MeasureList[i][j]) {
                     continue;
                 }
-                if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.isVisible()) {
-                    for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
-                        if ((sourceMeasure.StaffLinkedExpressions[j][k].MoodList.length > 0) ||
-                            (sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length > 0)) {
-                            this.calculateMoodAndUnknownExpression(sourceMeasure.StaffLinkedExpressions[j][k], i, j);
+                let staffIndexToUse: number = j;
+                if (!this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.isVisible()) {
+                    // If this staff is hidden and it's the first staff (j === 0) (see #1621),
+                    // find the first visible staff to render expressions on (similar to rehearsal mark fix #1555)
+                    if (j === 0) {
+                        let foundVisibleStaff: boolean = false;
+                        for (let s: number = 0; s < this.graphicalMusicSheet.MeasureList[i].length; s++) {
+                            if (this.graphicalMusicSheet.MeasureList[i][s]?.ParentStaff.isVisible()) {
+                                staffIndexToUse = s; // render words on this staff instead of first/invisible staff (see #1621)
+                                foundVisibleStaff = true;
+                                break;
+                            }
                         }
+                        if (!foundVisibleStaff) {
+                            continue; // No visible staff found, skip this expression
+                        }
+                    } else {
+                        continue; // Non-first staff is hidden, skip its expressions
+                    }
+                }
+                for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
+                    if ((sourceMeasure.StaffLinkedExpressions[j][k].MoodList.length > 0) ||
+                        (sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length > 0)) {
+                        this.calculateMoodAndUnknownExpression(sourceMeasure.StaffLinkedExpressions[j][k], i, staffIndexToUse);
                     }
                 }
             }

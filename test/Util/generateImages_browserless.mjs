@@ -550,7 +550,11 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
 
     const isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
     const isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
-    if (isTestOctaveShiftInvisibleInstrument) {
+    const isTestWordsDirectionLostWhenFirstInstrumentInvisible = sampleFilename.includes("test_words_direction_lost_when_first_instrument_invisible");
+
+    if (isTestOctaveShiftInvisibleInstrument ||
+        isTestWordsDirectionLostWhenFirstInstrumentInvisible
+    ) {
         osmdInstance.Sheet.Instruments[0].Visible = false;
     }
     if (isTestInvisibleMeasureNotAffectingLayout) {
