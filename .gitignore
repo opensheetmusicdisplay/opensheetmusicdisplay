@@ -17,6 +17,9 @@ pids
 # OS files
 .DS_Store
 
+# dot folders (e.g. IDE settings)
+.*
+
 # optional npm script-generated data
 visual_regression/
 export/
