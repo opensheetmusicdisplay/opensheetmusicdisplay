@@ -73,7 +73,7 @@
     <credit-type>subtitle</credit-type>
     <credit-words default-x="600" default-y="1565.82" justify="center" valign="top" font-size="11">Vincenzo Bellini's Opera Norma 
 </credit-words>
-    <credit-words>Grend Fantaisie
+    <credit-words>Grand Fantaisie
 </credit-words>
     <credit-words>S.394</credit-words>
     </credit>
@@ -1306,7 +1306,7 @@
             </ornaments>
           </notations>
         </note>
-      <backup><duration>1087</duration></backup></measure>
+      <backup><duration>1087</duration></backup>
       </measure>
     </part>
   </score-partwise>
