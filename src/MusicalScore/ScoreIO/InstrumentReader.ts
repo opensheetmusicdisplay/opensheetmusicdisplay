@@ -1019,7 +1019,7 @@ export class InstrumentReader {
       if (value instanceof ClefInstruction) {
         const clefInstruction: ClefInstruction = <ClefInstruction>value;
         if (this.currentXmlMeasureIndex === 0 || (key <= this.activeClefs.length && clefInstruction !== this.activeClefs[key - 1])) {
-          if (!beginOfMeasure && this.currentStaffEntry !== undefined && !this.currentStaffEntry.hasNotes() &&
+          if (!beginOfMeasure && this.currentStaffEntry !== undefined &&
             key - 1 === this.instrument.Staves.indexOf(this.currentStaffEntry.ParentStaff)) {
             const newClefInstruction: ClefInstruction = clefInstruction;
             const staffEntry: SourceStaffEntry = this.currentStaffEntry;
