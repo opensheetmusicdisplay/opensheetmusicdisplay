@@ -1435,12 +1435,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                 }
 
-                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
-                    // GhostNote, don't add modifiers like in-measure clefs
-                    this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
-                    continue;
-                }
-
                 // check for in-measure clefs:
                 // Note: we used to only add clefs in main voice to not add them twice,
                 //   but there are many legitimate clefs e.g. in 2nd voices, and this doesn't seem to cause issues.
@@ -1460,6 +1454,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         // Grace/cue notes use GraceNote, which still supports modifiers.
                         vfStaveNote.addModifier(0, clefModifier);
                     }
+                }
+
+                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
+                    // GhostNote: still allow in-measure clefs on invisible notes, but skip other modifiers.
+                    this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
+                    continue;
                 }
 
                 // add fingering
