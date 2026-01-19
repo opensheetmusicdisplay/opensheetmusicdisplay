@@ -167,4 +167,5 @@ export enum AlignmentType {
     Begin,
     End,
     Mid,
+    Discontinue
 }

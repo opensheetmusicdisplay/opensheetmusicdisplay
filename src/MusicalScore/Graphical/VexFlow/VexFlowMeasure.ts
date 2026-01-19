@@ -519,6 +519,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         voltaType = VF.Volta.type.BEGIN;
                     }
                     break;
+                case AlignmentType.Discontinue:
+                    if (this.parentSourceMeasure.beginsRepetitionEnding()) {
+                        // don't add MID volta since BEGIN was already added
+                        return;
+                    }
+                    // similar to type End, but without the downward jog/line at the right end
+                    voltaType = VF.Volta.type.MID;
+                    break;
                 case AlignmentType.End:
                     if (this.parentSourceMeasure.beginsRepetitionEnding()) {
                         //voltaType = VF.Volta.type.BEGIN_END;

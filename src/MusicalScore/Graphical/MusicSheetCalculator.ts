@@ -3766,7 +3766,8 @@ export abstract class MusicSheetCalculator {
             }
 
             for (const instruction of sourceMeasure.LastRepetitionInstructions) {
-                if (instruction.type === RepetitionInstructionEnum.Ending && instruction.alignment === AlignmentType.End) {
+                if (instruction.type === RepetitionInstructionEnum.Ending &&
+                    (instruction.alignment === AlignmentType.End || instruction.alignment === AlignmentType.Discontinue)) {
                     hasEndEnding = true;
                 }
             }
