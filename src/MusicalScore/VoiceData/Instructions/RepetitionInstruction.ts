@@ -166,4 +166,6 @@ export enum RepetitionInstructionEnum {
 export enum AlignmentType {
     Begin,
     End,
+    Mid,
+    Discontinue
 }
