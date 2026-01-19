@@ -2,7 +2,7 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="4.0">
   <work>
-    <work-title>Réminiscences de Norma</work-title>
+    <work-title>test_clef_change_on_invisible_note_norma_fantasy_1605</work-title>
     </work>
   <identification>
     <encoding>
@@ -67,7 +67,7 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="600" default-y="1622.85" justify="center" valign="top" font-size="23">Réminiscences de Norma</credit-words>
+    <credit-words default-x="600" default-y="1622.85" justify="center" valign="top" font-size="23">test_clef_change_on_invisible_note_norma_fantasy_1605</credit-words>
     </credit>
   <credit page="1">
     <credit-type>subtitle</credit-type>
