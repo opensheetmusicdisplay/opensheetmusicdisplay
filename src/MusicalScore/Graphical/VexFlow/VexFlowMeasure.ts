@@ -1435,25 +1435,30 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                 }
 
-                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
-                    // GhostNote, don't add modifiers like in-measure clefs
-                    this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
-                    continue;
-                }
-
                 // check for in-measure clefs:
                 // Note: we used to only add clefs in main voice to not add them twice,
                 //   but there are many legitimate clefs e.g. in 2nd voices, and this doesn't seem to cause issues.
                 //if (isMainVoice) {
                 const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
                 if (vfse && vfse.vfClefBefore) {
+                    if (voiceEntry.notes[0] && !voiceEntry.notes[0].sourceNote.PrintObject) {
+                        const clefColor: string = this.rules.DefaultColorMusic || "#000000";
+                        // need to cast to any because ClefNote actually extends Note, which extends Tickable, which extends Element,
+                        //   which has setStyle. But in our definitions, Tickable doesn't implement anything, so it doesn't have setStyle.
+                        (vfse.vfClefBefore as any).setStyle({ fillStyle: clefColor, strokeStyle: clefColor });
+                    }
                     // add clef as NoteSubGroup so that we get modifier layouting
                     const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
-                    // The cast is necesary because...vexflow -> see types
-                    if (vexFlowVoiceEntry.vfStaveNote.getCategory && vexFlowVoiceEntry.vfStaveNote.getCategory() === "stavenotes") {
-                        // GhostNotes and other StemmableNotes don't have this function
-                        (vexFlowVoiceEntry.vfStaveNote as VF.StaveNote).addModifier(0, clefModifier);
+                    const vfStaveNote: any = vexFlowVoiceEntry.vfStaveNote;
+                    if (vfStaveNote && typeof vfStaveNote.addModifier === "function") {
+                        vfStaveNote.addModifier(0, clefModifier);
                     }
+                }
+
+                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
+                    // GhostNote: still allow in-measure clefs on invisible notes, but skip other modifiers.
+                    this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
+                    continue;
                 }
 
                 // add fingering

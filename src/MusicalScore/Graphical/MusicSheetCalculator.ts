@@ -2910,9 +2910,13 @@ export abstract class MusicSheetCalculator {
                     );
                 }
                 // SourceStaffEntry has inStaff ClefInstruction -> create graphical clef
-                if (sourceStaffEntry.Instructions.length > 0) {
-                    const clefInstruction: ClefInstruction = <ClefInstruction>sourceStaffEntry.Instructions[0];
-                    MusicSheetCalculator.symbolFactory.createInStaffClef(graphicalStaffEntry, clefInstruction);
+                for (const instruction of sourceStaffEntry.Instructions) {
+                    if (instruction instanceof ClefInstruction) {
+                        MusicSheetCalculator.symbolFactory.createInStaffClef(
+                            graphicalStaffEntry, instruction as ClefInstruction
+                        );
+                        break;
+                    }
                 }
                 if (this.rules.RenderChordSymbols && sourceStaffEntry.ChordContainers?.length > 0) {
                     sourceStaffEntry.ParentStaff.ParentInstrument.HasChordSymbols = true;
