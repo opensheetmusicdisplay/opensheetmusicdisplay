@@ -2711,16 +2711,28 @@ export abstract class MusicSheetCalculator {
         const accidentalCalculators: AccidentalCalculator[] = [];
         const firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
         if (firstSourceMeasure) {
+            const transposeHalftones: number = this.graphicalMusicSheet.ParentMusicSheet.Transpose;
             for (let i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
                 const accidentalCalculator: AccidentalCalculator = new AccidentalCalculator();
                 accidentalCalculators.push(accidentalCalculator);
-                accidentalCalculator.Transpose = this.graphicalMusicSheet.ParentMusicSheet.Transpose;
+                accidentalCalculator.Transpose = transposeHalftones;
                 if (firstSourceMeasure.FirstInstructionsStaffEntries[i]) {
                     for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
                         const abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
                         if (abstractNotationInstruction instanceof KeyInstruction) {
-                            const keyInstruction: KeyInstruction = <KeyInstruction>abstractNotationInstruction;
-                            accidentalCalculator.ActiveKeyInstruction = keyInstruction;
+                            // Create a new KeyInstruction using keyTypeOriginal to ensure correct starting point (#1383)
+                            // This ensures that when transpose=0, we get the original key (e.g., C major)
+                            // rather than a previously transposed key (e.g., Db major from transpose=1)
+                            const originalKey: KeyInstruction = <KeyInstruction>abstractNotationInstruction;
+                            const key: KeyInstruction = new KeyInstruction(originalKey.Parent, originalKey.keyTypeOriginal, originalKey.Mode);
+                            // Then transpose if needed (skip percussion instruments)
+                            const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.Staves[i];
+                            if (transposeHalftones !== 0 &&
+                                staff?.ParentInstrument?.MidiInstrumentId !== MidiInstrument.Percussion &&
+                                MusicSheetCalculator.transposeCalculator) {
+                                MusicSheetCalculator.transposeCalculator.transposeKey(key, transposeHalftones);
+                            }
+                            accidentalCalculator.ActiveKeyInstruction = key;
                         }
                     }
                 }
@@ -2803,7 +2815,10 @@ export abstract class MusicSheetCalculator {
             for (let idx: number = 0, len: number = sourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions.length; idx < len; ++idx) {
                 const instruction: AbstractNotationInstruction = sourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[idx];
                 if (instruction instanceof KeyInstruction) {
-                    const key: KeyInstruction = KeyInstruction.copy(instruction);
+                    // Create a new KeyInstruction using keyTypeOriginal to ensure correct starting point (#1383)
+                    // This ensures that when transpose=0, we get the original key (e.g., C major)
+                    // rather than a previously transposed key (e.g., Db major from transpose=1)
+                    const key: KeyInstruction = new KeyInstruction(instruction.Parent, instruction.keyTypeOriginal, instruction.Mode);
                     const transposeHalftones: number = measure.getTransposedHalftones();
                     if (transposeHalftones !== 0 &&
                         measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
@@ -3016,6 +3031,10 @@ export abstract class MusicSheetCalculator {
                 accidentalCalculator.ActiveKeyInstruction, activeClef, transposeHalftones, octaveEnum
             );
             graphicalNote.sourceNote.TransposedPitch = pitch;
+        } else {
+            // Clear any previously set TransposedPitch when not transposing,
+            // to avoid stale state affecting accidental calculation (#1383)
+            graphicalNote.sourceNote.TransposedPitch = undefined;
         }
         graphicalNote.sourceNote.halfTone = pitch.getHalfTone();
         accidentalCalculator.checkAccidental(graphicalNote, pitch);

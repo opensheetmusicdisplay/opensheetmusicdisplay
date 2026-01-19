@@ -328,6 +328,20 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     debug("xml loaded", DEBUG);
     try {
         osmdInstance.render();
+        // if (sampleFilename.includes("test_transposing_accidentals_1383")) {
+        //     // transpose back and forth to make sure that doesn't change accidentals
+        //     osmdInstance.Sheet.Transpose = 1;
+        //     osmdInstance.updateGraphic();
+        //     osmdInstance.render();
+        //     //await sleep(1); // doesn't change the result
+
+        //     osmdInstance.Sheet.Transpose = 0;
+        //     osmdInstance.updateGraphic();
+        //     osmdInstance.render();
+        //     //await sleep(1);
+        //     // TODO this doesn't work to produce the bug before the fix in #1639.
+        //     //   it looks like Node behaves differently here than a browser.
+        // }
         // there were reports that await could help here, but render isn't a synchronous function, and it seems to work. see #932
     } catch (ex) {
         debug("renderError: " + ex);
