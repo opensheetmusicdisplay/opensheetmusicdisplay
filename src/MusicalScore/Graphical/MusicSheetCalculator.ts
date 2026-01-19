@@ -3787,9 +3787,10 @@ export abstract class MusicSheetCalculator {
                 this.calculateWordRepetitionInstruction(instruction, i);
             }
 
-            // If this measure has no Begin or End ending but we have active volta spans,
-            // and this measure is AFTER the start of the span (not the same measure),
-            // then add a MID volta
+            // Add continuing volta line:
+            //   If this measure has no Begin or End volta/instruction but we have active volta spans,
+            //   and this measure is AFTER the start of the span (not the same measure),
+            //   then add a MID volta. (continuing volta line in a measure between start and end volta measure)
             if (!hasBeginEnding && !hasEndEnding && activeVoltaSpans.length > 0) {
                 // Use the most recent active span
                 const activeSpan: {startMeasure: number, endingIndices: number[]} = activeVoltaSpans[activeVoltaSpans.length - 1];
