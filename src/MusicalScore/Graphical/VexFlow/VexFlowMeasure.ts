@@ -1451,7 +1451,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
                     const vfStaveNote: any = vexFlowVoiceEntry.vfStaveNote;
                     if (vfStaveNote && typeof vfStaveNote.addModifier === "function") {
-                        // Grace/cue notes use GraceNote, which still supports modifiers.
                         vfStaveNote.addModifier(0, clefModifier);
                     }
                 }
