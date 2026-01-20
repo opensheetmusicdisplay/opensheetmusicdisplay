@@ -18,6 +18,7 @@ beam.js (custom addition):
 fix beam slopes changing on each re-render (render() call)
 add flat_beams, flat_beam_offset, flat_beam_offset_per_beam render_option (fixed in vexflow 4)
 able to add svg node id+class to beam (not yet in vexflow 4)
+fix beam not covering last note's stem: fix end X position to use Stem.WIDTH instead of hardcoded 1 (#1593)
 
 clef.js (merged vexflow 4):
 open group to get SVG group+class for clef
@@ -63,6 +64,7 @@ Fix stem/flag formatting. Instead of shifting notes by default, update the stem/
   (not yet in vexflow 4, PR 1263 open)
 able to add svg node id+class to stem (merged vexflow 4.x)
 Save and restore noteheads (e.g. slash noteheads) in reset()
+Fix stem/flag pixel alignment (#1593): adjust flag X position to align with stem edge, extend stem to reach flag's height / connecting point
 preFormat() and getBoundingBox(): add paddingRight variable to allow for custom right padding (e.g. for long lyrics below note)
 allow notehead y_shift without
 open group for ledger lines (SVG)

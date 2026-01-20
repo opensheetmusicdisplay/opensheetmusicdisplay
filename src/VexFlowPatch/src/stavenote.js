@@ -1183,19 +1183,47 @@ export class StaveNote extends StemmableNote {
     if (glyph.flag && shouldRenderFlag) {
       const { y_top, y_bottom } = this.getNoteHeadBounds();
       const noteStemHeight = stem.getHeight();
-      const flagX = this.getStemX();
-      // FIXME: What's with the magic +/- 2
-      const flagY = this.getStemDirection() === Stem.DOWN
+      const stemDirection = this.getStemDirection();
+      // VexFlowPatch: Adjust flag X position to align with stem edge (#1593).
+      //   The stem is drawn centered at getStemX() with width Stem.WIDTH,
+      //   so we shift the flag by half the stem width in the stem direction
+      //   to align the flag edge with the stem edge.
+      const stemX = this.getStemX();
+      const flagX = stemX + (Stem.WIDTH / 2) * stemDirection;
+      const flagYOffset = 2; // FIXME: Vexflow magic number. already noted FIXME in original vexflow.
+      const flagY = stemDirection === Stem.DOWN
         // Down stems have flags on the left
-        ? y_top - noteStemHeight + 2
-        // Up stems have flags on the eft.
-        : y_bottom - noteStemHeight - 2;
+        ? y_top - noteStemHeight + flagYOffset
+        // Up stems have flags on the left.
+        : y_bottom - noteStemHeight - flagYOffset;
+
+      // VexFlowPatch: Extend stem to reach the flag's render origin (#1593).
+      //   The flag is positioned 2 pixels beyond the stem tip (magic number +/-2 offset in vexflow).
+      //   The flag glyph extends FROM flagY in the stem direction (downward for upstem, upward for downstem),
+      //   so we just need to extend the stem to reach flagY to close the gap.
+      //   note: for stem-to-notehead junctions without flags, the minimal overhang/pixel seems to be an aliasing issue,
+      //     resolution likely too low to fix (not clear though).
+      const stemTipY = stemDirection === Stem.DOWN
+        ? y_top - noteStemHeight
+        : y_bottom - noteStemHeight;
+      // Extend stem from its tip to the flag's render origin (flagY).
+      //   applyStyle and restoreStyle only matter if a stem style exists (only then restoreStyle calls ctx.restore()).
+      //   We pass `|| false` to avoid the default parameter falling back to this.getStyle() in restoreStyle() when stemStyle is undefined.
+      ctx.save(); // to un-apply setLineWidth later
+      this.applyStyle(ctx, this.getStemStyle() || false);
+      ctx.beginPath();
+      ctx.setLineWidth(Stem.WIDTH);
+      ctx.moveTo(stemX, stemTipY);
+      ctx.lineTo(stemX, flagY);
+      ctx.stroke();
+      this.restoreStyle(ctx, this.getStemStyle() || false); // un-apply stem style
+      ctx.restore(); // un-apply setLineWidth
 
       // Draw the Flag
       ctx.openGroup('flag', null, { pointerBBox: true });
       this.applyStyle(ctx, this.getFlagStyle() || false);
       this.flag.render(ctx, flagX, flagY);
-      this.restoreStyle(ctx, this.getFlagStyle() || false);
+      this.restoreStyle(ctx, this.getFlagStyle() || false); // note on || false: see above at setStemStyle
       ctx.closeGroup();
     }
   }
