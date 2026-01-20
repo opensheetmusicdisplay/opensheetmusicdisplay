@@ -565,6 +565,7 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     const isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
     const isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
     const isTestWordsDirectionLostWhenFirstInstrumentInvisible = sampleFilename.includes("test_words_direction_lost_when_first_instrument_invisible");
+    const isTestTransposeEnharmonic9 = sampleFilename.includes("test_transpose_enharmonic_9");
 
     if (isTestOctaveShiftInvisibleInstrument ||
         isTestWordsDirectionLostWhenFirstInstrumentInvisible
@@ -575,6 +576,10 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
         if (osmdInstance.Sheet.Instruments[1]) { // some systems can't handle ?. in this script (just a safety check anyways)
             osmdInstance.Sheet.Instruments[1].Visible = false;
         }
+    }
+    if (isTestTransposeEnharmonic9) {
+        osmdInstance.Sheet.Transpose = 9;
+        osmdInstance.updateGraphic();
     }
 
     return options;

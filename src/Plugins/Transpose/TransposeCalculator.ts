@@ -34,9 +34,26 @@ export class TransposeCalculator implements ITransposeCalculator {
             const currentValue: number = <number>TransposeCalculator.noteEnums[i];
             if (currentValue > transposedHalfTone) {
                 let noteIndex: number = i;
-                const accidentalHalfTones: number = Pitch.HalfTonesFromAccidental(pitch.Accidental);
 
-                if (accidentalHalfTones > 0 || (accidentalHalfTones === 0 && currentKeyInstruction.Key >= 0)) {
+                const accidentalHalfTones: number = Pitch.HalfTonesFromAccidental(pitch.Accidental);
+                const hasSharpAccidental: boolean = accidentalHalfTones > 0;
+                const hasFlatAccidental: boolean = accidentalHalfTones < 0;
+                const keyHasSharps: boolean = currentKeyInstruction.Key > 0;
+                const keyHasFlats: boolean = currentKeyInstruction.Key < 0;
+                let preferSharps: boolean = true;
+
+                // Choose enharmonic (sharp vs flat) based on the transposed key signature (#1345),
+                //   but keep the original accidental when the key has no preference
+                //   (e.g. Beethoven Geliebte measure 6, transposing -3 to C major: keep flat instead of sharp).
+                if (keyHasSharps) {
+                    preferSharps = true;
+                } else if (keyHasFlats) {
+                    preferSharps = false;
+                } else if (hasSharpAccidental || hasFlatAccidental) {
+                    preferSharps = hasSharpAccidental;
+                }
+
+                if (preferSharps) {
                     noteIndex--;
                 }
                 while (noteIndex < 0) {
