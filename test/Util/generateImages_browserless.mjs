@@ -332,9 +332,21 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     debug("xml loaded", DEBUG);
     try {
         osmdInstance.render();
-        if (sampleFilename.includes("test_transposing_accidentals_1383")) {
+        const isTestTransposingAccidentals = sampleFilename.includes("test_transposing_accidentals_1383");
+        const isTestTransposingCsharpMajorToCAndBack = sampleFilename.includes("test_transposing_csharp_major_to_c_and_back_to_csharp");
+
+        if (isTestTransposingAccidentals) {
             // transpose back and forth to make sure that doesn't change accidentals (see #1383)
             osmdInstance.Sheet.Transpose = 1;
+            osmdInstance.updateGraphic();
+            osmdInstance.render();
+
+            osmdInstance.Sheet.Transpose = 0;
+            osmdInstance.updateGraphic();
+            osmdInstance.render();
+        }
+        if (isTestTransposingCsharpMajorToCAndBack) {
+            osmdInstance.Sheet.Transpose = -1;
             osmdInstance.updateGraphic();
             osmdInstance.render();
 
@@ -566,6 +578,7 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     const isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
     const isTestWordsDirectionLostWhenFirstInstrumentInvisible = sampleFilename.includes("test_words_direction_lost_when_first_instrument_invisible");
     const isTestTransposeEnharmonic9 = sampleFilename.includes("test_transpose_enharmonic_9");
+    const isTestTransposingCsharpMajorToC = sampleFilename.includes("test_transposing_csharp_major_to_c");
 
     if (isTestOctaveShiftInvisibleInstrument ||
         isTestWordsDirectionLostWhenFirstInstrumentInvisible
@@ -579,6 +592,10 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestTransposeEnharmonic9) {
         osmdInstance.Sheet.Transpose = 9;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingCsharpMajorToC) {
+        osmdInstance.Sheet.Transpose = -1;
         osmdInstance.updateGraphic();
     }
 

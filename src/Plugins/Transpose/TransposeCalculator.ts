@@ -85,9 +85,25 @@ export class TransposeCalculator implements ITransposeCalculator {
     public transposeKey(keyInstruction: KeyInstruction, transpose: number): void {
         let currentIndex: number = 0;
         let previousKeyType: number = 0;
+        let keyTypeForMapping: number = keyInstruction.keyTypeOriginal;
+
+        // restore the original key signature when the net transpose is a multiple of 12, so a C# -> C-> C# round trip returns to C#
+        if (transpose % 12 === 0) {
+            keyInstruction.Key = keyInstruction.keyTypeOriginal;
+            keyInstruction.isTransposedBy = transpose;
+            return;
+        }
+
+        // Normalize rare key signatures (e.g., 7 sharps or 7 flats) to enharmonic equivalents present in mapping.
+        if (keyTypeForMapping > 6) {
+            keyTypeForMapping -= 12;
+        } else if (keyTypeForMapping < -6) {
+            keyTypeForMapping += 12;
+        }
+
         for (; currentIndex < TransposeCalculator.keyMapping.length; currentIndex++) {
             previousKeyType = TransposeCalculator.keyMapping[currentIndex];
-            if (previousKeyType === keyInstruction.keyTypeOriginal) {
+            if (previousKeyType === keyTypeForMapping) {
                 break;
             }
         }
