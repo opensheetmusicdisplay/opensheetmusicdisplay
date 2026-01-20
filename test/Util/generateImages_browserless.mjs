@@ -484,10 +484,19 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestAlignRests = sampleFilename.includes("alignrests");
     const isTestHeavyBarline = sampleFilename.includes("test_barline_heavy-heavy_mid_score");
     const isTestTupletRatioed = sampleFilename.includes("test_tuplet_ratioed");
+    const isTestDrawFromMeasureNumber9ClefChange = sampleFilename.includes("test_drawFromMeasureNumber_9_respect_earlier_clef_changes");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
     if (isTestEndClefStaffEntryBboxes) {
         options.drawBoundingBoxString = "VexFlowStaffEntry";
         options.fileNameAddition = "bbox" + options.drawBoundingBoxString + "_";
+    }
+    let drawFromMeasureNumber = 1;
+    let drawUpToMeasureNumber = Number.MAX_SAFE_INTEGER;
+    if (isFunctionTestDrawingRange) {
+        drawFromMeasureNumber = 9;
+        drawUpToMeasureNumber = 12;
+    } else if (isTestDrawFromMeasureNumber9ClefChange) {
+        drawFromMeasureNumber = 9;
     }
     osmdInstance.setOptions({
         autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
@@ -496,8 +505,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         coloringSetCustom: isFunctionTestAutoColoring ? ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"] : undefined,
         colorStemsLikeNoteheads: isFunctionTestAutoColoring,
         drawingParameters: defaultOrCompactTightMode, // note: default resets all EngravingRules. could be solved differently
-        drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
-        drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
+        drawFromMeasureNumber: drawFromMeasureNumber,
+        drawUpToMeasureNumber: drawUpToMeasureNumber,
         newSystemFromXML: isFunctionTestSystemAndPageBreaks,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks,
