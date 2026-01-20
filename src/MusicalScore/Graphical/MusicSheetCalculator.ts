@@ -2820,6 +2820,9 @@ export abstract class MusicSheetCalculator {
                     // rather than a previously transposed key (e.g., Db major from transpose=1)
                     const key: KeyInstruction = new KeyInstruction(instruction.Parent, instruction.keyTypeOriginal, instruction.Mode);
                     const transposeHalftones: number = measure.getTransposedHalftones();
+                    if (transposeHalftones !== 0 && MusicSheetCalculator.transposeCalculator === undefined) {
+                        log.info("[OSMD] transpose requested, but TransposeCalculator undefined. Use osmd.TransposeCalculator = new TransposeCalculator()");
+                    }
                     if (transposeHalftones !== 0 &&
                         measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
                         MusicSheetCalculator.transposeCalculator) {

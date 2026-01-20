@@ -3,6 +3,7 @@ import FS from "fs";
 import jsdom from "jsdom";
 //import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
 import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
+// for debugging, use opensheetmusicdisplay.min.js, created by npm run build:webpack-dev
 /*
   Render each OSMD sample, grab the generated images, and
   dump them into a local directory as PNG or SVG files.
@@ -236,6 +237,9 @@ async function init () {
     });
     // for more options check OSMDOptions.ts
 
+    // initialize transposing. necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
+    osmdInstance.TransposeCalculator = new OSMD.TransposeCalculator();
+
     // you can set finer-grained rendering/engraving settings in EngravingRules:
     // osmdInstance.EngravingRules.TitleTopDistance = 5.0 // 5.0 is default
     //   (unless in osmdTestingMode, these will be reset with drawingParameters default)
@@ -328,20 +332,16 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     debug("xml loaded", DEBUG);
     try {
         osmdInstance.render();
-        // if (sampleFilename.includes("test_transposing_accidentals_1383")) {
-        //     // transpose back and forth to make sure that doesn't change accidentals
-        //     osmdInstance.Sheet.Transpose = 1;
-        //     osmdInstance.updateGraphic();
-        //     osmdInstance.render();
-        //     //await sleep(1); // doesn't change the result
+        if (sampleFilename.includes("test_transposing_accidentals_1383")) {
+            // transpose back and forth to make sure that doesn't change accidentals (see #1383)
+            osmdInstance.Sheet.Transpose = 1;
+            osmdInstance.updateGraphic();
+            osmdInstance.render();
 
-        //     osmdInstance.Sheet.Transpose = 0;
-        //     osmdInstance.updateGraphic();
-        //     osmdInstance.render();
-        //     //await sleep(1);
-        //     // TODO this doesn't work to produce the bug before the fix in #1639.
-        //     //   it looks like Node behaves differently here than a browser.
-        // }
+            osmdInstance.Sheet.Transpose = 0;
+            osmdInstance.updateGraphic();
+            osmdInstance.render();
+        }
         // there were reports that await could help here, but render isn't a synchronous function, and it seems to work. see #932
     } catch (ex) {
         debug("renderError: " + ex);
