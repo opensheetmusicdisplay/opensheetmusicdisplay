@@ -10,6 +10,12 @@ export class TransposeCalculator implements ITransposeCalculator {
     private static keyMapping: number[] = [0, -5, 2, -3, 4, -1, 6, 1, -4, 3, -2, 5];
     private static noteEnums: NoteEnum[] = [NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B];
     public transposePitch(pitch: Pitch, currentKeyInstruction: KeyInstruction, halftones: number): Pitch {
+        if (halftones === 0) {
+            return pitch;
+            // this fixes chord symbols changing when no transposition was requested (Transpose = 0),
+            //   e.g. OSMD_function_test_chord_symbols measure 2 showed D#7 instead of Eb7,
+            //   just because sharps fit the key signature better.
+        }
 
         let transposedFundamentalNote: NoteEnum = NoteEnum.C;
         let transposedOctave: number = 0;
