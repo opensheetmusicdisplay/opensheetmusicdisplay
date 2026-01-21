@@ -66,8 +66,8 @@ able to add svg node id+class to stem (merged vexflow 4.x)
 Save and restore noteheads (e.g. slash noteheads) in reset()
 Fix stem/flag pixel alignment (#1593): adjust flag X position to align with stem edge, extend stem to reach flag's height / connecting point
 preFormat() and getBoundingBox(): add paddingRight variable to allow for custom right padding (e.g. for long lyrics below note)
-allow notehead y_shift without
 open group for ledger lines (SVG)
+allow notehead y_shift without shifting stem (stem_up_y_shift)
 
 staverepetition.js (fixed vexflow 4):
 add TO_CODA enum to type() and draw()
