@@ -646,6 +646,14 @@ export class StaveNote extends StemmableNote {
       ys.baseY += halfLineSpacing * this.stem_direction;
       minY = Math.min(ys.topY, ys.baseY);
       maxY = Math.max(ys.topY, ys.baseY);
+      // VexFlowPatch: Account for stem extension to flag (#1593).
+      //   For upward stems with flags, drawFlag() extends the stem by flagYOffset (2 pixels).
+      //   We need to include this in the bounding box.
+      const shouldRenderFlag = this.beam === null && this.renderFlag;
+      if (this.glyph.flag && shouldRenderFlag && this.stem_direction === Stem.UP) {
+        const flagYOffset = 2; // same magic number as in drawFlag()
+        minY -= flagYOffset;
+      }
     } else {
       minY = null;
       maxY = null;
@@ -1185,39 +1193,49 @@ export class StaveNote extends StemmableNote {
       const noteStemHeight = stem.getHeight();
       const stemDirection = this.getStemDirection();
       // VexFlowPatch: Adjust flag X position to align with stem edge (#1593).
-      //   The stem is drawn centered at getStemX() with width Stem.WIDTH,
-      //   so we shift the flag by half the stem width in the stem direction
-      //   to align the flag edge with the stem edge.
+      //   The stem is drawn centered at getStemX() with width Stem.WIDTH.
+      //   Both upstem and downstem flag glyphs have their stem-connection part on the LEFT
+      //   edge and curve to the RIGHT, so we always shift the flag RIGHT by half the stem
+      //   width to align the flag's left edge with the stem's right edge.
       const stemX = this.getStemX();
-      const flagX = stemX + (Stem.WIDTH / 2) * stemDirection;
+      const flagX = stemX + Stem.WIDTH / 2;
       const flagYOffset = 2; // FIXME: Vexflow magic number. already noted FIXME in original vexflow.
       const flagY = stemDirection === Stem.DOWN
         // Down stems have flags on the left
         ? y_top - noteStemHeight + flagYOffset
         // Up stems have flags on the left.
-        : y_bottom - noteStemHeight - flagYOffset;
+        : y_bottom - noteStemHeight - flagYOffset; // we don't use the offset for downstem flags currently
 
-      // VexFlowPatch: Extend stem to reach the flag's render origin (#1593).
+      // VexFlowPatch: Extend stem to reach the flag's stem-connection point (#1593).
       //   The flag is positioned 2 pixels beyond the stem tip (magic number +/-2 offset in vexflow).
       //   The flag glyph extends FROM flagY in the stem direction (downward for upstem, upward for downstem),
       //   so we just need to extend the stem to reach flagY to close the gap.
-      //   note: for stem-to-notehead junctions without flags, the minimal overhang/pixel seems to be an aliasing issue,
-      //     resolution likely too low to fix (not clear though).
       const stemTipY = stemDirection === Stem.DOWN
         ? y_top - noteStemHeight
         : y_bottom - noteStemHeight;
-      // Extend stem from its tip to the flag's render origin (flagY).
-      //   applyStyle and restoreStyle only matter if a stem style exists (only then restoreStyle calls ctx.restore()).
-      //   We pass `|| false` to avoid the default parameter falling back to this.getStyle() in restoreStyle() when stemStyle is undefined.
-      ctx.save(); // to un-apply setLineWidth later
-      this.applyStyle(ctx, this.getStemStyle() || false);
-      ctx.beginPath();
-      ctx.setLineWidth(Stem.WIDTH);
-      ctx.moveTo(stemX, stemTipY);
-      ctx.lineTo(stemX, flagY);
-      ctx.stroke();
-      this.restoreStyle(ctx, this.getStemStyle() || false); // un-apply stem style
-      ctx.restore(); // un-apply setLineWidth
+      //   note: this makes the downwards stem about 0.3 pixels/steps too long, but we can only go full-pixel steps here.
+      //     and if we subtract 1 pixel for the downwards stem, the flag reaches further than the stem, which looks worse.
+      //     Upstem flag glyph (v54): edge starts ~0.14px BELOW flagY (glyph y=-5)
+      //     Downstem flag glyph (v9a): edge starts ~0.11px ABOVE flagY (glyph y=4)
+      //   note: for stem-to-notehead junctions without flags, the pixel overhang is even more minor,
+      //     and likewise the pixel step issue seems to prevent further improvement
+
+      // extend stem to extend to same height as flag
+      //   (only for upwards stem, for downwards stem we shifted and rotated the glyph instead, see tools folder)
+      if (stemDirection === Stem.UP) {
+        stem.y_top = stemTipY;
+        //   applyStyle and restoreStyle only matter if a stem style exists (only then restoreStyle calls ctx.restore()).
+        //   We pass `|| false` to avoid the default parameter falling back to this.getStyle() in restoreStyle() when stemStyle is undefined.
+        ctx.save(); // to un-apply setLineWidth later
+        this.applyStyle(ctx, this.getStemStyle() || false);
+        ctx.beginPath();
+        ctx.setLineWidth(Stem.WIDTH);
+        ctx.moveTo(stemX, stemTipY);
+        ctx.lineTo(stemX, flagY);
+        ctx.stroke();
+        this.restoreStyle(ctx, this.getStemStyle() || false); // un-apply stem style
+        ctx.restore(); // un-apply setLineWidth
+      }
 
       // Draw the Flag
       ctx.openGroup('flag', null, { pointerBBox: true });

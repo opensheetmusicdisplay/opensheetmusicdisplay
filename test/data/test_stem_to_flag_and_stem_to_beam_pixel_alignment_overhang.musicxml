@@ -2,13 +2,12 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="4.0">
   <work>
-    <work-title>test_stem_notehead_and_flag_pixel_overhang</work-title>
+    <work-title>test_stem_to_flag_and_stem_to_beam_pixel_alignment_overhang</work-title>
     </work>
   <identification>
-    <creator type="composer">Composer / arranger</creator>
     <encoding>
       <software>MuseScore Studio 4.6.5</software>
-      <encoding-date>2026-01-20</encoding-date>
+      <encoding-date>2026-01-21</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -17,8 +16,6 @@
       </encoding>
     <miscellaneous>
       <miscellaneous-field name="creationDate">2026-01-20</miscellaneous-field>
-      <miscellaneous-field name="platform">Microsoft Windows</miscellaneous-field>
-      <miscellaneous-field name="subtitle">Subtitle</miscellaneous-field>
       </miscellaneous>
     </identification>
   <defaults>
@@ -70,10 +67,6 @@
     <word-font font-family="Edwin" font-size="10"/>
     <lyric-font font-family="Edwin" font-size="10"/>
     </defaults>
-  <credit page="1">
-    <credit-type>title</credit-type>
-    <credit-words default-x="600.241935" default-y="1611.210312" justify="center" valign="top" font-size="22">test_stem_notehead_and_flag_pixel_overhang</credit-words>
-    </credit>
   <part-list>
     <score-part id="P1">
       <part-name>Piano</part-name>
@@ -105,10 +98,10 @@
       <attributes>
         <divisions>2</divisions>
         <key>
-          <fifths>-3</fifths>
+          <fifths>0</fifths>
           </key>
         <time>
-          <beats>3</beats>
+          <beats>4</beats>
           <beat-type>4</beat-type>
           </time>
         <clef>
@@ -116,18 +109,7 @@
           <line>2</line>
           </clef>
         </attributes>
-      <note default-x="118.07" default-y="-5">
-        <pitch>
-          <step>E</step>
-          <alter>-1</alter>
-          <octave>5</octave>
-          </pitch>
-        <duration>2</duration>
-        <voice>1</voice>
-        <type>quarter</type>
-        <stem>down</stem>
-        </note>
-      <note default-x="349.88" default-y="-30">
+      <note default-x="80.21" default-y="-30">
         <pitch>
           <step>G</step>
           <octave>4</octave>
@@ -135,18 +117,43 @@
         <duration>1</duration>
         <voice>1</voice>
         <type>eighth</type>
-        <stem>up</stem>
+        <stem>down</stem>
         </note>
-      <note default-x="504.42" default-y="-20">
-        <rest/>
+      <note default-x="198.59" default-y="-25">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+          </pitch>
         <duration>1</duration>
         <voice>1</voice>
         <type>eighth</type>
+        <stem>up</stem>
         </note>
-      <note default-x="658.96" default-y="-25">
+      <note default-x="316.96" default-y="-35">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+        <beam number="1">begin</beam>
+        </note>
+      <note default-x="435.34" default-y="-25">
         <pitch>
           <step>A</step>
-          <alter>-1</alter>
+          <octave>4</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+        <beam number="1">end</beam>
+        </note>
+      <note default-x="553.71" default-y="-20">
+        <pitch>
+          <step>B</step>
           <octave>4</octave>
           </pitch>
         <duration>1</duration>
@@ -155,16 +162,26 @@
         <stem>up</stem>
         <beam number="1">begin</beam>
         </note>
-      <note default-x="813.49" default-y="-30">
+      <note default-x="672.09" default-y="-10">
         <pitch>
-          <step>G</step>
-          <octave>4</octave>
+          <step>D</step>
+          <octave>5</octave>
           </pitch>
         <duration>1</duration>
         <voice>1</voice>
         <type>eighth</type>
         <stem>up</stem>
         <beam number="1">end</beam>
+        </note>
+      <note default-x="790.47" default-y="-5">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
