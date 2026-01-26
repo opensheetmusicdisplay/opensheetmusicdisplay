@@ -1,3 +1,23 @@
+## [1.9.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.3...1.9.4) (2026-01-19)
+
+
+### Bug Fixes
+
+* **Accent:** Fix unnecessary spacing being added on notes with accents, to not increase spacing to next note ([de0a9c8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/de0a9c83c299b1dc5f8f802c72e88ea335445a26))
+* **Accidentals:** Fix alternating naturals with sharps or flats not always showing naturals. Fix some unnecessary accidentals shown elsewhere ([#1564](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1564)) ([ac14c4a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ac14c4ac657b145e76691dceb43bbceff4b08e96))
+* **Beams:** Fix beams changing on re-render (e.g. changing slope -> render() not idempotent) ([#1636](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1636), [#1594](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1594)) ([1848fda](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1848fdaf5cab3c5df7562c9427dddccb11893afa))
+* **Crescendo/Decrescendo:** Fix overlaps and wrong end.x in multi-staff scores ([#1477](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1477)) ([088bb8a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/088bb8af3ac72610e5ec230480b4b60d1d292abe))
+* **Tuplet:** Fix some horizontal misalignment of multi-voice tuplet notes with simultaneous notes due to denominator/tick fraction differences (PR [#1631](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1631)) ([8497ce7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8497ce70aac67ccf5dcdc7e474429220c984f322))
+* **Words:** Fix words direction not rendered when first staff/instrument invisible/hidden ([#1621](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1621)) ([793836e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/793836ec359d6d4ea21528b72f1f2efa3684c420))
+
+
+### Features
+
+* **Mxl:** Able to osmd.load() an mxl file blob ([#1629](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1629)) ([a595712](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a595712d2dc345f0e6020170a18098a2b4438269))
+* **Notehead None:** Make note(head) invisible when notehead='none' given in XML (PR [#1633](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1633)) ([1f0319c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1f0319c216a44adc2a472c9da23a52a0b72096a9))
+
+
+
 ## [1.9.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.2...1.9.3) (2025-11-24)
 
 

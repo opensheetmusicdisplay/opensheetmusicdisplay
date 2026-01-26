@@ -15,6 +15,7 @@ respect modifier.y_shift (y_shift affects y position of rendering)
 breath mark support
 
 beam.js (custom addition):
+fix beam slopes changing on each re-render (render() call)
 add flat_beams, flat_beam_offset, flat_beam_offset_per_beam render_option (fixed in vexflow 4)
 able to add svg node id+class to beam (not yet in vexflow 4)
 

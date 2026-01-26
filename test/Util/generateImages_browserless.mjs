@@ -3,6 +3,7 @@ import FS from "fs";
 import jsdom from "jsdom";
 //import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
 import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
+// for debugging, use opensheetmusicdisplay.min.js, created by npm run build:webpack-dev
 /*
   Render each OSMD sample, grab the generated images, and
   dump them into a local directory as PNG or SVG files.
@@ -236,6 +237,9 @@ async function init () {
     });
     // for more options check OSMDOptions.ts
 
+    // initialize transposing. necessary for using osmd.Sheet.Transpose and osmd.Sheet.Instruments[i].Transpose
+    osmdInstance.TransposeCalculator = new OSMD.TransposeCalculator();
+
     // you can set finer-grained rendering/engraving settings in EngravingRules:
     // osmdInstance.EngravingRules.TitleTopDistance = 5.0 // 5.0 is default
     //   (unless in osmdTestingMode, these will be reset with drawingParameters default)
@@ -328,6 +332,28 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     debug("xml loaded", DEBUG);
     try {
         osmdInstance.render();
+        const isTestTransposingAccidentals = sampleFilename.includes("test_transposing_accidentals_1383");
+        const isTestTransposingCsharpMajorToCAndBack = sampleFilename.includes("test_transposing_csharp_major_to_c_and_back_to_csharp");
+
+        if (isTestTransposingAccidentals) {
+            // transpose back and forth to make sure that doesn't change accidentals (see #1383)
+            osmdInstance.Sheet.Transpose = 1;
+            osmdInstance.updateGraphic();
+            osmdInstance.render();
+
+            osmdInstance.Sheet.Transpose = 0;
+            osmdInstance.updateGraphic();
+            osmdInstance.render();
+        }
+        if (isTestTransposingCsharpMajorToCAndBack) {
+            osmdInstance.Sheet.Transpose = -1;
+            osmdInstance.updateGraphic();
+            osmdInstance.render();
+
+            osmdInstance.Sheet.Transpose = 0;
+            osmdInstance.updateGraphic();
+            osmdInstance.render();
+        }
         // there were reports that await could help here, but render isn't a synchronous function, and it seems to work. see #932
     } catch (ex) {
         debug("renderError: " + ex);
@@ -458,10 +484,19 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestAlignRests = sampleFilename.includes("alignrests");
     const isTestHeavyBarline = sampleFilename.includes("test_barline_heavy-heavy_mid_score");
     const isTestTupletRatioed = sampleFilename.includes("test_tuplet_ratioed");
+    const isTestDrawFromMeasureNumber9ClefChange = sampleFilename.includes("test_drawFromMeasureNumber_9_respect_earlier_clef_changes");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
     if (isTestEndClefStaffEntryBboxes) {
         options.drawBoundingBoxString = "VexFlowStaffEntry";
         options.fileNameAddition = "bbox" + options.drawBoundingBoxString + "_";
+    }
+    let drawFromMeasureNumber = 1;
+    let drawUpToMeasureNumber = Number.MAX_SAFE_INTEGER;
+    if (isFunctionTestDrawingRange) {
+        drawFromMeasureNumber = 9;
+        drawUpToMeasureNumber = 12;
+    } else if (isTestDrawFromMeasureNumber9ClefChange) {
+        drawFromMeasureNumber = 9;
     }
     osmdInstance.setOptions({
         autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
@@ -470,8 +505,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         coloringSetCustom: isFunctionTestAutoColoring ? ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"] : undefined,
         colorStemsLikeNoteheads: isFunctionTestAutoColoring,
         drawingParameters: defaultOrCompactTightMode, // note: default resets all EngravingRules. could be solved differently
-        drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
-        drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
+        drawFromMeasureNumber: drawFromMeasureNumber,
+        drawUpToMeasureNumber: drawUpToMeasureNumber,
         newSystemFromXML: isFunctionTestSystemAndPageBreaks,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks,
@@ -550,13 +585,27 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
 
     const isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
     const isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
-    if (isTestOctaveShiftInvisibleInstrument) {
+    const isTestWordsDirectionLostWhenFirstInstrumentInvisible = sampleFilename.includes("test_words_direction_lost_when_first_instrument_invisible");
+    const isTestTransposeEnharmonic9 = sampleFilename.includes("test_transpose_enharmonic_9");
+    const isTestTransposingCsharpMajorToC = sampleFilename.includes("test_transposing_csharp_major_to_c");
+
+    if (isTestOctaveShiftInvisibleInstrument ||
+        isTestWordsDirectionLostWhenFirstInstrumentInvisible
+    ) {
         osmdInstance.Sheet.Instruments[0].Visible = false;
     }
     if (isTestInvisibleMeasureNotAffectingLayout) {
         if (osmdInstance.Sheet.Instruments[1]) { // some systems can't handle ?. in this script (just a safety check anyways)
             osmdInstance.Sheet.Instruments[1].Visible = false;
         }
+    }
+    if (isTestTransposeEnharmonic9) {
+        osmdInstance.Sheet.Transpose = 9;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingCsharpMajorToC) {
+        osmdInstance.Sheet.Transpose = -1;
+        osmdInstance.updateGraphic();
     }
 
     return options;

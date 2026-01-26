@@ -189,7 +189,7 @@ export class TemposCalculator implements IAfterSheetReadingModule {
             }
         }
         musicSheet.TimestampSortedTempoExpressionsList = ExpressionsList;
-        if (ExpressionsList[0]) {
+        if (ExpressionsList[0]?.InstantaneousTempo) {
             musicSheet.DefaultStartTempoInBpm = ExpressionsList[0].InstantaneousTempo.TempoInBpm;
         }
     }

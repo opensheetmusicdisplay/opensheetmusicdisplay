@@ -519,6 +519,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         voltaType = VF.Volta.type.BEGIN;
                     }
                     break;
+                case AlignmentType.Discontinue:
+                    if (this.parentSourceMeasure.beginsRepetitionEnding()) {
+                        // don't add MID volta since BEGIN was already added
+                        return;
+                    }
+                    // similar to type End, but without the downward jog/line at the right end
+                    voltaType = VF.Volta.type.MID;
+                    break;
                 case AlignmentType.End:
                     if (this.parentSourceMeasure.beginsRepetitionEnding()) {
                         //voltaType = VF.Volta.type.BEGIN_END;
@@ -527,6 +535,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     } else {
                         voltaType = VF.Volta.type.END;
                     }
+                    break;
+                case AlignmentType.Mid:
+                    voltaType = VF.Volta.type.MID;
                     break;
                 default:
                     break;
@@ -1402,10 +1413,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     // if denominator === 0, addTickable() below goes into an infinite loop.
                     // continue; // previous solution, but can lead to valid notes skipped, further problems, see #1073
                 }
-                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
-                    // GhostNote, don't add modifiers like in-measure clefs
-                    this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
-                    continue;
+
+                // Fix tick values for tuplet notes to ensure cross-voice alignment.
+                // VexFlow calculates ticks based on note type and time-modification, but when
+                // different voices use different normal-type values in their tuplets, the calculated
+                // ticks can differ even for notes at the same timestamp. We use graphicalNoteLength
+                // (which represents the actual musical duration) to calculate correct tick values.
+                if (voiceEntry.notes.length > 0 && voiceEntry.notes[0].sourceNote) {
+                    const sourceNote: Note = voiceEntry.notes[0].sourceNote;
+                    if (sourceNote.NoteTuplet) {
+                        const graphicalLength: Fraction = voiceEntry.notes[0].graphicalNoteLength;
+                        // Calculate ticks using VexFlow Fraction to preserve precision.
+                        // graphicalLength.RealValue is the note length as a fraction of a whole note.
+                        // VF.RESOLUTION (e.g., 16384) is the number of ticks for a whole note.
+                        // We use Fraction arithmetic to avoid floating-point precision issues.
+                        const vfTicks: VF.Fraction = vexFlowVoiceEntry.vfStaveNote.getTicks();
+                        vfTicks.numerator = graphicalLength.Numerator * VF.RESOLUTION;
+                        vfTicks.denominator = graphicalLength.Denominator;
+                        // Simplify the fraction to reduce large numbers
+                        vfTicks.simplify();
+                    }
                 }
 
                 // check for in-measure clefs:
@@ -1414,13 +1441,24 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 //if (isMainVoice) {
                 const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
                 if (vfse && vfse.vfClefBefore) {
+                    if (voiceEntry.notes[0] && !voiceEntry.notes[0].sourceNote.PrintObject) {
+                        const clefColor: string = this.rules.DefaultColorMusic || "#000000";
+                        // need to cast to any because ClefNote actually extends Note, which extends Tickable, which extends Element,
+                        //   which has setStyle. But in our definitions, Tickable doesn't implement anything, so it doesn't have setStyle.
+                        (vfse.vfClefBefore as any).setStyle({ fillStyle: clefColor, strokeStyle: clefColor });
+                    }
                     // add clef as NoteSubGroup so that we get modifier layouting
                     const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
-                    // The cast is necesary because...vexflow -> see types
-                    if (vexFlowVoiceEntry.vfStaveNote.getCategory && vexFlowVoiceEntry.vfStaveNote.getCategory() === "stavenotes") {
-                        // GhostNotes and other StemmableNotes don't have this function
-                        (vexFlowVoiceEntry.vfStaveNote as VF.StaveNote).addModifier(0, clefModifier);
+                    const vfStaveNote: any = vexFlowVoiceEntry.vfStaveNote;
+                    if (vfStaveNote && typeof vfStaveNote.addModifier === "function") {
+                        vfStaveNote.addModifier(0, clefModifier);
                     }
+                }
+
+                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
+                    // GhostNote: still allow in-measure clefs on invisible notes, but skip other modifiers.
+                    this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
+                    continue;
                 }
 
                 // add fingering

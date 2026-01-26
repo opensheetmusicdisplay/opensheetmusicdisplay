@@ -82,7 +82,20 @@ export class AccidentalCalculator {
                     this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
                     this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.AccidentalHalfTones);
                 } else if (pitch.Accidental !== AccidentalEnum.NONE) {
-                    this.currentInMeasureNoteAlterationsDict.remove(pitchKey);
+                    // explicit accidental that matches key signature (or no key sig for this pitch)
+                    // Restore to key signature state or remove if not in key sig (#1564)
+                    if (this.keySignatureNoteAlterationsDict.containsKey(pitchKey)) {
+                        this.currentInMeasureNoteAlterationsDict.setValue(
+                            pitchKey,
+                            this.keySignatureNoteAlterationsDict.getValue(pitchKey)
+                        );
+                    } else {
+                        this.currentInMeasureNoteAlterationsDict.remove(pitchKey);
+                    }
+                } else {
+                    // pitch.Accidental === NONE: returning to natural state
+                    // Update dict so subsequent alterations are properly detected (#1564)
+                    this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.AccidentalHalfTones);
                 }
 
                 const inMeasureAlterationAccidental: AccidentalEnum = this.currentInMeasureNoteAlterationsDict.getValue(pitchKey);

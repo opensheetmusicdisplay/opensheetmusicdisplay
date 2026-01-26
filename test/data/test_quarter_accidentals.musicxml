@@ -99,6 +99,7 @@
       <note default-x="134.45" default-y="-40.00">
         <pitch>
           <step>E</step>
+		  <alter>0.5</alter>
           <octave>4</octave>
           </pitch>
         <duration>1</duration>
@@ -109,6 +110,7 @@
       <note default-x="180.44" default-y="-40.00">
         <pitch>
           <step>E</step>
+		  <alter>0.5</alter>
           <octave>4</octave>
           </pitch>
         <duration>1</duration>
@@ -137,6 +139,7 @@
       <note default-x="61.26" default-y="-35.00">
         <pitch>
           <step>F</step>
+		  <alter>-0.5</alter>
           <octave>4</octave>
           </pitch>
         <duration>1</duration>
@@ -147,6 +150,7 @@
       <note default-x="107.25" default-y="-35.00">
         <pitch>
           <step>F</step>
+		  <alter>-0.5</alter>
           <octave>4</octave>
           </pitch>
         <duration>1</duration>
