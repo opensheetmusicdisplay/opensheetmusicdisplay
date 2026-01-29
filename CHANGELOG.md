@@ -1,3 +1,16 @@
+## [1.9.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.4...1.9.5) (2026-01-29)
+
+
+### Bug Fixes
+
+* **Beams:** Fix beams not fully covering stem of last note (~1 px missing) ([#1593](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1593)) ([a03ce79](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a03ce79a6d5786b60dfd0da5fc80e01b9529dd4e))
+* **DrawFromMeasure:** Fix some clef changes not respected when starting to render from a later measure instead of first ([#1079](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1079)) (e.g. option drawFromMeasureNumber: 9) ([d62b2c5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d62b2c5ff863ed01ffab11918182803d24595260))
+* **Transposing:** Fix transposition from complex key signatures like c# major with >6 sharps/flats leading to unexpected key signature ([1b2aece](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1b2aece5d509b2a7582d7ec67085420d1ba64f50))
+* **Transposing:** Prefer sharps for transposing to sharp key signature and vice versa for flats ([#1345](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1345)). Prefer given accidental if it doesn't conflict with new keysignature (partly revert behavior change in recent fix for [#1639](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1639)) ([69506f8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/69506f85339bed8ef7e16ad0b83f7ec3c91dd574))
+* **Transposing:** Transposing back and forth doesn't change accidentals anymore ([#1639](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1639), [#1383](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1383)) (transposing back to original key signature keeps original accidentals) ([39796fe](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/39796fe5221a7715098f9f87cf29e3eaf7e6de4a))
+
+
+
 ## [1.9.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.3...1.9.4) (2026-01-19)
 
 
