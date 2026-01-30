@@ -282,8 +282,11 @@ select {
     margin-bottom: 20px;
   }
   #header{
-    order:-1;
+    order:-2;
     margin-top: 0%;
+  }
+  #versionDiv{
+    order:-1;
   }
   .portraitCollapsible.active:after {
     content: ' ';
@@ -357,9 +360,16 @@ select {
     top:79px;
   }
 
+  #versionDiv{
+    order:-1;
+    margin-top: 80px;
+    align-self: center;
+    font-size: 0.8em;
+    font-style: italic;
+  }
   #selectSampleContainer{
     position: relative;
-    margin-top: 100px;
+    margin-top: 0px;
     width: 50%;
     display: flex;
     justify-content: center;
