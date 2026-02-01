@@ -11,6 +11,11 @@ import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/Music
 import {EngravingRules} from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { Staff } from "../../../../src/MusicalScore/VoiceData/Staff";
 import { Instrument } from "../../../../src/MusicalScore/Instrument";
+import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import { VexFlowVoiceEntry } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
+import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
+import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
+import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
 
 describe("VexFlow Measure", () => {
 
@@ -42,6 +47,45 @@ describe("VexFlow Measure", () => {
       chai.expect(gms.MeasureList[0].length).to.equal(1);
       chai.expect(gms.MeasureList[0][0].staffEntries.length).to.equal(0);
       done();
+   });
+
+   // Non-regression test for grace note fingering positioning
+   // Before fix: baseFingeringXOffset was calculated across all notes in the staff entry,
+   // causing grace notes to have incorrect offsets based on collision with other grace notes
+   // at different horizontal positions. The fix calculates offsets per voice entry for grace notes.
+   it("Grace notes should have baseFingeringXOffset calculated per voice entry", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_grace_note_fingerings_position.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(
+         (_: {}) => {
+            osmd.render();
+
+            // Get the first measure and staff entry
+            const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+            const staffEntry: GraphicalStaffEntry = gm.staffEntries[0];
+
+            // Get grace voice entries (each containing a single grace note)
+            const graceVoiceEntries: GraphicalVoiceEntry[] = staffEntry.graphicalVoiceEntries.filter(
+               (gve: VexFlowVoiceEntry) => gve.parentVoiceEntry?.IsGrace
+            );
+            chai.expect(graceVoiceEntries.length).to.equal(2);
+
+            // Each grace note is alone in its voice entry, so baseFingeringXOffset should be 0.
+            // Before the fix, the second grace note had offset=1 due to collision detection
+            // with the first grace note (which is at a different horizontal position).
+            for (const gve of graceVoiceEntries) {
+               for (const note of gve.notes) {
+                  chai.expect(note.baseFingeringXOffset).to.equal(0,
+                     "Single grace notes should have baseFingeringXOffset=0");
+               }
+            }
+
+            done();
+         },
+         done
+      );
    });
 
 });
