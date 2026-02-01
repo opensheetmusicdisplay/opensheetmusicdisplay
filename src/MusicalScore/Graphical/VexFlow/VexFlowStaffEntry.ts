@@ -106,17 +106,37 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
 
     // should be called after VexFlowConverter.StaveNote
     public setModifierXOffsets(): void {
-        let notes: GraphicalNote[] = [];
+        // Grace notes are at different horizontal positions than other notes,
+        // so we calculate collision offsets separately for each grace note voice entry.
+        // Non-grace notes at the same timestamp share the same X position, so they're grouped together.
+        const nonGraceNotes: GraphicalNote[] = [];
+
         for (const gve of this.graphicalVoiceEntries) {
-            notes = notes.concat(gve.notes);
+            const isGrace: boolean = gve.parentVoiceEntry?.IsGrace ?? false;
+            if (isGrace) {
+                // Calculate offsets only within this grace note voice entry
+                const graceStaffLines: number[] = gve.notes.map(n => n.staffLine);
+                const graceStringOffsets: number[] = this.calculateModifierXOffsets(graceStaffLines, 1);
+                const graceFingeringOffsets: number[] = this.calculateModifierXOffsets(graceStaffLines, 0.5);
+                gve.notes.forEach((note, i) => {
+                    note.baseFingeringXOffset = graceFingeringOffsets[i];
+                    note.baseStringNumberXOffset = graceStringOffsets[i];
+                });
+            } else {
+                nonGraceNotes.push(...gve.notes);
+            }
         }
-        const staffLines: number[] = notes.map(n => n.staffLine);
-        const stringNumberOffsets: number[] = this.calculateModifierXOffsets(staffLines, 1);
-        const fingeringOffsets: number[] = this.calculateModifierXOffsets(staffLines, 0.5);
-        notes.forEach((note, i) => {
-            note.baseFingeringXOffset = fingeringOffsets[i];
-            note.baseStringNumberXOffset = stringNumberOffsets[i];
-        });
+
+        // Calculate offsets for all non-grace notes together (they share the same X position)
+        if (nonGraceNotes.length > 0) {
+            const staffLines: number[] = nonGraceNotes.map(n => n.staffLine);
+            const stringNumberOffsets: number[] = this.calculateModifierXOffsets(staffLines, 1);
+            const fingeringOffsets: number[] = this.calculateModifierXOffsets(staffLines, 0.5);
+            nonGraceNotes.forEach((note, i) => {
+                note.baseFingeringXOffset = fingeringOffsets[i];
+                note.baseStringNumberXOffset = stringNumberOffsets[i];
+            });
+        }
     }
 
     /**

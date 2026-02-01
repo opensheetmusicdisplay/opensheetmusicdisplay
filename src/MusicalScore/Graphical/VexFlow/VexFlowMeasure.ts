@@ -1632,6 +1632,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
             let offsetX: number = this.rules.FingeringOffsetX;
             let modifierPosition: number; // VF.Stavemodifier.Position
+            // baseFingeringXOffset is now calculated per voice entry for grace notes
+            // (in VexFlowStaffEntry.setModifierXOffsets), so it correctly handles
+            // collision avoidance within each chord without cross-chord interference.
             switch (fingeringPosition) {
                 default:
                 case PlacementEnum.Left:
