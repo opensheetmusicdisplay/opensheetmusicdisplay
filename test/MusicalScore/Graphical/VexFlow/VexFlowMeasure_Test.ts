@@ -50,10 +50,10 @@ describe("VexFlow Measure", () => {
    });
 
    // Non-regression test for grace note fingering positioning
-   // Before fix: fingerings on grace notes were incorrectly shifted due to chord collision offset
-   // being applied, causing e.g. the second grace note's fingering to appear above the first grace note.
-   // The fix skips applying baseFingeringXOffset for grace notes since they're already horizontally separated.
-   it("Grace note fingerings should render correctly without chord collision offset", (done: Mocha.Done) => {
+   // Before fix: baseFingeringXOffset was calculated across all notes in the staff entry,
+   // causing grace notes to have incorrect offsets based on collision with other grace notes
+   // at different horizontal positions. The fix calculates offsets per voice entry for grace notes.
+   it("Grace notes should have baseFingeringXOffset calculated per voice entry", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_grace_note_fingerings_position.musicxml");
       const div: HTMLElement = TestUtils.getDivElement(document);
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -62,42 +62,24 @@ describe("VexFlow Measure", () => {
          (_: {}) => {
             osmd.render();
 
-            // Get the first measure
+            // Get the first measure and staff entry
             const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
-            chai.expect(gm).to.not.be.undefined;
-
-            // Get the first staff entry which should contain grace notes
             const staffEntry: GraphicalStaffEntry = gm.staffEntries[0];
-            chai.expect(staffEntry).to.not.be.undefined;
 
-            // Check that we have grace voice entries with fingerings
+            // Get grace voice entries (each containing a single grace note)
             const graceVoiceEntries: GraphicalVoiceEntry[] = staffEntry.graphicalVoiceEntries.filter(
                (gve: VexFlowVoiceEntry) => gve.parentVoiceEntry?.IsGrace
             );
             chai.expect(graceVoiceEntries.length).to.equal(2);
 
-            // Verify each grace note has a fingering defined in the source
-            let fingeringsFound: number = 0;
+            // Each grace note is alone in its voice entry, so baseFingeringXOffset should be 0.
+            // Before the fix, the second grace note had offset=1 due to collision detection
+            // with the first grace note (which is at a different horizontal position).
             for (const gve of graceVoiceEntries) {
                for (const note of gve.notes) {
-                  if (note.sourceNote.Fingering) {
-                     fingeringsFound++;
-                  }
+                  chai.expect(note.baseFingeringXOffset).to.equal(0,
+                     "Single grace notes should have baseFingeringXOffset=0");
                }
-            }
-            chai.expect(fingeringsFound).to.equal(2);
-
-            // Verify the vfStaveNote modifiers contain the fingerings
-            // This ensures the fingerings were actually added to the VexFlow notes
-            for (const gve of graceVoiceEntries as VexFlowVoiceEntry[]) {
-               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-               const modifiers: any[] = (gve.vfStaveNote as any).getModifiers();
-               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-               const fingeringModifiers: any[] = modifiers.filter(
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (m: any) => m.getCategory() === "frethandfinger"
-               );
-               chai.expect(fingeringModifiers.length).to.be.greaterThan(0);
             }
 
             done();
