@@ -114,29 +114,26 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         for (const gve of this.graphicalVoiceEntries) {
             const isGrace: boolean = gve.parentVoiceEntry?.IsGrace ?? false;
             if (isGrace) {
-                // Calculate offsets only within this grace note voice entry
-                const graceStaffLines: number[] = gve.notes.map(n => n.staffLine);
-                const graceStringOffsets: number[] = this.calculateModifierXOffsets(graceStaffLines, 1);
-                const graceFingeringOffsets: number[] = this.calculateModifierXOffsets(graceStaffLines, 0.5);
-                gve.notes.forEach((note, i) => {
-                    note.baseFingeringXOffset = graceFingeringOffsets[i];
-                    note.baseStringNumberXOffset = graceStringOffsets[i];
-                });
+                this.applyModifierOffsets(gve.notes);
             } else {
                 nonGraceNotes.push(...gve.notes);
             }
         }
 
-        // Calculate offsets for all non-grace notes together (they share the same X position)
-        if (nonGraceNotes.length > 0) {
-            const staffLines: number[] = nonGraceNotes.map(n => n.staffLine);
-            const stringNumberOffsets: number[] = this.calculateModifierXOffsets(staffLines, 1);
-            const fingeringOffsets: number[] = this.calculateModifierXOffsets(staffLines, 0.5);
-            nonGraceNotes.forEach((note, i) => {
-                note.baseFingeringXOffset = fingeringOffsets[i];
-                note.baseStringNumberXOffset = stringNumberOffsets[i];
-            });
+        this.applyModifierOffsets(nonGraceNotes);
+    }
+
+    private applyModifierOffsets(notes: GraphicalNote[]): void {
+        if (notes.length === 0) {
+            return;
         }
+        const staffLines: number[] = notes.map(n => n.staffLine);
+        const fingeringOffsets: number[] = this.calculateModifierXOffsets(staffLines, 0.5);
+        const stringNumberOffsets: number[] = this.calculateModifierXOffsets(staffLines, 1);
+        notes.forEach((note, i) => {
+            note.baseFingeringXOffset = fingeringOffsets[i];
+            note.baseStringNumberXOffset = stringNumberOffsets[i];
+        });
     }
 
     /**
