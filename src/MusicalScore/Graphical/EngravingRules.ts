@@ -505,6 +505,9 @@ export class EngravingRules {
     public NewPageAtXMLNewPageAttribute: boolean;
     /** Force OSMD to render only x measures per line/system, creating line breaks / system breaks. Disabled if set to 0. */
     public RenderXMeasuresPerLineAkaSystem: number;
+    /** When true, forces exactly RenderXMeasuresPerLineAkaSystem measures per line, ignoring width constraints.
+     * Only applies when RenderXMeasuresPerLineAkaSystem \u003e 0. Use with caution as measures may overlap if too narrow. Default false. */
+    public ForceRenderXMeasuresPerLineAkaSystem: boolean;
     public PageFormat: PageFormat;
     public PageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
     /** Whether dark mode is enabled. This is read-only, to set this, please use osmd.setOptions({darkMode: true}). */
@@ -951,6 +954,7 @@ export class EngravingRules {
         this.NewPageAtXMLNewPageAttribute = false;
         this.NewSystemAtXMLNewPageAttribute = false;
         this.RenderXMeasuresPerLineAkaSystem = 0;
+        this.ForceRenderXMeasuresPerLineAkaSystem = false;
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
         this.IgnoreBracketsWords = true;

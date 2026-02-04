@@ -137,7 +137,15 @@ export class MusicSystemBuilder {
             // When RenderXMeasuresPerLineAkaSystem is set, don't reserve space for next measure's instructions
             // (key/time signatures will appear at the start of the next line instead)
             const nextInstructionWidth: number = this.rules.RenderXMeasuresPerLineAkaSystem > 0 ? 0 : nextMeasureBeginInstructionWidth;
-            const measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextInstructionWidth < systemMaxWidth;
+            let measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextInstructionWidth < systemMaxWidth;
+
+            // When ForceRenderXMeasuresPerLineAkaSystem is enabled, force measures to fit until we reach the target count
+            if (this.rules.ForceRenderXMeasuresPerLineAkaSystem &&
+                this.rules.RenderXMeasuresPerLineAkaSystem > 0 &&
+                currentMeasureNumberInSystem < this.rules.RenderXMeasuresPerLineAkaSystem) {
+                measureFitsInSystem = true;
+            }
+
             const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && sourceMeasure.printNewPageXml;
             const impliedSystemBreak: boolean = doXmlPageBreak || // also create new system if doing page break
                 (this.rules.NewSystemAtXMLNewPageAttribute && sourceMeasure.printNewPageXml);
