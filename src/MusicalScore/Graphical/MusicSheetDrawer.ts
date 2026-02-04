@@ -355,6 +355,7 @@ export abstract class MusicSheetDrawer {
         if (!this.leadSheet) {
             for (const measureNumberLabel of musicSystem.MeasureNumberLabels) {
                 measureNumberLabel.SVGNode = this.drawLabel(measureNumberLabel, <number>GraphicalLayers.Notes);
+                (measureNumberLabel.SVGNode as SVGGElement)?.classList?.add("measure-number");
             }
         }
         for (const staffLine of musicSystem.StaffLines) {
