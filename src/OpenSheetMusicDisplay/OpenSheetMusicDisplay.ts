@@ -31,6 +31,7 @@ import { OctaveShift } from "../MusicalScore/VoiceData/Expressions/ContinuousExp
 import { GraphicalLyricEntry } from "../MusicalScore/Graphical/GraphicalLyricEntry";
 import { GraphicalChordSymbolContainer } from "../MusicalScore/Graphical/GraphicalChordSymbolContainer";
 import { MultiTempoExpression } from "../MusicalScore/VoiceData/Expressions/MultiTempoExpression";
+import { MidiExporter, MidiExportOptions } from "../MusicalScore/Export/MidiExporter";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -399,6 +400,34 @@ export class OpenSheetMusicDisplay {
             }
             // if we add CanvasVexFlowBackend exporting, rename function to export() or exportImages() again
         }
+    }
+
+    /**
+     * Export the loaded music sheet as a MIDI file.
+     * @param options Optional MIDI export options
+     * @returns Uint8Array containing the MIDI file data, or undefined if no sheet is loaded
+     */
+    public exportMIDI(options?: MidiExportOptions): Uint8Array | undefined {
+        if (!this.sheet) {
+            log.warn("[OSMD] exportMIDI(): No music sheet loaded.");
+            return undefined;
+        }
+        const exporter: MidiExporter = new MidiExporter(this.sheet, options);
+        return exporter.export();
+    }
+
+    /**
+     * Export the loaded music sheet as a MIDI file and trigger a download.
+     * @param filename Optional filename for the download (default: based on sheet title)
+     * @param options Optional MIDI export options
+     */
+    public exportMIDIDownload(filename?: string, options?: MidiExportOptions): void {
+        if (!this.sheet) {
+            log.warn("[OSMD] exportMIDIDownload(): No music sheet loaded.");
+            return;
+        }
+        const exporter: MidiExporter = new MidiExporter(this.sheet, options);
+        exporter.exportAndDownload(filename);
     }
 
     /** States whether the render() function can be safely called. */

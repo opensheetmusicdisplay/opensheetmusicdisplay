@@ -3,6 +3,7 @@ import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
 import * as jsPDF  from '../node_modules/jspdf/dist/jspdf.es.min';
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.umd.min';
 import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculator';
+import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
 
 /*jslint browser:true */
 (function () {
@@ -110,6 +111,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         selectPageSizes,
         printPdfBtns,
         darkModeBtn,
+        exportMidiBtn,
+        playMidiBtn,
         transpose,
         transposeBtn,
         versionDiv,
@@ -286,6 +289,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         printPdfBtns.push(document.getElementById("print-pdf-btn"));
         printPdfBtns.push(document.getElementById("print-pdf-btn-optional"));
         darkModeBtn = document.getElementById("dark-mode-btn");
+        exportMidiBtn = document.getElementById("export-midi-btn");
+        playMidiBtn = document.getElementById("play-midi-btn");
         transpose = document.getElementById('transpose');
         transposeBtn = document.getElementById('transpose-btn');
         versionDiv = document.getElementById('versionDiv');
@@ -533,6 +538,100 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                     darkMode: !osmd.EngravingRules.DarkModeEnabled // toggle to opposite of current value (on/off)
                 });
                 renderAndScrollBack();
+            }
+        }
+
+        if (exportMidiBtn) {
+            exportMidiBtn.onclick = function() {
+                if (openSheetMusicDisplay && openSheetMusicDisplay.Sheet) {
+                    console.log("[OSMD] Exporting MIDI...");
+                    openSheetMusicDisplay.exportMIDIDownload();
+                    console.log("[OSMD] MIDI export completed.");
+                } else {
+                    console.log("[OSMD] No sheet loaded to export.");
+                }
+            }
+        }
+
+        // MIDI Playback using SpessaSynth (single synth/sequencer instance)
+        var midiPlayer = {
+            audioContext: null,
+            synth: null,
+            sequencer: null,
+            isPlaying: false,
+            isInitialized: false
+        };
+
+        var WORKLET_PATH = "./resources/spessasynth_processor.min.js";
+        var SOUNDFONT_PATH = "./resources/GeneralUserGS.sf3";
+
+        // Initialize SpessaSynth once on first play
+        async function initSpessaSynth() {
+            if (midiPlayer.isInitialized) return;
+
+            console.log("[OSMD] Initializing SpessaSynth...");
+
+            // Create audio context and worklet
+            midiPlayer.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            await midiPlayer.audioContext.audioWorklet.addModule(WORKLET_PATH);
+
+            // Create synth
+            midiPlayer.synth = new WorkletSynthesizer(midiPlayer.audioContext);
+            midiPlayer.synth.connect(midiPlayer.audioContext.destination);
+
+            // Load soundfont
+            var sfResponse = await fetch(SOUNDFONT_PATH);
+            if (!sfResponse.ok) throw new Error("Failed to load SoundFont");
+            var sfData = await sfResponse.arrayBuffer();
+            await midiPlayer.synth.soundBankManager.addSoundBank(sfData, "main");
+
+            // Create sequencer
+            midiPlayer.sequencer = new Sequencer(midiPlayer.synth);
+            midiPlayer.sequencer.loopCount = 0;
+
+            // Handle song end
+            midiPlayer.sequencer.eventHandler.addEvent('songEnded', 'osmd-demo', function() {
+                midiPlayer.isPlaying = false;
+                if (playMidiBtn) playMidiBtn.textContent = "Play MIDI";
+                console.log("[OSMD] Playback finished.");
+            });
+
+            midiPlayer.isInitialized = true;
+            console.log("[OSMD] SpessaSynth ready!");
+        }
+
+        if (playMidiBtn) {
+            playMidiBtn.onclick = async function() {
+                if (!openSheetMusicDisplay || !openSheetMusicDisplay.Sheet) {
+                    console.log("[OSMD] No sheet loaded.");
+                    return;
+                }
+
+                if (midiPlayer.isPlaying) {
+                    midiPlayer.sequencer.pause();
+                    midiPlayer.isPlaying = false;
+                    playMidiBtn.textContent = "Play MIDI";
+                } else {
+                    playMidiBtn.textContent = "Loading...";
+                    try {
+                        if (!midiPlayer.isInitialized) await initSpessaSynth();
+                        await midiPlayer.audioContext.resume();
+
+                        var midiData = openSheetMusicDisplay.exportMIDI();
+                        if (!midiData) throw new Error("Failed to export MIDI");
+
+                        var midiBuffer = midiData.buffer.slice(midiData.byteOffset, midiData.byteOffset + midiData.byteLength);
+                        midiPlayer.sequencer.loadNewSongList([{ binary: midiBuffer }]);
+                        midiPlayer.sequencer.currentTime = 0;
+                        midiPlayer.sequencer.play();
+                        midiPlayer.isPlaying = true;
+                        playMidiBtn.textContent = "Stop MIDI";
+                    } catch (e) {
+                        console.error("[OSMD] Playback error:", e);
+                        alert("MIDI playback failed: " + e.message);
+                        playMidiBtn.textContent = "Play MIDI";
+                    }
+                }
             }
         }
 
