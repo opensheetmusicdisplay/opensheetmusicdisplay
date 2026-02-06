@@ -794,19 +794,15 @@ export class MidiExporter {
     /**
      * Convert pitch to MIDI note number
      * MIDI note 60 = Middle C = C4
-     * OSMD uses octave where middle C is octave 1
      */
     private pitchToMidiNote(note: Note): number {
         if (!note.Pitch) {
             return 60; // Default to middle C
         }
 
-        // Use the halfTone property which is already calculated
-        // halfTone in OSMD: fundamentalNote + (octave + 3) * 12 + accidentalHalfTones
-        // MIDI: C4 (middle C) = 60, which corresponds to OSMD octave 1
-        // OSMD stores halfTone as: fundamentalNote + (octave + 3) * 12
-        // So OSMD halfTone already gives us MIDI pitch directly
-        return note.halfTone;
+        // OSMD halfTone is an octave lower, so when creating the midi we kinda
+        // need to compensate!
+        return note.halfTone + 12;
     }
 
     /**
