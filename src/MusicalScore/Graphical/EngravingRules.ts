@@ -548,6 +548,10 @@ export class EngravingRules {
     /** Whether to always set preferred backend (WebGL or Plain) automatically, depending on browser and number of measures. */
     public AlwaysSetPreferredSkyBottomLineBackendAutomatically: boolean;
 
+    // Playback settings
+    /** Currently only used in audio player */
+    public UseInterpolatedTempoForAccelerandoEtc: boolean;
+
     constructor() {
         this.loadDefaultValues();
     }
@@ -974,6 +978,11 @@ export class EngravingRules {
         this.DisableWebGLInFirefox = true;
         this.DisableWebGLInSafariAndIOS = true;
         this.setPreferredSkyBottomLineBackendAutomatically();
+
+        // Playback
+        this.UseInterpolatedTempoForAccelerandoEtc = false; // wait for rit support etc. can also make
+        //   player features like syncing more difficult to implement.
+        //   Also, the end of an accelerando is usually not marked, so this makes it difficult to find an end timestamp.
 
         // this.populateDictionaries(); // these values aren't used currently
         try {
