@@ -496,7 +496,8 @@ export class SourceMeasure {
                 }
                 return true;
             }
-            if (instr.parentRepetition !== undefined && instr === instr.parentRepetition.startMarker && !instr.parentRepetition.FromWords) {
+            if (instr.parentRepetition !== undefined && instr === instr.parentRepetition.startMarker && !instr.parentRepetition.FromWords
+                && instr.type !== RepetitionInstructionEnum.None) {
                 return true;
             }
         }
