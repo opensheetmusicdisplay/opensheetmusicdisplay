@@ -324,9 +324,16 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                 cursor.next();
                 chai.expect(cursor.NotesUnderCursor().length).to.greaterThanOrEqual(1);
                 chai.expect(cursor.Iterator.currentTimeStamp.RealValue).to.equal(0);
+                // go past end of sheet if repetitions are ignored, which we don't do here (anymore). So, we should not reach the end here.
+                for (let i: number = 1; i <= 260; i++) {
+                    cursor.next();
+                }
+                chai.expect(cursor.Iterator.EndReached).to.equal(false);
                 // go past end of sheet
                 for (let i: number = 1; i <= 260; i++) {
-                    cursor.next(); // go past end of sheet: after 258 times in Clementi 36/1/1, the last timestamp is reached
+                    cursor.next();
+                    // go past end of sheet:
+                    //   after ~520 times (260 * 2) in Clementi 36/1/1, the last timestamp is reached
                 }
                 chai.expect(cursor.Iterator.EndReached).to.equal(true);
                 // try to go back again after going beyond end of sheet
