@@ -18,12 +18,9 @@ import {Note} from "./VoiceData/Note";
 import {VoiceEntry} from "./VoiceData/VoiceEntry";
 import log from "loglevel";
 import { TextAlignmentEnum } from "../Common/Enums/TextAlignment";
+import { PlaybackSettings } from "../Common/DataObjects/PlaybackSettings";
 
 // FIXME Andrea: Commented out some unnecessary/not-ported-yet code, have a look at (*)
-
-export class PlaybackSettings {
-    public rhythm: Fraction;
-}
 
 /**
  * This is the representation of a complete piece of sheet music.
