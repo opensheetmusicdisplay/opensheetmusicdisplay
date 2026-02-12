@@ -61,9 +61,25 @@ export class VexFlowMusicSystem extends MusicSystem {
 
         if (bottomMeasure) {
             renderInitialLine = true;
-            // create here the correct lines according to the given lineType.
-            (bottomMeasure as VexFlowMeasure).lineTo(topMeasure as VexFlowMeasure, VexFlowConverter.line(lineType, linePosition));
+            // Set bar types on both staves before creating connectors,
+            // so VexFlow's stave formatting is aware of the REPEAT_BEGIN barline.
             (bottomMeasure as VexFlowMeasure).addMeasureLine(lineType, linePosition);
+            if (vfTopMeasure) {
+                vfTopMeasure.addMeasureLine(lineType, linePosition, renderInitialLine);
+            }
+
+            // For begin repeat barlines on measures with begin instructions (clef, key, time signature),
+            // shift the StaveConnector past the begin instructions so it aligns with the repeat barline
+            // rather than drawing at the stave's leftmost x position.
+            let connectorXShift: number = 0;
+            if (lineType === SystemLinesEnum.BoldThinDots && linePosition === SystemLinePosition.MeasureBegin
+                && topMeasure.beginInstructionsWidth > 0) {
+                connectorXShift = vfTopMeasure.getVFStave().getModifierXShift(0);
+            }
+
+            // create here the correct lines according to the given lineType.
+            (bottomMeasure as VexFlowMeasure).lineTo(
+                topMeasure as VexFlowMeasure, VexFlowConverter.line(lineType, linePosition), connectorXShift);
             //Double repeat. VF doesn't have concept of double repeat. Need to add stave connector to begin of next measure
             if (lineType === SystemLinesEnum.DotsBoldBoldDots) {
                 const nextIndex: number = bottomMeasure.ParentStaffLine.Measures.indexOf(bottomMeasure) + 1;
@@ -74,8 +90,7 @@ export class VexFlowMusicSystem extends MusicSystem {
                     nextBottomMeasure.addMeasureLine(SystemLinesEnum.BoldThinDots, linePosition);
                 }
             }
-        }
-        if (vfTopMeasure) {
+        } else if (vfTopMeasure) {
             vfTopMeasure.addMeasureLine(lineType, linePosition, renderInitialLine);
         }
 

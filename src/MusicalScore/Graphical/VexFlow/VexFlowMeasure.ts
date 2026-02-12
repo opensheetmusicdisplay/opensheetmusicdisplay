@@ -1753,9 +1753,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param top
      * @param lineType
      */
-    public lineTo(top: VexFlowMeasure, lineType: any): void {
+    public lineTo(top: VexFlowMeasure, lineType: any, xShift: number = 0): void {
         const connector: VF.StaveConnector = new VF.StaveConnector(top.getVFStave(), this.stave);
         connector.setType(lineType);
+        if (xShift !== 0) {
+            connector.setXShift(xShift);
+        }
         this.connectors.push(connector);
     }
 
