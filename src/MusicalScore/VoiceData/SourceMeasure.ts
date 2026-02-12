@@ -488,6 +488,12 @@ export class SourceMeasure {
         for (let idx: number = 0, len: number = this.FirstRepetitionInstructions.length; idx < len; ++idx) {
             const instr: RepetitionInstruction = this.FirstRepetitionInstructions[idx];
             if (instr.type === RepetitionInstructionEnum.StartLine) {
+                // Skip virtual "overall repetition" StartLine markers (FromWords=true) that are created by RepetitionCalculator
+                //   for cursor/playback purposes - these should not force a visible repeat barline.
+                //   It just creates a virtual repetition, which basically means the whole piece is a repetition, repeated 0 times.
+                if (instr.parentRepetition !== undefined && instr.parentRepetition.FromWords) {
+                    continue;
+                }
                 return true;
             }
             if (instr.parentRepetition !== undefined && instr === instr.parentRepetition.startMarker && !instr.parentRepetition.FromWords) {
