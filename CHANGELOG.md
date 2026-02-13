@@ -1,3 +1,20 @@
+## [1.9.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.5...1.9.6) (2026-02-13)
+
+
+### Bug Fixes
+
+* **Cursor/Repetition:** Fix cursor.next() not respecting repetitions. Fix left repeat barline not respecting instructions like clef (shifted to left). Fix double thin barline after "to coda" etc (PR [#1644](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1644)) ([90f704b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/90f704b80f89b9083892baccff8a6e1c9b5aebdf))
+* **Demo/PDF:** Improve PDF export. Add SVG option. Fix invisible notes being visible, fix broken unicode characters (e.g. Chinese characters or Vietnamese accents) ([#1184](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1184), [#1296](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1296)) ([f097116](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f0971167ab3d01073acfbe968c6f9c27989287c2))
+* **Grace Notes:** Fix grace note fingering positioning for multiple grace notes with fingering (PR [#1642](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1642)) ([0204800](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/020480070d1b9c577dc16c708661e23b622a4256))
+
+
+### Features
+
+* **MeasureNumbers:** Add CSS class 'measure-number' to measure number labels (PR [#1643](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1643)) ([6fe46ae](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6fe46aea4702d848c2e79491455ac16b7507a97d))
+* **Repetition:** Add EngravingRule CursorIgnoreRepetitions (default false). Restores behavior of previous versions (cursor ignores repetitions) ([#1644](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1644)) ([6801c02](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6801c0275c5fc819012db35e8bef647ffd519c56))
+
+
+
 ## [1.9.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.4...1.9.5) (2026-01-29)
 
 
