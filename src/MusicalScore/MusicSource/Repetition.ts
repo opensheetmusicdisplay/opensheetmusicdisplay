@@ -19,7 +19,8 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
     /** If set to true, will skip the repetition during playback.
      * Note that you need to call PlaybackManager.recalculatePlaybackEntriesAndRepetitions() afterwards to skip repetitions during playback.
      * Also note that the better method is to set UserNumberOfRepetitions = 1 instead of SkipRepetition, this will also work for voltas.
-     * This can be set or disabled by the user/developer at any time. */
+     * This can be set or disabled by the user/developer at any time.
+     * Note that you can also set osmd.EngravingRules.CursorIgnoreRepetitions to skip all repetitions. */
     public SkipRepetition: boolean = false;
 
     /** How many times the repetition should be played. Standard for a repetition is 2, so setting it to 1 makes it not repeat.

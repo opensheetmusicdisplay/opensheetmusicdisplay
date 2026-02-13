@@ -413,7 +413,7 @@ export class MusicPartManagerIterator {
             if (!currentRepetition) { continue; }
             if (currentRepetition.BackwardJumpInstructions.indexOf(repetitionInstruction) > -1) {
                 if (this.getRepetitionIterationCount(currentRepetition) < currentRepetition.UserNumberOfRepetitions &&
-                    !currentRepetition.SkipRepetition) {
+                    !currentRepetition.SkipRepetition && !this.musicSheet.Rules.CursorIgnoreRepetitions) {
                     this.doBackJump(currentRepetition);
                     return;
                 }
@@ -451,7 +451,7 @@ export class MusicPartManagerIterator {
         }
     }
     private doBackJump(currentRepetition: Repetition): void {
-        if (currentRepetition.SkipRepetition) {
+        if (currentRepetition.SkipRepetition || this.musicSheet.Rules.CursorIgnoreRepetitions) {
             return;
         }
         this.currentMeasureIndex = currentRepetition.getBackwardJumpTarget();
