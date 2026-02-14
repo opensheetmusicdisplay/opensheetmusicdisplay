@@ -16,6 +16,10 @@ import { VexFlowVoiceEntry } from "../../../../src/MusicalScore/Graphical/VexFlo
 import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
+import { GraphicalOctaveShift } from "../../../../src/MusicalScore/Graphical/GraphicalOctaveShift";
+import { GraphicalMusicPage } from "../../../../src/MusicalScore/Graphical/GraphicalMusicPage";
+import { MusicSystem } from "../../../../src/MusicalScore/Graphical/MusicSystem";
+import { StaffLine } from "../../../../src/MusicalScore/Graphical/StaffLine";
 
 describe("VexFlow Measure", () => {
 
@@ -81,6 +85,50 @@ describe("VexFlow Measure", () => {
                      "Single grace notes should have baseFingeringXOffset=0");
                }
             }
+
+            done();
+         },
+         done
+      );
+   });
+
+   // Non-regression test for octave shift spanning 3+ systems.
+   // Before fix: the condition `i < systemsInBetweenCount - 1` compared a system ID against
+   // a count, causing graphicalEndAtMeasureEnd to never be set on intermediate systems when
+   // the octave shift started on system ID >= 1. The dashed line would stop at the last note
+   // instead of extending to the end of the measure.
+   it("Octave shift on intermediate system should have graphicalEndAtMeasureEnd set", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_octaveshift_multiline_grace_notes.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, {
+         autoResize: false,
+         newSystemFromXML: true,
+      });
+
+      osmd.load(score).then(
+         (_: {}) => {
+            osmd.render();
+
+            const musicPage: GraphicalMusicPage = osmd.GraphicSheet.MusicPages[0];
+            // System 0: no octave shift (measure 1)
+            // System 1: 8va starts (measure 2)
+            // System 2: intermediate (measure 3 with grace notes) - this is where the bug was
+            // System 3: 8va ends (measures 4-5)
+            chai.expect(musicPage.MusicSystems.length).to.be.greaterThanOrEqual(4,
+               "Score should have at least 4 systems for this test to be valid");
+
+            // The intermediate system (index 2) should have an octave shift
+            const intermediateSystem: MusicSystem = musicPage.MusicSystems[2];
+            const staffLine: StaffLine = intermediateSystem.StaffLines[0];
+            const octaveShifts: GraphicalOctaveShift[] = staffLine.OctaveShifts;
+
+            chai.expect(octaveShifts.length).to.equal(1,
+               "Intermediate system should have exactly one octave shift");
+
+            const shift: GraphicalOctaveShift = octaveShifts[0];
+            chai.expect(shift.endsOnDifferentStaffLine).to.be.true;
+            chai.expect(shift.graphicalEndAtMeasureEnd).to.be.true;
+            chai.expect(shift.endMeasure).to.not.be.undefined;
 
             done();
          },
