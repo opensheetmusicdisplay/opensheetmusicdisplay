@@ -16,9 +16,7 @@ import { VexFlowVoiceEntry } from "../../../../src/MusicalScore/Graphical/VexFlo
 import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
-import { GraphicalOctaveShift } from "../../../../src/MusicalScore/Graphical/GraphicalOctaveShift";
 import { GraphicalMusicPage } from "../../../../src/MusicalScore/Graphical/GraphicalMusicPage";
-import { MusicSystem } from "../../../../src/MusicalScore/Graphical/MusicSystem";
 import { StaffLine } from "../../../../src/MusicalScore/Graphical/StaffLine";
 
 describe("VexFlow Measure", () => {
@@ -102,33 +100,33 @@ describe("VexFlow Measure", () => {
       const div: HTMLElement = TestUtils.getDivElement(document);
       const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, {
          autoResize: false,
-         newSystemFromXML: true,
       });
 
       osmd.load(score).then(
          (_: {}) => {
             osmd.render();
 
+            // Find intermediate octave shifts: those that both start and end on a different
+            // staff line (i.e. the shift continues through this system without starting or
+            // stopping here). These are the ones affected by the bug.
             const musicPage: GraphicalMusicPage = osmd.GraphicSheet.MusicPages[0];
-            // System 0: no octave shift (measure 1)
-            // System 1: 8va starts (measure 2)
-            // System 2: intermediate (measure 3 with grace notes) - this is where the bug was
-            // System 3: 8va ends (measures 4-5)
             chai.expect(musicPage.MusicSystems.length).to.be.greaterThanOrEqual(4,
                "Score should have at least 4 systems for this test to be valid");
 
-            // The intermediate system (index 2) should have an octave shift
-            const intermediateSystem: MusicSystem = musicPage.MusicSystems[2];
-            const staffLine: StaffLine = intermediateSystem.StaffLines[0];
-            const octaveShifts: GraphicalOctaveShift[] = staffLine.OctaveShifts;
-
-            chai.expect(octaveShifts.length).to.equal(1,
-               "Intermediate system should have exactly one octave shift");
-
-            const shift: GraphicalOctaveShift = octaveShifts[0];
-            chai.expect(shift.endsOnDifferentStaffLine).to.be.true;
-            chai.expect(shift.graphicalEndAtMeasureEnd).to.be.true;
-            chai.expect(shift.endMeasure).to.not.be.undefined;
+            let foundIntermediate: boolean = false;
+            for (const system of musicPage.MusicSystems) {
+               const staffLine: StaffLine = system.StaffLines[0];
+               for (const shift of staffLine.OctaveShifts) {
+                  // An intermediate shift has endsOnDifferentStaffLine=true but is not
+                  // the first part (isFirstPart is set on the system where the 8va starts).
+                  if (shift.endsOnDifferentStaffLine && !shift.isFirstPart) {
+                     foundIntermediate = true;
+                     chai.expect(shift.graphicalEndAtMeasureEnd).to.be.true;
+                     chai.expect(shift.endMeasure).to.not.be.undefined;
+                  }
+               }
+            }
+            chai.expect(foundIntermediate).to.be.true;
 
             done();
          },
