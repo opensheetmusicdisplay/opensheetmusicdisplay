@@ -34,7 +34,8 @@ export class ExpressionReader {
     private openContinuousDynamicExpressions: ContinuousDynamicExpression[] = [];
     private openContinuousTempoExpression: ContinuousTempoExpression;
     private activeInstantaneousDynamic: InstantaneousDynamicExpression;
-    private openOctaveShift: OctaveShift;
+    private openOctaveShifts: Map<number, OctaveShift> = new Map();
+    private pendingOctaveShiftStops: Map<number, {measure: SourceMeasure, endTimestamp: Fraction}> = new Map();
     private lastWedge: ContinuousDynamicExpression;
     private WedgeYPosXml: number;
     private openPedal: Pedal;
@@ -327,19 +328,44 @@ export class ExpressionReader {
                         if (type === "up" || type === "down") { // unfortunately not always given in MusicXML (e.g. Musescore 3.6.2) even though required
                             const octaveShift: OctaveShift = new OctaveShift(type, octave);
                             octaveShift.StaffNumber = octaveStaffNumber;
+                            octaveShift.numberXml = numberXml;
                             this.getMultiExpression = this.createNewMultiExpressionIfNeeded(
                                 currentMeasure, numberXml);
                             this.getMultiExpression.OctaveShiftStart = octaveShift;
                             octaveShift.ParentStartMultiExpression = this.getMultiExpression;
-                            this.openOctaveShift = octaveShift;
-                        } else if (type === "stop") {
-                            if (this.openOctaveShift) {
+                            this.openOctaveShifts.set(numberXml, octaveShift);
+                            // Check if the matching stop was already encountered (stop before start due to voice/backup ordering)
+                            const pendingStop: {measure: SourceMeasure, endTimestamp: Fraction} =
+                                this.pendingOctaveShiftStops.get(numberXml);
+                            if (pendingStop) {
+                                this.pendingOctaveShiftStops.delete(numberXml);
                                 this.getMultiExpression = this.createNewMultiExpressionIfNeeded(
-                                    currentMeasure, this.openOctaveShift.numberXml, endTimestamp);
+                                    pendingStop.measure, numberXml, pendingStop.endTimestamp);
+                                this.getMultiExpression.OctaveShiftEnd = octaveShift;
+                                octaveShift.ParentEndMultiExpression = this.getMultiExpression;
+                                this.openOctaveShifts.delete(numberXml);
+                            }
+                        } else if (type === "stop") {
+                            const matchingShift: OctaveShift = this.openOctaveShifts.get(numberXml);
+                            if (matchingShift) {
+                                this.getMultiExpression = this.createNewMultiExpressionIfNeeded(
+                                    currentMeasure, matchingShift.numberXml, endTimestamp);
                                 const octaveShiftStartExpression: MultiExpression = this.getMultiExpression;
-                                octaveShiftStartExpression.OctaveShiftEnd = this.openOctaveShift;
-                                this.openOctaveShift.ParentEndMultiExpression = this.getMultiExpression;
-                                this.openOctaveShift = undefined;
+                                octaveShiftStartExpression.OctaveShiftEnd = matchingShift;
+                                matchingShift.ParentEndMultiExpression = this.getMultiExpression;
+                                this.openOctaveShifts.delete(numberXml);
+                            } else {
+                                // Stop arrived before its matching start (e.g. due to voice/backup ordering in MusicXML).
+                                // Store it so it can be matched when the start is encountered later.
+                                // Use directionTimestamp stepped back by one division to get an inclusive end (notes at end timestamp are included),
+                                // since directionTimestamp (= currentFraction) is an exclusive boundary and
+                                // endTimestamp (= previousFraction) refers to the wrong voice's timeline.
+                                const inclusiveEnd: Fraction = Fraction.minus(
+                                    this.directionTimestamp, new Fraction(1, 4 * this.divisions));
+                                this.pendingOctaveShiftStops.set(numberXml, {
+                                    measure: currentMeasure,
+                                    endTimestamp: inclusiveEnd
+                                });
                             }
                         } // TODO handle type === "continue"?
                         else if (!type) {
