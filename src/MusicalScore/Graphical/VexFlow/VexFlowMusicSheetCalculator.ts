@@ -923,7 +923,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
     }
     let startMeasure: GraphicalMeasure = undefined;
-    if (octaveShift.ParentEndMultiExpression) {
+    if (octaveShift.ParentStartMultiExpression) {
       startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentStartMultiExpression.SourceMeasureParent,
                                                                                            staffIndex);
     } else {
@@ -990,6 +990,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         startStaffEntry = startMeasure.staffEntries[0];
       }
       let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+      if (!endStaffEntry) {
+        // No exact match (e.g. pending stop with computed inclusive end).
+        // Find the latest staff entry at or before the end timestamp.
+        for (let i: number = endMeasure.staffEntries.length - 1; i >= 0; i--) {
+          const entry: GraphicalStaffEntry = endMeasure.staffEntries[i];
+          if (entry.relInMeasureTimestamp?.lte(endTimeStamp)) {
+            endStaffEntry = entry;
+            break;
+          }
+        }
+      }
       if (!endStaffEntry) { // fix for rendering range set
         endStaffEntry = endMeasure.staffEntries[endMeasure.staffEntries.length - 1];
       }
