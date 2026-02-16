@@ -1038,11 +1038,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const nextOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, nextShiftFirstMeasure.PositionAndShape);
             let nextShiftLastMeasure: GraphicalMeasure = this.findLastStafflineMeasure(nextShiftStaffline);
 
-            if (i < systemsInBetweenCount - 1) {
-              // if not - 1, the last octaveshift will always go to the end of the staffline
+            if (i < endStaffLine.ParentMusicSystem.Id - 1) {
+              // "in-between" staffline before the staffline where the octave shift ends: make octave shift go to end of staffline
               nextOctaveShift.endsOnDifferentStaffLine = true;
               nextOctaveShift.graphicalEndAtMeasureEnd = true;
               nextOctaveShift.endMeasure = nextShiftLastMeasure;
+              // this is tested by the sample test_octaveshift_multiline_grace_notes.musicxml (see PR #1646)
             }
             const firstNote: GraphicalStaffEntry = nextShiftFirstMeasure.staffEntries[0];
             let lastNote: GraphicalStaffEntry = nextShiftLastMeasure.staffEntries[nextShiftLastMeasure.staffEntries.length - 1];
