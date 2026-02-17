@@ -79,20 +79,7 @@ export class ExpressionReader {
             } else { this.directionTimestamp = Fraction.createFromFraction(offsetFraction); }
         }
 
-        // read default-y for wedge node
-        let newWedgeYPos: number;
-        const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
-        let wedgeNode: IXmlElement;
-        if (directionTypeNode) {
-            wedgeNode = directionTypeNode.element("wedge");
-            if (wedgeNode) {
-                const yPosAttr: IXmlAttribute = wedgeNode.attribute("default-y");
-                if (yPosAttr) {
-                    newWedgeYPos = this.readPosition(yPosAttr);
-                }
-            }
-        }
-        this.WedgeYPosXml = newWedgeYPos;
+        const directionTypeNodes: IXmlElement[] = xmlNode.elements("direction-type");
 
         const placeAttr: IXmlAttribute = xmlNode.attribute("placement");
         if (placeAttr) {
@@ -111,20 +98,24 @@ export class ExpressionReader {
                 this.placement = PlacementEnum.Below;
             }
         }
-        if (this.placement === PlacementEnum.NotYetDefined) {
-            try {
-                if (directionTypeNode) {
+        try {
+            for (const directionTypeNode of directionTypeNodes) {
+                const wedgeNode: IXmlElement = directionTypeNode.element("wedge");
+                if (wedgeNode) {
+                    const defAttr: IXmlAttribute = wedgeNode.attribute("default-y");
+                    if (defAttr) {
+                        this.WedgeYPosXml = parseInt(defAttr.value, 10);
+                        if (this.placement === PlacementEnum.NotYetDefined) {
+                            this.readExpressionPlacement(defAttr, "read wedge y pos");
+                        }
+                    }
+                }
+                if (this.placement === PlacementEnum.NotYetDefined) {
                     const dynamicsNode: IXmlElement = directionTypeNode.element("dynamics");
                     if (dynamicsNode) {
                         const defAttr: IXmlAttribute = dynamicsNode.attribute("default-y");
                         if (defAttr) {
                             this.readExpressionPlacement(defAttr, "read dynamics y pos");
-                        }
-                    }
-                    if (wedgeNode) {
-                        const defAttr: IXmlAttribute = wedgeNode.attribute("default-y");
-                        if (defAttr) {
-                            this.readExpressionPlacement(defAttr, "read wedge y pos");
                         }
                     }
                     const wordsNode: IXmlElement = directionTypeNode.element("words");
@@ -142,14 +133,13 @@ export class ExpressionReader {
                         }
                     }
                 }
-            } catch (ex) {
-                const errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/ExpressionPlacementError",
-                                                                          "Invalid expression placement. Set to default.");
-                log.debug("ExpressionReader.readExpressionParameters", errorMsg, ex);
-                this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                this.placement = PlacementEnum.Below;
             }
-
+        } catch (ex) {
+            const errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/ExpressionPlacementError",
+                                                                      "Invalid expression placement. Set to default.");
+            log.debug("ExpressionReader.readExpressionParameters", errorMsg, ex);
+            this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+            this.placement = PlacementEnum.Below;
         }
         if (this.placement === PlacementEnum.NotYetDefined) {
             if (currentInstrument.Staves.length > 1) {
@@ -299,10 +289,10 @@ export class ExpressionReader {
                 log.debug("ExpressionReader.addOctaveShift", errorMsg, ex);
             }
         }
-        const directionTypeNode: IXmlElement = directionNode.element("direction-type");
-        if (directionTypeNode) {
+        const directionTypeNodes: IXmlElement[] = directionNode.elements("direction-type");
+        const placement: PlacementEnum = this.readPlacement(directionNode);
+        for (const directionTypeNode of directionTypeNodes) {
             const octaveShiftNode: IXmlElement = directionTypeNode.element("octave-shift");
-            const placement: PlacementEnum = this.readPlacement(directionNode);
             // if (placement === PlacementEnum.NotYetDefined && this.staffNumber === 1) {
             //     placement = PlacementEnum.Above;
             // }
@@ -381,10 +371,11 @@ export class ExpressionReader {
         }
     }
     public addPedalMarking(directionNode: IXmlElement, currentMeasure: SourceMeasure, endTimestamp: Fraction): void {
-        const directionTypeNode: IXmlElement = directionNode.element("direction-type");
-        if (directionTypeNode) {
+        const directionTypeNodes: IXmlElement[] = directionNode.elements("direction-type");
+        for (const directionTypeNode of directionTypeNodes) {
             const pedalNode: IXmlElement = directionTypeNode.element("pedal");
-            if (pedalNode !== undefined && pedalNode.hasAttributes) {
+            if (!pedalNode) { continue; }
+            if (pedalNode.hasAttributes) {
                 let sign: boolean = false, line: boolean = false;
                 try {
                     if (pedalNode.attribute("line")?.value === "yes") {
