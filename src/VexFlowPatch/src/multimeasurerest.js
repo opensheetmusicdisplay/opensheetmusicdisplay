@@ -195,7 +195,10 @@ export class MultiMeasureRest extends Element {
     // VexFlowPatch: getNoteEndX() doesn't include end barline width. subtract it.
     const endModifiers = stave.getModifiers(StaveModifier.Position.END);
     if (endModifiers.length >= 1 && endModifiers[0].getCategory() === 'barlines') {
-      right -= endModifiers[0].getWidth();
+      const barline = endModifiers[0];
+      // right -= barline.getWidth(); // TODO width is always 5 regardless of barline.type. See stavebarline.js constructor
+      right -= barline.getPadding(); // see stavebarline.js constructor
+      // note: we want 0 padding / reduction for normal barlines, as the distance of the multirest element to the end is perfect there
     }
 
     if (!isNaN(this.render_options.padding_left)) {

@@ -60,6 +60,7 @@ add xOffset, fontSize arguments (see stavesection.js) (merged vexflow 4.x)
 
 stavebarline.js (custom addition):
 support double_heavy barline (heavy-heavy in MusicXML)
+change padding for end barlines for multimeasurerest element (#1329)
 
 stavenote.js (custom addition):
 Fix stem/flag formatting. Instead of shifting notes by default, update the stem/flag rendering to render different voices aligned.
