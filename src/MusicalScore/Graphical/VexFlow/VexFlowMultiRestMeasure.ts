@@ -39,7 +39,11 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
 
         this.resetLayout();
 
+        const padding_right: number = this.endInstructionsWidth * 10; // add padding e.g. to not get too close to end repeat barline
+        // see e.g. test/data/test_multiple_rest_measures_repeat_3_measures.musicxml, issue #1329
+
         this.multiRestElement = new VF.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
+            padding_right: padding_right,
             // number_line: 3
         });
     }
