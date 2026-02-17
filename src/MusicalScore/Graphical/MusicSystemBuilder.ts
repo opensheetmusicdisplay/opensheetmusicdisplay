@@ -62,6 +62,7 @@ export class MusicSystemBuilder {
 
         // the first System - create also its Labels
         this.currentSystemParams.currentSystem = this.initMusicSystem();
+        this.currentSystemParams.maxLabelLength = this.currentSystemParams.currentSystem.MaxLabelLength;
 
         // let numberOfMeasures: number = 0;
         // for (let idx: number = 0, len: number = this.measureList.length; idx < len; ++idx) {
@@ -141,7 +142,10 @@ export class MusicSystemBuilder {
                 }
             }
             const currentMeasureNumberInSystem: number = this.currentSystemParams.systemMeasures.length;
-            const measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth < systemMaxWidth;
+            const labelWidth: number = this.currentSystemParams.maxLabelLength > 0
+                ? this.currentSystemParams.maxLabelLength + this.rules.SystemLabelsRightMargin : 0;
+            const measureFitsInSystem: boolean =
+                this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth + labelWidth < systemMaxWidth;
             const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && sourceMeasure.printNewPageXml;
             const impliedSystemBreak: boolean = doXmlPageBreak || // also create new system if doing page break
                 (this.rules.NewSystemAtXMLNewPageAttribute && sourceMeasure.printNewPageXml);
@@ -233,6 +237,7 @@ export class MusicSystemBuilder {
         if (measures !== undefined &&
             this.measureListIndex < this.measureList.length) {
             this.currentSystemParams.currentSystem = this.initMusicSystem();
+            this.currentSystemParams.maxLabelLength = this.currentSystemParams.currentSystem.MaxLabelLength;
         }
     }
 
