@@ -187,10 +187,15 @@ export class MultiMeasureRest extends Element {
     let right = stave.getNoteEndX();
 
     // FIXME: getNoteStartX() returns x+5(barline width) and
-    // getNoteEndX() returns x + width(no barline width) by default. how to fix?
+    // getNoteEndX() returns x + width(no barline width) by default. how to fix? -> see VexFlowPatch below
     const begModifiers = stave.getModifiers(StaveModifier.Position.BEGIN);
-    if (begModifiers.length === 1 && begModifiers[0].getCategory() === 'barlines') {
+    if (begModifiers.length === 1 && begModifiers[0].getCategory() === 'barlines') { // TODO maybe use >=
       left -= begModifiers[0].getWidth();
+    }
+    // VexFlowPatch: getNoteEndX() doesn't include end barline width. subtract it.
+    const endModifiers = stave.getModifiers(StaveModifier.Position.END);
+    if (endModifiers.length >= 1 && endModifiers[0].getCategory() === 'barlines') {
+      right -= endModifiers[0].getWidth();
     }
 
     if (!isNaN(this.render_options.padding_left)) {

@@ -37,11 +37,14 @@ gracenotegroup.js (custom addition, needs check if necessary in vexflow 4):
 check for gracenotegroup.spacing set, to allow e.g. spacing = 0 by default.
 (with previous default 4, spacing is way too large unnecessarily, in most cases)
 
-notehead.js (custom addition):
-add stem_up_y_shift and stem_down_y_shift to shift notehead (independent of stem length)
-
 keysignature.js (merged vexflow 4):
 open group to get SVG group+class for key signature
+
+multimeasurerest.js (custom fix, not yet merged):
+Fix end_x ("right") position not adding padding / subtracting length for wide end measure barlines like repeat barline (#1329)
+
+notehead.js (custom addition):
+add stem_up_y_shift and stem_down_y_shift to shift notehead (independent of stem length)
 
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
