@@ -204,7 +204,10 @@ export class ExpressionReader {
                     if (useCurrentFractionForPositioning) {
                         this.directionTimestamp = Fraction.createFromFraction(timestampFraction);
                     }
-                    const bpmNumber: number = parseFloat(bpm.value);
+                    // per-minute can contain text alongside the number (e.g. "c. 108" for circa)
+                    // -> find first number ("c. 108" matches 108, "108.5" would match 108.5)
+                    const bpmMatch: RegExpMatchArray = bpm.value.match(/(\d+\.?\d*)/);
+                    const bpmNumber: number = bpmMatch ? parseFloat(bpmMatch[1]) : NaN;
                     this.createNewTempoExpressionIfNeeded(currentMeasure);
                     const instantaneousTempoExpression: InstantaneousTempoExpression =
                         new InstantaneousTempoExpression(undefined,
