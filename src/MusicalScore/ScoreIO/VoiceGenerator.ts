@@ -620,6 +620,20 @@ export class VoiceGenerator {
         if (!sameVoiceEntry) {
           const openBeam: Beam = this.openBeams[beamNumber - 1];
           openBeam.addNoteToBeam(note);
+          // Detect secondary beam breaks: a higher beam level ends while beam #1 continues.
+          // VexFlow's breakSecondaryAt extends the beam TO the break index then stops,
+          // so we record the index of the last note in the outgoing secondary group.
+          if (currentBeamTag === "continue" && mainBeamNode.length > 1) {
+            for (let i: number = 1; i < mainBeamNode.length; i++) {
+              if (mainBeamNode[i].value === "end") {
+                const noteIndex: number = openBeam.Notes.length - 1;
+                if (noteIndex > 0) {
+                  openBeam.SecondaryBreakIndices.push(noteIndex);
+                }
+                break;
+              }
+            }
+          }
           // const lastBeamNote: Note = openBeam.Notes.last();
           // const graceStatusChanged: boolean = (lastBeamNote?.IsCueNote || lastBeamNote?.IsGraceNote) !== (note.IsCueNote) || (note.IsGraceNote);
           if (currentBeamTag === "end") {

@@ -1014,6 +1014,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                     if (notes.length > 1) {
                         const vfBeam: VF.Beam = new VF.Beam(notes, autoStemBeam);
+                        if (psBeam.SecondaryBreakIndices?.length > 0) {
+                            vfBeam.breakSecondaryAt(psBeam.SecondaryBreakIndices);
+                        }
                         if (isGraceBeam) {
                             // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
                             (<any>vfBeam).render_options.beam_width = 3;
