@@ -541,7 +541,8 @@ export class ExpressionReader {
                 // addExpression unnecessary now?:
                 //const multiExpression = this.getMultiExpression(ExpressionType.InstantaneousDynamic, numberXml);
                 //multiExpression.addExpression(instantaneousDynamicExpression, "");
-                this.initialize();
+                //this.initialize(); this is unnecessary, also done at the beginning of readExpressionParameters().
+                //  initialize also resets this.placement to NotYetDefined, would be an issue for multiple direction-type nodes in one direction node.
                 if (this.activeInstantaneousDynamic) {
                     this.activeInstantaneousDynamic.DynEnum = instantaneousDynamicExpression.DynEnum;
                 } else {
