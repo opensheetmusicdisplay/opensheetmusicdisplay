@@ -129,6 +129,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var showPageFormatControl = false;
     var showZoomControl = true;
     var showHeader = true;
+    var showVersionHeader = true;
     var showDebugControls = false;
 
     document.title = "OpenSheetMusicDisplay Demo";
@@ -144,6 +145,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         var paramShowExportPdfControl = findGetParameter('showExportPdfControl');
         var paramShowZoomControl = findGetParameter('showZoomControl');
         var paramShowHeader = findGetParameter('showHeader');
+        var paramShowVersionHeader = findGetParameter('showVersionHeader'); // versionDiv
         var paramZoom = findGetParameter('zoom');
         var paramOverflow = findGetParameter('overflow');
         var paramDarkMode = findGetParameter('darkMode');
@@ -163,6 +165,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         var paramSingleHorizontalStaffline = findGetParameter('singleHorizontalStaffline');
 
         showHeader = (paramShowHeader !== '0');
+        showVersionHeader = (paramShowVersionHeader !== '0');
         showControls = false;
         if (paramEmbedded) {
             showControls = paramShowControls !== '0';
@@ -367,10 +370,18 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (!showHeader) {
             if (header) {
                 header.style.display = 'none';
+                if (versionDiv) {
+                    versionDiv.style.marginTop = "5px"; // default 80px
+                }
             }
         } else {
             if (header) {
                 header.style.opacity = 1.0;
+            }
+        }
+        if (!showVersionHeader) {
+            if (versionDiv) {
+                versionDiv.style.display = 'none';
             }
         }
         // Hide error
