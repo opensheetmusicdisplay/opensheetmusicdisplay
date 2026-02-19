@@ -1,3 +1,19 @@
+## [1.9.7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.6...1.9.7) (2026-02-19)
+
+
+### Bug Fixes
+
+* **8va/OctaveShift:** Fix 8xa start and end timestamp and visual display shifted when backup nodes or multiple voices involved ([#1645](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1645), PR [#1647](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1647)) ([33d6b40](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/33d6b4041998a85634b821a26d6fb250ed053432))
+* **8va/OctaveShift:** Fix octave shift that goes over multiple systems/lines not always going to the end of the staffline in systems in-between (PR [#1646](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1646)) ([15c07e5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/15c07e519ca753db65f6b30c675ebe1070c60805))
+* **Beams:** Enable secondary beam breaks ([#1071](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1071)). E.g. break between 16ths and triplet 16ths if given in MusicXML ([73a88c5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/73a88c5f60bb922dbd0511b020314a6bc30198c9))
+* **BPM:** `<metronome><per-minute>` is now parsed correctly if the value contains text in addition to numbers (e.g. "c. 108" instead of just "108") ([#1175](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1175)) ([be8fc24](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/be8fc248168e8f8e75fca00e03da2f678492fb7f))
+* **Layout:** For multiple rest measures, fix crowded notes: Correctly calculate space required by multirest measures ([#1329](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1329)) ([cc6ed00](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cc6ed00ec63da02e3e7ea61c6c50e96968308a10))
+* **Layout:** Respect system label length. Fix crowded notes when instrument name label very long ([#1329](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1329)) ([e94876e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e94876e4b0145aed06c96c8783418ba4f7d1c92e))
+* **Multiple Rest Measures:** Fix multiple rest element / line too close to ending barline for end repeat barline etc ([#1329](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1329)) ([1e2710e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1e2710e52944ce308900d891da3249da3cbdc9ee))
+* **MusicXML/direction-type:** Multiple <direction-type> nodes within a single <direction> node can now be read ([#1175](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1175)) ([1f9b9a8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1f9b9a82ee45b4f24202ececfbfcf4c1a95c828e))
+
+
+
 ## [1.9.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.5...1.9.6) (2026-02-13)
 
 
