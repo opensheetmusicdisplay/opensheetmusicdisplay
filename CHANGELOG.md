@@ -10,7 +10,7 @@
 * **Layout:** For multiple rest measures, fix crowded notes: Correctly calculate space required by multirest measures ([#1329](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1329)) ([cc6ed00](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cc6ed00ec63da02e3e7ea61c6c50e96968308a10))
 * **Layout:** Respect system label length. Fix crowded notes when instrument name label very long ([#1329](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1329)) ([e94876e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e94876e4b0145aed06c96c8783418ba4f7d1c92e))
 * **Multiple Rest Measures:** Fix multiple rest element / line too close to ending barline for end repeat barline etc ([#1329](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1329)) ([1e2710e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1e2710e52944ce308900d891da3249da3cbdc9ee))
-* **MusicXML/direction-type:** Multiple <direction-type> nodes within a single <direction> node can now be read ([#1175](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1175)) ([1f9b9a8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1f9b9a82ee45b4f24202ececfbfcf4c1a95c828e))
+* **MusicXML/direction-type:** Multiple `<direction-type>` nodes within a single `<direction>` node can now be read ([#1175](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1175)) ([1f9b9a8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1f9b9a82ee45b4f24202ececfbfcf4c1a95c828e))
 
 
 
