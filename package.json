@@ -17,6 +17,7 @@
     "build:webpack": "webpack --progress --config webpack.prod.js",
     "build:webpack-dev": "webpack --progress --config webpack.dev.js",
     "build:webpack-sourcemap": "webpack --progress --config webpack.sourcemap.js",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "husky": "husky",
     "start": "webpack-dev-server --progress --config webpack.dev.js",
     "start:local": "webpack-dev-server --progress --config webpack.local.js",
