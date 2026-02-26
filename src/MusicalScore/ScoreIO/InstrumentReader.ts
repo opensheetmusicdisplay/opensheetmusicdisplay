@@ -459,7 +459,14 @@ export class InstrumentReader {
                expressionReader.readExpressionParameters(
                  xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, true
                );
-               expressionReader.addOctaveShift(xmlNode, this.currentMeasure, previousFraction.clone());
+               // Count how many VoiceEntries at the current timestamp were parsed before this stop.
+               // Grace notes before/after a stop share the same timestamp; this count lets the
+               // renderer distinguish which VoiceEntries fall under the octave shift.
+               let endVoiceEntryCount: number = 0;
+               if (this.currentStaffEntry?.Timestamp?.Equals(currentFraction)) {
+                 endVoiceEntryCount = this.currentStaffEntry.VoiceEntries.length;
+               }
+               expressionReader.addOctaveShift(xmlNode, this.currentMeasure, currentFraction.clone(), endVoiceEntryCount);
              }
              if (directionTypeNodes.some(dt => dt.element("pedal"))) {
               expressionReader.readExpressionParameters(

@@ -2893,10 +2893,12 @@ export abstract class MusicSheetCalculator {
                 }
                 // check for possible OctaveShift
                 let octaveShiftValue: OctaveEnum = OctaveEnum.NONE;
+                let activeOctaveShift: OctaveShift;
                 if (openOctaveShifts[staffIndex]) {
                     if (openOctaveShifts[staffIndex].getAbsoluteStartTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
                         sourceStaffEntry.AbsoluteTimestamp.lte(openOctaveShifts[staffIndex].getAbsoluteEndTimestamp)) {
                         octaveShiftValue = openOctaveShifts[staffIndex].getOpenOctaveShift.Type;
+                        activeOctaveShift = openOctaveShifts[staffIndex].getOpenOctaveShift;
                     }
                 }
                 if (octaveShiftValue === OctaveEnum.NONE) {
@@ -2911,6 +2913,7 @@ export abstract class MusicSheetCalculator {
                         if (targetOctaveShift?.ParentStartMultiExpression?.AbsoluteTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
                             !targetOctaveShift.ParentEndMultiExpression?.AbsoluteTimestamp.lt(sourceStaffEntry.AbsoluteTimestamp)) {
                                 octaveShiftValue = targetOctaveShift.Type;
+                                activeOctaveShift = targetOctaveShift;
                                 break;
                             }
                     }
@@ -2918,6 +2921,14 @@ export abstract class MusicSheetCalculator {
                 // for each visible Voice create the corresponding GraphicalNotes
                 for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                     const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
+                    // When an octave shift stop falls between grace notes at the same timestamp,
+                    // turn off the shift for VoiceEntries parsed after the stop.
+                    if (octaveShiftValue !== OctaveEnum.NONE && activeOctaveShift &&
+                        activeOctaveShift.ParentEndMultiExpression?.AbsoluteTimestamp.Equals(sourceStaffEntry.AbsoluteTimestamp) &&
+                        idx >= activeOctaveShift.endVoiceEntryIndex) {
+                        octaveShiftValue = OctaveEnum.NONE;
+                        activeOctaveShift = undefined;
+                    }
                     // Normal Notes...
                     octaveShiftValue = this.handleVoiceEntry(
                         voiceEntry, graphicalStaffEntry,

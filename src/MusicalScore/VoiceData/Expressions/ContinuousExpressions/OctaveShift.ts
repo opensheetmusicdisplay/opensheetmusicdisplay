@@ -9,6 +9,11 @@ export class OctaveShift {
     private octaveValue: OctaveEnum;
     private staffNumber: number;
     public numberXml: number = 1;
+    /** Number of VoiceEntries at the end timestamp that are still covered by this shift.
+     *  When the stop is placed between grace notes sharing the same timestamp,
+     *  this distinguishes which VoiceEntries are before vs after the stop.
+     *  0 means no VoiceEntries at the end timestamp are covered. */
+    public endVoiceEntryIndex: number = 0;
     private startMultiExpression: MultiExpression;
     private endMultiExpression: MultiExpression;
 

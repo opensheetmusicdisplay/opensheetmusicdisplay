@@ -4,6 +4,7 @@ import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { OctaveShift, OctaveEnum } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { BoundingBox } from "../BoundingBox";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
+import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import log from "loglevel";
 
@@ -76,18 +77,23 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
      * Set an end note using a staff entry
      * @param graphicalStaffEntry the staff entry that holds the end note
      */
-    public setEndNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
-        // this is duplicate code from setStartNote, but if we make one general method, we add a lot of branching.
-        for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
-            const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
+    /**
+     * Set an end note using a staff entry.
+     * @param graphicalStaffEntry the staff entry that holds the end note
+     * @param maxVoiceEntryIndex when >= 0, only consider voice entries before this index
+     *        (used when an octave shift stop falls between grace notes sharing the same staff entry)
+     */
+    public setEndNote(graphicalStaffEntry: GraphicalStaffEntry, maxVoiceEntryIndex: number = -1): boolean {
+        const entries: GraphicalVoiceEntry[] = graphicalStaffEntry.graphicalVoiceEntries;
+        const limit: number = maxVoiceEntryIndex >= 0 ? Math.min(maxVoiceEntryIndex, entries.length) : entries.length;
+        // Search backwards to find the last covered VoiceEntry
+        for (let i: number = limit - 1; i >= 0; i--) {
+            const vve: VexFlowVoiceEntry = (entries[i] as VexFlowVoiceEntry);
             if (vve?.vfStaveNote) {
                 this.endNote = vve.vfStaveNote;
                 this.endMeasure = graphicalStaffEntry.parentMeasure;
                 if (this.endMeasure?.parentSourceMeasure.Rules.OctaveShiftOnWholeMeasureNoteUntilEndOfMeasure &&
                     vve.notes[0].sourceNote.isWholeMeasureNote()) {
-                    // draw whole note octave shift until end of measure
-                    //   Instead, we could try to fix the display of very short octaveshift brackets,
-                    //   which seem to overlap text (-> VF.TextBracket VexFlowPatch?).
                     this.graphicalEndAtMeasureEnd = true;
                 }
                 return true;
