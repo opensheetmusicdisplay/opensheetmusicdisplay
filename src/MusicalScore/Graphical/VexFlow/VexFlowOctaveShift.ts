@@ -74,10 +74,6 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
     }
 
     /**
-     * Set an end note using a staff entry
-     * @param graphicalStaffEntry the staff entry that holds the end note
-     */
-    /**
      * Set an end note using a staff entry.
      * @param graphicalStaffEntry the staff entry that holds the end note
      * @param maxVoiceEntryIndex when >= 0, only consider voice entries before this index

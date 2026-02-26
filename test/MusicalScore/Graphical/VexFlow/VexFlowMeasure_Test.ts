@@ -112,28 +112,23 @@ describe("VexFlow Measure", () => {
 
                const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
 
-               // Collect all grace voice entries and their octave shift values
-               const graceEntries: {isGrace: boolean, octaveShift: OctaveEnum}[] = [];
+               // Collect octave shift values for all grace notes in the measure
+               const graceOctaveShifts: OctaveEnum[] = [];
                for (const staffEntry of gm.staffEntries) {
                   for (const gve of staffEntry.graphicalVoiceEntries) {
                      if (gve.parentVoiceEntry?.IsGrace) {
                         const note: VexFlowGraphicalNote = gve.notes[0] as VexFlowGraphicalNote;
-                        graceEntries.push({
-                           isGrace: true,
-                           octaveShift: note.octaveShift,
-                        });
+                        graceOctaveShifts.push(note.octaveShift);
                      }
                   }
                }
 
-               // We have 6 grace notes total: 4 under 8va, then 2 after the stop
-               chai.expect(graceEntries.length).to.equal(6, "Should have 6 grace notes");
+               // 6 grace notes total: 4 under 8va, then 2 after the stop
+               chai.expect(graceOctaveShifts.length).to.equal(6, "Should have 6 grace notes");
 
                // First 4 grace notes should have octave shift applied (VA8 = 8va)
-               // Before fix: these had OctaveEnum.NONE because previousFraction pointed
-               // to the start of the measure instead of the current position.
                for (let i: number = 0; i < 4; i++) {
-                  chai.expect(graceEntries[i].octaveShift).to.not.equal(OctaveEnum.NONE,
+                  chai.expect(graceOctaveShifts[i]).to.not.equal(OctaveEnum.NONE,
                      `Grace note ${i} should be under 8va`);
                }
 
