@@ -90,6 +90,9 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
                 this.endMeasure = graphicalStaffEntry.parentMeasure;
                 if (this.endMeasure?.parentSourceMeasure.Rules.OctaveShiftOnWholeMeasureNoteUntilEndOfMeasure &&
                     vve.notes[0].sourceNote.isWholeMeasureNote()) {
+                    // draw whole note octave shift until end of measure
+                    //   Instead, we could try to fix the display of very short octaveshift brackets,
+                    //   which seem to overlap text (-> VF.TextBracket VexFlowPatch?).
                     this.graphicalEndAtMeasureEnd = true;
                 }
                 return true;
