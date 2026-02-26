@@ -1071,7 +1071,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               log.warn(logPrefix + "no lastNote found");
             }
             nextOctaveShift.setStartNote(firstNote);
-            nextOctaveShift.setEndNote(lastNote);
+            const endIdx: number = endMeasure.ParentStaffLine === nextShiftStaffline && octaveShift.endVoiceEntryIndex > 0
+              ? octaveShift.endVoiceEntryIndex : -1;
+            nextOctaveShift.setEndNote(lastNote, endIdx);
             nextShiftStaffline.OctaveShifts.push(nextOctaveShift);
             this.calculateOctaveShiftSkyBottomLine(firstNote, lastNote, nextOctaveShift, nextShiftStaffline);
           }
