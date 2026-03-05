@@ -29,8 +29,33 @@ export class RepetitionCalculator {
     this.lastRepetitionCommonPartStartIndex = 0;
 
     const sourceMeasures: SourceMeasure[] = this.musicSheet.SourceMeasures;
+    // Detect movement boundaries where measure numbers reset (e.g. multi-movement pieces without explicit <movement> tags).
+    // Repetitions should not cross these boundaries.
+    const movementStartIndices: Set<number> = new Set();
+    for (let i: number = 1; i < sourceMeasures.length; i++) {
+      const curNum: number = sourceMeasures[i].MeasureNumberXML ?? sourceMeasures[i].MeasureNumber;
+      const prevNum: number = sourceMeasures[i - 1].MeasureNumberXML ?? sourceMeasures[i - 1].MeasureNumber;
+      if (curNum <= 1 && prevNum > 1) {
+        movementStartIndices.add(i);
+      }
+    }
+
+    let lastInstructionMeasureIndex: number = 0;
     for (const instruction of this.repetitionInstructions) {
       this.currentMeasureIndex = instruction.measureIndex;
+      // If we crossed a movement boundary, finalize all open repetitions so they don't span across movements
+      if (this.currentMeasureIndex > lastInstructionMeasureIndex) {
+        for (const movementStart of movementStartIndices) {
+          if (movementStart > lastInstructionMeasureIndex && movementStart <= this.currentMeasureIndex) {
+            while (this.openRepetitions.length > 0) {
+              this.finalizeRepetition(this.openRepetitions.last());
+            }
+            this.lastRepetitionCommonPartStartIndex = movementStart;
+            break;
+          }
+        }
+      }
+      lastInstructionMeasureIndex = this.currentMeasureIndex;
       try {
         this.currentMeasure = sourceMeasures[this.currentMeasureIndex];
         this.handleRepetitionInstructions(instruction);
