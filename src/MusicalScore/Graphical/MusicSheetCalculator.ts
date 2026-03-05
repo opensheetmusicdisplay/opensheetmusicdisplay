@@ -2969,10 +2969,19 @@ export abstract class MusicSheetCalculator {
                 if (this.rules.PercussionOneLineCutoff > 0 && !this.rules.PercussionUseCajon2NoteSystem) {
                     //We have a percussion clef, check to see if this property applies...
                     if (staffIsPercussionArray[idx2]) {
+                        const uniquePitchCount: number = MusicSheetCalculator.stafflineNoteCalculator.getStafflineUniquePositionCount(idx2);
                         //-1 means always trigger, or we are under the cutoff number specified
                         if (this.rules.PercussionOneLineCutoff === -1 ||
-                            MusicSheetCalculator.stafflineNoteCalculator.getStafflineUniquePositionCount(idx2) < this.rules.PercussionOneLineCutoff) {
-                            measure.ParentStaff.StafflineCount = 1;
+                            uniquePitchCount < this.rules.PercussionOneLineCutoff) {
+                            // Only use 1 line if there's exactly 1 unique pitch, otherwise use all 5 lines
+                            if (uniquePitchCount === 1 || this.rules.PercussionOneLineCutoff === -1) {
+                                measure.ParentStaff.StafflineCount = 1;
+                            } else {
+                                measure.ParentStaff.StafflineCount = 5;
+                            }
+                        } else {
+                            // Multiple pitches: use standard 5 staff lines
+                            measure.ParentStaff.StafflineCount = 5;
                         }
                     }
                 }

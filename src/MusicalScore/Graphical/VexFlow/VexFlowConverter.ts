@@ -771,6 +771,18 @@ export class VexFlowConverter {
                             }
                         }
                     }
+                    (vfArt as any).render_options = {
+                        ...(vfArt as any).render_options,
+                        extra_left_px: 0,
+                        extra_right_px: 0,
+                    };
+                    // Override the articulation's width calculation to prevent extra spacing
+                    const originalGetWidth: any = (vfArt as any).getWidth;
+                    if (originalGetWidth) {
+                        (vfArt as any).getWidth = function (): number {
+                        return 0; // Return 0 width to prevent articulations from adding spacing
+                        };
+                    }
                     break;
                 }
                 case ArticulationEnum.breathmark: {
