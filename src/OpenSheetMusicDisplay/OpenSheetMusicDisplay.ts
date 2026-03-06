@@ -2351,10 +2351,13 @@ export class OpenSheetMusicDisplay {
         if (!anchor || !selection) {
             return undefined;
         }
-        const baseLineHitTolerancePx: number = Math.max(this.getSelectionLineWidthPx() * 1.5, 12);
+        const zoomValue: number = Math.max(0.25, Number.isFinite(this.zoom) ? this.zoom : 1);
+        const configuredLineWidthPx: number = this.rangeSelection.options.lineWidthPx ?? 12;
+        // Desktop precision should improve as zoom increases (smaller hit target),
+        // while touch remains forgiving regardless of zoom.
         const lineHitTolerancePx: number = isTouchInteraction
-            ? Math.max(baseLineHitTolerancePx * 2.5, 30)
-            : baseLineHitTolerancePx;
+            ? Math.max(24, Math.min(38, configuredLineWidthPx * 2.2))
+            : Math.max(4, Math.min(10, configuredLineWidthPx / Math.sqrt(zoomValue)));
         const matchesStartSystem: boolean = anchor.systemIndex === selection.normalizedStart.systemIndex;
         const matchesEndSystem: boolean = anchor.systemIndex === selection.normalizedEnd.systemIndex;
         const startDistancePx: number = Math.abs(anchor.xPx - selection.normalizedStart.xPx);
@@ -2491,8 +2494,11 @@ export class OpenSheetMusicDisplay {
     }
 
     private getRangeSelectionSnapPaddingPx(): number {
-        // Keep this aligned with touch auto-scroll edge threshold.
-        return 30;
+        // Keep this aligned with touch auto-scroll edge threshold and
+        // scale with zoom so snap spacing remains musically consistent.
+        const zoomValue: number = Math.max(0.25, Number.isFinite(this.zoom) ? this.zoom : 1);
+        const zoomScaledPaddingPx: number = 18 * Math.sqrt(zoomValue);
+        return Math.max(10, Math.min(28, zoomScaledPaddingPx));
     }
 
     private getRangeSelectionSnapNeighborLeewayPx(): number {
@@ -2733,13 +2739,23 @@ export class OpenSheetMusicDisplay {
         if (this.isRangeDragging || !this.dragStartAnchor || !this.dragCurrentAnchor || !this.graphic) {
             return;
         }
+        const hadForwardDirection: boolean = this.dragStartAnchor.timestampReal <= this.dragCurrentAnchor.timestampReal;
         const refreshedStartAnchor: RangeSelectionAnchor = this.createAnchorFromTimestamp(new Fraction(this.dragStartAnchor.timestampReal, 1));
         const refreshedEndAnchor: RangeSelectionAnchor = this.createAnchorFromTimestamp(new Fraction(this.dragCurrentAnchor.timestampReal, 1));
         if (!refreshedStartAnchor || !refreshedEndAnchor) {
             return;
         }
-        this.dragStartAnchor = refreshedStartAnchor;
-        this.dragCurrentAnchor = refreshedEndAnchor;
+        const refreshedSelection: RangeSelectionPayload = this.applySelectionPadding(
+            this.createSelectionPayload("committed", refreshedStartAnchor, refreshedEndAnchor, false),
+            "both"
+        );
+        if (hadForwardDirection) {
+            this.dragStartAnchor = refreshedSelection.normalizedStart;
+            this.dragCurrentAnchor = refreshedSelection.normalizedEnd;
+            return;
+        }
+        this.dragStartAnchor = refreshedSelection.normalizedEnd;
+        this.dragCurrentAnchor = refreshedSelection.normalizedStart;
     }
 
     private renderSelectionRangeOverlay(start: RangeSelectionAnchor, end: RangeSelectionAnchor): void {
@@ -2887,7 +2903,10 @@ export class OpenSheetMusicDisplay {
     }
 
     private getSelectionLineWidthPx(): number {
-        return this.rangeSelection.options.lineWidthPx ?? 12;
+        const baseLineWidthPx: number = this.rangeSelection.options.lineWidthPx ?? 12;
+        const zoomValue: number = Number.isFinite(this.zoom) ? this.zoom : 1;
+        const zoomScaledLineWidthPx: number = baseLineWidthPx * Math.sqrt(Math.max(0.25, zoomValue));
+        return Math.max(6, Math.min(14, zoomScaledLineWidthPx));
     }
 
     private shouldHideSelectionRangeVisuals(): boolean {
@@ -3570,7 +3589,7 @@ export class OpenSheetMusicDisplay {
         segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }>
     ): boolean {
         const noteSystemIndex: number = this.getSystemIndexForGraphicalNote(graphicalNote);
-        const noteXPx: number = graphicalNote.PositionAndShape.AbsolutePosition.x * this.zoom * 10.0;
+        const noteXPx: number = this.getGraphicalNoteSelectionXPx(graphicalNote);
         if (this.isXInSelection(noteSystemIndex, noteXPx, segments)) {
             return true;
         }
@@ -3582,6 +3601,19 @@ export class OpenSheetMusicDisplay {
         }
         const noteTimestampReal: number = this.getAbsoluteTimestampRealForNote(note);
         return this.isTimestampRealInSelection(noteTimestampReal, selection);
+    }
+
+    private getGraphicalNoteSelectionXPx(graphicalNote: GraphicalNote): number {
+        const zoomScale: number = this.zoom * 10.0;
+        const noteXPx: number = graphicalNote?.PositionAndShape?.AbsolutePosition?.x * zoomScale;
+        if (!this.rangeSelection.options?.snapToNotes) {
+            return noteXPx;
+        }
+        // Snap boundaries are computed from staff-entry semantic x positions.
+        // Use the same semantic x for note inclusion so gray-out matches snap behavior.
+        const entryX: number = graphicalNote?.parentVoiceEntry?.parentStaffEntry?.PositionAndShape?.AbsolutePosition?.x;
+        const entryXPx: number = entryX * zoomScale;
+        return Number.isFinite(entryXPx) ? entryXPx : noteXPx;
     }
 
     private isTieStopNote(
