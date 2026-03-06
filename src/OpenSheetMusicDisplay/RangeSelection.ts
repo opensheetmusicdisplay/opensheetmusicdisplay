@@ -44,6 +44,8 @@ export interface InteractiveRangeSelectionOptions {
     loopButtonLabel?: string;
     clearButtonLabel?: string;
     grayOutNonSelectedNotes?: boolean;
+    /** Keep stave connectors visible at system boundaries (first/last measure) during range gray-out. */
+    keepBoundaryConnectorsVisible?: boolean;
     nonSelectedNotesOpacity?: number;
     grayOutUpdateIntervalMs?: number;
     showCommittedRangeFill?: boolean;

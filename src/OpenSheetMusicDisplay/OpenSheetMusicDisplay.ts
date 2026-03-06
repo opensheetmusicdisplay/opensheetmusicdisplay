@@ -3297,30 +3297,58 @@ export class OpenSheetMusicDisplay {
         const nonNoteSelectionTolerancePx: number = this.getNonNoteSelectionTolerancePx();
         const selectionEndBoundary: { systemIndex: number, xPx: number } = this.getSelectionEndBoundary(segments);
         const clefBraceRects: DOMRect[] = [];
+        const elementMetadata: Array<{
+            element: SVGGraphicsElement;
+            elementRect: DOMRect;
+            centerXPx: number;
+            system: MusicSystem;
+            systemIndex: number;
+        }> = [];
+        const connectorExtremesBySystem: Map<number, { minXPx: number, maxXPx: number }> = new Map();
         for (const element of elements) {
             if (this.isRightSideOnlyStructuralElement(element)) {
                 clefBraceRects.push(element.getBoundingClientRect());
             }
-        }
-        for (const element of elements) {
             const elementRect: DOMRect = element.getBoundingClientRect();
             const centerXPx: number = (elementRect.left - containerRect.left) + (elementRect.width / 2);
             const centerYPx: number = (elementRect.top - containerRect.top) + (elementRect.height / 2);
             const system: MusicSystem = this.findSystemAtPosition(new PointF2D(centerXPx / (this.zoom * 10.0), centerYPx / (this.zoom * 10.0)));
             const systemIndex: number = this.getSystemIndex(system);
+            elementMetadata.push({ element, elementRect, centerXPx, system, systemIndex });
+            if (!this.isConnectorStructuralElement(element) || systemIndex < 0 || !Number.isFinite(centerXPx)) {
+                continue;
+            }
+            const extremes: { minXPx: number, maxXPx: number } = connectorExtremesBySystem.get(systemIndex)
+                ?? { minXPx: centerXPx, maxXPx: centerXPx };
+            extremes.minXPx = Math.min(extremes.minXPx, centerXPx);
+            extremes.maxXPx = Math.max(extremes.maxXPx, centerXPx);
+            connectorExtremesBySystem.set(systemIndex, extremes);
+        }
+        for (const meta of elementMetadata) {
+            const { element, elementRect, centerXPx, system, systemIndex } = meta;
+            const keepBoundaryConnectorVisible: boolean = this.shouldKeepBoundaryConnectorVisible(
+                element,
+                system,
+                centerXPx,
+                nonNoteSelectionTolerancePx,
+                systemIndex,
+                connectorExtremesBySystem
+            );
             const isRightSideOnlyElement: boolean = this.isRightSideOnlyStructuralElement(element)
                 || (this.isConnectorStructuralElement(element)
                     && this.isConnectorNearClefOrBrace(elementRect, clefBraceRects));
-            const opacity: number = isRightSideOnlyElement
-                ? (this.isElementAfterSelectionEnd(systemIndex, centerXPx, selectionEndBoundary, nonNoteSelectionTolerancePx)
-                    ? nonSelectedOpacity
-                    : 1.0)
-                : (this.isXInSelection(
-                    systemIndex,
-                    centerXPx,
-                    segments,
-                    nonNoteSelectionTolerancePx
-                ) ? 1.0 : nonSelectedOpacity);
+            const opacity: number = keepBoundaryConnectorVisible
+                ? 0.6
+                : (isRightSideOnlyElement
+                    ? (this.isElementAfterSelectionEnd(systemIndex, centerXPx, selectionEndBoundary, nonNoteSelectionTolerancePx)
+                        ? nonSelectedOpacity
+                        : 1.0)
+                    : (this.isXInSelection(
+                        systemIndex,
+                        centerXPx,
+                        segments,
+                        nonNoteSelectionTolerancePx
+                    ) ? 1.0 : nonSelectedOpacity));
             element.setAttribute("opacity", opacity.toString());
         }
     }
@@ -3371,6 +3399,30 @@ export class OpenSheetMusicDisplay {
             }
         }
         return false;
+    }
+
+    private shouldKeepBoundaryConnectorVisible(
+        element: SVGGraphicsElement,
+        system: MusicSystem,
+        centerXPx: number,
+        tolerancePx: number,
+        systemIndex: number,
+        connectorExtremesBySystem: Map<number, { minXPx: number, maxXPx: number }>
+    ): boolean {
+        if (this.rangeSelection.options?.keepBoundaryConnectorsVisible === false) {
+            return false;
+        }
+        if (!this.isConnectorStructuralElement(element) || !system || !Number.isFinite(centerXPx)) {
+            return false;
+        }
+        const connectorExtremes: { minXPx: number, maxXPx: number } = connectorExtremesBySystem.get(systemIndex);
+        if (!connectorExtremes) {
+            return false;
+        }
+        const boundaryTolerancePx: number = Math.max(16, tolerancePx * 2);
+        const nearLeftmostConnector: boolean = Math.abs(centerXPx - connectorExtremes.minXPx) <= boundaryTolerancePx;
+        const nearRightmostConnector: boolean = Math.abs(centerXPx - connectorExtremes.maxXPx) <= boundaryTolerancePx;
+        return nearLeftmostConnector || nearRightmostConnector;
     }
 
     private getSelectionEndBoundary(
