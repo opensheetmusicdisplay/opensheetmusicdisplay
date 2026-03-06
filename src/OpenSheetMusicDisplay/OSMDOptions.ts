@@ -1,6 +1,7 @@
 import { ColoringModes } from "../Common/Enums/ColoringModes";
 import { FontStyles } from "../Common/Enums/FontStyles";
 import { DrawingParametersEnum } from "../Common/Enums/DrawingParametersEnum";
+import { InteractiveRangeSelectionOptions, RangeSelectionPayload } from "./RangeSelection";
 
 export enum CursorType {
     Standard = 0,
@@ -19,6 +20,20 @@ export enum CursorType {
  *  The OSMDOptions are the main options we support.
  */
 export interface IOSMDOptions {
+    /** Enables note/time range interaction with hover and drag selection. */
+    interactiveRangeSelection?: boolean;
+    /** Fine-tunes visual behavior of interactive range selection. */
+    interactiveRangeSelectionOptions?: InteractiveRangeSelectionOptions;
+    /** Callback fired when the interactive range selection changes (hover, dragging, committed, cleared). */
+    onRangeSelectionChange?: (payload: RangeSelectionPayload) => void;
+    /** Callback fired when user presses the interactive range "Loop" button. */
+    onRangeSelectionLoopRequest?: (payload: RangeSelectionPayload) => void;
+    /** Callback fired when user presses the interactive range "Clear" button. */
+    onRangeSelectionClearRequest?: (payload: RangeSelectionPayload) => void;
+    /** Callback to render host controls in the selection controls container (usually from consuming app). */
+    onRangeSelectionControlsRender?: (container: HTMLDivElement, payload: RangeSelectionPayload) => void;
+    /** Callback fired when dragging a start/end range handle starts or stops. */
+    onRangeHandleDraggingChange?: (isHandleDragging: boolean) => void;
     /** Whether to let Vexflow align rests to preceding or following notes (Vexflow option). Default false (0).
      * This can naturally reduce collisions of rest notes with other notes.
      * Auto mode (2) only aligns rests when there are multiple voices in a measure,

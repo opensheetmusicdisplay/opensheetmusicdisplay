@@ -12,6 +12,8 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
     var sampleFolder = "",
         samples = {
             // "Summer Time": "summertime.musicxml",
+            "Czerny Etude no 1 op 299": "819.musicxml",
+            "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "Fingerings are oddly positioned": "1168-3.musicxml",
             "Chords but the chords are weirdly positioned": "836.musicxml",
             "Rests in weird places": "2239-2.musicxml",
@@ -20,7 +22,6 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
             "Sample 2": "1346 2.musicxml",
             "Sample": "1346.musicxml",
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
-            "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
             "Clementi, M. - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
             "Clementi, M. - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2.xml",
@@ -115,6 +116,7 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
         playMidiBtn,
         transpose,
         transposeBtn,
+        toggleSelectionRangeBtn,
         versionDiv,
         measureFromInput,
         measureToInput,
@@ -138,6 +140,7 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
         blurStaff0Btn,
         blurStaff1Btn,
         restoreAllStavesBtn;
+    var isSelectionRangeHidden = false;
     
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -289,6 +292,7 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
         printPdfBtns.push(document.getElementById("print-pdf-btn"));
         printPdfBtns.push(document.getElementById("print-pdf-btn-optional"));
         darkModeBtn = document.getElementById("dark-mode-btn");
+        toggleSelectionRangeBtn = document.getElementById("toggle-selection-range-btn");
         exportMidiBtn = document.getElementById("export-midi-btn");
         playMidiBtn = document.getElementById("play-midi-btn");
         transpose = document.getElementById('transpose');
@@ -540,6 +544,18 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
                 renderAndScrollBack();
             }
         }
+        if (!toggleSelectionRangeBtn && darkModeBtn && darkModeBtn.parentElement) {
+            toggleSelectionRangeBtn = document.createElement("div");
+            toggleSelectionRangeBtn.id = "toggle-selection-range-btn";
+            toggleSelectionRangeBtn.className = "ui button";
+            darkModeBtn.parentElement.appendChild(toggleSelectionRangeBtn);
+        }
+        if (toggleSelectionRangeBtn) {
+            updateSelectionRangeToggleButtonLabel();
+            toggleSelectionRangeBtn.onclick = function () {
+                setSelectionRangeHidden(!isSelectionRangeHidden, true);
+            };
+        }
 
         if (exportMidiBtn) {
             exportMidiBtn.onclick = function() {
@@ -718,6 +734,68 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
                 beam_middle_rests_only: false,
                 //groups: [[3,4], [1,1]],
                 maintain_stem_directions: false
+            },
+            interactiveRangeSelection: true,
+            interactiveRangeSelectionOptions: {
+                enabled: true,
+                lineColor: "rgba(47, 169, 224, 0.95)",
+                fillColor: "rgba(47, 169, 224, 0.25)",
+                outsideMaskColor: "rgba(0, 0, 0, 0.20)",
+                lineWidthPx: 12,
+                hideSelectionRange: isSelectionRangeHidden,
+                overlayZIndex: 4,
+                snapToNotes: true,
+            },
+            onRangeSelectionChange: function (payload) {
+                if (!payload) {
+                    return;
+                }
+                console.log("[OSMD demo] range selection:", payload.phase,
+                    "start=", payload.normalizedStart?.timestampReal,
+                    "end=", payload.normalizedEnd?.timestampReal,
+                    "direction=", payload.direction);
+            },
+            onRangeSelectionLoopRequest: function (payload) {
+                console.log("[OSMD demo] loop requested:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
+            },
+            onRangeSelectionClearRequest: function (payload) {
+                console.log("[OSMD demo] clear requested:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
+            },
+            onRangeSelectionControlsRender: function (container, payload) {
+                var makeIconButton = function (icon, title, onClick) {
+                    var button = document.createElement("button");
+                    button.type = "button";
+                    button.textContent = icon;
+                    button.title = title;
+                    button.style.border = "none";
+                    button.style.borderRadius = "8px";
+                    button.style.width = "28px";
+                    button.style.height = "28px";
+                    button.style.padding = "0";
+                    button.style.backgroundColor = "rgba(255, 255, 255, 0.96)";
+                    button.style.color = "#1d1d1d";
+                    button.style.fontSize = "14px";
+                    button.style.lineHeight = "1";
+                    button.style.cursor = "pointer";
+                    button.style.boxShadow = "0 1px 4px rgba(0, 0, 0, 0.25)";
+                    button.onclick = onClick;
+                    return button;
+                };
+                container.appendChild(makeIconButton("↻", "Loop Section", function (event) {
+                    event.stopPropagation();
+                    console.log("[OSMD demo] loop action icon clicked:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
+                    if (openSheetMusicDisplay?.OnRangeSelectionLoopRequest) {
+                        openSheetMusicDisplay.OnRangeSelectionLoopRequest(payload);
+                    }
+                }));
+                container.appendChild(makeIconButton("✕", "Clear Selection", function (event) {
+                    event.stopPropagation();
+                    console.log("[OSMD demo] clear action icon clicked:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
+                    if (openSheetMusicDisplay?.OnRangeSelectionClearRequest) {
+                        openSheetMusicDisplay.OnRangeSelectionClearRequest(payload);
+                    }
+                    openSheetMusicDisplay?.clearRangeSelection(false);
+                }));
             },
             pageFormat: pageFormat,
             pageBackgroundColor: pageBackgroundColor,
@@ -1054,6 +1132,66 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
             top: newScrollY,
             behavior: 'instant' // visually, there is no change in the scroll bar position, as it's the same as before.
         })
+    }
+
+    function updateSelectionRangeToggleButtonLabel() {
+        if (!toggleSelectionRangeBtn) {
+            return;
+        }
+        toggleSelectionRangeBtn.textContent = isSelectionRangeHidden ? "Show Selection Range" : "Hide Selection Range";
+    }
+
+    function getRangeSelectionOverlayElement() {
+        return canvas ? canvas.querySelector(".osmd-range-selection-overlay") : undefined;
+    }
+
+    function setSelectionRangeHidden(shouldHide, animate) {
+        if (!openSheetMusicDisplay) {
+            return;
+        }
+        if (isSelectionRangeHidden === shouldHide) {
+            return;
+        }
+        var applyHiddenState = function () {
+            isSelectionRangeHidden = shouldHide;
+            openSheetMusicDisplay.setOptions({
+                interactiveRangeSelectionOptions: {
+                    hideSelectionRange: shouldHide
+                }
+            });
+            renderAndScrollBack();
+            updateSelectionRangeToggleButtonLabel();
+        };
+        if (!animate) {
+            applyHiddenState();
+            return;
+        }
+        var overlay = getRangeSelectionOverlayElement();
+        if (shouldHide) {
+            if (overlay) {
+                overlay.style.transition = "opacity 180ms ease";
+                overlay.style.opacity = "1";
+                requestAnimationFrame(function () {
+                    overlay.style.opacity = "0";
+                });
+            }
+            window.setTimeout(function () {
+                applyHiddenState();
+            }, overlay ? 180 : 0);
+            return;
+        }
+        applyHiddenState();
+        window.setTimeout(function () {
+            var nextOverlay = getRangeSelectionOverlayElement();
+            if (!nextOverlay) {
+                return;
+            }
+            nextOverlay.style.transition = "opacity 180ms ease";
+            nextOverlay.style.opacity = "0";
+            requestAnimationFrame(function () {
+                nextOverlay.style.opacity = "1";
+            });
+        }, 0);
     }
 
     function updateMeasureRangeStatus(fromMeasure, toMeasure) {

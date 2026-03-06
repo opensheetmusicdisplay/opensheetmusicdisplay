@@ -30,8 +30,19 @@ import { MultiExpression } from "../MusicalScore/VoiceData/Expressions/MultiExpr
 import { OctaveShift } from "../MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { GraphicalLyricEntry } from "../MusicalScore/Graphical/GraphicalLyricEntry";
 import { GraphicalChordSymbolContainer } from "../MusicalScore/Graphical/GraphicalChordSymbolContainer";
+import { GraphicalLabel } from "../MusicalScore/Graphical/GraphicalLabel";
 import { MultiTempoExpression } from "../MusicalScore/VoiceData/Expressions/MultiTempoExpression";
 import { MidiExporter, MidiExportOptions } from "../MusicalScore/Export/MidiExporter";
+import { PointF2D } from "../Common/DataObjects/PointF2D";
+import { GraphicalStaffEntry } from "../MusicalScore/Graphical/GraphicalStaffEntry";
+import { MusicSystem } from "../MusicalScore/Graphical/MusicSystem";
+import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
+import {
+    InteractiveRangeSelectionOptions,
+    RangeSelectionAnchor,
+    RangeSelectionDirection,
+    RangeSelectionPayload
+} from "./RangeSelection";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -108,6 +119,47 @@ export class OpenSheetMusicDisplay {
      * so you can make modifications to the xml that OSMD will use.
      * Note that this is (re-)set on osmd.setOptions as `{return xml}`, unless you specify the function in the options. */
     public OnXMLRead: (xml: string) => string;
+    public OnRangeSelectionChange: (payload: RangeSelectionPayload) => void;
+    public OnRangeSelectionLoopRequest: (payload: RangeSelectionPayload) => void;
+    public OnRangeSelectionClearRequest: (payload: RangeSelectionPayload) => void;
+    public OnRangeSelectionControlsRender: (container: HTMLDivElement, payload: RangeSelectionPayload) => void;
+    public OnRangeHandleDraggingChange: (isHandleDragging: boolean) => void;
+    private interactiveRangeSelectionEnabled: boolean = false;
+    private interactiveRangeSelectionOptions: InteractiveRangeSelectionOptions = {};
+    private rangeInteractionOverlay: HTMLDivElement;
+    private rangeInteractionBoundElements: HTMLElement[] = [];
+    private isRangeDragging: boolean = false;
+    private hasActiveRangeSelectionOpacity: boolean = false;
+    private rangeOpacityUpdateTimeoutId: number = 0;
+    private lastRangeOpacityUpdateTimestampMs: number = 0;
+    private pendingRangePointerMoveAnchor: RangeSelectionAnchor;
+    private rangePointerMoveAnimationFrameId: number = 0;
+    private rangeTouchAutoScrollAnimationFrameId: number = 0;
+    private needsCommittedRangeAnchorRefresh: boolean = false;
+    private hoverAnchor: RangeSelectionAnchor;
+    private dragStartAnchor: RangeSelectionAnchor;
+    private dragCurrentAnchor: RangeSelectionAnchor;
+    private pendingTouchRangeStartAnchor: RangeSelectionAnchor;
+    private activeDragBound: "start" | "end" | "both" = "both";
+    private rangeDragPointerCaptureElement: Element;
+    private rangeDragPointerId: number = -1;
+    private activeTouchPointerId: number = -1;
+    private activeTouchStartClientX: number = 0;
+    private activeTouchStartClientY: number = 0;
+    private activeTouchMoved: boolean = false;
+    private activeTouchDownAnchor: RangeSelectionAnchor;
+    private activeTouchDragClientX: number = 0;
+    private activeTouchDragClientY: number = 0;
+    private touchDragScrollLockEnabled: boolean = false;
+    private touchDragNativeScrollSuppressed: boolean = false;
+    private isRangeHandleDragging: boolean = false;
+    private touchPendingAction: "none" | "setOrCommit" | "clearSelection" = "none";
+    private readonly rangePointerMoveListener: (event: PointerEvent) => void = (event: PointerEvent): void => this.onRangePointerMove(event);
+    private readonly rangePointerDownListener: (event: PointerEvent) => void = (event: PointerEvent): void => this.onRangePointerDown(event);
+    private readonly rangePointerUpListener: (event: PointerEvent) => void = (event: PointerEvent): void => this.onRangePointerUp(event);
+    private readonly rangePointerCancelListener: (event: PointerEvent) => void = (event: PointerEvent): void => this.onRangePointerCancel(event);
+    private readonly rangePointerLeaveListener: (event: PointerEvent) => void = (event: PointerEvent): void => this.onRangePointerLeave(event);
+    private readonly touchMoveDuringRangeDragListener: (event: TouchEvent) => void = (event: TouchEvent): void => this.onTouchMoveDuringRangeDrag(event);
 
     /**
      * Load a MusicXML file
@@ -299,6 +351,9 @@ export class OpenSheetMusicDisplay {
             });
         }
         this.reapplyStaffOpacityOverrides();
+        this.syncInteractiveRangeSelection();
+        this.needsCommittedRangeAnchorRefresh = true;
+        this.renderRangeSelection();
         this.zoomUpdated = false;
         this.rules.RenderCount++;
         //console.log("[OSMD] render finished");
@@ -465,6 +520,49 @@ export class OpenSheetMusicDisplay {
         this.reset(); // without this, resize will draw loaded sheet again
     }
 
+    /** Returns the currently committed interactive range selection, if any. */
+    public getRangeSelection(): RangeSelectionPayload {
+        if (!this.dragStartAnchor || !this.dragCurrentAnchor) {
+            return undefined;
+        }
+        return this.createSelectionPayload("committed", this.dragStartAnchor, this.dragCurrentAnchor, false);
+    }
+
+    /** Programmatically sets the interactive range selection using absolute score timestamps. */
+    public setRangeSelection(start: Fraction, end: Fraction): void {
+        if (!this.graphic || !start || !end) {
+            return;
+        }
+        const startAnchor: RangeSelectionAnchor = this.createAnchorFromTimestamp(start);
+        const endAnchor: RangeSelectionAnchor = this.createAnchorFromTimestamp(end);
+        if (!startAnchor || !endAnchor) {
+            return;
+        }
+        this.dragStartAnchor = startAnchor;
+        this.dragCurrentAnchor = endAnchor;
+        this.pendingTouchRangeStartAnchor = undefined;
+        this.renderRangeSelection();
+        this.emitRangeSelection("committed", startAnchor, endAnchor, false);
+    }
+
+    /** Clears the interactive range selection and removes all related overlays. */
+    public clearRangeSelection(emitCallback: boolean = true): void {
+        const hadSelection: boolean = !!(this.dragStartAnchor && this.dragCurrentAnchor);
+        const startAnchor: RangeSelectionAnchor = this.dragStartAnchor;
+        const endAnchor: RangeSelectionAnchor = this.dragCurrentAnchor;
+        this.dragStartAnchor = undefined;
+        this.dragCurrentAnchor = undefined;
+        this.pendingTouchRangeStartAnchor = undefined;
+        this.activeDragBound = "both";
+        this.isRangeDragging = false;
+        this.emitRangeHandleDragging(false);
+        this.resetTouchGestureState();
+        this.renderRangeSelection();
+        if (emitCallback && hadSelection && startAnchor && endAnchor) {
+            this.emitRangeSelection("cleared", startAnchor, endAnchor, false);
+        }
+    }
+
     /** Set OSMD rendering options using an IOSMDOptions object.
      *  Can be called during runtime. Also called by constructor.
      *  For example, setOptions({autoResize: false}) will disable autoResize even during runtime.
@@ -493,6 +591,33 @@ export class OpenSheetMusicDisplay {
         this.OnXMLRead = function(xml): string {return xml;};
         if (options.onXMLRead) {
             this.OnXMLRead = options.onXMLRead;
+        }
+        if ("onRangeSelectionChange" in options) {
+            this.OnRangeSelectionChange = options.onRangeSelectionChange;
+        }
+        if ("onRangeSelectionLoopRequest" in options) {
+            this.OnRangeSelectionLoopRequest = options.onRangeSelectionLoopRequest;
+        }
+        if ("onRangeSelectionClearRequest" in options) {
+            this.OnRangeSelectionClearRequest = options.onRangeSelectionClearRequest;
+        }
+        if ("onRangeSelectionControlsRender" in options) {
+            this.OnRangeSelectionControlsRender = options.onRangeSelectionControlsRender;
+        }
+        if ("onRangeHandleDraggingChange" in options) {
+            this.OnRangeHandleDraggingChange = options.onRangeHandleDraggingChange;
+        }
+        if (options.interactiveRangeSelection !== undefined) {
+            this.interactiveRangeSelectionEnabled = options.interactiveRangeSelection;
+        }
+        if (options.interactiveRangeSelectionOptions !== undefined) {
+            this.interactiveRangeSelectionOptions = {
+                ...this.interactiveRangeSelectionOptions,
+                ...options.interactiveRangeSelectionOptions
+            };
+            if (options.interactiveRangeSelectionOptions.enabled !== undefined) {
+                this.interactiveRangeSelectionEnabled = options.interactiveRangeSelectionOptions.enabled;
+            }
         }
 
         const backendNotInitialized: boolean = !this.drawer || !this.drawer.Backends || this.drawer.Backends.length < 1;
@@ -741,6 +866,7 @@ export class OpenSheetMusicDisplay {
         if (options.skyBottomLineBatchMinMeasures !== undefined) {
             this.rules.SkyBottomLineBatchMinMeasures = options.skyBottomLineBatchMinMeasures;
         }
+        this.syncInteractiveRangeSelection();
     }
 
     public setColoringMode(options: IOSMDOptions): void {
@@ -831,6 +957,10 @@ export class OpenSheetMusicDisplay {
         this.zoom = 1.0;
         this.rules.RenderCount = 0;
         this.staffOpacityOverrides.clear();
+        this.clearRangeSelection(false);
+        this.hoverAnchor = undefined;
+        this.detachRangeSelectionListeners();
+        this.removeRangeSelectionOverlay();
     }
 
     /**
@@ -1418,6 +1548,1745 @@ export class OpenSheetMusicDisplay {
                 }
             }
         }
+    }
+
+    private syncInteractiveRangeSelection(): void {
+        if (!this.interactiveRangeSelectionEnabled || !this.graphic || !this.drawer?.Backends?.length) {
+            this.detachRangeSelectionListeners();
+            this.removeRangeSelectionOverlay();
+            return;
+        }
+
+        this.ensureRangeSelectionOverlay();
+        this.updateRangeSelectionOverlayStyles();
+        this.attachRangeSelectionListeners();
+        this.renderRangeSelection();
+    }
+
+    private attachRangeSelectionListeners(): void {
+        const currentElements: HTMLElement[] = this.drawer.Backends
+            .map((backend: VexFlowBackend) => backend.getRenderElement())
+            .filter((element: HTMLElement) => !!element);
+        const sameBinding: boolean = currentElements.length === this.rangeInteractionBoundElements.length
+            && currentElements.every((element: HTMLElement, index: number) => this.rangeInteractionBoundElements[index] === element);
+        if (sameBinding) {
+            return;
+        }
+        this.detachRangeSelectionListeners();
+        for (const element of currentElements) {
+            element.addEventListener("pointermove", this.rangePointerMoveListener, { passive: false });
+            element.addEventListener("pointerdown", this.rangePointerDownListener);
+            element.addEventListener("pointerleave", this.rangePointerLeaveListener, { passive: true });
+            this.rangeInteractionBoundElements.push(element);
+        }
+        if (this.rangeInteractionBoundElements.length > 0) {
+            window.addEventListener("pointerup", this.rangePointerUpListener);
+            window.addEventListener("pointercancel", this.rangePointerCancelListener);
+        }
+    }
+
+    private detachRangeSelectionListeners(): void {
+        this.cancelPendingRangeOpacityUpdate();
+        this.stopTouchDragAutoScroll();
+        this.setTouchDragScrollLockEnabled(false);
+        this.setTouchDragNativeScrollSuppressed(false);
+        this.emitRangeHandleDragging(false);
+        this.releaseRangeDragPointerCapture();
+        if (this.rangePointerMoveAnimationFrameId !== 0) {
+            window.cancelAnimationFrame(this.rangePointerMoveAnimationFrameId);
+            this.rangePointerMoveAnimationFrameId = 0;
+        }
+        this.pendingRangePointerMoveAnchor = undefined;
+        for (const element of this.rangeInteractionBoundElements) {
+            element.removeEventListener("pointermove", this.rangePointerMoveListener);
+            element.removeEventListener("pointerdown", this.rangePointerDownListener);
+            element.removeEventListener("pointerleave", this.rangePointerLeaveListener);
+            element.style.removeProperty("cursor");
+        }
+        this.rangeInteractionBoundElements = [];
+        window.removeEventListener("pointerup", this.rangePointerUpListener);
+        window.removeEventListener("pointercancel", this.rangePointerCancelListener);
+    }
+
+    private ensureRangeSelectionOverlay(): void {
+        if (this.rangeInteractionOverlay) {
+            // Backend refresh can remove all container children, which detaches this node.
+            // If the reference exists but the node is no longer connected, re-attach it.
+            const overlayDetached: boolean = !this.rangeInteractionOverlay.isConnected
+                || this.rangeInteractionOverlay.parentElement !== this.container;
+            if (!overlayDetached) {
+                return;
+            }
+            this.rangeInteractionOverlay.style.position = "absolute";
+            this.rangeInteractionOverlay.style.left = "0";
+            this.rangeInteractionOverlay.style.top = "0";
+            this.rangeInteractionOverlay.style.right = "0";
+            this.rangeInteractionOverlay.style.bottom = "0";
+            this.rangeInteractionOverlay.style.pointerEvents = "none";
+            this.rangeInteractionOverlay.style.zIndex = this.getSelectionOverlayZIndex().toString();
+            this.container.appendChild(this.rangeInteractionOverlay);
+            return;
+        }
+        if (window.getComputedStyle(this.container).position === "static") {
+            this.container.style.position = "relative";
+        }
+        this.rangeInteractionOverlay = document.createElement("div");
+        this.rangeInteractionOverlay.className = "osmd-range-selection-overlay";
+        this.rangeInteractionOverlay.style.position = "absolute";
+        this.rangeInteractionOverlay.style.left = "0";
+        this.rangeInteractionOverlay.style.top = "0";
+        this.rangeInteractionOverlay.style.right = "0";
+        this.rangeInteractionOverlay.style.bottom = "0";
+        this.rangeInteractionOverlay.style.pointerEvents = "none";
+        this.rangeInteractionOverlay.style.zIndex = this.getSelectionOverlayZIndex().toString();
+        this.container.appendChild(this.rangeInteractionOverlay);
+    }
+
+    private updateRangeSelectionOverlayStyles(): void {
+        if (!this.rangeInteractionOverlay) {
+            return;
+        }
+        this.rangeInteractionOverlay.style.zIndex = this.getSelectionOverlayZIndex().toString();
+    }
+
+    private removeRangeSelectionOverlay(): void {
+        if (!this.rangeInteractionOverlay) {
+            return;
+        }
+        this.rangeInteractionOverlay.remove();
+        this.rangeInteractionOverlay = undefined;
+    }
+
+    private onRangePointerMove(event: PointerEvent): void {
+        if (!this.interactiveRangeSelectionEnabled) {
+            return;
+        }
+        if (this.isTouchPointerEvent(event)) {
+            this.updateTouchMoveState(event);
+            if (event.pointerId !== this.activeTouchPointerId) {
+                return;
+            }
+            if (this.isRangeDragging) {
+                this.activeTouchDragClientX = event.clientX;
+                this.activeTouchDragClientY = event.clientY;
+                event.preventDefault();
+            }
+            // Let touch gestures default to native page/score scrolling unless we are actively dragging a handle.
+            if (!this.isRangeDragging) {
+                return;
+            }
+        }
+        const anchor: RangeSelectionAnchor = this.getAnchorFromPointerEvent(event);
+        this.updateDesktopRangeCursor(event, anchor);
+        if (!anchor) {
+            return;
+        }
+        this.pendingRangePointerMoveAnchor = anchor;
+        if (this.rangePointerMoveAnimationFrameId !== 0) {
+            return;
+        }
+        this.rangePointerMoveAnimationFrameId = window.requestAnimationFrame((): void => {
+            this.rangePointerMoveAnimationFrameId = 0;
+            this.flushRangePointerMove();
+        });
+    }
+
+    private flushRangePointerMove(): void {
+        if (!this.interactiveRangeSelectionEnabled) {
+            this.pendingRangePointerMoveAnchor = undefined;
+            return;
+        }
+        const anchor: RangeSelectionAnchor = this.pendingRangePointerMoveAnchor;
+        this.pendingRangePointerMoveAnchor = undefined;
+        if (!anchor) {
+            return;
+        }
+        this.hoverAnchor = anchor;
+        if (this.isRangeDragging && this.dragStartAnchor) {
+            this.dragCurrentAnchor = anchor;
+            this.renderRangeSelection();
+            this.emitRangeSelection("dragging", this.dragStartAnchor, anchor, true);
+            return;
+        }
+        this.renderRangeSelection();
+        this.emitRangeSelection("hover", anchor, anchor, false);
+    }
+
+    private onRangePointerDown(event: PointerEvent): void {
+        if (!this.interactiveRangeSelectionEnabled) {
+            return;
+        }
+        if (this.isTouchPointerEvent(event)) {
+            this.onRangeTouchPointerDown(event);
+            return;
+        }
+        this.pendingTouchRangeStartAnchor = undefined;
+        this.captureRangePointer(event);
+        const anchor: RangeSelectionAnchor = this.getAnchorFromPointerEvent(event);
+        if (!anchor) {
+            return;
+        }
+        const existingSelection: RangeSelectionPayload = this.getRangeSelection();
+        const draggedBound: "start" | "end" | undefined = this.getDraggedBoundFromAnchor(anchor, existingSelection);
+        if (existingSelection && !this.isAnchorInsideSelection(anchor, existingSelection)) {
+            if (draggedBound) {
+                this.isRangeDragging = true;
+                if (draggedBound === "start") {
+                    // Resize start bound (keep end fixed).
+                    this.activeDragBound = "start";
+                    this.dragStartAnchor = existingSelection.normalizedEnd;
+                } else {
+                    // Resize end bound (keep start fixed).
+                    this.activeDragBound = "end";
+                    this.dragStartAnchor = existingSelection.normalizedStart;
+                }
+                this.dragCurrentAnchor = anchor;
+                this.emitRangeHandleDragging(true);
+                this.renderRangeSelection();
+                this.emitRangeSelection("dragging", this.dragStartAnchor, this.dragCurrentAnchor, true);
+                event.preventDefault();
+                return;
+            }
+            this.clearRangeSelection(true);
+            event.preventDefault();
+            return;
+        }
+        this.isRangeDragging = true;
+        if (existingSelection) {
+            if (draggedBound === "start") {
+                // Resize start bound (keep end fixed).
+                this.activeDragBound = "start";
+                this.dragStartAnchor = existingSelection.normalizedEnd;
+                this.dragCurrentAnchor = anchor;
+            } else if (draggedBound === "end") {
+                // Resize end bound (keep start fixed).
+                this.activeDragBound = "end";
+                this.dragStartAnchor = existingSelection.normalizedStart;
+                this.dragCurrentAnchor = anchor;
+            } else {
+            this.activeDragBound = "both";
+            const startDistance: number = Math.abs(anchor.timestampReal - existingSelection.normalizedStart.timestampReal);
+            const endDistance: number = Math.abs(anchor.timestampReal - existingSelection.normalizedEnd.timestampReal);
+            if (startDistance <= endDistance) {
+                // Resize start bound (keep end fixed).
+                this.dragStartAnchor = existingSelection.normalizedEnd;
+            } else {
+                // Resize end bound (keep start fixed).
+                this.dragStartAnchor = existingSelection.normalizedStart;
+            }
+            this.dragCurrentAnchor = anchor;
+            }
+        } else {
+            this.activeDragBound = "both";
+            this.dragStartAnchor = anchor;
+            this.dragCurrentAnchor = anchor;
+        }
+        this.emitRangeHandleDragging(this.activeDragBound !== "both");
+        this.renderRangeSelection();
+        this.emitRangeSelection("dragging", this.dragStartAnchor, this.dragCurrentAnchor, true);
+        event.preventDefault();
+    }
+
+    private onRangePointerUp(event: PointerEvent): void {
+        if (this.isTouchPointerEvent(event)) {
+            this.onRangeTouchPointerUp(event);
+            return;
+        }
+        this.releaseRangeDragPointerCapture();
+        this.commitRangeDrag(event);
+    }
+
+    private onRangePointerCancel(event: PointerEvent): void {
+        if (!this.interactiveRangeSelectionEnabled || !this.isTouchPointerEvent(event)) {
+            return;
+        }
+        if (event.pointerId !== this.activeTouchPointerId) {
+            return;
+        }
+        this.releaseRangeDragPointerCapture();
+        this.commitRangeDrag();
+        this.resetTouchGestureState();
+    }
+
+    private releaseRangeDragPointerCapture(): void {
+        if (!this.rangeDragPointerCaptureElement || this.rangeDragPointerId < 0) {
+            return;
+        }
+        const captureElement: Element & {
+            hasPointerCapture?: (pointerId: number) => boolean;
+            releasePointerCapture?: (pointerId: number) => void;
+        } = this.rangeDragPointerCaptureElement as any;
+        if (captureElement.hasPointerCapture?.(this.rangeDragPointerId) && captureElement.releasePointerCapture) {
+            captureElement.releasePointerCapture(this.rangeDragPointerId);
+        }
+        this.rangeDragPointerCaptureElement = undefined;
+        this.rangeDragPointerId = -1;
+    }
+
+    private onRangePointerLeave(event: PointerEvent): void {
+        this.clearDesktopRangeCursor(event);
+        if (this.isRangeDragging) {
+            return;
+        }
+        const relatedTarget: Node = event.relatedTarget as Node;
+        if (relatedTarget && this.rangeInteractionOverlay?.contains(relatedTarget)) {
+            return;
+        }
+        this.hoverAnchor = undefined;
+        this.renderRangeSelection();
+    }
+
+    private onRangeTouchPointerDown(event: PointerEvent): void {
+        if (this.activeTouchPointerId !== -1 && this.activeTouchPointerId !== event.pointerId) {
+            return;
+        }
+        const anchor: RangeSelectionAnchor = this.getAnchorFromPointerEvent(event);
+        if (!anchor) {
+            return;
+        }
+        this.activeTouchPointerId = event.pointerId;
+        this.activeTouchStartClientX = event.clientX;
+        this.activeTouchStartClientY = event.clientY;
+        this.activeTouchMoved = false;
+        this.activeTouchDownAnchor = anchor;
+        this.activeTouchDragClientX = event.clientX;
+        this.activeTouchDragClientY = event.clientY;
+        this.touchPendingAction = "none";
+
+        const existingSelection: RangeSelectionPayload = this.getRangeSelection();
+        const draggedBound: "start" | "end" | undefined = this.getDraggedBoundFromAnchor(anchor, existingSelection, true);
+        if (existingSelection) {
+            if (draggedBound) {
+                this.pendingTouchRangeStartAnchor = undefined;
+                this.captureRangePointer(event);
+                this.startRangeHandleDrag(existingSelection, draggedBound, anchor);
+                event.preventDefault();
+                return;
+            }
+            if (this.isAnchorInsideSelection(anchor, existingSelection)) {
+                return;
+            }
+            this.touchPendingAction = "clearSelection";
+            return;
+        }
+        this.touchPendingAction = "setOrCommit";
+    }
+
+    private onRangeTouchPointerUp(event: PointerEvent): void {
+        if (this.activeTouchPointerId !== event.pointerId) {
+            return;
+        }
+        if (this.isRangeDragging) {
+            this.releaseRangeDragPointerCapture();
+            this.commitRangeDrag(event);
+            this.resetTouchGestureState();
+            return;
+        }
+        const isTap: boolean = !this.activeTouchMoved;
+        const anchor: RangeSelectionAnchor = this.getAnchorFromPointerEvent(event) ?? this.activeTouchDownAnchor;
+        if (isTap) {
+            if (this.touchPendingAction === "clearSelection") {
+                this.clearRangeSelection(true);
+            } else if (this.touchPendingAction === "setOrCommit" && anchor) {
+                this.handleTouchTapRangePick(anchor);
+            }
+        }
+        this.resetTouchGestureState();
+    }
+
+    private captureRangePointer(event: PointerEvent): void {
+        const pointerCaptureElement: Element = event.currentTarget as Element;
+        if (pointerCaptureElement?.setPointerCapture) {
+            pointerCaptureElement.setPointerCapture(event.pointerId);
+            this.rangeDragPointerCaptureElement = pointerCaptureElement;
+            this.rangeDragPointerId = event.pointerId;
+        }
+    }
+
+    private commitRangeDrag(event?: PointerEvent): void {
+        if (!this.interactiveRangeSelectionEnabled || !this.isRangeDragging || !this.dragStartAnchor) {
+            return;
+        }
+        const anchor: RangeSelectionAnchor = (event ? this.getAnchorFromPointerEvent(event) : undefined)
+            ?? this.dragCurrentAnchor
+            ?? this.dragStartAnchor;
+        this.isRangeDragging = false;
+        this.dragCurrentAnchor = anchor;
+        const committedSelection: RangeSelectionPayload = this.createSelectionPayload("committed", this.dragStartAnchor, this.dragCurrentAnchor, false);
+        const paddedSelection: RangeSelectionPayload = this.applySelectionPadding(committedSelection, this.activeDragBound);
+        this.dragStartAnchor = paddedSelection.normalizedStart;
+        this.dragCurrentAnchor = paddedSelection.normalizedEnd;
+        this.pendingTouchRangeStartAnchor = undefined;
+        this.activeDragBound = "both";
+        this.emitRangeHandleDragging(false);
+        if (!this.selectionHasAnyNotes(this.dragStartAnchor, this.dragCurrentAnchor)) {
+            this.clearRangeSelection(true);
+            return;
+        }
+        this.renderRangeSelection();
+        this.emitRangeSelection("committed", this.dragStartAnchor, this.dragCurrentAnchor, false);
+    }
+
+    private startRangeHandleDrag(
+        existingSelection: RangeSelectionPayload,
+        draggedBound: "start" | "end",
+        anchor: RangeSelectionAnchor
+    ): void {
+        this.isRangeDragging = true;
+        this.emitRangeHandleDragging(true);
+        this.setTouchDragScrollLockEnabled(true);
+        this.setTouchDragNativeScrollSuppressed(true);
+        this.startTouchDragAutoScroll();
+        if (draggedBound === "start") {
+            // Resize start bound (keep end fixed).
+            this.activeDragBound = "start";
+            this.dragStartAnchor = existingSelection.normalizedEnd;
+        } else {
+            // Resize end bound (keep start fixed).
+            this.activeDragBound = "end";
+            this.dragStartAnchor = existingSelection.normalizedStart;
+        }
+        this.dragCurrentAnchor = anchor;
+        this.renderRangeSelection();
+        this.emitRangeSelection("dragging", this.dragStartAnchor, this.dragCurrentAnchor, true);
+    }
+
+    private handleTouchTapRangePick(anchor: RangeSelectionAnchor): void {
+        if (!this.pendingTouchRangeStartAnchor) {
+            this.pendingTouchRangeStartAnchor = anchor;
+            this.hoverAnchor = anchor;
+            this.renderRangeSelection();
+            this.emitRangeSelection("hover", anchor, anchor, false);
+            return;
+        }
+        this.dragStartAnchor = this.pendingTouchRangeStartAnchor;
+        this.dragCurrentAnchor = anchor;
+        this.pendingTouchRangeStartAnchor = undefined;
+        const committedSelection: RangeSelectionPayload = this.createSelectionPayload("committed", this.dragStartAnchor, this.dragCurrentAnchor, false);
+        const paddedSelection: RangeSelectionPayload = this.applySelectionPadding(committedSelection, "both");
+        this.dragStartAnchor = paddedSelection.normalizedStart;
+        this.dragCurrentAnchor = paddedSelection.normalizedEnd;
+        if (!this.selectionHasAnyNotes(this.dragStartAnchor, this.dragCurrentAnchor)) {
+            this.clearRangeSelection(true);
+            return;
+        }
+        this.renderRangeSelection();
+        this.emitRangeSelection("committed", this.dragStartAnchor, this.dragCurrentAnchor, false);
+    }
+
+    private updateTouchMoveState(event: PointerEvent): void {
+        if (event.pointerId !== this.activeTouchPointerId || this.activeTouchMoved) {
+            return;
+        }
+        const movementThresholdPx: number = 10;
+        const distanceX: number = Math.abs(event.clientX - this.activeTouchStartClientX);
+        const distanceY: number = Math.abs(event.clientY - this.activeTouchStartClientY);
+        if (distanceX >= movementThresholdPx || distanceY >= movementThresholdPx) {
+            this.activeTouchMoved = true;
+            this.touchPendingAction = "none";
+        }
+    }
+
+    private resetTouchGestureState(): void {
+        this.stopTouchDragAutoScroll();
+        this.setTouchDragScrollLockEnabled(false);
+        this.setTouchDragNativeScrollSuppressed(false);
+        this.activeTouchPointerId = -1;
+        this.activeTouchMoved = false;
+        this.activeTouchDownAnchor = undefined;
+        this.activeTouchDragClientX = 0;
+        this.activeTouchDragClientY = 0;
+        this.touchPendingAction = "none";
+    }
+
+    private isTouchPointerEvent(event: PointerEvent): boolean {
+        return event.pointerType === "touch";
+    }
+
+    private setTouchDragScrollLockEnabled(enabled: boolean): void {
+        if (this.touchDragScrollLockEnabled === enabled) {
+            return;
+        }
+        this.touchDragScrollLockEnabled = enabled;
+        for (const element of this.rangeInteractionBoundElements) {
+            if (enabled) {
+                element.style.touchAction = "none";
+            } else {
+                element.style.removeProperty("touch-action");
+            }
+        }
+    }
+
+    private setTouchDragNativeScrollSuppressed(enabled: boolean): void {
+        if (this.touchDragNativeScrollSuppressed === enabled) {
+            return;
+        }
+        this.touchDragNativeScrollSuppressed = enabled;
+        if (enabled) {
+            // iOS Safari/WKWebView can keep panning unless touchmove is cancelled in capture phase.
+            document.addEventListener("touchmove", this.touchMoveDuringRangeDragListener, { passive: false, capture: true });
+            window.addEventListener("touchmove", this.touchMoveDuringRangeDragListener, { passive: false, capture: true });
+            for (const element of this.rangeInteractionBoundElements) {
+                element.addEventListener("touchmove", this.touchMoveDuringRangeDragListener, { passive: false, capture: true });
+            }
+        } else {
+            document.removeEventListener("touchmove", this.touchMoveDuringRangeDragListener, true);
+            window.removeEventListener("touchmove", this.touchMoveDuringRangeDragListener, true);
+            for (const element of this.rangeInteractionBoundElements) {
+                element.removeEventListener("touchmove", this.touchMoveDuringRangeDragListener, true);
+            }
+        }
+    }
+
+    private onTouchMoveDuringRangeDrag(event: TouchEvent): void {
+        if (!this.isRangeDragging || this.activeTouchPointerId < 0) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    private emitRangeHandleDragging(isHandleDragging: boolean): void {
+        if (this.isRangeHandleDragging === isHandleDragging) {
+            return;
+        }
+        this.isRangeHandleDragging = isHandleDragging;
+        if (this.OnRangeHandleDraggingChange) {
+            this.OnRangeHandleDraggingChange(isHandleDragging);
+        }
+    }
+
+    private updateDesktopRangeCursor(event: PointerEvent, anchor: RangeSelectionAnchor): void {
+        if (this.isTouchPointerEvent(event)) {
+            return;
+        }
+        const pointerElement: HTMLElement = event.currentTarget as HTMLElement;
+        if (!pointerElement) {
+            return;
+        }
+        const existingSelection: RangeSelectionPayload = this.getRangeSelection();
+        const hoveredHandle: "start" | "end" | undefined = this.getDraggedBoundFromAnchor(anchor, existingSelection, false);
+        pointerElement.style.cursor = hoveredHandle ? "pointer" : "";
+    }
+
+    private clearDesktopRangeCursor(event: PointerEvent): void {
+        if (this.isTouchPointerEvent(event)) {
+            return;
+        }
+        const pointerElement: HTMLElement = event.currentTarget as HTMLElement;
+        if (!pointerElement) {
+            return;
+        }
+        pointerElement.style.removeProperty("cursor");
+    }
+
+    private startTouchDragAutoScroll(): void {
+        if (this.rangeTouchAutoScrollAnimationFrameId !== 0) {
+            return;
+        }
+        const step: () => void = (): void => {
+            this.rangeTouchAutoScrollAnimationFrameId = 0;
+            if (!this.isRangeDragging || this.activeTouchPointerId < 0) {
+                return;
+            }
+            const scrollContainer: HTMLElement | Window = this.getTouchDragScrollContainer();
+            const scrollDeltaY: number = this.getTouchDragScrollDeltaY(scrollContainer, this.activeTouchDragClientY);
+            if (scrollDeltaY !== 0) {
+                if (this.isWindowObject(scrollContainer)) {
+                    scrollContainer.scrollBy(0, scrollDeltaY);
+                } else {
+                    scrollContainer.scrollTop += scrollDeltaY;
+                }
+                const anchorFromScroll: RangeSelectionAnchor = this.getAnchorFromClientPoint(this.activeTouchDragClientX, this.activeTouchDragClientY);
+                if (anchorFromScroll && this.dragStartAnchor) {
+                    this.dragCurrentAnchor = anchorFromScroll;
+                    this.renderRangeSelection();
+                    this.emitRangeSelection("dragging", this.dragStartAnchor, this.dragCurrentAnchor, true);
+                }
+            }
+            this.rangeTouchAutoScrollAnimationFrameId = window.requestAnimationFrame(step);
+        };
+        this.rangeTouchAutoScrollAnimationFrameId = window.requestAnimationFrame(step);
+    }
+
+    private stopTouchDragAutoScroll(): void {
+        if (this.rangeTouchAutoScrollAnimationFrameId === 0) {
+            return;
+        }
+        window.cancelAnimationFrame(this.rangeTouchAutoScrollAnimationFrameId);
+        this.rangeTouchAutoScrollAnimationFrameId = 0;
+    }
+
+    private getTouchDragScrollContainer(): HTMLElement | Window {
+        let current: HTMLElement = this.container;
+        while (current && current !== document.body) {
+            const styles: CSSStyleDeclaration = window.getComputedStyle(current);
+            const overflowY: string = styles.overflowY;
+            const isScrollable: boolean = (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay")
+                && current.scrollHeight > current.clientHeight;
+            if (isScrollable) {
+                return current;
+            }
+            current = current.parentElement;
+        }
+        return window;
+    }
+
+    private getTouchDragScrollDeltaY(scrollContainer: HTMLElement | Window, clientY: number): number {
+        const edgeThresholdPx: number = this.getRangeSelectionSnapPaddingPx();
+        const minSpeedPxPerFrame: number = 2;
+        const maxSpeedPxPerFrame: number = 10;
+        let top: number;
+        let bottom: number;
+        if (this.isWindowObject(scrollContainer)) {
+            top = 0;
+            bottom = window.innerHeight;
+        } else {
+            const rect: DOMRect = scrollContainer.getBoundingClientRect();
+            top = rect.top;
+            bottom = rect.bottom;
+        }
+        if (clientY < top + edgeThresholdPx) {
+            const ratio: number = Math.max(0, (top + edgeThresholdPx - clientY) / edgeThresholdPx);
+            const speed: number = minSpeedPxPerFrame + (maxSpeedPxPerFrame - minSpeedPxPerFrame) * ratio;
+            return -Math.round(speed);
+        }
+        if (clientY > bottom - edgeThresholdPx) {
+            const ratio: number = Math.max(0, (clientY - (bottom - edgeThresholdPx)) / edgeThresholdPx);
+            const speed: number = minSpeedPxPerFrame + (maxSpeedPxPerFrame - minSpeedPxPerFrame) * ratio;
+            return Math.round(speed);
+        }
+        return 0;
+    }
+
+    private isWindowObject(target: HTMLElement | Window): target is Window {
+        return target === window;
+    }
+
+    private getAnchorFromPointerEvent(event: PointerEvent): RangeSelectionAnchor {
+        return this.getAnchorFromClientPoint(event.clientX, event.clientY);
+    }
+
+    private getAnchorFromClientPoint(clientX: number, clientY: number): RangeSelectionAnchor {
+        if (!this.graphic) {
+            return undefined;
+        }
+        const domPoint: PointF2D = new PointF2D(clientX, clientY);
+        const svgPoint: PointF2D = this.graphic.domToSvg(domPoint);
+        if (!svgPoint) {
+            return undefined;
+        }
+        const osmdPoint: PointF2D = this.graphic.svgToOsmd(svgPoint);
+        if (!osmdPoint) {
+            return undefined;
+        }
+        const system: MusicSystem = this.findSystemAtPosition(osmdPoint);
+        if (!system) {
+            return undefined;
+        }
+        const leftBoundaryX: number = system.GetLeftBorderAbsoluteXPosition();
+        const rightBoundaryX: number = system.GetRightBorderAbsoluteXPosition();
+        const zoomScale: number = Math.max(0.0001, this.zoom * 10.0);
+        const preStartPaddingPx: number = this.getRangeSelectionPreStartPaddingPx();
+        const preStartPaddingOsmd: number = preStartPaddingPx / zoomScale;
+        const x: number = Math.min(
+            rightBoundaryX,
+            Math.max(leftBoundaryX - preStartPaddingOsmd, osmdPoint.x)
+        );
+        const xPx: number = x * zoomScale;
+        const startTime: Fraction = system.GetSystemsFirstTimeStamp();
+        const endTime: Fraction = system.GetSystemsLastTimeStamp();
+        const totalWidthOsmd: number = Math.max(0.0001, rightBoundaryX - leftBoundaryX);
+        const ratio: number = (x - leftBoundaryX) / totalWidthOsmd;
+        const clampedRatio: number = Math.max(-(preStartPaddingOsmd / totalWidthOsmd), Math.min(1, ratio));
+        const timestampReal: number = startTime.RealValue + (endTime.RealValue - startTime.RealValue) * clampedRatio;
+        const timestamp: Fraction = new Fraction(timestampReal, 1);
+        if (!timestamp) {
+            return undefined;
+        }
+        const staffEntry: GraphicalStaffEntry = this.graphic.GetNearestStaffEntry(new PointF2D(x, osmdPoint.y));
+        const lineBounds: { yPx: number, heightPx: number } = this.getSystemVerticalBoundsInPixels(system);
+        return {
+            timestamp,
+            timestampReal,
+            measureIndex: staffEntry?.parentMeasure?.parentSourceMeasure?.measureListIndex
+                ?? system.GraphicalMeasures[0]?.[0]?.parentSourceMeasure?.measureListIndex
+                ?? 0,
+            systemIndex: this.getSystemIndex(system),
+            pageNumber: system.Parent?.PageNumber ?? 1,
+            staffIndex: staffEntry?.sourceStaffEntry?.ParentStaff?.idInMusicSheet ?? system.StaffLines[0]?.ParentStaff?.idInMusicSheet ?? 0,
+            x,
+            xPx,
+            yPx: lineBounds.yPx,
+            heightPx: lineBounds.heightPx
+        };
+    }
+
+    private createAnchorFromTimestamp(timestamp: Fraction): RangeSelectionAnchor {
+        if (!this.graphic) {
+            return undefined;
+        }
+        const result: [number, MusicSystem] = this.graphic.calculateXPositionFromTimestamp(timestamp);
+        if (!result || !result[1]) {
+            return undefined;
+        }
+        const x: number = result[0];
+        const system: MusicSystem = result[1];
+        const systemMeasure: GraphicalMeasure = system.GraphicalMeasures[0]?.[0];
+        const lineBounds: { yPx: number, heightPx: number } = this.getSystemVerticalBoundsInPixels(system);
+        return {
+            timestamp,
+            timestampReal: timestamp.RealValue,
+            measureIndex: systemMeasure?.parentSourceMeasure?.measureListIndex ?? 0,
+            systemIndex: this.getSystemIndex(system),
+            pageNumber: system.Parent?.PageNumber ?? 1,
+            staffIndex: system.StaffLines[0]?.ParentStaff?.idInMusicSheet ?? 0,
+            x,
+            xPx: x * this.zoom * 10.0,
+            yPx: lineBounds.yPx,
+            heightPx: lineBounds.heightPx
+        };
+    }
+
+    private getSystemVerticalBoundsInPixels(system: MusicSystem): { yPx: number, heightPx: number } {
+        const firstStaffLine: MusicSystem["StaffLines"][number] = system.StaffLines[0];
+        const lastStaffLine: MusicSystem["StaffLines"][number] = system.StaffLines[system.StaffLines.length - 1];
+        const y: number = system.PositionAndShape.AbsolutePosition.y + firstStaffLine.PositionAndShape.RelativePosition.y;
+        const bottomY: number = system.PositionAndShape.AbsolutePosition.y + lastStaffLine.PositionAndShape.RelativePosition.y + lastStaffLine.StaffHeight;
+        const scale: number = this.zoom * 10.0;
+        return {
+            yPx: y * scale,
+            heightPx: (bottomY - y) * scale
+        };
+    }
+
+    private getSystemHorizontalBoundsInPixels(system: MusicSystem): { leftPx: number, rightPx: number } {
+        const scale: number = this.zoom * 10.0;
+        return {
+            leftPx: system.GetLeftBorderAbsoluteXPosition() * scale,
+            rightPx: system.GetRightBorderAbsoluteXPosition() * scale
+        };
+    }
+
+    private getSystemIndex(targetSystem: MusicSystem): number {
+        let index: number = 0;
+        for (const page of this.graphic.MusicPages) {
+            for (const system of page.MusicSystems) {
+                if (system === targetSystem) {
+                    return index;
+                }
+                index++;
+            }
+        }
+        return -1;
+    }
+
+    private findSystemAtPosition(position: PointF2D): MusicSystem {
+        if (!this.graphic) {
+            return undefined;
+        }
+        let closestSystem: MusicSystem = undefined;
+        let closestDistance: number = Number.MAX_VALUE;
+        for (const page of this.graphic.MusicPages) {
+            for (const system of page.MusicSystems) {
+                const left: number = system.GetLeftBorderAbsoluteXPosition();
+                const right: number = system.GetRightBorderAbsoluteXPosition();
+                const firstStaffLine: MusicSystem["StaffLines"][number] = system.StaffLines[0];
+                const lastStaffLine: MusicSystem["StaffLines"][number] = system.StaffLines[system.StaffLines.length - 1];
+                if (!firstStaffLine || !lastStaffLine) {
+                    continue;
+                }
+                const top: number = system.PositionAndShape.AbsolutePosition.y + firstStaffLine.PositionAndShape.RelativePosition.y;
+                const bottom: number = system.PositionAndShape.AbsolutePosition.y
+                    + lastStaffLine.PositionAndShape.RelativePosition.y + lastStaffLine.StaffHeight;
+                if (position.x >= left && position.x <= right && position.y >= top && position.y <= bottom) {
+                    return system;
+                }
+                const dx: number = position.x < left ? left - position.x : (position.x > right ? position.x - right : 0);
+                const dy: number = position.y < top ? top - position.y : (position.y > bottom ? position.y - bottom : 0);
+                const distance: number = dx + dy;
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestSystem = system;
+                }
+            }
+        }
+        return closestSystem;
+    }
+
+    private isAnchorInsideSelection(anchor: RangeSelectionAnchor, selection: RangeSelectionPayload): boolean {
+        if (!anchor || !selection) {
+            return false;
+        }
+        return anchor.timestampReal >= selection.normalizedStart.timestampReal
+            && anchor.timestampReal <= selection.normalizedEnd.timestampReal;
+    }
+
+    private getDraggedBoundFromAnchor(
+        anchor: RangeSelectionAnchor,
+        selection: RangeSelectionPayload,
+        isTouchInteraction: boolean = false
+    ): "start" | "end" | undefined {
+        if (!anchor || !selection) {
+            return undefined;
+        }
+        const baseLineHitTolerancePx: number = Math.max(this.getSelectionLineWidthPx() * 1.5, 12);
+        const lineHitTolerancePx: number = isTouchInteraction
+            ? Math.max(baseLineHitTolerancePx * 2.5, 30)
+            : baseLineHitTolerancePx;
+        const matchesStartSystem: boolean = anchor.systemIndex === selection.normalizedStart.systemIndex;
+        const matchesEndSystem: boolean = anchor.systemIndex === selection.normalizedEnd.systemIndex;
+        const startDistancePx: number = Math.abs(anchor.xPx - selection.normalizedStart.xPx);
+        const endDistancePx: number = Math.abs(anchor.xPx - selection.normalizedEnd.xPx);
+        const nearStartLine: boolean = matchesStartSystem && startDistancePx <= lineHitTolerancePx;
+        const nearEndLine: boolean = matchesEndSystem && endDistancePx <= lineHitTolerancePx;
+        if (!nearStartLine && !nearEndLine) {
+            return undefined;
+        }
+        if (nearStartLine && nearEndLine) {
+            return startDistancePx <= endDistancePx ? "start" : "end";
+        }
+        return nearStartLine ? "start" : "end";
+    }
+
+    private applySelectionPadding(selection: RangeSelectionPayload, movedBound: "start" | "end" | "both" = "both"): RangeSelectionPayload {
+        if (!selection) {
+            return selection;
+        }
+        // Snap-to-notes: align selection boundaries to nearest note positions
+        if (this.interactiveRangeSelectionOptions.snapToNotes && this.graphic) {
+            const snappedStart: RangeSelectionAnchor = movedBound === "end"
+                ? selection.normalizedStart
+                : this.snapAnchorToNearestNote(selection.normalizedStart, "start");
+            const snappedEnd: RangeSelectionAnchor = movedBound === "start"
+                ? selection.normalizedEnd
+                : this.snapAnchorToNearestNote(selection.normalizedEnd, "end");
+            return this.createSelectionPayload(selection.phase, snappedStart, snappedEnd, selection.isDragging);
+        }
+        const paddingPx: number = this.interactiveRangeSelectionOptions.applyPaddingPx ?? 0;
+        if (!Number.isFinite(paddingPx) || paddingPx <= 0) {
+            return selection;
+        }
+        const paddedStart: RangeSelectionAnchor = movedBound === "end"
+            ? selection.normalizedStart
+            : this.shiftAnchorX(selection.normalizedStart, -paddingPx);
+        const paddedEnd: RangeSelectionAnchor = movedBound === "start"
+            ? selection.normalizedEnd
+            : this.shiftAnchorX(selection.normalizedEnd, paddingPx);
+        return this.createSelectionPayload(selection.phase, paddedStart, paddedEnd, selection.isDragging);
+    }
+
+    /**
+     * Snap an anchor to the nearest GraphicalStaffEntry note position.
+     * For "start" bound: snap to the first note at or after the anchor's timestamp.
+     * For "end" bound: snap to the last note at or before the anchor's timestamp.
+     */
+    private snapAnchorToNearestNote(anchor: RangeSelectionAnchor, bound: "start" | "end"): RangeSelectionAnchor {
+        if (!anchor || !this.graphic) {
+            return anchor;
+        }
+        const scale: number = this.zoom * 10.0;
+        let bestEntry: GraphicalStaffEntry = undefined;
+        let bestSystemIndex: number = -1;
+        let bestXPx: number = bound === "start" ? Number.MAX_VALUE : Number.MIN_VALUE;
+        let systemIndex: number = 0;
+        for (const page of this.graphic.MusicPages) {
+            for (const musicSystem of page.MusicSystems) {
+                for (const staffLine of musicSystem.StaffLines) {
+                    for (const measure of staffLine.Measures) {
+                        for (const entry of measure.staffEntries) {
+                            if (!this.entryHasPlayableNotes(entry)) {
+                                continue;
+                            }
+                            const candidateX: number = entry.PositionAndShape?.AbsolutePosition?.x;
+                            if (typeof candidateX !== "number" || !Number.isFinite(candidateX)) {
+                                continue;
+                            }
+                            const candidateXPx: number = candidateX * scale;
+                            // Use xPx + systemIndex matching (same criteria as gray-out logic)
+                            if (bound === "start") {
+                                // Find first note at or after anchor xPx (in same system) or in later system
+                                const isAfterAnchor: boolean = systemIndex > anchor.systemIndex
+                                    || (systemIndex === anchor.systemIndex && candidateXPx >= anchor.xPx - 1);
+                                const isBetterThanBest: boolean = bestEntry === undefined
+                                    || systemIndex < bestSystemIndex
+                                    || (systemIndex === bestSystemIndex && candidateXPx < bestXPx);
+                                if (isAfterAnchor && isBetterThanBest) {
+                                    bestEntry = entry;
+                                    bestSystemIndex = systemIndex;
+                                    bestXPx = candidateXPx;
+                                }
+                            } else {
+                                // Find last note at or before anchor xPx (in same system) or in earlier system
+                                const isBeforeAnchor: boolean = systemIndex < anchor.systemIndex
+                                    || (systemIndex === anchor.systemIndex && candidateXPx <= anchor.xPx + 1);
+                                const isBetterThanBest: boolean = bestEntry === undefined
+                                    || systemIndex > bestSystemIndex
+                                    || (systemIndex === bestSystemIndex && candidateXPx > bestXPx);
+                                if (isBeforeAnchor && isBetterThanBest) {
+                                    bestEntry = entry;
+                                    bestSystemIndex = systemIndex;
+                                    bestXPx = candidateXPx;
+                                }
+                            }
+                        }
+                    }
+                }
+                systemIndex++;
+            }
+        }
+        if (!bestEntry) {
+            return anchor;
+        }
+        const entryX: number = bestEntry.PositionAndShape?.AbsolutePosition?.x ?? anchor.x;
+        const entryXPx: number = entryX * scale;
+        const widthCompensationPx: number = this.getSnapWidthCompensationPxForEntry(bestEntry, bound, scale);
+        const snapPaddingPx: number = this.getRangeSelectionSnapPaddingPx();
+        const rawSnappedXPx: number = bound === "start"
+            ? entryXPx - snapPaddingPx - widthCompensationPx
+            : entryXPx + snapPaddingPx + widthCompensationPx;
+        const snappedXPx: number = this.clampSnapBoundaryToAdjacentEntryMidpoint(bestEntry, bound, rawSnappedXPx, scale);
+        const snappedX: number = snappedXPx / scale;
+        const entryTimestamp: number = bestEntry.getAbsoluteTimestamp()?.RealValue ?? anchor.timestampReal;
+        const system: MusicSystem = bestEntry.parentMeasure?.ParentMusicSystem
+            ?? this.findSystemByIndex(anchor.systemIndex);
+        const lineBounds: { yPx: number, heightPx: number } = system
+            ? this.getSystemVerticalBoundsInPixels(system)
+            : { yPx: anchor.yPx, heightPx: anchor.heightPx };
+        return {
+            timestamp: new Fraction(entryTimestamp, 1),
+            timestampReal: entryTimestamp,
+            measureIndex: bestEntry.parentMeasure?.parentSourceMeasure?.measureListIndex ?? anchor.measureIndex,
+            systemIndex: system ? this.getSystemIndex(system) : anchor.systemIndex,
+            pageNumber: system?.Parent?.PageNumber ?? anchor.pageNumber,
+            staffIndex: bestEntry.sourceStaffEntry?.ParentStaff?.idInMusicSheet ?? anchor.staffIndex,
+            x: snappedX,
+            xPx: snappedXPx,
+            selectionX: entryX,
+            selectionXPx: entryXPx,
+            yPx: lineBounds.yPx,
+            heightPx: lineBounds.heightPx,
+        };
+    }
+
+    private getRangeSelectionSnapPaddingPx(): number {
+        // Keep this aligned with touch auto-scroll edge threshold.
+        return 30;
+    }
+
+    private getRangeSelectionSnapNeighborLeewayPx(): number {
+        return 16;
+    }
+
+    private entryHasPlayableNotes(entry: GraphicalStaffEntry): boolean {
+        return entry?.sourceStaffEntry?.VoiceEntries?.some(
+            (voiceEntry: any) => voiceEntry.Notes?.some((note: any) => !note.isRest())
+        ) ?? false;
+    }
+
+    private clampSnapBoundaryToAdjacentEntryMidpoint(
+        entry: GraphicalStaffEntry,
+        bound: "start" | "end",
+        snappedXPx: number,
+        scale: number
+    ): number {
+        if (!entry || !Number.isFinite(snappedXPx) || !Number.isFinite(scale)) {
+            return snappedXPx;
+        }
+        const entryCenterXPx: number = (entry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
+        if (!Number.isFinite(entryCenterXPx)) {
+            return snappedXPx;
+        }
+        const neighborCenterXPx: number = this.getAdjacentPlayableEntryCenterXPx(
+            entry,
+            bound === "start" ? "previous" : "next",
+            scale
+        );
+        if (!Number.isFinite(neighborCenterXPx)) {
+            return snappedXPx;
+        }
+        const midpointXPx: number = (entryCenterXPx + neighborCenterXPx) / 2;
+        const leewayPx: number = this.getRangeSelectionSnapNeighborLeewayPx();
+        return bound === "start"
+            ? Math.max(snappedXPx, midpointXPx - leewayPx)
+            : Math.min(snappedXPx, midpointXPx + leewayPx);
+    }
+
+    private getAdjacentPlayableEntryCenterXPx(
+        entry: GraphicalStaffEntry,
+        direction: "previous" | "next",
+        scale: number
+    ): number {
+        const system: MusicSystem = entry?.parentMeasure?.ParentMusicSystem;
+        if (!system || !Number.isFinite(scale)) {
+            return undefined;
+        }
+        const entryCenterXPx: number = (entry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
+        if (!Number.isFinite(entryCenterXPx)) {
+            return undefined;
+        }
+        let candidateCenterXPx: number = direction === "previous" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+        for (const staffLine of system.StaffLines) {
+            for (const measure of staffLine.Measures) {
+                for (const candidateEntry of measure.staffEntries) {
+                    if (!candidateEntry || candidateEntry === entry || !this.entryHasPlayableNotes(candidateEntry)) {
+                        continue;
+                    }
+                    const centerXPx: number = (candidateEntry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
+                    if (!Number.isFinite(centerXPx)) {
+                        continue;
+                    }
+                    if (direction === "previous") {
+                        if (centerXPx < entryCenterXPx && centerXPx > candidateCenterXPx) {
+                            candidateCenterXPx = centerXPx;
+                        }
+                    } else if (centerXPx > entryCenterXPx && centerXPx < candidateCenterXPx) {
+                        candidateCenterXPx = centerXPx;
+                    }
+                }
+            }
+        }
+        if (direction === "previous" && !Number.isFinite(candidateCenterXPx)) {
+            return undefined;
+        }
+        if (direction === "next" && !Number.isFinite(candidateCenterXPx)) {
+            return undefined;
+        }
+        return candidateCenterXPx;
+    }
+
+    private getSnapWidthCompensationPxForEntry(
+        entry: GraphicalStaffEntry,
+        bound: "start" | "end",
+        scale: number
+    ): number {
+        if (!entry || !Number.isFinite(scale)) {
+            return 0;
+        }
+        const entryX: number = entry.PositionAndShape?.AbsolutePosition?.x;
+        if (!Number.isFinite(entryX)) {
+            return 0;
+        }
+        const entryXPx: number = entryX * scale;
+        let minLeftXPx: number = Number.POSITIVE_INFINITY;
+        let maxRightXPx: number = Number.NEGATIVE_INFINITY;
+
+        for (const graphicalVoiceEntry of entry.graphicalVoiceEntries ?? []) {
+            for (const graphicalNote of graphicalVoiceEntry?.notes ?? []) {
+                const sourceNote: any = graphicalNote?.sourceNote;
+                if (!sourceNote || sourceNote.isRest()) {
+                    continue;
+                }
+                const noteX: number = graphicalNote.PositionAndShape?.AbsolutePosition?.x;
+                if (!Number.isFinite(noteX)) {
+                    continue;
+                }
+                const noteXPx: number = noteX * scale;
+                const noteLeftXPx: number = noteXPx + ((graphicalNote.PositionAndShape?.BorderLeft ?? 0) * scale);
+                const noteRightXPx: number = noteXPx + ((graphicalNote.PositionAndShape?.BorderRight ?? 0) * scale);
+                minLeftXPx = Math.min(minLeftXPx, noteLeftXPx);
+                maxRightXPx = Math.max(maxRightXPx, noteRightXPx);
+            }
+        }
+
+        if (!Number.isFinite(minLeftXPx) || !Number.isFinite(maxRightXPx)) {
+            return 0;
+        }
+        return bound === "start"
+            ? Math.max(0, entryXPx - minLeftXPx)
+            : Math.max(0, maxRightXPx - entryXPx);
+    }
+
+    private shiftAnchorX(anchor: RangeSelectionAnchor, deltaPx: number): RangeSelectionAnchor {
+        if (!anchor || !this.graphic) {
+            return anchor;
+        }
+        const system: MusicSystem = this.findSystemByIndex(anchor.systemIndex);
+        if (!system) {
+            return anchor;
+        }
+        const horizontalBounds: { leftPx: number, rightPx: number } = this.getSystemHorizontalBoundsInPixels(system);
+        const preStartPaddingPx: number = this.getRangeSelectionPreStartPaddingPx();
+        const shiftedXPx: number = Math.min(
+            horizontalBounds.rightPx,
+            Math.max(horizontalBounds.leftPx - preStartPaddingPx, anchor.xPx + deltaPx)
+        );
+        const startTime: Fraction = system.GetSystemsFirstTimeStamp();
+        const endTime: Fraction = system.GetSystemsLastTimeStamp();
+        const widthPx: number = Math.max(1, horizontalBounds.rightPx - horizontalBounds.leftPx);
+        const ratio: number = (shiftedXPx - horizontalBounds.leftPx) / widthPx;
+        const timestampReal: number = startTime.RealValue + (endTime.RealValue - startTime.RealValue) * ratio;
+        return {
+            ...anchor,
+            timestamp: new Fraction(timestampReal, 1),
+            timestampReal,
+            xPx: shiftedXPx,
+            x: shiftedXPx / (this.zoom * 10.0)
+        };
+    }
+
+    private findSystemByIndex(targetIndex: number): MusicSystem {
+        if (!this.graphic || targetIndex < 0) {
+            return undefined;
+        }
+        let index: number = 0;
+        for (const page of this.graphic.MusicPages) {
+            for (const system of page.MusicSystems) {
+                if (index === targetIndex) {
+                    return system;
+                }
+                index++;
+            }
+        }
+        return undefined;
+    }
+
+    private createSelectionPayload(
+        phase: "hover" | "dragging" | "committed" | "cleared",
+        start: RangeSelectionAnchor,
+        end: RangeSelectionAnchor,
+        isDragging: boolean
+    ): RangeSelectionPayload {
+        const normalizedStart: RangeSelectionAnchor = start.timestampReal <= end.timestampReal ? start : end;
+        const normalizedEnd: RangeSelectionAnchor = normalizedStart === start ? end : start;
+        const direction: RangeSelectionDirection = start.timestampReal <= end.timestampReal ? "forward" : "backward";
+        return {
+            phase,
+            direction,
+            start,
+            end,
+            normalizedStart,
+            normalizedEnd,
+            isDragging
+        };
+    }
+
+    private emitRangeSelection(
+        phase: "hover" | "dragging" | "committed" | "cleared",
+        start: RangeSelectionAnchor,
+        end: RangeSelectionAnchor,
+        isDragging: boolean
+    ): void {
+        if (!this.OnRangeSelectionChange || !start || !end) {
+            return;
+        }
+        this.OnRangeSelectionChange(this.createSelectionPayload(phase, start, end, isDragging));
+    }
+
+    private renderRangeSelection(): void {
+        if (!this.rangeInteractionOverlay) {
+            return;
+        }
+        if (this.needsCommittedRangeAnchorRefresh) {
+            this.refreshCommittedRangeAnchorsFromTimestamps();
+            this.needsCommittedRangeAnchorRefresh = false;
+        }
+        this.rangeInteractionOverlay.innerHTML = "";
+        this.updateRangeSelectionOpacity();
+        const hideSelectionVisuals: boolean = this.shouldHideSelectionRangeVisuals();
+        if (this.dragStartAnchor && this.dragCurrentAnchor) {
+            if (!hideSelectionVisuals && (this.isRangeDragging || this.shouldShowCommittedRangeFill())) {
+                this.renderSelectionRangeOverlay(this.dragStartAnchor, this.dragCurrentAnchor);
+            }
+            if (!hideSelectionVisuals) {
+                const lineWidthPx: number = this.getSelectionLineWidthPx();
+                this.renderVerticalLine(this.dragStartAnchor, this.getSelectionLineColor(), lineWidthPx);
+                this.renderVerticalLine(this.dragCurrentAnchor, this.getSelectionLineColor(), lineWidthPx);
+            }
+            if (!hideSelectionVisuals && !this.isRangeDragging) {
+                const currentSelection: RangeSelectionPayload = this.getRangeSelection();
+                this.renderRangeActionButtons(currentSelection);
+            }
+            return;
+        }
+        if (!hideSelectionVisuals && !this.isRangeDragging && this.pendingTouchRangeStartAnchor) {
+            this.renderVerticalLine(this.pendingTouchRangeStartAnchor, this.getSelectionLineColor(), this.getSelectionLineWidthPx());
+            return;
+        }
+        if (!hideSelectionVisuals && this.shouldShowHoverLine() && !this.isRangeDragging && this.hoverAnchor) {
+            this.renderVerticalLine(this.hoverAnchor, this.getSelectionLineColor(), 2);
+        }
+    }
+
+    private refreshCommittedRangeAnchorsFromTimestamps(): void {
+        if (this.isRangeDragging || !this.dragStartAnchor || !this.dragCurrentAnchor || !this.graphic) {
+            return;
+        }
+        const refreshedStartAnchor: RangeSelectionAnchor = this.createAnchorFromTimestamp(new Fraction(this.dragStartAnchor.timestampReal, 1));
+        const refreshedEndAnchor: RangeSelectionAnchor = this.createAnchorFromTimestamp(new Fraction(this.dragCurrentAnchor.timestampReal, 1));
+        if (!refreshedStartAnchor || !refreshedEndAnchor) {
+            return;
+        }
+        this.dragStartAnchor = refreshedStartAnchor;
+        this.dragCurrentAnchor = refreshedEndAnchor;
+    }
+
+    private renderSelectionRangeOverlay(start: RangeSelectionAnchor, end: RangeSelectionAnchor): void {
+        if (!this.graphic) {
+            return;
+        }
+        const selection: RangeSelectionPayload = this.createSelectionPayload("dragging", start, end, this.isRangeDragging);
+        const firstAnchor: RangeSelectionAnchor = selection.normalizedStart;
+        const lastAnchor: RangeSelectionAnchor = selection.normalizedEnd;
+        const selectedFill: string = this.interactiveRangeSelectionOptions.fillColor ?? "rgba(47, 169, 224, 0.25)";
+        for (const page of this.graphic.MusicPages) {
+            for (const system of page.MusicSystems) {
+                const systemIndex: number = this.getSystemIndex(system);
+                if (systemIndex < firstAnchor.systemIndex || systemIndex > lastAnchor.systemIndex) {
+                    continue;
+                }
+                const horizontal: { leftPx: number, rightPx: number } = this.getSystemHorizontalBoundsInPixels(system);
+                const vertical: { yPx: number, heightPx: number } = this.getSystemVerticalBoundsInPixels(system);
+                let selectionLeft: number = horizontal.leftPx;
+                let selectionRight: number = horizontal.rightPx;
+                if (systemIndex === firstAnchor.systemIndex) {
+                    selectionLeft = firstAnchor.xPx;
+                }
+                if (systemIndex === lastAnchor.systemIndex) {
+                    selectionRight = lastAnchor.xPx;
+                }
+                if (firstAnchor.systemIndex === lastAnchor.systemIndex) {
+                    selectionLeft = Math.min(firstAnchor.xPx, lastAnchor.xPx);
+                    selectionRight = Math.max(firstAnchor.xPx, lastAnchor.xPx);
+                }
+                const minLeftPx: number = systemIndex === firstAnchor.systemIndex
+                    ? horizontal.leftPx - this.getRangeSelectionPreStartPaddingPx()
+                    : horizontal.leftPx;
+                selectionLeft = Math.max(minLeftPx, selectionLeft);
+                selectionRight = Math.min(horizontal.rightPx, selectionRight);
+                if (selectionRight < selectionLeft) {
+                    const temp: number = selectionLeft;
+                    selectionLeft = selectionRight;
+                    selectionRight = temp;
+                }
+                this.renderRectangle(selectionLeft, vertical.yPx, Math.max(1, selectionRight - selectionLeft), vertical.heightPx, selectedFill);
+            }
+        }
+    }
+
+    private renderVerticalLine(anchor: RangeSelectionAnchor, color: string, widthPx: number, visualOffsetPx: number = 0): void {
+        const line: HTMLDivElement = document.createElement("div");
+        const overlayHeight: number = this.rangeInteractionOverlay?.clientHeight ?? 0;
+        let topPx: number = anchor.yPx;
+        let heightPx: number = anchor.heightPx;
+        const lineOutsideOverlay: boolean = overlayHeight > 0 && (topPx + heightPx < 0 || topPx > overlayHeight);
+        const invalidLineGeometry: boolean = !Number.isFinite(topPx) || !Number.isFinite(heightPx) || heightPx <= 1 || lineOutsideOverlay;
+        if (invalidLineGeometry && overlayHeight > 0) {
+            // App layouts with additional wrappers/transforms can shift computed Y bounds.
+            // Fall back to overlay height so the cursor remains visible.
+            topPx = 0;
+            heightPx = overlayHeight;
+        } else if (overlayHeight > 0) {
+            topPx = Math.max(0, Math.min(topPx, overlayHeight - 1));
+            heightPx = Math.max(1, Math.min(heightPx, overlayHeight - topPx));
+        }
+        line.style.position = "absolute";
+        line.style.left = `${anchor.xPx + visualOffsetPx - widthPx / 2}px`;
+        line.style.top = `${topPx}px`;
+        line.style.width = `${widthPx}px`;
+        line.style.height = `${heightPx}px`;
+        line.style.borderRadius = "999px";
+        line.style.backgroundColor = color;
+        this.rangeInteractionOverlay.appendChild(line);
+    }
+
+    private renderRectangle(leftPx: number, topPx: number, widthPx: number, heightPx: number, color: string): void {
+        if (widthPx <= 0 || heightPx <= 0) {
+            return;
+        }
+        const rect: HTMLDivElement = document.createElement("div");
+        rect.style.position = "absolute";
+        rect.style.left = `${leftPx}px`;
+        rect.style.top = `${topPx}px`;
+        rect.style.width = `${widthPx}px`;
+        rect.style.height = `${heightPx}px`;
+        rect.style.backgroundColor = color;
+        this.rangeInteractionOverlay.appendChild(rect);
+    }
+
+    private renderRangeActionButtons(selection: RangeSelectionPayload): void {
+        if (!selection || !this.OnRangeSelectionControlsRender) {
+            return;
+        }
+        const buttonsContainer: HTMLDivElement = document.createElement("div");
+        buttonsContainer.style.position = "absolute";
+        buttonsContainer.style.pointerEvents = "auto";
+        buttonsContainer.style.display = "flex";
+        buttonsContainer.style.flexDirection = "column";
+        buttonsContainer.style.gap = "6px";
+        buttonsContainer.style.zIndex = "9";
+        this.OnRangeSelectionControlsRender(buttonsContainer, selection);
+        if (buttonsContainer.childElementCount < 1) {
+            return;
+        }
+        const overlayWidthPx: number = this.rangeInteractionOverlay?.clientWidth ?? 0;
+        const overlayHeightPx: number = this.rangeInteractionOverlay?.clientHeight ?? 0;
+        const controlsWidthPx: number = buttonsContainer.offsetWidth;
+        const controlsHeightPx: number = buttonsContainer.offsetHeight;
+        const horizontalMarginPx: number = 10;
+        const verticalMarginPx: number = 8;
+
+        const startAnchor: RangeSelectionAnchor = selection.normalizedStart;
+        const endAnchor: RangeSelectionAnchor = selection.normalizedEnd;
+        const sameSystemTolerancePx: number = 1;
+        let controlsAnchor: RangeSelectionAnchor = startAnchor;
+        if (endAnchor.yPx < startAnchor.yPx - sameSystemTolerancePx) {
+            // End handle is on a topmost system.
+            controlsAnchor = endAnchor;
+        } else if (Math.abs(endAnchor.yPx - startAnchor.yPx) <= sameSystemTolerancePx && endAnchor.xPx < startAnchor.xPx) {
+            // Same system: use the leftmost handle.
+            controlsAnchor = endAnchor;
+        }
+
+        // Place controls to the left of the selected anchor handle.
+        const preferredLeftPx: number = controlsAnchor.xPx - controlsWidthPx - horizontalMarginPx;
+        const fallbackLeftPx: number = controlsAnchor.xPx + horizontalMarginPx;
+        let leftPx: number = preferredLeftPx;
+        if (leftPx < horizontalMarginPx) {
+            leftPx = fallbackLeftPx;
+        }
+        if (overlayWidthPx > 0) {
+            const maxLeftPx: number = Math.max(horizontalMarginPx, overlayWidthPx - controlsWidthPx - horizontalMarginPx);
+            leftPx = Math.min(maxLeftPx, Math.max(horizontalMarginPx, leftPx));
+        }
+
+        let topPx: number = Math.max(verticalMarginPx, controlsAnchor.yPx);
+        if (overlayHeightPx > 0) {
+            const maxTopPx: number = Math.max(verticalMarginPx, overlayHeightPx - controlsHeightPx - verticalMarginPx);
+            topPx = Math.min(maxTopPx, Math.max(verticalMarginPx, topPx));
+        }
+
+        buttonsContainer.style.left = `${leftPx}px`;
+        buttonsContainer.style.top = `${topPx}px`;
+        this.rangeInteractionOverlay.appendChild(buttonsContainer);
+    }
+
+    private getSelectionLineColor(): string {
+        return this.interactiveRangeSelectionOptions.lineColor ?? "rgba(47, 169, 224, 0.95)";
+    }
+
+    private getSelectionLineWidthPx(): number {
+        return this.interactiveRangeSelectionOptions.lineWidthPx ?? 12;
+    }
+
+    private shouldHideSelectionRangeVisuals(): boolean {
+        return this.interactiveRangeSelectionOptions.hideSelectionRange === true;
+    }
+
+    private shouldShowHoverLine(): boolean {
+        return this.interactiveRangeSelectionOptions.showHoverLine !== false;
+    }
+
+    private getSelectionOverlayZIndex(): number {
+        return this.interactiveRangeSelectionOptions.overlayZIndex ?? 8;
+    }
+
+    private getRangeSelectionPreStartPaddingPx(): number {
+        // Allow hovering and dragging slightly before the first visible system timestamp,
+        // so notes at the start boundary (timestamp 0) can still be selected.
+        return Math.max(this.getSelectionLineWidthPx() * 4, 48);
+    }
+
+    private selectionHasAnyNotes(start: RangeSelectionAnchor, end: RangeSelectionAnchor): boolean {
+        if (!this.sheet || !start || !end || !this.graphic) {
+            return false;
+        }
+        const selection: RangeSelectionPayload = this.createSelectionPayload("committed", start, end, false);
+        const segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }> = this.getSelectionSegments(selection);
+        for (const instrument of this.sheet.Instruments) {
+            for (const staff of instrument.Staves) {
+                for (const voice of staff.Voices) {
+                    for (const voiceEntry of voice.VoiceEntries) {
+                        for (const note of voiceEntry.Notes) {
+                            if (note.isRest()) {
+                                continue;
+                            }
+                            const graphicalNote: GraphicalNote = this.rules.GNote(note);
+                            if (!graphicalNote) {
+                                continue;
+                            }
+                            if (this.isGraphicalNoteInSelection(note, graphicalNote, selection, segments)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private shouldGrayOutNonSelectedNotes(): boolean {
+        return this.interactiveRangeSelectionOptions.grayOutNonSelectedNotes !== false;
+    }
+
+    private getNonSelectedNotesOpacity(): number {
+        return this.interactiveRangeSelectionOptions.nonSelectedNotesOpacity ?? 0.28;
+    }
+
+    private getGrayOutUpdateIntervalMs(): number {
+        const configuredIntervalMs: number = this.interactiveRangeSelectionOptions.grayOutUpdateIntervalMs ?? 25;
+        return Math.max(0, configuredIntervalMs);
+    }
+
+    private shouldShowCommittedRangeFill(): boolean {
+        return this.interactiveRangeSelectionOptions.showCommittedRangeFill === true;
+    }
+
+    private updateRangeSelectionOpacity(): void {
+        if (!this.dragStartAnchor || !this.dragCurrentAnchor || !this.shouldGrayOutNonSelectedNotes()) {
+            this.cancelPendingRangeOpacityUpdate();
+            this.resetRangeSelectionNoteOpacity();
+            return;
+        }
+        const intervalMs: number = this.getGrayOutUpdateIntervalMs();
+        if (!this.isRangeDragging || intervalMs <= 0) {
+            this.cancelPendingRangeOpacityUpdate();
+            this.applyRangeSelectionOpacityNow();
+            return;
+        }
+        const nowMs: number = Date.now();
+        const elapsedMs: number = nowMs - this.lastRangeOpacityUpdateTimestampMs;
+        if (!this.hasActiveRangeSelectionOpacity || elapsedMs >= intervalMs) {
+            this.cancelPendingRangeOpacityUpdate();
+            this.applyRangeSelectionOpacityNow();
+            return;
+        }
+        if (this.rangeOpacityUpdateTimeoutId !== 0) {
+            return;
+        }
+        const remainingMs: number = Math.max(0, intervalMs - elapsedMs);
+        this.rangeOpacityUpdateTimeoutId = window.setTimeout((): void => {
+            this.rangeOpacityUpdateTimeoutId = 0;
+            if (!this.interactiveRangeSelectionEnabled || !this.dragStartAnchor || !this.dragCurrentAnchor) {
+                this.resetRangeSelectionNoteOpacity();
+                return;
+            }
+            this.applyRangeSelectionOpacityNow();
+        }, remainingMs);
+    }
+
+    private applyRangeSelectionOpacityNow(): void {
+        this.applyNoteOpacityForCurrentSelection();
+        this.lastRangeOpacityUpdateTimestampMs = Date.now();
+    }
+
+    private cancelPendingRangeOpacityUpdate(): void {
+        if (this.rangeOpacityUpdateTimeoutId !== 0) {
+            window.clearTimeout(this.rangeOpacityUpdateTimeoutId);
+            this.rangeOpacityUpdateTimeoutId = 0;
+        }
+    }
+
+    private applyNoteOpacityForCurrentSelection(): void {
+        if (!this.sheet || !this.graphic || !this.shouldGrayOutNonSelectedNotes()) {
+            this.resetRangeSelectionNoteOpacity();
+            return;
+        }
+        if (!this.dragStartAnchor || !this.dragCurrentAnchor) {
+            this.resetRangeSelectionNoteOpacity();
+            return;
+        }
+        const selection: RangeSelectionPayload = this.createSelectionPayload("committed", this.dragStartAnchor, this.dragCurrentAnchor, this.isRangeDragging);
+        const segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }> = this.getSelectionSegments(selection);
+        const nonSelectedOpacity: number = this.getNonSelectedNotesOpacity();
+
+        for (const instrument of this.sheet.Instruments) {
+            for (const staff of instrument.Staves) {
+                for (const voice of staff.Voices) {
+                    for (const voiceEntry of voice.VoiceEntries) {
+                        for (const note of voiceEntry.Notes) {
+                            const graphicalNote: GraphicalNote = this.rules.GNote(note);
+                            if (!graphicalNote) {
+                                continue;
+                            }
+                            const noteIsSelected: boolean = this.isGraphicalNoteInSelection(note, graphicalNote, selection, segments);
+                            const isUnplayableTieContinuation: boolean = this.isTieContinuationNote(note)
+                                && !this.isTieStartNoteSelected(note, selection, segments);
+                            if (!noteIsSelected || isUnplayableTieContinuation) {
+                                graphicalNote.setOpacity(nonSelectedOpacity);
+                            } else {
+                                graphicalNote.setOpacity(1.0);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        this.applyStaffEntryElementOpacityForSelection(segments, nonSelectedOpacity);
+        this.applyTupletOpacityForSelection(segments, nonSelectedOpacity);
+        this.hasActiveRangeSelectionOpacity = true;
+    }
+
+    private resetRangeSelectionNoteOpacity(): void {
+        if (!this.hasActiveRangeSelectionOpacity) {
+            return;
+        }
+        if (!this.sheet || !this.graphic) {
+            this.hasActiveRangeSelectionOpacity = false;
+            return;
+        }
+        for (const instrument of this.sheet.Instruments) {
+            for (const staff of instrument.Staves) {
+                for (const voice of staff.Voices) {
+                    for (const voiceEntry of voice.VoiceEntries) {
+                        for (const note of voiceEntry.Notes) {
+                            const graphicalNote: GraphicalNote = this.rules.GNote(note);
+                            if (graphicalNote) {
+                                graphicalNote.setOpacity(1.0);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        this.resetStaffEntryElementOpacity();
+        this.resetTupletOpacity();
+        this.hasActiveRangeSelectionOpacity = false;
+        this.lastRangeOpacityUpdateTimestampMs = 0;
+    }
+
+    private applyStaffEntryElementOpacityForSelection(
+        segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }>,
+        nonSelectedOpacity: number
+    ): void {
+        if (!this.graphic) {
+            return;
+        }
+        for (const verticalContainer of this.graphic.VerticalGraphicalStaffEntryContainers) {
+            for (const staffEntry of verticalContainer?.StaffEntries ?? []) {
+                if (!staffEntry) {
+                    continue;
+                }
+                const systemIndex: number = this.getSystemIndex(staffEntry.parentMeasure?.ParentMusicSystem);
+                const entryXPx: number = staffEntry.PositionAndShape.AbsolutePosition.x * this.zoom * 10.0;
+                const opacity: number = this.isXInSelection(systemIndex, entryXPx, segments) ? 1.0 : nonSelectedOpacity;
+                for (const lyricsEntry of staffEntry.LyricsEntries ?? []) {
+                    this.setGraphicalLabelOpacity(lyricsEntry?.GraphicalLabel, opacity);
+                }
+                for (const fingeringEntry of staffEntry.FingeringEntries ?? []) {
+                    this.setGraphicalLabelOpacity(fingeringEntry, opacity);
+                }
+                for (const chordContainer of staffEntry.graphicalChordContainers ?? []) {
+                    this.setGraphicalLabelOpacity(chordContainer?.GraphicalLabel, opacity);
+                }
+            }
+        }
+    }
+
+    private resetStaffEntryElementOpacity(): void {
+        if (!this.graphic) {
+            return;
+        }
+        for (const verticalContainer of this.graphic.VerticalGraphicalStaffEntryContainers) {
+            for (const staffEntry of verticalContainer?.StaffEntries ?? []) {
+                if (!staffEntry) {
+                    continue;
+                }
+                for (const lyricsEntry of staffEntry.LyricsEntries ?? []) {
+                    this.setGraphicalLabelOpacity(lyricsEntry?.GraphicalLabel, 1.0);
+                }
+                for (const fingeringEntry of staffEntry.FingeringEntries ?? []) {
+                    this.setGraphicalLabelOpacity(fingeringEntry, 1.0);
+                }
+                for (const chordContainer of staffEntry.graphicalChordContainers ?? []) {
+                    this.setGraphicalLabelOpacity(chordContainer?.GraphicalLabel, 1.0);
+                }
+            }
+        }
+    }
+
+    private setGraphicalLabelOpacity(label: GraphicalLabel, opacity: number): void {
+        if (!label?.SVGNode) {
+            return;
+        }
+        const labelNode: Element = label.SVGNode as Element;
+        labelNode.setAttribute("opacity", opacity.toString());
+    }
+
+    private getSystemIndexForGraphicalNote(graphicalNote: GraphicalNote): number {
+        const system: MusicSystem = graphicalNote?.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentMusicSystem;
+        return this.getSystemIndex(system);
+    }
+
+    private getSelectionSegments(
+        selection: RangeSelectionPayload
+    ): Array<{ systemIndex: number, leftPx: number, rightPx: number }> {
+        const segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }> = [];
+        if (!this.graphic || !selection) {
+            return segments;
+        }
+        for (const page of this.graphic.MusicPages) {
+            for (const system of page.MusicSystems) {
+                const systemIndex: number = this.getSystemIndex(system);
+                if (systemIndex < selection.normalizedStart.systemIndex || systemIndex > selection.normalizedEnd.systemIndex) {
+                    continue;
+                }
+                const horizontal: { leftPx: number, rightPx: number } = this.getSystemHorizontalBoundsInPixels(system);
+                let leftPx: number = horizontal.leftPx;
+                let rightPx: number = horizontal.rightPx;
+                if (systemIndex === selection.normalizedStart.systemIndex) {
+                    leftPx = this.getSelectionBoundaryXPx(selection.normalizedStart);
+                }
+                if (systemIndex === selection.normalizedEnd.systemIndex) {
+                    rightPx = this.getSelectionBoundaryXPx(selection.normalizedEnd);
+                }
+                const minLeftPx: number = systemIndex === selection.normalizedStart.systemIndex
+                    ? horizontal.leftPx - this.getRangeSelectionPreStartPaddingPx()
+                    : horizontal.leftPx;
+                leftPx = Math.max(minLeftPx, leftPx);
+                rightPx = Math.min(horizontal.rightPx, rightPx);
+                if (rightPx < leftPx) {
+                    const temp: number = leftPx;
+                    leftPx = rightPx;
+                    rightPx = temp;
+                }
+                segments.push({ systemIndex, leftPx, rightPx });
+            }
+        }
+        return segments;
+    }
+
+    private getSelectionBoundaryXPx(anchor: RangeSelectionAnchor): number {
+        if (!anchor) {
+            return undefined;
+        }
+        return Number.isFinite(anchor.selectionXPx) ? anchor.selectionXPx : anchor.xPx;
+    }
+
+    private isXInSelection(
+        systemIndex: number,
+        xPx: number,
+        segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }>
+    ): boolean {
+        if (systemIndex < 0) {
+            return false;
+        }
+        for (const segment of segments) {
+            if (segment.systemIndex !== systemIndex) {
+                continue;
+            }
+            // Small tolerance to prevent boundary notes from being excluded
+            // due to floating-point differences between graphicalNote.x and entry.x
+            const tolerancePx: number = 0;
+            if (xPx >= segment.leftPx - tolerancePx && xPx <= segment.rightPx + tolerancePx) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private isGraphicalNoteInSelection(
+        note: any,
+        graphicalNote: GraphicalNote,
+        selection: RangeSelectionPayload,
+        segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }>
+    ): boolean {
+        const noteSystemIndex: number = this.getSystemIndexForGraphicalNote(graphicalNote);
+        const noteXPx: number = graphicalNote.PositionAndShape.AbsolutePosition.x * this.zoom * 10.0;
+        if (this.isXInSelection(noteSystemIndex, noteXPx, segments)) {
+            return true;
+        }
+        // When snapToNotes is on, xPx is the authoritative boundary.
+        // Don't fall back to timestamp — it re-includes notes at measure boundaries
+        // that xPx correctly excluded.
+        if (this.interactiveRangeSelectionOptions.snapToNotes) {
+            return false;
+        }
+        const noteTimestampReal: number = this.getAbsoluteTimestampRealForNote(note);
+        return this.isTimestampRealInSelection(noteTimestampReal, selection);
+    }
+
+    private isTieContinuationNote(note: any): boolean {
+        const tieNotes: any[] = note?.NoteTie?.Notes;
+        if (!tieNotes || tieNotes.length < 2) {
+            return false;
+        }
+        return tieNotes[0] !== note;
+    }
+
+    private isTieStartNoteSelected(
+        note: any,
+        selection: RangeSelectionPayload,
+        segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }>
+    ): boolean {
+        const tieStartNote: any = note?.NoteTie?.Notes?.[0];
+        if (!tieStartNote || tieStartNote === note) {
+            return false;
+        }
+        const tieStartGraphicalNote: GraphicalNote = this.rules.GNote(tieStartNote);
+        if (!tieStartGraphicalNote) {
+            return false;
+        }
+        return this.isGraphicalNoteInSelection(tieStartNote, tieStartGraphicalNote, selection, segments);
+    }
+
+    private getAbsoluteTimestampRealForNote(note: any): number {
+        const timestamp: Fraction = note?.ParentVoiceEntry?.Timestamp;
+        const sourceMeasureAbsoluteTimestamp: Fraction =
+            note?.ParentVoiceEntry?.ParentSourceStaffEntry?.VerticalContainerParent?.ParentMeasure?.AbsoluteTimestamp
+            ?? note?.SourceMeasure?.AbsoluteTimestamp;
+        if (!timestamp || !sourceMeasureAbsoluteTimestamp) {
+            return undefined;
+        }
+        return Fraction.plus(sourceMeasureAbsoluteTimestamp, timestamp).RealValue;
+    }
+
+    private isTimestampRealInSelection(timestampReal: number, selection: RangeSelectionPayload): boolean {
+        if (timestampReal === undefined || !selection?.normalizedStart || !selection?.normalizedEnd) {
+            return false;
+        }
+        const epsilon: number = Fraction.FloatInaccuracyTolerance;
+        return timestampReal >= selection.normalizedStart.timestampReal - epsilon
+            && timestampReal <= selection.normalizedEnd.timestampReal + epsilon;
+    }
+
+    private applyTupletOpacityForSelection(
+        segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }>,
+        nonSelectedOpacity: number
+    ): void {
+        const tupletElements: SVGGraphicsElement[] = this.getTupletElements();
+        const containerRect: DOMRect = this.container.getBoundingClientRect();
+        for (const element of tupletElements) {
+            const elementRect: DOMRect = element.getBoundingClientRect();
+            const centerXPx: number = (elementRect.left - containerRect.left) + (elementRect.width / 2);
+            const centerYPx: number = (elementRect.top - containerRect.top) + (elementRect.height / 2);
+            const system: MusicSystem = this.findSystemAtPosition(new PointF2D(centerXPx / (this.zoom * 10.0), centerYPx / (this.zoom * 10.0)));
+            const systemIndex: number = this.getSystemIndex(system);
+            const opacity: number = this.isXInSelection(systemIndex, centerXPx, segments) ? 1.0 : nonSelectedOpacity;
+            element.setAttribute("opacity", opacity.toString());
+        }
+    }
+
+    private resetTupletOpacity(): void {
+        const tupletElements: SVGGraphicsElement[] = this.getTupletElements();
+        for (const element of tupletElements) {
+            element.setAttribute("opacity", "1");
+        }
+    }
+
+    private getTupletElements(): SVGGraphicsElement[] {
+        const elementSet: Set<SVGGraphicsElement> = new Set<SVGGraphicsElement>();
+        const selectors: string[] = [
+            ".vf-tuplet",
+            ".vf-tupletnum",
+            ".vf-tuplet-bracket",
+            ".vf-stavetie.vf-tuplet",
+            "[class*='tuplet']"
+        ];
+        for (const backend of this.drawer?.Backends ?? []) {
+            const renderRoot: HTMLElement = backend.getRenderElement();
+            if (!renderRoot) {
+                continue;
+            }
+            for (const selector of selectors) {
+                const matches: NodeListOf<SVGGraphicsElement> = renderRoot.querySelectorAll<SVGGraphicsElement>(selector);
+                for (const match of matches) {
+                    elementSet.add(match);
+                }
+            }
+        }
+        return Array.from(elementSet);
     }
 
     private setStaffOpacity(staffIndex: number, opacity: number, fallbackOpacity: number): void {
