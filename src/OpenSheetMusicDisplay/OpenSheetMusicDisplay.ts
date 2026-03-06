@@ -2550,12 +2550,15 @@ export class OpenSheetMusicDisplay {
             const startClampBoundaryXPx: number = Number.isFinite(neighborBoundaryXPx)
                 ? Math.max(measureBoundaryXPx, neighborBoundaryXPx)
                 : measureBoundaryXPx;
-            return Math.max(snappedXPx, startClampBoundaryXPx);
+            // Enforce fixed snap padding as a hard minimum for start bound.
+            // `snappedXPx` is already computed from note position + min snap padding.
+            return Math.min(startClampBoundaryXPx, snappedXPx);
         }
         const endClampBoundaryXPx: number = Number.isFinite(neighborBoundaryXPx)
             ? Math.min(measureBoundaryXPx, neighborBoundaryXPx)
             : measureBoundaryXPx;
-        return Math.min(snappedXPx, endClampBoundaryXPx);
+        // Symmetric behavior: enforce fixed snap padding as hard minimum.
+        return Math.max(endClampBoundaryXPx, snappedXPx);
     }
 
     private getMeasureHorizontalBoundsInPixels(
@@ -2595,6 +2598,7 @@ export class OpenSheetMusicDisplay {
         if (!measure || !Number.isFinite(scale)) {
             return undefined;
         }
+        const entryStaffIndex: number = entry?.sourceStaffEntry?.ParentStaff?.idInMusicSheet;
         const entryCenterXPx: number = (entry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
         if (!Number.isFinite(entryCenterXPx)) {
             return undefined;
@@ -2602,6 +2606,12 @@ export class OpenSheetMusicDisplay {
         let candidateCenterXPx: number = direction === "previous" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
         for (const candidateEntry of measure.staffEntries ?? []) {
             if (!candidateEntry || candidateEntry === entry || !this.entryHasPlayableNotes(candidateEntry)) {
+                continue;
+            }
+            // Keep midpoint clamping on the same staff so visible notes from other
+            // instruments/staves don't affect range snap boundaries.
+            const candidateStaffIndex: number = candidateEntry?.sourceStaffEntry?.ParentStaff?.idInMusicSheet;
+            if (Number.isFinite(entryStaffIndex) && Number.isFinite(candidateStaffIndex) && candidateStaffIndex !== entryStaffIndex) {
                 continue;
             }
             const centerXPx: number = (candidateEntry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
