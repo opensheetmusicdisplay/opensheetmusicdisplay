@@ -1609,9 +1609,8 @@ export class OpenSheetMusicDisplay {
 
     private detachRangeSelectionListeners(): void {
         this.cancelPendingRangeOpacityUpdate();
-        this.stopTouchDragAutoScroll();
-        this.setTouchDragScrollLockEnabled(false);
-        this.setTouchDragNativeScrollSuppressed(false);
+        this.resetTouchGestureState();
+        this.pendingTouchRangeStartAnchor = undefined;
         this.emitRangeHandleDragging(false);
         this.releaseRangeDragPointerCapture();
         if (this.rangePointerMoveAnimationFrameId !== 0) {
