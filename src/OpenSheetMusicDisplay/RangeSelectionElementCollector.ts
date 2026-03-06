@@ -139,6 +139,15 @@ export class RangeSelectionElementCollector {
         if (element.closest(".vf-notehead, .vf-stem, .vf-flag, .vf-beam, .vf-accidental, .vf-modifiers, .vf-stavenote, .vf-note")) {
             return true;
         }
+        if (element.matches(".vf-text text") || element.closest(".vf-text")) {
+            return true;
+        }
+        if (element.matches(".vf-curve, [id*='-slur'], .vf-slur") || element.closest(".vf-curve, [id*='-slur'], .vf-slur")) {
+            return true;
+        }
+        if (element.matches(".vf-stavetie, [id*='-tie'], .vf-tie") || element.closest(".vf-stavetie, [id*='-tie'], .vf-tie")) {
+            return true;
+        }
         const className: string = (element.getAttribute("class") ?? "").toLowerCase();
         const elementId: string = (element.id ?? "").toLowerCase();
         const signature: string = `${className} ${elementId}`;

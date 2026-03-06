@@ -3032,6 +3032,10 @@ export class OpenSheetMusicDisplay {
         const selection: RangeSelectionPayload = this.createSelectionPayload("committed", this.dragStartAnchor, this.dragCurrentAnchor, this.isRangeDragging);
         const segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }> = this.getSelectionSegments(selection);
         const nonSelectedOpacity: number = this.getNonSelectedNotesOpacity();
+        const opacityByTarget: Map<string, { graphicalNote: GraphicalNote, shouldHighlight: boolean }> =
+            new Map<string, { graphicalNote: GraphicalNote, shouldHighlight: boolean }>();
+        const noteheadOpacityByTarget: Map<string, { graphicalNote: GraphicalNote, shouldHighlight: boolean }> =
+            new Map<string, { graphicalNote: GraphicalNote, shouldHighlight: boolean }>();
 
         for (const instrument of this.sheet.Instruments) {
             for (const staff of instrument.Staves) {
@@ -3043,17 +3047,31 @@ export class OpenSheetMusicDisplay {
                                 continue;
                             }
                             const noteIsSelected: boolean = this.isGraphicalNoteInSelection(note, graphicalNote, selection, segments);
-                            const isUnplayableTieContinuation: boolean = this.isTieContinuationNote(note)
-                                && !this.isTieStartNoteSelected(note, selection, segments);
-                            if (!noteIsSelected || isUnplayableTieContinuation) {
-                                graphicalNote.setOpacity(nonSelectedOpacity);
+                            const isTieStopNote: boolean = this.isTieStopNote(note, selection, segments);
+                            const shouldHighlight: boolean = noteIsSelected && !isTieStopNote;
+                            const targetKey: string = this.getGraphicalOpacityTargetKey(graphicalNote, note);
+                            const existingTargetState: { graphicalNote: GraphicalNote, shouldHighlight: boolean } =
+                                opacityByTarget.get(targetKey);
+                            if (existingTargetState) {
+                                existingTargetState.shouldHighlight = existingTargetState.shouldHighlight || shouldHighlight;
                             } else {
-                                graphicalNote.setOpacity(1.0);
+                                opacityByTarget.set(targetKey, { graphicalNote, shouldHighlight });
                             }
+                            const noteheadKey: string = this.getGraphicalNoteheadOpacityTargetKey(graphicalNote, note);
+                            noteheadOpacityByTarget.set(noteheadKey, { graphicalNote, shouldHighlight });
                         }
                     }
                 }
             }
+        }
+        for (const targetState of opacityByTarget.values()) {
+            targetState.graphicalNote.setOpacity(targetState.shouldHighlight ? 1.0 : nonSelectedOpacity);
+        }
+        for (const noteheadState of noteheadOpacityByTarget.values()) {
+            this.setSpecificGraphicalNoteheadOpacity(
+                noteheadState.graphicalNote,
+                noteheadState.shouldHighlight ? 1.0 : nonSelectedOpacity
+            );
         }
         if (includeDecorations) {
             this.applyStaffEntryElementOpacityForSelection(segments, nonSelectedOpacity);
@@ -3566,28 +3584,74 @@ export class OpenSheetMusicDisplay {
         return this.isTimestampRealInSelection(noteTimestampReal, selection);
     }
 
-    private isTieContinuationNote(note: any): boolean {
+    private isTieStopNote(
+        note: any,
+        selection?: RangeSelectionPayload,
+        segments?: Array<{ systemIndex: number, leftPx: number, rightPx: number }>
+    ): boolean {
         const tieNotes: any[] = note?.NoteTie?.Notes;
         if (!tieNotes || tieNotes.length < 2) {
             return false;
         }
-        return tieNotes[0] !== note;
+        const noteIndex: number = tieNotes.indexOf(note);
+        if (noteIndex <= 0) {
+            return false;
+        }
+        if (!selection || !segments) {
+            return true;
+        }
+        const parentTieNote: any = tieNotes[noteIndex - 1];
+        if (!parentTieNote) {
+            return true;
+        }
+        const parentTieGraphicalNote: GraphicalNote = this.rules.GNote(parentTieNote);
+        if (parentTieGraphicalNote) {
+            const parentTieInSelection: boolean = this.isGraphicalNoteInSelection(
+                parentTieNote,
+                parentTieGraphicalNote,
+                selection,
+                segments
+            );
+            return !parentTieInSelection;
+        }
+        const parentTieTimestampReal: number = this.getAbsoluteTimestampRealForNote(parentTieNote);
+        const parentTieInSelectionByTimestamp: boolean = this.isTimestampRealInSelection(parentTieTimestampReal, selection);
+        return !parentTieInSelectionByTimestamp;
     }
 
-    private isTieStartNoteSelected(
-        note: any,
-        selection: RangeSelectionPayload,
-        segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }>
-    ): boolean {
-        const tieStartNote: any = note?.NoteTie?.Notes?.[0];
-        if (!tieStartNote || tieStartNote === note) {
-            return false;
+    private getGraphicalOpacityTargetKey(graphicalNote: GraphicalNote, note: any): string {
+        const svgId: string = (graphicalNote as any)?.getSVGId?.();
+        if (svgId) {
+            return `svg:${svgId}`;
         }
-        const tieStartGraphicalNote: GraphicalNote = this.rules.GNote(tieStartNote);
-        if (!tieStartGraphicalNote) {
-            return false;
+        const noteObjectId: number = graphicalNote?.sourceNote?.NoteToGraphicalNoteObjectId;
+        if (Number.isFinite(noteObjectId)) {
+            return `note:${noteObjectId}`;
         }
-        return this.isGraphicalNoteInSelection(tieStartNote, tieStartGraphicalNote, selection, segments);
+        const fallbackTimestampReal: number = this.getAbsoluteTimestampRealForNote(note);
+        return `fallback:${fallbackTimestampReal}:${(graphicalNote as any)?.vfnoteIndex ?? -1}`;
+    }
+
+    private getGraphicalNoteheadOpacityTargetKey(graphicalNote: GraphicalNote, note: any): string {
+        const noteheadIndex: number = (graphicalNote as any)?.vfnoteIndex;
+        const targetKey: string = this.getGraphicalOpacityTargetKey(graphicalNote, note);
+        return `notehead:${targetKey}:${Number.isFinite(noteheadIndex) ? noteheadIndex : -1}`;
+    }
+
+    private setSpecificGraphicalNoteheadOpacity(graphicalNote: GraphicalNote, opacity: number): void {
+        const noteheadIndex: number = (graphicalNote as any)?.vfnoteIndex;
+        if (!Number.isFinite(noteheadIndex) || noteheadIndex < 0) {
+            return;
+        }
+        const noteheadSvgs: Element[] = (graphicalNote as any)?.getNoteheadSVGs?.() ?? [];
+        const noteheadSvg: Element = noteheadSvgs[noteheadIndex];
+        if (!noteheadSvg) {
+            return;
+        }
+        const noteheadPaths: NodeListOf<SVGElement> = noteheadSvg.querySelectorAll<SVGElement>("path");
+        for (const noteheadPath of noteheadPaths) {
+            noteheadPath.setAttribute("opacity", opacity.toString());
+        }
     }
 
     private getAbsoluteTimestampRealForNote(note: any): number {
