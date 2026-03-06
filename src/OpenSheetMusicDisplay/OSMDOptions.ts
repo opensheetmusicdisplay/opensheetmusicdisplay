@@ -1,7 +1,7 @@
 import { ColoringModes } from "../Common/Enums/ColoringModes";
 import { FontStyles } from "../Common/Enums/FontStyles";
 import { DrawingParametersEnum } from "../Common/Enums/DrawingParametersEnum";
-import { InteractiveRangeSelectionOptions, RangeSelectionPayload } from "./RangeSelection";
+import { InteractiveRangeSelectionOptions, RangeSelectionConfig, RangeSelectionPayload } from "./RangeSelection";
 
 export enum CursorType {
     Standard = 0,
@@ -20,6 +20,8 @@ export enum CursorType {
  *  The OSMDOptions are the main options we support.
  */
 export interface IOSMDOptions {
+    /** Single-object configuration for interactive range selection (preferred API). */
+    rangeSelection?: RangeSelectionConfig;
     /** Enables note/time range interaction with hover and drag selection. */
     interactiveRangeSelection?: boolean;
     /** Fine-tunes visual behavior of interactive range selection. */

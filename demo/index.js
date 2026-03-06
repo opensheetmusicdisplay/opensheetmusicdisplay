@@ -12,6 +12,7 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
     var sampleFolder = "",
         samples = {
             // "Summer Time": "summertime.musicxml",
+            "Kuhlau Sonatina": "1878-2.musicxml",
             "Czerny Etude no 1 op 299": "819.musicxml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "Fingerings are oddly positioned": "1168-3.musicxml",
@@ -735,33 +736,35 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
                 //groups: [[3,4], [1,1]],
                 maintain_stem_directions: false
             },
-            interactiveRangeSelection: true,
-            interactiveRangeSelectionOptions: {
+            rangeSelection: {
                 enabled: true,
-                lineColor: "rgba(47, 169, 224, 0.95)",
-                fillColor: "rgba(47, 169, 224, 0.25)",
-                outsideMaskColor: "rgba(0, 0, 0, 0.20)",
-                lineWidthPx: 12,
-                hideSelectionRange: isSelectionRangeHidden,
-                overlayZIndex: 4,
-                snapToNotes: true,
-            },
-            onRangeSelectionChange: function (payload) {
-                if (!payload) {
-                    return;
-                }
-                console.log("[OSMD demo] range selection:", payload.phase,
-                    "start=", payload.normalizedStart?.timestampReal,
-                    "end=", payload.normalizedEnd?.timestampReal,
-                    "direction=", payload.direction);
-            },
-            onRangeSelectionLoopRequest: function (payload) {
-                console.log("[OSMD demo] loop requested:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
-            },
-            onRangeSelectionClearRequest: function (payload) {
-                console.log("[OSMD demo] clear requested:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
-            },
-            onRangeSelectionControlsRender: function (container, payload) {
+                options: {
+                    enabled: true,
+                    lineColor: "rgba(47, 169, 224, 0.95)",
+                    fillColor: "rgba(47, 169, 224, 0.25)",
+                    outsideMaskColor: "rgba(0, 0, 0, 0.20)",
+                    lineWidthPx: 12,
+                    hideSelectionRange: isSelectionRangeHidden,
+                    overlayZIndex: 4,
+                    snapToNotes: true,
+                },
+                callbacks: {
+                    onChange: function (payload) {
+                        if (!payload) {
+                            return;
+                        }
+                        console.log("[OSMD demo] range selection:", payload.phase,
+                            "start=", payload.normalizedStart?.timestampReal,
+                            "end=", payload.normalizedEnd?.timestampReal,
+                            "direction=", payload.direction);
+                    },
+                    onLoopRequest: function (payload) {
+                        console.log("[OSMD demo] loop requested:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
+                    },
+                    onClearRequest: function (payload) {
+                        console.log("[OSMD demo] clear requested:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
+                    },
+                    onControlsRender: function (container, payload) {
                 var makeIconButton = function (icon, title, onClick) {
                     var button = document.createElement("button");
                     button.type = "button";
@@ -784,18 +787,20 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
                 container.appendChild(makeIconButton("↻", "Loop Section", function (event) {
                     event.stopPropagation();
                     console.log("[OSMD demo] loop action icon clicked:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
-                    if (openSheetMusicDisplay?.OnRangeSelectionLoopRequest) {
-                        openSheetMusicDisplay.OnRangeSelectionLoopRequest(payload);
+                    if (openSheetMusicDisplay?.rangeSelection?.callbacks?.onLoopRequest) {
+                        openSheetMusicDisplay.rangeSelection.callbacks.onLoopRequest(payload);
                     }
                 }));
                 container.appendChild(makeIconButton("✕", "Clear Selection", function (event) {
                     event.stopPropagation();
                     console.log("[OSMD demo] clear action icon clicked:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
-                    if (openSheetMusicDisplay?.OnRangeSelectionClearRequest) {
-                        openSheetMusicDisplay.OnRangeSelectionClearRequest(payload);
+                    if (openSheetMusicDisplay?.rangeSelection?.callbacks?.onClearRequest) {
+                        openSheetMusicDisplay.rangeSelection.callbacks.onClearRequest(payload);
                     }
                     openSheetMusicDisplay?.clearRangeSelection(false);
                 }));
+                    },
+                },
             },
             pageFormat: pageFormat,
             pageBackgroundColor: pageBackgroundColor,
@@ -1155,8 +1160,10 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
         var applyHiddenState = function () {
             isSelectionRangeHidden = shouldHide;
             openSheetMusicDisplay.setOptions({
-                interactiveRangeSelectionOptions: {
-                    hideSelectionRange: shouldHide
+                rangeSelection: {
+                    options: {
+                        hideSelectionRange: shouldHide
+                    }
                 }
             });
             renderAndScrollBack();

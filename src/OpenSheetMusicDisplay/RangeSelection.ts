@@ -51,3 +51,31 @@ export interface InteractiveRangeSelectionOptions {
     overlayZIndex?: number;
 }
 
+export interface RangeSelectionCallbacks {
+    onChange?: (payload: RangeSelectionPayload) => void;
+    onLoopRequest?: (payload: RangeSelectionPayload) => void;
+    onClearRequest?: (payload: RangeSelectionPayload) => void;
+    onControlsRender?: (container: HTMLDivElement, payload: RangeSelectionPayload) => void;
+    onHandleDraggingChange?: (isHandleDragging: boolean) => void;
+}
+
+export interface RangeSelectionConfig {
+    enabled?: boolean;
+    options?: InteractiveRangeSelectionOptions;
+    callbacks?: RangeSelectionCallbacks;
+}
+
+export interface ResolvedRangeSelectionConfig {
+    enabled: boolean;
+    options: InteractiveRangeSelectionOptions;
+    callbacks: RangeSelectionCallbacks;
+}
+
+export function createResolvedRangeSelectionConfig(): ResolvedRangeSelectionConfig {
+    return {
+        enabled: false,
+        options: {},
+        callbacks: {}
+    };
+}
+
