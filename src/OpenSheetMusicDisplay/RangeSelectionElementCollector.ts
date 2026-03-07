@@ -73,6 +73,9 @@ export class RangeSelectionElementCollector {
             ".staffline > .vf-text > text",
             ".vf-clef",
             ".vf-stave-clef",
+            ".vf-timesignature",
+            ".vf-timesignature *",
+            ".vf-stave-timesignature",
             ".vf-dynamic",
             ".vf-expression",
             ".vf-crescendo",
@@ -84,6 +87,8 @@ export class RangeSelectionElementCollector {
             "[class*='connector']",
             "[class*='brace']",
             "[class*='clef']",
+            "[class*='timesig']",
+            "[class*='timesignature']",
             "[class*='dynamic']",
             "[class*='expression']",
             "[class*='crescendo']",
@@ -92,6 +97,7 @@ export class RangeSelectionElementCollector {
             "[class*='tie']",
             "[id*='brace']",
             "[id*='clef']",
+            "[id*='timesig']",
             "[id*='-slur']",
             "[id*='-tie']"
         ];

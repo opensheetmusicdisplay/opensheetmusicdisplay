@@ -2539,6 +2539,20 @@ export class OpenSheetMusicDisplay {
             entry?.parentMeasure?.ParentMusicSystem
         );
 
+        if (bound === "start" && this.isFirstVisiblePlayableEntryInSystem(entry, scale)) {
+            const system: MusicSystem = entry?.parentMeasure?.ParentMusicSystem;
+            if (system) {
+                // For the first visible playable note in a system, allow snapping to the
+                // pre-start area left of the opening clef/key/time block so selection can
+                // include beat-0 notes and feel anchored to the visual system start.
+                const systemBounds: { leftPx: number, rightPx: number } = this.getSystemHorizontalBoundsInPixels(system);
+                const leftVisualStartPx: number = Number.isFinite(measureBounds.leftPx)
+                    ? Math.min(systemBounds.leftPx, measureBounds.leftPx)
+                    : systemBounds.leftPx;
+                return leftVisualStartPx - this.getRangeSelectionPreStartPaddingPx();
+            }
+        }
+
         // Rule: if this is the first/last visible playable timestamp in the measure,
         // allow measure boundary snapping directly.
         if (allowMeasureBoundarySnap) {
@@ -2668,6 +2682,48 @@ export class OpenSheetMusicDisplay {
         }
         return Number.isFinite(maxRightAtMaxTimestamp)
             && entryBoundsXPx.rightPx >= maxRightAtMaxTimestamp - xEpsilonPx;
+    }
+
+    private isFirstVisiblePlayableEntryInSystem(entry: GraphicalStaffEntry, scale: number): boolean {
+        const system: MusicSystem = entry?.parentMeasure?.ParentMusicSystem;
+        if (!system || !Number.isFinite(scale)) {
+            return false;
+        }
+        const entryTimestamp: number = entry?.getAbsoluteTimestamp()?.RealValue;
+        const entryBoundsXPx: { leftPx: number, rightPx: number } = this.getEntryPlayableBoundsXPx(entry, scale);
+        if (!Number.isFinite(entryTimestamp) || !entryBoundsXPx || !Number.isFinite(entryBoundsXPx.leftPx)) {
+            return false;
+        }
+        let minTimestamp: number = Number.POSITIVE_INFINITY;
+        let minLeftAtMinTimestamp: number = Number.POSITIVE_INFINITY;
+        for (const staffLine of system.StaffLines ?? []) {
+            for (const measure of staffLine?.Measures ?? []) {
+                for (const candidateEntry of measure?.staffEntries ?? []) {
+                    if (!candidateEntry
+                        || !this.entryHasPlayableNotes(candidateEntry)
+                        || !this.isStaffEntryVisibleForRangeSnap(candidateEntry)) {
+                        continue;
+                    }
+                    const candidateTimestamp: number = candidateEntry.getAbsoluteTimestamp()?.RealValue;
+                    const candidateBoundsXPx: { leftPx: number, rightPx: number } = this.getEntryPlayableBoundsXPx(candidateEntry, scale);
+                    if (!Number.isFinite(candidateTimestamp) || !candidateBoundsXPx || !Number.isFinite(candidateBoundsXPx.leftPx)) {
+                        continue;
+                    }
+                    if (candidateTimestamp < minTimestamp - Fraction.FloatInaccuracyTolerance) {
+                        minTimestamp = candidateTimestamp;
+                        minLeftAtMinTimestamp = candidateBoundsXPx.leftPx;
+                    } else if (Math.abs(candidateTimestamp - minTimestamp) <= Fraction.FloatInaccuracyTolerance) {
+                        minLeftAtMinTimestamp = Math.min(minLeftAtMinTimestamp, candidateBoundsXPx.leftPx);
+                    }
+                }
+            }
+        }
+        if (!Number.isFinite(minTimestamp) || !Number.isFinite(minLeftAtMinTimestamp)) {
+            return false;
+        }
+        const xEpsilonPx: number = 0.5;
+        return entryTimestamp <= minTimestamp + Fraction.FloatInaccuracyTolerance
+            && entryBoundsXPx.leftPx <= minLeftAtMinTimestamp + xEpsilonPx;
     }
 
     private isStaffEntryVisibleForRangeSnap(entry: GraphicalStaffEntry): boolean {
