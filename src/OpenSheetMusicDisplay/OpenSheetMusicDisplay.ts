@@ -2430,7 +2430,7 @@ export class OpenSheetMusicDisplay {
                 for (const staffLine of musicSystem.StaffLines) {
                     for (const measure of staffLine.Measures) {
                         for (const entry of measure.staffEntries) {
-                            if (!this.entryHasPlayableNotes(entry)) {
+                            if (!this.entryHasPlayableNotes(entry) || !this.isStaffEntryVisibleForRangeSnap(entry)) {
                                 continue;
                             }
                             const candidateX: number = entry.PositionAndShape?.AbsolutePosition?.x;
@@ -2527,38 +2527,269 @@ export class OpenSheetMusicDisplay {
         if (!entry || !Number.isFinite(snappedXPx) || !Number.isFinite(scale)) {
             return snappedXPx;
         }
-        const entryCenterXPx: number = (entry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
-        if (!Number.isFinite(entryCenterXPx)) {
-            return snappedXPx;
-        }
-        const neighborCenterXPx: number = this.getAdjacentPlayableEntryCenterXPx(
+        const neighborBoundsXPx: { leftPx: number, rightPx: number } = this.getAdjacentPlayableEntryBoundsXPx(
             entry,
             bound === "start" ? "previous" : "next",
             scale
         );
-        const neighborBoundaryXPx: number = Number.isFinite(neighborCenterXPx)
-            ? (entryCenterXPx + neighborCenterXPx) / 2
-            : undefined;
-
+        const allowMeasureBoundarySnap: boolean = this.isMeasureBoundarySnapAllowed(entry, bound);
+        const epsilonPx: number = 0.5;
         const measureBounds: { leftPx: number, rightPx: number } = this.getMeasureHorizontalBoundsInPixels(
             entry?.parentMeasure,
             entry?.parentMeasure?.ParentMusicSystem
         );
-        const measureBoundaryXPx: number = bound === "start" ? measureBounds.leftPx : measureBounds.rightPx;
+
+        // Rule: if this is the first/last visible playable timestamp in the measure,
+        // allow measure boundary snapping directly.
+        if (allowMeasureBoundarySnap) {
+            if (bound === "start") {
+                return Number.isFinite(measureBounds.leftPx)
+                    ? measureBounds.leftPx
+                    : snappedXPx;
+            }
+            return Number.isFinite(measureBounds.rightPx)
+                ? measureBounds.rightPx
+                : snappedXPx;
+        }
 
         if (bound === "start") {
-            const startClampBoundaryXPx: number = Number.isFinite(neighborBoundaryXPx)
-                ? Math.max(measureBoundaryXPx, neighborBoundaryXPx)
-                : measureBoundaryXPx;
-            // Enforce fixed snap padding as a hard minimum for start bound.
-            // `snappedXPx` is already computed from note position + min snap padding.
-            return Math.min(startClampBoundaryXPx, snappedXPx);
+            if (neighborBoundsXPx && Number.isFinite(neighborBoundsXPx.rightPx)) {
+                // Prefer snapping almost to the previous visible note edge.
+                // This keeps the range tight without including that note.
+                return neighborBoundsXPx.rightPx + epsilonPx;
+            }
+            // No adjacent visible note on this side: fall back to snap padding.
+            return snappedXPx;
         }
-        const endClampBoundaryXPx: number = Number.isFinite(neighborBoundaryXPx)
-            ? Math.min(measureBoundaryXPx, neighborBoundaryXPx)
-            : measureBoundaryXPx;
-        // Symmetric behavior: enforce fixed snap padding as hard minimum.
-        return Math.max(endClampBoundaryXPx, snappedXPx);
+
+        if (neighborBoundsXPx && Number.isFinite(neighborBoundsXPx.leftPx)) {
+            // Prefer snapping almost to the next visible note edge.
+            // This keeps the range tight without including that note.
+            return neighborBoundsXPx.leftPx - epsilonPx;
+        }
+        // No adjacent visible note on this side: fall back to snap padding.
+        return snappedXPx;
+    }
+
+    private isMeasureBoundarySnapAllowed(
+        entry: GraphicalStaffEntry,
+        bound: "start" | "end"
+    ): boolean {
+        const measure: GraphicalMeasure = entry?.parentMeasure;
+        if (!measure) {
+            return false;
+        }
+        const entryTimestamp: number = entry?.getAbsoluteTimestamp()?.RealValue;
+        if (!Number.isFinite(entryTimestamp)) {
+            return false;
+        }
+        const targetSystem: MusicSystem = measure?.ParentMusicSystem;
+        const targetMeasureIndex: number = measure?.parentSourceMeasure?.measureListIndex;
+        if (!targetSystem || !Number.isFinite(targetMeasureIndex)) {
+            return false;
+        }
+        const scale: number = this.zoom * 10.0;
+        if (!Number.isFinite(scale)) {
+            return false;
+        }
+        type EntryBoundarySnapshot = { timestamp: number, leftPx: number, rightPx: number };
+        const boundarySnapshots: EntryBoundarySnapshot[] = [];
+        let minTimestamp: number = Number.POSITIVE_INFINITY;
+        let maxTimestamp: number = Number.NEGATIVE_INFINITY;
+        for (const staffLine of targetSystem.StaffLines ?? []) {
+            for (const siblingMeasure of staffLine?.Measures ?? []) {
+                if (siblingMeasure?.parentSourceMeasure?.measureListIndex !== targetMeasureIndex) {
+                    continue;
+                }
+                for (const candidateEntry of siblingMeasure?.staffEntries ?? []) {
+                    if (!candidateEntry
+                        || !this.entryHasPlayableNotes(candidateEntry)
+                        || !this.isStaffEntryVisibleForRangeSnap(candidateEntry)) {
+                        continue;
+                    }
+                    const candidateTimestamp: number = candidateEntry.getAbsoluteTimestamp()?.RealValue;
+                    if (!Number.isFinite(candidateTimestamp)) {
+                        continue;
+                    }
+                    const candidateBoundsXPx: { leftPx: number, rightPx: number } = this.getEntryPlayableBoundsXPx(candidateEntry, scale);
+                    if (!candidateBoundsXPx
+                        || !Number.isFinite(candidateBoundsXPx.leftPx)
+                        || !Number.isFinite(candidateBoundsXPx.rightPx)) {
+                        continue;
+                    }
+                    minTimestamp = Math.min(minTimestamp, candidateTimestamp);
+                    maxTimestamp = Math.max(maxTimestamp, candidateTimestamp);
+                    boundarySnapshots.push({
+                        timestamp: candidateTimestamp,
+                        leftPx: candidateBoundsXPx.leftPx,
+                        rightPx: candidateBoundsXPx.rightPx
+                    });
+                }
+            }
+        }
+        if (!Number.isFinite(minTimestamp) || !Number.isFinite(maxTimestamp) || boundarySnapshots.length === 0) {
+            return false;
+        }
+        const entryBoundsXPx: { leftPx: number, rightPx: number } = this.getEntryPlayableBoundsXPx(entry, scale);
+        if (!entryBoundsXPx || !Number.isFinite(entryBoundsXPx.leftPx) || !Number.isFinite(entryBoundsXPx.rightPx)) {
+            return false;
+        }
+        const epsilon: number = Fraction.FloatInaccuracyTolerance;
+        const xEpsilonPx: number = 0.5;
+        if (bound === "start") {
+            if (entryTimestamp > minTimestamp + epsilon) {
+                return false;
+            }
+            let minLeftAtMinTimestamp: number = Number.POSITIVE_INFINITY;
+            for (const snapshot of boundarySnapshots) {
+                if (snapshot.timestamp <= minTimestamp + epsilon) {
+                    minLeftAtMinTimestamp = Math.min(minLeftAtMinTimestamp, snapshot.leftPx);
+                }
+            }
+            return Number.isFinite(minLeftAtMinTimestamp)
+                && entryBoundsXPx.leftPx <= minLeftAtMinTimestamp + xEpsilonPx;
+        }
+        if (entryTimestamp < maxTimestamp - epsilon) {
+            return false;
+        }
+        let maxRightAtMaxTimestamp: number = Number.NEGATIVE_INFINITY;
+        for (const snapshot of boundarySnapshots) {
+            if (snapshot.timestamp >= maxTimestamp - epsilon) {
+                maxRightAtMaxTimestamp = Math.max(maxRightAtMaxTimestamp, snapshot.rightPx);
+            }
+        }
+        return Number.isFinite(maxRightAtMaxTimestamp)
+            && entryBoundsXPx.rightPx >= maxRightAtMaxTimestamp - xEpsilonPx;
+    }
+
+    private isStaffEntryVisibleForRangeSnap(entry: GraphicalStaffEntry): boolean {
+        if (!entry) {
+            return false;
+        }
+        const parentStaff: any = entry?.sourceStaffEntry?.ParentStaff;
+        const isStaffVisible: boolean = typeof parentStaff?.isVisible === "function"
+            ? parentStaff.isVisible()
+            : parentStaff?.Visible !== false;
+        if (!isStaffVisible) {
+            return false;
+        }
+        const parentMeasure: any = entry?.parentMeasure;
+        return typeof parentMeasure?.isVisible === "function"
+            ? parentMeasure.isVisible()
+            : true;
+    }
+
+    private getAdjacentPlayableEntryBoundsXPx(
+        entry: GraphicalStaffEntry,
+        direction: "previous" | "next",
+        scale: number
+    ): { leftPx: number, rightPx: number } {
+        const measure: GraphicalMeasure = entry?.parentMeasure;
+        if (!measure || !Number.isFinite(scale)) {
+            return undefined;
+        }
+        const entryCenterXPx: number = (entry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
+        if (!Number.isFinite(entryCenterXPx)) {
+            return undefined;
+        }
+        const targetSystem: MusicSystem = measure?.ParentMusicSystem;
+        const targetMeasureIndex: number = measure?.parentSourceMeasure?.measureListIndex;
+        if (!targetSystem || !Number.isFinite(targetMeasureIndex)) {
+            return undefined;
+        }
+        let bestCandidateEntry: GraphicalStaffEntry = undefined;
+        let candidateCenterXPx: number = direction === "previous" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+        for (const staffLine of targetSystem.StaffLines ?? []) {
+            for (const siblingMeasure of staffLine?.Measures ?? []) {
+                if (siblingMeasure?.parentSourceMeasure?.measureListIndex !== targetMeasureIndex) {
+                    continue;
+                }
+                for (const candidateEntry of siblingMeasure?.staffEntries ?? []) {
+                    if (!candidateEntry
+                        || candidateEntry === entry
+                        || !this.entryHasPlayableNotes(candidateEntry)
+                        || !this.isStaffEntryVisibleForRangeSnap(candidateEntry)) {
+                        continue;
+                    }
+                    // Adjacent-note clamping should consider all visible entries in this
+                    // source measure across all currently shown staves.
+                    const centerXPx: number = (candidateEntry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
+                    if (!Number.isFinite(centerXPx)) {
+                        continue;
+                    }
+                    if (direction === "previous") {
+                        if (centerXPx < entryCenterXPx && centerXPx > candidateCenterXPx) {
+                            candidateCenterXPx = centerXPx;
+                            bestCandidateEntry = candidateEntry;
+                        }
+                    } else if (centerXPx > entryCenterXPx && centerXPx < candidateCenterXPx) {
+                        candidateCenterXPx = centerXPx;
+                        bestCandidateEntry = candidateEntry;
+                    }
+                }
+            }
+        }
+        if (direction === "previous" && !Number.isFinite(candidateCenterXPx)) {
+            return undefined;
+        }
+        if (direction === "next" && !Number.isFinite(candidateCenterXPx)) {
+            return undefined;
+        }
+        return this.getEntryPlayableBoundsXPx(bestCandidateEntry, scale);
+    }
+
+    private getEntryPlayableBoundsXPx(
+        entry: GraphicalStaffEntry,
+        scale: number
+    ): { leftPx: number, rightPx: number } {
+        if (!entry || !Number.isFinite(scale)) {
+            return undefined;
+        }
+        const entryXPx: number = (entry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
+        if (!Number.isFinite(entryXPx)) {
+            return undefined;
+        }
+        let minLeftXPx: number = Number.POSITIVE_INFINITY;
+        let maxRightXPx: number = Number.NEGATIVE_INFINITY;
+        for (const graphicalVoiceEntry of entry.graphicalVoiceEntries ?? []) {
+            for (const graphicalNote of graphicalVoiceEntry?.notes ?? []) {
+                const sourceNote: any = graphicalNote?.sourceNote;
+                if (!sourceNote || sourceNote.isRest()) {
+                    continue;
+                }
+                const noteX: number = graphicalNote.PositionAndShape?.AbsolutePosition?.x;
+                if (!Number.isFinite(noteX)) {
+                    continue;
+                }
+                const noteXPx: number = noteX * scale;
+                const noteLeftXPx: number = noteXPx + ((graphicalNote.PositionAndShape?.BorderLeft ?? 0) * scale);
+                const noteRightXPx: number = noteXPx + ((graphicalNote.PositionAndShape?.BorderRight ?? 0) * scale);
+                minLeftXPx = Math.min(minLeftXPx, noteLeftXPx);
+                maxRightXPx = Math.max(maxRightXPx, noteRightXPx);
+            }
+        }
+        if (!Number.isFinite(minLeftXPx) || !Number.isFinite(maxRightXPx)) {
+            return { leftPx: entryXPx, rightPx: entryXPx };
+        }
+        return { leftPx: minLeftXPx, rightPx: maxRightXPx };
+    }
+
+    private getSnapWidthCompensationPxForEntry(
+        entry: GraphicalStaffEntry,
+        bound: "start" | "end",
+        scale: number
+    ): number {
+        const entryBoundsXPx: { leftPx: number, rightPx: number } = this.getEntryPlayableBoundsXPx(entry, scale);
+        if (!entryBoundsXPx) {
+            return 0;
+        }
+        const entryXPx: number = (entry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
+        if (!Number.isFinite(entryXPx)) {
+            return 0;
+        }
+        return bound === "start"
+            ? Math.max(0, entryXPx - entryBoundsXPx.leftPx)
+            : Math.max(0, entryBoundsXPx.rightPx - entryXPx);
     }
 
     private getMeasureHorizontalBoundsInPixels(
@@ -2587,94 +2818,6 @@ export class OpenSheetMusicDisplay {
             leftPx: Number.isFinite(fallbackBounds.leftPx) ? Math.max(normalizedLeftPx, fallbackBounds.leftPx) : normalizedLeftPx,
             rightPx: Number.isFinite(fallbackBounds.rightPx) ? Math.min(normalizedRightPx, fallbackBounds.rightPx) : normalizedRightPx
         };
-    }
-
-    private getAdjacentPlayableEntryCenterXPx(
-        entry: GraphicalStaffEntry,
-        direction: "previous" | "next",
-        scale: number
-    ): number {
-        const measure: GraphicalMeasure = entry?.parentMeasure;
-        if (!measure || !Number.isFinite(scale)) {
-            return undefined;
-        }
-        const entryStaffIndex: number = entry?.sourceStaffEntry?.ParentStaff?.idInMusicSheet;
-        const entryCenterXPx: number = (entry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
-        if (!Number.isFinite(entryCenterXPx)) {
-            return undefined;
-        }
-        let candidateCenterXPx: number = direction === "previous" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
-        for (const candidateEntry of measure.staffEntries ?? []) {
-            if (!candidateEntry || candidateEntry === entry || !this.entryHasPlayableNotes(candidateEntry)) {
-                continue;
-            }
-            // Keep midpoint clamping on the same staff so visible notes from other
-            // instruments/staves don't affect range snap boundaries.
-            const candidateStaffIndex: number = candidateEntry?.sourceStaffEntry?.ParentStaff?.idInMusicSheet;
-            if (Number.isFinite(entryStaffIndex) && Number.isFinite(candidateStaffIndex) && candidateStaffIndex !== entryStaffIndex) {
-                continue;
-            }
-            const centerXPx: number = (candidateEntry.PositionAndShape?.AbsolutePosition?.x ?? NaN) * scale;
-            if (!Number.isFinite(centerXPx)) {
-                continue;
-            }
-            if (direction === "previous") {
-                if (centerXPx < entryCenterXPx && centerXPx > candidateCenterXPx) {
-                    candidateCenterXPx = centerXPx;
-                }
-            } else if (centerXPx > entryCenterXPx && centerXPx < candidateCenterXPx) {
-                candidateCenterXPx = centerXPx;
-            }
-        }
-        if (direction === "previous" && !Number.isFinite(candidateCenterXPx)) {
-            return undefined;
-        }
-        if (direction === "next" && !Number.isFinite(candidateCenterXPx)) {
-            return undefined;
-        }
-        return candidateCenterXPx;
-    }
-
-    private getSnapWidthCompensationPxForEntry(
-        entry: GraphicalStaffEntry,
-        bound: "start" | "end",
-        scale: number
-    ): number {
-        if (!entry || !Number.isFinite(scale)) {
-            return 0;
-        }
-        const entryX: number = entry.PositionAndShape?.AbsolutePosition?.x;
-        if (!Number.isFinite(entryX)) {
-            return 0;
-        }
-        const entryXPx: number = entryX * scale;
-        let minLeftXPx: number = Number.POSITIVE_INFINITY;
-        let maxRightXPx: number = Number.NEGATIVE_INFINITY;
-
-        for (const graphicalVoiceEntry of entry.graphicalVoiceEntries ?? []) {
-            for (const graphicalNote of graphicalVoiceEntry?.notes ?? []) {
-                const sourceNote: any = graphicalNote?.sourceNote;
-                if (!sourceNote || sourceNote.isRest()) {
-                    continue;
-                }
-                const noteX: number = graphicalNote.PositionAndShape?.AbsolutePosition?.x;
-                if (!Number.isFinite(noteX)) {
-                    continue;
-                }
-                const noteXPx: number = noteX * scale;
-                const noteLeftXPx: number = noteXPx + ((graphicalNote.PositionAndShape?.BorderLeft ?? 0) * scale);
-                const noteRightXPx: number = noteXPx + ((graphicalNote.PositionAndShape?.BorderRight ?? 0) * scale);
-                minLeftXPx = Math.min(minLeftXPx, noteLeftXPx);
-                maxRightXPx = Math.max(maxRightXPx, noteRightXPx);
-            }
-        }
-
-        if (!Number.isFinite(minLeftXPx) || !Number.isFinite(maxRightXPx)) {
-            return 0;
-        }
-        return bound === "start"
-            ? Math.max(0, entryXPx - minLeftXPx)
-            : Math.max(0, maxRightXPx - entryXPx);
     }
 
     private shiftAnchorX(anchor: RangeSelectionAnchor, deltaPx: number): RangeSelectionAnchor {
@@ -2914,6 +3057,7 @@ export class OpenSheetMusicDisplay {
         const controlsWidthPx: number = buttonsContainer.offsetWidth;
         const controlsHeightPx: number = buttonsContainer.offsetHeight;
         const horizontalMarginPx: number = 10;
+        const extraLeftOffsetPx: number = 32;
         const verticalMarginPx: number = 8;
 
         const startAnchor: RangeSelectionAnchor = selection.normalizedStart;
@@ -2929,7 +3073,7 @@ export class OpenSheetMusicDisplay {
         }
 
         // Place controls to the left of the selected anchor handle.
-        const preferredLeftPx: number = controlsAnchor.xPx - controlsWidthPx - horizontalMarginPx;
+        const preferredLeftPx: number = controlsAnchor.xPx - controlsWidthPx - horizontalMarginPx - extraLeftOffsetPx;
         const fallbackLeftPx: number = controlsAnchor.xPx + horizontalMarginPx;
         let leftPx: number = preferredLeftPx;
         if (leftPx < horizontalMarginPx) {

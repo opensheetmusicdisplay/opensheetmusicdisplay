@@ -70,7 +70,7 @@ export class RangeSelectionElementCollector {
             ".vf-connector *",
             ".vf-brace",
             ".vf-brace *",
-            ".vf-text text",
+            ".staffline > .vf-text > text",
             ".vf-clef",
             ".vf-stave-clef",
             ".vf-dynamic",
@@ -140,7 +140,10 @@ export class RangeSelectionElementCollector {
             return true;
         }
         if (element.matches(".vf-text text") || element.closest(".vf-text")) {
-            return true;
+            const textContainer: SVGGraphicsElement = element.closest(".vf-text");
+            if (!textContainer?.closest(".staffline")) {
+                return true;
+            }
         }
         if (element.matches(".vf-curve, [id*='-slur'], .vf-slur") || element.closest(".vf-curve, [id*='-slur'], .vf-slur")) {
             return true;
