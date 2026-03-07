@@ -2556,7 +2556,15 @@ export class OpenSheetMusicDisplay {
             if (neighborBoundsXPx && Number.isFinite(neighborBoundsXPx.rightPx)) {
                 // Prefer snapping almost to the previous visible note edge.
                 // This keeps the range tight without including that note.
-                return neighborBoundsXPx.rightPx + epsilonPx;
+                const entryBoundsXPx: { leftPx: number, rightPx: number } = this.getEntryPlayableBoundsXPx(entry, scale);
+                const maxPreviousSnapDistancePx: number = 32;
+                const previousNoteSnapXPx: number = neighborBoundsXPx.rightPx + epsilonPx;
+                if (entryBoundsXPx && Number.isFinite(entryBoundsXPx.leftPx)) {
+                    // Cap how far back start-handle can jump when snapping to previous note.
+                    const furthestBackAllowedXPx: number = entryBoundsXPx.leftPx - maxPreviousSnapDistancePx;
+                    return Math.max(furthestBackAllowedXPx, previousNoteSnapXPx);
+                }
+                return previousNoteSnapXPx;
             }
             // No adjacent visible note on this side: fall back to snap padding.
             return snappedXPx;
