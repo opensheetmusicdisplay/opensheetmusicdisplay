@@ -463,10 +463,16 @@ export class InstrumentReader {
                // Grace notes before/after a stop share the same timestamp; this count lets the
                // renderer distinguish which VoiceEntries fall under the octave shift.
                let endVoiceEntryCount: number = 0;
+               let endFraction: Fraction;
                if (this.currentStaffEntry?.Timestamp?.Equals(currentFraction)) {
+                 // Grace notes at this timestamp — use currentFraction and track which entries are covered
                  endVoiceEntryCount = this.currentStaffEntry.VoiceEntries.length;
+                 endFraction = currentFraction.clone();
+               } else {
+                 // Normal case: last note was a real note, use previousFraction
+                 endFraction = previousFraction.clone();
                }
-               expressionReader.addOctaveShift(xmlNode, this.currentMeasure, currentFraction.clone(), endVoiceEntryCount);
+               expressionReader.addOctaveShift(xmlNode, this.currentMeasure, endFraction, endVoiceEntryCount);
              }
              if (directionTypeNodes.some(dt => dt.element("pedal"))) {
               expressionReader.readExpressionParameters(

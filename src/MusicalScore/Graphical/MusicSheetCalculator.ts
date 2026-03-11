@@ -2924,6 +2924,7 @@ export abstract class MusicSheetCalculator {
                     // When an octave shift stop falls between grace notes at the same timestamp,
                     // turn off the shift for VoiceEntries parsed after the stop.
                     if (octaveShiftValue !== OctaveEnum.NONE && activeOctaveShift &&
+                        activeOctaveShift.endVoiceEntryIndex > 0 && // without this, last note in bracket is drawn an octave too high
                         activeOctaveShift.ParentEndMultiExpression?.AbsoluteTimestamp.Equals(sourceStaffEntry.AbsoluteTimestamp) &&
                         idx >= activeOctaveShift.endVoiceEntryIndex) {
                         octaveShiftValue = OctaveEnum.NONE;
