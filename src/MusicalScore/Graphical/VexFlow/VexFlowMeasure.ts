@@ -1602,12 +1602,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const TRILL_GLYPH_HALF_WIDTH: number = 14;
         // Padding before the next note's x position
         const WAVY_LINE_END_PADDING: number = 3;
-        // Width of one wave (half-cycle in pixels)
-        const WAVE_WIDTH: number = 6;
-        // Amplitude of the wave in pixels
-        const WAVE_HEIGHT: number = 3;
-        // Vertical offset above the glyph baseline so the line aligns with the tr symbol
+        // Vertical offset so the line aligns with the tr symbol baseline
         const WAVY_Y_OFFSET: number = 5;
+
+        // Use the same wave parameters as VexFlow's Vibrato modifier
+        const wave_width: number = 4;
+        const wave_height: number = 6;
+        const wave_girth: number = 2;
 
         for (const { vfNote, nextVfNote } of this.trillExtensionNotes) {
             const staveNote: VF.StaveNote = vfNote as VF.StaveNote;
@@ -1620,27 +1621,37 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 : staveNote.getStave().getX() + staveNote.getStave().getWidth() - WAVY_LINE_END_PADDING;
             const y: number = staveNote.getStave().getYForTopText(1) - WAVY_Y_OFFSET;
 
-            // Fit as many complete wave pairs as possible in the available width
-            const numWavePairs: number = Math.floor((endX - startX) / (WAVE_WIDTH * 2));
-            if (numWavePairs <= 0) {
+            const vibrato_width: number = endX - startX;
+            const num_waves: number = Math.floor(vibrato_width / wave_width);
+            if (num_waves <= 0) {
                 continue;
             }
 
+            // Render using the same algorithm as VexFlow's Vibrato.renderVibrato() (non-harsh),
+            // which produces an identical look to OSMD's existing vibrato strokes.
             (ctx as any).openGroup("trill-extension");
             (ctx as any).save();
             (ctx as any).setFillStyle("#000000");
-            (ctx as any).setStrokeStyle("#000000");
-            (ctx as any).setLineWidth(1.5);
             (ctx as any).beginPath();
-            (ctx as any).moveTo(startX, y);
             let x: number = startX;
-            for (let i: number = 0; i < numWavePairs; i++) {
-                (ctx as any).quadraticCurveTo(x + WAVE_WIDTH / 2, y - WAVE_HEIGHT, x + WAVE_WIDTH, y);
-                x += WAVE_WIDTH;
-                (ctx as any).quadraticCurveTo(x + WAVE_WIDTH / 2, y + WAVE_HEIGHT, x + WAVE_WIDTH, y);
-                x += WAVE_WIDTH;
+            (ctx as any).moveTo(x, y + wave_girth);
+            for (let i: number = 0; i < num_waves / 2; ++i) {
+                (ctx as any).quadraticCurveTo(x + (wave_width / 2), y - (wave_height / 2), x + wave_width, y);
+                x += wave_width;
+                (ctx as any).quadraticCurveTo(x + (wave_width / 2), y + (wave_height / 2), x + wave_width, y);
+                x += wave_width;
             }
-            (ctx as any).stroke();
+            for (let i: number = 0; i < num_waves / 2; ++i) {
+                (ctx as any).quadraticCurveTo(
+                    x - (wave_width / 2), (y + (wave_height / 2)) + wave_girth,
+                    x - wave_width, y + wave_girth);
+                x -= wave_width;
+                (ctx as any).quadraticCurveTo(
+                    x - (wave_width / 2), (y - (wave_height / 2)) + wave_girth,
+                    x - wave_width, y + wave_girth);
+                x -= wave_width;
+            }
+            (ctx as any).fill();
             (ctx as any).restore();
             (ctx as any).closeGroup();
         }
