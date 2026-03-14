@@ -11,6 +11,8 @@ export class OrnamentContainer {
     public placement: PlacementEnum = PlacementEnum.Above;
     private accidentalAbove: AccidentalEnum = AccidentalEnum.NONE;
     private accidentalBelow: AccidentalEnum = AccidentalEnum.NONE;
+    /** Whether a wavy-line extension should be drawn after the trill symbol. */
+    public hasWavyLine: boolean = false;
 
     public get GetOrnament(): OrnamentEnum {
         return this.ornament;

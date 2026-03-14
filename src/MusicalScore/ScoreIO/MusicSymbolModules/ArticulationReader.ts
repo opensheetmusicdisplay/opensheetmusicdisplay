@@ -330,6 +330,16 @@ export class ArticulationReader {
             }
           }
         }
+        // Detect wavy-line extension for trill marks (tr~~~)
+        if (ornament.GetOrnament === OrnamentEnum.Trill) {
+          const wavyLineNode: IXmlElement = ornamentsNode.element("wavy-line");
+          if (wavyLineNode) {
+            const typeAttr: IXmlAttribute = wavyLineNode.attribute("type");
+            if (typeAttr && typeAttr.value === "start") {
+              ornament.hasWavyLine = true;
+            }
+          }
+        }
         // add this to currentVoiceEntry
         currentVoiceEntry.OrnamentContainer = ornament;
       }

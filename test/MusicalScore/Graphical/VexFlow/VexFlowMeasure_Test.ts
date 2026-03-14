@@ -16,6 +16,7 @@ import { VexFlowVoiceEntry } from "../../../../src/MusicalScore/Graphical/VexFlo
 import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
+import { OrnamentContainer } from "../../../../src/MusicalScore/VoiceData/OrnamentContainer";
 
 describe("VexFlow Measure", () => {
 
@@ -83,6 +84,49 @@ describe("VexFlow Measure", () => {
             }
 
             done();
+         },
+         done
+      );
+   });
+
+   it("Trill with wavy-line should set hasWavyLine on OrnamentContainer and render a trill-extension SVG group", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_trill_wavy_line.xml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      div.style.width = "800px";
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(
+         (_: {}) => {
+            try {
+               osmd.render();
+
+               const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+
+               // Find the voice entry with the trill ornament
+               let hasWavyLine: boolean = false;
+               for (const staffEntry of gm.staffEntries) {
+                  for (const gve of staffEntry.graphicalVoiceEntries) {
+                     const ornament: OrnamentContainer = gve.notes[0]?.sourceNote?.ParentVoiceEntry?.OrnamentContainer;
+                     if (ornament?.hasWavyLine) {
+                        hasWavyLine = true;
+                     }
+                  }
+               }
+               chai.expect(hasWavyLine).to.equal(true, "OrnamentContainer.hasWavyLine should be true when <wavy-line type='start'> is present");
+
+               // Verify the wavy-line extension SVG group is rendered
+               // VexFlow adds a "vf-" prefix to all group classes via Vex.Prefix()
+               const trillExtensions: NodeListOf<Element> = div.querySelectorAll("g.vf-trill-extension");
+               chai.expect(trillExtensions.length).to.be.greaterThan(0, "A g.vf-trill-extension SVG group should be rendered for a trill with wavy-line");
+
+               done();
+            } catch (e) {
+               done(e);
+            }
          },
          done
       );

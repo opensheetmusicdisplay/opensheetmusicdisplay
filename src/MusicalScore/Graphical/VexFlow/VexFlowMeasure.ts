@@ -27,7 +27,7 @@ import {VexFlowVoiceEntry} from "./VexFlowVoiceEntry";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {Voice} from "../../VoiceData/Voice";
 import {EngravingRules} from "../EngravingRules";
-import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
+import {OrnamentContainer, OrnamentEnum} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction, TechnicalInstructionType} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
@@ -89,6 +89,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
     protected tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][] } = {};
     /** VexFlow Tuplets */
     private vftuplets: { [voiceID: number]: VF.Tuplet[] } = {};
+    /** Notes with trill + wavy-line extension to draw after VexFlow renders voices */
+    private trillExtensionNotes: Array<{vfNote: StemmableNote, nextVfNote: StemmableNote | undefined}> = [];
     // The engraving rules of OSMD.
     public rules: EngravingRules;
 
@@ -658,6 +660,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // this.vfVoices[voiceID].tickables.forEach(t => t.getBoundingBox().draw(ctx));
             }
         }
+        // Draw trill wavy-line extensions (tr~~~)
+        this.drawTrillExtensions(ctx);
         // Draw beams
         for (const voiceID in this.vfbeams) {
             if (this.vfbeams.hasOwnProperty(voiceID)) {
@@ -1558,6 +1562,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * Create the ornaments for all notes of the current staff entry
      */
     protected createOrnaments(): void {
+        this.trillExtensionNotes = [];
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
             const gvoices: { [voiceID: number]: GraphicalVoiceEntry } = graphicalStaffEntry.graphicalVoiceEntries;
@@ -1568,9 +1573,76 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const ornamentContainer: OrnamentContainer = gvoices[voiceID].notes[0].sourceNote.ParentVoiceEntry.OrnamentContainer;
                     if (ornamentContainer) {
                         VexFlowConverter.generateOrnaments(vfStaveNote, ornamentContainer);
+                        if (ornamentContainer.GetOrnament === OrnamentEnum.Trill && ornamentContainer.hasWavyLine) {
+                            // Find the next vfStaveNote in this voice to know where the extension ends
+                            let nextVfNote: StemmableNote | undefined = undefined;
+                            for (let nextIdx: number = idx + 1; nextIdx < len; nextIdx++) {
+                                const nextEntry: VexFlowStaffEntry = (this.staffEntries[nextIdx] as VexFlowStaffEntry);
+                                const nextVoiceEntry: GraphicalVoiceEntry = nextEntry.graphicalVoiceEntries[Number(voiceID)];
+                                if (nextVoiceEntry) {
+                                    nextVfNote = (nextVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
+                                    break;
+                                }
+                            }
+                            this.trillExtensionNotes.push({ vfNote: vfStaveNote, nextVfNote });
+                        }
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Draw wavy-line extensions after trill marks (tr~~~).
+     * Must be called after VexFlow has formatted and drawn all voices,
+     * so that absolute x/y positions are available.
+     */
+    private drawTrillExtensions(ctx: Vex.IRenderContext): void {
+        // Approximate half-width of the "tr" glyph + gap before the wavy line begins
+        const TRILL_GLYPH_HALF_WIDTH: number = 14;
+        // Padding before the next note's x position
+        const WAVY_LINE_END_PADDING: number = 3;
+        // Width of one wave (half-cycle in pixels)
+        const WAVE_WIDTH: number = 6;
+        // Amplitude of the wave in pixels
+        const WAVE_HEIGHT: number = 3;
+        // Vertical offset above the glyph baseline so the line aligns with the tr symbol
+        const WAVY_Y_OFFSET: number = 5;
+
+        for (const { vfNote, nextVfNote } of this.trillExtensionNotes) {
+            const staveNote: VF.StaveNote = vfNote as VF.StaveNote;
+            if (!staveNote.getStave) {
+                continue;
+            }
+            const startX: number = staveNote.getAbsoluteX() + TRILL_GLYPH_HALF_WIDTH;
+            const endX: number = nextVfNote
+                ? (nextVfNote as VF.StaveNote).getAbsoluteX() - WAVY_LINE_END_PADDING
+                : staveNote.getStave().getX() + staveNote.getStave().getWidth() - WAVY_LINE_END_PADDING;
+            const y: number = staveNote.getStave().getYForTopText(1) - WAVY_Y_OFFSET;
+
+            // Fit as many complete wave pairs as possible in the available width
+            const numWavePairs: number = Math.floor((endX - startX) / (WAVE_WIDTH * 2));
+            if (numWavePairs <= 0) {
+                continue;
+            }
+
+            (ctx as any).openGroup("trill-extension");
+            (ctx as any).save();
+            (ctx as any).setFillStyle("#000000");
+            (ctx as any).setStrokeStyle("#000000");
+            (ctx as any).setLineWidth(1.5);
+            (ctx as any).beginPath();
+            (ctx as any).moveTo(startX, y);
+            let x: number = startX;
+            for (let i: number = 0; i < numWavePairs; i++) {
+                (ctx as any).quadraticCurveTo(x + WAVE_WIDTH / 2, y - WAVE_HEIGHT, x + WAVE_WIDTH, y);
+                x += WAVE_WIDTH;
+                (ctx as any).quadraticCurveTo(x + WAVE_WIDTH / 2, y + WAVE_HEIGHT, x + WAVE_WIDTH, y);
+                x += WAVE_WIDTH;
+            }
+            (ctx as any).stroke();
+            (ctx as any).restore();
+            (ctx as any).closeGroup();
         }
     }
 
