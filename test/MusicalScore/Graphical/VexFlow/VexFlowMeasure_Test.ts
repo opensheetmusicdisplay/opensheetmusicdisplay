@@ -89,12 +89,10 @@ describe("VexFlow Measure", () => {
       );
    });
 
+   // Measure 11 of OSMD_function_test_Ornaments.xml contains a trill-mark + wavy-line start/stop.
+   // Using the existing ornaments fixture avoids an extra one-off test file.
    it("Trill with wavy-line should set hasWavyLine on OrnamentContainer and render a trill-extension SVG group", (done: Mocha.Done) => {
-      const score: Document = TestUtils.getScore("test_trill_wavy_line.xml");
-      if (!score) {
-         done(new Error("Score file not found"));
-         return;
-      }
+      const score: Document = TestUtils.getScore("OSMD_function_test_Ornaments.xml");
       const div: HTMLElement = TestUtils.getDivElement(document);
       div.style.width = "800px";
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -104,7 +102,8 @@ describe("VexFlow Measure", () => {
             try {
                osmd.render();
 
-               const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+               // Measure 11 (index 10) has the trill + wavy-line
+               const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(10, 0);
 
                // Find the voice entry with the trill ornament
                let hasWavyLine: boolean = false;
