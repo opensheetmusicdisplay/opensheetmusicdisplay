@@ -339,13 +339,13 @@ export class InstrumentReader {
           const [stemDirectionXml, stemColorXml, noteheadColorXml] = this.getStemDirectionAndColors(xmlNode);
 
           // check Tremolo, Vibrato
-          let vibratoStrokes: boolean = false;
           let tremoloInfo: TremoloInfo;
+          //let vibratoStrokes: boolean = false; // not necessary, handled by wavy-line
           if (notationsNode) {
             const ornamentsNode: IXmlElement = notationsNode.element("ornaments");
             if (ornamentsNode) {
               tremoloInfo = this.getTremoloInfo(ornamentsNode);
-              vibratoStrokes = this.getVibratoStrokes(ornamentsNode);
+              this.getWavyLines(ornamentsNode, xmlNode, currentFraction, previousFraction);
             }
           }
 
@@ -406,7 +406,7 @@ export class InstrumentReader {
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, octavePlusOne,
             printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloInfo, stemColorXml, noteheadColorXml,
-            vibratoStrokes, dots
+            dots
           );
 
           // notationsNode created further up for multiple checks
@@ -1487,15 +1487,26 @@ export class InstrumentReader {
     };
   }
 
-  private getVibratoStrokes(ornamentsNode: IXmlElement): boolean {
-    const vibratoNode: IXmlElement = ornamentsNode.element("wavy-line");
-    if (vibratoNode !== undefined) {
-      const vibratoType: Attr = vibratoNode.attribute("type");
-      if (vibratoType && vibratoType.value === "start") {
-        return true;
+  private getWavyLines(ornamentsNode: IXmlElement, xmlNode: IXmlElement, currentFraction: Fraction, previousFraction: Fraction): void {
+    const wavyLineNodes: IXmlElement[] = ornamentsNode.elements("wavy-line");
+    if (!wavyLineNodes) {
+      return;
+    }
+    /* As mentioned elsewhere, the wavy-line is technically an ornament element, but is specified and behaves
+        very much like a continuous expression, so makes more sense to interpret as an expression in our model.
+    */
+    for (const wavyLineNode of wavyLineNodes) {
+      const expressionReader: ExpressionReader = this.expressionReaders[this.readExpressionStaffNumber(xmlNode) - 1];
+      if (expressionReader) {
+        //Read placement from the wavy line node
+        expressionReader.readExpressionParameters(
+          wavyLineNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, false
+        );
+        expressionReader.addWavyLine(
+          wavyLineNode, this.currentMeasure, currentFraction, previousFraction
+        );
       }
     }
-    return false;
   }
 
   private getNoteStaff(xmlNode: IXmlElement): number {

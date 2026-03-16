@@ -16,7 +16,7 @@ import { ClefInstruction } from "../../VoiceData/Instructions/ClefInstruction";
 import { OctaveEnum, OctaveShift } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { Fraction } from "../../../Common/DataObjects/Fraction";
 import { LyricWord } from "../../VoiceData/Lyrics/LyricsWord";
-import { OrnamentContainer } from "../../VoiceData/OrnamentContainer";
+import { OrnamentContainer, OrnamentEnum } from "../../VoiceData/OrnamentContainer";
 import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -67,6 +67,8 @@ import { CollectionUtil } from "../../../Util/CollectionUtil";
 import { GraphicalGlissando } from "../GraphicalGlissando";
 import { Glissando } from "../../VoiceData/Glissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
+import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
+import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -908,7 +910,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const maxMeasureToDrawIndex: number = this.rules.MaxMeasureToDrawIndex;
 
     let startStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
-    if (!startStaffLine) { // fix for rendering range set. all of these can probably done cleaner.
+    if (!startStaffLine) { // fix for rendering range set. all of these can probably be done cleaner.
       startStaffLine = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex].ParentStaffLine;
     }
 
@@ -933,11 +935,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
     }
 
-    if (startMeasure.MeasureNumber < minMeasureToDrawIndex + 1 ||
-        startMeasure.MeasureNumber > maxMeasureToDrawIndex + 1 ||
-        endMeasure.MeasureNumber < minMeasureToDrawIndex + 1 ||
-        endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) {
-      // octave shift completely out of drawing range, don't draw anything
+    if (startMeasure.parentSourceMeasure.measureListIndex < minMeasureToDrawIndex ||
+        startMeasure.parentSourceMeasure.measureListIndex > maxMeasureToDrawIndex ||
+        endMeasure.parentSourceMeasure.measureListIndex < minMeasureToDrawIndex ||
+        endMeasure.parentSourceMeasure.measureListIndex > maxMeasureToDrawIndex) {
+      // completely out of drawing range, don't draw anything
       return;
     }
 
@@ -1048,7 +1050,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const firstNote: GraphicalStaffEntry = nextShiftFirstMeasure.staffEntries[0];
             let lastNote: GraphicalStaffEntry = nextShiftLastMeasure.staffEntries[nextShiftLastMeasure.staffEntries.length - 1];
 
-            //If the is the ending staffline, this endMeasure is the end of the shift
+            //If the end measure's staffline is the ending staffline, this endMeasure is the end of the shift
             if (endMeasure.ParentStaffLine === nextShiftStaffline) {
               nextShiftLastMeasure = endMeasure;
               lastNote = endStaffEntry;
@@ -1272,6 +1274,181 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     } else {
       log.warn("End measure or staffLines for pedal are undefined! This should not happen!");
     }
+  }
+
+  protected calculateSingleWavyLine(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+    // calculate absolute Timestamp and startStaffLine (and EndStaffLine if needed)
+    const wavyLine: WavyLine = multiExpression.WavyLineStart;
+
+    const startTimeStamp: Fraction = wavyLine.ParentStartMultiExpression.Timestamp;
+    const endTimeStamp: Fraction = wavyLine.ParentEndMultiExpression?.Timestamp;
+
+    const minMeasureToDrawIndex: number = this.rules.MinMeasureToDrawIndex;
+    const maxMeasureToDrawIndex: number = this.rules.MaxMeasureToDrawIndex;
+
+    let startStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
+    if (!startStaffLine) { // fix for rendering range set. all of these can probably be done cleaner.
+      startStaffLine = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex].ParentStaffLine;
+    }
+    let endMeasure: GraphicalMeasure = undefined;
+    if (wavyLine.ParentEndMultiExpression) {
+      endMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(wavyLine.ParentEndMultiExpression.SourceMeasureParent,
+                                                                                          staffIndex);
+    } else {
+      endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true); // get last rendered measure
+    }
+    if (endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) { //  ends in measure not rendered
+      endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
+    }
+    let startMeasure: GraphicalMeasure = undefined;
+    if (wavyLine.ParentEndMultiExpression) {
+      startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(wavyLine.ParentStartMultiExpression.SourceMeasureParent,
+                                                                                            staffIndex);
+    } else {
+      startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
+    }
+    if (startMeasure.MeasureNumber < minMeasureToDrawIndex + 1) { //  starts before range of measures selected to render
+      startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
+    }
+
+    if (startMeasure.parentSourceMeasure.measureListIndex < minMeasureToDrawIndex ||
+        startMeasure.parentSourceMeasure.measureListIndex > maxMeasureToDrawIndex ||
+        endMeasure.parentSourceMeasure.measureListIndex < minMeasureToDrawIndex ||
+        endMeasure.parentSourceMeasure.measureListIndex > maxMeasureToDrawIndex) {
+      // completely out of drawing range, don't draw anything
+      return;
+    }
+
+    let endStaffLine: StaffLine = endMeasure.ParentStaffLine;
+    if (!endStaffLine) {
+      endStaffLine = startStaffLine;
+    }
+    if (endMeasure && startStaffLine && endStaffLine) {
+      const graphicalWavyLine: VexFlowVibratoBracket = new VexFlowVibratoBracket(wavyLine, startStaffLine.PositionAndShape, startMeasure.ParentStaff.isTab);
+      // calculate RelativePosition
+      let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+      if (!startStaffEntry) { // fix for rendering range set
+        startStaffEntry = startMeasure.staffEntries[0];
+      }
+      let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+      if (!endStaffEntry) { // fix for rendering range set
+        endStaffEntry = endMeasure.staffEntries[endMeasure.staffEntries.length - 1];
+      }
+      graphicalWavyLine.setStartNote(startStaffEntry);
+
+      if (endStaffLine !== startStaffLine) {
+          let lastMeasureOfFirstShift: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
+          if (lastMeasureOfFirstShift === undefined) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
+            lastMeasureOfFirstShift = endMeasure;
+          }
+          const lastNoteOfFirstShift: GraphicalStaffEntry = lastMeasureOfFirstShift.staffEntries[lastMeasureOfFirstShift.staffEntries.length - 1];
+          graphicalWavyLine.setEndNote(lastNoteOfFirstShift);
+
+          const systemsInBetweenCount: number = endStaffLine.ParentMusicSystem.Id - startStaffLine.ParentMusicSystem.Id;
+          if (systemsInBetweenCount > 0) {
+            for (let i: number = startStaffLine.ParentMusicSystem.Id; i < endStaffLine.ParentMusicSystem.Id; i++) {
+              const nextWavyLineMusicSystem: MusicSystem = this.musicSystems[i + 1];
+              const nextWavyLineStaffline: StaffLine = nextWavyLineMusicSystem.StaffLines[staffIndex];
+              const nextWavyLineFirstMeasure: GraphicalMeasure = nextWavyLineStaffline.Measures[0];
+              // vibrato starts on the first measure
+              const nextWavyLine: VexFlowVibratoBracket = new VexFlowVibratoBracket(wavyLine, nextWavyLineFirstMeasure.PositionAndShape,
+                nextWavyLineStaffline.ParentStaff.isTab);
+              let nextWavyLineLastMeasure: GraphicalMeasure = nextWavyLineStaffline.Measures[nextWavyLineStaffline.Measures.length - 1];
+              const firstNote: GraphicalStaffEntry = nextWavyLineFirstMeasure.staffEntries[0];
+              let lastNote: GraphicalStaffEntry = nextWavyLineLastMeasure.staffEntries[nextWavyLineLastMeasure.staffEntries.length - 1];
+              //If the end measure's is the ending staffline, this endMeasure is the end of the wavy line
+              if (endMeasure.ParentStaffLine === nextWavyLineStaffline) {
+                nextWavyLineLastMeasure = endMeasure;
+                lastNote = endStaffEntry;
+              }
+
+              nextWavyLine.setStartNote(firstNote);
+              nextWavyLine.setEndNote(lastNote);
+              nextWavyLineStaffline.WavyLines.push(nextWavyLine);
+              nextWavyLine.CalculateBoundingBox();
+              this.calculateWavyLineSkyBottomLine(nextWavyLine.startVfVoiceEntry, nextWavyLine.endVfVoiceEntry, nextWavyLine, nextWavyLineStaffline);
+            }
+          }
+          graphicalWavyLine.CalculateBoundingBox();
+          this.calculateWavyLineSkyBottomLine(graphicalWavyLine.startVfVoiceEntry, graphicalWavyLine.endVfVoiceEntry, graphicalWavyLine, startStaffLine);
+      } else {
+        graphicalWavyLine.setEndNote(endStaffEntry);
+        graphicalWavyLine.CalculateBoundingBox();
+        this.calculateWavyLineSkyBottomLine(graphicalWavyLine.startVfVoiceEntry, graphicalWavyLine.endVfVoiceEntry, graphicalWavyLine, startStaffLine);
+      }
+      startStaffLine.WavyLines.push(graphicalWavyLine);
+    } else {
+      log.warn("End measure or staffLines for wavy line are undefined! This should not happen!");
+    }
+  }
+
+  private calculateWavyLineSkyBottomLine(startVfVoiceEntry: VexFlowVoiceEntry, endVfVoiceEntry: VexFlowVoiceEntry,
+    vfVibratoBracket: VexFlowVibratoBracket, parentStaffline: StaffLine): void {
+    const startStave: Vex.Flow.Stave = vfVibratoBracket.startNote.getStave();
+    const endStave: Vex.Flow.Stave = vfVibratoBracket.endNote.getStave();
+    //In VF Line positions, need to negate for our units
+    const highestVFTopTextPosition: number = Math.max(
+      startStave.options.top_text_position,
+      endStave.options.top_text_position
+    );
+
+    //Whichever is higher, set the other to match
+    startStave.options.top_text_position = highestVFTopTextPosition;
+    endStave.options.top_text_position = highestVFTopTextPosition;
+    let headroom: number = -highestVFTopTextPosition;
+    let trillStartX: number = 0;
+    let trillEndX: number = 0;
+    let trillSkyline: number = Infinity;
+    let trillWavyLineBottom: number = Infinity;
+    const TRILL_HEIGHT: number = 1.85;
+
+    let startX: number = startVfVoiceEntry.PositionAndShape.AbsolutePosition.x + startVfVoiceEntry.PositionAndShape.BorderLeft;
+    if (startVfVoiceEntry.parentVoiceEntry?.OrnamentContainer?.GetOrnament === OrnamentEnum.Trill) {
+      trillStartX = startX;
+      //Width of trill mark
+      startX += 2;
+      trillEndX = startX;
+      //Since the trill mark is not managed or calculated by our bounding boxes, we have to get the location this way
+      //Also at this point the skyline has already been updated with the trill mark. So we can't determine if it should go lower
+      //Need to trust Vexflow later on, unless the wavy line must be rendered higher
+      trillSkyline = parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(trillStartX, trillEndX);
+      //height of the trill mark
+      trillWavyLineBottom = trillSkyline + TRILL_HEIGHT;
+    }
+
+    let stopX: number = undefined;
+    //If the end of the line is the last note in the measure, go all the way to the end of the stave
+    if(vfVibratoBracket.ToEndOfStopStave) {
+      //vexflow backs off by 1 unit (10 pixels) from stave edge
+      stopX = endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.AbsolutePosition.x +
+        endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.BorderRight - 1;
+    } else {
+      stopX = endVfVoiceEntry.PositionAndShape.AbsolutePosition.x + endVfVoiceEntry.PositionAndShape.BorderRight;
+      //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
+      const vfClefBefore: Vex.Flow.ClefNote = (endVfVoiceEntry.parentStaffEntry as VexFlowStaffEntry).vfClefBefore;
+      if (vfClefBefore) {
+        const clefWidth: number = vfClefBefore.getWidth() / 10;
+        stopX += clefWidth;
+      }
+    }
+
+    headroom = parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX);
+    if (headroom === Infinity) { // will cause Vexflow error
+      return;
+    }
+    //If somewhere in our wavy line path we have to render higher than where the trill mark is set...
+    if (headroom < trillSkyline) {
+      startStave.options.top_text_position = -headroom;
+      endStave.options.top_text_position = -headroom;
+      //A decent enough approximation. Better than recalculating via Canvas or SVG sampling
+      parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(trillStartX, trillEndX, headroom - TRILL_HEIGHT);
+    } else { //Else just render where Vexflow has set the trill mark
+      vfVibratoBracket.line = -trillWavyLineBottom;
+      headroom = trillWavyLineBottom;
+    }
+    //Update skyline to include height of the wavy line
+    headroom -= vfVibratoBracket.PositionAndShape.Size.height;
+    parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom);
   }
 
   private calculatePedalSkyBottomLine(startVfVoiceEntry: VexFlowVoiceEntry, endVfVoiceEntry: VexFlowVoiceEntry,

@@ -473,6 +473,7 @@ export class EngravingRules {
     public RenderTimeSignatures: boolean;
     public RenderFirstTempoExpression: boolean;
     public RenderPedals: boolean;
+    public RenderWavyLines: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
     public IgnoreRepeatedDynamics: boolean;
@@ -941,6 +942,7 @@ export class EngravingRules {
         this.RenderTimeSignatures = true;
         this.RenderFirstTempoExpression = true;
         this.RenderPedals = true;
+        this.RenderWavyLines = true;
         this.ArticulationPlacementFromXML = true;
         this.BreathMarkDistance = 0.8;
         this.FingeringPosition = PlacementEnum.AboveOrBelow; // AboveOrBelow = correct bounding boxes

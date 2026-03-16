@@ -126,6 +126,9 @@ vexflow_font.js: (custom fix):
 downstem flag glyph (v9a): rotate and shift the flag so that it suits the stem better, as 1px steps don't align here)
   to shift and rotate glyphs, use src/VexFlowPatch/tools/shift_glyph.py and rorate_glyph.py
 
+vibratobracket.js: (custom option):
+add option vibratobracket.toEndOfStopStave: Render to the end of the stop note, instead of before it
+
 Currently, we are using a heavily improved and customized version of Vexflow 1.2.93,
 because of some formatter advantages compared to Vexflow 3.x versions, see this issue:
 https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/915
