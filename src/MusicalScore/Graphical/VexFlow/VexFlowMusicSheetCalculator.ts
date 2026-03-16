@@ -1342,7 +1342,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             lastMeasureOfFirstShift = endMeasure;
           }
           const lastNoteOfFirstShift: GraphicalStaffEntry = lastMeasureOfFirstShift.staffEntries[lastMeasureOfFirstShift.staffEntries.length - 1];
-          graphicalWavyLine.setEndNote(lastNoteOfFirstShift);
+          if (lastNoteOfFirstShift) {
+            graphicalWavyLine.setEndNote(lastNoteOfFirstShift); // TODO maybe not best way to handle this. sample/situation where value is undefined unclear.
+          }
 
           const systemsInBetweenCount: number = endStaffLine.ParentMusicSystem.Id - startStaffLine.ParentMusicSystem.Id;
           if (systemsInBetweenCount > 0) {
@@ -1385,7 +1387,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   private calculateWavyLineSkyBottomLine(startVfVoiceEntry: VexFlowVoiceEntry, endVfVoiceEntry: VexFlowVoiceEntry,
     vfVibratoBracket: VexFlowVibratoBracket, parentStaffline: StaffLine): void {
     const startStave: Vex.Flow.Stave = vfVibratoBracket.startNote.getStave();
-    const endStave: Vex.Flow.Stave = vfVibratoBracket.endNote.getStave();
+    let endStave: Vex.Flow.Stave = vfVibratoBracket.endNote?.getStave();
+    if (!endStave) { // e.g. if endNote undefined
+      endStave = startStave;
+      endVfVoiceEntry = startVfVoiceEntry;
+      // TODO maybe not best way to handle this. sample/situation where value is undefined unclear.
+    }
     //In VF Line positions, need to negate for our units
     const highestVFTopTextPosition: number = Math.max(
       startStave.options.top_text_position,
