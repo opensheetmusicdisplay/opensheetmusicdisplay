@@ -16,6 +16,8 @@ import { VexFlowVoiceEntry } from "../../../../src/MusicalScore/Graphical/VexFlo
 import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
+import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
+import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 
 describe("VexFlow Measure", () => {
 
@@ -83,6 +85,57 @@ describe("VexFlow Measure", () => {
             }
 
             done();
+         },
+         done
+      );
+   });
+
+   // Non-regression test for octave shift stop placed after grace notes.
+   // Before fix: addOctaveShift used previousFraction as end timestamp, but previousFraction
+   // is only updated for real notes (not grace notes). When the stop is placed after grace notes,
+   // previousFraction still points to the position of the last real note before the grace notes,
+   // causing the octave shift to end too early and miss the grace notes entirely.
+   // Fix: use currentFraction instead (like addPedalMarking already does).
+   it("Octave shift should apply to grace notes before the stop direction", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_octaveshift_stop_after_grace_notes.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(
+         (_: {}) => {
+            try {
+               osmd.render();
+
+               const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+
+               // Collect octave shift values for all grace notes in the measure
+               const graceOctaveShifts: OctaveEnum[] = [];
+               for (const staffEntry of gm.staffEntries) {
+                  for (const gve of staffEntry.graphicalVoiceEntries) {
+                     if (gve.parentVoiceEntry?.IsGrace) {
+                        const note: VexFlowGraphicalNote = gve.notes[0] as VexFlowGraphicalNote;
+                        graceOctaveShifts.push(note.octaveShift);
+                     }
+                  }
+               }
+
+               // 6 grace notes total: 4 under 8va, then 2 after the stop
+               chai.expect(graceOctaveShifts.length).to.equal(6, "Should have 6 grace notes");
+
+               // First 4 grace notes should have octave shift applied (VA8 = 8va)
+               for (let i: number = 0; i < 4; i++) {
+                  chai.expect(graceOctaveShifts[i]).to.not.equal(OctaveEnum.NONE,
+                     `Grace note ${i} should be under 8va`);
+               }
+
+               done();
+            } catch (e) {
+               done(e);
+            }
          },
          done
       );

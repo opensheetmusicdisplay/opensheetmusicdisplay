@@ -278,7 +278,8 @@ export class ExpressionReader {
             this.closeOpenContinuousTempo(Fraction.plus(sourceMeasure.AbsoluteTimestamp, timestamp));
         }
     }
-    public addOctaveShift(directionNode: IXmlElement, currentMeasure: SourceMeasure, endTimestamp: Fraction): void {
+    public addOctaveShift(directionNode: IXmlElement, currentMeasure: SourceMeasure, endTimestamp: Fraction,
+                          endVoiceEntryCount: number = 0): void {
         let octaveStaffNumber: number = 1;
         const staffNode: IXmlElement = directionNode.element("staff");
         if (staffNode) {
@@ -341,6 +342,7 @@ export class ExpressionReader {
                         } else if (type === "stop") {
                             const matchingShift: OctaveShift = this.openOctaveShifts.get(numberXml);
                             if (matchingShift) {
+                                matchingShift.endVoiceEntryIndex = endVoiceEntryCount;
                                 this.getMultiExpression = this.createNewMultiExpressionIfNeeded(
                                     currentMeasure, matchingShift.numberXml, endTimestamp);
                                 const octaveShiftStartExpression: MultiExpression = this.getMultiExpression;
