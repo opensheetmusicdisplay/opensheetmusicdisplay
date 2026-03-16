@@ -35,4 +35,9 @@ export class TabNote extends Note {
         return this.bendArray?.length > 0;
         // || this.vibratoStroke // vibratoStroke is handled by wavy-line (difference to public OSMD)
     }
+
+    // handled by wavy-line
+    // public get VibratoStroke(): boolean {
+    //     return this.vibratoStroke;
+    // }
 }
