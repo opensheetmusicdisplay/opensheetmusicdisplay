@@ -19,6 +19,7 @@ import log from "loglevel";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
+import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;
@@ -39,6 +40,7 @@ export class ExpressionReader {
     private lastWedge: ContinuousDynamicExpression;
     private WedgeYPosXml: number;
     private openPedal: Pedal;
+    private openWavyLine: WavyLine;
     constructor(musicSheet: MusicSheet, instrument: Instrument, staffNumber: number) {
         this.musicSheet = musicSheet;
         this.staffNumber = staffNumber;
@@ -451,6 +453,37 @@ export class ExpressionReader {
         this.getMultiExpression.PedalEnd = this.openPedal;
         this.openPedal.ParentEndMultiExpression = this.getMultiExpression;
         this.openPedal = undefined;
+    }
+    public addWavyLine(wavyLineNode: IXmlElement, currentMeasure: SourceMeasure, currentTimestamp: Fraction, previousTimestamp: Fraction): void {
+        if (wavyLineNode && wavyLineNode.hasAttributes) {
+            try {
+                switch (wavyLineNode.attribute("type").value) {
+                    case "start":
+                        this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+                        this.openWavyLine = new WavyLine(this.placement);
+                        this.getMultiExpression.WavyLineStart = this.openWavyLine;
+                        this.openWavyLine.ParentStartMultiExpression = this.getMultiExpression;
+                    break;
+                    case "stop":
+                        if (this.openWavyLine) {
+                            this.createNewMultiExpressionIfNeeded(currentMeasure, -1, currentTimestamp);
+                            this.getMultiExpression.WavyLineEnd = this.openWavyLine;
+                            this.openWavyLine.ParentEndMultiExpression = this.getMultiExpression;
+                            this.openWavyLine = undefined;
+                        }
+                    break;
+                    case "continue":
+                        //Seems we can ignore this for now. TODO: Look into when this is a barline child
+                    break;
+                    default:
+                    break;
+                }
+            } catch (ex) {
+                const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/WavyLineError", "Error while reading wavy-line.");
+                this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+                log.debug("ExpressionReader.addWavyLine", errorMsg, ex);
+            }
+        }
     }
     private initialize(): void {
         this.placement = PlacementEnum.NotYetDefined;

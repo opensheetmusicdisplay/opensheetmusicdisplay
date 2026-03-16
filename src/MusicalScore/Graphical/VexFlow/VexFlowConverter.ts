@@ -978,7 +978,6 @@ export class VexFlowConverter {
         const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.durations(frac, isTuplet)[0];
         let numDots: number = 0;
-        let tabVibrato: boolean = false;
         const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
         let isXNotehead: boolean = false;
         for (const note of gve.notes) {
@@ -1011,10 +1010,6 @@ export class VexFlowConverter {
                         tabPhrases.push({type: VF.Bend.DOWN, text: phraseText, width: 10});
                     }
                 });
-            }
-
-            if (tabNote.VibratoStroke) {
-                tabVibrato = true;
             }
 
             if (numDots < note.numberOfDots) {
@@ -1051,9 +1046,6 @@ export class VexFlowConverter {
                 vfnote.addModifier (new VF.Bend(phrase.text, true));
             }
         });
-        if (tabVibrato) {
-            vfnote.addModifier(new VF.Vibrato());
-        }
 
         return vfnote;
     }
