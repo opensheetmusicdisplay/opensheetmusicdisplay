@@ -65,8 +65,8 @@ if (!mode) {
 async function init () {
     debug("init");
 
-    const { default: osmdImport } = await import(osmdBuildDir + "/opensheetmusicdisplay.min.js");
-    OSMD = osmdImport;
+    const osmdModule = await import(osmdBuildDir + "/opensheetmusicdisplay.min.js");
+    OSMD = osmdModule.default || osmdModule;
 
     const osmdTestingMode = mode.includes("osmdtesting"); // can also be --debugosmdtesting
     const osmdTestingSingleMode = mode.includes("osmdtestingsingle");
@@ -354,7 +354,14 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     if (sampleFilename.endsWith(".mxl")) {
         loadParameter = await OSMD.MXLHelper.MXLtoXMLstring(loadParameter);
     } else {
-        loadParameter = loadParameter.toString();
+        // Detect UTF-16LE BOM (ff fe) and handle encoding appropriately
+        if (loadParameter.length >= 2 && loadParameter[0] === 0xFF && loadParameter[1] === 0xFE) {
+            // UTF-16LE encoding
+            loadParameter = loadParameter.toString('utf16le');
+        } else {
+            // Default UTF-8 encoding
+            loadParameter = loadParameter.toString();
+        }
     }
     // debug('loadParameter: ' + loadParameter)
     // debug('typeof loadParameter: ' + typeof loadParameter)

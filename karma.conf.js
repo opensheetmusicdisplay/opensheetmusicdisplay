@@ -1,4 +1,4 @@
-var common = require('./webpack.common.js')
+var common = require('./webpack.common.cjs')
 
 module.exports = function (config) {
     'use strict'
