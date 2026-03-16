@@ -243,6 +243,8 @@ export class EngravingRules {
     public RepetitionEndingLabelYOffset: number;
     public RepetitionEndingLineYLowerOffset: number;
     public RepetitionEndingLineYUpperOffset: number;
+    /** Whether the cursor should ignore / skip repetitions (alternative name: SkipRepetitions). False by default */
+    public CursorIgnoreRepetitions: boolean;
     public VoltaOffset: number;
     /** X offset applied after label was moved to not overflow the staffline to the left.
      * Without this offset, simply removing the overflow is usually too strict, moving it too far unnecessarily.
@@ -548,6 +550,10 @@ export class EngravingRules {
     /** Whether to always set preferred backend (WebGL or Plain) automatically, depending on browser and number of measures. */
     public AlwaysSetPreferredSkyBottomLineBackendAutomatically: boolean;
 
+    // Playback settings
+    /** Currently only used in audio player */
+    public UseInterpolatedTempoForAccelerandoEtc: boolean;
+
     constructor() {
         this.loadDefaultValues();
     }
@@ -788,6 +794,7 @@ export class EngravingRules {
         this.RepetitionEndingLabelYOffset = 0.3;
         this.RepetitionEndingLineYLowerOffset = 0.5;
         this.RepetitionEndingLineYUpperOffset = 0.3;
+        this.CursorIgnoreRepetitions = false;
         this.VoltaOffset = 2.5;
 
         // <direction><word> nodes text alignment
@@ -974,6 +981,11 @@ export class EngravingRules {
         this.DisableWebGLInFirefox = true;
         this.DisableWebGLInSafariAndIOS = true;
         this.setPreferredSkyBottomLineBackendAutomatically();
+
+        // Playback
+        this.UseInterpolatedTempoForAccelerandoEtc = false; // wait for rit support etc. can also make
+        //   player features like syncing more difficult to implement.
+        //   Also, the end of an accelerando is usually not marked, so this makes it difficult to find an end timestamp.
 
         // this.populateDictionaries(); // these values aren't used currently
         try {

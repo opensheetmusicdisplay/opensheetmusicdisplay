@@ -62,6 +62,7 @@ export class MusicSystemBuilder {
 
         // the first System - create also its Labels
         this.currentSystemParams.currentSystem = this.initMusicSystem();
+        this.currentSystemParams.maxLabelLength = this.currentSystemParams.currentSystem.MaxLabelLength;
 
         // let numberOfMeasures: number = 0;
         // for (let idx: number = 0, len: number = this.measureList.length; idx < len; ++idx) {
@@ -131,10 +132,20 @@ export class MusicSystemBuilder {
             }
             let totalMeasureWidth: number = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
             if (graphicalMeasures[0]?.parentSourceMeasure?.multipleRestMeasures) {
-                totalMeasureWidth = this.rules.MultipleRestMeasureDefaultWidth; // default 4 (12 seems too large)
+                currentMeasureVarWidth = this.rules.MultipleRestMeasureDefaultWidth;
+                totalMeasureWidth = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
+                // Set minimumStaffEntriesWidth so stretchMusicSystem uses a correct value (not -1 from constructor)
+                for (let i: number = 0; i < this.numberOfVisibleStaffLines; i++) {
+                    if (graphicalMeasures[i]) {
+                        graphicalMeasures[i].minimumStaffEntriesWidth = currentMeasureVarWidth;
+                    }
+                }
             }
             const currentMeasureNumberInSystem: number = this.currentSystemParams.systemMeasures.length;
-            const measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth < systemMaxWidth;
+            const labelWidth: number = this.currentSystemParams.maxLabelLength > 0
+                ? this.currentSystemParams.maxLabelLength + this.rules.SystemLabelsRightMargin : 0;
+            const measureFitsInSystem: boolean =
+                this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth + labelWidth < systemMaxWidth;
             const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && sourceMeasure.printNewPageXml;
             const impliedSystemBreak: boolean = doXmlPageBreak || // also create new system if doing page break
                 (this.rules.NewSystemAtXMLNewPageAttribute && sourceMeasure.printNewPageXml);
@@ -226,6 +237,7 @@ export class MusicSystemBuilder {
         if (measures !== undefined &&
             this.measureListIndex < this.measureList.length) {
             this.currentSystemParams.currentSystem = this.initMusicSystem();
+            this.currentSystemParams.maxLabelLength = this.currentSystemParams.currentSystem.MaxLabelLength;
         }
     }
 
@@ -825,7 +837,9 @@ export class MusicSystemBuilder {
         /*if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].parentSourceMeasure.endsPiece) {
             return SystemLinesEnum.ThinBold;
         }*/
-        if (this.nextMeasureHasKeyInstructionChange() || this.thisMeasureEndsWordRepetition() || this.nextMeasureBeginsWordRepetition()) {
+        if (this.nextMeasureHasKeyInstructionChange()) {
+        //if (this.nextMeasureHasKeyInstructionChange() || this.thisMeasureEndsWordRepetition() || this.nextMeasureBeginsWordRepetition()) {
+        //  previously, we forced a double thin barline for places like "to coda" end of measure, even if it there's no double thin barline in the xml
             return SystemLinesEnum.DoubleThin;
         }
         if (!sourceMeasure) {

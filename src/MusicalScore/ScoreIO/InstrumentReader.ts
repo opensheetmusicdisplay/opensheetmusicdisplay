@@ -436,7 +436,8 @@ export class InstrumentReader {
             previousFraction = new Fraction(0, 1);
           }
         } else if (xmlNode.name === "direction") {
-          const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
+          const directionTypeNodes: IXmlElement[] = xmlNode.elements("direction-type");
+          const directionTypeNode: IXmlElement = directionTypeNodes[0]; // kept for repetition handler
           // (*) MetronomeReader.readMetronomeInstructions(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
           let relativePositionInMeasure: number = Math.min(1, currentFraction.RealValue);
           if (this.activeRhythm !== undefined && this.activeRhythm.Rhythm) {
@@ -454,13 +455,26 @@ export class InstrumentReader {
              expressionReader = this.expressionReaders[staffIndex];
            }
            if (expressionReader) {
-             if (directionTypeNode.element("octave-shift")) {
+             if (directionTypeNodes.some(dt => dt.element("octave-shift"))) {
                expressionReader.readExpressionParameters(
                  xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, true
                );
-               expressionReader.addOctaveShift(xmlNode, this.currentMeasure, previousFraction.clone());
+               // Count how many VoiceEntries at the current timestamp were parsed before this stop.
+               // Grace notes before/after a stop share the same timestamp; this count lets the
+               // renderer distinguish which VoiceEntries fall under the octave shift.
+               let endVoiceEntryCount: number = 0;
+               let endFraction: Fraction;
+               if (this.currentStaffEntry?.Timestamp?.Equals(currentFraction)) {
+                 // Grace notes at this timestamp — use currentFraction and track which entries are covered
+                 endVoiceEntryCount = this.currentStaffEntry.VoiceEntries.length;
+                 endFraction = currentFraction.clone();
+               } else {
+                 // Normal case: last note was a real note, use previousFraction
+                 endFraction = previousFraction.clone();
+               }
+               expressionReader.addOctaveShift(xmlNode, this.currentMeasure, endFraction, endVoiceEntryCount);
              }
-             if (directionTypeNode.element("pedal")) {
+             if (directionTypeNodes.some(dt => dt.element("pedal"))) {
               expressionReader.readExpressionParameters(
                 xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, true
               );
