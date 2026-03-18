@@ -24,7 +24,7 @@ import { Note } from "../VoiceData/Note";
  *  like Render* to (not) render certain elements (e.g. osmd.rules.RenderRehearsalMarks = false)
  */
 export class EngravingRules {
-    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
+    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow at osmd.Zoom = 1 (default). */
     public static unit: number = 1.0;
     public SamplingUnit: number;
     public StaccatoShorteningFactor: number;
