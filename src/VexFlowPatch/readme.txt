@@ -84,7 +84,7 @@ fix rehearsal marks not rendered with canvas backend in browser
 
 stavetempo.js (custom addition):
 open a context group for vf-stavetempo, and one for its subgroup vf-bpm (for just the "= 150" text node)
-add drawNoteEquation() and drawNoteGroup() for complex metronome marks (note equations like swing: eighth+eighth = quarter+eighth under triplet bracket)
+add drawNoteEquation() and drawNoteGroup() for complex metronome marks (note equations like swing: 8th+8th = quarter+8th under triplet bracket)
 
 stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
