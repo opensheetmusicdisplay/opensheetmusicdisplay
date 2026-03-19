@@ -9,7 +9,7 @@ import {Instrument} from "../../Instrument";
 import {MultiExpression} from "../../VoiceData/Expressions/MultiExpression";
 import {IXmlAttribute, IXmlElement} from "../../../Common/FileIO/Xml";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
-import {InstantaneousTempoExpression} from "../../VoiceData/Expressions/InstantaneousTempoExpression";
+import {InstantaneousTempoExpression, MetronomeNote, MetronomeNoteGroup, MetronomeTuplet} from "../../VoiceData/Expressions/InstantaneousTempoExpression";
 import {MoodExpression} from "../../VoiceData/Expressions/MoodExpression";
 import {UnknownExpression} from "../../VoiceData/Expressions/UnknownExpression";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
@@ -196,40 +196,53 @@ export class ExpressionReader {
         for (const dirNode of dirNodes) {
             let dirContentNode: IXmlElement = dirNode.element("metronome");
             if (dirContentNode) {
-                const beatUnit: IXmlElement = dirContentNode.element("beat-unit");
-                // TODO check second "beat-unit", e.g. quarter = half
-                const dotted: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
-                const bpm: IXmlElement = dirContentNode.element("per-minute");
-                // TODO check print-object = false -> don't render invisible metronome mark
-                if (beatUnit !== undefined && bpm) {
-                    const useCurrentFractionForPositioning: boolean = (dirContentNode.hasAttributes && dirContentNode.attribute("default-x") !== undefined);
-                    if (useCurrentFractionForPositioning) {
-                        this.directionTimestamp = Fraction.createFromFraction(timestampFraction);
+                const metronomeNotes: IXmlElement[] = dirContentNode.elements("metronome-note");
+                const metronomeRelation: IXmlElement = dirContentNode.element("metronome-relation");
+
+                if (metronomeNotes.length > 0 && metronomeRelation) {
+                    // Complex metronome mark (note equation, e.g. swing notation)
+                    this.parseComplexMetronomeMark(dirContentNode, metronomeNotes, metronomeRelation,
+                                                   currentMeasure, timestampFraction);
+                } else {
+                    // Simple metronome mark: beat-unit = BPM
+                    // TODO handle two <beat-unit> elements without <per-minute> (simple note equation,
+                    //   e.g. quarter = half for metric modulations). This is a simpler MusicXML pattern
+                    //   than <metronome-note> — no beams or tuplets, just two note types.
+                    const beatUnit: IXmlElement = dirContentNode.element("beat-unit");
+                    const dotted: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
+                    const bpm: IXmlElement = dirContentNode.element("per-minute");
+                    // TODO check print-object = false -> don't render invisible metronome mark
+                    if (beatUnit !== undefined && bpm) {
+                        const useCurrentFractionForPositioning: boolean =
+                            (dirContentNode.hasAttributes && dirContentNode.attribute("default-x") !== undefined);
+                        if (useCurrentFractionForPositioning) {
+                            this.directionTimestamp = Fraction.createFromFraction(timestampFraction);
+                        }
+                        // per-minute can contain text alongside the number (e.g. "c. 108" for circa)
+                        // -> find first number ("c. 108" matches 108, "108.5" would match 108.5)
+                        const bpmMatch: RegExpMatchArray = bpm.value.match(/(\d+\.?\d*)/);
+                        const bpmNumber: number = bpmMatch ? parseFloat(bpmMatch[1]) : NaN;
+                        this.createNewTempoExpressionIfNeeded(currentMeasure);
+                        const instantaneousTempoExpression: InstantaneousTempoExpression =
+                            new InstantaneousTempoExpression(undefined,
+                                                             this.placement,
+                                                             this.staffNumber,
+                                                             bpmNumber,
+                                                             this.currentMultiTempoExpression,
+                                                             true);
+                        instantaneousTempoExpression.parentMeasure = currentMeasure;
+                        this.soundTempo = bpmNumber;
+                        // make sure to take dotted beats into account
+                        currentMeasure.TempoInBPM = this.soundTempo * (dotted?1.5:1);
+                        if (this.musicSheet.DefaultStartTempoInBpm === 0) {
+                            this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
+                        }
+                        this.musicSheet.HasBPMInfo = true;
+                        instantaneousTempoExpression.dotted = dotted;
+                        instantaneousTempoExpression.beatUnit = beatUnit.value;
+                        this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
+                        this.currentMultiTempoExpression.CombinedExpressionsText = "test";
                     }
-                    // per-minute can contain text alongside the number (e.g. "c. 108" for circa)
-                    // -> find first number ("c. 108" matches 108, "108.5" would match 108.5)
-                    const bpmMatch: RegExpMatchArray = bpm.value.match(/(\d+\.?\d*)/);
-                    const bpmNumber: number = bpmMatch ? parseFloat(bpmMatch[1]) : NaN;
-                    this.createNewTempoExpressionIfNeeded(currentMeasure);
-                    const instantaneousTempoExpression: InstantaneousTempoExpression =
-                        new InstantaneousTempoExpression(undefined,
-                                                         this.placement,
-                                                         this.staffNumber,
-                                                         bpmNumber,
-                                                         this.currentMultiTempoExpression,
-                                                         true);
-                    instantaneousTempoExpression.parentMeasure = currentMeasure;
-                    this.soundTempo = bpmNumber;
-                    // make sure to take dotted beats into account
-                    currentMeasure.TempoInBPM = this.soundTempo * (dotted?1.5:1);
-                    if (this.musicSheet.DefaultStartTempoInBpm === 0) {
-                        this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
-                    }
-                    this.musicSheet.HasBPMInfo = true;
-                    instantaneousTempoExpression.dotted = dotted;
-                    instantaneousTempoExpression.beatUnit = beatUnit.value;
-                    this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
-                    this.currentMultiTempoExpression.CombinedExpressionsText = "test";
                 }
                 continue;
             }
@@ -526,6 +539,97 @@ export class ExpressionReader {
             log.debug("ExpressionReader.readExpressionParameters", ex);
         }
     }
+    /** Parse a complex metronome mark with metronome-note elements and a metronome-relation (e.g. swing notation). */
+    private parseComplexMetronomeMark(metronomeNode: IXmlElement, metronomeNotes: IXmlElement[],
+                                      metronomeRelationNode: IXmlElement,
+                                      currentMeasure: SourceMeasure, timestampFraction: Fraction): void {
+        const useCurrentFractionForPositioning: boolean =
+            (metronomeNode.hasAttributes && metronomeNode.attribute("default-x") !== undefined);
+        if (useCurrentFractionForPositioning) {
+            this.directionTimestamp = Fraction.createFromFraction(timestampFraction);
+        }
+
+        // Split metronome-note elements into left and right groups, divided by metronome-relation.
+        // We iterate the raw children to determine ordering.
+        const allChildren: IXmlElement[] = metronomeNode.elements();
+        const leftNotes: MetronomeNote[] = [];
+        const rightNotes: MetronomeNote[] = [];
+        let currentTuplet: MetronomeTuplet | undefined;
+        let passedRelation: boolean = false;
+
+        for (const child of allChildren) {
+            if (child.name === "metronome-relation") {
+                passedRelation = true;
+                continue;
+            }
+            if (child.name !== "metronome-note") {
+                continue;
+            }
+            const typeEl: IXmlElement = child.element("metronome-type");
+            if (!typeEl) {
+                continue;
+            }
+            const note: MetronomeNote = {
+                type: typeEl.value,
+                dots: child.elements("metronome-dot").length,
+            };
+            const beamEl: IXmlElement = child.element("metronome-beam");
+            if (beamEl) {
+                note.beam = beamEl.value; // "begin", "continue", "end"
+            }
+
+            // Parse tuplet start/stop
+            const tupletEl: IXmlElement = child.element("metronome-tuplet");
+            if (tupletEl) {
+                const tupletType: string = tupletEl.hasAttributes ? tupletEl.attribute("type")?.value : undefined;
+                if (tupletType === "start") {
+                    const actualEl: IXmlElement = tupletEl.element("actual-notes");
+                    const normalEl: IXmlElement = tupletEl.element("normal-notes");
+                    const bracketAttr: IXmlAttribute = tupletEl.attribute("bracket");
+                    const showNumberAttr: IXmlAttribute = tupletEl.attribute("show-number");
+                    currentTuplet = {
+                        actualNotes: actualEl ? parseInt(actualEl.value, 10) : 3,
+                        normalNotes: normalEl ? parseInt(normalEl.value, 10) : 2,
+                        bracket: bracketAttr ? bracketAttr.value === "yes" : true,
+                        showNumber: showNumberAttr ? showNumberAttr.value : "actual",
+                    };
+                }
+                // tupletType === "stop" — tuplet ends on this note, handled below
+            }
+
+            if (passedRelation) {
+                rightNotes.push(note);
+            } else {
+                leftNotes.push(note);
+            }
+        }
+
+        // Build note groups
+        const leftGroup: MetronomeNoteGroup = { notes: leftNotes };
+        const rightGroup: MetronomeNoteGroup = { notes: rightNotes, tuplet: currentTuplet };
+
+        // Create the tempo expression. Use the sound tempo from the parent <sound> element.
+        this.createNewTempoExpressionIfNeeded(currentMeasure);
+        const instantaneousTempoExpression: InstantaneousTempoExpression =
+            new InstantaneousTempoExpression(undefined,
+                                             this.placement,
+                                             this.staffNumber,
+                                             this.soundTempo,
+                                             this.currentMultiTempoExpression,
+                                             true);
+        instantaneousTempoExpression.parentMeasure = currentMeasure;
+        instantaneousTempoExpression.metronomeNoteGroupLeft = leftGroup;
+        instantaneousTempoExpression.metronomeNoteGroupRight = rightGroup;
+        instantaneousTempoExpression.metronomeRelation = metronomeRelationNode.value;
+
+        if (this.musicSheet.DefaultStartTempoInBpm === 0) {
+            this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
+        }
+        this.musicSheet.HasBPMInfo = true;
+        this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
+        this.currentMultiTempoExpression.CombinedExpressionsText = "test";
+    }
+
     private interpretInstantaneousDynamics(dynamicsNode: IXmlElement,
                                            currentMeasure: SourceMeasure,
                                            inSourceMeasureCurrentFraction: Fraction,

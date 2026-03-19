@@ -46,7 +46,7 @@ import { GraphicalSlur } from "../GraphicalSlur";
 import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
-import { InstantaneousTempoExpression, TempoType } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
+import { InstantaneousTempoExpression, MetronomeNoteGroup, TempoType } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
@@ -814,12 +814,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   might be because of both <sound> node and <per-minute> node (within <metronome>) creating metronome marks
     }
     const vfStave: VF.Stave = vfMeasure.getVFStave();
-    //vfStave.addModifier(new VF.StaveTempo( // needs Vexflow PR
-    let vexflowDuration: string = "q";
-    if (metronomeExpression.beatUnit) {
-      const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(metronomeExpression.beatUnit);
-      vexflowDuration = VexFlowConverter.durations(duration, false)[0];
-    }
 
     let yShift: number = this.rules.MetronomeMarkYShift;
     let hasExpressionsAboveStaffline: boolean = false;
@@ -841,15 +835,30 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // console.log('max skyline: ' + maxSkylineBeginning);
     }
     const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine?.SkyLine;
-    vfStave.setTempo(
-      {
-          bpm: metronomeExpression.TempoInBpm,
-          dots: metronomeExpression.dotted,
-          duration: vexflowDuration
-      },
-      yShift * unitInPixels);
-       // -50, -30), 0); //needs Vexflow PR
-       //.setShiftX(-50);
+
+    if (metronomeExpression.metronomeNoteGroupLeft && metronomeExpression.metronomeNoteGroupRight) {
+      // Complex metronome mark (note equation, e.g. swing notation)
+      const noteEquation: any = this.buildNoteEquationForVexFlow(
+        metronomeExpression.metronomeNoteGroupLeft,
+        metronomeExpression.metronomeNoteGroupRight
+      );
+      (vfStave as any).setTempo({ noteEquation }, yShift * unitInPixels);
+    } else {
+      // Simple metronome mark: note = BPM
+      let vexflowDuration: string = "q";
+      if (metronomeExpression.beatUnit) {
+        const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(metronomeExpression.beatUnit);
+        vexflowDuration = VexFlowConverter.durations(duration, false)[0];
+      }
+      vfStave.setTempo(
+        {
+            bpm: metronomeExpression.TempoInBpm,
+            dots: metronomeExpression.dotted,
+            duration: vexflowDuration
+        },
+        yShift * unitInPixels);
+    }
+
     const xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
     (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
       xShift
@@ -860,6 +869,35 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       skyline[0] = Math.min(skyline[0], -4.5 + yShift);
     }
     // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
+  }
+
+  /** Convert MetronomeNoteGroup data into the format expected by VexFlow's StaveTempo.drawNoteEquation(). */
+  private buildNoteEquationForVexFlow(left: MetronomeNoteGroup, right: MetronomeNoteGroup): any {
+    const convertGroup: (group: MetronomeNoteGroup) => any = (group) => {
+      const notes: any[] = group.notes.map(note => {
+        const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(note.type);
+        const vfDuration: string = VexFlowConverter.durations(duration, false)[0];
+        return {
+          duration: vfDuration,
+          dots: note.dots,
+          beam: note.beam,
+        };
+      });
+      const result: any = { notes };
+      if (group.tuplet) {
+        result.tuplet = {
+          actualNotes: group.tuplet.actualNotes,
+          normalNotes: group.tuplet.normalNotes,
+          bracket: group.tuplet.bracket,
+          showNumber: group.tuplet.showNumber,
+        };
+      }
+      return result;
+    };
+    return {
+      left: convertGroup(left),
+      right: convertGroup(right),
+    };
   }
 
   protected calculateRehearsalMark(measure: SourceMeasure): void {
