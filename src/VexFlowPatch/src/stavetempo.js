@@ -59,7 +59,7 @@ export class StaveTempo extends StaveModifier {
     }
 
     if (noteEquation) {
-      // Complex metronome mark: note group = note group (e.g. swing notation)
+      // Complex metronome mark: note group = note group (e.g. swing notation) (VexFlowPatch)
       x = this.drawNoteEquation(ctx, x, y, scale, noteEquation);
     } else if (duration && bpm) {
       ctx.setFont(font.family, font.size, 'normal');
@@ -115,6 +115,7 @@ export class StaveTempo extends StaveModifier {
   /**
    * Draw a complex metronome mark: leftNotes = rightNotes (with optional tuplet bracket).
    * noteEquation: { left: { notes: [{duration, dots, beam}], tuplet? }, right: { ... } }
+   * (added in VexFlowPatch)
    */
   drawNoteEquation(ctx, x, y, scale, noteEquation) {
     const font = this.font;
@@ -142,6 +143,7 @@ export class StaveTempo extends StaveModifier {
    * Draw a group of notes (with beams connecting flagged notes, and optional tuplet bracket).
    * @param baseSpacing Base spacing unit — all internal spacing is derived from this.
    * group: { notes: [{duration, dots, beam}], tuplet?: {actualNotes, bracket, showNumber} }
+   * (added in VexFlowPatch)
    */
   drawNoteGroup(ctx, x, y, scale, baseSpacing, group) {
     const options = this.render_options;
