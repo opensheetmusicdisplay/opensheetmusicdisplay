@@ -117,29 +117,33 @@ export class StaveTempo extends StaveModifier {
    * noteEquation: { left: { notes: [{duration, dots, beam}], tuplet? }, right: { ... } }
    */
   drawNoteEquation(ctx, x, y, scale, noteEquation) {
-    const options = this.render_options;
     const font = this.font;
 
-    // Draw left note group
-    x = this.drawNoteGroup(ctx, x, y, scale, noteEquation.left);
+    // Base spacing unit — controls overall density of the note equation.
+    // All spacing values below are derived from this so they scale together.
+    const baseSpacing = 4 * scale;
 
-    // Draw "=" sign
+    // Draw left note group
+    x = this.drawNoteGroup(ctx, x, y, scale, baseSpacing, noteEquation.left);
+
+    // Draw "=" sign with padding derived from base spacing
     ctx.setFont(font.family, font.size, 'bold');
-    const equalsText = ' = ';
-    ctx.fillText(equalsText, x + 2 * scale, y);
-    x += ctx.measureText(equalsText).width + 2 * scale;
+    x += 1.5 * baseSpacing;
+    ctx.fillText('=', x, y);
+    x += ctx.measureText('=').width + 1.5 * baseSpacing;
 
     // Draw right note group (with optional tuplet)
-    x = this.drawNoteGroup(ctx, x, y, scale, noteEquation.right);
+    x = this.drawNoteGroup(ctx, x, y, scale, baseSpacing, noteEquation.right);
 
     return x;
   }
 
   /**
    * Draw a group of notes (with beams connecting flagged notes, and optional tuplet bracket).
+   * @param baseSpacing Base spacing unit — all internal spacing is derived from this.
    * group: { notes: [{duration, dots, beam}], tuplet?: {actualNotes, bracket, showNumber} }
    */
-  drawNoteGroup(ctx, x, y, scale, group) {
+  drawNoteGroup(ctx, x, y, scale, baseSpacing, group) {
     const options = this.render_options;
     const notes = group.notes;
     const tuplet = group.tuplet;
@@ -202,9 +206,9 @@ export class StaveTempo extends StaveModifier {
         currentBeamGroup = [];
       }
 
-      // Add spacing between notes in the group
+      // Inter-note spacing: tuplet groups get double spacing so the bracket has room
       if (i < notes.length - 1) {
-        x += 2 * scale;
+        x += tuplet ? 2 * baseSpacing : baseSpacing;
       }
     }
 
@@ -245,12 +249,13 @@ export class StaveTempo extends StaveModifier {
         minY = Math.min(minY, pos.y_top);
       }
 
-      const bracketY = minY - 6 * scale;
-      const bracketStartX = firstPos.stemX - 3 * scale;
-      const bracketEndX = lastPos.stemX + 3 * scale;
+      const bracketOverhang = 1.25 * baseSpacing;
+      const bracketY = minY - 1.5 * baseSpacing;
+      const bracketStartX = firstPos.x - 0.5 * baseSpacing;
+      const bracketEndX = lastPos.stemX + bracketOverhang;
 
       if (tuplet.bracket) {
-        const hookHeight = 4 * scale;
+        const hookHeight = baseSpacing;
         ctx.beginPath();
         // Left hook
         ctx.moveTo(bracketStartX, bracketY + hookHeight);
