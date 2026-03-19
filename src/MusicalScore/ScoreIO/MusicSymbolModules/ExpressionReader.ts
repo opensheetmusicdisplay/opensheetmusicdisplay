@@ -205,6 +205,9 @@ export class ExpressionReader {
                                                    currentMeasure, timestampFraction);
                 } else {
                     // Simple metronome mark: beat-unit = BPM
+                    // TODO handle two <beat-unit> elements without <per-minute> (simple note equation,
+                    //   e.g. quarter = half for metric modulations). This is a simpler MusicXML pattern
+                    //   than <metronome-note> — no beams or tuplets, just two note types.
                     const beatUnit: IXmlElement = dirContentNode.element("beat-unit");
                     const dotted: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
                     const bpm: IXmlElement = dirContentNode.element("per-minute");
