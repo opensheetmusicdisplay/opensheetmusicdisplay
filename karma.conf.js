@@ -1,4 +1,5 @@
 var common = require('./webpack.common.js')
+var path = require('path')
 
 module.exports = function (config) {
     'use strict'
@@ -63,6 +64,12 @@ module.exports = function (config) {
             // copy parts of webpack configuration to use minimal effort here
             devtool: process.env.CI ? false : 'inline-source-map',
             mode: process.env.CI ? 'production' : 'development',
+            output: {
+                // Override karma-webpack default (os.tmpdir on C:) to avoid cross-drive path issues on Windows
+                // when the project is on a different drive (e.g. P:)
+                filename: '[name].js',
+                path: path.join(__dirname, '.karma_temp'),
+            },
             module: {
                 rules: common.module.rules
             },

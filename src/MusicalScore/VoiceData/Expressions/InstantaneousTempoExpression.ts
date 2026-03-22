@@ -3,6 +3,34 @@ import {PlacementEnum} from "./AbstractExpression";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {MultiTempoExpression} from "./MultiTempoExpression";
 
+/** A single note in a complex metronome mark (e.g. swing notation: two eighth notes = quarter + eighth under triplet). */
+export interface MetronomeNote {
+    /** MusicXML note type string, e.g. "quarter", "eighth" */
+    type: string;
+    /** Number of dots on this note */
+    dots: number;
+    /** Beam state for this note: "begin", "continue", "end", or undefined */
+    beam?: string;
+}
+
+/** Tuplet bracket information for a group of metronome notes. */
+export interface MetronomeTuplet {
+    /** Actual notes in the tuplet (e.g. 3 for triplet) */
+    actualNotes: number;
+    /** Normal notes the tuplet replaces (e.g. 2 for triplet) */
+    normalNotes: number;
+    /** Whether to draw a bracket */
+    bracket: boolean;
+    /** What number to show: "actual", "both", "none" */
+    showNumber: string;
+}
+
+/** A group of metronome notes on one side of a note equation, with optional tuplet. */
+export interface MetronomeNoteGroup {
+    notes: MetronomeNote[];
+    tuplet?: MetronomeTuplet;
+}
+
 /** Tempo expressions that usually have an instantaneous and non-gradual effect on playback speed (e.g. Allegro),
  * or at least cover large sections, compared to the usually gradual effects or shorter sections of ContinuousExpressions.
  */
@@ -21,6 +49,12 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
     public dotted: boolean;
     public beatUnit: string;
     public isMetronomeMark: boolean;
+    /** For complex metronome marks (note equations like swing): left-side note group */
+    public metronomeNoteGroupLeft: MetronomeNoteGroup;
+    /** For complex metronome marks (note equations like swing): right-side note group */
+    public metronomeNoteGroupRight: MetronomeNoteGroup;
+    /** The relation between left and right groups, e.g. "equals" */
+    public metronomeRelation: string;
     private static listInstantaneousTempoLarghissimo: string[] = ["Larghissimo", "Sehr breit", "very, very slow"]; // }), TempoEnum.larghissimo);
     private static listInstantaneousTempoGrave: string[] = ["Grave", "Schwer", "slow and solemn"]; //  }), TempoEnum.grave);
     private static listInstantaneousTempoLento: string[] = ["Lento", "Lent", "Langsam", "slowly"]; //  }), TempoEnum.lento);

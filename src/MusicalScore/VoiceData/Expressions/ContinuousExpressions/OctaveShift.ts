@@ -9,6 +9,10 @@ export class OctaveShift {
     private octaveValue: OctaveEnum;
     private staffNumber: number;
     public numberXml: number = 1;
+    /** Index of the first VoiceEntry at the end timestamp that is NOT covered by this shift.
+     *  Used when a stop falls between grace notes sharing the same timestamp.
+     *  0 means no VoiceEntries at the end timestamp are covered. */
+    public endVoiceEntryIndex: number = 0;
     private startMultiExpression: MultiExpression;
     private endMultiExpression: MultiExpression;
 

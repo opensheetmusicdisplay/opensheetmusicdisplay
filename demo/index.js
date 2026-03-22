@@ -129,6 +129,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var showPageFormatControl = false;
     var showZoomControl = true;
     var showHeader = true;
+    var showVersionHeader = true;
     var showDebugControls = false;
 
     document.title = "OpenSheetMusicDisplay Demo";
@@ -144,6 +145,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         var paramShowExportPdfControl = findGetParameter('showExportPdfControl');
         var paramShowZoomControl = findGetParameter('showZoomControl');
         var paramShowHeader = findGetParameter('showHeader');
+        var paramShowVersionHeader = findGetParameter('showVersionHeader'); // versionDiv
         var paramZoom = findGetParameter('zoom');
         var paramOverflow = findGetParameter('overflow');
         var paramDarkMode = findGetParameter('darkMode');
@@ -163,6 +165,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         var paramSingleHorizontalStaffline = findGetParameter('singleHorizontalStaffline');
 
         showHeader = (paramShowHeader !== '0');
+        showVersionHeader = (paramShowVersionHeader !== '0');
         showControls = false;
         if (paramEmbedded) {
             showControls = paramShowControls !== '0';
@@ -367,10 +370,18 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (!showHeader) {
             if (header) {
                 header.style.display = 'none';
+                if (versionDiv) {
+                    versionDiv.style.marginTop = "5px"; // default 80px
+                }
             }
         } else {
             if (header) {
                 header.style.opacity = 1.0;
+            }
+        }
+        if (!showVersionHeader) {
+            if (versionDiv) {
+                versionDiv.style.display = 'none';
             }
         }
         // Hide error
@@ -970,12 +981,84 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     }
 
     /**
-     * Creates a Pdf of the currently rendered MusicXML
-     * @param pdfName if no name is given, the composer and title of the piece will be used
+     * Renders an SVG element to a JPEG data URL using the browser's native SVG renderer (e.g. for createPDF()).
+     * This correctly handles unicode characters, 8-digit hex colors with alpha (#RRGGBBAA),
+     * and all SVG features that the browser supports.
+     * @param svgElement the SVG DOM element to render
+     * @param scale resolution multiplier (default 1, use 2 for higher DPI)
+     * @param jpegQuality JPEG compression quality, 0.0 to 1.0 (default 0.8)
+     * @returns {Promise<string>} JPEG data URL
      */
-    async function createPdf(pdfName) {
+    function svgElementToDataUrl(svgElement, scale, jpegQuality) {
+        if (scale === undefined) {
+            scale = 2;
+            // scale 2 and jpegQuality 0.9 is a good balance between sharpness and file size.
+            //   File size is still smaller than before the jpeg change.
+            //   at scale 1, especially curved objects like clefs and braces look bad when zooming in a lot.
+        }
+        if (jpegQuality === undefined) {
+            jpegQuality = 0.9;
+        }
+        return new Promise(function(resolve, reject) {
+            var clone = svgElement.cloneNode(true);
+            if (!clone.getAttribute('xmlns')) {
+                clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            }
+            if (!clone.getAttribute('xmlns:xlink')) {
+                clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            }
+
+            var width = svgElement.clientWidth || svgElement.getBoundingClientRect().width;
+            var height = svgElement.clientHeight || svgElement.getBoundingClientRect().height;
+            clone.setAttribute('width', width);
+            clone.setAttribute('height', height);
+
+            var svgData = new XMLSerializer().serializeToString(clone);
+            var svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+            var url = URL.createObjectURL(svgBlob);
+
+            var img = new Image();
+            img.onload = function() {
+                var canvas = document.createElement('canvas');
+                canvas.width = width * scale;
+                canvas.height = height * scale;
+                var ctx = canvas.getContext('2d');
+                // Fill white background so transparent elements stay invisible against white
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.scale(scale, scale);
+                ctx.drawImage(img, 0, 0, width, height);
+                URL.revokeObjectURL(url);
+                resolve(canvas.toDataURL('image/jpeg', jpegQuality));
+            };
+            img.onerror = function(e) {
+                URL.revokeObjectURL(url);
+                reject(new Error('Failed to render SVG to image'));
+            };
+            img.src = url;
+        });
+    }
+
+    /**
+     * Creates a PDF of the currently rendered MusicXML.
+     * By default, uses image-based export which correctly handles unicode characters
+     * (Vietnamese, Chinese, etc.) and transparency (8-digit hex colors like #RRGGBBAA).
+     * @param pdfName if no name is given, the composer and title of the piece will be used
+     * @param scale resolution multiplier for image export (default 1). Higher values produce
+     *   sharper output but larger files. Use 2 for high-DPI/print quality.
+     * @param exportMode "image" (default) renders via browser's native SVG renderer for best
+     *   compatibility. "svg" uses svg2pdf.js for vector output (requires svg2pdf.js, may have
+     *   rendering issues with unicode and transparency).
+     */
+    async function createPdf(pdfName, scale, exportMode) {
+        if (scale === undefined) {
+            scale = 2;
+        }
+        if (exportMode === undefined) {
+            exportMode = "image";
+        }
         if (openSheetMusicDisplay.backendType !== BackendType.SVG) {
-            console.log("[OSMD] createPdf(): Warning: createPDF is only supported for SVG background for now, not for Canvas." +
+            console.log("[OSMD] createPdf(): Warning: createPdf is only supported for SVG backend for now, not for Canvas." +
                 " Please use osmd.setOptions({backendType: SVG}).");
             return;
         }
@@ -998,37 +1081,45 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         }
 
         const orientation = pageHeight > pageWidth ? "p" : "l";
-        // create a new jsPDF instance
         const pdf = new jsPDF.jsPDF({
             orientation: orientation,
             unit: "mm",
             format: [pageWidth, pageHeight]
         });
-        //const scale = pageWidth / svgElement.clientWidth;
-        for (let idx = 0, len = backends.length; idx < len; ++idx) {
-            if (idx > 0) {
-                pdf.addPage();
+        if (exportMode === "image") {
+            // Image-based export: uses the browser's native SVG renderer, which correctly
+            // handles unicode, 8-digit hex alpha colors, and all CSS/SVG features.
+            for (let idx = 0; idx < backends.length; idx++) {
+                if (idx > 0) {
+                    pdf.addPage();
+                }
+                svgElement = backends[idx].getSvgElement();
+                const imageDataUrl = await svgElementToDataUrl(svgElement, scale);
+                pdf.addImage(imageDataUrl, 'JPEG', 0, 0, pageWidth, pageHeight);
             }
-            svgElement = backends[idx].getSvgElement();
-            
-            if (!pdf.svg && !svg2pdf) { // this line also serves to make the svg2pdf not unused, though it's still necessary
-                // we need svg2pdf to have pdf.svg defined
-                console.log("svg2pdf missing, necessary for jspdf.svg().");
+        } else {
+            // SVG-based export (original approach, requires svg2pdf.js).
+            // Note: svg2pdf.js may not correctly handle unicode or 8-digit hex colors.
+            if (!pdf.svg && !svg2pdf) {
+                console.log("[OSMD] createPdf(): svg2pdf.js missing, necessary for SVG export mode.");
                 return;
             }
-            await pdf.svg(svgElement, {
-                x: 0,
-                y: 0,
-                width: pageWidth,
-                height: pageHeight,
-            })
+            for (let idx = 0; idx < backends.length; idx++) {
+                if (idx > 0) {
+                    pdf.addPage();
+                }
+                svgElement = backends[idx].getSvgElement();
+                await pdf.svg(svgElement, {
+                    x: 0,
+                    y: 0,
+                    width: pageWidth,
+                    height: pageHeight,
+                });
+            }
         }
 
         pdf.save(pdfName); // save/download the created pdf
-        //pdf.output("pdfobjectnewwindow", {filename: "osmd_createPDF.pdf"}); // open PDF in new tab/window
-
-        // note that using jspdf with svg2pdf creates unnecessary console warnings "AcroForm-Classes are not populated into global-namespace..."
-        // this will hopefully be fixed with a new jspdf release, see https://github.com/yWorks/jsPDF/pull/32
+        // pdf.output("pdfobjectnewwindow", {filename: "osmd_createPDF.pdf"}); // open PDF in new tab/window
     }
 
     // Register events: load, drag&drop

@@ -1014,6 +1014,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                     if (notes.length > 1) {
                         const vfBeam: VF.Beam = new VF.Beam(notes, autoStemBeam);
+                        if (psBeam.SecondaryBreakIndices?.length > 0) {
+                            vfBeam.breakSecondaryAt(psBeam.SecondaryBreakIndices);
+                        }
                         if (isGraceBeam) {
                             // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
                             (<any>vfBeam).render_options.beam_width = 3;
@@ -1753,9 +1756,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param top
      * @param lineType
      */
-    public lineTo(top: VexFlowMeasure, lineType: any): void {
+    public lineTo(top: VexFlowMeasure, lineType: any, xShift: number = 0): void {
         const connector: VF.StaveConnector = new VF.StaveConnector(top.getVFStave(), this.stave);
         connector.setType(lineType);
+        if (xShift !== 0) {
+            connector.setXShift(xShift);
+        }
         this.connectors.push(connector);
     }
 

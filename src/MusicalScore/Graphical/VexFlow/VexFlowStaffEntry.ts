@@ -106,13 +106,30 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
 
     // should be called after VexFlowConverter.StaveNote
     public setModifierXOffsets(): void {
-        let notes: GraphicalNote[] = [];
+        // Grace notes are at different horizontal positions than other notes,
+        // so we calculate collision offsets separately for each grace note voice entry.
+        // Non-grace notes at the same timestamp share the same X position, so they're grouped together.
+        const nonGraceNotes: GraphicalNote[] = [];
+
         for (const gve of this.graphicalVoiceEntries) {
-            notes = notes.concat(gve.notes);
+            const isGrace: boolean = gve.parentVoiceEntry?.IsGrace ?? false;
+            if (isGrace) {
+                this.applyModifierOffsets(gve.notes);
+            } else {
+                nonGraceNotes.push(...gve.notes);
+            }
+        }
+
+        this.applyModifierOffsets(nonGraceNotes);
+    }
+
+    private applyModifierOffsets(notes: GraphicalNote[]): void {
+        if (notes.length === 0) {
+            return;
         }
         const staffLines: number[] = notes.map(n => n.staffLine);
-        const stringNumberOffsets: number[] = this.calculateModifierXOffsets(staffLines, 1);
         const fingeringOffsets: number[] = this.calculateModifierXOffsets(staffLines, 0.5);
+        const stringNumberOffsets: number[] = this.calculateModifierXOffsets(staffLines, 1);
         notes.forEach((note, i) => {
             note.baseFingeringXOffset = fingeringOffsets[i];
             note.baseStringNumberXOffset = stringNumberOffsets[i];

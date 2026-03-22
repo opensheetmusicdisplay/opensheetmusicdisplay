@@ -742,6 +742,16 @@ export abstract class MusicSheetCalculator {
         measureIndex: number, staffIndex: number): void;
 
     /**
+     * Calculate a single Wavy Line for a [[MultiExpression]].
+     * @param sourceMeasure
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
+    protected abstract calculateSingleWavyLine(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
+        measureIndex: number, staffIndex: number): void;
+
+    /**
      * Calculate all the textual [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
      * @param repetitionInstruction
      * @param measureIndex
@@ -970,7 +980,11 @@ export abstract class MusicSheetCalculator {
                 // calculate all Pedal Expressions
                 this.calculatePedals();
             }
-            // calcualte RepetitionInstructions (Dal Segno, Coda, etc)
+            //calculate all wavy lines (vibrato, trill marks)
+            if (this.rules.RenderWavyLines) {
+                this.calculateWavyLines();
+            }
+            // calculate RepetitionInstructions (Dal Segno, Coda, etc)
             this.calculateWordRepetitionInstructions();
         }
         // calculate endings last, so they appear above measure numbers
@@ -2893,10 +2907,12 @@ export abstract class MusicSheetCalculator {
                 }
                 // check for possible OctaveShift
                 let octaveShiftValue: OctaveEnum = OctaveEnum.NONE;
+                let activeOctaveShift: OctaveShift;
                 if (openOctaveShifts[staffIndex]) {
                     if (openOctaveShifts[staffIndex].getAbsoluteStartTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
                         sourceStaffEntry.AbsoluteTimestamp.lte(openOctaveShifts[staffIndex].getAbsoluteEndTimestamp)) {
                         octaveShiftValue = openOctaveShifts[staffIndex].getOpenOctaveShift.Type;
+                        activeOctaveShift = openOctaveShifts[staffIndex].getOpenOctaveShift;
                     }
                 }
                 if (octaveShiftValue === OctaveEnum.NONE) {
@@ -2911,6 +2927,7 @@ export abstract class MusicSheetCalculator {
                         if (targetOctaveShift?.ParentStartMultiExpression?.AbsoluteTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
                             !targetOctaveShift.ParentEndMultiExpression?.AbsoluteTimestamp.lt(sourceStaffEntry.AbsoluteTimestamp)) {
                                 octaveShiftValue = targetOctaveShift.Type;
+                                activeOctaveShift = targetOctaveShift;
                                 break;
                             }
                     }
@@ -2918,6 +2935,15 @@ export abstract class MusicSheetCalculator {
                 // for each visible Voice create the corresponding GraphicalNotes
                 for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                     const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
+                    // When an octave shift stop falls between grace notes at the same timestamp,
+                    // turn off the shift for VoiceEntries parsed after the stop.
+                    if (octaveShiftValue !== OctaveEnum.NONE && activeOctaveShift &&
+                        activeOctaveShift.endVoiceEntryIndex > 0 && // without this, last note in bracket is drawn an octave too high
+                        activeOctaveShift.ParentEndMultiExpression?.AbsoluteTimestamp.Equals(sourceStaffEntry.AbsoluteTimestamp) &&
+                        idx >= activeOctaveShift.endVoiceEntryIndex) {
+                        octaveShiftValue = OctaveEnum.NONE;
+                        activeOctaveShift = undefined;
+                    }
                     // Normal Notes...
                     octaveShiftValue = this.handleVoiceEntry(
                         voiceEntry, graphicalStaffEntry,
@@ -3740,6 +3766,24 @@ export abstract class MusicSheetCalculator {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
                         if ((sourceMeasure.StaffLinkedExpressions[j][k].PedalStart)) {
                             this.calculateSinglePedal(sourceMeasure, sourceMeasure.StaffLinkedExpressions[j][k], i, j);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private calculateWavyLines(): void {
+        for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
+            const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+            for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
+                if (!this.graphicalMusicSheet.MeasureList[i] || !this.graphicalMusicSheet.MeasureList[i][j]) {
+                    continue;
+                }
+                if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.isVisible()) {
+                    for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
+                        if ((sourceMeasure.StaffLinkedExpressions[j][k].WavyLineStart)) {
+                            this.calculateSingleWavyLine(sourceMeasure, sourceMeasure.StaffLinkedExpressions[j][k], i, j);
                         }
                     }
                 }

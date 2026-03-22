@@ -24,7 +24,7 @@ import { Note } from "../VoiceData/Note";
  *  like Render* to (not) render certain elements (e.g. osmd.rules.RenderRehearsalMarks = false)
  */
 export class EngravingRules {
-    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
+    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow at osmd.Zoom = 1 (default). */
     public static unit: number = 1.0;
     public SamplingUnit: number;
     public StaccatoShorteningFactor: number;
@@ -243,6 +243,8 @@ export class EngravingRules {
     public RepetitionEndingLabelYOffset: number;
     public RepetitionEndingLineYLowerOffset: number;
     public RepetitionEndingLineYUpperOffset: number;
+    /** Whether the cursor should ignore / skip repetitions (alternative name: SkipRepetitions). False by default */
+    public CursorIgnoreRepetitions: boolean;
     public VoltaOffset: number;
     /** X offset applied after label was moved to not overflow the staffline to the left.
      * Without this offset, simply removing the overflow is usually too strict, moving it too far unnecessarily.
@@ -471,6 +473,7 @@ export class EngravingRules {
     public RenderTimeSignatures: boolean;
     public RenderFirstTempoExpression: boolean;
     public RenderPedals: boolean;
+    public RenderWavyLines: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
     public IgnoreRepeatedDynamics: boolean;
@@ -547,6 +550,10 @@ export class EngravingRules {
     public SkyBottomLineWebGLMinMeasures: number;
     /** Whether to always set preferred backend (WebGL or Plain) automatically, depending on browser and number of measures. */
     public AlwaysSetPreferredSkyBottomLineBackendAutomatically: boolean;
+
+    // Playback settings
+    /** Currently only used in audio player */
+    public UseInterpolatedTempoForAccelerandoEtc: boolean;
 
     constructor() {
         this.loadDefaultValues();
@@ -788,6 +795,7 @@ export class EngravingRules {
         this.RepetitionEndingLabelYOffset = 0.3;
         this.RepetitionEndingLineYLowerOffset = 0.5;
         this.RepetitionEndingLineYUpperOffset = 0.3;
+        this.CursorIgnoreRepetitions = false;
         this.VoltaOffset = 2.5;
 
         // <direction><word> nodes text alignment
@@ -934,6 +942,7 @@ export class EngravingRules {
         this.RenderTimeSignatures = true;
         this.RenderFirstTempoExpression = true;
         this.RenderPedals = true;
+        this.RenderWavyLines = true;
         this.ArticulationPlacementFromXML = true;
         this.BreathMarkDistance = 0.8;
         this.FingeringPosition = PlacementEnum.AboveOrBelow; // AboveOrBelow = correct bounding boxes
@@ -974,6 +983,11 @@ export class EngravingRules {
         this.DisableWebGLInFirefox = true;
         this.DisableWebGLInSafariAndIOS = true;
         this.setPreferredSkyBottomLineBackendAutomatically();
+
+        // Playback
+        this.UseInterpolatedTempoForAccelerandoEtc = false; // wait for rit support etc. can also make
+        //   player features like syncing more difficult to implement.
+        //   Also, the end of an accelerando is usually not marked, so this makes it difficult to find an end timestamp.
 
         // this.populateDictionaries(); // these values aren't used currently
         try {

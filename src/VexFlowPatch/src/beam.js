@@ -851,8 +851,9 @@ export class Beam extends Element {
         this.context.beginPath();
         this.context.moveTo(startBeamX, startBeamY);
         this.context.lineTo(startBeamX, startBeamY + beamThickness);
-        this.context.lineTo(lastBeamX + 1, lastBeamY + beamThickness);
-        this.context.lineTo(lastBeamX + 1, lastBeamY);
+        // VexFlowPatch: Use Stem.WIDTH instead of hardcoded 1 to properly cover the last stem
+        this.context.lineTo(lastBeamX + Stem.WIDTH, lastBeamY + beamThickness);
+        this.context.lineTo(lastBeamX + Stem.WIDTH, lastBeamY);
         this.context.closePath();
         this.context.fill();
         this.context.closeGroup();
