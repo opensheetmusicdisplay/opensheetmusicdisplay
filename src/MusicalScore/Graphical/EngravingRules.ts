@@ -237,6 +237,7 @@ export class EngravingRules {
     public TabUseXNoteheadAlternativeGlyph: boolean;
     public TabXNoteheadScale: number;
 
+    /** Whether the first measure is allowed to have a left repeat barline, if explicitly given in the MusicXML. */
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
     public RepetitionEndingLabelXOffset: number;
