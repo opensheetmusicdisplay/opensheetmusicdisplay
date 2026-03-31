@@ -48,6 +48,20 @@ Developers can also run a [local development demo (see Wiki)](https://github.com
 
 <img title="Local OSMD Development/Debug demo" alt="Local OSMD Developer Demo" src="https://user-images.githubusercontent.com/33069673/106189263-5695f400-61a8-11eb-901f-aafc853af497.png" style="max-width: 100%; max-height: 100vh; width: auto; margin: auto;">
 
+### Develop-branch CDN compatibility (MusicXML viewer)
+
+For `docs/musicxml-viewer.html`, we intentionally keep using the development build from
+`lukasshannon/opensheetmusicdisplay@develop` as the first loader target, and pin companion scripts:
+
+* Primary attempt:
+  * `https://cdn.jsdelivr.net/npm/vexflow@4.2.5/releases/vexflow-min.js`
+  * `https://cdn.jsdelivr.net/gh/lukasshannon/opensheetmusicdisplay@develop/build/opensheetmusicdisplay.min.js`
+* Fallback retry (still dev-branch, not npm stable):
+  * `../build/opensheetmusicdisplay.min.js` (the local develop-branch build output in this repo)
+
+This is required because develop-branch OSMD bundles can fail with an incompatible VexFlow runtime
+(for example with `l.Stave is not a constructor`), which indicates an OSMD/VexFlow API mismatch.
+
 
 ## Key Features
 
