@@ -4,11 +4,16 @@
     "esModuleInterop": true,
     "module": "commonjs",
     "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "vexflow": ["src/VexFlowCompat"]
+    },
     "noUnusedLocals": true,
     "outDir": "build/dist",
     "declaration": true,
     "sourceMap": true,
     "typeRoots": ["./node_modules/@types"],
+    "skipLibCheck": true,
   },
   "include": ["./.eslintrc.js", "./test/", "./src"],
   "exclude": [
