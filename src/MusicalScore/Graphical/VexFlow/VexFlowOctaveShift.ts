@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { OctaveShift, OctaveEnum } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { BoundingBox } from "../BoundingBox";

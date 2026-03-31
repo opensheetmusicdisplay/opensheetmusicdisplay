@@ -10,8 +10,7 @@
     "lint": "npm run eslint",
     "test": "karma start --single-run --no-auto-watch",
     "test:watch": "karma start --no-single-run --auto-watch --browsers ChromeNoSecurity",
-    "prebuild": "npm-run-all prebuildVexflow",
-    "prebuildVexflow": "ncp src/VexFlowPatch/src/ node_modules/vexflow/src/",
+    "prebuild": "echo \"Skipping legacy VexFlow v1 patch step for VexFlow v5\"",
     "prepare": "npm-run-all husky build",
     "build": "npm-run-all lint build:webpack",
     "build:webpack": "webpack --progress --config webpack.prod.js",
@@ -70,11 +69,10 @@
   },
   "homepage": "https://opensheetmusicdisplay.org",
   "dependencies": {
-    "@types/vexflow": "^1.2.38",
     "jszip": "3.10.1",
     "loglevel": "^1.8.0",
     "typescript-collections": "^1.3.3",
-    "vexflow": "1.2.93"
+    "vexflow": "^5.0.0"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin-ts": "^3.1.0",

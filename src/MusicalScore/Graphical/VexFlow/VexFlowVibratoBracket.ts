@@ -3,13 +3,13 @@ import { BoundingBox } from "../BoundingBox";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalWavyLine } from "../GraphicalWavyLine";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
-import Vex from "vexflow";
+import * as VF from "vexflow";
 
 export class VexFlowVibratoBracket extends GraphicalWavyLine {
     /** Defines the note where the bracket starts */
-    public startNote: Vex.Flow.StemmableNote;
+    public startNote: VF.StemmableNote;
     /** Defines the note where the bracket ends */
-    public endNote: Vex.Flow.StemmableNote;
+    public endNote: VF.StemmableNote;
     public startVfVoiceEntry: VexFlowVoiceEntry;
     public endVfVoiceEntry: VexFlowVoiceEntry;
     //Line where vexflow renders the bracket. VF default is 1
@@ -68,8 +68,8 @@ export class VexFlowVibratoBracket extends GraphicalWavyLine {
         this.boundingBox.Size.height = vfBracket.render_options.wave_height * 0.2;
     }
 
-    public getVibratoBracket(): Vex.Flow.VibratoBracket {
-		const bracket: Vex.Flow.VibratoBracket = new Vex.Flow.VibratoBracket({
+    public getVibratoBracket(): VF.VibratoBracket {
+		const bracket: VF.VibratoBracket = new VF.VibratoBracket({
 			start: this.startNote,
 			stop: this.endNote,
             toEndOfStopStave: this.toEndOfStopStave

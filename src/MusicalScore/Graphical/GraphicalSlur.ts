@@ -14,8 +14,7 @@ import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { Fraction } from "../../Common/DataObjects/Fraction";
 import { StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 
 export class GraphicalSlur extends GraphicalCurve {
     // private intersection: PointF2D;

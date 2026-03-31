@@ -1,6 +1,5 @@
 import { GraphicalGlissando } from "../GraphicalGlissando";
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 
 export class VexFlowGlissando extends GraphicalGlissando {
     public vfTie: VF.StaveTie;

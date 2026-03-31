@@ -21,8 +21,7 @@ import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import log from "loglevel";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
@@ -85,9 +84,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
     //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
     if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "gonville") {
-      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+      (VF as any).DEFAULT_FONT_STACK = [(VF as any).Fonts?.Gonville, (VF as any).Fonts?.Bravura, (VF as any).Fonts?.Custom];
     } else if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "petaluma") {
-      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Petaluma, (Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura];
+      (VF as any).DEFAULT_FONT_STACK = [(VF as any).Fonts?.Petaluma, (VF as any).Fonts?.Gonville, (VF as any).Fonts?.Bravura];
     }
     // else keep new vexflow default Bravura (more cursive, bold)
   }
@@ -1424,8 +1423,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   private calculateWavyLineSkyBottomLine(startVfVoiceEntry: VexFlowVoiceEntry, endVfVoiceEntry: VexFlowVoiceEntry,
     vfVibratoBracket: VexFlowVibratoBracket, parentStaffline: StaffLine): void {
-    const startStave: Vex.Flow.Stave = vfVibratoBracket.startNote.getStave();
-    let endStave: Vex.Flow.Stave = vfVibratoBracket.endNote?.getStave();
+    const startStave: VF.Stave = vfVibratoBracket.startNote.getStave();
+    let endStave: VF.Stave = vfVibratoBracket.endNote?.getStave();
     if (!endStave) { // e.g. if endNote undefined
       endStave = startStave;
       endVfVoiceEntry = startVfVoiceEntry;
@@ -1470,7 +1469,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     } else {
       stopX = endVfVoiceEntry.PositionAndShape.AbsolutePosition.x + endVfVoiceEntry.PositionAndShape.BorderRight;
       //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-      const vfClefBefore: Vex.Flow.ClefNote = (endVfVoiceEntry.parentStaffEntry as VexFlowStaffEntry).vfClefBefore;
+      const vfClefBefore: VF.ClefNote = (endVfVoiceEntry.parentStaffEntry as VexFlowStaffEntry).vfClefBefore;
       if (vfClefBefore) {
         const clefWidth: number = vfClefBefore.getWidth() / 10;
         stopX += clefWidth;
@@ -1503,7 +1502,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         endBbox = vfPedal.endMeasure.PositionAndShape;
       }
       //Just for shorthand. Easier readability below
-      const PEDAL_STYLES_ENUM: any = Vex.Flow.PedalMarking.Styles;
+      const PEDAL_STYLES_ENUM: any = VF.PedalMarking.Styles;
       const pedalMarking: any = vfPedal.getPedalMarking();
       //VF adds 3 lines to whatever the pedal line is set to.
       //VF also measures from the bottom line, whereas our bottom line is from the top staff line
@@ -1571,7 +1570,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
         }
         //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-        const vfClefBefore: Vex.Flow.ClefNote = (endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
+        const vfClefBefore: VF.ClefNote = (endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
         if (vfClefBefore) {
           const clefWidth: number = vfClefBefore.getWidth() / 10;
           stopX += clefWidth;
@@ -1634,7 +1633,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               }
             }
             //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-            const vfOtherClefBefore: Vex.Flow.ClefNote = (vfOtherPedal.endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
+            const vfOtherClefBefore: VF.ClefNote = (vfOtherPedal.endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
             if (vfOtherClefBefore) {
               const otherClefWidth: number = vfOtherClefBefore.getWidth() / 10;
               otherPedalStopX += otherClefWidth;

@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 
 export interface ICurveOptions {
