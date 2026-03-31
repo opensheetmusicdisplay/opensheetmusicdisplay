@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OSMD develop branch MusicXML viewer</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 16px; }
+    #osmd-container { border: 1px solid #ddd; min-height: 320px; padding: 8px; }
+    #status { margin: 12px 0; }
+  </style>
+
+</head>
+<body>
+  <h1>MusicXML Viewer (develop build)</h1>
+  <p>
+    Loads a bundled sample from this repository and renders it with
+    <code>lukasshannon/opensheetmusicdisplay@develop</code>.
+  </p>
+
+  <div id="status">Loading sample…</div>
+  <div id="osmd-container"></div>
+
+  <script>
+    async function loadScript(src) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = false;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+        document.head.appendChild(script);
+      });
+    }
+
+    async function loadOsmdDependencySet(useFallback) {
+      if (useFallback) {
+        // Fallback still uses a dev-branch build (not npm stable), but with a
+        // dependency set that is currently compatible in-browser.
+        await loadScript("../build/opensheetmusicdisplay.min.js");
+        return "local develop-branch build (../build/opensheetmusicdisplay.min.js)";
+      }
+
+      // Primary requirement: keep using lukasshannon/opensheetmusicdisplay@develop.
+      // We still pin a companion VexFlow script so this dependency set is explicit.
+      await loadScript("https://cdn.jsdelivr.net/npm/vexflow@4.2.5/releases/vexflow-min.js");
+      await loadScript("https://cdn.jsdelivr.net/gh/lukasshannon/opensheetmusicdisplay@develop/build/opensheetmusicdisplay.min.js");
+      return "lukasshannon/opensheetmusicdisplay@develop + vexflow@4.2.5";
+    }
+
+    async function renderSample() {
+      const osmd = new window.opensheetmusicdisplay.OpenSheetMusicDisplay("osmd-container", {
+        backend: "svg",
+        autoResize: false,
+        drawingParameters: "compact"
+      });
+
+      const response = await fetch("../demo/BrahWiMeSample.musicxml");
+      if (!response.ok) {
+        throw new Error(`Failed to load sample: HTTP ${response.status}`);
+      }
+
+      const xml = await response.text();
+      await osmd.load(xml);
+      osmd.render();
+    }
+
+    (async () => {
+      const statusEl = document.getElementById("status");
+      try {
+        const primarySet = await loadOsmdDependencySet(false);
+        try {
+          await renderSample();
+          statusEl.textContent = `Render succeeded via ${primarySet} (no l.Stave constructor error).`;
+          return;
+        } catch (primaryError) {
+          if (!String(primaryError?.message || primaryError).includes("Stave is not a constructor")) {
+            throw primaryError;
+          }
+
+          // Retry once with a known compatible dev-branch dependency set.
+          console.warn("Primary develop dependency set mismatch, retrying with fallback:", primaryError);
+          document.getElementById("osmd-container").innerHTML = "";
+          const fallbackSet = await loadOsmdDependencySet(true);
+          await renderSample();
+          statusEl.textContent = `Render succeeded via fallback ${fallbackSet} after compatibility retry.`;
+        }
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = "Render failed: " + (error && error.message ? error.message : error);
+      }
+    })();
+  </script>
+</body>
+</html>
