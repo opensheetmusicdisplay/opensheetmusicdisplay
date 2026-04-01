@@ -137,4 +137,31 @@ describe("Music Sheet Reader", () => {
             done();
         });
     });
+
+    describe("Notehead SMuFL mapping", () => {
+        const smuflNoteheadPath: string = "test/data/test_notehead_smufl_chant.musicxml";
+        let smuflNoteheadSheet: MusicSheet;
+
+        before((): void => {
+            const doc: Document = getSheet(smuflNoteheadPath);
+            chai.expect(doc).to.not.be.undefined;
+            const smuflScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            smuflNoteheadSheet = reader.createMusicSheet(smuflScore, smuflNoteheadPath);
+        });
+
+        it("maps notehead@smufl='chantPunctum' to Note.CustomNoteheadVFCode", (done: Mocha.Done) => {
+            // eslint-disable-next-line @typescript-eslint/typedef
+            const firstMeasure = smuflNoteheadSheet.SourceMeasures[0];
+            // eslint-disable-next-line @typescript-eslint/typedef
+            const firstContainer = firstMeasure.VerticalSourceStaffEntryContainers[0];
+            // eslint-disable-next-line @typescript-eslint/typedef
+            const firstStaffEntry = firstContainer.StaffEntries[0];
+            // eslint-disable-next-line @typescript-eslint/typedef
+            const firstVoiceEntry = firstStaffEntry.VoiceEntries[0];
+            // eslint-disable-next-line @typescript-eslint/typedef
+            const firstNote = firstVoiceEntry.Notes[0];
+            chai.expect(firstNote.CustomNoteheadVFCode).to.equal("ue990");
+            done();
+        });
+    });
 });
