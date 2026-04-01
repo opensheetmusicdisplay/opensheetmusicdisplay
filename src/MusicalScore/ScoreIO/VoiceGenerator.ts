@@ -518,7 +518,7 @@ export class VoiceGenerator {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
     if (noteheadSmuflXml) {
-      const vfCode: string = VoiceGenerator.noteheadSmuflToVexflowGlyphCode(noteheadSmuflXml);
+      const vfCode: string = Notehead.SmuflNoteheadToVexFlowCode(noteheadSmuflXml);
       if (vfCode) {
         note.CustomNoteheadVFCode = vfCode;
       }
@@ -587,22 +587,6 @@ export class VoiceGenerator {
       // add PlaybackInstrumentId for rest notes?
     }
 
-  private static noteheadSmuflToVexflowGlyphCode(smuflGlyphName: string): string {
-    switch (smuflGlyphName) {
-      case "chantPunctum":
-        return "ue990";
-      case "chantVirga":
-        return "ue994";
-      case "chantQuilisma":
-        return "ue99b";
-      case "chantOriscusAscending":
-        return "ue99c";
-      case "chantStropha":
-        return "ue9a4";
-      default:
-        return undefined;
-    }
-  }
 
   /**
    * Handle the currentVoiceBeam.
