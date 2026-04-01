@@ -518,7 +518,10 @@ export class VoiceGenerator {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
     if (noteheadSmuflXml) {
-      note.CustomNoteheadVFCode = Notehead.SmuflNoteheadToVexFlowCode(noteheadSmuflXml);
+      const vfCode: string = VoiceGenerator.noteheadSmuflToVexflowGlyphCode(noteheadSmuflXml);
+      if (vfCode) {
+        note.CustomNoteheadVFCode = vfCode;
+      }
     }
     if (stemDirectionXml === StemDirectionType.None) {
       stemColorXml = "#00000000";  // just setting this to transparent for now
@@ -583,6 +586,23 @@ export class VoiceGenerator {
       // add IsGraceNote for rest notes like with Notes?
       // add PlaybackInstrumentId for rest notes?
     }
+
+  private static noteheadSmuflToVexflowGlyphCode(smuflGlyphName: string): string {
+    switch (smuflGlyphName) {
+      case "chantPunctum":
+        return "ue990";
+      case "chantVirga":
+        return "ue994";
+      case "chantQuilisma":
+        return "ue99b";
+      case "chantOriscusAscending":
+        return "ue99c";
+      case "chantStropha":
+        return "ue9a4";
+      default:
+        return undefined;
+    }
+  }
 
   /**
    * Handle the currentVoiceBeam.
