@@ -5,6 +5,13 @@ import log from "loglevel";
  * A note head with shape and fill information belonging to a [[Note]].
  */
 export class Notehead {
+    private static readonly smuflChantNoteheadToVexFlowCode: { [smuflName: string]: string } = {
+        chantpunctum: "ue990",
+        chantvirga: "ue994",
+        chantquilisma: "ue99b",
+        chantoriscusascending: "ue99c",
+        chantstropha: "ue9a4",
+    };
     /**
      * @param sourceNote
      * @param shapeTypeXml The shape type given from XML.
@@ -89,6 +96,14 @@ export class Notehead {
                 log.info("unsupported/unhandled xml notehead '" + shapeTypeXml + "'. Using normal notehead.");
                 return NoteHeadShape.NORMAL;
         }
+    }
+
+    public static SmuflNoteheadToVexFlowCode(smuflNoteheadName: string): string {
+        if (!smuflNoteheadName) {
+            return undefined;
+        }
+
+        return Notehead.smuflChantNoteheadToVexFlowCode[smuflNoteheadName.toLowerCase()];
     }
 }
 

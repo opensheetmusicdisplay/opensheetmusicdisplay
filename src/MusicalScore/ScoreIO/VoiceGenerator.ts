@@ -454,8 +454,9 @@ export class VoiceGenerator {
           if (noteElement.attribute("filled")) {
             noteheadFilledXml = noteElement.attribute("filled").value === "yes";
           }
-          if (noteElement.attribute("smufl")) {
-            noteheadSmuflXml = noteElement.attribute("smufl").value;
+          const noteheadSmuflAttribute: IXmlAttribute = noteElement.attribute("smufl");
+          if (noteheadSmuflAttribute) {
+            noteheadSmuflXml = noteheadSmuflAttribute.value;
           }
         }
       } catch (ex) {
