@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { Notehead, NoteHeadShape } from "../../../src/MusicalScore/VoiceData/Notehead";
 
 describe("Notehead", () => {
@@ -70,6 +71,22 @@ describe("Notehead", () => {
         chai.expect(Notehead.SmuflNoteheadToVexFlowCode("chantQuilisma")).to.equal("ue99b");
         chai.expect(Notehead.SmuflNoteheadToVexFlowCode("chantOriscusAscending")).to.equal("ue99c");
         chai.expect(Notehead.SmuflNoteheadToVexFlowCode("chantStropha")).to.equal("ue9a4");
+        done();
+    });
+
+    it("maps chant SMuFL noteheads case-insensitively", (done: Mocha.Done) => {
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("CHANTPUNCTUM")).to.equal("ue990");
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("chantvirga")).to.equal("ue994");
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("cHaNtQuIlIsMa")).to.equal("ue99b");
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("CHANTORISCUSASCENDING")).to.equal("ue99c");
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("chantstropha")).to.equal("ue9a4");
+        done();
+    });
+
+    it("returns undefined for unknown or missing chant SMuFL names", (done: Mocha.Done) => {
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("chantUnknown")).to.be.undefined;
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("")).to.be.undefined;
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode(undefined)).to.be.undefined;
         done();
     });
 });

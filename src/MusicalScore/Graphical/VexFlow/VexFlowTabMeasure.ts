@@ -141,7 +141,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
         // else return; // we don't need clefs in tabs.
      }
 
-     public draw(ctx: Vex.IRenderContext): void {
+     public draw(ctx: VF.IRenderContext): void {
         super.draw(ctx);
 
         // draw multi-measure rest: unlike a classical measure, this is not a VexFlowMultiRestMeasure class,
