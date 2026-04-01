@@ -73,7 +73,7 @@ export abstract class VexFlowBackend {
     // there is unfortunately no built-in container.hasChild(child) method.
   }
 
-public abstract getContext(): Vex.IRenderContext;
+public abstract getContext(): VF.IRenderContext;
 
   // public abstract setWidth(width: number): void;
   // public abstract setHeight(height: number): void;

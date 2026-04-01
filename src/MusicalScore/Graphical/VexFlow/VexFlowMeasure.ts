@@ -638,7 +638,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * Draw this measure on a VexFlow CanvasContext
      * @param ctx
      */
-    public draw(ctx: Vex.IRenderContext): void {
+    public draw(ctx: VF.IRenderContext): void {
         const measureNode: SVGGElement = ctx.openGroup() as SVGGElement;
         if (measureNode) {
             measureNode.classList?.add("vf-measure");

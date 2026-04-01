@@ -117,7 +117,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawStaffLine(staffLine: StaffLine): void {
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.IRenderContext = this.backend.getContext();
         const stafflineNode: Node = ctx.openGroup();
         if (stafflineNode) {
             (stafflineNode as SVGGElement).classList.add("staffline");
@@ -478,7 +478,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.IRenderContext = this.backend.getContext();
         ctx.openGroup("brace");
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBrace = (brace as VexFlowInstrumentBrace);
@@ -487,7 +487,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawGroupBracket(bracket: GraphicalObject, system: MusicSystem): void {
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.IRenderContext = this.backend.getContext();
         ctx.openGroup("bracket");
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBracket = (bracket as VexFlowInstrumentBracket);
@@ -499,7 +499,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalOctaveShift of staffLine.OctaveShifts) {
             if (graphicalOctaveShift) {
                 const vexFlowOctaveShift: VexFlowOctaveShift = graphicalOctaveShift as VexFlowOctaveShift;
-                const ctx: Vex.IRenderContext = this.backend.getContext();
+                const ctx: VF.IRenderContext = this.backend.getContext();
                 const textBracket: VF.TextBracket = vexFlowOctaveShift.getTextBracket();
                 if (this.rules.DefaultColorMusic) {
                     (textBracket as any).render_options.color = this.rules.DefaultColorMusic;
@@ -518,7 +518,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalPedal of staffLine.Pedals) {
             if (graphicalPedal) {
                 const vexFlowPedal: VexFlowPedal = graphicalPedal as VexFlowPedal;
-                const ctx: Vex.IRenderContext = this.backend.getContext();
+                const ctx: VF.IRenderContext = this.backend.getContext();
                 const pedalMarking: VF.PedalMarking = vexFlowPedal.getPedalMarking();
                 (pedalMarking as any).render_options.color = this.rules.DefaultColorMusic;
                 pedalMarking.setContext(ctx);
@@ -531,7 +531,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalWavyLine of staffLine.WavyLines) {
             if (graphicalWavyLine) {
                 const vexFlowVibratoBracket: VexFlowVibratoBracket = graphicalWavyLine as VexFlowVibratoBracket;
-                const ctx: Vex.IRenderContext = this.backend.getContext();
+                const ctx: VF.IRenderContext = this.backend.getContext();
                 const vfVibratoBracket: VF.VibratoBracket = vexFlowVibratoBracket.getVibratoBracket();
                 (vfVibratoBracket as any).setContext(ctx);
                 vfVibratoBracket.draw();

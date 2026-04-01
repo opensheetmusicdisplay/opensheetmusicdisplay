@@ -532,7 +532,11 @@ export class MusicSystemBuilder {
             );
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
         }
-        staves[0].formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
+        // VexFlow 5 compatibility: some stave implementations (depending on backend/patch path)
+        // don't expose formatBegModifiers().
+        if (staves[0]?.formatBegModifiers) {
+            staves[0].formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
+        }
         return totalBeginInstructionLengthX;
     }
 

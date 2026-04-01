@@ -9,8 +9,7 @@ import {VexFlowMeasure} from "../../../../src/MusicalScore/Graphical/VexFlow/Vex
 import {VexFlowVoiceEntry} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
 import {Note} from "../../../../src/MusicalScore/VoiceData/Note";
 import {Fraction} from "../../../../src/Common/DataObjects/Fraction";
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 
 describe("VexFlow Measure - Tuplet Voice Alignment", () => {
 
@@ -66,7 +65,7 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
 
       // Voice 1 should have 6 tuplet eighth notes, each with the same tick value
       const voice1: VF.Voice = vfVoices[voiceIds[0]];
-      const voice1Tickables: VF.Tickable[] = voice1.getTickables();
+      const voice1Tickables: VF.Note[] = voice1.getTickables() as VF.Note[];
 
       // All voice 1 notes should have identical tick values (tuplet eighths)
       const firstNoteTicks: number = voice1Tickables[0].getTicks().value();

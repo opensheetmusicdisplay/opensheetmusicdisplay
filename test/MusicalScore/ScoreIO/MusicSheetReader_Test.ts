@@ -164,4 +164,33 @@ describe("Music Sheet Reader", () => {
             done();
         });
     });
+
+    describe("Notehead SMuFL mapping variants", () => {
+        const smuflVariantPath: string = "test/data/test_notehead_smufl_chant_variants.musicxml";
+        let smuflVariantSheet: MusicSheet;
+
+        before((): void => {
+            const doc: Document = getSheet(smuflVariantPath);
+            chai.expect(doc).to.not.be.undefined;
+            const variantScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            smuflVariantSheet = reader.createMusicSheet(variantScore, smuflVariantPath);
+        });
+
+        it("maps notehead@smufl case-insensitively and leaves unsupported names unmapped", (done: Mocha.Done) => {
+            // eslint-disable-next-line @typescript-eslint/typedef
+            const firstMeasure = smuflVariantSheet.SourceMeasures[0];
+            // eslint-disable-next-line @typescript-eslint/typedef
+            const firstContainer = firstMeasure.VerticalSourceStaffEntryContainers[0];
+            // eslint-disable-next-line @typescript-eslint/typedef
+            const secondContainer = firstMeasure.VerticalSourceStaffEntryContainers[1];
+            // eslint-disable-next-line @typescript-eslint/typedef
+            const firstNote = firstContainer.StaffEntries[0].VoiceEntries[0].Notes[0];
+            // eslint-disable-next-line @typescript-eslint/typedef
+            const secondNote = secondContainer.StaffEntries[0].VoiceEntries[0].Notes[0];
+
+            chai.expect(firstNote.CustomNoteheadVFCode).to.equal("ue994");
+            chai.expect(secondNote.CustomNoteheadVFCode).to.be.undefined;
+            done();
+        });
+    });
 });

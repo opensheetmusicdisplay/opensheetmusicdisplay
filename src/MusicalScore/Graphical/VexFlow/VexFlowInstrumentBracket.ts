@@ -25,7 +25,7 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
      * Render the bracket using the given backend
      * @param ctx Render Vexflow context
      */
-    public draw(ctx: Vex.IRenderContext): void {
+    public draw(ctx: VF.IRenderContext): void {
         // Draw vexflow brace. This sets the positions inside the connector.
         if (this.Visible) {
             this.vexflowConnector.setContext(ctx).draw();
