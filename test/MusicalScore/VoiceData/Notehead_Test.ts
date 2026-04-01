@@ -63,4 +63,13 @@ describe("Notehead", () => {
         chai.expect(Notehead.ShapeTypeXmlToShape("invalid")).to.equal(NoteHeadShape.NORMAL);
         done();
     });
+
+    it("maps supported chant SMuFL noteheads to VexFlow glyph codes", (done: Mocha.Done) => {
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("chantPunctum")).to.equal("ue990");
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("chantVirga")).to.equal("ue994");
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("chantQuilisma")).to.equal("ue99b");
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("chantOriscusAscending")).to.equal("ue99c");
+        chai.expect(Notehead.SmuflNoteheadToVexFlowCode("chantStropha")).to.equal("ue9a4");
+        done();
+    });
 });

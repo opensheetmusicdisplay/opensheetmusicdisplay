@@ -1,5 +1,7 @@
 # Build
-build
+build/**
+!build/opensheetmusicdisplay.min.js
+!build/opensheetmusicdisplay.min.js.LICENSE.txt
 
 # Dist
 dist

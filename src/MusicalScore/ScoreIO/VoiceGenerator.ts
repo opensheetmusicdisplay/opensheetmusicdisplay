@@ -356,6 +356,7 @@ export class VoiceGenerator {
     let playbackInstrumentId: string = undefined;
     let noteheadShapeXml: string = undefined;
     let noteheadFilledXml: boolean = undefined; // if undefined, the final filled parameter will be calculated from duration
+    let noteheadSmuflXml: string = undefined;
 
     const xmlnodeElementsArr: IXmlElement[] = node.elements();
     for (let idx: number = 0, len: number = xmlnodeElementsArr.length; idx < len; ++idx) {
@@ -453,6 +454,10 @@ export class VoiceGenerator {
           if (noteElement.attribute("filled")) {
             noteheadFilledXml = noteElement.attribute("filled").value === "yes";
           }
+          const noteheadSmuflAttribute: IXmlAttribute = noteElement.attribute("smufl");
+          if (noteheadSmuflAttribute) {
+            noteheadSmuflXml = noteheadSmuflAttribute.value;
+          }
         }
       } catch (ex) {
         log.info("VoiceGenerator.addSingleNote: ", ex);
@@ -512,6 +517,9 @@ export class VoiceGenerator {
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
+    if (noteheadSmuflXml) {
+      note.CustomNoteheadVFCode = Notehead.SmuflNoteheadToVexFlowCode(noteheadSmuflXml);
+    }
     if (stemDirectionXml === StemDirectionType.None) {
       stemColorXml = "#00000000";  // just setting this to transparent for now
     }
