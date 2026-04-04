@@ -1356,7 +1356,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         xMargin /= 3; // prevent overlap. multiple grace notes end up closer to the main note.
                     }
                     (graceNoteGroup as any).spacing = xMargin * 10;
-                    ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(0, graceNoteGroup);
+                    ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(graceNoteGroup, 0);
                     graceGVoiceEntriesBefore = [];
                 }
             }
@@ -1453,7 +1453,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
                     const vfStaveNote: any = vexFlowVoiceEntry.vfStaveNote;
                     if (vfStaveNote && typeof vfStaveNote.addModifier === "function") {
-                        vfStaveNote.addModifier(0, clefModifier);
+                        vfStaveNote.addModifier(clefModifier, 0);
                     }
                 }
 
@@ -1682,7 +1682,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
                     // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
-                    vexFlowVoiceEntry.vfStaveNote.addModifier((fingeringIndex as any), (stringNumber as any));
+                    vexFlowVoiceEntry.vfStaveNote.addModifier((stringNumber as any), (fingeringIndex as any));
                     continue;
                 }
             }
@@ -1691,7 +1691,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
               // vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
 
             // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
-            vexFlowVoiceEntry.vfStaveNote.addModifier((fingeringIndex as any), (fretFinger as any));
+            vexFlowVoiceEntry.vfStaveNote.addModifier((fretFinger as any), (fingeringIndex as any));
         }
     }
 
@@ -1745,7 +1745,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
                 vfStringNumber.setOffsetY(offsetY);
 
-                vexFlowVoiceEntry.vfStaveNote.addModifier((stringIndex as any), (vfStringNumber as any)); // see addModifier() above
+                vexFlowVoiceEntry.vfStaveNote.addModifier((vfStringNumber as any), (stringIndex as any)); // see addModifier() above
             }
         });
     }
