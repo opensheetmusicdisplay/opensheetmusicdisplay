@@ -671,6 +671,14 @@ export class VexFlowConverter {
         // add accidentals
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
+            const addAccidental: (accidentalCode: string) => void = (accidentalCode: string): void => {
+                const accidental: VF.Accidental = new VF.Accidental(accidentalCode);
+                if ((vfnote as any).addAccidental) {
+                    (vfnote as any).addAccidental(i, accidental);
+                } else {
+                    (vfnote as any).addModifier(accidental, i);
+                }
+            };
             if (accidentals[i]) {
                 if (accidentals[i] === "###") { // triple sharp
                     addAccidentalToNote(i, "##");
