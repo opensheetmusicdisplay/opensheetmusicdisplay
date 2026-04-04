@@ -661,17 +661,25 @@ export class VexFlowConverter {
         // add accidentals
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
+            const addAccidental: (accidentalCode: string) => void = (accidentalCode: string): void => {
+                const accidental: VF.Accidental = new VF.Accidental(accidentalCode);
+                if ((vfnote as any).addAccidental) {
+                    (vfnote as any).addAccidental(i, accidental);
+                } else {
+                    (vfnote as any).addModifier(accidental, i);
+                }
+            };
             if (accidentals[i]) {
                 if (accidentals[i] === "###") { // triple sharp
-                    vfnote.addAccidental(i, new VF.Accidental("##"));
-                    vfnote.addAccidental(i, new VF.Accidental("#"));
+                    addAccidental("##");
+                    addAccidental("#");
                     continue;
                 } else if (accidentals[i] === "bbs") { // triple flat
-                    vfnote.addAccidental(i, new VF.Accidental("bb"));
-                    vfnote.addAccidental(i, new VF.Accidental("b"));
+                    addAccidental("bb");
+                    addAccidental("b");
                     continue;
                 }
-                vfnote.addAccidental(i, new VF.Accidental(accidentals[i])); // normal accidental
+                addAccidental(accidentals[i]); // normal accidental
             }
 
             // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
@@ -680,7 +688,7 @@ export class VexFlowConverter {
                 const tremolo: VF.Tremolo = new VF.Tremolo(tremoloStrokes);
                 (tremolo as any).extra_stroke_scale = rules.TremoloStrokeScale;
                 (tremolo as any).y_spacing_scale = rules.TremoloYSpacingScale;
-                vfnote.addModifier(i, tremolo);
+                vfnote.addModifier(tremolo, i);
             }
         }
 
@@ -703,7 +711,11 @@ export class VexFlowConverter {
         // }
 
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
-            vfnote.addDotToAll();
+            if ((vfnote as any).addDotToAll) {
+                (vfnote as any).addDotToAll();
+            } else {
+                (VF as any).Dot.buildAndAttach([vfnote], { all: true });
+            }
         }
         return vfnote;
     }
@@ -878,7 +890,7 @@ export class VexFlowConverter {
             }
             if (vfArt) {
                 vfArt.setPosition(vfArtPosition);
-                (vfnote as StaveNote).addModifier(0, vfArt);
+                (vfnote as StaveNote).addModifier(vfArt, 0);
             }
         }
     }
@@ -939,7 +951,7 @@ export class VexFlowConverter {
                 vfOrna.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
             }
             vfOrna.setPosition(vfPosition); // Vexflow draws it above right now in any case, never below
-            (vfnote as StaveNote).addModifier(0, vfOrna);
+            (vfnote as StaveNote).addModifier(vfOrna, 0);
         }
     }
 
