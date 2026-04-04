@@ -664,10 +664,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
-      if (vfStartNote) { // first_note or last_note must be not null in Vexflow
+      if (vfStartNote) { // firstNote or lastNote must be not null in VexFlow
         const vfTie1: VF.StaveTie = new VF.StaveTie({
-          first_indices: [startNoteIndexInTie],
-          first_note: vfStartNote
+          firstIndexes: [startNoteIndexInTie],
+          firstNote: vfStartNote
         });
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
@@ -675,8 +675,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       if (vfEndNote) {
         const vfTie2: VF.StaveTie = new VF.StaveTie({
-          last_indices: [endNoteIndexInTie],
-          last_note: vfEndNote
+          lastIndexes: [endNoteIndexInTie],
+          lastNote: vfEndNote
         });
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure2.addStaveTie(vfTie2, tie);
@@ -696,20 +696,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
             vfTie = new VF.TabSlide(
               {
-                first_indices: [startNoteIndexInTie],
-                first_note: vfStartNote,
-                last_indices: [endNoteIndexInTie],
-                last_note: vfEndNote,
+                firstIndexes: [startNoteIndexInTie],
+                firstNote: vfStartNote,
+                lastIndexes: [endNoteIndexInTie],
+                lastNote: vfEndNote,
               },
               slideDirection
             );
           } else {
             vfTie = new VF.TabTie(
               {
-                first_indices: [startNoteIndexInTie],
-                first_note: vfStartNote,
-                last_indices: [endNoteIndexInTie],
-                last_note: vfEndNote,
+                firstIndexes: [startNoteIndexInTie],
+                firstNote: vfStartNote,
+                lastIndexes: [endNoteIndexInTie],
+                lastNote: vfEndNote,
               },
               tie.Tie.Type
             );
@@ -717,10 +717,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
         } else { // not Tab (guitar), normal StaveTie
           vfTie = new VF.StaveTie({
-            first_indices: [startNoteIndexInTie],
-            first_note: vfStartNote,
-            last_indices: [endNoteIndexInTie],
-            last_note: vfEndNote
+            firstIndexes: [startNoteIndexInTie],
+            firstNote: vfStartNote,
+            lastIndexes: [endNoteIndexInTie],
+            lastNote: vfEndNote
           });
           const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote.sourceNote);
           if (tieDirection === PlacementEnum.Below) {
@@ -2144,28 +2144,28 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             if (startNote.FretNumber > endNote.FretNumber) {
               slideDirection = -1;
             }
-            let first_indices: number[] = undefined;
-            let last_indices: number[] = undefined;
+            let firstIndexes: number[] = undefined;
+            let lastIndexes: number[] = undefined;
             let startStemmableNote: VF.StemmableNote  = undefined;
             // let startNoteIndexInTie: number = 0;
             if (vfStartNote && vfStartNote.vfnote && vfStartNote.vfnote.length >= 2) {
               startStemmableNote = vfStartNote.vfnote[0]; // otherwise needs to be undefined in TabSlide constructor!
-              first_indices = [0];
+              firstIndexes = [0];
               // startNoteIndexInTie = vfStartNote.vfnote[1];
             }
             let endStemmableNote: VF.StemmableNote  = undefined;
             // let endNoteIndexInTie: number = 0;
             if (vfEndNote && vfEndNote.vfnote && vfEndNote.vfnote.length >= 2) {
               endStemmableNote = vfEndNote.vfnote[0];
-              last_indices = [0];
+              lastIndexes = [0];
               // endNoteIndexInTie = vfEndNote.vfnote[1];
             }
             const vfTie: VF.TabSlide = new VF.TabSlide(
               {
-                first_indices: first_indices,
-                first_note: startStemmableNote,
-                last_indices: last_indices,
-                last_note: endStemmableNote,
+                firstIndexes: firstIndexes,
+                firstNote: startStemmableNote,
+                lastIndexes: lastIndexes,
+                lastNote: endStemmableNote,
               },
               slideDirection
             );
@@ -2188,4 +2188,3 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 }
-
