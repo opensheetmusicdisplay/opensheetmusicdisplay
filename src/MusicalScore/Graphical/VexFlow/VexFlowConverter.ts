@@ -658,6 +658,16 @@ export class VexFlowConverter {
             }
         }
 
+        const addAccidentalToNote: (index: number, accidentalType: string) => void = (index: number, accidentalType: string): void => {
+            const accidentalCapableNote: any = vfnote as any;
+            const accidental: VF.Accidental = new VF.Accidental(accidentalType);
+            if (typeof accidentalCapableNote.addAccidental === "function") {
+                accidentalCapableNote.addAccidental(index, accidental);
+            } else {
+                accidentalCapableNote.addModifier(accidental, index);
+            }
+        };
+
         // add accidentals
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
@@ -671,15 +681,15 @@ export class VexFlowConverter {
             };
             if (accidentals[i]) {
                 if (accidentals[i] === "###") { // triple sharp
-                    addAccidental("##");
-                    addAccidental("#");
+                    addAccidentalToNote(i, "##");
+                    addAccidentalToNote(i, "#");
                     continue;
                 } else if (accidentals[i] === "bbs") { // triple flat
-                    addAccidental("bb");
-                    addAccidental("b");
+                    addAccidentalToNote(i, "bb");
+                    addAccidentalToNote(i, "b");
                     continue;
                 }
-                addAccidental(accidentals[i]); // normal accidental
+                addAccidentalToNote(i, accidentals[i]); // normal accidental
             }
 
             // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
@@ -711,8 +721,9 @@ export class VexFlowConverter {
         // }
 
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
-            if ((vfnote as any).addDotToAll) {
-                (vfnote as any).addDotToAll();
+            const dotCapableNote: any = vfnote as any;
+            if (typeof dotCapableNote.addDotToAll === "function") {
+                dotCapableNote.addDotToAll();
             } else {
                 (VF as any).Dot.buildAndAttach([vfnote], { all: true });
             }

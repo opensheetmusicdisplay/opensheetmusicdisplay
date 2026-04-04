@@ -1681,7 +1681,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     stringNumber.radius = 0; // hack to remove the circle around the number
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
-                    // VexFlow 5 Note.addModifier signature is (modifier, index).
+                    // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
                     vexFlowVoiceEntry.vfStaveNote.addModifier((stringNumber as any), (fingeringIndex as any));
                     continue;
                 }
@@ -1690,7 +1690,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
               // TODO this doesn't work yet for tabnotes. don't add fingering for tabs for now.
               // vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
 
-            // VexFlow 5 Note.addModifier signature is (modifier, index).
+            // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
             vexFlowVoiceEntry.vfStaveNote.addModifier((fretFinger as any), (fingeringIndex as any));
         }
     }

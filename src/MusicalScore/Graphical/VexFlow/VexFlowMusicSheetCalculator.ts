@@ -664,7 +664,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
-      if (vfStartNote) { // firstNote or lastNote must be not null in VexFlow
+      if (vfStartNote) { // firstNote or lastNote must be not null in Vexflow
         const vfTie1: VF.StaveTie = new VF.StaveTie({
           firstIndexes: [startNoteIndexInTie],
           firstNote: vfStartNote
@@ -2162,9 +2162,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
             const vfTie: VF.TabSlide = new VF.TabSlide(
               {
-                firstIndexes: firstIndexes,
+                firstIndexes: first_indices,
                 firstNote: startStemmableNote,
-                lastIndexes: lastIndexes,
+                lastIndexes: last_indices,
                 lastNote: endStemmableNote,
               },
               slideDirection
