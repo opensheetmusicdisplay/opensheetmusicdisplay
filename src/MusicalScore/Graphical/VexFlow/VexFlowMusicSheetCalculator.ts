@@ -2162,9 +2162,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
             const vfTie: VF.TabSlide = new VF.TabSlide(
               {
-                firstIndexes: first_indices,
+                firstIndexes: firstIndexes,
                 firstNote: startStemmableNote,
-                lastIndexes: last_indices,
+                lastIndexes: lastIndexes,
                 lastNote: endStemmableNote,
               },
               slideDirection

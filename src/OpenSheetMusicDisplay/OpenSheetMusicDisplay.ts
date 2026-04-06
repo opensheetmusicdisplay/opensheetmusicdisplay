@@ -678,6 +678,9 @@ export class OpenSheetMusicDisplay {
         if (options.skyBottomLineBatchMinMeasures !== undefined) {
             this.rules.SkyBottomLineBatchMinMeasures = options.skyBottomLineBatchMinMeasures;
         }
+        if (options.alwaysSetPreferredSkyBottomLineBackendAutomatically !== undefined) {
+            this.rules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = options.alwaysSetPreferredSkyBottomLineBackendAutomatically;
+        }
     }
 
     public setColoringMode(options: IOSMDOptions): void {

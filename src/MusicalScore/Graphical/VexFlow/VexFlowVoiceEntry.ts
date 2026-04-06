@@ -50,8 +50,14 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         }
         for (let i: number = 0; i < this.notes.length; i++) {
             const note: Note = this.notes[i].sourceNote;
-            if (vfStaveNote.note_heads) { // see VexFlowConverter, needs Vexflow PR
-                if (note.CustomNoteheadVFCode) {
+            if (note.CustomNoteheadVFCode) {
+                // VexFlow v5: use noteHeads getter and setText() for custom SMuFL glyphs
+                const noteHeads: any = vfStaveNote.noteHeads;
+                if (noteHeads && noteHeads[i]) {
+                    noteHeads[i].setText(note.CustomNoteheadVFCode);
+                }
+                // Fallback for VexFlow v4 style access
+                else if (vfStaveNote.note_heads && vfStaveNote.note_heads[i]) {
                     (vfStaveNote.note_heads[i] as any).glyph_code = note.CustomNoteheadVFCode;
                 }
             }

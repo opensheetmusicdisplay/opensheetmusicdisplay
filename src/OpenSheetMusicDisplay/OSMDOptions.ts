@@ -269,6 +269,11 @@ export interface IOSMDOptions {
      * Defines the minimum number of measures in the entire sheet music where the skyline and bottom-line batch calculation is enabled.
      */
     skyBottomLineBatchMinMeasures?: number;
+    /**
+     * Whether to automatically set the preferred sky/bottom line backend based on environment.
+     * Set to false to force a specific backend. Default true.
+     */
+    alwaysSetPreferredSkyBottomLineBackendAutomatically?: boolean;
 }
 
 export enum AlignRestOption {

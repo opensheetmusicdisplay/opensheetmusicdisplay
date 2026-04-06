@@ -883,11 +883,15 @@ export abstract class MusicSheetCalculator {
                 if (graphicalMeasure?.isVisible()) {
                     visiblegraphicalMeasures.push(graphicalMeasure);
 
+                    for (const staffEntry of graphicalMeasure.staffEntries) {
+                        for (const gve of staffEntry.graphicalVoiceEntries) {
+                            gve.applyCustomNoteheads();
+                        }
+                    }
+
                     if (this.rules.ColoringEnabled) {
-                        // (re-)color notes
                         for (const staffEntry of graphicalMeasure.staffEntries) {
                             for (const gve of staffEntry.graphicalVoiceEntries) {
-                                gve.applyCustomNoteheads();
                                 gve.color();
                             }
                         }

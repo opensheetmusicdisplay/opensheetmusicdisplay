@@ -64,8 +64,16 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         } // else keep new vexflow default Bravura (more cursive, bold).
 
         // sizing defaults in Vexflow
-        (VF as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
-        (VF as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
+        try {
+            (VF as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
+        } catch (e) {
+            // VexFlow 5 may have read-only constants, ignore
+        }
+        try {
+            (VF as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
+        } catch (e) {
+            // VexFlow 5 may have read-only constants, ignore
+        }
         // sets scale/size of notes/rest notes:
         (VF as any).DEFAULT_NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
         (VF as any).DEFAULT_TAB_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything

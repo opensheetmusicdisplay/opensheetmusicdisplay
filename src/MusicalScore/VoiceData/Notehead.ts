@@ -5,13 +5,13 @@ import log from "loglevel";
  * A note head with shape and fill information belonging to a [[Note]].
  */
 export class Notehead {
-    private static readonly smuflChantNoteheadToVexFlowCode: { [smuflName: string]: string } = {
-        chantpunctum: "ue990",
-        chantvirga: "ue994",
-        chantquilisma: "ue99b",
-        chantoriscusascending: "ue99c",
-        chantstropha: "ue9a4",
-    };
+  private static readonly smuflChantNoteheadToVexFlowCode: { [smuflName: string]: string } = {
+    chantpunctum: "\uE990",
+    chantvirga: "\uE994",
+    chantquilisma: "\uE99B",
+    chantoriscusascending: "\uE99C",
+    chantstropha: "\uE9A4",
+  };
     /**
      * @param sourceNote
      * @param shapeTypeXml The shape type given from XML.
