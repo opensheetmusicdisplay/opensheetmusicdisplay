@@ -142,7 +142,7 @@ export default defineConfig(
             "no-case-declarations": "off",
             "no-constant-binary-expression": "off",
             "no-constant-condition": "off",
-            "no-irregular-whitespace": "off",
+            "no-irregular-whitespace": "error",
             "no-trailing-spaces": "error",
             "no-underscore-dangle": "off",
             "no-unexpected-multiline": "off",
