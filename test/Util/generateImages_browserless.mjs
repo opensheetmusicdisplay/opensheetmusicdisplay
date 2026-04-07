@@ -33,12 +33,10 @@ function sleep (ms) {
 
 // global variables
 //   (without these being global, we'd have to pass many of these values to the generateSampleImage function)
-// eslint-disable-next-line prefer-const, max-len
 let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 12);
 imageFormat = imageFormat?.toLowerCase();
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
-        // eslint-disable-next-line max-len
         "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]");
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)');
@@ -58,7 +56,6 @@ if (!mode) {
 }
 
 // let OSMD; // can only be required once window was simulated
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 
 async function init () {
     debug("init");
@@ -90,16 +87,11 @@ async function init () {
     }
 
     // ---- hacks to fake Browser elements OSMD and Vexflow need, like window, document, and a canvas HTMLElement ----
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const dom = new jsdom.JSDOM("<!DOCTYPE html></html>");
-    // eslint-disable-next-line no-global-assign
     // window = dom.window;
-    // eslint-disable-next-line no-global-assign
     // document = dom.window.document;
 
-    // eslint-disable-next-line no-global-assign
     global.window = dom.window;
-    // eslint-disable-next-line no-global-assign
     global.document = window.document;
     //window.console = console; // probably does nothing
     global.HTMLElement = window.HTMLElement;
@@ -299,7 +291,6 @@ async function init () {
     debug("done, exiting.");
 }
 
-// eslint-disable-next-line
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
 async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestMode,
     options = {}, DEBUG = false) {
@@ -502,7 +493,6 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     osmdInstance.setOptions({
         autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
         coloringMode: isFunctionTestAutoColoring ? 2 : 0,
-        // eslint-disable-next-line max-len
         coloringSetCustom: isFunctionTestAutoColoring ? ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"] : undefined,
         colorStemsLikeNoteheads: isFunctionTestAutoColoring,
         drawingParameters: defaultOrCompactTightMode, // note: default resets all EngravingRules. could be solved differently
