@@ -1,0 +1,176 @@
+// @ts-check
+import eslint from "@eslint/js";
+import { defineConfig } from "eslint/config";
+import tseslint from "typescript-eslint";
+import stylistic from "@stylistic/eslint-plugin";
+import jsdoc from "eslint-plugin-jsdoc";
+
+export default defineConfig(
+    {
+        ignores: ["webpack*.js", "karma.conf.js", "src/VexFlowPatch/", "build/", "**/*.d.ts", "demo/"],
+    },
+    eslint.configs.recommended,
+    tseslint.configs.recommended,
+    {
+        rules: {
+            "no-undef": "off",
+        },
+    },
+    {
+        files: ["**/*.ts"],
+        languageOptions: {
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+        plugins: {
+            "@stylistic": stylistic,
+            jsdoc,
+        },
+        rules: {
+            "@typescript-eslint/dot-notation": "error",
+            "@typescript-eslint/explicit-function-return-type": "error",
+            "@typescript-eslint/explicit-member-accessibility": [
+                "off",
+                {
+                    accessibility: "explicit",
+                },
+            ],
+            "@stylistic/member-delimiter-style": [
+                "error",
+                {
+                    multiline: {
+                        delimiter: "semi",
+                        requireLast: true,
+                    },
+                    singleline: {
+                        delimiter: "comma",
+                        requireLast: false,
+                    },
+                },
+            ],
+            "@typescript-eslint/member-ordering": "off",
+            "@typescript-eslint/naming-convention": "off",
+            "@typescript-eslint/no-empty-function": "error",
+            "@typescript-eslint/no-empty-object-type": "off",
+            "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/no-inferrable-types": "off",
+            "@typescript-eslint/parameter-properties": "error",
+            "@typescript-eslint/no-require-imports": "off",
+            "@typescript-eslint/no-shadow": [
+                "error",
+                {
+                    hoist: "all",
+                },
+            ],
+            "@typescript-eslint/no-this-alias": "off",
+            "@typescript-eslint/no-unused-expressions": "error",
+            "@typescript-eslint/no-unused-vars": "off",
+            "@typescript-eslint/no-wrapper-object-types": "off",
+            "@typescript-eslint/prefer-namespace-keyword": "error",
+            "@stylistic/quotes": [
+                "error",
+                "double",
+                {
+                    avoidEscape: true,
+                },
+            ],
+            "@stylistic/semi": ["error"],
+            "@typescript-eslint/typedef": [
+                "error",
+                {
+                    arrowParameter: false,
+                    variableDeclaration: true,
+                },
+            ],
+            "@stylistic/type-annotation-spacing": "error",
+            "brace-style": ["off", "1tbs"],
+            "comma-dangle": "off",
+            curly: "error",
+            "default-case": "error",
+            "eol-last": "error",
+            eqeqeq: ["error", "smart"],
+            "guard-for-in": "error",
+            "id-match": "error",
+            "jsdoc/check-alignment": "error",
+            "jsdoc/check-indentation": "off",
+            "max-len": [
+                "error",
+                {
+                    code: 160,
+                },
+            ],
+            "no-bitwise": "error",
+            "no-caller": "error",
+            "no-cond-assign": "error",
+            "no-console": [
+                "error",
+                {
+                    allow: [
+                        "log",
+                        "warn",
+                        "dir",
+                        "timeLog",
+                        "assert",
+                        "clear",
+                        "count",
+                        "countReset",
+                        "group",
+                        "groupEnd",
+                        "table",
+                        "dirxml",
+                        "error",
+                        "groupCollapsed",
+                        "Console",
+                        "profile",
+                        "profileEnd",
+                        "timeStamp",
+                        "context",
+                    ],
+                },
+            ],
+            "no-debugger": "error",
+            "no-empty": "error",
+            "no-eval": "error",
+            "no-fallthrough": "error",
+            "no-multiple-empty-lines": "off",
+            "no-new-wrappers": "error",
+            "no-prototype-builtins": "off",
+            "no-redeclare": "error",
+            "for-direction": "off",
+            "no-case-declarations": "off",
+            "no-constant-binary-expression": "off",
+            "no-constant-condition": "off",
+            "no-irregular-whitespace": "off",
+            "no-trailing-spaces": "error",
+            "no-underscore-dangle": "off",
+            "no-unexpected-multiline": "off",
+            "no-unsafe-optional-chaining": "off",
+            "no-unused-labels": "error",
+            "no-useless-assignment": "off",
+            "no-useless-escape": "off",
+            "no-var": "error",
+            "prefer-const": "error",
+            "prefer-spread": "off",
+            radix: "error",
+            "spaced-comment": [
+                "off",
+                "always",
+                {
+                    markers: ["/"],
+                },
+            ],
+        },
+    },
+    {
+        files: ["test/Util/*.js", "test/Util/*.mjs"],
+        rules: {
+            "@typescript-eslint/explicit-function-return-type": "off",
+            "@typescript-eslint/no-require-imports": "off",
+            "@typescript-eslint/no-unused-vars": "off",
+            "@typescript-eslint/typedef": "off",
+            "no-useless-assignment": "off",
+        },
+    },
+);
