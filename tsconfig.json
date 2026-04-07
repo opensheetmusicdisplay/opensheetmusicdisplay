@@ -8,6 +8,7 @@
     "outDir": "build/dist",
     "declaration": true,
     "sourceMap": true,
+    "strictPropertyInitialization": false,
     "typeRoots": ["./node_modules/@types"],
   },
   "include": ["./.eslintrc.js", "./test/", "./src"],
