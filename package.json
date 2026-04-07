@@ -77,7 +77,7 @@
     "vexflow": "1.2.93"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^9.27.0",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/chai": "^4.2.22",
     "@types/jest": "^30.0.0",
@@ -92,7 +92,7 @@
     "cross-blob": "^3.0.0",
     "cross-env": "^7.0.3",
     "cz-conventional-changelog": "^3.3.0",
-    "eslint": "^10.2.0",
+    "eslint": "^9.39.4",
     "eslint-plugin-jsdoc": "^62.9.0",
     "html-webpack-plugin": "^5.5.0",
     "husky": "^9.1.7",
