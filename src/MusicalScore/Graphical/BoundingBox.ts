@@ -571,7 +571,7 @@ export class BoundingBox {
         }
         for (let idx: number = 0, len: number = this.childElements.length; idx < len; ++idx) {
             const psi: BoundingBox = this.childElements[idx];
-            const innerObject: object = psi.getClickedObjectOfType<T>(clickPosition);
+            const innerObject: T = psi.getClickedObjectOfType<T>(clickPosition);
             if (innerObject) {
                 return (innerObject as T);
             }
