@@ -3,7 +3,6 @@
     "target": "es2020",
     "esModuleInterop": true,
     "module": "commonjs",
-    "moduleResolution": "node",
     "noUnusedLocals": true,
     "outDir": "build/dist",
     "declaration": true,
