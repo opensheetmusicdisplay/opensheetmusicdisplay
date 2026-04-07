@@ -124,10 +124,5 @@
   },
   "optionalDependencies": {
     "gl": "^8.1.6"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
   }
 }
