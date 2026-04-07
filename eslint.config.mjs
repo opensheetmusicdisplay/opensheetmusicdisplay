@@ -149,7 +149,6 @@ export default defineConfig(
             "no-unsafe-optional-chaining": "error",
             "no-unused-labels": "error",
             "no-useless-assignment": "off",
-            "no-useless-escape": "off",
             "no-var": "error",
             "prefer-const": "error",
             "prefer-spread": "off",
