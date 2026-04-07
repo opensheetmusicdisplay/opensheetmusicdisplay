@@ -219,7 +219,7 @@ export class RepetitionCalculator {
                 this.finalizeRepetition(currentRepetition);
             }
             break;
-        case RepetitionInstructionEnum.Ending:
+        case RepetitionInstructionEnum.Ending: {
             currentRepetition = this.getOrCreateCurrentRepetition();
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
             const isFirstEndingStart: boolean = currentRepetitionInstruction.endingIndices.contains(1) &&
@@ -263,6 +263,7 @@ export class RepetitionCalculator {
                 }
             }
             break;
+        }
         case RepetitionInstructionEnum.Segno:
             currentRepetition = this.getCurrentRepetition(true);
             if (currentRepetition !== undefined &&

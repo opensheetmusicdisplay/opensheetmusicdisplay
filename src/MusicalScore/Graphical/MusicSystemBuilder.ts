@@ -1045,7 +1045,7 @@ export class MusicSystemBuilder {
                     const startLine: SystemLinesEnum = this.currentSystemParams.systemMeasures[measureIndex].beginLine;
                     const lineWidth: number = measure.getLineWidth(SystemLinesEnum.BoldThinDots);
                     switch (startLine) {
-                        case SystemLinesEnum.BoldThinDots:
+                        case SystemLinesEnum.BoldThinDots: {
                             let xPosition: number = currentXPosition;
                             if (measureIndex === 0) {
                                 xPosition = currentXPosition + measure.beginInstructionsWidth - lineWidth;
@@ -1053,6 +1053,7 @@ export class MusicSystemBuilder {
 
                             currentSystem.createVerticalLineForMeasure(xPosition, lineWidth, startLine, SystemLinePosition.MeasureBegin, measureIndex, measure);
                             break;
+                        }
                         default:
                     }
                 }

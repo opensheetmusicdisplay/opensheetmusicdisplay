@@ -139,7 +139,6 @@ export default defineConfig(
             "no-prototype-builtins": "off",
             "no-redeclare": "error",
             "for-direction": "off",
-            "no-case-declarations": "off",
             "no-constant-binary-expression": "off",
             "no-constant-condition": "off",
             "no-irregular-whitespace": "error",

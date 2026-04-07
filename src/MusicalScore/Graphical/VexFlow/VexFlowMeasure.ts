@@ -1651,7 +1651,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 case PlacementEnum.Below:
                     modifierPosition = VF.StaveModifier.Position.BELOW;
                     break;
-                case PlacementEnum.NotYetDefined: // automatic fingering placement, could be more complex/customizable
+                case PlacementEnum.NotYetDefined: { // automatic fingering placement, could be more complex/customizable
                     const sourceStaff: Staff = voiceEntry.parentStaffEntry.sourceStaffEntry.ParentStaff;
                     if (voiceEntry.notes.length > 1 || voiceEntry.parentStaffEntry.graphicalVoiceEntries.length > 1) {
                         modifierPosition = VF.StaveModifier.Position.LEFT;
@@ -1662,6 +1662,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         modifierPosition = VF.StaveModifier.Position.BELOW;
                         fingeringPosition = PlacementEnum.Below;
                     }
+                }
             }
 
             const fretFinger: VF.FretHandFinger = new VF.FretHandFinger(fingering.value);
