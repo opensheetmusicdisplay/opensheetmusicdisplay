@@ -167,7 +167,6 @@ export default defineConfig(
         files: ["test/Util/*.js", "test/Util/*.mjs"],
         rules: {
             "@typescript-eslint/explicit-function-return-type": "off",
-            "@typescript-eslint/no-require-imports": "off",
             "@typescript-eslint/no-unused-vars": "off",
             "@typescript-eslint/typedef": "off",
             "no-useless-assignment": "off",
