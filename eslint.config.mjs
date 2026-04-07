@@ -57,7 +57,7 @@ export default defineConfig(
             "@typescript-eslint/no-explicit-any": "off",
             "@typescript-eslint/no-inferrable-types": "off",
             "@typescript-eslint/parameter-properties": "error",
-            "@typescript-eslint/no-require-imports": "off",
+            "@typescript-eslint/no-require-imports": "error",
             "@typescript-eslint/no-shadow": [
                 "error",
                 {
