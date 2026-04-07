@@ -93,6 +93,7 @@
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9.39.4",
     "eslint-plugin-jsdoc": "^62.9.0",
+    "globals": "^17.4.0",
     "html-webpack-plugin": "^5.5.0",
     "husky": "^9.1.7",
     "jquery": "^3.6.0",

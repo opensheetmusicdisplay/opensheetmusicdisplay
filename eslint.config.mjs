@@ -1,6 +1,7 @@
 // @ts-check
 import eslint from "@eslint/js";
 import { defineConfig } from "eslint/config";
+import globals from "globals";
 import tseslint from "typescript-eslint";
 import stylistic from "@stylistic/eslint-plugin";
 import jsdoc from "eslint-plugin-jsdoc";
@@ -12,13 +13,12 @@ export default defineConfig(
     eslint.configs.recommended,
     tseslint.configs.recommended,
     {
-        rules: {
-            "no-undef": "off",
-        },
-    },
-    {
         files: ["**/*.ts"],
         languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node,
+            },
             parserOptions: {
                 projectService: true,
                 tsconfigRootDir: import.meta.dirname,
@@ -164,7 +164,24 @@ export default defineConfig(
         },
     },
     {
+        files: ["test/**/*.ts"],
+        languageOptions: {
+            globals: {
+                ...globals.mocha,
+                chai: "readonly",
+                Mocha: "readonly",
+            },
+        },
+    },
+    {
         files: ["test/Util/*.js", "test/Util/*.mjs"],
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node,
+                ...globals.mocha,
+            },
+        },
         rules: {
             "@typescript-eslint/explicit-function-return-type": "off",
             "@typescript-eslint/no-unused-vars": "off",
