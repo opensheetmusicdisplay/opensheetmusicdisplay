@@ -60,7 +60,7 @@ export class RepetitionInstruction /*implements IComparable*/ {
     /** How many times this should be repeated */
     public Times: number;
 
-    public CompareTo(obj: Object): number {
+    public CompareTo(obj: object): number {
         const other: RepetitionInstruction = <RepetitionInstruction>obj;
         if (this.measureIndex > other.measureIndex) {
             return 1;

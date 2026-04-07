@@ -67,7 +67,6 @@ export default defineConfig(
             "@typescript-eslint/no-this-alias": "off",
             "@typescript-eslint/no-unused-expressions": "error",
             "@typescript-eslint/no-unused-vars": "off",
-            "@typescript-eslint/no-wrapper-object-types": "off",
             "@typescript-eslint/prefer-namespace-keyword": "error",
             "@stylistic/quotes": [
                 "error",
