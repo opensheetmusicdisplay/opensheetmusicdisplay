@@ -11,7 +11,7 @@
     "strictPropertyInitialization": false,
     "typeRoots": ["./node_modules/@types"],
   },
-  "include": ["./.eslintrc.js", "./test/", "./src"],
+  "include": ["./test/", "./src"],
   "exclude": [
     "node_modules",
     "dist",

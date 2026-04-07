@@ -80,7 +80,6 @@
     "@eslint/js": "^9.27.0",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/chai": "^4.2.22",
-    "@types/jest": "^30.0.0",
     "@types/minimatch": "^5.1.2",
     "@types/mocha": "^9.1.1",
     "@types/node": "^16.11.11",
