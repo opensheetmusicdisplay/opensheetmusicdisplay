@@ -146,7 +146,7 @@ export default defineConfig(
             "no-trailing-spaces": "error",
             "no-underscore-dangle": "off",
             "no-unexpected-multiline": "off",
-            "no-unsafe-optional-chaining": "off",
+            "no-unsafe-optional-chaining": "error",
             "no-unused-labels": "error",
             "no-useless-assignment": "off",
             "no-useless-escape": "off",

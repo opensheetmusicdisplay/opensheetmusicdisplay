@@ -391,7 +391,10 @@ export class OpenSheetMusicDisplay {
 
     // for now SVG only, see generateImages_browserless (PNG/SVG)
     public exportSVG(): void {
-        for (const backend of this.drawer?.Backends) {
+        if (!this.drawer) {
+            return;
+        }
+        for (const backend of this.drawer.Backends) {
             if (backend instanceof SvgVexFlowBackend) {
                 (backend as SvgVexFlowBackend).export();
             }
