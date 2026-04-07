@@ -962,7 +962,7 @@ export class OpenSheetMusicDisplay {
         pageFormatString = pageFormatString.replace("Landscape", "L");
         pageFormatString = pageFormatString.replace("Portrait", "P");
         //console.log("change format to: " + formatId);
-        if (OpenSheetMusicDisplay.PageFormatStandards.hasOwnProperty(pageFormatString)) {
+        if (Object.hasOwn(OpenSheetMusicDisplay.PageFormatStandards, pageFormatString)) {
             pageFormat = OpenSheetMusicDisplay.PageFormatStandards[pageFormatString];
             return pageFormat;
         }

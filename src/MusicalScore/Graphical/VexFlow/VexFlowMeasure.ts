@@ -587,7 +587,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const prevStaveModifiers: VF.StaveModifier[] = prevMeasure.stave.getModifiers();
                 for (let i: number = 0; i < prevStaveModifiers.length; i++) {
                     const nextStaveModifier: VF.StaveModifier = prevStaveModifiers[i];
-                    if (nextStaveModifier.hasOwnProperty("volta")) {
+                    if (Object.hasOwn(nextStaveModifier, "volta")) {
                         const prevskyBottomLineCalculator: SkyBottomLineCalculator = prevMeasure.ParentStaffLine.SkyBottomLineCalculator;
                         const prevStart: number = prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginLeft + 0.4;
                         const prevEnd: number = Math.max(
@@ -650,7 +650,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.stave.setContext(ctx).draw();
         // Draw all voices
         for (const voiceID in this.vfVoices) {
-            if (this.vfVoices.hasOwnProperty(voiceID)) {
+            if (Object.hasOwn(this.vfVoices, voiceID)) {
                 ctx.save();
                 this.vfVoices[voiceID].draw(ctx, this.stave);
                 ctx.restore();
@@ -660,7 +660,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         // Draw beams
         for (const voiceID in this.vfbeams) {
-            if (this.vfbeams.hasOwnProperty(voiceID)) {
+            if (Object.hasOwn(this.vfbeams, voiceID)) {
                 for (const beam of this.vfbeams[voiceID]) {
                     beam.setContext(ctx).draw();
                 }
@@ -680,7 +680,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
             // Draw tuplets
             for (const voiceID in this.vftuplets) {
-                if (this.vftuplets.hasOwnProperty(voiceID)) {
+                if (Object.hasOwn(this.vftuplets, voiceID)) {
                     for (let i: number = 0; i < this.tuplets[voiceID].length; i++) {
                         const tuplet: Tuplet = this.tuplets[voiceID][i][0];
                         const vftuplet: VF.Tuplet = this.vftuplets[voiceID][i];
@@ -960,7 +960,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         const beamedNotes: StaveNote[] = []; // already beamed notes, will be ignored by this.autoBeamNotes()
         for (const voiceID in this.beams) {
-            if (this.beams.hasOwnProperty(voiceID)) {
+            if (Object.hasOwn(this.beams, voiceID)) {
                 let vfbeams: VF.Beam[] = this.vfbeams[voiceID];
                 if (!vfbeams) {
                     vfbeams = this.vfbeams[voiceID] = [];
@@ -1249,7 +1249,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // should the old tuplets be removed manually from the notes?
         this.vftuplets = {};
         for (const voiceID in this.tuplets) {
-            if (this.tuplets.hasOwnProperty(voiceID)) {
+            if (Object.hasOwn(this.tuplets, voiceID)) {
                 let vftuplets: VF.Tuplet[] = this.vftuplets[voiceID];
                 if (!vftuplets) {
                     vftuplets = this.vftuplets[voiceID] = [];
@@ -1566,7 +1566,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const gvoices: { [voiceID: number]: GraphicalVoiceEntry } = graphicalStaffEntry.graphicalVoiceEntries;
 
             for (const voiceID in gvoices) {
-                if (gvoices.hasOwnProperty(voiceID)) {
+                if (Object.hasOwn(gvoices, voiceID)) {
                     const vfStaveNote: StemmableNote = (gvoices[voiceID] as VexFlowVoiceEntry).vfStaveNote;
                     const ornamentContainer: OrnamentContainer = gvoices[voiceID].notes[0].sourceNote.ParentVoiceEntry.OrnamentContainer;
                     if (ornamentContainer) {

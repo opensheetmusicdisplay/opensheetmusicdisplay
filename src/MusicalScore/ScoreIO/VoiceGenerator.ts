@@ -294,7 +294,7 @@ export class VoiceGenerator {
   public checkOpenTies(): void {
     const openTieDict: { [key: number]: Tie } = this.openTieDict;
     for (const key in openTieDict) {
-      if (openTieDict.hasOwnProperty(key)) {
+      if (Object.hasOwn(openTieDict, key)) {
         const tie: Tie = openTieDict[key];
         if (Fraction.plus(tie.StartNote.ParentStaffEntry.Timestamp, tie.Duration)
           .lt(tie.StartNote.SourceMeasure.Duration)) {
@@ -1110,7 +1110,7 @@ export class VoiceGenerator {
   private findCurrentNoteInTieDict(candidateNote: Note): number {
     const openTieDict: { [_: number]: Tie } = this.openTieDict;
     for (const key in openTieDict) {
-      if (openTieDict.hasOwnProperty(key)) {
+      if (Object.hasOwn(openTieDict, key)) {
         const tie: Tie = openTieDict[key];
         const tieTabNote: TabNote = tie.Notes[0] as TabNote;
         const tieCandidateNote: TabNote = candidateNote as TabNote;

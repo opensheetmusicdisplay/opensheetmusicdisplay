@@ -136,7 +136,6 @@ export default defineConfig(
             "no-fallthrough": "error",
             "no-multiple-empty-lines": "off",
             "no-new-wrappers": "error",
-            "no-prototype-builtins": "off",
             "no-redeclare": "error",
             "for-direction": "off",
             "no-case-declarations": "off",

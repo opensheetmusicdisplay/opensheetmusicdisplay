@@ -533,7 +533,7 @@ export class InstrumentReader {
         }
       }
       for (const j in this.voiceGeneratorsDict) {
-        if (this.voiceGeneratorsDict.hasOwnProperty(j)) {
+        if (Object.hasOwn(this.voiceGeneratorsDict, j)) {
           const voiceGenerator: VoiceGenerator = this.voiceGeneratorsDict[j];
           voiceGenerator.checkForOpenBeam();
         }
@@ -624,7 +624,7 @@ export class InstrumentReader {
 
   public doCalculationsAfterDurationHasBeenSet(): void {
     for (const j in this.voiceGeneratorsDict) {
-      if (this.voiceGeneratorsDict.hasOwnProperty(j)) {
+      if (Object.hasOwn(this.voiceGeneratorsDict, j)) {
         this.voiceGeneratorsDict[j].checkOpenTies();
       }
     }

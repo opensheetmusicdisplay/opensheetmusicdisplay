@@ -226,7 +226,7 @@ export class RepetitionCalculator {
                                                 currentRepetitionInstruction.alignment === AlignmentType.Begin;
             if (isFirstEndingStart) {
                 if (currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.length > 0 ||
-                    currentRepetition.RepetitonUnderConstruction.EndingIndexDict.hasOwnProperty(1)) {
+                    Object.hasOwn(currentRepetition.RepetitonUnderConstruction.EndingIndexDict, 1)) {
                     currentRepetition = undefined;
                     for (let i: number = this.openRepetitions.length - 1; i >= 0; i--) {
                         const openRep: RepetitionBuildingContainer = this.openRepetitions[i];
@@ -387,7 +387,7 @@ export class RepetitionCalculator {
                       0, 0, currentRepetition.RepetitonUnderConstruction.startMarker);
                 }
             }
-            if (currentRepetition.RepetitonUnderConstruction.EndingIndexDict.hasOwnProperty(1)) {
+            if (Object.hasOwn(currentRepetition.RepetitonUnderConstruction.EndingIndexDict, 1)) {
                 currentRepetition.RepetitonUnderConstruction.setEndingEndIndex(1, this.currentMeasureIndex);
             }
             currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.push(currentRepetitionInstruction);
@@ -424,7 +424,7 @@ export class RepetitionCalculator {
                       splice(0, 0, currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction);
                 }
             }
-            if (!currentRepetition.RepetitonUnderConstruction.EndingIndexDict.hasOwnProperty(1)) {
+            if (!Object.hasOwn(currentRepetition.RepetitonUnderConstruction.EndingIndexDict, 1)) {
                 currentRepetition.RepetitonUnderConstruction.setEndingEndIndex(1, this.currentMeasureIndex);
             }
             currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.push(currentRepetitionInstruction);
@@ -457,7 +457,7 @@ export class RepetitionCalculator {
                       splice(0, 0, currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction);
                 }
             }
-            if (!currentRepetition.RepetitonUnderConstruction.EndingIndexDict.hasOwnProperty(1)) {
+            if (!Object.hasOwn(currentRepetition.RepetitonUnderConstruction.EndingIndexDict, 1)) {
                 currentRepetition.RepetitonUnderConstruction.setEndingEndIndex(1, this.currentMeasureIndex);
             }
             currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.push(currentRepetitionInstruction);
@@ -507,7 +507,7 @@ export class RepetitionCalculator {
             if (currentRepetition.ToCodaFound) {
                 currentRepetition.WaitingForCoda = true;
             }
-            if (!currentRepetition.RepetitonUnderConstruction.EndingIndexDict.hasOwnProperty(1)) {
+            if (!Object.hasOwn(currentRepetition.RepetitonUnderConstruction.EndingIndexDict, 1)) {
                 currentRepetition.RepetitonUnderConstruction.setEndingEndIndex(1, this.currentMeasureIndex);
             }
             currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.push(currentRepetitionInstruction);
@@ -555,7 +555,7 @@ export class RepetitionCalculator {
             if (currentRepetition.ToCodaFound) {
                 currentRepetition.WaitingForCoda = true;
             }
-            if (!currentRepetition.RepetitonUnderConstruction.EndingIndexDict.hasOwnProperty(1)) {
+            if (!Object.hasOwn(currentRepetition.RepetitonUnderConstruction.EndingIndexDict, 1)) {
                 currentRepetition.RepetitonUnderConstruction.setEndingEndIndex(1, this.currentMeasureIndex);
             }
             currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.push(currentRepetitionInstruction);

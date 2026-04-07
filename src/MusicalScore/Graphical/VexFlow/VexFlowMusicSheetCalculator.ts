@@ -182,7 +182,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const mvoices: { [voiceID: number]: VF.Voice } = (measure as VexFlowMeasure).vfVoices;
       const voices: VF.Voice[] = [];
       for (const voiceID in mvoices) {
-        if (mvoices.hasOwnProperty(voiceID)) {
+        if (Object.hasOwn(mvoices, voiceID)) {
           const mvoice: any = mvoices[voiceID];
           if (measure.hasOnlyRests && !mvoice.ticksUsed.equals(mvoice.totalTicks)) {
             // fix layouting issues with whole measure rests in one staff and notes in other. especially in 12/8 rthythm (#1187)
@@ -338,7 +338,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const mvoices: { [voiceID: number]: VF.Voice } = (measure as VexFlowMeasure).vfVoices;
       const voices: VF.Voice[] = [];
       for (const voiceID in mvoices) {
-        if (mvoices.hasOwnProperty(voiceID)) {
+        if (Object.hasOwn(mvoices, voiceID)) {
           voices.push(mvoices[voiceID]);
         }
       }
