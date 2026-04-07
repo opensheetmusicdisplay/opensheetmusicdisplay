@@ -8,6 +8,7 @@
     "outDir": "build/dist",
     "declaration": true,
     "sourceMap": true,
+    "strict": false,
     "strictPropertyInitialization": false,
     "typeRoots": ["./node_modules/@types"],
   },
