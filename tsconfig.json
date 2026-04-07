@@ -10,6 +10,7 @@
     "strict": false,
     "strictPropertyInitialization": false,
     "typeRoots": ["./node_modules/@types"],
+    "types": ["mocha", "chai", "node", "minimatch"],
   },
   "include": ["./test/", "./src"],
   "exclude": [
