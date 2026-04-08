@@ -1,0 +1,49 @@
+name: Sync & Build OSMD
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+  repository_dispatch:
+    types: [vexflow-updated]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+      - name: Add upstream
+        run: |
+          git remote add upstream https://github.com/opensheetmusicdisplay/opensheetmusicdisplay.git || true
+          git fetch upstream
+
+      - name: Update develop
+        run: |
+          git checkout develop
+          git rebase upstream/develop || true
+
+      - name: Rebase patch
+        run: |
+          git checkout chroma-patch
+          git rebase develop || true
+
+      - name: Install deps
+        run: npm install
+
+      - name: Build
+        run: npm run build || true
+
+      - name: Push
+        run: |
+          git push origin develop --force-with-lease
+          git push origin chroma-patch --force-with-lease
