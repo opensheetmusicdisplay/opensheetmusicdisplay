@@ -66,7 +66,14 @@ export default defineConfig(
             ],
             "@typescript-eslint/no-this-alias": "off",
             "@typescript-eslint/no-unused-expressions": "error",
-            "@typescript-eslint/no-unused-vars": "off",
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                {
+                    args: "none",
+                    varsIgnorePattern: "^_",
+                    caughtErrorsIgnorePattern: "^_|^e$|^err$|^exc$",
+                },
+            ],
             "@typescript-eslint/no-wrapper-object-types": "off",
             "@typescript-eslint/prefer-namespace-keyword": "error",
             "@stylistic/quotes": [
@@ -166,7 +173,13 @@ export default defineConfig(
         files: ["test/Util/*.js", "test/Util/*.mjs"],
         rules: {
             "@typescript-eslint/explicit-function-return-type": "off",
-            "@typescript-eslint/no-unused-vars": "off",
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                {
+                    argsIgnorePattern: "^_",
+                    varsIgnorePattern: "^_",
+                },
+            ],
             "@typescript-eslint/typedef": "off",
             "no-useless-assignment": "off",
         },
