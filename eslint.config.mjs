@@ -7,7 +7,7 @@ import jsdoc from "eslint-plugin-jsdoc";
 
 export default defineConfig(
     {
-        ignores: ["webpack*.js", "karma.conf.js", "src/VexFlowPatch/", "build/", "**/*.d.ts", "demo/"],
+        ignores: ["webpack*.js", "karma.conf.js", "src/VexFlowPatch/", "build/", "**/*.d.ts", "demo/", ".karma_temp/", "export/"],
     },
     eslint.configs.recommended,
     tseslint.configs.recommended,
