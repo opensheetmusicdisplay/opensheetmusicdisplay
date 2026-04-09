@@ -1,6 +1,8 @@
+# appveyor CI, likely soon fully replaced by new Github Workflows CI (see .github/workflows/ci.yml)
+#   runs on private appveyor account (haas) - not ideal for public repository. also slower than github.
 image: Visual Studio 2022
 environment:
-  timeout: 20000
+  timeout: 15000
   matrix:
     # - nodejs_version: "12"
     - nodejs_version: "20"
