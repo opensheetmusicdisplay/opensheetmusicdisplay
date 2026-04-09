@@ -152,7 +152,6 @@ export default defineConfig(
             "no-useless-escape": "off",
             "no-var": "error",
             "prefer-const": "error",
-            "prefer-spread": "off",
             radix: "error",
             "spaced-comment": [
                 "off",
