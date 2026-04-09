@@ -13,7 +13,7 @@ install:
   - ps: Install-Product node $env:nodejs_version $env:platform
   - node --version
   - npm --version
-  - npm run fix-memory-limit
+  # - npm run fix-memory-limit # doesn't work anymore with node 24, probably not neessary
   - npm install
 # build_script: # included in npm install
 #   - npm run lint
