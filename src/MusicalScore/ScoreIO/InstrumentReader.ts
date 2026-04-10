@@ -963,8 +963,8 @@ export class InstrumentReader {
       const typeList: IXmlElement[] = [];
       for (let idx: number = 0, len: number = timeList.length; idx < len; ++idx) {
         const xmlNode: IXmlElement = timeList[idx];
-        beatsList.push.apply(beatsList, xmlNode.elements("beats"));
-        typeList.push.apply(typeList, xmlNode.elements("beat-type"));
+        beatsList.push(...xmlNode.elements("beats"));
+        typeList.push(...xmlNode.elements("beat-type"));
       }
       if (!senzaMisura) {
         try {
