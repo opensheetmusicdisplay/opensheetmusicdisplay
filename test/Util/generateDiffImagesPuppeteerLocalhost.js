@@ -105,9 +105,9 @@ async function init () {
 
     // fix navigation error
     var responseEventOccurred = false
-    var responseHandler = function (event) { responseEventOccurred = true }
+    var responseHandler = function (_event) { responseEventOccurred = true }
 
-    var responseWatcher = new Promise(function (resolve, reject) {
+    var responseWatcher = new Promise(function (resolve, _reject) {
         setTimeout(function () {
             if (!responseEventOccurred) {
                 resolve(true)

@@ -697,7 +697,7 @@ export class OpenSheetMusicDisplay {
             }
             // validate strings input
             for (const colorString of options.coloringSetCustom) {
-                const regExp: RegExp = /^\#[0-9a-fA-F]{6}$/;
+                const regExp: RegExp = /^#[0-9a-fA-F]{6}$/;
                 if (!regExp.test(colorString)) {
                     throw new Error(
                         "One of the color strings in options.coloringSetCustom was not a valid HTML Hex color:\n" + colorString);

@@ -8,7 +8,7 @@ import jsdoc from "eslint-plugin-jsdoc";
 
 export default defineConfig(
     {
-        ignores: ["webpack*.js", "karma.conf.js", "src/VexFlowPatch/", "build/", "**/*.d.ts", "demo/"],
+        ignores: ["webpack*.js", "karma.conf.js", "src/VexFlowPatch/", "build/", "**/*.d.ts", "demo/", ".karma_temp/", "export/"],
     },
     eslint.configs.recommended,
     tseslint.configs.recommended,
@@ -66,7 +66,14 @@ export default defineConfig(
             ],
             "@typescript-eslint/no-this-alias": "off",
             "@typescript-eslint/no-unused-expressions": "error",
-            "@typescript-eslint/no-unused-vars": "off",
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                {
+                    args: "none",
+                    varsIgnorePattern: "^_",
+                    caughtErrorsIgnorePattern: "^_|^e$|^err$|^exc$",
+                },
+            ],
             "@typescript-eslint/no-wrapper-object-types": "off",
             "@typescript-eslint/prefer-namespace-keyword": "error",
             "@stylistic/quotes": [
@@ -149,10 +156,8 @@ export default defineConfig(
             "no-unsafe-optional-chaining": "error",
             "no-unused-labels": "error",
             "no-useless-assignment": "off",
-            "no-useless-escape": "off",
             "no-var": "error",
             "prefer-const": "error",
-            "prefer-spread": "off",
             radix: "error",
             "spaced-comment": [
                 "off",
@@ -184,7 +189,13 @@ export default defineConfig(
         },
         rules: {
             "@typescript-eslint/explicit-function-return-type": "off",
-            "@typescript-eslint/no-unused-vars": "off",
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                {
+                    argsIgnorePattern: "^_",
+                    varsIgnorePattern: "^_",
+                },
+            ],
             "@typescript-eslint/typedef": "off",
             "no-useless-assignment": "off",
         },
