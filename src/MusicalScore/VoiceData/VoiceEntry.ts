@@ -257,7 +257,8 @@ export class VoiceEntry {
         let currentTimestamp: Fraction = Fraction.createFromFraction(baseTimestamp);
         //let length: Fraction;
         switch (voiceEntryWithOrnament.ornamentContainer.GetOrnament) {
-            case OrnamentEnum.Trill: {
+            case OrnamentEnum.Trill:
+            case OrnamentEnum.LongTrill: {
                 const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 8);
                 const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
                 let alteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
@@ -348,7 +349,11 @@ export class VoiceEntry {
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
                 break;
             }
-            case OrnamentEnum.Mordent: {
+            case OrnamentEnum.Mordent:
+            case OrnamentEnum.LongMordent:
+            case OrnamentEnum.UpMordent:
+            case OrnamentEnum.DownMordent:
+            case OrnamentEnum.LinePrall: {
                 const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
                 const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
                 const alteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
@@ -360,7 +365,13 @@ export class VoiceEntry {
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
                 break;
             }
-            case OrnamentEnum.InvertedMordent: {
+            case OrnamentEnum.InvertedMordent:
+            case OrnamentEnum.LongInvertedMordent:
+            case OrnamentEnum.UpPrall:
+            case OrnamentEnum.DownPrall:
+            case OrnamentEnum.PrallUp:
+            case OrnamentEnum.PrallDown:
+            case OrnamentEnum.PrallPrall: {
                 const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
                 const lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
                 const alteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);

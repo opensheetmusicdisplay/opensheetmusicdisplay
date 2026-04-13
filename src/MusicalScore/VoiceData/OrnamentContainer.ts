@@ -11,6 +11,7 @@ export class OrnamentContainer {
     public placement: PlacementEnum = PlacementEnum.Above;
     private accidentalAbove: AccidentalEnum = AccidentalEnum.NONE;
     private accidentalBelow: AccidentalEnum = AccidentalEnum.NONE;
+    private vexflowOrnament: string;
 
     public get GetOrnament(): OrnamentEnum {
         return this.ornament;
@@ -27,21 +28,26 @@ export class OrnamentContainer {
     public set AccidentalBelow(value: AccidentalEnum) {
         this.accidentalBelow = value;
     }
+    public get VexflowOrnament(): string {
+        return this.vexflowOrnament;
+    }
+    public set VexflowOrnament(value: string) {
+        this.vexflowOrnament = value;
+    }
 
 }
 
 export enum OrnamentEnum {
     Trill,
+    LongTrill,
     Turn,
     InvertedTurn,
     DelayedTurn,
     DelayedInvertedTurn,
     Mordent,
     InvertedMordent,
-    // the following ornaments are not yet supported by MusicXML (3.1).
-    // there is a "other-ornament"-node, but most programs probably don't export as such, e.g. Musescore
-    // see musicXML manuals -> Ornaments
-    /*
+    LongMordent,
+    LongInvertedMordent,
     UpPrall,
     DownPrall,
     PrallUp,
@@ -50,5 +56,4 @@ export enum OrnamentEnum {
     DownMordent,
     LinePrall,
     PrallPrall
-    */
 }

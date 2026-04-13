@@ -373,19 +373,19 @@ Flow.accidentalColumnsTable = {
 Flow.ornamentCodes = acc => Flow.ornamentCodes.ornaments[acc];
 
 Flow.ornamentCodes.ornaments = {
-  'mordent': { code: 'v1e' },
-  'mordent_inverted': { code: 'v45' },
-  'turn': { code: 'v72' },
-  'turn_inverted': { code: 'v33' },
-  'tr': { code: 'v1f' },
-  'upprall': { code: 'v60' },
-  'downprall': { code: 'vb4' },
-  'prallup': { code: 'v6d' },
-  'pralldown': { code: 'v2c' },
-  'upmordent': { code: 'v29' },
-  'downmordent': { code: 'v68' },
-  'lineprall': { code: 'v20' },
-  'prallprall': { code: 'v86' },
+  'mordent': { code: 'v1e', smuflGlyph: '\uE56C', smuflYOffset: -0.18 },
+  'mordent_inverted': { code: 'v45', smuflGlyph: '\uE56D', smuflYOffset: -0.16 },
+  'turn': { code: 'v72', smuflGlyph: '\uE567', smuflYOffset: -0.28 },
+  'turn_inverted': { code: 'v33', smuflGlyph: '\uE569', smuflYOffset: -0.26 },
+  'tr': { code: 'v1f', smuflGlyph: '\uE566', smuflYOffset: -0.22 },
+  'upprall': { code: 'v60', smuflGlyph: '\uE5B5', smuflYOffset: -0.18 },
+  'downprall': { code: 'vb4', smuflGlyph: '\uE5C3', smuflYOffset: -0.18 },
+  'prallup': { code: 'v6d', smuflGlyph: '\uE5BB', smuflYOffset: -0.2 },
+  'pralldown': { code: 'v2c', smuflGlyph: '\uE5C8', smuflYOffset: -0.2 },
+  'upmordent': { code: 'v29', smuflGlyph: '\uE5B8', smuflYOffset: -0.18 },
+  'downmordent': { code: 'v68', smuflGlyph: '\uE5C4', smuflYOffset: -0.18 },
+  'lineprall': { code: 'v20', smuflGlyph: '\uE5B2', smuflYOffset: -0.18 },
+  'prallprall': { code: 'v86', smuflGlyph: '\uE56E', smuflYOffset: -0.14 },
 };
 
 Flow.keySignature = spec => {

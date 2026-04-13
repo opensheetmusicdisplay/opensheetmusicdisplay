@@ -890,8 +890,28 @@ export class VexFlowConverter {
             vfPosition = VF.Modifier.Position.BELOW;
         }
 
+        if (oContainer.VexflowOrnament) {
+            const vexflowOrnament: VF.Ornament = new VF.Ornament(oContainer.VexflowOrnament);
+            vexflowOrnament.setDelayed(false);
+            if (oContainer.AccidentalBelow !== AccidentalEnum.NONE) {
+                vexflowOrnament.setLowerAccidental(Pitch.accidentalVexflow(oContainer.AccidentalBelow));
+            }
+            if (oContainer.AccidentalAbove !== AccidentalEnum.NONE) {
+                vexflowOrnament.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
+            }
+            vexflowOrnament.setPosition(vfPosition);
+            (vfnote as StaveNote).addModifier(0, vexflowOrnament);
+            return;
+        }
+
         let vfOrna: VF.Ornament = undefined;
         switch (oContainer.GetOrnament) {
+            case OrnamentEnum.LongTrill:
+            case OrnamentEnum.Trill: {
+                vfOrna = new VF.Ornament("tr");
+                vfOrna.setDelayed(false);
+                break;
+            }
             case OrnamentEnum.DelayedInvertedTurn: {
                 vfOrna = new VF.Ornament("turn_inverted");
                 vfOrna.setDelayed(true);
@@ -917,8 +937,53 @@ export class VexFlowConverter {
                 vfOrna.setDelayed(false);
                 break;
             }
-            case OrnamentEnum.Trill: {
-                vfOrna = new VF.Ornament("tr");
+            case OrnamentEnum.LongMordent: {
+                vfOrna = new VF.Ornament("lineprall");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.LongInvertedMordent: {
+                vfOrna = new VF.Ornament("prallprall");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.UpPrall: {
+                vfOrna = new VF.Ornament("upprall");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.DownPrall: {
+                vfOrna = new VF.Ornament("downprall");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.PrallUp: {
+                vfOrna = new VF.Ornament("prallup");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.PrallDown: {
+                vfOrna = new VF.Ornament("pralldown");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.UpMordent: {
+                vfOrna = new VF.Ornament("upmordent");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.DownMordent: {
+                vfOrna = new VF.Ornament("downmordent");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.LinePrall: {
+                vfOrna = new VF.Ornament("lineprall");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.PrallPrall: {
+                vfOrna = new VF.Ornament("prallprall");
                 vfOrna.setDelayed(false);
                 break;
             }

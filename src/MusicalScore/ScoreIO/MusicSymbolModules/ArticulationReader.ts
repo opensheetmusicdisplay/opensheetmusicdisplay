@@ -280,12 +280,20 @@ export class ArticulationReader {
       const elementToOrnamentEnum: XMLElementToOrnamentEnum = {
         "delayed-inverted-turn": OrnamentEnum.DelayedInvertedTurn,
         "delayed-turn": OrnamentEnum.DelayedTurn,
-        "inverted-mordent": OrnamentEnum.InvertedMordent,
         "inverted-turn": OrnamentEnum.InvertedTurn,
-        "mordent": OrnamentEnum.Mordent,
-        "trill-mark": OrnamentEnum.Trill,
         "turn": OrnamentEnum.Turn,
-        // further ornaments are not yet supported by MusicXML (3.1).
+      };
+      const otherOrnamentAliases: XMLElementToOrnamentEnum = {
+        "downmordent": OrnamentEnum.DownMordent,
+        "down-prall": OrnamentEnum.DownPrall,
+        "downprall": OrnamentEnum.DownPrall,
+        "lineprall": OrnamentEnum.LinePrall,
+        "pralldown": OrnamentEnum.PrallDown,
+        "prallprall": OrnamentEnum.PrallPrall,
+        "prallup": OrnamentEnum.PrallUp,
+        "upmordent": OrnamentEnum.UpMordent,
+        "up-prall": OrnamentEnum.UpPrall,
+        "upprall": OrnamentEnum.UpPrall,
       };
 
       for (const ornamentElement in elementToOrnamentEnum) {
@@ -302,6 +310,27 @@ export class ArticulationReader {
               ornament.placement = PlacementEnum.Below;
             }
           }
+        }
+      }
+      if (!ornament) {
+        ornament = this.parseMusicXmlOrnament(ornamentsNode);
+      }
+      if (!ornament) {
+        for (const otherOrnamentNode of ornamentsNode.elements("other-ornament")) {
+          const normalizedValue: string = otherOrnamentNode.value?.toLowerCase().replace(/[\s_-]+/g, "");
+          if (!normalizedValue) {
+            continue;
+          }
+          const ornamentType: OrnamentEnum = otherOrnamentAliases[normalizedValue];
+          if (ornamentType === undefined) {
+            continue;
+          }
+          ornament = new OrnamentContainer(ornamentType);
+          const placementAttr: Attr = otherOrnamentNode.attribute("placement");
+          if (placementAttr?.value === "below") {
+            ornament.placement = PlacementEnum.Below;
+          }
+          break;
         }
       }
       if (ornament) {
@@ -335,5 +364,99 @@ export class ArticulationReader {
       }
     }
   } // /addOrnament
+
+  private parseMusicXmlOrnament(ornamentsNode: IXmlElement): OrnamentContainer {
+    const trillMarkNode: IXmlElement = ornamentsNode.element("trill-mark");
+    if (trillMarkNode) {
+      const wavyLineNode: IXmlElement = ornamentsNode.element("wavy-line");
+      const isLongTrill: boolean = wavyLineNode?.attribute("type")?.value === "start";
+      const ornamentType: OrnamentEnum = isLongTrill ? OrnamentEnum.LongTrill : OrnamentEnum.Trill;
+      return this.createOrnamentContainer(ornamentType, trillMarkNode, isLongTrill ? "tr" : undefined);
+    }
+
+    const invertedMordentNode: IXmlElement = ornamentsNode.element("inverted-mordent");
+    if (invertedMordentNode) {
+      const ornamentType: OrnamentEnum = this.getInvertedMordentType(invertedMordentNode);
+      return this.createOrnamentContainer(ornamentType, invertedMordentNode, this.vexflowOrnamentFor(ornamentType));
+    }
+
+    const mordentNode: IXmlElement = ornamentsNode.element("mordent");
+    if (mordentNode) {
+      const ornamentType: OrnamentEnum = this.getMordentType(mordentNode);
+      return this.createOrnamentContainer(ornamentType, mordentNode, this.vexflowOrnamentFor(ornamentType));
+    }
+
+    return undefined;
+  }
+
+  private createOrnamentContainer(ornamentType: OrnamentEnum, node: IXmlElement, vexflowOrnament?: string): OrnamentContainer {
+    const ornament: OrnamentContainer = new OrnamentContainer(ornamentType);
+    const placementAttr: Attr = node?.attribute("placement");
+    if (placementAttr?.value === "below") {
+      ornament.placement = PlacementEnum.Below;
+    }
+    if (vexflowOrnament) {
+      ornament.VexflowOrnament = vexflowOrnament;
+    }
+    return ornament;
+  }
+
+  private getMordentType(node: IXmlElement): OrnamentEnum {
+    if (node.attribute("long")?.value !== "yes") {
+      return OrnamentEnum.Mordent;
+    }
+    switch (node.attribute("approach")?.value) {
+      case "below":
+        return OrnamentEnum.UpMordent;
+      case "above":
+        return OrnamentEnum.DownMordent;
+      default:
+        return OrnamentEnum.LongMordent;
+    }
+  }
+
+  private getInvertedMordentType(node: IXmlElement): OrnamentEnum {
+    if (node.attribute("long")?.value !== "yes") {
+      return OrnamentEnum.InvertedMordent;
+    }
+    switch (node.attribute("approach")?.value) {
+      case "below":
+        return OrnamentEnum.UpPrall;
+      case "above":
+        return OrnamentEnum.DownPrall;
+      default:
+    }
+    switch (node.attribute("departure")?.value) {
+      case "below":
+        return OrnamentEnum.PrallUp;
+      case "above":
+        return OrnamentEnum.PrallDown;
+      default:
+        return OrnamentEnum.LongInvertedMordent;
+    }
+  }
+
+  private vexflowOrnamentFor(ornament: OrnamentEnum): string {
+    switch (ornament) {
+      case OrnamentEnum.LongMordent:
+        return "lineprall";
+      case OrnamentEnum.LongInvertedMordent:
+        return "prallprall";
+      case OrnamentEnum.UpPrall:
+        return "upprall";
+      case OrnamentEnum.DownPrall:
+        return "downprall";
+      case OrnamentEnum.PrallUp:
+        return "prallup";
+      case OrnamentEnum.PrallDown:
+        return "pralldown";
+      case OrnamentEnum.UpMordent:
+        return "upmordent";
+      case OrnamentEnum.DownMordent:
+        return "downmordent";
+      default:
+        return undefined;
+    }
+  }
 
 }
