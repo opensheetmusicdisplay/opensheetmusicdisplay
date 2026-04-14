@@ -54,7 +54,9 @@ function ensureSmuflFont(ctx) {
 }
 
 function renderSmuflOrnament(ornament, ctx, glyphX, glyphY) {
-  const fontSize = ornament.render_options.font_scale * 0.92;
+  const baseFontSize = ornament.render_options.font_scale * 0.92;
+  const configuredScale = ornament.ornament.smuflScale || 1;
+  let fontSize = baseFontSize * configuredScale;
   const yOffset = ornament.ornament.smuflYOffset || 0;
   ensureSmuflFont(ctx);
   ctx.save();
@@ -125,7 +127,8 @@ export class Ornament extends Modifier {
 
     this.glyph = new Glyph(this.ornament.code, this.render_options.font_scale);
     this.glyph.setOrigin(0.5, 1.0); // FIXME: SMuFL won't require a vertical origin shift
-    this.setWidth(this.glyph.getMetrics().width);
+    const smuflScale = this.ornament?.smuflScale || 1;
+    this.setWidth(this.glyph.getMetrics().width * smuflScale);
   }
 
   getCategory() { return Ornament.CATEGORY; }
@@ -186,6 +189,11 @@ export class Ornament extends Modifier {
     // Beamed stems are longer than quarter note stems, adjust accordingly
     if (!isPlacedOnNoteheadSide && this.note.beam) {
       lineSpacing += 0.5;
+    }
+    // SMuFL ornaments can look cramped above stem-down notes (notehead side),
+    // so add a little extra clearance in that specific case.
+    if (this.ornament.smuflGlyph && isPlacedOnNoteheadSide) {
+      lineSpacing += 0.4;
     }
 
     const totalSpacing = spacing * (this.text_line + lineSpacing);

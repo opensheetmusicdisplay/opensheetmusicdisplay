@@ -303,6 +303,11 @@ export class ArticulationReader {
         const node: IXmlElement = ornamentsNode.element(ornamentElement);
         if (node) {
           ornament = new OrnamentContainer(elementToOrnamentEnum[ornamentElement]);
+          if (ornamentElement === "turn") {
+            ornament.VexflowOrnament = "turn";
+          } else if (ornamentElement === "inverted-turn") {
+            ornament.VexflowOrnament = "turn_inverted";
+          }
           const placementAttr: Attr = node.attribute("placement");
           if (placementAttr) {
             const placementString: string = placementAttr.value;
@@ -428,9 +433,9 @@ export class ArticulationReader {
     }
     switch (node.attribute("departure")?.value) {
       case "below":
-        return OrnamentEnum.PrallUp;
-      case "above":
         return OrnamentEnum.PrallDown;
+      case "above":
+        return OrnamentEnum.PrallUp;
       default:
         return OrnamentEnum.LongInvertedMordent;
     }
@@ -439,9 +444,9 @@ export class ArticulationReader {
   private vexflowOrnamentFor(ornament: OrnamentEnum): string {
     switch (ornament) {
       case OrnamentEnum.LongMordent:
-        return "lineprall";
+        return "prallmordent";
       case OrnamentEnum.LongInvertedMordent:
-        return "prallprall";
+        return "tremblement";
       case OrnamentEnum.UpPrall:
         return "upprall";
       case OrnamentEnum.DownPrall:

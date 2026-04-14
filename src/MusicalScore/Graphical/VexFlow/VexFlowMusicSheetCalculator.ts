@@ -1445,10 +1445,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let trillEndX: number = 0;
     let trillSkyline: number = Infinity;
     let trillWavyLineBottom: number = Infinity;
-    const TRILL_HEIGHT: number = 1.85;
+    const TRILL_HEIGHT: number = 1.5;
+    // Keep the first trill wavy segment slightly lower so it visually matches
+    // continuation wavy segments in following measures.
+    const TRILL_WAVYLINE_LINE_OFFSET: number = 1.3;
 
     let startX: number = startVfVoiceEntry.PositionAndShape.AbsolutePosition.x + startVfVoiceEntry.PositionAndShape.BorderLeft;
-    if (startVfVoiceEntry.parentVoiceEntry?.OrnamentContainer?.GetOrnament === OrnamentEnum.Trill) {
+    const startOrnament: OrnamentEnum = startVfVoiceEntry.parentVoiceEntry?.OrnamentContainer?.GetOrnament;
+    const hasTrillMark: boolean = startOrnament === OrnamentEnum.Trill || startOrnament === OrnamentEnum.LongTrill;
+    if (hasTrillMark) {
       trillStartX = startX;
       //Width of trill mark
       startX += 2;
@@ -1485,10 +1490,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (headroom < trillSkyline) {
       startStave.options.top_text_position = -headroom;
       endStave.options.top_text_position = -headroom;
+      if (trillSkyline < Infinity) {
+        vfVibratoBracket.line = -headroom - TRILL_WAVYLINE_LINE_OFFSET;
+      }
       //A decent enough approximation. Better than recalculating via Canvas or SVG sampling
       parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(trillStartX, trillEndX, headroom - TRILL_HEIGHT);
     } else { //Else just render where Vexflow has set the trill mark
-      vfVibratoBracket.line = -trillWavyLineBottom;
+      vfVibratoBracket.line = -trillWavyLineBottom - TRILL_WAVYLINE_LINE_OFFSET;
       headroom = trillWavyLineBottom;
     }
     //Update skyline to include height of the wavy line
@@ -2189,4 +2197,3 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 }
-

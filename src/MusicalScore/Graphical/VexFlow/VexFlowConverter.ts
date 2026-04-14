@@ -938,12 +938,12 @@ export class VexFlowConverter {
                 break;
             }
             case OrnamentEnum.LongMordent: {
-                vfOrna = new VF.Ornament("lineprall");
+                vfOrna = new VF.Ornament("prallmordent");
                 vfOrna.setDelayed(false);
                 break;
             }
             case OrnamentEnum.LongInvertedMordent: {
-                vfOrna = new VF.Ornament("prallprall");
+                vfOrna = new VF.Ornament("tremblement");
                 vfOrna.setDelayed(false);
                 break;
             }
