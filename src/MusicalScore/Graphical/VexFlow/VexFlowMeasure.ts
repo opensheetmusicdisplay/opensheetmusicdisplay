@@ -108,8 +108,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
     private vftuplets: { [voiceID: number]: VF.Tuplet[] } = {};
     /** Direction lock and matching metadata for each VexFlow tie. */
     private tieCollisionMetadata: WeakMap<VF.StaveTie, TieCollisionMetadata> = new WeakMap();
-    /** Baseline beam state used by collision manager to avoid cumulative y-shift/extension drift. */
-    private beamCollisionBaselines: WeakMap<VF.Beam, BeamCollisionBaseline> = new WeakMap();
     // The engraving rules of OSMD.
     public rules: EngravingRules;
 
@@ -1919,7 +1917,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         const baseCp1: number = Number.isFinite(renderOptions.cp1) ? Math.max(3, renderOptions.cp1) : 8;
         const originalCp2: number = Number.isFinite(renderOptions.cp2) ? renderOptions.cp2 : 12;
-        const thickenedCp2: number = Math.max(baseCp1 + 4.5, originalCp2 + 1.75); // make ties visibly thicker.
+        const thickenedCp2: number = Math.max(baseCp1 + 4.2, originalCp2 + 1.25); // make ties visibly thicker, but keep it light.
         const baseYShift: number = Number.isFinite(renderOptions.y_shift) ? Math.max(3, renderOptions.y_shift) : 7;
 
         const currentDirection: number = this.getTieDirection(tie);
@@ -2097,11 +2095,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
             return;
         }
         if (typeof beam.postFormat === "function") {
+            beam.postFormatted = false;
             beam.postFormat();
         }
-        const baseline: BeamCollisionBaseline = this.getOrCreateBeamCollisionBaseline(vfBeam);
-        this.restoreBeamCollisionBaseline(beam, baseline);
-
+        const baseline: BeamCollisionBaseline = this.captureBeamCollisionBaseline(beam);
         let bestOffset: number = 0;
         let bestScore: number = this.scoreBeamOverlap(beam, baseline, noteheadSamples, 0);
         for (const extensionOffset of [2, 4, 6, 8, 10, 12]) {
@@ -2114,33 +2111,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.applyBeamCollisionOffset(beam, baseline, bestOffset);
     }
 
-    private getOrCreateBeamCollisionBaseline(vfBeam: VF.Beam): BeamCollisionBaseline {
-        const beam: any = vfBeam as any;
-        const existing: BeamCollisionBaseline = this.beamCollisionBaselines.get(vfBeam);
-        if (existing && existing.stemExtensions.length === beam.notes.length && existing.stemDirection === beam.stem_direction) {
-            return existing;
-        }
-        const baseline: BeamCollisionBaseline = {
+    private captureBeamCollisionBaseline(beam: any): BeamCollisionBaseline {
+        return {
             yShift: Number.isFinite(beam.y_shift) ? beam.y_shift : 0,
-            stemDirection: beam.stem_direction,
+            stemDirection: beam.stem_direction === -1 ? -1 : 1,
             stemExtensions: beam.notes.map((note: any) => {
                 const extension: number = note?.getStem?.()?.getExtension?.();
                 return Number.isFinite(extension) ? extension : 0;
             })
         };
-        this.beamCollisionBaselines.set(vfBeam, baseline);
-        return baseline;
-    }
-
-    private restoreBeamCollisionBaseline(beam: any, baseline: BeamCollisionBaseline): void {
-        beam.y_shift = baseline.yShift;
-        for (let i: number = 0; i < beam.notes.length; i++) {
-            const stem: any = beam.notes[i]?.getStem?.();
-            if (!stem || typeof stem.setExtension !== "function") {
-                continue;
-            }
-            stem.setExtension(baseline.stemExtensions[i] ?? 0);
-        }
     }
 
     private applyBeamCollisionOffset(beam: any, baseline: BeamCollisionBaseline, extensionOffset: number): void {
