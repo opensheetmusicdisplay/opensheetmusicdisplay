@@ -96,6 +96,34 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      * @returns {any}
      */
     public findTieGraphicalNoteFromNote(tieNote: Note): GraphicalNote {
+        if (!tieNote) {
+            return undefined;
+        }
+        // Prefer exact object identity to avoid ambiguous tie targets
+        // when multiple notes at the same timestamp share a similar pitch context.
+        for (const gve of this.graphicalVoiceEntries) {
+            for (const graphicalNote of gve.notes) {
+                if (graphicalNote.sourceNote === tieNote) {
+                    return graphicalNote;
+                }
+            }
+        }
+        // Secondary match: same voice entry, same pitch, same timestamp.
+        for (const gve of this.graphicalVoiceEntries) {
+            if (gve.parentVoiceEntry !== tieNote.ParentVoiceEntry) {
+                continue;
+            }
+            for (const graphicalNote of gve.notes) {
+                const note: Note = graphicalNote.sourceNote;
+                if (!note.isRest()
+                    && note.Pitch.FundamentalNote === tieNote.Pitch.FundamentalNote
+                    && note.Pitch.Octave === tieNote.Pitch.Octave
+                    && note.getAbsoluteTimestamp().Equals(tieNote.getAbsoluteTimestamp())) {
+                    return graphicalNote;
+                }
+            }
+        }
+        // Fallback for legacy files with incomplete voice association.
         for (const gve of this.graphicalVoiceEntries) {
             for (const graphicalNote of gve.notes) {
                 const note: Note = graphicalNote.sourceNote;

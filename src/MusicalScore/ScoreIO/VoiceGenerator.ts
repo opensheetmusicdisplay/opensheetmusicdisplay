@@ -1017,21 +1017,22 @@ export class VoiceGenerator {
         const tieNode: IXmlElement = tieNodeList[0];
         if (tieNode !== undefined && tieNode.attributes()) {
           const tieDirection: PlacementEnum = this.getTieDirection(tieNode);
+          const tieNumberFromXml: number | undefined = this.getTieNumber(tieNode);
 
           const type: string = tieNode.attribute("type").value;
           try {
             if (type === "start") {
-              const num: number = this.findCurrentNoteInTieDict(this.currentNote);
-              if (num < 0) {
+              const num: number = this.findCurrentNoteInTieDict(this.currentNote, tieNumberFromXml, tieType);
+              if (num >= 0) {
                 delete this.openTieDict[num];
               }
               const newTieNumber: number = this.getNextAvailableNumberForTie();
               const tie: Tie = new Tie(this.currentNote, tieType);
               this.openTieDict[newTieNumber] = tie;
-              tie.TieNumber = newTieNumber;
+              tie.TieNumber = tieNumberFromXml ?? newTieNumber;
               tie.TieDirection = tieDirection;
             } else if (type === "stop") {
-              const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
+              const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote, tieNumberFromXml, tieType);
               const tie: Tie = this.openTieDict[tieNumber];
               if (tie) {
                 tie.AddNote(this.currentNote);
@@ -1045,7 +1046,9 @@ export class VoiceGenerator {
 
         }
       } else if (tieNodeList.length === 2) { // stop+start
-        const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
+        const stopNode: IXmlElement | undefined = tieNodeList.find(node => node.attribute("type")?.value === "stop");
+        const tieNumberFromXml: number | undefined = this.getTieNumber(stopNode);
+        const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote, tieNumberFromXml, tieType);
         if (tieNumber >= 0) {
           const tie: Tie = this.openTieDict[tieNumber];
           tie.AddNote(this.currentNote);
@@ -1085,6 +1088,24 @@ export class VoiceGenerator {
   }
 
   /**
+   * Read tie number from MusicXML, if present.
+   */
+  private getTieNumber(tieNode: IXmlElement | undefined): number | undefined {
+    if (!tieNode) {
+      return undefined;
+    }
+    const numberAttr: IXmlAttribute = tieNode.attribute("number");
+    if (!numberAttr) {
+      return undefined;
+    }
+    const parsed: number = Number.parseInt(numberAttr.value, 10);
+    if (!Number.isFinite(parsed)) {
+      return undefined;
+    }
+    return parsed;
+  }
+
+  /**
    * Find the next free int (starting from 0) to use as key in TieDict.
    * @returns {number}
    */
@@ -1107,23 +1128,51 @@ export class VoiceGenerator {
    * @param candidateNote
    * @returns {number}
    */
-  private findCurrentNoteInTieDict(candidateNote: Note): number {
+  private findCurrentNoteInTieDict(candidateNote: Note, requestedTieNumber?: number, tieType?: TieTypes): number {
     const openTieDict: { [_: number]: Tie } = this.openTieDict;
+    const candidateVoiceId: number | undefined = candidateNote?.ParentVoiceEntry?.ParentVoice?.VoiceId;
+    let bestMatchKey: number = -1;
+    let bestMatchScore: number = Number.NEGATIVE_INFINITY;
     for (const key in openTieDict) {
       if (openTieDict.hasOwnProperty(key)) {
         const tie: Tie = openTieDict[key];
+        if (tieType !== undefined && tie.Type !== tieType) {
+          continue;
+        }
         const tieTabNote: TabNote = tie.Notes[0] as TabNote;
         const tieCandidateNote: TabNote = candidateNote as TabNote;
-        if (tie.Pitch.FundamentalNote === candidateNote.Pitch.FundamentalNote && tie.Pitch.Octave === candidateNote.Pitch.Octave) {
-          return parseInt(key, 10);
-        } else if (tieTabNote.StringNumberTab !== undefined) {
-          if (tieTabNote.StringNumberTab === tieCandidateNote.StringNumberTab) {
-            return parseInt(key, 10);
+        const matchByPitch: boolean = tie.Pitch?.FundamentalNote === candidateNote.Pitch?.FundamentalNote
+          && tie.Pitch?.Octave === candidateNote.Pitch?.Octave;
+        const matchByTabString: boolean = tieTabNote.StringNumberTab !== undefined
+          && tieCandidateNote.StringNumberTab !== undefined
+          && tieTabNote.StringNumberTab === tieCandidateNote.StringNumberTab;
+        if (!matchByPitch && !matchByTabString) {
+          continue;
+        }
+        let score: number = 0;
+        if (requestedTieNumber !== undefined) {
+          score += tie.TieNumber === requestedTieNumber ? 8 : -4;
+        }
+        const tieVoiceId: number | undefined = tie.Notes[0]?.ParentVoiceEntry?.ParentVoice?.VoiceId;
+        if (candidateVoiceId !== undefined && tieVoiceId === candidateVoiceId) {
+          score += 4;
+        }
+        if (matchByPitch) {
+          score += 2;
+          if (tie.Pitch?.Accidental === candidateNote.Pitch?.Accidental) {
+            score += 1;
           }
+        }
+        if (matchByTabString) {
+          score += 2;
+        }
+        if (score > bestMatchScore) {
+          bestMatchScore = score;
+          bestMatchKey = parseInt(key, 10);
         }
       }
     }
-    return -1;
+    return bestMatchKey;
   }
 
   /**
