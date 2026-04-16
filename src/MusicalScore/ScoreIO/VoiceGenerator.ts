@@ -1022,15 +1022,22 @@ export class VoiceGenerator {
           const type: string = tieNode.attribute("type").value;
           try {
             if (type === "start") {
-              const num: number = this.findCurrentNoteInTieDict(this.currentNote, tieNumberFromXml, tieType);
-              if (num >= 0) {
-                delete this.openTieDict[num];
+              // Keep existing unnumbered ties open.
+              // MusicXML can emit another start of the same pitch later in the note stream
+              // (e.g. due to backup/voice ordering) before an earlier stop appears.
+              // Removing the older tie here causes wrong tie pairings.
+              if (tieNumberFromXml !== undefined) {
+                const num: number = this.findCurrentNoteInTieDict(this.currentNote, tieNumberFromXml, tieType);
+                if (num >= 0 && this.openTieDict[num]?.TieNumber === tieNumberFromXml) {
+                  delete this.openTieDict[num];
+                }
               }
               const newTieNumber: number = this.getNextAvailableNumberForTie();
               const tie: Tie = new Tie(this.currentNote, tieType);
               this.openTieDict[newTieNumber] = tie;
               tie.TieNumber = tieNumberFromXml ?? newTieNumber;
               tie.TieDirection = tieDirection;
+              tie.TieDirectionFromXml = tieDirection === PlacementEnum.Above || tieDirection === PlacementEnum.Below;
             } else if (type === "stop") {
               const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote, tieNumberFromXml, tieType);
               const tie: Tie = this.openTieDict[tieNumber];

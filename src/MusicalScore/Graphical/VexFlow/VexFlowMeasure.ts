@@ -995,6 +995,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             // }
                         }
                     }
+                    const hasCrossStaffTransferredNote: boolean = psBeam.Notes.some((beamNote: Note) => {
+                        const sourceStaffId: number = beamNote?.ParentVoiceEntry?.ParentSourceStaffEntry?.ParentStaff?.Id;
+                        const currentStaffId: number = beamNote?.ParentStaffEntry?.ParentStaff?.Id;
+                        return sourceStaffId !== undefined && currentStaffId !== undefined && sourceStaffId !== currentStaffId;
+                    });
+                    if (hasCrossStaffTransferredNote) {
+                        autoStemBeam = true;
+                    }
 
                     let isGraceBeam: boolean = false;
                     let beamColor: string;
@@ -1796,7 +1804,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public addStaveTie(stavetie: VF.StaveTie, graphicalTie: GraphicalTie): void {
         this.vfTies.push(stavetie);
         graphicalTie.vfTie = stavetie;
-        if (graphicalTie.Tie.TieDirection === PlacementEnum.Below) {
+        const explicitDirection: number = (stavetie as any)?.render_options?.direction;
+        if ((explicitDirection === undefined || explicitDirection === null)
+            && graphicalTie.Tie.TieDirection === PlacementEnum.Below) {
             (stavetie as any).setDirection(1);
         }
     }

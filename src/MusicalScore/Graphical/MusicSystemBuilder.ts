@@ -1145,29 +1145,62 @@ export class MusicSystemBuilder {
         // don't perform any y-spacing in case of a StaffEntryLink (in both StaffLines)
         if (!musicSystem.checkStaffEntriesForStaffEntryLink()) {
             for (let i: number = 0; i < musicSystem.StaffLines.length - 1; i++) {
+                const upperStaffLine: StaffLine = musicSystem.StaffLines[i];
+                const lowerStaffLine: StaffLine = musicSystem.StaffLines[i + 1];
                 const upperBottomLine: number[] = musicSystem.StaffLines[i].BottomLine;
                 const lowerSkyLine: number[] = musicSystem.StaffLines[i + 1].SkyLine;
+                const sameInstrumentPair: boolean = upperStaffLine.ParentStaff?.ParentInstrument ===
+                    lowerStaffLine.ParentStaff?.ParentInstrument;
+                // Cross-staff noteheads (or malformed skylines) can create extreme outliers and
+                // inflate the entire grand-staff distance. Clamp only for adjacent staves of
+                // the same instrument (e.g. piano) to keep the pair compact and stable.
+                const interStaffOutlierClamp: number = this.rules.StaffHeight
+                    + this.rules.MinimumStaffLineDistance
+                    + this.rules.MinSkyBottomDistBetweenStaves
+                    + 2.0;
+                const sameInstrumentDistanceCap: number = this.rules.StaffHeight
+                    + this.rules.MinimumStaffLineDistance
+                    + this.rules.MinSkyBottomDistBetweenStaves
+                    + 2.0;
                 // 1. Find maximum required space for sky bottom line touching each other
                 let maxDistance: number = 0;
                 for (let j: number = 0; j < upperBottomLine.length; j++) {
-                    const bottomLineValue: number = upperBottomLine[j];
+                    let bottomLineValue: number = upperBottomLine[j];
+                    if (!Number.isFinite(bottomLineValue)) {
+                        continue;
+                    }
 
                     // look at a range of +/- 2 Units to also ensure that objects are also not too close in x-direction:
                     const startIdx: number = Math.max(0, j - 6);
                     const endIdx: number = Math.min(lowerSkyLine.length - 1, j + 6);
                     let skylineValue: number = 0;
                     for (let lowerIdx: number = startIdx; lowerIdx <= endIdx; lowerIdx++) {
-                        skylineValue = Math.min(skylineValue, lowerSkyLine[lowerIdx]);
+                        const lowerSkylineValue: number = lowerSkyLine[lowerIdx];
+                        if (!Number.isFinite(lowerSkylineValue)) {
+                            continue;
+                        }
+                        skylineValue = Math.min(skylineValue, lowerSkylineValue);
+                    }
+                    if (sameInstrumentPair) {
+                        bottomLineValue = Math.min(bottomLineValue, interStaffOutlierClamp);
+                        skylineValue = Math.max(skylineValue, -interStaffOutlierClamp);
                     }
 
                     const distance: number = bottomLineValue - skylineValue;
+                    if (!Number.isFinite(distance)) {
+                        continue;
+                    }
                     maxDistance = Math.max(distance, maxDistance);
                 }
                 // 2. Add user defined distance between sky bottom line
                 maxDistance += this.rules.MinSkyBottomDistBetweenStaves;
                 // 3. Take the maximum between previous value and user defined value for staff line minimum distance
                 maxDistance = Math.max(maxDistance, this.rules.StaffHeight + this.rules.MinimumStaffLineDistance);
-                const lowerStafflineYPos: number = maxDistance + musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y;
+                // 4. For grand staff pairs, prevent beam/stem outliers from exploding staff distance.
+                if (sameInstrumentPair) {
+                    maxDistance = Math.min(maxDistance, sameInstrumentDistanceCap);
+                }
+                const lowerStafflineYPos: number = maxDistance + upperStaffLine.PositionAndShape.RelativePosition.y;
                 this.updateStaffLinesRelativePosition(musicSystem, i + 1, lowerStafflineYPos);
             }
         }

@@ -19,6 +19,8 @@ export class Tie {
     private type: TieTypes;
     public TieNumber: number = 1;
     public TieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
+    /** True when TieDirection was explicitly provided by MusicXML (placement/orientation). */
+    public TieDirectionFromXml: boolean = false;
     /** Can contain tie directions at certain note indices.
      *  For example, if it contains {2: PlacementEnum.Below}, then
      *  the tie should go downwards from Tie.Notes[2] onwards,

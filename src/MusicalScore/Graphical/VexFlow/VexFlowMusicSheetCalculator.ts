@@ -4,6 +4,7 @@ import { GraphicalMeasure } from "../GraphicalMeasure";
 import { StaffLine } from "../StaffLine";
 import { SkyBottomLineBatchCalculator } from "../SkyBottomLineBatchCalculator";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
+import { Note } from "../../VoiceData/Note";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalTie } from "../GraphicalTie";
@@ -648,6 +649,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean, isTab: boolean): void {
     const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
     const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
+    const tieDirection: PlacementEnum = !isTab
+      ? this.resolveTieDirectionWithCollisionAvoidance(tie, startNote, endNote)
+      : PlacementEnum.NotYetDefined;
 
     let vfStartNote: VF.StemmableNote  = undefined;
     let startNoteIndexInTie: number = 0;
@@ -670,6 +674,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           first_indices: [startNoteIndexInTie],
           first_note: vfStartNote
         });
+        if (tieDirection === PlacementEnum.Below) {
+          (vfTie1 as any).setDirection(1); // + is down in vexflow
+        } else if (tieDirection === PlacementEnum.Above) {
+          (vfTie1 as any).setDirection(-1);
+        }
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
       }
@@ -679,6 +688,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           last_indices: [endNoteIndexInTie],
           last_note: vfEndNote
         });
+        if (tieDirection === PlacementEnum.Below) {
+          (vfTie2 as any).setDirection(1); // + is down in vexflow
+        } else if (tieDirection === PlacementEnum.Above) {
+          (vfTie2 as any).setDirection(-1);
+        }
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure2.addStaveTie(vfTie2, tie);
       }
@@ -723,7 +737,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             last_indices: [endNoteIndexInTie],
             last_note: vfEndNote
           });
-          const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote.sourceNote);
           if (tieDirection === PlacementEnum.Below) {
             vfTie.setDirection(1); // + is down in vexflow
           } else if (tieDirection === PlacementEnum.Above) {
@@ -735,6 +748,94 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         measure.addStaveTie(vfTie, tie);
       }
     }
+  }
+
+  /**
+   * Keep XML-defined tie directions, otherwise try flipping when current side clearly collides with nearby notes.
+   */
+  private resolveTieDirectionWithCollisionAvoidance(
+    tie: GraphicalTie,
+    startNote: VexFlowGraphicalNote,
+    endNote: VexFlowGraphicalNote
+  ): PlacementEnum {
+    const tieModel: Tie = tie.Tie;
+    if (!startNote?.sourceNote) {
+      return tieModel.TieDirection;
+    }
+    const preferredDirection: PlacementEnum = tieModel.getTieDirection(startNote.sourceNote);
+    if (this.tieDirectionWasDefinedInXml(tieModel, startNote.sourceNote)) {
+      return preferredDirection;
+    }
+    const collidesAbove: boolean = this.tieDirectionCollidesWithNearbyNotes(startNote, endNote, PlacementEnum.Above);
+    const collidesBelow: boolean = this.tieDirectionCollidesWithNearbyNotes(startNote, endNote, PlacementEnum.Below);
+    if (preferredDirection === PlacementEnum.Above && collidesAbove && !collidesBelow) {
+      return PlacementEnum.Below;
+    }
+    if (preferredDirection === PlacementEnum.Below && collidesBelow && !collidesAbove) {
+      return PlacementEnum.Above;
+    }
+    if (preferredDirection !== PlacementEnum.Above && preferredDirection !== PlacementEnum.Below) {
+      if (collidesAbove && !collidesBelow) {
+        return PlacementEnum.Below;
+      }
+      if (collidesBelow && !collidesAbove) {
+        return PlacementEnum.Above;
+      }
+    }
+    return preferredDirection;
+  }
+
+  private tieDirectionWasDefinedInXml(tie: Tie, startSourceNote: Note): boolean {
+    if (tie.TieDirectionFromXml) {
+      return true;
+    }
+    const startNoteIndex: number = tie.Notes.indexOf(startSourceNote);
+    if (startNoteIndex < 0) {
+      return false;
+    }
+    const mappedDirection: PlacementEnum = tie.NoteIndexToTieDirection[startNoteIndex];
+    return mappedDirection === PlacementEnum.Above || mappedDirection === PlacementEnum.Below;
+  }
+
+  private tieDirectionCollidesWithNearbyNotes(
+    startNote: VexFlowGraphicalNote,
+    endNote: VexFlowGraphicalNote,
+    direction: PlacementEnum
+  ): boolean {
+    return this.tieDirectionCollidesInStaffEntry(startNote?.parentVoiceEntry?.parentStaffEntry, startNote, direction)
+      || this.tieDirectionCollidesInStaffEntry(endNote?.parentVoiceEntry?.parentStaffEntry, endNote, direction);
+  }
+
+  private tieDirectionCollidesInStaffEntry(
+    staffEntry: GraphicalStaffEntry,
+    anchorNote: VexFlowGraphicalNote,
+    direction: PlacementEnum
+  ): boolean {
+    if (!staffEntry || !anchorNote) {
+      return false;
+    }
+    const anchorPitch: number = anchorNote.sourceNote?.Pitch?.getHalfTone();
+    if (!Number.isFinite(anchorPitch)) {
+      return false;
+    }
+    for (const gve of staffEntry.graphicalVoiceEntries) {
+      for (const candidate of gve.notes) {
+        if (candidate === anchorNote || candidate?.sourceNote?.isRest() || !candidate?.sourceNote?.PrintObject) {
+          continue;
+        }
+        const candidatePitch: number = candidate?.sourceNote?.Pitch?.getHalfTone();
+        if (!Number.isFinite(candidatePitch)) {
+          continue;
+        }
+        if (direction === PlacementEnum.Above && candidatePitch > anchorPitch) {
+          return true;
+        }
+        if (direction === PlacementEnum.Below && candidatePitch < anchorPitch) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
