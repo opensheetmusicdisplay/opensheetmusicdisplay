@@ -34,6 +34,8 @@ import { ReaderPluginManager } from "./ReaderPluginManager";
 import { Instrument } from "../Instrument";
 
 export class VoiceGenerator {
+  private static readonly pendingTieStopsByStaff: WeakMap<Staff, PendingTieStop[]> = new WeakMap<Staff, PendingTieStop[]>();
+
   constructor(pluginManager: ReaderPluginManager, staff: Staff, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
     this.staff = staff;
     this.instrument = staff.ParentInstrument;
@@ -1022,6 +1024,18 @@ export class VoiceGenerator {
           const type: string = tieNode.attribute("type").value;
           try {
             if (type === "start") {
+              const pendingStop: PendingTieStop | undefined = this.findPendingTieStopForStart(
+                this.currentNote, tieNumberFromXml, tieType
+              );
+              if (pendingStop) {
+                const resolvedTie: Tie = new Tie(this.currentNote, tieType);
+                resolvedTie.AddNote(pendingStop.note);
+                resolvedTie.TieNumber = tieNumberFromXml ?? pendingStop.tieNumber ?? this.getNextAvailableNumberForTie();
+                resolvedTie.TieDirection = tieDirection;
+                resolvedTie.TieDirectionFromXml = tieDirection === PlacementEnum.Above || tieDirection === PlacementEnum.Below;
+                this.removePendingTieStop(pendingStop);
+                return;
+              }
               // Keep existing unnumbered ties open.
               // MusicXML can emit another start of the same pitch later in the note stream
               // (e.g. due to backup/voice ordering) before an earlier stop appears.
@@ -1044,6 +1058,12 @@ export class VoiceGenerator {
               if (tie) {
                 tie.AddNote(this.currentNote);
                 delete this.openTieDict[tieNumber];
+              } else {
+                this.getPendingTieStops().push({
+                  note: this.currentNote,
+                  tieNumber: tieNumberFromXml,
+                  tieType: tieType
+                });
               }
             }
           } catch (err) {
@@ -1138,48 +1158,222 @@ export class VoiceGenerator {
   private findCurrentNoteInTieDict(candidateNote: Note, requestedTieNumber?: number, tieType?: TieTypes): number {
     const openTieDict: { [_: number]: Tie } = this.openTieDict;
     const candidateVoiceId: number | undefined = candidateNote?.ParentVoiceEntry?.ParentVoice?.VoiceId;
-    let bestMatchKey: number = -1;
-    let bestMatchScore: number = Number.NEGATIVE_INFINITY;
+    const candidateOrderValue: number | undefined = this.getSafeNoteOrderValue(candidateNote);
+    const candidateStaffId: number | undefined = candidateNote?.ParentStaffEntry?.ParentStaff?.Id;
+    type MatchedTieCandidate = {
+      key: number;
+      exactTieNumber: boolean;
+      sameVoice: boolean;
+      sameStaff: boolean;
+      sameAccidental: boolean;
+      delta: number | undefined;
+      isPastOrEqual: boolean;
+    };
+    const matchedCandidates: MatchedTieCandidate[] = [];
     for (const key in openTieDict) {
       if (openTieDict.hasOwnProperty(key)) {
         const tie: Tie = openTieDict[key];
+        const referenceNote: Note = tie.Notes[tie.Notes.length - 1] ?? tie.StartNote;
         if (tieType !== undefined && tie.Type !== tieType) {
           continue;
         }
-        const tieTabNote: TabNote = tie.Notes[0] as TabNote;
+        const tieTabNote: TabNote = referenceNote as TabNote;
         const tieCandidateNote: TabNote = candidateNote as TabNote;
-        const matchByPitch: boolean = tie.Pitch?.FundamentalNote === candidateNote.Pitch?.FundamentalNote
-          && tie.Pitch?.Octave === candidateNote.Pitch?.Octave;
+        const tieReferencePitch: Pitch = referenceNote?.Pitch;
+        const matchByPitch: boolean = tieReferencePitch?.FundamentalNote === candidateNote.Pitch?.FundamentalNote
+          && tieReferencePitch?.Octave === candidateNote.Pitch?.Octave;
         const matchByTabString: boolean = tieTabNote.StringNumberTab !== undefined
           && tieCandidateNote.StringNumberTab !== undefined
           && tieTabNote.StringNumberTab === tieCandidateNote.StringNumberTab;
         if (!matchByPitch && !matchByTabString) {
           continue;
         }
-        let score: number = 0;
-        if (requestedTieNumber !== undefined) {
-          score += tie.TieNumber === requestedTieNumber ? 8 : -4;
+        const tieVoiceId: number | undefined = referenceNote?.ParentVoiceEntry?.ParentVoice?.VoiceId;
+        const tieStaffId: number | undefined = referenceNote?.ParentStaffEntry?.ParentStaff?.Id;
+        const sameVoice: boolean = candidateVoiceId !== undefined && tieVoiceId === candidateVoiceId;
+        const sameStaff: boolean = candidateStaffId !== undefined && tieStaffId === candidateStaffId;
+        const sameAccidental: boolean = tieReferencePitch?.Accidental === candidateNote.Pitch?.Accidental;
+        const tieStartOrderValue: number | undefined = this.getSafeNoteOrderValue(referenceNote);
+        let delta: number | undefined = undefined;
+        let isPastOrEqual: boolean = false;
+        if (Number.isFinite(candidateOrderValue) && Number.isFinite(tieStartOrderValue)) {
+          delta = candidateOrderValue - tieStartOrderValue;
+          isPastOrEqual = delta >= -Fraction.FloatInaccuracyTolerance;
         }
-        const tieVoiceId: number | undefined = tie.Notes[0]?.ParentVoiceEntry?.ParentVoice?.VoiceId;
-        if (candidateVoiceId !== undefined && tieVoiceId === candidateVoiceId) {
-          score += 4;
-        }
-        if (matchByPitch) {
-          score += 2;
-          if (tie.Pitch?.Accidental === candidateNote.Pitch?.Accidental) {
-            score += 1;
-          }
-        }
-        if (matchByTabString) {
-          score += 2;
-        }
-        if (score > bestMatchScore) {
-          bestMatchScore = score;
-          bestMatchKey = parseInt(key, 10);
-        }
+        matchedCandidates.push({
+          key: parseInt(key, 10),
+          exactTieNumber: requestedTieNumber !== undefined && tie.TieNumber === requestedTieNumber,
+          sameVoice: sameVoice,
+          sameStaff: sameStaff,
+          sameAccidental: sameAccidental,
+          delta: delta,
+          isPastOrEqual: isPastOrEqual
+        });
       }
     }
-    return bestMatchKey;
+    if (matchedCandidates.length === 0) {
+      return -1;
+    }
+    matchedCandidates.sort((a: MatchedTieCandidate, b: MatchedTieCandidate): number => {
+      if (a.exactTieNumber !== b.exactTieNumber) {
+        return a.exactTieNumber ? -1 : 1;
+      }
+      const aHasDelta: boolean = Number.isFinite(a.delta);
+      const bHasDelta: boolean = Number.isFinite(b.delta);
+      if (aHasDelta !== bHasDelta) {
+        return aHasDelta ? -1 : 1;
+      }
+      if (aHasDelta && bHasDelta) {
+        if (a.isPastOrEqual !== b.isPastOrEqual) {
+          return a.isPastOrEqual ? -1 : 1;
+        }
+      }
+      if (a.sameVoice !== b.sameVoice) {
+        return a.sameVoice ? -1 : 1;
+      }
+      if (a.sameStaff !== b.sameStaff) {
+        return a.sameStaff ? -1 : 1;
+      }
+      if (a.sameAccidental !== b.sameAccidental) {
+        return a.sameAccidental ? -1 : 1;
+      }
+      // Prefer the oldest opened tie as final fallback (stable FIFO matching).
+      return a.key - b.key;
+    });
+    return matchedCandidates[0].key;
+  }
+
+  private getSafeNoteOrderValue(note: Note | undefined): number | undefined {
+    const absoluteTimestamp: number | undefined = this.getSafeNoteAbsoluteTimestampRealValue(note);
+    if (Number.isFinite(absoluteTimestamp)) {
+      return absoluteTimestamp;
+    }
+    const measureNumber: number | undefined = note?.SourceMeasure?.MeasureNumber;
+    const voiceTimestamp: Fraction | undefined = note?.ParentVoiceEntry?.Timestamp;
+    if (!Number.isFinite(measureNumber) || !voiceTimestamp) {
+      return undefined;
+    }
+    return measureNumber + voiceTimestamp.RealValue;
+  }
+
+  private getSafeNoteAbsoluteTimestampRealValue(note: Note | undefined): number | undefined {
+    const voiceTimestamp: Fraction | undefined = note?.ParentVoiceEntry?.Timestamp;
+    const measureTimestamp: Fraction | undefined = note?.SourceMeasure?.AbsoluteTimestamp;
+    if (!voiceTimestamp || !measureTimestamp) {
+      return undefined;
+    }
+    return Fraction.plus(voiceTimestamp, measureTimestamp).RealValue;
+  }
+
+  private getPendingTieStops(): PendingTieStop[] {
+    let pendingStops: PendingTieStop[] = VoiceGenerator.pendingTieStopsByStaff.get(this.staff);
+    if (!pendingStops) {
+      pendingStops = [];
+      VoiceGenerator.pendingTieStopsByStaff.set(this.staff, pendingStops);
+    }
+    return pendingStops;
+  }
+
+  private removePendingTieStop(stopToRemove: PendingTieStop): void {
+    const pendingStops: PendingTieStop[] = this.getPendingTieStops();
+    const index: number = pendingStops.indexOf(stopToRemove);
+    if (index >= 0) {
+      pendingStops.splice(index, 1);
+    }
+  }
+
+  private findPendingTieStopForStart(candidateStartNote: Note, requestedTieNumber?: number, tieType?: TieTypes): PendingTieStop | undefined {
+    const pendingStops: PendingTieStop[] = this.getPendingTieStops();
+    const candidateVoiceId: number | undefined = candidateStartNote?.ParentVoiceEntry?.ParentVoice?.VoiceId;
+    const candidateStaffId: number | undefined = candidateStartNote?.ParentStaffEntry?.ParentStaff?.Id;
+    const candidateOrderValue: number | undefined = this.getSafeNoteOrderValue(candidateStartNote);
+    type MatchingPendingStop = {
+      pendingStop: PendingTieStop;
+      exactTieNumber: boolean;
+      sameVoice: boolean;
+      sameStaff: boolean;
+      sameAccidental: boolean;
+      delta: number | undefined;
+      isFutureOrEqual: boolean;
+    };
+    const matches: MatchingPendingStop[] = [];
+    for (const pendingStop of pendingStops) {
+      if (tieType !== undefined && pendingStop.tieType !== tieType) {
+        continue;
+      }
+      const pendingPitch: Pitch = pendingStop.note?.Pitch;
+      const matchByPitch: boolean = pendingPitch?.FundamentalNote === candidateStartNote.Pitch?.FundamentalNote
+        && pendingPitch?.Octave === candidateStartNote.Pitch?.Octave;
+      const pendingTabNote: TabNote = pendingStop.note as TabNote;
+      const candidateTabNote: TabNote = candidateStartNote as TabNote;
+      const matchByTabString: boolean = pendingTabNote.StringNumberTab !== undefined
+        && candidateTabNote.StringNumberTab !== undefined
+        && pendingTabNote.StringNumberTab === candidateTabNote.StringNumberTab;
+      if (!matchByPitch && !matchByTabString) {
+        continue;
+      }
+      const pendingVoiceId: number | undefined = pendingStop.note?.ParentVoiceEntry?.ParentVoice?.VoiceId;
+      const pendingStaffId: number | undefined = pendingStop.note?.ParentStaffEntry?.ParentStaff?.Id;
+      const sameVoice: boolean = candidateVoiceId !== undefined && pendingVoiceId === candidateVoiceId;
+      const sameStaff: boolean = candidateStaffId !== undefined && pendingStaffId === candidateStaffId;
+      const sameAccidental: boolean = pendingPitch?.Accidental === candidateStartNote.Pitch?.Accidental;
+      const pendingOrderValue: number | undefined = this.getSafeNoteOrderValue(pendingStop.note);
+      let delta: number | undefined = undefined;
+      let isFutureOrEqual: boolean = false;
+      if (Number.isFinite(candidateOrderValue) && Number.isFinite(pendingOrderValue)) {
+        delta = pendingOrderValue - candidateOrderValue;
+        isFutureOrEqual = delta >= -Fraction.FloatInaccuracyTolerance;
+        if (!isFutureOrEqual) {
+          // A pending stop older than the start note cannot belong to this tie.
+          continue;
+        }
+      }
+      matches.push({
+        pendingStop: pendingStop,
+        exactTieNumber: requestedTieNumber !== undefined && pendingStop.tieNumber === requestedTieNumber,
+        sameVoice: sameVoice,
+        sameStaff: sameStaff,
+        sameAccidental: sameAccidental,
+        delta: delta,
+        isFutureOrEqual: isFutureOrEqual
+      });
+    }
+    if (matches.length === 0) {
+      return undefined;
+    }
+    matches.sort((a: MatchingPendingStop, b: MatchingPendingStop): number => {
+      if (a.exactTieNumber !== b.exactTieNumber) {
+        return a.exactTieNumber ? -1 : 1;
+      }
+      const aHasDelta: boolean = Number.isFinite(a.delta);
+      const bHasDelta: boolean = Number.isFinite(b.delta);
+      if (aHasDelta !== bHasDelta) {
+        return aHasDelta ? -1 : 1;
+      }
+      if (aHasDelta && bHasDelta) {
+        if (a.isFutureOrEqual !== b.isFutureOrEqual) {
+          return a.isFutureOrEqual ? -1 : 1;
+        }
+      }
+      if (a.sameVoice !== b.sameVoice) {
+        return a.sameVoice ? -1 : 1;
+      }
+      if (a.sameStaff !== b.sameStaff) {
+        return a.sameStaff ? -1 : 1;
+      }
+      if (a.sameAccidental !== b.sameAccidental) {
+        return a.sameAccidental ? -1 : 1;
+      }
+      if (aHasDelta && bHasDelta) {
+        const aDist: number = Math.abs(a.delta);
+        const bDist: number = Math.abs(b.delta);
+        if (aDist !== bDist) {
+          return aDist - bDist;
+        }
+      }
+      return 0;
+    });
+    return matches[0].pendingStop;
   }
 
   /**
@@ -1204,4 +1398,10 @@ export class VoiceGenerator {
     }
     return undefined;
   }
+}
+
+interface PendingTieStop {
+  note: Note;
+  tieNumber?: number;
+  tieType: TieTypes;
 }
