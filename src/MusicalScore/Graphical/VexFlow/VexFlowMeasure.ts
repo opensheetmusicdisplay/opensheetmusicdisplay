@@ -41,6 +41,23 @@ import { TabNote } from "../../VoiceData/TabNote";
 
 // type StemmableNote = VF.StemmableNote;
 
+interface NoteheadCollisionSample {
+    x: number;
+    y: number;
+    radius: number;
+    staveNote: any;
+}
+
+interface TieCollisionMetadata {
+    directionLockedByXml: boolean;
+}
+
+interface BeamCollisionBaseline {
+    yShift: number;
+    stemDirection: number;
+    stemExtensions: number[];
+}
+
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, sourceMeasure?: SourceMeasure, staffLine?: StaffLine) {
         super(staff, sourceMeasure, staffLine);
@@ -89,6 +106,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
     protected tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][] } = {};
     /** VexFlow Tuplets */
     private vftuplets: { [voiceID: number]: VF.Tuplet[] } = {};
+    /** Direction lock and matching metadata for each VexFlow tie. */
+    private tieCollisionMetadata: WeakMap<VF.StaveTie, TieCollisionMetadata> = new WeakMap();
+    /** Baseline beam state used by collision manager to avoid cumulative y-shift/extension drift. */
+    private beamCollisionBaselines: WeakMap<VF.Beam, BeamCollisionBaseline> = new WeakMap();
     // The engraving rules of OSMD.
     public rules: EngravingRules;
 
@@ -658,10 +679,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // this.vfVoices[voiceID].tickables.forEach(t => t.getBoundingBox().draw(ctx));
             }
         }
+        const noteheadSamples: NoteheadCollisionSample[] = this.collectNoteheadCollisionSamples();
         // Draw beams
         for (const voiceID in this.vfbeams) {
             if (this.vfbeams.hasOwnProperty(voiceID)) {
                 for (const beam of this.vfbeams[voiceID]) {
+                    this.optimizeBeamAndStemCollision(beam, noteheadSamples);
                     beam.setContext(ctx).draw();
                 }
             }
@@ -669,12 +692,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // Draw auto-generated beams from Beam.generateBeams()
         if (this.autoVfBeams) {
             for (const beam of this.autoVfBeams) {
+                this.optimizeBeamAndStemCollision(beam, noteheadSamples);
                 beam.setContext(ctx).draw();
             }
         }
         if (!this.isTabMeasure || this.rules.TupletNumbersInTabs) {
             if (this.autoTupletVfBeams) {
                 for (const beam of this.autoTupletVfBeams) {
+                    this.optimizeBeamAndStemCollision(beam, noteheadSamples);
                     beam.setContext(ctx).draw();
                 }
             }
@@ -709,6 +734,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             if (tie instanceof VF.TabSlide) {
                 continue; // rendered later in VexFlowMusicSheetDrawer.drawGlissandi(), when all staffline measures are rendered
             }
+            this.optimizeTieCollision(tie, noteheadSamples);
             tie.setContext(ctx);
             tie.draw();
         }
@@ -1804,11 +1830,382 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public addStaveTie(stavetie: VF.StaveTie, graphicalTie: GraphicalTie): void {
         this.vfTies.push(stavetie);
         graphicalTie.vfTie = stavetie;
+        this.tieCollisionMetadata.set(stavetie, {
+            directionLockedByXml: this.tieDirectionIsLockedByXml(graphicalTie)
+        });
         const explicitDirection: number = (stavetie as any)?.render_options?.direction;
         if ((explicitDirection === undefined || explicitDirection === null)
             && graphicalTie.Tie.TieDirection === PlacementEnum.Below) {
             (stavetie as any).setDirection(1);
         }
+    }
+
+    /** True if tie direction was explicitly set in XML and should not be auto-flipped. */
+    private tieDirectionIsLockedByXml(graphicalTie: GraphicalTie): boolean {
+        const tieModel: any = graphicalTie?.Tie;
+        if (!tieModel) {
+            return false;
+        }
+        if (tieModel.TieDirectionFromXml) {
+            return true;
+        }
+        const startSourceNote: Note = graphicalTie?.StartNote?.sourceNote;
+        if (!startSourceNote || !Array.isArray(tieModel.Notes)) {
+            return false;
+        }
+        const startIndex: number = tieModel.Notes.indexOf(startSourceNote);
+        if (startIndex < 0) {
+            return false;
+        }
+        const mappedDirection: PlacementEnum = tieModel.NoteIndexToTieDirection?.[startIndex];
+        return mappedDirection === PlacementEnum.Above || mappedDirection === PlacementEnum.Below;
+    }
+
+    private collectNoteheadCollisionSamples(): NoteheadCollisionSample[] {
+        const samples: NoteheadCollisionSample[] = [];
+        for (const voiceID in this.vfVoices) {
+            if (!this.vfVoices.hasOwnProperty(voiceID)) {
+                continue;
+            }
+            const voice: any = this.vfVoices[voiceID];
+            const tickables: any[] = voice?.getTickables?.() ?? voice?.tickables;
+            if (!Array.isArray(tickables)) {
+                continue;
+            }
+            for (const tickable of tickables) {
+                if (!tickable || typeof tickable.getYs !== "function") {
+                    continue;
+                }
+                if (typeof tickable.isRest === "function" && tickable.isRest()) {
+                    continue;
+                }
+                const ys: number[] = tickable.getYs();
+                if (!Array.isArray(ys) || ys.length === 0) {
+                    continue;
+                }
+                const xs: number[] = typeof tickable.getXs === "function" ? tickable.getXs() : [];
+                const fallbackX: number = typeof tickable.getStemX === "function" ? tickable.getStemX() : undefined;
+                const radius: number = this.estimateNoteheadRadiusPx(tickable);
+                for (let i: number = 0; i < ys.length; i++) {
+                    const x: number = Number.isFinite(xs[i]) ? xs[i] : xs.length > 0 ? xs[xs.length - 1] : fallbackX;
+                    if (!Number.isFinite(x) || !Number.isFinite(ys[i])) {
+                        continue;
+                    }
+                    samples.push({
+                        x: x,
+                        y: ys[i],
+                        radius: radius,
+                        staveNote: tickable
+                    });
+                }
+            }
+        }
+        return samples;
+    }
+
+    private estimateNoteheadRadiusPx(vfNote: any): number {
+        const glyphWidth: number = typeof vfNote?.getGlyphWidth === "function" ? vfNote.getGlyphWidth() : 10;
+        if (Number.isFinite(glyphWidth) && glyphWidth > 0) {
+            return Math.max(3, Math.min(8, glyphWidth * 0.42));
+        }
+        return 5;
+    }
+
+    private optimizeTieCollision(staveTie: VF.StaveTie, noteheadSamples: NoteheadCollisionSample[]): void {
+        const tie: any = staveTie as any;
+        const renderOptions: any = tie?.render_options;
+        if (!renderOptions || noteheadSamples.length === 0) {
+            return;
+        }
+        const baseCp1: number = Number.isFinite(renderOptions.cp1) ? Math.max(3, renderOptions.cp1) : 8;
+        const originalCp2: number = Number.isFinite(renderOptions.cp2) ? renderOptions.cp2 : 12;
+        const thickenedCp2: number = Math.max(baseCp1 + 4.5, originalCp2 + 1.75); // make ties visibly thicker.
+        const baseYShift: number = Number.isFinite(renderOptions.y_shift) ? Math.max(3, renderOptions.y_shift) : 7;
+
+        const currentDirection: number = this.getTieDirection(tie);
+        const directionLockedByXml: boolean = this.tieCollisionMetadata.get(staveTie)?.directionLockedByXml ?? false;
+        const directionCandidates: number[] = directionLockedByXml ? [currentDirection] : [currentDirection, -currentDirection];
+
+        let bestDirection: number = currentDirection;
+        let bestYShift: number = baseYShift;
+        let bestCp1: number = baseCp1;
+        let bestCp2: number = thickenedCp2;
+        let bestScore: number = Number.MAX_VALUE;
+
+        for (const direction of directionCandidates) {
+            for (const extraClearance of [0, 1, 2, 3, 4, 5, 6]) {
+                const yShift: number = baseYShift + extraClearance;
+                const cp1: number = baseCp1 + extraClearance * 0.2;
+                const cp2: number = thickenedCp2 + extraClearance * 0.9;
+                const overlapScore: number = this.scoreTieOverlap(tie, noteheadSamples, direction, yShift, cp1, cp2);
+                const complexityPenalty: number = extraClearance * 0.25;
+                const score: number = overlapScore + complexityPenalty;
+                if (score < bestScore) {
+                    bestScore = score;
+                    bestDirection = direction;
+                    bestYShift = yShift;
+                    bestCp1 = cp1;
+                    bestCp2 = cp2;
+                }
+            }
+        }
+
+        renderOptions.cp1 = bestCp1;
+        renderOptions.cp2 = bestCp2;
+        renderOptions.y_shift = bestYShift;
+        if (bestDirection !== currentDirection && typeof tie.setDirection === "function") {
+            tie.setDirection(bestDirection);
+        }
+    }
+
+    private getTieDirection(tie: any): number {
+        const explicitDirection: number = tie?.direction;
+        if (explicitDirection === 1 || explicitDirection === -1) {
+            return explicitDirection;
+        }
+        const firstDirection: number = tie?.first_note?.getStemDirection?.();
+        if (firstDirection === 1 || firstDirection === -1) {
+            return firstDirection;
+        }
+        const lastDirection: number = tie?.last_note?.getStemDirection?.();
+        if (lastDirection === 1 || lastDirection === -1) {
+            return lastDirection;
+        }
+        return 1;
+    }
+
+    private scoreTieOverlap(
+        tie: any,
+        noteheadSamples: NoteheadCollisionSample[],
+        direction: number,
+        yShift: number,
+        cp1: number,
+        cp2: number
+    ): number {
+        const tieGeometry: ReturnType<typeof this.getTieGeometry> = this.getTieGeometry(tie);
+        if (!tieGeometry) {
+            return 0;
+        }
+        const { firstX, lastX, firstYs, lastYs, firstIndices, lastIndices, firstNote, lastNote } = tieGeometry;
+        const minX: number = Math.min(firstX, lastX) - 2;
+        const maxX: number = Math.max(firstX, lastX) + 2;
+        const activeSamples: NoteheadCollisionSample[] = noteheadSamples.filter((sample: NoteheadCollisionSample) => {
+            if (sample.staveNote === firstNote || sample.staveNote === lastNote) {
+                return false;
+            }
+            return sample.x >= minX && sample.x <= maxX;
+        });
+        if (activeSamples.length === 0) {
+            return 0;
+        }
+
+        let overlapScore: number = 0;
+        const xSpan: number = Math.max(Math.abs(lastX - firstX), 1);
+        const xDirection: number = lastX >= firstX ? 1 : -1;
+        const safeLastX: number = firstX + xDirection * xSpan;
+
+        for (let i: number = 0; i < firstIndices.length; i++) {
+            const firstIndex: number = firstIndices[i];
+            const lastIndex: number = lastIndices[i];
+            const firstY: number = firstYs[firstIndex] + yShift * direction;
+            const lastY: number = lastYs[lastIndex] + yShift * direction;
+            if (!Number.isFinite(firstY) || !Number.isFinite(lastY)) {
+                continue;
+            }
+            const controlYTop: number = (firstY + lastY) / 2 + cp1 * direction;
+            const controlYBottom: number = (firstY + lastY) / 2 + cp2 * direction;
+
+            for (const sample of activeSamples) {
+                const tRaw: number = (sample.x - firstX) / (safeLastX - firstX);
+                const t: number = Math.max(0, Math.min(1, tRaw));
+                const yTop: number = this.evaluateQuadratic(firstY, controlYTop, lastY, t);
+                const yBottom: number = this.evaluateQuadratic(firstY, controlYBottom, lastY, t);
+                const bandMin: number = Math.min(yTop, yBottom) - 0.8;
+                const bandMax: number = Math.max(yTop, yBottom) + 0.8;
+                const noteMin: number = sample.y - sample.radius;
+                const noteMax: number = sample.y + sample.radius;
+                const intersects: boolean = noteMax >= bandMin && noteMin <= bandMax;
+                if (intersects) {
+                    overlapScore += 20;
+                    continue;
+                }
+                const distance: number = sample.y < bandMin ? bandMin - sample.y : sample.y - bandMax;
+                const comfortZone: number = sample.radius + 1.5;
+                if (distance < comfortZone) {
+                    overlapScore += (comfortZone - distance) * 2.5;
+                }
+            }
+        }
+        return overlapScore;
+    }
+
+    private evaluateQuadratic(startY: number, controlY: number, endY: number, t: number): number {
+        const invT: number = 1 - t;
+        return invT * invT * startY + 2 * invT * t * controlY + t * t * endY;
+    }
+
+    private getTieGeometry(tie: any): {
+        firstX: number;
+        lastX: number;
+        firstYs: number[];
+        lastYs: number[];
+        firstIndices: number[];
+        lastIndices: number[];
+        firstNote: any;
+        lastNote: any;
+    } | undefined {
+        const firstNote: any = tie?.first_note;
+        const lastNote: any = tie?.last_note;
+        let firstX: number;
+        let lastX: number;
+        let firstYs: number[];
+        let lastYs: number[];
+        let firstIndices: number[] = Array.isArray(tie?.first_indices) ? tie.first_indices : [0];
+        let lastIndices: number[] = Array.isArray(tie?.last_indices) ? tie.last_indices : [0];
+
+        if (firstNote) {
+            firstX = firstNote.getTieRightX() + (tie?.render_options?.tie_spacing ?? 0);
+            firstYs = firstNote.getYs();
+        } else if (lastNote) {
+            firstX = lastNote.getStave().getTieStartX();
+            firstYs = lastNote.getYs();
+            firstIndices = lastIndices;
+        } else {
+            return undefined;
+        }
+
+        if (lastNote) {
+            lastX = lastNote.getTieLeftX() + (tie?.render_options?.tie_spacing ?? 0);
+            lastYs = lastNote.getYs();
+        } else if (firstNote) {
+            lastX = firstNote.getStave().getTieEndX();
+            lastYs = firstNote.getYs();
+            lastIndices = firstIndices;
+        } else {
+            return undefined;
+        }
+
+        if (!Array.isArray(firstYs) || !Array.isArray(lastYs) || firstYs.length === 0 || lastYs.length === 0) {
+            return undefined;
+        }
+        return { firstX, lastX, firstYs, lastYs, firstIndices, lastIndices, firstNote, lastNote };
+    }
+
+    private optimizeBeamAndStemCollision(vfBeam: VF.Beam, noteheadSamples: NoteheadCollisionSample[]): void {
+        const beam: any = vfBeam as any;
+        if (!beam || !Array.isArray(beam.notes) || beam.notes.length < 2 || noteheadSamples.length === 0) {
+            return;
+        }
+        if (typeof beam.postFormat === "function") {
+            beam.postFormat();
+        }
+        const baseline: BeamCollisionBaseline = this.getOrCreateBeamCollisionBaseline(vfBeam);
+        this.restoreBeamCollisionBaseline(beam, baseline);
+
+        let bestOffset: number = 0;
+        let bestScore: number = this.scoreBeamOverlap(beam, baseline, noteheadSamples, 0);
+        for (const extensionOffset of [2, 4, 6, 8, 10, 12]) {
+            const score: number = this.scoreBeamOverlap(beam, baseline, noteheadSamples, extensionOffset);
+            if (score < bestScore) {
+                bestScore = score;
+                bestOffset = extensionOffset;
+            }
+        }
+        this.applyBeamCollisionOffset(beam, baseline, bestOffset);
+    }
+
+    private getOrCreateBeamCollisionBaseline(vfBeam: VF.Beam): BeamCollisionBaseline {
+        const beam: any = vfBeam as any;
+        const existing: BeamCollisionBaseline = this.beamCollisionBaselines.get(vfBeam);
+        if (existing && existing.stemExtensions.length === beam.notes.length && existing.stemDirection === beam.stem_direction) {
+            return existing;
+        }
+        const baseline: BeamCollisionBaseline = {
+            yShift: Number.isFinite(beam.y_shift) ? beam.y_shift : 0,
+            stemDirection: beam.stem_direction,
+            stemExtensions: beam.notes.map((note: any) => {
+                const extension: number = note?.getStem?.()?.getExtension?.();
+                return Number.isFinite(extension) ? extension : 0;
+            })
+        };
+        this.beamCollisionBaselines.set(vfBeam, baseline);
+        return baseline;
+    }
+
+    private restoreBeamCollisionBaseline(beam: any, baseline: BeamCollisionBaseline): void {
+        beam.y_shift = baseline.yShift;
+        for (let i: number = 0; i < beam.notes.length; i++) {
+            const stem: any = beam.notes[i]?.getStem?.();
+            if (!stem || typeof stem.setExtension !== "function") {
+                continue;
+            }
+            stem.setExtension(baseline.stemExtensions[i] ?? 0);
+        }
+    }
+
+    private applyBeamCollisionOffset(beam: any, baseline: BeamCollisionBaseline, extensionOffset: number): void {
+        const verticalShift: number = -baseline.stemDirection * extensionOffset;
+        beam.y_shift = baseline.yShift + verticalShift;
+        for (let i: number = 0; i < beam.notes.length; i++) {
+            const stem: any = beam.notes[i]?.getStem?.();
+            if (!stem || typeof stem.setExtension !== "function") {
+                continue;
+            }
+            const baseExtension: number = baseline.stemExtensions[i] ?? 0;
+            stem.setExtension(baseExtension + extensionOffset);
+        }
+    }
+
+    private scoreBeamOverlap(
+        beam: any,
+        baseline: BeamCollisionBaseline,
+        noteheadSamples: NoteheadCollisionSample[],
+        extensionOffset: number
+    ): number {
+        if (!beam.notes?.length) {
+            return 0;
+        }
+        const beamNotes: Set<any> = new Set<any>(beam.notes);
+        const stemXs: number[] = beam.notes.map((note: any) => note?.getStemX?.()).filter((x: number) => Number.isFinite(x));
+        if (stemXs.length < 2) {
+            return extensionOffset;
+        }
+        const minX: number = Math.min(...stemXs) - 2;
+        const maxX: number = Math.max(...stemXs) + 2;
+        const beamThickness: number = (beam.render_options?.beam_width ?? 5) * baseline.stemDirection;
+        const beamBandMultiplier: number = ((beam.beam_count - 1) * 1.5) + 1;
+        const beamBandHeight: number = beamThickness * beamBandMultiplier;
+
+        const firstNote: any = beam.notes[0];
+        const firstStemX: number = firstNote.getStemX();
+        const baseBeamY: number = beam.getBeamYToDraw();
+        const shiftedBeamY: number = baseBeamY + (-baseline.stemDirection * extensionOffset);
+        let score: number = extensionOffset * 0.6; // prefer shorter stems unless needed.
+
+        for (const sample of noteheadSamples) {
+            if (sample.x < minX || sample.x > maxX || beamNotes.has(sample.staveNote)) {
+                continue;
+            }
+            const beamLineY: number = beam.getSlopeY(sample.x, firstStemX, shiftedBeamY, beam.slope);
+            if (!Number.isFinite(beamLineY)) {
+                continue;
+            }
+            const bandMin: number = Math.min(beamLineY, beamLineY + beamBandHeight);
+            const bandMax: number = Math.max(beamLineY, beamLineY + beamBandHeight);
+            const noteMin: number = sample.y - sample.radius;
+            const noteMax: number = sample.y + sample.radius;
+            const intersects: boolean = noteMax >= bandMin && noteMin <= bandMax;
+            if (intersects) {
+                score += 25;
+                continue;
+            }
+            const distanceToBand: number = sample.y < bandMin ? bandMin - sample.y : sample.y - bandMax;
+            const comfortZone: number = sample.radius + 2;
+            if (distanceToBand < comfortZone) {
+                score += (comfortZone - distanceToBand) * 4;
+            }
+        }
+        return score;
     }
 }
 
