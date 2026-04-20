@@ -8,7 +8,20 @@ import jsdoc from "eslint-plugin-jsdoc";
 
 export default defineConfig(
     {
-        ignores: ["webpack*.js", "karma.conf.js", "src/VexFlowPatch/", "build/", "**/*.d.ts", "demo/", ".karma_temp/", "export/"],
+        ignores: ["webpack*.js",
+            "**/*.d.ts",
+            "*_min.ts",
+            ".karma_temp/",
+            "build/",
+            "demo/",
+            "export/",
+            "karma.conf.js",
+            "osmd-native/",
+            "react-native/",
+            "src/SamplePlayerPatch/",
+            "src/SoundfontPlayerPatch/",
+            "src/VexFlowPatch/",
+        ],
     },
     eslint.configs.recommended,
     tseslint.configs.recommended,
