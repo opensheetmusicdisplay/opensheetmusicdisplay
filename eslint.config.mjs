@@ -1,6 +1,4 @@
 // @ts-check
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import eslint from "@eslint/js";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
@@ -36,8 +34,7 @@ export default defineConfig(
             },
             parserOptions: {
                 projectService: true,
-                //tsconfigRootDir: import.meta.dirname, // needs node v20+
-                tsconfigRootDir: path.dirname(fileURLToPath(import.meta.url)),
+                tsconfigRootDir: import.meta.dirname, // needs node v20+, but eslint >=9 needs it anyways
             },
         },
         plugins: {
