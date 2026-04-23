@@ -69,9 +69,6 @@
     "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
   },
   "homepage": "https://opensheetmusicdisplay.org",
-  "engines": {
-    "node": ">=20.11.0"
-  },
   "dependencies": {
     "@types/vexflow": "^1.2.38",
     "jszip": "3.10.1",
