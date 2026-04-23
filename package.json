@@ -6,6 +6,7 @@
   "types": "build/dist/src/index.d.ts",
   "scripts": {
     "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay ./src",
+    "preeslint": "node -e \"if(parseInt(process.versions.node,10)<20){console.error('ESLint 9 requires Node >=20.11 (you have '+process.versions.node+'). Please upgrade Node.');process.exit(1)}\"",
     "eslint": "eslint .",
     "lint": "npm run eslint",
     "test": "karma start --single-run --no-auto-watch",
