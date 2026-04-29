@@ -133,6 +133,7 @@ export class OpenSheetMusicDisplay {
     private rangePointerMoveAnimationFrameId: number = 0;
     private rangeTouchAutoScrollAnimationFrameId: number = 0;
     private rangeViewportUpdateAnimationFrameId: number = 0;
+    private rangeViewportSettleUpdateTimeoutId: number = 0;
     private rangeViewportScrollTarget: HTMLElement | Window;
     private readonly rangeOpacityTouchedGraphicalNotes: Set<GraphicalNote> = new Set<GraphicalNote>();
     private readonly rangeOpacityTouchedNoteheadElements: Set<SVGElement> = new Set<SVGElement>();
@@ -163,7 +164,10 @@ export class OpenSheetMusicDisplay {
     private readonly rangePointerCancelListener: (event: PointerEvent) => void = (event: PointerEvent): void => this.onRangePointerCancel(event);
     private readonly rangePointerLeaveListener: (event: PointerEvent) => void = (event: PointerEvent): void => this.onRangePointerLeave(event);
     private readonly touchMoveDuringRangeDragListener: (event: TouchEvent) => void = (event: TouchEvent): void => this.onTouchMoveDuringRangeDrag(event);
-    private readonly rangeViewportUpdateListener: () => void = (): void => this.scheduleRangeViewportUpdate();
+    private readonly rangeViewportUpdateListener: () => void = (): void => {
+        this.scheduleRangeViewportUpdate();
+        this.scheduleRangeViewportSettleUpdate();
+    };
 
     /**
      * Load a MusicXML file
@@ -1628,6 +1632,10 @@ export class OpenSheetMusicDisplay {
             window.cancelAnimationFrame(this.rangeViewportUpdateAnimationFrameId);
             this.rangeViewportUpdateAnimationFrameId = 0;
         }
+        if (this.rangeViewportSettleUpdateTimeoutId !== 0) {
+            window.clearTimeout(this.rangeViewportSettleUpdateTimeoutId);
+            this.rangeViewportSettleUpdateTimeoutId = 0;
+        }
         this.pendingRangePointerMoveAnchor = undefined;
         for (const element of this.rangeInteractionBoundElements) {
             element.removeEventListener("pointermove", this.rangePointerMoveListener);
@@ -1648,6 +1656,8 @@ export class OpenSheetMusicDisplay {
         this.detachRangeViewportListeners();
         this.rangeViewportScrollTarget = scrollTarget;
         this.rangeViewportScrollTarget.addEventListener("scroll", this.rangeViewportUpdateListener, { passive: true });
+        // Capture window-level scroll as a fallback when the app scrolls in wrappers above the detected target.
+        window.addEventListener("scroll", this.rangeViewportUpdateListener, { passive: true, capture: true });
         window.addEventListener("resize", this.rangeViewportUpdateListener, { passive: true });
     }
 
@@ -1656,7 +1666,12 @@ export class OpenSheetMusicDisplay {
             this.rangeViewportScrollTarget.removeEventListener("scroll", this.rangeViewportUpdateListener);
             this.rangeViewportScrollTarget = undefined;
         }
+        window.removeEventListener("scroll", this.rangeViewportUpdateListener, true);
         window.removeEventListener("resize", this.rangeViewportUpdateListener);
+        if (this.rangeViewportSettleUpdateTimeoutId !== 0) {
+            window.clearTimeout(this.rangeViewportSettleUpdateTimeoutId);
+            this.rangeViewportSettleUpdateTimeoutId = 0;
+        }
     }
 
     private scheduleRangeViewportUpdate(): void {
@@ -1672,6 +1687,22 @@ export class OpenSheetMusicDisplay {
                 this.renderRangeSelection();
             }
         });
+    }
+
+    private scheduleRangeViewportSettleUpdate(): void {
+        if (this.rangeViewportSettleUpdateTimeoutId !== 0) {
+            window.clearTimeout(this.rangeViewportSettleUpdateTimeoutId);
+        }
+        this.rangeViewportSettleUpdateTimeoutId = window.setTimeout((): void => {
+            this.rangeViewportSettleUpdateTimeoutId = 0;
+            if (!this.rangeSelection.enabled || !this.rangeInteractionOverlay) {
+                return;
+            }
+            if (this.isRangeDragging || !this.dragStartAnchor || !this.dragCurrentAnchor) {
+                return;
+            }
+            this.renderRangeSelection();
+        }, 120);
     }
 
     private ensureRangeSelectionOverlay(): void {
