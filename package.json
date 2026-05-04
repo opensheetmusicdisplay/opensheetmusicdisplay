@@ -90,7 +90,6 @@
     "chai": "^4.3.4",
     "cross-blob": "^3.0.0",
     "cross-env": "^7.0.3",
-    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9.39.4",
     "eslint-plugin-jsdoc": "^62.9.0",
     "html-webpack-plugin": "^5.5.0",
