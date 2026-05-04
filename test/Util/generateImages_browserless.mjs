@@ -1,4 +1,4 @@
-import Blob from "cross-blob";
+//import Blob from "cross-blob"; // unnecessary in Node v18+
 import FS from "fs";
 import jsdom from "jsdom";
 //import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
@@ -133,8 +133,9 @@ async function init () {
         }
     }
 
+    // unnecessary in Node v18+:
     // fix Blob not found (to support external modules like is-blob)
-    global.Blob = Blob;
+    //global.Blob = Blob;
 
     const div = document.createElement("div");
     div.id = "browserlessDiv";
