@@ -3587,6 +3587,11 @@ export abstract class MusicSheetCalculator {
         let endStaffEntry: GraphicalStaffEntry = undefined;
         let endStaffLine: StaffLine = undefined;
         const staffIndex: number = startStaffEntry.parentMeasure.ParentStaff.idInMusicSheet;
+        if (!startStaffEntry.parentVerticalContainer) {
+            // shouldn't happen since calculateVerticalContainersList covers all measure.staffEntries,
+            // but skip rather than crash if some upstream parsing left a staff entry without a container
+            return;
+        }
         for (let index: number = startStaffEntry.parentVerticalContainer.Index + 1;
             index < this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length;
             ++index) {
