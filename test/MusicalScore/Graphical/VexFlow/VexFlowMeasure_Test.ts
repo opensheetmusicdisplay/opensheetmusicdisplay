@@ -1,3 +1,4 @@
+import { expect } from "chai";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
@@ -24,15 +25,15 @@ describe("VexFlow Measure", () => {
    it("Can create GraphicalMusicSheet", (done: Mocha.Done) => {
       const path: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
       const score: Document = TestUtils.getScore(path);
-      chai.expect(score).to.not.be.undefined;
+      expect(score).to.not.be.undefined;
       const partwise: Element = TestUtils.getPartWiseElement(score);
-      chai.expect(partwise).to.not.be.undefined;
+      expect(partwise).to.not.be.undefined;
       const reader: MusicSheetReader = new MusicSheetReader();
       const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
       const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), path);
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
       // console.log(gms);
-      chai.expect(gms).to.not.be.undefined; // at least necessary for linter so that variable is not unused
+      expect(gms).to.not.be.undefined; // at least necessary for linter so that variable is not unused
       done();
    });
 
@@ -45,9 +46,9 @@ describe("VexFlow Measure", () => {
       sheet.addMeasure(measure);
       const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator(sheet.Rules);
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
-      chai.expect(gms.MeasureList.length).to.equal(1);
-      chai.expect(gms.MeasureList[0].length).to.equal(1);
-      chai.expect(gms.MeasureList[0][0].staffEntries.length).to.equal(0);
+      expect(gms.MeasureList.length).to.equal(1);
+      expect(gms.MeasureList[0].length).to.equal(1);
+      expect(gms.MeasureList[0][0].staffEntries.length).to.equal(0);
       done();
    });
 
@@ -72,14 +73,14 @@ describe("VexFlow Measure", () => {
             const graceVoiceEntries: GraphicalVoiceEntry[] = staffEntry.graphicalVoiceEntries.filter(
                (gve: VexFlowVoiceEntry) => gve.parentVoiceEntry?.IsGrace
             );
-            chai.expect(graceVoiceEntries.length).to.equal(2);
+            expect(graceVoiceEntries.length).to.equal(2);
 
             // Each grace note is alone in its voice entry, so baseFingeringXOffset should be 0.
             // Before the fix, the second grace note had offset=1 due to collision detection
             // with the first grace note (which is at a different horizontal position).
             for (const gve of graceVoiceEntries) {
                for (const note of gve.notes) {
-                  chai.expect(note.baseFingeringXOffset).to.equal(0,
+                  expect(note.baseFingeringXOffset).to.equal(0,
                      "Single grace notes should have baseFingeringXOffset=0");
                }
             }
@@ -124,11 +125,11 @@ describe("VexFlow Measure", () => {
                }
 
                // 6 grace notes total: 4 under 8va, then 2 after the stop
-               chai.expect(graceOctaveShifts.length).to.equal(6, "Should have 6 grace notes");
+               expect(graceOctaveShifts.length).to.equal(6, "Should have 6 grace notes");
 
                // First 4 grace notes should have octave shift applied (VA8 = 8va)
                for (let i: number = 0; i < 4; i++) {
-                  chai.expect(graceOctaveShifts[i]).to.not.equal(OctaveEnum.NONE,
+                  expect(graceOctaveShifts[i]).to.not.equal(OctaveEnum.NONE,
                      `Grace note ${i} should be under 8va`);
                }
 

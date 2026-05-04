@@ -1,3 +1,4 @@
+import { expect } from "chai";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
@@ -17,9 +18,9 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
    it("Should normalize tick denominators for tuplet notes", (done: Mocha.Done) => {
       const path: string = "test_tuplet_multivoice_alignment.musicxml";
       const score: Document = TestUtils.getScore(path);
-      chai.expect(score).to.not.be.undefined;
+      expect(score).to.not.be.undefined;
       const partwise: Element = TestUtils.getPartWiseElement(score);
-      chai.expect(partwise).to.not.be.undefined;
+      expect(partwise).to.not.be.undefined;
       const reader: MusicSheetReader = new MusicSheetReader();
       const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
       const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), path);
@@ -27,8 +28,8 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
       calc.calculate();
 
       // Get the first measure
-      chai.expect(gms.MeasureList.length).to.be.greaterThan(0);
-      chai.expect(gms.MeasureList[0].length).to.be.greaterThan(0);
+      expect(gms.MeasureList.length).to.be.greaterThan(0);
+      expect(gms.MeasureList[0].length).to.be.greaterThan(0);
       const measure: VexFlowMeasure = gms.MeasureList[0][0] as VexFlowMeasure;
 
       // Verify that all notes have their tick denominators normalized to 1
@@ -37,7 +38,7 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
             const vfVoiceEntry: VexFlowVoiceEntry = gve as VexFlowVoiceEntry;
             if (vfVoiceEntry.vfStaveNote) {
                const ticks: VF.Fraction = vfVoiceEntry.vfStaveNote.getTicks();
-               chai.expect(ticks.denominator).to.equal(1,
+               expect(ticks.denominator).to.equal(1,
                   "All tick denominators should be normalized to 1");
             }
          }
@@ -62,7 +63,7 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
       const vfVoices: { [voiceID: number]: VF.Voice } = measure.vfVoices;
       const voiceIds: string[] = Object.keys(vfVoices);
 
-      chai.expect(voiceIds.length).to.be.greaterThan(1, "Should have multiple voices");
+      expect(voiceIds.length).to.be.greaterThan(1, "Should have multiple voices");
 
       // Voice 1 should have 6 tuplet eighth notes, each with the same tick value
       const voice1: VF.Voice = vfVoices[voiceIds[0]];
@@ -72,7 +73,7 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
       const firstNoteTicks: number = voice1Tickables[0].getTicks().value();
       for (let i: number = 1; i < voice1Tickables.length; i++) {
          const tickValue: number = voice1Tickables[i].getTicks().value();
-         chai.expect(tickValue).to.equal(firstNoteTicks,
+         expect(tickValue).to.equal(firstNoteTicks,
             "All tuplet eighths in voice 1 should have the same tick value");
       }
 
@@ -118,7 +119,7 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
       const voice1SecondNotePos: number = voice1Positions[1];
       const voice2QuarterNotePos: number = voice2Positions[1];
 
-      chai.expect(voice2QuarterNotePos).to.equal(voice1SecondNotePos,
+      expect(voice2QuarterNotePos).to.equal(voice1SecondNotePos,
          "Notes at the same timestamp in different voices should have the same cumulative tick position");
 
       done();
@@ -148,9 +149,9 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
                   const graphicalLength: Fraction = vfVoiceEntry.notes[0].graphicalNoteLength;
                   const expectedTicks: number = Math.round(graphicalLength.RealValue * VF.RESOLUTION);
 
-                  chai.expect(ticks.numerator).to.equal(expectedTicks,
+                  expect(ticks.numerator).to.equal(expectedTicks,
                      "Tuplet note tick value should match its graphical length");
-                  chai.expect(ticks.denominator).to.equal(1,
+                  expect(ticks.denominator).to.equal(1,
                      "Tuplet note tick denominator should be 1");
                }
             }

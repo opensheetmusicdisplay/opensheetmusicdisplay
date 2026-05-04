@@ -1,3 +1,4 @@
+import { expect } from "chai";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import {MusicSheetReader} from "../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import {MusicSheet} from "../../../src/MusicalScore/MusicSheet";
@@ -21,9 +22,9 @@ describe("Music Sheet Calculator", () => {
         MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(new EngravingRules());
         // Load the XML file
         const xml: Document = TestUtils.getScore(filename);
-        chai.expect(xml).to.not.be.undefined;
+        expect(xml).to.not.be.undefined;
         score = new IXmlElement(TestUtils.getPartWiseElement(xml));
-        chai.expect(score).to.not.be.undefined;
+        expect(score).to.not.be.undefined;
         sheet = reader.createMusicSheet(score, "path-of-" + filename);
 
         const graphicalSheet: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calculator);

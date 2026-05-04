@@ -1,3 +1,4 @@
+import { expect } from "chai";
 import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 import {TestUtils} from "../../Util/TestUtils";
 import {OpenSheetMusicDisplay} from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
@@ -58,11 +59,11 @@ describe("XML interface", () => {
 
     it("test IXmlElement", (done: Mocha.Done) => {
         // Test name attribute
-        chai.expect(documentElement.name).to.equal("score-partwise");
+        expect(documentElement.name).to.equal("score-partwise");
         // Test element method
-        chai.should().exist(documentElement.element("identification"));
+        expect(documentElement.element("identification")).to.not.equal(undefined);
         // Test value attribute
-        chai.expect(documentElement
+        expect(documentElement
             .element("identification")
             .element("encoding")
             .element("software").value).to.equal("Example Software name");
@@ -71,16 +72,16 @@ describe("XML interface", () => {
 
     it("test IXmlAttribute", (done: Mocha.Done) => {
         // Test attributes method
-        chai.expect(
+        expect(
             documentElement.element("credit").attributes()[0].name
         ).to.equal("page");
 
         const creditWords: IXmlElement =
             documentElement.element("credit").element("credit-words");
         // Test attributes method
-        chai.expect(creditWords.attributes().length).to.equal(2);
+        expect(creditWords.attributes().length).to.equal(2);
         // Test value attribute
-        chai.expect(creditWords.attribute("justify").value).to.equal("center");
+        expect(creditWords.attribute("justify").value).to.equal("center");
         done();
     });
 });

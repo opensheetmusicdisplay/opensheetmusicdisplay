@@ -9,7 +9,8 @@ module.exports = function (config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['mocha', 'chai'],
+        // chai is imported directly in each test file; karma-chai is incompatible with chai 5+ (ESM-only)
+        frameworks: ['mocha'],
 
         // list of files to exclude
         exclude: [],
