@@ -93,7 +93,7 @@
     "html-webpack-plugin": "^5.6.7",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
-    "jspdf": "^4.1.0",
+    "jspdf": "^4.2.1",
     "karma": "^6.4.4",
     "karma-base64-to-js-preprocessor": "^0.1.0",
     "karma-chrome-launcher": "^3.2.0",
