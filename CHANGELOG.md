@@ -1,3 +1,22 @@
+## [1.9.8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.7...1.9.8) (2026-05-04)
+
+
+### Bug Fixes
+
+* **Cursor:** Fix multi-movement pieces not isolating repetitions between movements, affecting cursor movement for repetitions in later movements ([ef19c11](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ef19c11bc41383471ed268eae4bf601f3ec774c2))
+* **Lyrics:** Fix error for old samples: noteDuration NaN when MusicXML exporter places divisions after first notes of measure, erroring in calculateLyricExtend ([048d4a5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/048d4a514a9db0a09b853873b70e3abc63db89dd))
+* **Octave Bracket:** Fix octave shift not applied to grace notes before stop direction (PR [#1649](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1649)) ([c0f4a3f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c0f4a3fd5e7724bc32cf9d11538ee1efa19b6d3a))
+* **Wavy-Line:** Fix a rare error with wavy-lines on certain screen widths for a sample where the end note could not be found (PR [#1653](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1653), [#657](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/657)) ([c758794](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c7587949c734119d0e2a3f3864b738cf06b9c8cb))
+
+
+### Features
+
+* **Metronome Mark:** Implement swing metronome mark and other complex metronome marks (PR [#1655](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1655), [#1654](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1654)) ([742a0f6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/742a0f689dae526ca1693aa21653fa030216f186))
+* Migrate ESLint to v9/10 with flat config (needs node v20+) ([#1662](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1662)) ([01cddff](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/01cddffdaba2f7041d5a493d27d4556fbd49cd28))
+* **Wavy Line:** Implement wavy-line (e.g. after trill) (merge from audio player) (PR [#1653](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1653)) ([cde49c7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cde49c716905211be45594b3497bdbd7805d46ac)), closes [#1651](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1651)
+
+
+
 ## [1.9.7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.6...1.9.7) (2026-02-19)
 
 
