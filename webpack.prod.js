@@ -3,14 +3,18 @@ var webpack = require('webpack')
 var path = require('path')
 var common = require('./webpack.common.js')
 var Visualizer = require('webpack-visualizer-plugin2')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = merge(common, {
     output: {
         filename: '[name].min.js',
         path: path.resolve(__dirname, 'build'),
         library: 'opensheetmusicdisplay',
-        libraryTarget: 'umd'
+        libraryTarget: 'umd',
+        // webpack 5 built-in cleanup, replaces clean-webpack-plugin.
+        // keep statistics.html (emitted by webpack-visualizer-plugin2) across rebuilds.
+        clean: {
+            keep: /^statistics\.html/
+        }
     },
     mode: 'production',
     optimization: {
@@ -22,11 +26,6 @@ module.exports = merge(common, {
     },
     plugins: [
         // build optimization plugins
-        new CleanWebpackPlugin({
-            verbose: false,
-            dry: false,
-            cleanOnceBeforeBuildPatterns: ['**/*', '!statistics.html*']
-        }),
         new webpack.LoaderOptionsPlugin({
             minimize: true,
             debug: true
