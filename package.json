@@ -108,7 +108,7 @@
     "svg2pdf.js": "^2.7.0",
     "ts-loader": "^9.2.6",
     "typedoc": "^0.28.19",
-    "typescript": "5.8.2",
+    "typescript": "6.0.3",
     "typescript-eslint": "^8.58.0",
     "webpack": "^5.106.2",
     "webpack-cli": "^6.0.1",
