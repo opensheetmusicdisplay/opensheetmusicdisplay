@@ -90,7 +90,7 @@
     "eslint": "^10.3.0",
     "eslint-plugin-jsdoc": "^62.9.0",
     "globals": "^17.6.0",
-    "html-webpack-plugin": "^5.5.0",
+    "html-webpack-plugin": "^5.6.7",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "jspdf": "^4.1.0",
