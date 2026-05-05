@@ -68,18 +68,6 @@
     <word-font font-family="Edwin" font-size="10"/>
     <lyric-font font-family="Edwin" font-size="10"/>
     </defaults>
-  <credit page="1">
-    <credit-type>title</credit-type>
-    <credit-words default-x="600.165" default-y="1611.0057" justify="center" valign="top" font-size="22">Minden időben áldom</credit-words>
-    </credit>
-  <credit page="1">
-    <credit-type>subtitle</credit-type>
-    <credit-words default-x="600.165" default-y="1553.862843" justify="center" valign="top" font-size="14">Subtitle</credit-words>
-    </credit>
-  <credit page="1">
-    <credit-type>composer</credit-type>
-    <credit-words default-x="1114.6157" default-y="1506.028556" justify="right" valign="bottom">Composer / arranger</credit-words>
-    </credit>
   <part-list>
     <score-part id="P1">
       <part-name>Piano</part-name>
