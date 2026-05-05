@@ -287,6 +287,14 @@ export class EngravingRules {
     /** Last note in measure needs less padding because of measure bar and bar start/end padding. */
     public LyricsXPaddingReductionForLastNoteInMeasure: number;
     public LyricsXPaddingForLastNoteInMeasure: boolean;
+    /** Reduction applied for the last note of a measure when its lyric is a multi-syllable
+     *  mid-word continuation (a dash trails to the next syllable, which lives in the next measure).
+     *  Lower than LyricsXPaddingReductionForLastNoteInMeasure because the next measure's first note
+     *  has a syllable + dash glyph right at its start — the usual measure-end buffer doesn't apply.
+     *  Set to 0 for maximum cross-measure clearance (no reduction), or up to
+     *  LyricsXPaddingReductionForLastNoteInMeasure for the same reduction as a normal last note.
+     *  Default 1.0 (regular note 1.2). */
+    public LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord: number;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
     public BetweenSyllableMaximumDistance: number;
@@ -817,6 +825,9 @@ export class EngravingRules {
         this.LyricsXPaddingReductionForLongNotes = 0.7;
         this.LyricsXPaddingReductionForLastNoteInMeasure = 1.2;
         this.LyricsXPaddingForLastNoteInMeasure = true;
+        this.LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord = 1.0;
+        // 1.0 avoids too much padding/measure width e.g. in Schubert measure 9 end, Mozart Veilchen measure 18 and 19 end
+
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;

@@ -561,8 +561,17 @@ export class VexFlowConverter {
                         const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
                         const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
                         const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
+                        // The regular reduction compensates for the natural buffer between the last note
+                        // and the bar line. If this lyric is a multi-syllable mid-word continuation
+                        // (a dash trails to the next syllable in the next measure), that buffer is much
+                        // smaller — the next measure's first note has a syllable + dash glyph right at
+                        // its start. Use a smaller reduction (LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord)
+                        // to add some extra padding without over-padding.
+                        const isCrossMeasureMidWord: boolean = isLastNoteInMeasure && lyricsEntry.hasDashFromLyricWord();
                         if (isLastNoteInMeasure) {
-                            extraExistingPadding += rules.LyricsXPaddingReductionForLastNoteInMeasure; // need less padding
+                            extraExistingPadding += isCrossMeasureMidWord
+                                ? rules.LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord
+                                : rules.LyricsXPaddingReductionForLastNoteInMeasure;
                         }
                         if (!hasShortNotes) {
                             extraExistingPadding += rules.LyricsXPaddingReductionForLongNotes; // quarter or longer notes need less padding
