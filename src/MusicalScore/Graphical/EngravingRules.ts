@@ -825,7 +825,9 @@ export class EngravingRules {
         this.LyricsXPaddingReductionForLongNotes = 0.7;
         this.LyricsXPaddingReductionForLastNoteInMeasure = 1.2;
         this.LyricsXPaddingForLastNoteInMeasure = true;
-        this.LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord = 0.6;
+        this.LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord = 1.0;
+        // 1.0 avoids too much padding/measure width e.g. in Schubert measure 9 end, Mozart Veilchen measure 18 and 19 end
+
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
