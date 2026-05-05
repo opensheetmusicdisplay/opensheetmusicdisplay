@@ -293,7 +293,7 @@ export class EngravingRules {
      *  has a syllable + dash glyph right at its start — the usual measure-end buffer doesn't apply.
      *  Set to 0 for maximum cross-measure clearance (no reduction), or up to
      *  LyricsXPaddingReductionForLastNoteInMeasure for the same reduction as a normal last note.
-     *  Default 0.6 (half of the regular 1.2). */
+     *  Default 1.0 (regular note 1.2). */
     public LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord: number;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
