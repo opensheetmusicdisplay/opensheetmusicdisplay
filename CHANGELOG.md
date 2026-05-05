@@ -1,3 +1,15 @@
+## [1.9.9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.8...1.9.9) (2026-05-05)
+
+
+### Bug Fixes
+
+* **Lyrics:** Fix lyrics overlap for pickup measure / last note in measure with dash that's part of a multi-syllable word (PR [#1672](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1672), [#1659](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1659)) ([7833778](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/783377881db0bb37f826852cbc972c467c93a8a4))
+
+### Misc
+* **Npm Audit:** gl bumped to ^9.0.0-rc.10, should remove npm audit warning for tar (even though the released package doesn't use gl anyways, it's an optional devDependency) ([18c3544](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/18c354431efb620fec16f22bf62b389b7b075767))
+
+
+
 ## [1.9.8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.7...1.9.8) (2026-05-04)
 
 
