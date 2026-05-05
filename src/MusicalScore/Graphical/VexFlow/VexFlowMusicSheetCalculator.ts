@@ -362,20 +362,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return minStaffEntriesWidth;
   }
 
-  /**
-   * @param crossMeasureFloorRef Out-parameter (mutated). Tracks the minimum elongation factor
-   *   this measure must have in order to clear the *previous* measure's lyric/chord overflow
-   *   that spilled past its bar line into this measure (seeded into lastEntryDict via
-   *   isCrossMeasureSeed entries before this function runs). The caller uses this as a lower
-   *   bound that bypasses MaximumLyricsElongationFactor — the regular within-measure elongation
-   *   factor is capped, but cross-measure clearance must always be honored, otherwise lyrics
-   *   from the previous measure overlap the first lyric of this one.
-   *   `.value` starts at 1 (no extra elongation needed) and is raised via Math.max.
-   */
   private calculateElongationFactor(containers: (GraphicalLyricEntry|GraphicalChordSymbolContainer)[], staffEntry: GraphicalStaffEntry, lastEntryDict: any,
                                     oldMinimumStaffEntriesWidth: number, elongationFactorForMeasureWidth: number,
-                                    measureNumber: number, oldMinSpacing: number, nextMeasureOverlap: number,
-                                    crossMeasureFloorRef?: { value: number }): number {
+                                    measureNumber: number, oldMinSpacing: number, nextMeasureOverlap: number): number {
     let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
     let currentContainerIndex: number = 0;
 
@@ -504,16 +493,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         elongationFactorForMeasureWidthForCurrentContainer
       );
 
-      // Raise the cross-measure clearance floor: this is the minimum elongation factor required
-      // to keep the current container clear of the previous measure's lyric/chord overflow
-      // (synthesized into lastEntryDict before this loop, marked with isCrossMeasureSeed).
-      // The caller will apply this as a lower bound exempt from MaximumLyricsElongationFactor,
-      // because otherwise pickup-measure overflows that exceed the cap can never be cleared.
-      if (crossMeasureFloorRef && lastEntryDict[currentContainerIndex] &&
-          lastEntryDict[currentContainerIndex].isCrossMeasureSeed) {
-        crossMeasureFloorRef.value = Math.max(crossMeasureFloorRef.value, elongationFactorNeededForLastContainer);
-      }
-
       let overlap: number = Math.max((spacingNeededToLastContainer - currentSpacingToLastContainer) || 0, 0);
       if (lastEntryDict[currentContainerIndex]) {
         overlap += lastEntryDict[currentContainerIndex].cumulativeOverlap;
@@ -546,9 +525,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @returns
    *   - `factor`: regular elongation factor from within-measure spacing constraints (subject to
    *     MaximumLyricsElongationFactor cap by the caller).
-   *   - `crossMeasureFloor`: minimum elongation factor required to clear the previous measure's
-   *     overflow. The caller enforces this as a lower bound that bypasses the cap, otherwise
-   *     a pickup whose lyric exceeds the allowed overlap can never be cleared.
    *   - `lastLyricEntryDict` / `lastChordEntryDict`: final state of the per-verse last-entry
    *     dicts after processing. The caller uses these (with the post-cap measure width) to
    *     compute the overflows passed into the next measure's call.
@@ -558,14 +534,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                                                   previousLyricOverflows?: number[],
                                                   previousChordOverflows?: number[]): {
     factor: number;
-    crossMeasureFloor: number;
     lastLyricEntryDict: { [i: number]: any };
     lastChordEntryDict: { [i: number]: any };
   } {
     interface EntryInfo {
       cumulativeOverlap: number;
       extend: boolean;
-      isCrossMeasureSeed?: boolean;
       labelWidth: number;
       needsDashSpaceAtEnd?: boolean;
       xPosition: number;
@@ -594,7 +568,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           lastLyricEntryDict[i] = {
             cumulativeOverlap: 0,
             extend: false,
-            isCrossMeasureSeed: true,
             labelWidth: overflow,
             measureNumber: measureNumber - 1,
             sourceNoteDuration: new Fraction(1, 4),
@@ -611,7 +584,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           lastChordEntryDict[i] = {
             cumulativeOverlap: 0,
             extend: false,
-            isCrossMeasureSeed: true,
             labelWidth: overflow,
             measureNumber: measureNumber - 1,
             sourceNoteDuration: new Fraction(1, 4),
@@ -621,12 +593,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
     }
-
-    /** Lower bound on the final elongation factor of this measure, raised whenever a synthetic
-     *  cross-measure-seed entry forces extra spacing on the first container of a verse.
-     *  Wrapped in an object so calculateElongationFactor can mutate it via Math.max.
-     *  Default 1 = no extra elongation required beyond regular within-measure spacing. */
-    const crossMeasureFloorRef: { value: number } = { value: 1 };
 
     // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
     for (const staffEntry of staffEntries) {
@@ -641,7 +607,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             measureNumber,
             this.rules.HorizontalBetweenLyricsDistance,
             this.rules.LyricOverlapAllowedIntoNextMeasure,
-            crossMeasureFloorRef,
           );
       }
       if (staffEntry.graphicalChordContainers.length > 0 && this.rules.RenderChordSymbols) {
@@ -655,14 +620,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             measureNumber,
             this.rules.ChordSymbolXSpacing,
             this.rules.ChordOverlapAllowedIntoNextMeasure,
-            crossMeasureFloorRef,
           );
       }
     }
 
     return {
       factor: newElongationFactorForMeasureWidth,
-      crossMeasureFloor: crossMeasureFloorRef.value,
       lastLyricEntryDict,
       lastChordEntryDict,
     };
@@ -670,11 +633,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   public calculateMeasureWidthFromStaffEntries(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
     let elongationFactorForMeasureWidth: number = 1;
-    /** Lower bound on the final elongation factor required to clear the previous measure's lyric/chord
-     *  overflow into this measure. Aggregated as the max across all vertical staves of this bar.
-     *  Applied after the MaximumLyricsElongationFactor cap so cross-measure clearance is honored
-     *  even when the cap would otherwise prevent it. */
-    let crossMeasureFloor: number = 1;
 
     interface PerStaffResult {
       staff: Staff;
@@ -694,7 +652,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const previousChordOverflows: number[] = this.previousChordOverflowsByStaff.get(staff);
 
       // (measure as VexFlowMeasure).format(); // needed to get vexflow bbox / x-position
-      const result: { factor: number, crossMeasureFloor: number, lastLyricEntryDict: { [i: number]: any }, lastChordEntryDict: { [i: number]: any } } =
+      const result: { factor: number, lastLyricEntryDict: { [i: number]: any }, lastChordEntryDict: { [i: number]: any } } =
         this.calculateElongationFactorFromStaffEntries(
           measure.staffEntries,
           oldMinimumStaffEntriesWidth,
@@ -704,20 +662,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           previousChordOverflows,
         );
       elongationFactorForMeasureWidth = result.factor;
-      // accumulate the per-staff cross-measure clearance requirement; the widest constraint wins
-      crossMeasureFloor = Math.max(crossMeasureFloor, result.crossMeasureFloor);
       perStaffResults.push({
         staff,
         lastLyricEntryDict: result.lastLyricEntryDict,
         lastChordEntryDict: result.lastChordEntryDict,
       });
     }
-    // Apply the cap to regular within-measure elongation, but enforce a floor for cross-measure
-    // clearance — otherwise lyrics that overflowed past the previous measure's bar can never be
-    // cleared in the next measure. Cross-measure pressure is bounded by the inputs (overflow +
-    // dashSpace + minSpacing), so this can't blow up arbitrarily.
     elongationFactorForMeasureWidth = Math.min(elongationFactorForMeasureWidth, this.rules.MaximumLyricsElongationFactor);
-    elongationFactorForMeasureWidth = Math.max(elongationFactorForMeasureWidth, crossMeasureFloor);
     // console.log(`elongationFactor for measure ${measuresVertical[0]?.MeasureNumber}: ${elongationFactorForMeasureWidth}`);
     // TODO check when this is > 2.0. See PR #1474
 

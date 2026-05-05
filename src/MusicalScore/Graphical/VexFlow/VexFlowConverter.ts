@@ -561,7 +561,14 @@ export class VexFlowConverter {
                         const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
                         const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
                         const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
-                        if (isLastNoteInMeasure) {
+                        // The reduction here normally compensates for the natural buffer between the last
+                        // note and the bar line. But if this lyric is a multi-syllable mid-word continuation
+                        // (a dash trails to the next syllable), and we're at the last note of the measure,
+                        // the next syllable lives in the next measure and starts right at its first note —
+                        // there is no buffer to compensate for. Skip the reduction so the lyric gets enough
+                        // padding to clear the bar (and leave room for the inter-measure dash).
+                        const isCrossMeasureMidWord: boolean = isLastNoteInMeasure && lyricsEntry.hasDashFromLyricWord();
+                        if (isLastNoteInMeasure && !isCrossMeasureMidWord) {
                             extraExistingPadding += rules.LyricsXPaddingReductionForLastNoteInMeasure; // need less padding
                         }
                         if (!hasShortNotes) {
