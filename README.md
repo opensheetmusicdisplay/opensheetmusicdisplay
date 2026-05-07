@@ -72,13 +72,13 @@ Developers can also run a [local development demo (see Wiki)](https://github.com
 ## Limitations
 
 Not all MusicXML tags are (fully) supported:
-* Pedal marks (currently in early access for sponsors)
-* Glissando lines
-* Wavy-line (currently in early access for sponsors)
-* Etc, see [OSMD 1.0 Project](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/projects/3)
+* Advanced Pedal marks (down/up brackets and lift wedge currently in early access for sponsors, "Ped." and "*" signs supported)
+* Tremolo between 2 notes (tremolo on a single note is supported)
+* Slurs across staves (e.g. from piano left hand to right hand)
 
-Also, **OSMD is a renderer, not an interactive sheet music editor.** Rendering takes some time, and you can't easily/quickly move notes, place new notes, etc.<br>
-(You can, however, manipulate the SVG nodes for instant changes like note re-coloring, see [Exploring the Demo | Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Exploring-the-Demo))
+Also, **OSMD is a renderer, not a full interactive sheet music editor.** Rendering takes some time for long scores, and you can't easily/quickly move notes, place new notes, etc.<br>
+There are however limited editing features like making notes invisible, coloring, hiding some instruments/staffs, not showing key or time signatures, and so on, see IOSMDOptions and EngravingRules<br>
+(You can manipulate the SVG nodes for instant changes like note re-coloring, see [Exploring the Demo | Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Exploring-the-Demo))
 
 ## How to Use OSMD
 
