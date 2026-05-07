@@ -51,13 +51,13 @@ Developers can also run a [local development demo (see Wiki)](https://github.com
 
 ## Key Features
 
-* Displays MusicXML sheet music in a browser(less) environment (Javascript, Typescript, server-side: browserless NodeJS script)
+* Displays MusicXML sheet music in a browser(less) environment (Javascript, Typescript, server-side: headless/browserless NodeJS script)
 * *Soon: Audio Playback (work in progress, early access build available for [Github sponsors](https://github.com/sponsors/opensheetmusicdisplay))*
 * Uses [Vexflow](https://www.vexflow.com/) for rendering and (partly) layout
 * Parses most MusicXML tags and integrates it into an accessible and modifiable data model (e.g. to change a note's color)
 * Offers many options ([OSMDOptions](https://opensheetmusicdisplay.github.io/classdoc/classes/OSMDOptions.html) / [EngravingRules](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/master/src/MusicalScore/Graphical/EngravingRules.ts)): Page Format, Font Family, Positioning, not rendering certain elements like the title or lyrics, etc.
 * Allows modification of the displayed score, like hiding parts or instruments, hiding instrument names, title or composer, a more compact layout, or coloring notes
-* Outputs SVG or PNG, also via nodejs script in the command line, completely browserless (e.g. for server-side rendering)
+* Outputs SVG or PNG, also via nodejs script in the command line, completely headless/browserless (e.g. for server-side rendering - see generateImages script)
 * Written in [Typescript](https://www.typescriptlang.org/) with complete type information, 100% compatible with Javascript (minified build is .js)
 * Can display tablature (guitar tabs) from MusicXML, including effects like bends and glissandi. Can be combined with treble clef.
 <img src="https://user-images.githubusercontent.com/33069673/127324371-b7c5f137-a1b8-4127-95b0-38e6a185c906.png" height="130">
