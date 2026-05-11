@@ -104,6 +104,7 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
         nextCursorBtn,
         resetCursorBtn,
         followCursorCheckbox,
+        drawPartAbbreviationsOnFirstSystemCheckbox,
         showCursorBtn,
         hideCursorBtn,
         backendSelect,
@@ -156,6 +157,7 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
     var autoCustomColoringOptionStashedValue = false;
     var drawPartNamesOptionStashedValue = true;
     var drawPartAbbreviationsStashedValue = true;
+    var drawPartAbbreviationsOnFirstSystemStashedValue = false;
     var drawPartNamesOptionNeedsReset = false;
     var pageBreaksOptionStashedValue = false;
     var pageBreaksOptionNeedsReset = false;
@@ -280,6 +282,7 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
         nextCursorBtn = document.getElementById("next-cursor-btn");
         resetCursorBtn = document.getElementById("reset-cursor-btn");
         followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
+        drawPartAbbreviationsOnFirstSystemCheckbox = document.getElementById("draw-part-abbr-first-system-checkbox");
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
         backendSelect = document.getElementById("backend-select");
@@ -854,6 +857,18 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
                 openSheetMusicDisplay.FollowCursor = !openSheetMusicDisplay.FollowCursor;
             }
         }
+        if (drawPartAbbreviationsOnFirstSystemCheckbox) {
+            drawPartAbbreviationsOnFirstSystemCheckbox.checked =
+                !!openSheetMusicDisplay.EngravingRules.RenderPartAbbreviationsOnFirstSystem;
+            drawPartAbbreviationsOnFirstSystemCheckbox.onchange = function () {
+                openSheetMusicDisplay.setOptions({
+                    drawPartAbbreviationsOnFirstSystem: drawPartAbbreviationsOnFirstSystemCheckbox.checked
+                });
+                if (openSheetMusicDisplay.graphic) {
+                    openSheetMusicDisplay.renderAndScrollBack();
+                }
+            };
+        }
         hideCursorBtn.addEventListener("click", function () {
             if (openSheetMusicDisplay.cursor) {
                 openSheetMusicDisplay.cursor.hide();
@@ -1398,10 +1413,16 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
         if (!isCustom && str.includes("Schubert_An_die_Musik")) { // TODO weird layout bug here with part names. but shouldn't be in score anyways
             drawPartNamesOptionStashedValue = openSheetMusicDisplay.EngravingRules.RenderPartNames;
             drawPartAbbreviationsStashedValue = openSheetMusicDisplay.EngravingRules.RenderPartAbbreviations;
+            drawPartAbbreviationsOnFirstSystemStashedValue =
+                openSheetMusicDisplay.EngravingRules.RenderPartAbbreviationsOnFirstSystem;
             openSheetMusicDisplay.setOptions({ drawPartNames: false, drawPartAbbreviations: false }); // TODO sets osmd.drawingParameters.DrawPartNames! also check EngravingRules.RenderPartAbbreviations, was false
             drawPartNamesOptionNeedsReset = true;
         } else if (drawPartNamesOptionNeedsReset) {
-            openSheetMusicDisplay.setOptions({ drawPartNames: drawPartNamesOptionStashedValue, drawPartAbbreviations: drawPartAbbreviationsStashedValue });
+            openSheetMusicDisplay.setOptions({
+                drawPartNames: drawPartNamesOptionStashedValue,
+                drawPartAbbreviations: drawPartAbbreviationsStashedValue,
+                drawPartAbbreviationsOnFirstSystem: drawPartAbbreviationsOnFirstSystemStashedValue
+            });
             drawPartNamesOptionNeedsReset = false;
         }
     }
@@ -1446,6 +1467,11 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
                     tempoBPMInput.placeholder = "No tempo";
                 }
             }
+        }
+
+        if (drawPartAbbreviationsOnFirstSystemCheckbox && openSheetMusicDisplay && openSheetMusicDisplay.EngravingRules) {
+            drawPartAbbreviationsOnFirstSystemCheckbox.checked =
+                !!openSheetMusicDisplay.EngravingRules.RenderPartAbbreviationsOnFirstSystem;
         }
         
         // Enable controls again

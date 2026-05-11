@@ -738,6 +738,9 @@ export class OpenSheetMusicDisplay {
         if (options.drawPartAbbreviations !== undefined) {
             this.rules.RenderPartAbbreviations = options.drawPartAbbreviations;
         }
+        if (options.drawPartAbbreviationsOnFirstSystem !== undefined) {
+            this.rules.RenderPartAbbreviationsOnFirstSystem = options.drawPartAbbreviationsOnFirstSystem;
+        }
         if (options.drawFingerings === false) {
             this.rules.RenderFingerings = false;
         }

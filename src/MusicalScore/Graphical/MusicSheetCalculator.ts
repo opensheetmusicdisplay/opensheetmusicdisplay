@@ -2301,6 +2301,14 @@ export abstract class MusicSheetCalculator {
                 let renderedLabel: Label = instrument.NameLabel;
                 if (!this.rules.RenderPartNames) {
                     renderedLabel = new Label("", renderedLabel.textAlignment, renderedLabel.font);
+                } else if (this.rules.RenderPartAbbreviationsOnFirstSystem
+                    && instrument.PartAbbreviation
+                    && instrument.PartAbbreviation !== "") {
+                    renderedLabel = new Label(
+                        instrument.PartAbbreviation,
+                        instrument.NameLabel.textAlignment,
+                        instrument.NameLabel.font
+                    );
                 }
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
                     renderedLabel, this.rules.InstrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.rules);

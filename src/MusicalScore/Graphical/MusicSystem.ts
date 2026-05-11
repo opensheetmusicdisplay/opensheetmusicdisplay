@@ -287,7 +287,8 @@ export abstract class MusicSystem extends GraphicalObject {
     }
 
     /**
-     * Create the Instrument's Labels (only for the first [[MusicSystem]] of the first MusicPage).
+     * Create the Instrument's Labels at the left of the system (full name on the first system by default;
+     * abbreviations on following systems when enabled — see EngravingRules.RenderPartAbbreviationsOnFirstSystem).
      * @param instrumentLabelTextHeight
      * @param systemLabelsRightMargin
      * @param labelMarginBorderFactor
@@ -300,10 +301,19 @@ export abstract class MusicSystem extends GraphicalObject {
             const instrument: Instrument = this.staffLines[idx].ParentStaff.ParentInstrument;
             let instrNameLabel: Label;
             if (isFirstSystem) {
-                instrNameLabel = instrument.NameLabel;
-                if (!this.rules.RenderPartNames || !instrNameLabel?.print) {
+                if (!this.rules.RenderPartNames || !instrument.NameLabel?.print) {
                     instrNameLabel = new Label("", instrument.NameLabel.textAlignment, instrument.NameLabel.font);
                     systemLabelsRightMargin = 0; // might affect lyricist/tempo placement. but without this there's still some extra x-spacing.
+                } else if (this.rules.RenderPartAbbreviationsOnFirstSystem
+                    && instrument.PartAbbreviation
+                    && instrument.PartAbbreviation !== "") {
+                    instrNameLabel = new Label(
+                        instrument.PartAbbreviation,
+                        instrument.NameLabel.textAlignment,
+                        instrument.NameLabel.font
+                    );
+                } else {
+                    instrNameLabel = instrument.NameLabel;
                 }
             } else {
                 if (!this.rules.RenderPartAbbreviations || !this.rules.RenderPartNames // don't render abbreviations if we don't render part names

@@ -132,6 +132,10 @@ export interface IOSMDOptions {
     drawPartNames?: boolean;
     /** Whether to draw part (instrument) name abbreviations each system after the first. Only draws if drawPartNames. Default true. */
     drawPartAbbreviations?: boolean;
+    /** When true, the first system also uses the part abbreviation (MusicXML part-abbreviation) for the left label
+     *  when an abbreviation is present, instead of the full instrument name. Only applies when drawPartNames is true.
+     *  Later systems still follow drawPartAbbreviations. Default false. */
+    drawPartAbbreviationsOnFirstSystem?: boolean;
     /** Whether to draw measure numbers (labels). Default true.
      * Draws a measure number label at first measure, system start measure,
      * and every [measureNumberInterval] measures.

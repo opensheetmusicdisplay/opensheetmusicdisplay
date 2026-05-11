@@ -458,6 +458,8 @@ export class EngravingRules {
     public RenderCopyright: boolean;
     public RenderPartNames: boolean;
     public RenderPartAbbreviations: boolean;
+    /** When true, first music system uses PartAbbreviation for the staff label (if set), not the full name. */
+    public RenderPartAbbreviationsOnFirstSystem: boolean;
     /** Whether two render system labels on page 2+. This doesn't affect the default endless PageFormat. */
     public RenderSystemLabelsAfterFirstPage: boolean;
     public RenderFingerings: boolean;
@@ -922,6 +924,7 @@ export class EngravingRules {
         this.RenderCopyright = false;
         this.RenderPartNames = true;
         this.RenderPartAbbreviations = true;
+        this.RenderPartAbbreviationsOnFirstSystem = false;
         this.RenderSystemLabelsAfterFirstPage = true;
         this.RenderFingerings = true;
         this.RenderMeasureNumbers = true;
