@@ -3,7 +3,7 @@ import { BoundingBox } from "../BoundingBox";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalWavyLine } from "../GraphicalWavyLine";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
-import Vex from "vexflow";
+import * as VF from "vexflow";
 
 export class VexFlowVibratoBracket extends GraphicalWavyLine {
     /** Defines the note where the bracket starts */

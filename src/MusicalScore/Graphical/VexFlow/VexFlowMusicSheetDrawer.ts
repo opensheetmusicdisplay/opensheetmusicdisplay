@@ -1,5 +1,4 @@
-import Vex, { IRenderContext } from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
 import { VexFlowMeasure } from "./VexFlowMeasure";

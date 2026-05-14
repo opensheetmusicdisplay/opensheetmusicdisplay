@@ -11,6 +11,10 @@
     "strictPropertyInitialization": false,
     "typeRoots": ["./node_modules/@types"],
     "types": ["mocha", "chai", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "vexflow": ["./external/vexflow/build/types/entry/vexflow.d.ts"]
+    }
   },
   "include": ["./test/", "./src"],
   "exclude": [
