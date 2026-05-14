@@ -731,6 +731,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
             this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels, this);
         }
 
+        // Center whole-measure rests manually (VF5 dropped align_center support)
+        const stave: VF.Stave = this.getVFStave();
+        if (stave) {
+            const noteStartX: number = stave.getNoteStartX();
+            const noteEndX: number = stave.getNoteEndX();
+            const centerX: number = noteStartX + (noteEndX - noteStartX) / 2;
+            for (const voice of this.getVoicesWithinMeasure()) {
+                for (const ve of voice.VoiceEntries) {
+                    for (const note of ve.Notes) {
+                        const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
+                        const vfnote: VF.StemmableNote = gNote?.vfnote?.[0];
+                        if (vfnote && (vfnote as any)._alignCenter) {
+                            const glyphWidth: number = vfnote.getGlyphWidth();
+                            vfnote.setXShift(centerX - vfnote.getAbsoluteX() - glyphWidth / 2);
+                        }
+                    }
+                }
+            }
+        }
+
         // this.correctNotePositions(); // now done at the end of draw()
     }
 

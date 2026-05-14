@@ -123,6 +123,9 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
                             return 0;
                         }
                     };
+                },
+                getGlyphWidth(): number {
+                    return 0;
                 }
             };
         }

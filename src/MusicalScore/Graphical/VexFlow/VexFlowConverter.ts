@@ -662,6 +662,9 @@ export class VexFlowConverter {
         }
 
         vfnote.setXShift(xShift);
+        if (alignCenter) {
+            (vfnote as any)._alignCenter = true;
+        }
 
         if (gve.parentVoiceEntry.IsGrace && gve.notes[0].sourceNote.NoteBeam) {
             // Vexflow seems to have issues with wanted stem direction for beamed grace notes,
