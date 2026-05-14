@@ -23,6 +23,15 @@ module.exports = {
     },
     module: {
         rules: [
+            // treat vexflow ESM build as auto module (handles missing .js extensions in imports)
+            {
+                test: /\.js$/,
+                include: [path.resolve(__dirname, 'external/vexflow/build/esm')],
+                type: 'javascript/auto',
+                resolve: {
+                    fullySpecified: false,
+                },
+            },
             // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
             {
                 test: /\.ts$/,

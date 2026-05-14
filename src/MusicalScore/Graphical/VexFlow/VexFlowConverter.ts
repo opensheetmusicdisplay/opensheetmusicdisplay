@@ -684,6 +684,18 @@ export class VexFlowConverter {
         }
 
         // add accidentals
+        // Store MusicXML note IDs for SVG data-note-id attributes
+        const noteIdMap: Record<number, string> = {};
+        for (let i: number = 0; i < notes.length; i++) {
+            const xmlId: string = notes[i].sourceNote.xmlId;
+            if (xmlId) {
+                noteIdMap[i] = xmlId;
+            }
+        }
+        if (Object.keys(noteIdMap).length > 0) {
+            (vfnote as any)._noteXmlIds = noteIdMap;
+        }
+
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
