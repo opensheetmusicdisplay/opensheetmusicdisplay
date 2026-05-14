@@ -890,8 +890,8 @@ export class EngravingRules {
         this.SheetMaximumWidth = 32767;
 
         // xSpacing Variables
-        this.VoiceSpacingMultiplierVexflow = 0.85;
-        this.VoiceSpacingAddendVexflow = 3.0;
+        this.VoiceSpacingMultiplierVexflow = 0.70;
+        this.VoiceSpacingAddendVexflow = 2.0;
         this.PickupMeasureWidthMultiplier = 1.0;
         this.PickupMeasureRepetitionSpacing = 0.8;
         this.PickupMeasureSpacingSingleNoteAddend = 1.6;
@@ -903,7 +903,7 @@ export class EngravingRules {
         this.MetronomeMarksDrawn = true;
         this.MetronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.MetronomeMarkYShift = -1.0; // note this is correlated with TempoYSpacing: one-sided change can cause collisions
-        this.SoftmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
+        this.SoftmaxFactorVexFlow = 10; // Vexflow 5 default is 10. Slightly higher for better grace note spacing.
         // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
         // if too low, smaller notes aren't positioned correctly.
         this.StaggerSameWholeNotes = true;

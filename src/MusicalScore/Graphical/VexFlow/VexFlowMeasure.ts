@@ -277,7 +277,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const modifiers: VF.StaveModifier[] = this.stave.getModifiers();
             for (const modifier of modifiers) {
                 if (modifier instanceof VF.KeySignature) {
-                    modifier.setStyle({ fillStyle: "#00000000"}); // transparent. requires VexflowPatch
+                    modifier.setStyle({ fillStyle: "rgba(0,0,0,0)"}); // transparent. requires VexflowPatch
                     // instead of not rendering the key signature, technically, we render it, but with transparent color. this helps layout / x-alignment.
 
                     // SVG compatibility: also set visibility="hidden".
@@ -310,7 +310,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (!this.ShowTimeSignature ||
             this.isTabMeasure && !this.rules.TabTimeSignatureRendered) {
             // extends Element is missing from class StaveModifier in DefinitelyTyped definitions, so setStyle isn't found
-            timeSig.setStyle({ fillStyle: "#00000000"}); // transparent. requires VexflowPatch
+            timeSig.setStyle({ fillStyle: "rgba(0,0,0,0)"}); // transparent. requires VexflowPatch
             // instead of not rendering the time signature, technically, we render it, but with transparent color. this helps layout / x-alignment.
 
             // SVG compatibility: also set visibility="hidden".
@@ -339,7 +339,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // make clef invisible in vexflow. (only rendered to correct layout and staffentry boundingbox)
                 if (modifier.getCategory() === "clefs" && modifier.getPosition() === VF.StaveModifier.Position.END) {
                     if ((modifier as any).type === vfclef.type) { // any = VF.Clef
-                        const transparentStyle: string = "#12345600";
+                        const transparentStyle: string = "rgba(0,0,0,0)";
                         const originalStyle: any = modifier.getStyle();
                         if (originalStyle) {
                             (modifier as any).originalStrokeStyle = originalStyle.strokeStyle;
