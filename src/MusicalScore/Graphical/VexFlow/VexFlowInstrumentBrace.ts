@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";

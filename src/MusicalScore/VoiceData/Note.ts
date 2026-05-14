@@ -312,10 +312,10 @@ export class Note {
     }
 
     public computedSvgId(): string {
-        const m = this.ParentStaffEntry.VerticalContainerParent.ParentMeasure.MeasureNumber;
-        const s = this.ParentStaff.idInMusicSheet;
-        const v = this.ParentVoiceEntry.ParentVoice.VoiceId;
-        const i = this.ParentVoiceEntry.Notes.indexOf(this);
+        const m: number = this.ParentStaffEntry.VerticalContainerParent.ParentMeasure.MeasureNumber;
+        const s: number = this.ParentStaff.idInMusicSheet;
+        const v: number = this.ParentVoiceEntry.ParentVoice.VoiceId;
+        const i: number = this.ParentVoiceEntry.Notes.indexOf(this);
         return `note-${m}-${s}-${v}-${i}`;
     }
 }

@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
@@ -45,6 +46,7 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
         // see e.g. test/data/test_multiple_rest_measures_repeat_3_measures.musicxml, issue #1329
 
         this.multiRestElement = new VF.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
+            numberOfMeasures: sourceMeasure.multipleRestMeasures,
             // padding_right: padding_right, // this overwrites any padding/endX calculations in Vexflow. doesn't work well for end clefs
             // number_line: 3
         });
@@ -54,7 +56,7 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
      * Draw this measure on a VexFlow CanvasContext
      * @param ctx
      */
-    public draw(ctx: Vex.IRenderContext): void {
+    public draw(ctx: VF.RenderContext): void {
         const measureNode: SVGGElement = ctx.openGroup() as SVGGElement;
         if (measureNode) {
             measureNode.classList?.add("vf-measure");

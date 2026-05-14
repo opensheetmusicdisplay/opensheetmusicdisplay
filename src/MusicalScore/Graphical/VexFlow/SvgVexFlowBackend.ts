@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 
 
 import {VexFlowBackend} from "./VexFlowBackend";
@@ -42,7 +43,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";
         container.appendChild(this.inner);
-        this.renderer = new VF.Renderer(this.canvas, this.getVexflowBackendType());
+        this.renderer = new VF.Renderer(this.canvas as HTMLDivElement, this.getVexflowBackendType());
         this.ctx = <VF.SVGContext>this.renderer.getContext();
         this.ctx.svg.id = "osmdSvgPage" + this.graphicalMusicPage.PageNumber;
     }
@@ -181,7 +182,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         //this.ctx.attributes["font-weight"] = "bold";
         //this.ctx.attributes["stroke-linecap"] = "round";
 
-        this.ctx.lineWidth = lineWidth;
+        (this.ctx as any).lineWidth = lineWidth;
 
         this.ctx.stroke();
         this.ctx.closeGroup();

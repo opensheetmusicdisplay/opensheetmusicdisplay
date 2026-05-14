@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -51,7 +52,10 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 if (this.parentMeasure.ParentStaff.isTab) {
                     // the x-position could be finetuned for the cursor.
                     // somehow, gve.vfStaveNote.getBoundingBox() is null for a TabNote (which is a StemmableNote).
-                    bboxToAdjust.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + (<any>gve.vfStaveNote).glyph.getWidth()) / unitInPixels;
+                    // VF5: TabNote has no .glyph (only glyphProps), use .getWidth() as fallback.
+                    const noteGlyph: any = (<any>gve.vfStaveNote).glyph;
+                    const noteWidth: number = noteGlyph ? noteGlyph.getWidth() : gve.vfStaveNote.getWidth();
+                    bboxToAdjust.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + noteWidth) / unitInPixels;
                 } else {
                     bboxToAdjust.RelativePosition.x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
                     if (isSecondaryWholeRest) {

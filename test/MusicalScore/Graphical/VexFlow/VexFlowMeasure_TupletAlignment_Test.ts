@@ -10,8 +10,9 @@ import {VexFlowMeasure} from "../../../../src/MusicalScore/Graphical/VexFlow/Vex
 import {VexFlowVoiceEntry} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
 import {Note} from "../../../../src/MusicalScore/VoiceData/Note";
 import {Fraction} from "../../../../src/Common/DataObjects/Fraction";
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
+
+const RESOLUTION: number = 16384;
 
 describe("VexFlow Measure - Tuplet Voice Alignment", () => {
 
@@ -147,7 +148,7 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
                if (sourceNote.NoteTuplet && vfVoiceEntry.vfStaveNote) {
                   const ticks: VF.Fraction = vfVoiceEntry.vfStaveNote.getTicks();
                   const graphicalLength: Fraction = vfVoiceEntry.notes[0].graphicalNoteLength;
-                  const expectedTicks: number = Math.round(graphicalLength.RealValue * VF.RESOLUTION);
+                  const expectedTicks: number = Math.round(graphicalLength.RealValue * RESOLUTION);
 
                   expect(ticks.numerator).to.equal(expectedTicks,
                      "Tuplet note tick value should match its graphical length");

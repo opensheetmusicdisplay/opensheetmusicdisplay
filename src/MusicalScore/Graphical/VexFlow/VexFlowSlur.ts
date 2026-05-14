@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 

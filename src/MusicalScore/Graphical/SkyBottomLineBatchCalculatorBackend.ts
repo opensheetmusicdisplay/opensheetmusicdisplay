@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import { EngravingRules } from "./EngravingRules";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
@@ -136,7 +135,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
         const numElementsPerTable: number = numColumns * numRows;
 
         const vexFlowContext: VF.CanvasContext = this.canvas.getContext();
-        const context: CanvasRenderingContext2D = vexFlowContext as unknown as CanvasRenderingContext2D;
+        const nativeCtx: CanvasRenderingContext2D = (vexFlowContext as any).context2D;
         const canvasElement: HTMLCanvasElement = this.canvas.getCanvas() as HTMLCanvasElement;
 
         if (debugTmpCanvas) {
@@ -183,9 +182,9 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                 vsStaff.setWidth(oldMeasureWidth);
 
                 try {
-                    context.translate(u * elementWidth, v * elementHeight);
+                    nativeCtx.translate(u * elementWidth, v * elementHeight);
                     measure.draw(vexFlowContext);
-                    context.translate(-u * elementWidth, -v * elementHeight);
+                    nativeCtx.translate(-u * elementWidth, -v * elementHeight);
                     // Vexflow errors can happen here, then our complete rendering loop would halt without catching errors.
                 } catch (ex) {
                     log.warn("SkyBottomLineBatchCalculatorBackend.calculateLines.draw", ex);

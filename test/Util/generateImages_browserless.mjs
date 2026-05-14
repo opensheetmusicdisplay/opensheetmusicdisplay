@@ -1,6 +1,9 @@
 //import Blob from "cross-blob"; // unnecessary in Node v18+
 import FS from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import jsdom from "jsdom";
+import { registerFont } from "canvas";
 //import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
 import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
 // for debugging, use opensheetmusicdisplay.min.js, created by npm run build:webpack-dev
@@ -59,6 +62,16 @@ if (!mode) {
 
 async function init () {
     debug("init");
+
+    // Register VF5 music fonts with node-canvas (FontFace API doesn't work in JSDOM)
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const vexflowFontsDir = path.resolve(__dirname, "../../external/vexflow/node_modules/@vexflow-fonts");
+    registerFont(path.join(vexflowFontsDir, "bravura/bravura.otf"), { family: "Bravura" });
+    registerFont(path.join(vexflowFontsDir, "gonville/gonville.otf"), { family: "Gonville" });
+    registerFont(path.join(vexflowFontsDir, "petaluma/petaluma.otf"), { family: "Petaluma" });
+    registerFont(path.join(vexflowFontsDir, "petalumascript/petalumascript.otf"), { family: "Petaluma Script" });
+    registerFont(path.join(vexflowFontsDir, "academico/academico.otf"), { family: "Academico" });
+    registerFont(path.join(vexflowFontsDir, "academico/academico-bold.otf"), { family: "Academico", weight: "bold" });
 
     const osmdTestMode = mode.includes("osmdtesting"); // can also be --debugosmdtesting
     const osmdTestSingleMode = mode.includes("osmdtestingsingle");
@@ -261,6 +274,11 @@ async function init () {
     }
 
     debug("[OSMD.generateImages] starting loop over samples, saving images to " + imageDir, DEBUG);
+    // Wait for VF5 fonts to finish loading before rendering
+    if (typeof document !== "undefined" && document.fonts) {
+        await document.fonts.ready;
+    }
+
     for (let i = 0; i < samplesToProcess.length; i++) {
         const sampleFilename = samplesToProcess[i];
         debug("sampleFilename: " + sampleFilename, DEBUG);

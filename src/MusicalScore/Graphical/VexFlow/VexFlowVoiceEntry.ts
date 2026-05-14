@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
@@ -50,9 +51,9 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         }
         for (let i: number = 0; i < this.notes.length; i++) {
             const note: Note = this.notes[i].sourceNote;
-            if (vfStaveNote.note_heads) { // see VexFlowConverter, needs Vexflow PR
+            if (vfStaveNote._noteHeads) { // VF5: note_heads → _noteHeads
                 if (note.CustomNoteheadVFCode) {
-                    (vfStaveNote.note_heads[i] as any).glyph_code = note.CustomNoteheadVFCode;
+                    (vfStaveNote._noteHeads[i] as any).glyph_code = note.CustomNoteheadVFCode;
                 }
             }
         }
@@ -135,8 +136,8 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             }
 
             if (vfStaveNote) {
-                if (vfStaveNote.note_heads) { // see VexFlowConverter, needs Vexflow PR
-                    const notehead: any = vfStaveNote.note_heads[i];
+                if (vfStaveNote._noteHeads) { // VF5: note_heads → _noteHeads
+                    const notehead: any = vfStaveNote._noteHeads[i];
                     if (notehead) {
                         notehead.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
                     }

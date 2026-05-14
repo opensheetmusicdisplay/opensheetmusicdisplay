@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 import { GraphicalGlissando } from "../GraphicalGlissando";
 
 

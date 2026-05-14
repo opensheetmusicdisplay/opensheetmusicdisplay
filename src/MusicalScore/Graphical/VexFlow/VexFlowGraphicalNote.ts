@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 
 import {ColoringOptions, GraphicalNote, VisibilityOptions} from "../GraphicalNote";
 import {Note} from "../../VoiceData/Note";
@@ -87,9 +88,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         if (!vfnote) {
             vfnote = (this.vfnote[0] as any);
         }
-        const noteheads: any = vfnote.note_heads;
+        const noteheads: any = vfnote._noteHeads; // VF5: note_heads → _noteHeads
         if (noteheads && noteheads.length > this.vfnoteIndex && noteheads[this.vfnoteIndex]) {
-            return vfnote.note_heads[this.vfnoteIndex];
+            return vfnote._noteHeads[this.vfnoteIndex];
         } else {
             return { line: 0 };
         }

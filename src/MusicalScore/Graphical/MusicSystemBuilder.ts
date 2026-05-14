@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 import {GraphicalMeasure} from "./GraphicalMeasure";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {EngravingRules} from "./EngravingRules";
@@ -532,7 +533,7 @@ export class MusicSystemBuilder {
             );
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
         }
-        staves[0].formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
+        VF.Stave.formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
         return totalBeginInstructionLengthX;
     }
 

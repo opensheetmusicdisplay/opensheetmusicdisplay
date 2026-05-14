@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 
 
 import {VexFlowBackend} from "./VexFlowBackend";
@@ -47,7 +48,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvas.style.zIndex = "0";
         this.inner.appendChild(this.canvas);
         container.appendChild(this.inner);
-        this.renderer = new VF.Renderer(this.canvas, this.getVexflowBackendType());
+        this.renderer = new VF.Renderer(this.canvas as HTMLCanvasElement, this.getVexflowBackendType());
         this.ctx = <VF.CanvasContext>this.renderer.getContext();
     }
 
@@ -65,7 +66,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvas = document.createElement("canvas");
         (this.canvas as any).width = width;
         (this.canvas as any).height = height;
-        this.renderer = new VF.Renderer(this.canvas, this.getVexflowBackendType());
+        this.renderer = new VF.Renderer(this.canvas as HTMLCanvasElement, this.getVexflowBackendType());
         this.ctx = <VF.CanvasContext>this.renderer.getContext();
     }
 
@@ -204,6 +205,6 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         // This clusterfuck is only there to counter act my favorite vexflow line:
         // ctx.vexFlowCanvasContext = ctx;
         // No idea why they are saving the context but we wrap the types here
-        return <CanvasRenderingContext2D>(this.ctx as any).vexFlowCanvasContext;
+        return <CanvasRenderingContext2D>(this.ctx as any).context2D;
     }
 }

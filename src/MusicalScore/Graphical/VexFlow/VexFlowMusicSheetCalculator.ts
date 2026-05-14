@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 import { MusicSheetCalculator } from "../MusicSheetCalculator";
 import { VexFlowGraphicalSymbolFactory } from "./VexFlowGraphicalSymbolFactory";
 import { GraphicalMeasure } from "../GraphicalMeasure";
@@ -90,9 +91,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
     //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
     if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "gonville") {
-      VF.VexFlow.setFonts('Gonville', 'Bravura');
+      VF.VexFlow.setFonts("Gonville", "Bravura");
     } else if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "petaluma") {
-      VF.VexFlow.setFonts('Petaluma', 'Gonville', 'Bravura');
+      VF.VexFlow.setFonts("Petaluma", "Gonville", "Bravura");
     }
     // else keep new vexflow default Bravura (more cursive, bold)
   }
@@ -262,7 +263,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       };
       const formatVoicesAlignRests: (w: number,  p: VexFlowMeasure) => void = (w, p) => {
         formatter.formatToStave(allVoices, p.getVFStave(), {
-          align_rests: true,
+          alignRests: true,
           context: undefined
         });
       };
@@ -812,8 +813,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // split tie into two ties:
       if (vfStartNote) { // first_note or last_note must be not null in Vexflow
         const vfTie1: VF.StaveTie = new VF.StaveTie({
-          first_indices: [startNoteIndexInTie],
-          first_note: vfStartNote
+          firstIndexes: [startNoteIndexInTie],
+          firstNote: vfStartNote
         });
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
@@ -821,8 +822,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       if (vfEndNote) {
         const vfTie2: VF.StaveTie = new VF.StaveTie({
-          last_indices: [endNoteIndexInTie],
-          last_note: vfEndNote
+          lastIndexes: [endNoteIndexInTie],
+          lastNote: vfEndNote
         });
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure2.addStaveTie(vfTie2, tie);
@@ -842,20 +843,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
             vfTie = new VF.TabSlide(
               {
-                first_indices: [startNoteIndexInTie],
-                first_note: vfStartNote,
-                last_indices: [endNoteIndexInTie],
-                last_note: vfEndNote,
+                firstIndexes: [startNoteIndexInTie],
+                firstNote: vfStartNote,
+                lastIndexes: [endNoteIndexInTie],
+                lastNote: vfEndNote,
               },
               slideDirection
             );
           } else {
             vfTie = new VF.TabTie(
               {
-                first_indices: [startNoteIndexInTie],
-                first_note: vfStartNote,
-                last_indices: [endNoteIndexInTie],
-                last_note: vfEndNote,
+                firstIndexes: [startNoteIndexInTie],
+                firstNote: vfStartNote,
+                lastIndexes: [endNoteIndexInTie],
+                lastNote: vfEndNote,
               },
               tie.Tie.Type
             );
@@ -863,10 +864,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
         } else { // not Tab (guitar), normal StaveTie
           vfTie = new VF.StaveTie({
-            first_indices: [startNoteIndexInTie],
-            first_note: vfStartNote,
-            last_indices: [endNoteIndexInTie],
-            last_note: vfEndNote
+            firstIndexes: [startNoteIndexInTie],
+            firstNote: vfStartNote,
+            lastIndexes: [endNoteIndexInTie],
+            lastNote: vfEndNote
           });
           const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote.sourceNote);
           if (tieDirection === PlacementEnum.Below) {
@@ -998,14 +999,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       vfStave.setTempo(
         {
             bpm: metronomeExpression.TempoInBpm,
-            dots: metronomeExpression.dotted,
+            dots: metronomeExpression.dotted ? 1 : 0,
             duration: vexflowDuration
         },
         yShift * unitInPixels);
     }
 
     const xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
-    (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
+    (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setXShift(
       xShift
     );
     vfMeasure.hasMetronomeMark = true;
@@ -1569,8 +1570,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   private calculateWavyLineSkyBottomLine(startVfVoiceEntry: VexFlowVoiceEntry, endVfVoiceEntry: VexFlowVoiceEntry,
     vfVibratoBracket: VexFlowVibratoBracket, parentStaffline: StaffLine): void {
-    const startStave: Vex.Flow.Stave = vfVibratoBracket.startNote.getStave();
-    let endStave: Vex.Flow.Stave = vfVibratoBracket.endNote?.getStave();
+    const startStave: VF.Stave = vfVibratoBracket.startNote.getStave();
+    let endStave: VF.Stave = vfVibratoBracket.endNote?.getStave();
     if (!endStave) { // e.g. if endNote undefined
       endStave = startStave;
       endVfVoiceEntry = startVfVoiceEntry;
@@ -1578,13 +1579,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     //In VF Line positions, need to negate for our units
     const highestVFTopTextPosition: number = Math.max(
-      startStave.options.top_text_position,
-      endStave.options.top_text_position
+      startStave.options.topTextPosition,
+      endStave.options.topTextPosition
     );
 
     //Whichever is higher, set the other to match
-    startStave.options.top_text_position = highestVFTopTextPosition;
-    endStave.options.top_text_position = highestVFTopTextPosition;
+    startStave.options.topTextPosition = highestVFTopTextPosition;
+    endStave.options.topTextPosition = highestVFTopTextPosition;
     let headroom: number = -highestVFTopTextPosition;
     let trillStartX: number = 0;
     let trillEndX: number = 0;
@@ -1615,7 +1616,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     } else {
       stopX = endVfVoiceEntry.PositionAndShape.AbsolutePosition.x + endVfVoiceEntry.PositionAndShape.BorderRight;
       //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-      const vfClefBefore: Vex.Flow.ClefNote = (endVfVoiceEntry.parentStaffEntry as VexFlowStaffEntry).vfClefBefore;
+      const vfClefBefore: VF.ClefNote = (endVfVoiceEntry.parentStaffEntry as VexFlowStaffEntry).vfClefBefore;
       if (vfClefBefore) {
         const clefWidth: number = vfClefBefore.getWidth() / 10;
         stopX += clefWidth;
@@ -1628,8 +1629,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     //If somewhere in our wavy line path we have to render higher than where the trill mark is set...
     if (headroom < trillSkyline) {
-      startStave.options.top_text_position = -headroom;
-      endStave.options.top_text_position = -headroom;
+      startStave.options.topTextPosition = -headroom;
+      endStave.options.topTextPosition = -headroom;
       //A decent enough approximation. Better than recalculating via Canvas or SVG sampling
       parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(trillStartX, trillEndX, headroom - TRILL_HEIGHT);
     } else { //Else just render where Vexflow has set the trill mark
@@ -1648,19 +1649,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         endBbox = vfPedal.endMeasure.PositionAndShape;
       }
       //Just for shorthand. Easier readability below
-      const PEDAL_STYLES_ENUM: any = Vex.Flow.PedalMarking.Styles;
+      const PEDAL_STYLES_ENUM: any = VF.PedalMarking.type;
       const pedalMarking: any = vfPedal.getPedalMarking();
       //VF adds 3 lines to whatever the pedal line is set to.
       //VF also measures from the bottom line, whereas our bottom line is from the top staff line
       const yLineForPedalMarking: number = (pedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
       //VF Uses a margin offset for rendering. Take this into account
-      const pedalMarkingMarginXOffset: number = pedalMarking.render_options.text_margin_right / 10;
+      const pedalMarkingMarginXOffset: number = pedalMarking.renderOptions.text_margin_right / 10;
       //TODO: Most of this should be in the bounding box calculation
       let startX: number = startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - pedalMarkingMarginXOffset;
 
-      if (pedalMarking.style === PEDAL_STYLES_ENUM.MIXED ||
-          pedalMarking.style === PEDAL_STYLES_ENUM.MIXED_OPEN_END ||
-          pedalMarking.style === PEDAL_STYLES_ENUM.TEXT) {
+      if ((pedalMarking as any).type === PEDAL_STYLES_ENUM.MIXED ||
+          (pedalMarking as any).type === PEDAL_STYLES_ENUM.MIXED_OPEN_END ||
+          (pedalMarking as any).type === PEDAL_STYLES_ENUM.TEXT) {
         //Accomodate the Ped. sign
         startX -= 1;
       }
@@ -1675,7 +1676,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       //We have the two seperate symbols, with two bounding boxes
       if (vfPedal.EndSymbolPositionAndShape) {
-        const symbolHalfHeight: number = pedalMarking.render_options.glyph_point_size / 20;
+        const symbolHalfHeight: number = pedalMarking.renderOptions.glyph_point_size / 20;
         //Width of the Ped. symbol
         stopX = startX + 3.4;
         const startX2: number = endBbox.AbsolutePosition.x - pedalMarkingMarginXOffset;
@@ -1693,7 +1694,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + symbolHalfHeight);
         parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX2, stopX2, footroom + symbolHalfHeight);
       } else {
-        const bracketHeight: number = pedalMarking.render_options.bracket_height / 10;
+        const bracketHeight: number = pedalMarking.renderOptions.bracket_height / 10;
 
         if(pedalMarking.EndsStave){
           if(endVfVoiceEntry){
@@ -1716,7 +1717,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
         }
         //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-        const vfClefBefore: Vex.Flow.ClefNote = (endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
+        const vfClefBefore: VF.ClefNote = (endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
         if (vfClefBefore) {
           const clefWidth: number = vfClefBefore.getWidth() / 10;
           stopX += clefWidth;
@@ -1744,7 +1745,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const yLineForOtherPedalMarking: number = (otherPedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
         //Only do these changes if current footroom is higher
         if(footroom > yLineForOtherPedalMarking) {
-          const otherPedalMarkingMarginXOffset: number = otherPedalMarking.render_options.text_margin_right / 10;
+          const otherPedalMarkingMarginXOffset: number = otherPedalMarking.renderOptions.text_margin_right / 10;
           let otherPedalStartX: number = vfOtherPedal.startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
           let otherPedalStopX: number = undefined;
           vfOtherPedal.setLine(footroom - 3 - (parentStaffline.StaffLines.length - 1));
@@ -1753,7 +1754,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             otherPedalEndBBox = vfOtherPedal.endMeasure.PositionAndShape;
           }
           if (vfOtherPedal.EndSymbolPositionAndShape) {
-            const otherSymbolHalfHeight: number = pedalMarking.render_options.glyph_point_size / 20;
+            const otherSymbolHalfHeight: number = pedalMarking.renderOptions.glyph_point_size / 20;
             //Width of the Ped. symbol
             otherPedalStopX = otherPedalStartX + 3.4;
             const otherPedalStartX2: number = otherPedalEndBBox.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
@@ -1762,7 +1763,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX, otherPedalStopX, footroom + otherSymbolHalfHeight);
             parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX2, otherPedalStopX2, footroom + otherSymbolHalfHeight);
           } else {
-            const otherPedalBracketHeight: number = otherPedalMarking.render_options.bracket_height / 10;
+            const otherPedalBracketHeight: number = otherPedalMarking.renderOptions.bracket_height / 10;
 
             if(otherPedalMarking.EndsStave){
                 otherPedalStopX = otherPedalEndBBox.AbsolutePosition.x + otherPedalEndBBox.Size.width - otherPedalMarkingMarginXOffset;
@@ -1779,7 +1780,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               }
             }
             //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-            const vfOtherClefBefore: Vex.Flow.ClefNote = (vfOtherPedal.endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
+            const vfOtherClefBefore: VF.ClefNote = (vfOtherPedal.endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
             if (vfOtherClefBefore) {
               const otherClefWidth: number = vfOtherClefBefore.getWidth() / 10;
               otherPedalStopX += otherClefWidth;
@@ -1842,19 +1843,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const textBracket: VF.TextBracket = vfOctaveShift.getTextBracket();
     const fontSize: number = (textBracket as any).font.size / 10;
 
-    if ((<any>textBracket).position === VF.TextBracket.Positions.TOP) {
+    if ((<any>textBracket).position === VF.TextBracketPosition.TOP) {
       const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
       if (headroom === Infinity) { // will cause Vexflow error
         return;
       }
-      (textBracket.start.getStave().options as any).top_text_position = Math.abs(headroom);
+      (textBracket.start.getStave().options as any).topTextPosition = Math.abs(headroom);
       parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
     } else {
       const footroom: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
       if (footroom === Infinity) { // will cause Vexflow error
         return;
       }
-      (textBracket.start.getStave().options as any).bottom_text_position = footroom;
+      (textBracket.start.getStave().options as any).bottomTextPosition = footroom;
       //Vexflow positions top vs. bottom text in a slightly inconsistent way it seems
       parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);
     }
@@ -2290,28 +2291,28 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             if (startNote.FretNumber > endNote.FretNumber) {
               slideDirection = -1;
             }
-            let first_indices: number[] = undefined;
-            let last_indices: number[] = undefined;
+            let firstIndexes: number[] = undefined;
+            let lastIndexes: number[] = undefined;
             let startStemmableNote: VF.StemmableNote  = undefined;
             // let startNoteIndexInTie: number = 0;
             if (vfStartNote && vfStartNote.vfnote && vfStartNote.vfnote.length >= 2) {
               startStemmableNote = vfStartNote.vfnote[0]; // otherwise needs to be undefined in TabSlide constructor!
-              first_indices = [0];
+              firstIndexes = [0];
               // startNoteIndexInTie = vfStartNote.vfnote[1];
             }
             let endStemmableNote: VF.StemmableNote  = undefined;
             // let endNoteIndexInTie: number = 0;
             if (vfEndNote && vfEndNote.vfnote && vfEndNote.vfnote.length >= 2) {
               endStemmableNote = vfEndNote.vfnote[0];
-              last_indices = [0];
+              lastIndexes = [0];
               // endNoteIndexInTie = vfEndNote.vfnote[1];
             }
             const vfTie: VF.TabSlide = new VF.TabSlide(
               {
-                first_indices: first_indices,
-                first_note: startStemmableNote,
-                last_indices: last_indices,
-                last_note: endStemmableNote,
+                firstIndexes: firstIndexes,
+                firstNote: startStemmableNote,
+                lastIndexes: lastIndexes,
+                lastNote: endStemmableNote,
               },
               slideDirection
             );
