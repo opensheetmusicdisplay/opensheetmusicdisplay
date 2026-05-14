@@ -21,8 +21,8 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.rules = rules;
     }
 
-    public getVexflowBackendType(): VF.Renderer.Backends {
-        return VF.Renderer.Backends.SVG;
+    public getVexflowBackendType(): VF.RendererBackends {
+        return VF.RendererBackends.SVG;
     }
 
     public getOSMDBackendType(): BackendType {

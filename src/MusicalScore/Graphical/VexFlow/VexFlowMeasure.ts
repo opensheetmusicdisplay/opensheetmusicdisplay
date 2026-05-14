@@ -638,7 +638,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * Draw this measure on a VexFlow CanvasContext
      * @param ctx
      */
-    public draw(ctx: Vex.IRenderContext): void {
+    public draw(ctx: VF.RenderContext): void {
         const measureNode: SVGGElement = ctx.openGroup() as SVGGElement;
         if (measureNode) {
             measureNode.classList?.add("vf-measure");
@@ -1325,6 +1325,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     continue;
                 }
                 (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
+                // Set SVG id attribute for note identification
+                const firstGNote: GraphicalNote = gve.notes[0];
+                if (firstGNote?.sourceNote?.ParentStaffEntry?.VerticalContainerParent) {
+                    (gve as VexFlowVoiceEntry).vfStaveNote.setAttribute(
+                        "id",
+                        firstGNote.sourceNote.xmlId ?? firstGNote.sourceNote.computedSvgId()
+                    );
+                }
                 //if (!gve.notes[0].sourceNote.PrintObject) {
                     // note can now also be added as StaveNote instead of GhostNote, because we set it to transparent
 

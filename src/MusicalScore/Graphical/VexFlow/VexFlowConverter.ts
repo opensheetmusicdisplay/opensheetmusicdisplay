@@ -467,8 +467,9 @@ export class VexFlowConverter {
 
         const firstNote: Note = gve.notes[0].sourceNote;
         if (firstNote.IsCueNote) {
-            vfnoteStruct.glyph_font_scale = VF.DEFAULT_NOTATION_FONT_SCALE * VF.GraceNote.SCALE;
-            vfnoteStruct.stroke_px = VF.GraceNote.LEDGER_LINE_OFFSET;
+            // VF5: StaveNoteStruct uses strokePx (camelCase) instead of stroke_px.
+            // glyph_font_scale does not exist in VF5's NoteStruct — scaling is built into GraceNote.
+            vfnoteStruct.strokePx = VF.GraceNote.LEDGER_LINE_OFFSET;
         }
 
         if (gve.parentVoiceEntry.IsGrace || gve.notes[0].sourceNote.IsCueNote) {

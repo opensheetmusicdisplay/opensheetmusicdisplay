@@ -18,8 +18,8 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.rules = rules;
     }
 
-    public getVexflowBackendType(): VF.Renderer.Backends {
-        return VF.Renderer.Backends.CANVAS;
+    public getVexflowBackendType(): VF.RendererBackends {
+        return VF.RendererBackends.CANVAS;
     }
 
     public getOSMDBackendType(): BackendType {

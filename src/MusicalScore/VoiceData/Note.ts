@@ -114,6 +114,8 @@ export class Note {
      *    That's why we don't save a GraphicalNote reference directly in Note.
      */
     public NoteToGraphicalNoteObjectId: number; // used with EngravingRules.NoteToGraphicalNoteMap
+    /** The xml:id attribute from the MusicXML <note> element, if present. */
+    public xmlId?: string;
 
     public ToStringShort(octaveOffset: number = 0): string {
         if (!this.Pitch || this.isRest()) {
@@ -307,6 +309,14 @@ export class Note {
     }
     public hasTabEffects(): boolean {
         return false; // override in TabNote
+    }
+
+    public computedSvgId(): string {
+        const m = this.ParentStaffEntry.VerticalContainerParent.ParentMeasure.MeasureNumber;
+        const s = this.ParentStaff.idInMusicSheet;
+        const v = this.ParentVoiceEntry.ParentVoice.VoiceId;
+        const i = this.ParentVoiceEntry.Notes.indexOf(this);
+        return `note-${m}-${s}-${v}-${i}`;
     }
 }
 
