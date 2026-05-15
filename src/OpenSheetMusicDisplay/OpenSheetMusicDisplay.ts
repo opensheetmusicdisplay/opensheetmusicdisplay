@@ -38,6 +38,7 @@ import { GraphicalStaffEntry } from "../MusicalScore/Graphical/GraphicalStaffEnt
 import { MusicSystem } from "../MusicalScore/Graphical/MusicSystem";
 import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
 import { AbstractGraphicalExpression } from "../MusicalScore/Graphical/AbstractGraphicalExpression";
+import { countLedgerLineNotesForTransposition as countLedgerLineNotesOnMusicSheet } from "./ledgerLineTranspositionCount";
 import { RangeSelectionElementCollector } from "./RangeSelectionElementCollector";
 import {
     createResolvedRangeSelectionConfig,
@@ -1453,6 +1454,15 @@ export class OpenSheetMusicDisplay {
 
     public get TransposeCalculator(): ITransposeCalculator {
         return MusicSheetCalculator.transposeCalculator;
+    }
+
+    /**
+     * Read-only: does not set `Sheet.Transpose` or render. Counts printed notes that would fall outside
+     * treble D4–G5 or bass F2–B3 if the score were hypothetically transposed by `transposeHalftones` (semitones).
+     * Useful to know whether we want to transpose upwards or downwards, i.e. which result would be easier to read!
+     */
+    public countLedgerLineNotesForTransposition(transposeHalftones: number): number {
+        return countLedgerLineNotesOnMusicSheet(this.sheet, transposeHalftones);
     }
 
     public get Sheet(): MusicSheet {

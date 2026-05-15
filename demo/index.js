@@ -1,5 +1,6 @@
 import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
 import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
+import { countLedgerLineNotesForTransposition } from '../src/OpenSheetMusicDisplay/ledgerLineTranspositionCount';
 import * as jsPDF  from '../node_modules/jspdf/dist/jspdf.es.min';
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.umd.min';
 import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculator';
@@ -756,16 +757,10 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
                         if (!payload) {
                             return;
                         }
-                        console.log("[OSMD demo] range selection:", payload.phase,
-                            "start=", payload.normalizedStart?.timestampReal,
-                            "end=", payload.normalizedEnd?.timestampReal,
-                            "direction=", payload.direction);
                     },
                     onLoopRequest: function (payload) {
-                        console.log("[OSMD demo] loop requested:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
                     },
                     onClearRequest: function (payload) {
-                        console.log("[OSMD demo] clear requested:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
                     },
                     onControlsRender: function (container, payload) {
                 var makeIconButton = function (icon, title, onClick) {
@@ -789,14 +784,12 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
                 };
                 container.appendChild(makeIconButton("↻", "Loop Section", function (event) {
                     event.stopPropagation();
-                    console.log("[OSMD demo] loop action icon clicked:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
                     if (openSheetMusicDisplay?.rangeSelection?.callbacks?.onLoopRequest) {
                         openSheetMusicDisplay.rangeSelection.callbacks.onLoopRequest(payload);
                     }
                 }));
                 container.appendChild(makeIconButton("✕", "Clear Selection", function (event) {
                     event.stopPropagation();
-                    console.log("[OSMD demo] clear action icon clicked:", payload?.normalizedStart?.timestampReal, payload?.normalizedEnd?.timestampReal);
                     if (openSheetMusicDisplay?.rangeSelection?.callbacks?.onClearRequest) {
                         openSheetMusicDisplay.rangeSelection.callbacks.onClearRequest(payload);
                     }
@@ -1284,6 +1277,21 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
         openSheetMusicDisplay.DrawBoundingBox = value;
     }
 
+    /** After load: log hypothetical ledger-line note counts per semitone offset (-12..+12). */
+    function logLedgerLineCountsForAllTransposeKeys() {
+        if (!openSheetMusicDisplay || !openSheetMusicDisplay.Sheet) {
+            return;
+        }
+        var sheet = openSheetMusicDisplay.Sheet;
+        var counts = {};
+        var s;
+        for (s = -12; s <= 12; s += 1) {
+            var label = s > 0 ? "+" + s : (s < 0 ? String(s) : "0");
+            counts[label] = countLedgerLineNotesForTransposition(sheet, s);
+        }
+        console.log("[OSMD demo] hypothetical ledger-line note counts (semitones -12..+12; read-only, pre-Sheet.Transpose):", counts);
+    }
+
     function selectSampleOnChange(str) {
         error();
         disable();
@@ -1311,6 +1319,8 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
                 // openSheetMusicDisplay.Sheet.Instruments[0].Staves[1].Visible = false;
                 //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
                 renderAndScrollBack();
+
+                logLedgerLineCountsForAllTransposeKeys();
 
                 // Test updateTempo functionality
                 testUpdateTempo();
