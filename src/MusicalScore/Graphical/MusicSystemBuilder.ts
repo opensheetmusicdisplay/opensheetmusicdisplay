@@ -642,12 +642,11 @@ export class MusicSystemBuilder {
             if (abstractNotationInstruction instanceof ClefInstruction) {
                 const activeClef: ClefInstruction = <ClefInstruction>abstractNotationInstruction;
                 measure.addClefAtEnd(activeClef);
-                // TEMP DEBUG: disable invisible propagation
-                // for (const otherVerticalMeasure of measures) {
-                //     if (otherVerticalMeasure !== measure) {
-                //         otherVerticalMeasure.addClefAtEnd(activeClef, false);
-                //     }
-                // }
+                for (const otherVerticalMeasure of measures) {
+                    if (otherVerticalMeasure !== measure) {
+                        otherVerticalMeasure.addClefAtEnd(activeClef, false);
+                    }
+                }
             }
         }
         return this.rules.MeasureRightMargin + measure.endInstructionsWidth;
