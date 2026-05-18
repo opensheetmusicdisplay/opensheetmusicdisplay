@@ -20,6 +20,7 @@ pids
 # dot folders (e.g. IDE settings)
 .*
 !.github
+!.well-known
 
 # optional npm script-generated data
 visual_regression/
