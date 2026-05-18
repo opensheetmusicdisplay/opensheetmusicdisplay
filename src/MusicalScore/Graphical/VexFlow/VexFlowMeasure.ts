@@ -731,27 +731,45 @@ export class VexFlowMeasure extends GraphicalMeasure {
             this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels, this);
         }
 
-        // Center whole-measure rests manually (VF5 dropped align_center support)
+        this.centerWholeBarRests();
+
+        // this.correctNotePositions(); // now done at the end of draw()
+    }
+
+    /**
+     * Center whole-bar rests within this measure. Centers all rests that share a
+     * tick with an _alignCenter-flagged rest (primary whole-bar rest) to the same
+     * absolute X position, including secondary voice-fill rests that lack the flag.
+     */
+    public centerWholeBarRests(refCenterX: number = -1): void {
         const stave: VF.Stave = this.getVFStave();
-        if (stave) {
-            const noteStartX: number = stave.getNoteStartX();
-            const noteEndX: number = stave.getNoteEndX();
-            const centerX: number = noteStartX + (noteEndX - noteStartX) / 2;
-            for (const voice of this.getVoicesWithinMeasure()) {
-                for (const ve of voice.VoiceEntries) {
-                    for (const note of ve.Notes) {
-                        const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
-                        const vfnote: VF.StemmableNote = gNote?.vfnote?.[0];
-                        if (vfnote && (vfnote as any)._alignCenter) {
-                            const glyphWidth: number = vfnote.getGlyphWidth();
-                            vfnote.setXShift(centerX - vfnote.getAbsoluteX() - glyphWidth / 2);
-                        }
-                    }
+        if (!stave) { return; }
+        const localCenterX: number = stave.getNoteStartX() + (stave.getNoteEndX() - stave.getNoteStartX()) / 2;
+        const centerX: number = refCenterX >= 0 ? refCenterX : localCenterX;
+        // Group all rests by tick context X (rounded to .01).
+        const tickGroups: Map<string, VF.StemmableNote[]> = new Map();
+        for (const voice of this.getVoicesWithinMeasure()) {
+            for (const ve of voice.VoiceEntries) {
+                for (const note of ve.Notes) {
+                    const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
+                    const vfnote: VF.StemmableNote = gNote?.vfnote?.[0];
+                    if (!vfnote || !vfnote.isRest?.()) { continue; }
+                    const tcX: number = vfnote.getTickContext?.()?.getX() ?? 0;
+                    const key: string = (Math.round(tcX * 100)).toString();
+                    if (!tickGroups.has(key)) { tickGroups.set(key, []); }
+                    tickGroups.get(key)!.push(vfnote);
                 }
             }
         }
-
-        // this.correctNotePositions(); // now done at the end of draw()
+        for (const notes of tickGroups.values()) {
+            const hasAlignCenter: boolean = notes.some(n => (n as any)._alignCenter);
+            if (!hasAlignCenter) { continue; }
+            for (const vfnote of notes) {
+                const glyphWidth: number = vfnote.getGlyphWidth();
+                const ax: number = vfnote.getAbsoluteX();
+                vfnote.setXShift(centerX - ax - glyphWidth / 2);
+            }
+        }
     }
 
     // correct position / bounding box (note.setIndex() needs to have been called)
@@ -1573,11 +1591,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
     protected createArticulations(): void {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
-
-            // create vex flow articulation:
             const graphicalVoiceEntries: GraphicalVoiceEntry[] = graphicalStaffEntry.graphicalVoiceEntries;
             for (const gve of graphicalVoiceEntries) {
                 const vfStaveNote: StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
+                if (!vfStaveNote) { continue; }
                 VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0], this.rules);
             }
         }

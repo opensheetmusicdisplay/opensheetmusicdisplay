@@ -196,6 +196,7 @@
         </note>
       </measure>
     <measure number="2" width="523.27">
+      <print new-system="yes"/>
       <attributes>
         <clef number="1">
           <sign>G</sign>

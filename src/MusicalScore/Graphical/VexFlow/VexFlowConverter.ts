@@ -754,6 +754,16 @@ export class VexFlowConverter {
             return;
         }
 
+        // Remove existing articulations to prevent duplicates when called multiple times
+        if (typeof vfnote.getModifiers === "function") {
+            const modifiers: VF.Modifier[] = vfnote.getModifiers();
+            for (let i: number = modifiers.length - 1; i >= 0; i--) {
+                if (modifiers[i].getCategory?.() === "Articulation") {
+                    modifiers.splice(i, 1);
+                }
+            }
+        }
+
         for (const articulation of gNote.sourceNote.ParentVoiceEntry.Articulations) {
             let vfArtPosition: number = VF.Modifier.Position.ABOVE;
 

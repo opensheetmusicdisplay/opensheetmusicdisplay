@@ -134,8 +134,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     this.beamsNeedUpdate = false;
   }
 
+  private adjustArticulationXShift(): void {
+    // VexFlow 5 inherently aligns modifiers correctly (e.g. centering over notehead for articulations).
+    // The legacy manual padding actually broke centered placement requested by the user.
+    return;
+  }
+
   protected calculateMusicSystems(): void {
     super.calculateMusicSystems();
+    this.adjustArticulationXShift();
 
     if (!this.graphicalMusicSheet.MeasureList) {
       return;
@@ -259,7 +266,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // Propagate stave from voices to tickables (Voice.setStave only
       // sets it on the voice object; tickables need it for stave detection).
       for (const v of allVoices) {
-        const voiceStave = v.getStave();
+        const voiceStave: VF.Stave | null = v.getStave();
         if (voiceStave) {
           for (const tickable of v.getTickables()) {
             if (!(tickable as any).getStave?.()) {
@@ -327,34 +334,34 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // xShift per-context, which can misalign same-tick notes across
         // staves. Zero unless a tickable's notehead would overlap another
         // on the same staff (second interval).
-        const tctxs = formatter.getTickContexts();
+        const tctxs: any = formatter.getTickContexts();
         if (tctxs) {
           const noteStep: Record<string, number> = { c:0, d:1, e:2, f:3, g:4, a:5, b:6 };
           for (const tickKey of tctxs.list) {
-            const ctx = tctxs.map[tickKey];
-            const tickables = ctx.getTickables();
-            if (tickables.length < 2) continue;
+            const ctx: any = tctxs.map[tickKey];
+            const tickables: any[] = ctx.getTickables();
+            if (tickables.length < 2) { continue; }
             const needsXShift: Set<any> = new Set();
-            for (let i = 0; i < tickables.length; i++) {
-              for (let j = i + 1; j < tickables.length; j++) {
-                const a = tickables[i] as any;
-                const b = tickables[j] as any;
-                const sa = a.getStave?.();
-                const sb = b.getStave?.();
-                if (!sa || !sb || sa !== sb) continue;
+            for (let i: number = 0; i < tickables.length; i++) {
+              for (let j: number = i + 1; j < tickables.length; j++) {
+                const a: any = tickables[i] as any;
+                const b: any = tickables[j] as any;
+                const sa: any = a.getStave?.();
+                const sb: any = b.getStave?.();
+                if (!sa || !sb || sa !== sb) { continue; }
                 const ka: string[] = a.getKeys?.() ?? [];
                 const kb: string[] = b.getKeys?.() ?? [];
-                let isSecond = false;
+                let isSecond: boolean = false;
                 for (const k1 of ka) {
-                  if (isSecond) break;
+                  if (isSecond) { break; }
                   for (const k2 of kb) {
-                    const [n1, o1] = k1.split('/');
-                    const [n2, o2] = k2.split('/');
-                    const s1 = noteStep[n1[0]] ?? -1;
-                    const s2 = noteStep[n2[0]] ?? -1;
+                    const [n1, o1] = k1.split("/");
+                    const [n2, o2] = k2.split("/");
+                    const s1: number = noteStep[n1[0]] ?? -1;
+                    const s2: number = noteStep[n2[0]] ?? -1;
                     if (s1 >= 0 && s2 >= 0) {
-                      const d1 = parseInt(o1) * 7 + s1;
-                      const d2 = parseInt(o2) * 7 + s2;
+                      const d1: number = parseInt(o1, 10) * 7 + s1;
+                      const d2: number = parseInt(o2, 10) * 7 + s2;
                       if (Math.abs(d1 - d2) === 1) {
                         isSecond = true;
                       }
@@ -368,13 +375,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               }
             }
             for (const tickable of tickables) {
-              const t = tickable as any;
+              const t: any = tickable as any;
               if (needsXShift.has(tickable)) {
-                console.log(`[KEEP_XSHIFT] tickKey=${tickKey} keys=${t.getKeys?.()?.join('|')} stave=${t.getStave?.()?.getNum?.()}`);
+                console.log(`[KEEP_XSHIFT] tickKey=${tickKey} keys=${t.getKeys?.()?.join("|")} stave=${t.getStave?.()?.getNum?.()}`);
                 continue;
               }
-              if (typeof t.setXShift === 'function' && t.getXShift() !== 0) {
-                console.log(`[ZERO_XSHIFT] tickKey=${tickKey} keys=${t.getKeys?.()?.join('|')} stave=${t.getStave?.()?.getNum?.()}`);
+              if (typeof t.setXShift === "function" && t.getXShift() !== 0) {
+                console.log(`[ZERO_XSHIFT] tickKey=${tickKey} keys=${t.getKeys?.()?.join("|")} stave=${t.getStave?.()?.getNum?.()}`);
                 t.setXShift(0);
               }
             }
@@ -1548,7 +1555,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               const firstNote: GraphicalStaffEntry = nextPedalFirstMeasure.staffEntries[0];
               let lastNote: GraphicalStaffEntry = nextPedalLastMeasure.staffEntries[nextPedalLastMeasure.staffEntries.length - 1];
 
-              //If the end measure's staffline is the ending staffline, this endMeasure is the end of the pedal
+              //If the end measure's is the ending staffline, this endMeasure is the end of the pedal
               if (endMeasure.ParentStaffLine === nextPedalStaffline) {
                 nextPedalLastMeasure = endMeasure;
                 nextPedal.setEndMeasure(endMeasure);
@@ -1954,7 +1961,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let stopX: number = endBbox.AbsolutePosition.x + endXOffset;
     if (startX > stopX) {
       // very rare case of the start staffentry being before end staffentry. would lead to error in skybottomline. See #1281
-      // reverse startX and endX
+      // reverse startX and stopX
       const oldStartX: number = startX;
       startX = stopX;
       stopX = oldStartX;
@@ -2456,4 +2463,3 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 }
-

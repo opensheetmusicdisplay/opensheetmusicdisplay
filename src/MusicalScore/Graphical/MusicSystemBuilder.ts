@@ -581,6 +581,34 @@ export class MusicSystemBuilder {
         if (isSystemStartMeasure) {
             if (!currentClef) {
                 currentClef = this.activeClefs[visibleStaffIdx];
+                // Check if this clef type was already shown as an in-measure change
+                // in the previous measure (e.g., on the last beat). If so, skip
+                // adding it at system start — it's redundant.
+                const prevMeasureIdx: number = this.measureListIndex - 1;
+                if (prevMeasureIdx >= 0 && currentClef) {
+                    const prevSourceMeasure: SourceMeasure =
+                        this.measureList[prevMeasureIdx]?.[0]?.parentSourceMeasure;
+                    if (prevSourceMeasure) {
+                        const staffIdx: number = this.visibleStaffIndices[visibleStaffIdx];
+                        const prevEntries: SourceStaffEntry[] = prevSourceMeasure.getEntriesPerStaff(staffIdx);
+                        for (let e: number = prevEntries.length - 1; e >= 0; e--) {
+                            const entry: SourceStaffEntry = prevEntries[e];
+                            if (!entry?.Instructions) { continue; }
+                            let foundClef: boolean = false;
+                            for (let j: number = entry.Instructions.length - 1; j >= 0; j--) {
+                                const instr: AbstractNotationInstruction = entry.Instructions[j];
+                                if (instr instanceof ClefInstruction) {
+                                    foundClef = true;
+                                    if ((<ClefInstruction>instr).ClefType === currentClef.ClefType) {
+                                        currentClef = undefined;
+                                    }
+                                    break;
+                                }
+                            }
+                            if (foundClef || !currentClef) { break; }
+                        }
+                    }
+                }
             }
             if (!currentKey) {
                 currentKey = KeyInstruction.copy(this.activeKeys[visibleStaffIdx]);
@@ -642,11 +670,11 @@ export class MusicSystemBuilder {
             if (abstractNotationInstruction instanceof ClefInstruction) {
                 const activeClef: ClefInstruction = <ClefInstruction>abstractNotationInstruction;
                 measure.addClefAtEnd(activeClef);
-                for (const otherVerticalMeasure of measures) {
-                    if (otherVerticalMeasure !== measure) {
-                        otherVerticalMeasure.addClefAtEnd(activeClef, false);
-                    }
-                }
+                // Only add end-clef to this measure/staff. Do NOT propagate to other staves —
+                // an invisible end-clef on another staff causes a stale clef to appear at the next
+                // system start for that staff, because updateActiveClefs reads LastInstructionsStaffEntries
+                // and treats it as the active clef for the new system.
+                // (See in-measure-clefs test: bar 2 bass staff showing treble from bar 1 beat 4.)
             }
         }
         return this.rules.MeasureRightMargin + measure.endInstructionsWidth;
