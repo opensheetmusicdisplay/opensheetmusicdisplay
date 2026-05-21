@@ -1035,8 +1035,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       undefined,
       useStaffEntryBorderLeft
       );
-    if (dynamicStartPosition.x <= 0) {
-      dynamicStartPosition.x = startMeasure.beginInstructionsWidth + this.rules.RhythmRightMargin;
+    // Clamp wedge start to instruction area: useStaffEntryBorderLeft can place
+    // the open end at the note's leftmost border (including accidental space),
+    // which for the first note may extend before the barline into negatives.
+    // Ensure the wedge starts after clef, key, and time signature, but
+    // still just before the notehead.
+    const minStartX: number = startMeasure.beginInstructionsWidth;
+    if (dynamicStartPosition.x < minStartX) {
+      dynamicStartPosition.x = minStartX;
     }
 
     if (multiExpression.InstantaneousDynamic) {

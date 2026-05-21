@@ -270,7 +270,7 @@ export class ExpressionReader {
 
             dirContentNode = dirNode.element("wedge");
             if (dirContentNode) {
-                this.interpretWedge(directionNode, dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
+                this.interpretWedge(directionNode, dirContentNode, currentMeasure, timestampFraction, currentMeasure.MeasureNumber);
                 continue;
             }
 
