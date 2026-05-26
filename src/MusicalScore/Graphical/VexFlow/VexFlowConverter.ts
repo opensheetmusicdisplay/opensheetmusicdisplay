@@ -458,8 +458,8 @@ export class VexFlowConverter {
 
         let vfnote: VF.StaveNote;
         const vfnoteStruct: any = {
-            align_center: alignCenter,
-            auto_stem: true,
+            alignCenter: alignCenter,
+            autoStem: true,
             clef: vfClefType,
             duration: duration,
             keys: keys,

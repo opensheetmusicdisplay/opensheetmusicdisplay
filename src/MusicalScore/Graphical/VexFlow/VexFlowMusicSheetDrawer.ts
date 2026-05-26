@@ -252,40 +252,35 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                     }
                     const hasBbox: boolean = (stemElement as any)?.getBbox !== undefined;
                     if (hasBbox) {
-                        // apparently sometimes the stemElement is null, in that case we need to use the canvas method.
                         const rect: SVGRect = (stemElement as any).getBBox();
                         stemTip = new PointF2D(rect.x / 10, rect.y / 10);
                         stemHeight = rect.height / 10;
-                    } else { // if this.backend instanceof CanvasVexFlowBackend // also seems to work for SVG
+                    } else {
                         stemHeight = vfNote.vfnote[0].getStemLength() / 10;
                         stemTip = new PointF2D(
-                            (vfNote.vfnote[0].getStem() as any).x_begin / 10,
-                            (vfNote.vfnote[0].getStem() as any).y_top / 10,
+                            (vfNote.vfnote[0].getStem() as any).xBegin / 10,
+                            (vfNote.vfnote[0].getStem() as any).yTop / 10,
                         );
                         if (directionSign === 1) {
                             stemTip.y -= stemHeight;
                         }
                     }
-                    // this.DrawOverlayLine(stemTip, new PointF2D(stemTip.x + 5, stemTip.y), vfNote.ParentMusicPage); // debug
 
                     let startHeight: number = stemTip.y + stemHeight / 3;
                     if (vfNote.vfnote[0].getBeamCount() > 1) {
                         startHeight = stemTip.y + (stemHeight / 2);
                         if (directionSign === -1) {
-                            // downwards stem, z paints in downwards direction, so we need to start further up
                             startHeight -= (baseHeight + 0.2);
                         }
-                        // note that buzz rolls usually don't appear on notes smaller than 16ths, rather on longer ones
                     }
 
-                    const buzzStartX: number = stemTip.x - 0.5; // top left start point
+                    const buzzStartX: number = stemTip.x - 0.5;
                     const buzzStartY: number = startHeight;
                     const pathPoints: PointF2D[] = [];
-                    // movements to draw the "z" point by point: (drawing by numbers)
                     const movements: PointF2D[] = [
-                        new PointF2D(0, -thickness), // down a bit
-                        new PointF2D(baseLength-thickness, 0), // to the right
-                        new PointF2D(-baseLength+thickness,-baseHeight), // down left (etc)
+                        new PointF2D(0, -thickness),
+                        new PointF2D(baseLength-thickness, 0),
+                        new PointF2D(-baseLength+thickness,-baseHeight),
                         new PointF2D(0, -thickness),
                         new PointF2D(baseLength, 0),
                         new PointF2D(0, thickness),

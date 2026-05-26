@@ -765,6 +765,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const hasAlignCenter: boolean = notes.some(n => (n as any)._alignCenter);
             if (!hasAlignCenter) { continue; }
             for (const vfnote of notes) {
+                // VF5 already centers via setCenterXShift when alignCenter is set in struct.
+                // Skip to avoid double-centering. Only xShift fill rests sharing the tick.
+                if ((vfnote as any).isCenterAligned?.()) { continue; }
                 const glyphWidth: number = vfnote.getGlyphWidth();
                 const ax: number = vfnote.getAbsoluteX();
                 vfnote.setXShift(centerX - ax - glyphWidth / 2);
