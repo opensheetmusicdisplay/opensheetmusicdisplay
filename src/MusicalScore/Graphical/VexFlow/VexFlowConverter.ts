@@ -229,6 +229,29 @@ export class VexFlowConverter {
     }
 
     public static GhostNotes(frac: Fraction): VF.GhostNote[] {
+        // When a gap's duration is not a dyadic fraction (denominator not a power of two) -
+        // e.g. a tuplet member like a triplet eighth (1/12) - it cannot be represented exactly
+        // by standard note-value rests. durations() then decomposes it greedily and overshoots
+        // (1/12 -> 1/16 + 1/64 + 1/128), so the voice's accumulated ticks drift and every
+        // following note is pushed out of vertical alignment with simultaneous notes in other
+        // voices. This typically happens with cross-staff tuplets, where the off-staff members
+        // are filled with ghost notes on this staff. Emit a single ghost note whose ticks match
+        // the gap exactly, mirroring the StaveNote tuplet tick fix in graphicalMeasureCreatedCalculations().
+        const denominator: number = frac.Denominator;
+        // dyadic = denominator is a power of two (1, 2, 4, 8, ...), i.e. log2 is an integer.
+        const isDyadic: boolean = denominator > 0 && Number.isInteger(Math.log2(denominator));
+        if (!isDyadic) {
+            const ghostNote: VF.GhostNote = new VF.GhostNote({
+                duration: VexFlowConverter.durations(frac, true)[0],
+            });
+            // ticks = frac * VF.RESOLUTION, kept as an exact rational via VF.Fraction
+            // (e.g. 1/12 -> 16384/12 -> 4096/3) so the voice's resolution multiplier stays correct.
+            const vfTicks: VF.Fraction = ghostNote.getTicks();
+            vfTicks.numerator = frac.Numerator * VF.RESOLUTION;
+            vfTicks.denominator = frac.Denominator;
+            vfTicks.simplify();
+            return [ghostNote];
+        }
         const ghostNotes: VF.GhostNote[] = [];
         const durations: string[] = VexFlowConverter.durations(frac, false);
         for (const duration of durations) {

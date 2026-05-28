@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for cross-staff tuplet alignment.
+    A two-staff piano part where voice 2 is a triplet whose third note (G4) is
+    notated on the upper staff, so the lower staff must fill that slot with a
+    ghost note. Voice 5 plays plain eighth notes on the lower staff. On beat 2,
+    voice 2's first triplet note and voice 5's eighth note share the same
+    timestamp and must be horizontally aligned. Before the fix, the ghost filler
+    used a greedy dyadic rest decomposition (1/16 + 1/64 + 1/128) that overshot
+    the triplet-eighth gap and pushed the beat-2 notes out of alignment.
+  -->
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>12</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <staves>2</staves>
+        <clef number="1"><sign>G</sign><line>2</line></clef>
+        <clef number="2"><sign>F</sign><line>4</line></clef>
+      </attributes>
+
+      <!-- Voice 1: melody on the upper staff -->
+      <note>
+        <pitch><step>B</step><octave>4</octave></pitch>
+        <duration>12</duration><voice>1</voice><type>quarter</type><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>4</octave></pitch>
+        <duration>12</duration><voice>1</voice><type>quarter</type><staff>1</staff>
+      </note>
+
+      <backup><duration>24</duration></backup>
+
+      <!-- Voice 2: cross-staff triplets (3rd note of each triplet on the upper staff) -->
+      <note>
+        <pitch><step>B</step><octave>3</octave></pitch>
+        <duration>4</duration><voice>2</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <staff>2</staff>
+        <notations><tuplet type="start" bracket="yes"/></notations>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>4</duration><voice>2</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>4</duration><voice>2</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <staff>1</staff>
+        <notations><tuplet type="stop"/></notations>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>3</octave></pitch>
+        <duration>4</duration><voice>2</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <staff>2</staff>
+        <notations><tuplet type="start" bracket="yes"/></notations>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>4</duration><voice>2</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>4</duration><voice>2</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <staff>1</staff>
+        <notations><tuplet type="stop"/></notations>
+      </note>
+
+      <backup><duration>24</duration></backup>
+
+      <!-- Voice 5: plain eighth notes on the lower staff -->
+      <note>
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>6</duration><voice>5</voice><type>eighth</type><staff>2</staff>
+      </note>
+      <note>
+        <rest/><duration>6</duration><voice>5</voice><type>eighth</type><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>6</duration><voice>5</voice><type>eighth</type><staff>2</staff>
+      </note>
+      <note>
+        <rest/><duration>6</duration><voice>5</voice><type>eighth</type><staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>
