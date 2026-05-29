@@ -48,6 +48,38 @@ function centerRest(rest, noteU, noteL) {
   rest.minLine -= delta;
 }
 
+/**
+ * Whether two notes from different voices on the same staff line form a unison
+ * whose noteheads can share one horizontal position (overlap) instead of being
+ * staggered. Noteheads can't cleanly overlap if their shapes differ (one half/whole
+ * and the other not), if their dot counts differ, or - when
+ * EngravingRules.StaggerSameWholeNotes is set - for two identical whole notes.
+ * Shared by the two-voice and three-voice collision paths so the same decision is
+ * used in both (the divergence between them is what previously left three-voice
+ * unisons staggered).
+ * @param a a notesList entry, i.e. { line, isrest, note, ... }
+ * @param b the other notesList entry
+ * @param staggerSameWholeNotes EngravingRules.StaggerSameWholeNotes: keep two identical whole notes apart
+ * @returns true if the two noteheads can share a column (overlap) as a unison
+ */
+function mergeableUnison(a, b, staggerSameWholeNotes) {
+  if (a.isrest || b.isrest) return false;
+  if (a.line !== b.line) return false; // not on the same staff line -> not a unison
+  let halfNoteCount = 0;
+  let wholeNoteCount = 0;
+  for (const e of [a, b]) {
+    if (e.note.duration === "h") {
+      halfNoteCount++;
+    } else if (e.note.duration === "w") {
+      wholeNoteCount++;
+    }
+  }
+  if (halfNoteCount === 1 || wholeNoteCount === 1) return false; // mismatched notehead shapes
+  if (staggerSameWholeNotes && wholeNoteCount === 2) return false; // keep identical whole notes apart
+  if (a.note.dots !== b.note.dots) return false;
+  return true;
+}
+
 export class StaveNote extends StemmableNote {
   static get CATEGORY() { return 'stavenotes'; }
   static get STEM_UP() { return Stem.UP; }
@@ -169,27 +201,9 @@ export class StaveNote extends StemmableNote {
           //If we are sharing a line, switch one notes stem direction.
           //If we are sharing a line and in the same voice, only then offset one note
           const lineDiff = Math.abs(noteU.line - noteL.line);
-          //if (noteU.note.glyph.stem && noteL.note.glyph.stem) { // skip this condition: whole notes also relevant
-          //If we have different dot values, must offset
-          //Or If we have a non-filled in mixed with a filled in notehead, must offset
-          let halfNoteCount = 0;
-          let wholeNoteCount = 0;
-          if (noteU.note.duration === "h") {
-            halfNoteCount++;
-          } else if (noteU.note.duration === "w") {
-            wholeNoteCount++;
-          }
-          if (noteL.note.duration === "h") {
-            halfNoteCount++;
-          } else if (noteL.note.duration === "w") {
-            wholeNoteCount++;
-          }
-          // only stagger/x-shift if one of the notes is whole or half note and the other isn't. (or dots different)
-          let staggerConditions = halfNoteCount === 1 || wholeNoteCount === 1 || noteU.note.dots !== noteL.note.dots;
-          if (stagger_same_whole_notes) { // controlled by EngravingRules.StaggerSameWholeNotes. see declaration above
-            staggerConditions ||= wholeNoteCount === 2;
-          }
-          if (lineDiff === 0 && staggerConditions) {
+          // Stagger (x-shift) only if the two notes share a line but can't overlap as a
+          // unison - i.e. their notehead shapes or dots differ (see mergeableUnison).
+          if (lineDiff === 0 && !mergeableUnison(noteU, noteL, stagger_same_whole_notes)) {
             noteL.note.setXShift(xShift);
             if (noteU.note.dots > 0) {
               let foundDots = 0;
@@ -302,8 +316,22 @@ export class StaveNote extends StemmableNote {
     }
 
     // If middle voice intersects upper or lower voice
-    if ((!noteU.isrest && !noteM.isrest && noteU.minLine <= noteM.maxLine + 0.5) ||
-      (!noteM.isrest && !noteL.isrest && noteM.minLine <= noteL.maxLine)) {
+    const intersectsUpper = !noteU.isrest && !noteM.isrest && noteU.minLine <= noteM.maxLine + 0.5;
+    const intersectsLower = !noteM.isrest && !noteL.isrest && noteM.minLine <= noteL.maxLine;
+    // If the middle voice is a unison with either neighbour, its notehead should overlap
+    // that neighbour's (same pitch -> same column) rather than be staggered, just like in
+    // the two-voice path. This takes priority even when the middle voice also sits close to
+    // the other neighbour (e.g. a left-hand inner voice in unison with the upper voice while
+    // a separate bass note sits a sixth below). Only stagger a genuine collision where the
+    // middle voice isn't a unison with either neighbour. The extra single-notehead guard
+    // keeps this conservative for chords (the two-voice path has no such guard).
+    const middleIsSingleNotehead = noteM.note.getKeyProps().length === 1;
+    const isUnisonWithNeighbour = middleIsSingleNotehead && (
+      (intersectsUpper && noteU.note.getKeyProps().length === 1
+        && mergeableUnison(noteU, noteM, stagger_same_whole_notes)) ||
+      (intersectsLower && noteL.note.getKeyProps().length === 1
+        && mergeableUnison(noteM, noteL, stagger_same_whole_notes)));
+    if (!isUnisonWithNeighbour && (intersectsUpper || intersectsLower)) {
       xShift = voiceXShift + 3;      // shift middle note right
       noteM.note.setXShift(xShift);
     }
