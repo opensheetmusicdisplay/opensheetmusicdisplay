@@ -329,12 +329,16 @@ export class StaveNote extends StemmableNote {
     // If middle voice intersects upper or lower voice
     const intersectsUpper = !noteU.isrest && !noteM.isrest && noteU.minLine <= noteM.maxLine + 0.5;
     const intersectsLower = !noteM.isrest && !noteL.isrest && noteM.minLine <= noteL.maxLine;
-    // A unison (same staff line) between the middle voice and the voice it
-    // "intersects" should overlap, not be staggered, just like in the two-voice
-    // path. Only shift the middle note for a genuine (non-unison) collision.
-    const upperIsUnison = intersectsUpper && unisonMergeable(noteU, noteM);
-    const lowerIsUnison = intersectsLower && unisonMergeable(noteM, noteL);
-    if ((intersectsUpper && !upperIsUnison) || (intersectsLower && !lowerIsUnison)) {
+    // If the middle voice is a unison with either neighbour, its notehead should overlap
+    // that neighbour's (same pitch -> same column) rather than be staggered, just like in
+    // the two-voice path. This takes priority even when the middle voice also sits close to
+    // the other neighbour (e.g. a left-hand inner voice in unison with the upper voice while
+    // a separate bass note sits a sixth below). Only stagger a genuine collision where the
+    // middle voice isn't a unison with either neighbour.
+    const isUnisonWithNeighbour =
+      (intersectsUpper && unisonMergeable(noteU, noteM)) ||
+      (intersectsLower && unisonMergeable(noteM, noteL));
+    if (!isUnisonWithNeighbour && (intersectsUpper || intersectsLower)) {
       xShift = voiceXShift + 3;      // shift middle note right
       noteM.note.setXShift(xShift);
     }
