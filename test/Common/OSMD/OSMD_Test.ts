@@ -1,8 +1,19 @@
 import { expect } from "chai";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../Util/TestUtils";
-import { VoiceEntry, Instrument, Note, Staff, Voice, GraphicalStaffEntry, GraphicalNote,
-            Fraction, Pitch, AccidentalEnum, DrawingParametersEnum, IOSMDOptions, Cursor } from "../../../src";
+import { IOSMDOptions } from "../../../src/OpenSheetMusicDisplay/OSMDOptions";
+import { DrawingParametersEnum } from "../../../src/Common/Enums/DrawingParametersEnum";
+import { Cursor } from "../../../src/OpenSheetMusicDisplay/Cursor";
+import { MusicPartManagerIterator } from "../../../src/MusicalScore/MusicParts/MusicPartManagerIterator";
+import { VoiceEntry } from "../../../src/MusicalScore/VoiceData/VoiceEntry";
+import { Instrument } from "../../../src/MusicalScore/Instrument";
+import { Note } from "../../../src/MusicalScore/VoiceData/Note";
+import { Staff } from "../../../src/MusicalScore/VoiceData/Staff";
+import { Voice } from "../../../src/MusicalScore/VoiceData/Voice";
+import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
+import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
+import { Fraction } from "../../../src/Common/DataObjects/Fraction";
+import { AccidentalEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -340,6 +351,26 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                 cursor.previous();
                 cursor.previous();
                 expect(cursor.Iterator.EndReached).to.equal(false);
+            });
+        });
+
+        describe("iterator.clone()", () => {
+            it("clone() advancing does not corrupt the original iterator (#1674)", () => {
+                const cursor: Cursor = opensheetmusicdisplay.cursors[0];
+                cursor.reset(); // reset to first timestamp / notes in the sheet
+
+                const notesBefore: number = cursor.GNotesUnderCursor().length;
+                expect(notesBefore).to.be.greaterThan(0);
+
+                // Clone and advance — the common "peek at next position" pattern.
+                // Before the fix, the clone shared currentVoiceEntries with the original,
+                // so moveToNext() inside the clone wiped the original's entries.
+                const clone: MusicPartManagerIterator = cursor.iterator.clone();
+                clone.moveToNextVisibleVoiceEntry(false);
+
+                const notesAfter: number = cursor.GNotesUnderCursor().length;
+                expect(notesAfter).to.equal(notesBefore);
+                // note that cursor.Iterator.CurrentSourceTimestamp was unaffected by this bug, so we have to check e.g. GNotesUnderCursor or NotesUnderCursor.
             });
         });
 

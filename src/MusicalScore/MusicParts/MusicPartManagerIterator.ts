@@ -14,10 +14,10 @@ import {InstantaneousDynamicExpression} from "../VoiceData/Expressions/Instantan
 import {MultiTempoExpression} from "../VoiceData/Expressions/MultiTempoExpression";
 import {AbstractExpression} from "../VoiceData/Expressions/AbstractExpression";
 import log from "loglevel";
-import { MusicSheet } from "../MusicSheet";
-import { NoteHeadShape } from "../VoiceData/Notehead";
-import { PlaybackSettings } from "../../Common/DataObjects/PlaybackSettings";
-import { Note } from "../VoiceData";
+import {MusicSheet} from "../MusicSheet";
+import {NoteHeadShape} from "../VoiceData/Notehead";
+import {PlaybackSettings} from "../../Common/DataObjects/PlaybackSettings";
+import {Note} from "../VoiceData";
 
 export class MusicPartManagerIterator {
     constructor(musicSheet: MusicSheet, startTimestamp?: Fraction, endTimestamp?: Fraction) {
@@ -159,7 +159,8 @@ export class MusicPartManagerIterator {
         ret.currentVoiceEntryIndex = this.currentVoiceEntryIndex;
         ret.currentMappingPart = this.currentMappingPart;
         ret.currentPartIndex = this.currentPartIndex;
-        ret.currentVoiceEntries = this.currentVoiceEntries;
+        ret.currentVoiceEntries = this.currentVoiceEntries?.slice() ?? undefined;
+        // without slice() this is a shallow copy that shares data with the cloned iterator, so one can overwrite the other e.g. on next(). see #1674
         ret.endReached = this.endReached;
         ret.frontReached = this.frontReached;
         // alternative method to set currentTimeStamp? may not fully affect current iterator position
