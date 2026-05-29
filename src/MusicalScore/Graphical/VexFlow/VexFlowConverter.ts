@@ -229,15 +229,12 @@ export class VexFlowConverter {
     }
 
     public static GhostNotes(frac: Fraction): VF.GhostNote[] {
-        // Emit a single ghost note whose ticks exactly match the gap.
-        // Previously the gap was decomposed into standard note-value rests via durations(),
-        // but for a non-dyadic gap - a tuplet member such as a triplet eighth (1/12) - that
-        // decomposition cannot represent the length exactly and overshoots
-        // (1/12 -> 1/16 + 1/64 + 1/128), so the voice's accumulated ticks drift and following
-        // notes lose vertical alignment with simultaneous notes in other voices (e.g. cross-staff
-        // tuplets). A single exact-tick ghost avoids that, is at least as compact (it slightly
-        // improves spacing in some samples), and mirrors the StaveNote tuplet tick fix in
-        // graphicalMeasureCreatedCalculations().
+        // Fill the gap with a single ghost note whose ticks exactly match it. A gap can be a
+        // tuplet member (e.g. a triplet eighth = 1/12), which is not a dyadic fraction and so
+        // can't be represented exactly by standard note-value rests: decomposing it overshoots
+        // (1/12 -> 1/16 + 1/64 + 1/128) and drifts the voice's accumulated ticks, breaking
+        // vertical alignment with simultaneous notes in other voices (e.g. cross-staff tuplets).
+        // Setting the ticks directly as an exact rational keeps the voice's resolution multiplier correct.
         const ghostNote: VF.GhostNote = new VF.GhostNote({
             duration: VexFlowConverter.durations(frac, true)[0],
         });
