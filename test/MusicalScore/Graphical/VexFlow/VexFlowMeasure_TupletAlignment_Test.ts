@@ -162,3 +162,83 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
    });
 
 });
+
+describe("VexFlow Measure - Cross-Staff Tuplet Alignment", () => {
+
+   const path: string = "test_tuplet_crossstaff_alignment.musicxml";
+
+   function calculateCrossStaffSheet(): GraphicalMusicSheet {
+      const score: Document = TestUtils.getScore(path);
+      expect(score).to.not.be.undefined;
+      const partwise: Element = TestUtils.getPartWiseElement(score);
+      expect(partwise).to.not.be.undefined;
+      const reader: MusicSheetReader = new MusicSheetReader();
+      const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
+      const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), path);
+      const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
+      calc.calculate();
+      return gms;
+   }
+
+   it("Should fill a cross-staff tuplet gap with a ghost note of the exact tuplet length", (done: Mocha.Done) => {
+      const gms: GraphicalMusicSheet = calculateCrossStaffSheet();
+      // The lower staff is the second graphical measure of the first vertical measure.
+      const bassMeasure: VexFlowMeasure = gms.MeasureList[0][1] as VexFlowMeasure;
+      const tupletVoice: VF.Voice = bassMeasure.vfVoices[2];
+      expect(tupletVoice, "tuplet voice (id 2) should exist on the lower staff").to.not.be.undefined;
+
+      // The third note of each triplet (G4) is notated on the upper staff, so the lower
+      // staff fills that slot with a ghost note. A triplet eighth lasts RESOLUTION / 12 ticks.
+      const tripletEighthTicks: number = VF.RESOLUTION / 12;
+      const tickables: VF.Note[] = tupletVoice.getTickables() as VF.Note[];
+      const ghostTickables: VF.Note[] = tickables.filter((t: VF.Note) => t.isRest());
+      expect(ghostTickables.length).to.equal(2, "each of the two triplets should leave exactly one ghost-filled slot");
+      for (const ghost of ghostTickables) {
+         expect(ghost.getTicks().value()).to.be.closeTo(tripletEighthTicks, 0.001,
+            "the cross-staff ghost note should be exactly one triplet eighth, not an overshooting dyadic decomposition");
+      }
+
+      // The whole voice should still add up to the measure length (2/4 = RESOLUTION / 2).
+      const totalTicks: number = tickables.reduce((sum: number, t: VF.Note) => sum + t.getTicks().value(), 0);
+      expect(totalTicks).to.be.closeTo(VF.RESOLUTION / 2, 0.001,
+         "tuplet voice ticks should sum to the measure duration");
+
+      done();
+   });
+
+   it("Should align the beat-2 tuplet note with the simultaneous note in the other voice", (done: Mocha.Done) => {
+      const gms: GraphicalMusicSheet = calculateCrossStaffSheet();
+      const bassMeasure: VexFlowMeasure = gms.MeasureList[0][1] as VexFlowMeasure;
+      const tupletVoice: VF.Voice = bassMeasure.vfVoices[2];
+      const eighthVoice: VF.Voice = bassMeasure.vfVoices[5];
+      expect(eighthVoice, "eighth-note voice (id 5) should exist on the lower staff").to.not.be.undefined;
+
+      // Cumulative tick position where each voice reaches beat 2 (a quarter into a 2/4 measure).
+      const beat2Ticks: number = VF.RESOLUTION / 4;
+
+      function cumulativePositions(voice: VF.Voice): number[] {
+         const positions: number[] = [];
+         let pos: number = 0;
+         for (const tickable of voice.getTickables()) {
+            positions.push(pos);
+            pos += tickable.getTicks().value();
+         }
+         return positions;
+      }
+      const tupletPositions: number[] = cumulativePositions(tupletVoice);
+      const eighthPositions: number[] = cumulativePositions(eighthVoice);
+
+      // Both voices must have a note that starts exactly at beat 2; those starts must match.
+      const tupletBeat2: number = tupletPositions.find((p: number) => Math.abs(p - beat2Ticks) < 0.001);
+      const eighthBeat2: number = eighthPositions.find((p: number) => Math.abs(p - beat2Ticks) < 0.001);
+      expect(eighthBeat2, "the eighth-note voice should have a note starting on beat 2").to.not.be.undefined;
+      expect(tupletBeat2,
+         "the tuplet voice's beat-2 note should start at the same tick position as the simultaneous eighth note")
+         .to.not.be.undefined;
+      expect(tupletBeat2).to.be.closeTo(eighthBeat2, 0.001,
+         "notes at the same timestamp in different voices should share the same cumulative tick position");
+
+      done();
+   });
+
+});
