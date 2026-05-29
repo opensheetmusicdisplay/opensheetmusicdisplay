@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for three-voice unison alignment.
+    A single staff with three voices. On beat 1, voices 1 and 2 play the same
+    pitch (G4) - a unison that should share one horizontal position (overlapping
+    noteheads), not be staggered. On beat 2, voice 1 (A4) and voice 2 (G4) are a
+    second apart - a genuine collision that must still be staggered.
+  -->
+  <part-list>
+    <score-part id="P1"><part-name>Music</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+
+      <!-- Voice 1 (upper) -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+
+      <backup><duration>2</duration></backup>
+
+      <!-- Voice 2 (middle) -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+
+      <backup><duration>2</duration></backup>
+
+      <!-- Voice 3 (lower): an octave below, far enough not to collide with the
+           middle voice's stem, so the only collision on beat 1 is the unison. -->
+      <note><pitch><step>G</step><octave>3</octave></pitch><duration>1</duration><voice>3</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>G</step><octave>3</octave></pitch><duration>1</duration><voice>3</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
+  </part>
+</score-partwise>

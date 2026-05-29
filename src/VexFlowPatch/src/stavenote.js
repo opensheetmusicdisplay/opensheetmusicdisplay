@@ -48,6 +48,31 @@ function centerRest(rest, noteU, noteL) {
   rest.minLine -= delta;
 }
 
+// Whether two single-notehead notes from different voices form a unison that can
+// share the same horizontal position (overlapping noteheads) instead of being
+// staggered. Mirrors the stagger conditions used in the two-voice path: a
+// notehead cannot cleanly overlap if the shapes differ (one half/whole and the
+// other not) or if the dot counts differ. Used so that a unison in a three-voice
+// stave isn't pushed apart by the generic "shift middle note" collision rule.
+function unisonMergeable(a, b) {
+  if (a.isrest || b.isrest) return false;
+  if (a.line !== b.line) return false; // not on the same staff line -> not a unison
+  let halfNoteCount = 0;
+  let wholeNoteCount = 0;
+  for (const e of [a, b]) {
+    if (e.note.duration === "h") {
+      halfNoteCount++;
+    } else if (e.note.duration === "w") {
+      wholeNoteCount++;
+    }
+  }
+  if (halfNoteCount === 1 || wholeNoteCount === 1) return false; // mismatched notehead shapes
+  if (a.note.dots !== b.note.dots) return false;
+  // only handle single noteheads, to avoid chord-stacking complications
+  if (a.note.getKeyProps().length !== 1 || b.note.getKeyProps().length !== 1) return false;
+  return true;
+}
+
 export class StaveNote extends StemmableNote {
   static get CATEGORY() { return 'stavenotes'; }
   static get STEM_UP() { return Stem.UP; }
@@ -302,8 +327,14 @@ export class StaveNote extends StemmableNote {
     }
 
     // If middle voice intersects upper or lower voice
-    if ((!noteU.isrest && !noteM.isrest && noteU.minLine <= noteM.maxLine + 0.5) ||
-      (!noteM.isrest && !noteL.isrest && noteM.minLine <= noteL.maxLine)) {
+    const intersectsUpper = !noteU.isrest && !noteM.isrest && noteU.minLine <= noteM.maxLine + 0.5;
+    const intersectsLower = !noteM.isrest && !noteL.isrest && noteM.minLine <= noteL.maxLine;
+    // A unison (same staff line) between the middle voice and the voice it
+    // "intersects" should overlap, not be staggered, just like in the two-voice
+    // path. Only shift the middle note for a genuine (non-unison) collision.
+    const upperIsUnison = intersectsUpper && unisonMergeable(noteU, noteM);
+    const lowerIsUnison = intersectsLower && unisonMergeable(noteM, noteL);
+    if ((intersectsUpper && !upperIsUnison) || (intersectsLower && !lowerIsUnison)) {
       xShift = voiceXShift + 3;      // shift middle note right
       noteM.note.setXShift(xShift);
     }
