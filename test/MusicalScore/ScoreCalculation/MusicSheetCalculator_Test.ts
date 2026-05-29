@@ -8,7 +8,7 @@ import {VexFlowMusicSheetCalculator} from "../../../src/MusicalScore/Graphical/V
 import {GraphicalMusicSheet} from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {VexFlowTextMeasurer} from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer";
 import {TestUtils} from "../../Util/TestUtils";
-import {EngravingRules} from "../../../src";
+import { EngravingRules } from "../../../src/MusicalScore/Graphical/EngravingRules";
 
 describe("Music Sheet Calculator", () => {
     const filename: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";

@@ -160,6 +160,7 @@ export class MusicPartManagerIterator {
         ret.currentMappingPart = this.currentMappingPart;
         ret.currentPartIndex = this.currentPartIndex;
         ret.currentVoiceEntries = this.currentVoiceEntries?.slice() ?? undefined;
+        // without slice() this is a shallow copy that shares data with the cloned iterator, so one can overwrite the other e.g. on next(). see #1674
         ret.endReached = this.endReached;
         ret.frontReached = this.frontReached;
         // alternative method to set currentTimeStamp? may not fully affect current iterator position
