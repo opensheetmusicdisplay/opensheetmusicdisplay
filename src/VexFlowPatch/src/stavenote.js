@@ -48,14 +48,20 @@ function centerRest(rest, noteU, noteL) {
   rest.minLine -= delta;
 }
 
-// Whether two notes from different voices on the same staff line form a unison
-// whose noteheads can share one horizontal position (overlap) instead of being
-// staggered. Noteheads can't cleanly overlap if their shapes differ (one half/whole
-// and the other not), if their dot counts differ, or - when
-// EngravingRules.StaggerSameWholeNotes is set - for two identical whole notes.
-// Shared by the two-voice and three-voice collision paths so the same decision is
-// used in both (the divergence between them is what previously left three-voice
-// unisons staggered).
+/**
+ * Whether two notes from different voices on the same staff line form a unison
+ * whose noteheads can share one horizontal position (overlap) instead of being
+ * staggered. Noteheads can't cleanly overlap if their shapes differ (one half/whole
+ * and the other not), if their dot counts differ, or - when
+ * EngravingRules.StaggerSameWholeNotes is set - for two identical whole notes.
+ * Shared by the two-voice and three-voice collision paths so the same decision is
+ * used in both (the divergence between them is what previously left three-voice
+ * unisons staggered).
+ * @param a a notesList entry, i.e. { line, isrest, note, ... }
+ * @param b the other notesList entry
+ * @param staggerSameWholeNotes EngravingRules.StaggerSameWholeNotes: keep two identical whole notes apart
+ * @returns true if the two noteheads can share a column (overlap) as a unison
+ */
 function mergeableUnison(a, b, staggerSameWholeNotes) {
   if (a.isrest || b.isrest) return false;
   if (a.line !== b.line) return false; // not on the same staff line -> not a unison
