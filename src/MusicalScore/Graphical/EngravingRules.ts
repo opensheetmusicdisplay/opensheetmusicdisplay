@@ -412,6 +412,10 @@ export class EngravingRules {
     public SoftmaxFactorVexFlow: number;
     /** Stagger (x-shift) whole notes that are the same note, but in different voices (show 2 instead of 1). */
     public StaggerSameWholeNotes: boolean;
+    /** Stagger (x-shift) a unison in different voices when the two notes differ only in their dot count
+     * (e.g. a dotted eighth in unison with an eighth triplet note). When false, the noteheads overlap and
+     * share a single augmentation dot, matching MuseScore and most engraved editions. */
+    public StaggerDottedUnisons: boolean;
     public MaxInstructionsConstValue: number;
     public NoteDistances: number[] = [1.0, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 4.0];
     public NoteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
@@ -907,6 +911,7 @@ export class EngravingRules {
         // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
         // if too low, smaller notes aren't positioned correctly.
         this.StaggerSameWholeNotes = true;
+        this.StaggerDottedUnisons = true;
 
         // Render options (whether to render specific or invisible elements)
         this.AlignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto

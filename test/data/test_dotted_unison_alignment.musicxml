@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for dotted-unison alignment (EngravingRules.StaggerDottedUnisons).
+    A single staff with two voices that play the same pitch (G4) on beat 1, but with
+    different dot counts: voice 1 is a dotted quarter, voice 2 a plain quarter. Their
+    noteheads have the same shape, so a unison should share one horizontal position
+    (overlapping noteheads + a single augmentation dot), matching MuseScore and engraved
+    editions - e.g. Schumann Kinderszenen No. 1 m10, a dotted eighth in unison with an
+    eighth-triplet note. With StaggerDottedUnisons (default true) the two noteheads are
+    kept apart; with it false they overlap.
+  -->
+  <part-list>
+    <score-part id="P1"><part-name>Music</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+
+      <!-- Voice 1 (upper): dotted quarter on beat 1 -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><dot/><stem>up</stem></note>
+      <note><rest/><duration>1</duration><voice>1</voice><type>eighth</type></note>
+
+      <backup><duration>4</duration></backup>
+
+      <!-- Voice 2 (lower): plain quarter on beat 1, same pitch as voice 1 -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><rest/><duration>2</duration><voice>2</voice><type>quarter</type></note>
+    </measure>
+  </part>
+</score-partwise>
