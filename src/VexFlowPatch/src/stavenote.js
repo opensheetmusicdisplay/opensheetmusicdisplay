@@ -52,18 +52,19 @@ function centerRest(rest, noteU, noteL) {
  * Whether two notes from different voices on the same staff line form a unison
  * whose noteheads can share one horizontal position (overlap) instead of being
  * staggered. Noteheads can't cleanly overlap if their shapes differ (one half/whole
- * and the other not), when - if EngravingRules.StaggerDottedUnisons is set - their
- * dot counts differ, or - when EngravingRules.StaggerSameWholeNotes is set - for two
- * identical whole notes. Shared by the two-voice and three-voice collision paths so
- * the same decision is used in both (the divergence between them is what previously
- * left three-voice unisons staggered).
+ * and the other not), or - when EngravingRules.StaggerSameWholeNotes is set - for two
+ * identical whole notes. Notes that differ only in dots or duration still overlap:
+ * the shared notehead carries both stems (and the dotted voice's augmentation dot),
+ * so the two voices stay legible - matching MuseScore and engraved editions. Shared
+ * by the two-voice and three-voice collision paths so the same decision is used in
+ * both (the divergence between them is what previously left three-voice unisons
+ * staggered).
  * @param a a notesList entry, i.e. { line, isrest, note, ... }
  * @param b the other notesList entry
  * @param staggerSameWholeNotes EngravingRules.StaggerSameWholeNotes: keep two identical whole notes apart
- * @param staggerDottedUnisons EngravingRules.StaggerDottedUnisons: keep a unison apart when only its dots differ
  * @returns true if the two noteheads can share a column (overlap) as a unison
  */
-function mergeableUnison(a, b, staggerSameWholeNotes, staggerDottedUnisons) {
+function mergeableUnison(a, b, staggerSameWholeNotes) {
   if (a.isrest || b.isrest) return false;
   if (a.line !== b.line) return false; // not on the same staff line -> not a unison
   let halfNoteCount = 0;
@@ -77,7 +78,6 @@ function mergeableUnison(a, b, staggerSameWholeNotes, staggerDottedUnisons) {
   }
   if (halfNoteCount === 1 || wholeNoteCount === 1) return false; // mismatched notehead shapes
   if (staggerSameWholeNotes && wholeNoteCount === 2) return false; // keep identical whole notes apart
-  if (staggerDottedUnisons && a.note.dots !== b.note.dots) return false; // keep dot-differing unison apart
   return true;
 }
 
@@ -115,9 +115,6 @@ export class StaveNote extends StemmableNote {
     const stagger_same_whole_notes = notes[0].stagger_same_whole_notes;
     // whether to stagger whole notes on the same line but different voice (show 2 instead of 1).
     //   controlled by EngravingRules.StaggerSameWholeNotes
-    const stagger_dotted_unisons = notes[0].stagger_dotted_unisons;
-    // whether to stagger a unison whose two notes differ only in dot count.
-    //   controlled by EngravingRules.StaggerDottedUnisons
 
     for (let i = 0; i < notes.length; i++) {
       const props = notes[i].getKeyProps();
@@ -207,7 +204,7 @@ export class StaveNote extends StemmableNote {
           const lineDiff = Math.abs(noteU.line - noteL.line);
           // Stagger (x-shift) only if the two notes share a line but can't overlap as a
           // unison - i.e. their notehead shapes or dots differ (see mergeableUnison).
-          if (lineDiff === 0 && !mergeableUnison(noteU, noteL, stagger_same_whole_notes, stagger_dotted_unisons)) {
+          if (lineDiff === 0 && !mergeableUnison(noteU, noteL, stagger_same_whole_notes)) {
             noteL.note.setXShift(xShift);
             if (noteU.note.dots > 0) {
               let foundDots = 0;
@@ -332,9 +329,9 @@ export class StaveNote extends StemmableNote {
     const middleIsSingleNotehead = noteM.note.getKeyProps().length === 1;
     const isUnisonWithNeighbour = middleIsSingleNotehead && (
       (intersectsUpper && noteU.note.getKeyProps().length === 1
-        && mergeableUnison(noteU, noteM, stagger_same_whole_notes, stagger_dotted_unisons)) ||
+        && mergeableUnison(noteU, noteM, stagger_same_whole_notes)) ||
       (intersectsLower && noteL.note.getKeyProps().length === 1
-        && mergeableUnison(noteM, noteL, stagger_same_whole_notes, stagger_dotted_unisons)));
+        && mergeableUnison(noteM, noteL, stagger_same_whole_notes)));
     if (!isUnisonWithNeighbour && (intersectsUpper || intersectsLower)) {
       xShift = voiceXShift + 3;      // shift middle note right
       noteM.note.setXShift(xShift);

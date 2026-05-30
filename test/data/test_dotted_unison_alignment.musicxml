@@ -2,14 +2,13 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <!--
-    Regression sample for dotted-unison alignment (EngravingRules.StaggerDottedUnisons).
+    Regression sample for dotted-unison alignment.
     A single staff with two voices that play the same pitch (G4) on beat 1, but with
     different dot counts: voice 1 is a dotted quarter, voice 2 a plain quarter. Their
-    noteheads have the same shape, so a unison should share one horizontal position
+    noteheads have the same shape, so the unison shares one horizontal position
     (overlapping noteheads + a single augmentation dot), matching MuseScore and engraved
     editions - e.g. Schumann Kinderszenen No. 1 m10, a dotted eighth in unison with an
-    eighth-triplet note. With StaggerDottedUnisons (default true) the two noteheads are
-    kept apart; with it false they overlap.
+    eighth-triplet note. Both notes carry stems, so the two voices stay legible.
   -->
   <part-list>
     <score-part id="P1"><part-name>Music</part-name></score-part>

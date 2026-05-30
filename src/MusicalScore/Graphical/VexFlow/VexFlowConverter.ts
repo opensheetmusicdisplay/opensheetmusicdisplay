@@ -477,7 +477,6 @@ export class VexFlowConverter {
         } else {
             vfnote = new VF.StaveNote(vfnoteStruct);
             (vfnote as any).stagger_same_whole_notes = rules.StaggerSameWholeNotes;
-            (vfnote as any).stagger_dotted_unisons = rules.StaggerDottedUnisons;
             //   it would be nice to only save this once, not for every note, but has to be accessible in stavenote.js
             const lyricsEntries: GraphicalLyricEntry[] = gve.parentStaffEntry.LyricsEntries;
 
