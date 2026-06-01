@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <work>
+    <work-title>Test - Grace Note Fingerings Position</work-title>
+  </work>
+  <identification>
+    <encoding>
+      <software>OSMD Test</software>
+      <encoding-date>2024-01-01</encoding-date>
+    </encoding>
+  </identification>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <!-- Grace note 1 with fingering 2 -->
+      <note>
+        <grace/>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <voice>1</voice>
+        <type>16th</type>
+        <stem>up</stem>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical><fingering>2</fingering></technical>
+        </notations>
+      </note>
+      <!-- Grace note 2 with fingering 3 -->
+      <note>
+        <grace/>
+        <pitch><step>F</step><octave>5</octave></pitch>
+        <voice>1</voice>
+        <type>16th</type>
+        <stem>up</stem>
+        <beam number="1">end</beam>
+        <notations>
+          <technical><fingering>3</fingering></technical>
+        </notations>
+      </note>
+      <!-- Main note -->
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

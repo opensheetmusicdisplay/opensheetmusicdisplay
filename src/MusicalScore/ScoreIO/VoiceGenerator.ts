@@ -117,7 +117,7 @@ export class VoiceGenerator {
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
               measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, octavePlusOne: boolean,
               printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloInfo: TremoloInfo,
-              stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean,
+              stemColorXml: string, noteheadColorXml: string,
               dotsXml: number): Note {
     this.currentStaffEntry = parentStaffEntry;
     this.currentMeasure = parentMeasure;
@@ -127,7 +127,7 @@ export class VoiceGenerator {
       this.currentNote = restNote
         ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, typeDuration, normalNotes, printObject, isCueNote, noteheadColorXml)
         : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, octavePlusOne,
-                             printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloInfo, stemColorXml, noteheadColorXml, vibratoStrokes);
+                             printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloInfo, stemColorXml, noteheadColorXml);
       this.currentNote.DotsXml = dotsXml;
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
@@ -344,7 +344,7 @@ export class VoiceGenerator {
   private addSingleNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType, typeDuration: Fraction,
                         normalNotes: number, chord: boolean, octavePlusOne: boolean,
                         printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloInfo: TremoloInfo,
-                        stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
+                        stemColorXml: string, noteheadColorXml: string): Note {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
     let accidentalValue: string;
@@ -498,7 +498,7 @@ export class VoiceGenerator {
     } else {
       // create TabNote
       note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, this.currentMeasure,
-                         stringNumber, fretNumber, bends, vibratoStrokes);
+                         stringNumber, fretNumber, bends);
     }
 
     this.addNoteInfo(note, noteTypeXml, printObject, isCueNote, normalNotes,
@@ -620,6 +620,20 @@ export class VoiceGenerator {
         if (!sameVoiceEntry) {
           const openBeam: Beam = this.openBeams[beamNumber - 1];
           openBeam.addNoteToBeam(note);
+          // Detect secondary beam breaks: a higher beam level ends while beam #1 continues.
+          // VexFlow's breakSecondaryAt extends the beam TO the break index then stops,
+          // so we record the index of the last note in the outgoing secondary group.
+          if (currentBeamTag === "continue" && mainBeamNode.length > 1) {
+            for (let i: number = 1; i < mainBeamNode.length; i++) {
+              if (mainBeamNode[i].value === "end") {
+                const noteIndex: number = openBeam.Notes.length - 1;
+                if (noteIndex > 0) {
+                  openBeam.SecondaryBreakIndices.push(noteIndex);
+                }
+                break;
+              }
+            }
+          }
           // const lastBeamNote: Note = openBeam.Notes.last();
           // const graceStatusChanged: boolean = (lastBeamNote?.IsCueNote || lastBeamNote?.IsGraceNote) !== (note.IsCueNote) || (note.IsGraceNote);
           if (currentBeamTag === "end") {

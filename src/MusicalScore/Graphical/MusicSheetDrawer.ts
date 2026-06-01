@@ -355,6 +355,7 @@ export abstract class MusicSheetDrawer {
         if (!this.leadSheet) {
             for (const measureNumberLabel of musicSystem.MeasureNumberLabels) {
                 measureNumberLabel.SVGNode = this.drawLabel(measureNumberLabel, <number>GraphicalLayers.Notes);
+                (measureNumberLabel.SVGNode as SVGGElement)?.classList?.add("measure-number");
             }
         }
         for (const staffLine of musicSystem.StaffLines) {
@@ -390,6 +391,8 @@ export abstract class MusicSheetDrawer {
         this.drawOctaveShifts(staffLine);
 
         this.drawPedals(staffLine);
+
+        this.drawWavyLines(staffLine);
 
         this.drawExpressions(staffLine);
 
@@ -454,6 +457,8 @@ export abstract class MusicSheetDrawer {
     }
 
     protected abstract drawPedals(staffLine: StaffLine): void;
+
+    protected abstract drawWavyLines(staffLine: StaffLine): void;
 
     protected drawStaffLines(staffLine: StaffLine): void {
         if (staffLine.StaffLines) {

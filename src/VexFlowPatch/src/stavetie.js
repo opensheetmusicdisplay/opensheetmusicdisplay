@@ -110,9 +110,7 @@ export class StaveTie extends Element {
       const bottom_cp_y = ((first_y_px + last_y_px) / 2) + (cp2 * params.direction);
 
       let id;
-      if (this.first_note) { // ?. would be shorter, but fails appveyor build
-        id = this.first_note.getAttribute('id') + "-tie";
-      }
+      id = this.first_note?.getAttribute('id') + "-tie";
       this.setAttribute('el', ctx.openGroup('stavetie', id));
       ctx.beginPath();
       ctx.moveTo(params.first_x_px + first_x_shift, first_y_px);

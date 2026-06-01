@@ -205,6 +205,8 @@ export class VexFlowConverter {
         switch (notehead.Shape) {
             case NoteHeadShape.NORMAL:
                 return "";
+            case NoteHeadShape.NONE:
+                return ""; // none noteheads are invisible, handled via transparency
             case NoteHeadShape.DIAMOND:
                 return codeStart + "D" + codeFilled;
             case NoteHeadShape.TRIANGLE:
@@ -227,15 +229,22 @@ export class VexFlowConverter {
     }
 
     public static GhostNotes(frac: Fraction): VF.GhostNote[] {
-        const ghostNotes: VF.GhostNote[] = [];
-        const durations: string[] = VexFlowConverter.durations(frac, false);
-        for (const duration of durations) {
-            ghostNotes.push(new VF.GhostNote({
-                duration: duration,
-                //dots: dots
-            }));
-        }
-        return ghostNotes;
+        // Fill the gap with a single ghost note whose ticks exactly match it. A gap can be a
+        // tuplet member (e.g. a triplet eighth = 1/12), which is not a dyadic fraction and so
+        // can't be represented exactly by standard note-value rests: decomposing it overshoots
+        // (1/12 -> 1/16 + 1/64 + 1/128) and drifts the voice's accumulated ticks, breaking
+        // vertical alignment with simultaneous notes in other voices (e.g. cross-staff tuplets).
+        // Setting the ticks directly as an exact rational keeps the voice's resolution multiplier correct.
+        const ghostNote: VF.GhostNote = new VF.GhostNote({
+            duration: VexFlowConverter.durations(frac, true)[0],
+        });
+        // ticks = frac * VF.RESOLUTION, kept as an exact rational via VF.Fraction
+        // (e.g. 1/12 -> 16384/12 -> 4096/3) so the voice's resolution multiplier stays correct.
+        const vfTicks: VF.Fraction = ghostNote.getTicks();
+        vfTicks.numerator = frac.Numerator * VF.RESOLUTION;
+        vfTicks.denominator = frac.Denominator;
+        vfTicks.simplify();
+        return [ghostNote];
     }
 
     /**
@@ -559,8 +568,17 @@ export class VexFlowConverter {
                         const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
                         const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
                         const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
+                        // The regular reduction compensates for the natural buffer between the last note
+                        // and the bar line. If this lyric is a multi-syllable mid-word continuation
+                        // (a dash trails to the next syllable in the next measure), that buffer is much
+                        // smaller — the next measure's first note has a syllable + dash glyph right at
+                        // its start. Use a smaller reduction (LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord)
+                        // to add some extra padding without over-padding.
+                        const isCrossMeasureMidWord: boolean = isLastNoteInMeasure && lyricsEntry.hasDashFromLyricWord();
                         if (isLastNoteInMeasure) {
-                            extraExistingPadding += rules.LyricsXPaddingReductionForLastNoteInMeasure; // need less padding
+                            extraExistingPadding += isCrossMeasureMidWord
+                                ? rules.LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord
+                                : rules.LyricsXPaddingReductionForLastNoteInMeasure;
                         }
                         if (!hasShortNotes) {
                             extraExistingPadding += rules.LyricsXPaddingReductionForLongNotes; // quarter or longer notes need less padding
@@ -760,6 +778,19 @@ export class VexFlowConverter {
                                 vfArt.setYShift(rules.SlurStartArticulationYOffsetOfArticulation * 10);
                             }
                         }
+                    }
+                    (vfArt as any).render_options = {
+                        ...(vfArt as any).render_options,
+                        extra_left_px: 0,
+                        extra_right_px: 0,
+                    };
+                    // Override the articulation's width calculation to prevent extra spacing
+                    const originalGetWidth: any = (vfArt as any).getWidth;
+                    if (originalGetWidth) {
+                        (vfArt as any).getWidth = function (): number {
+                        return 0; // Return 0 width to prevent articulations from adding spacing
+                        // best example: Schubert - An die Musik, measure 2
+                        };
                     }
                     break;
                 }
@@ -963,7 +994,6 @@ export class VexFlowConverter {
         const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.durations(frac, isTuplet)[0];
         let numDots: number = 0;
-        let tabVibrato: boolean = false;
         const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
         let isXNotehead: boolean = false;
         for (const note of gve.notes) {
@@ -996,10 +1026,6 @@ export class VexFlowConverter {
                         tabPhrases.push({type: VF.Bend.DOWN, text: phraseText, width: 10});
                     }
                 });
-            }
-
-            if (tabNote.VibratoStroke) {
-                tabVibrato = true;
             }
 
             if (numDots < note.numberOfDots) {
@@ -1036,9 +1062,6 @@ export class VexFlowConverter {
                 vfnote.addModifier (new VF.Bend(phrase.text, true));
             }
         });
-        if (tabVibrato) {
-            vfnote.addModifier(new VF.Vibrato());
-        }
 
         return vfnote;
     }
@@ -1297,5 +1320,3 @@ export class VexFlowConverter {
         return ret;
     }
 }
-
-

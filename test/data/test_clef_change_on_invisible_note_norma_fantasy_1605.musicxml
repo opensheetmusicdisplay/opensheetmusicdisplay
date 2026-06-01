@@ -1,0 +1,1312 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work>
+    <work-title>test_clef_change_on_invisible_note_norma_fantasy_1605</work-title>
+    </work>
+  <identification>
+    <encoding>
+      <software>MuseScore 4.3.2</software>
+      <encoding-date>2025-03-07</encoding-date>
+      <supports element="accidental" type="yes"/>
+      <supports element="beam" type="yes"/>
+      <supports element="print" attribute="new-page" type="yes" value="yes"/>
+      <supports element="print" attribute="new-system" type="yes" value="yes"/>
+      <supports element="stem" type="yes"/>
+      </encoding>
+    <source>http://musescore.com/scores/franz-liszt/reminiscences-de-norma-s394-870262373741356</source>
+    </identification>
+  <defaults>
+    <scaling>
+      <millimeters>7</millimeters>
+      <tenths>40</tenths>
+      </scaling>
+    <page-layout>
+      <page-height>1697.14</page-height>
+      <page-width>1200</page-width>
+      <page-margins type="even">
+        <left-margin>85.7143</left-margin>
+        <right-margin>85.7143</right-margin>
+        <top-margin>74.2857</top-margin>
+        <bottom-margin>74.2857</bottom-margin>
+        </page-margins>
+      <page-margins type="odd">
+        <left-margin>85.7143</left-margin>
+        <right-margin>85.7143</right-margin>
+        <top-margin>74.2857</top-margin>
+        <bottom-margin>74.2857</bottom-margin>
+        </page-margins>
+      </page-layout>
+    <appearance>
+      <line-width type="light barline">1.8</line-width>
+      <line-width type="heavy barline">5.5</line-width>
+      <line-width type="beam">5</line-width>
+      <line-width type="bracket">4.5</line-width>
+      <line-width type="dashes">1</line-width>
+      <line-width type="enclosure">1</line-width>
+      <line-width type="ending">1.1</line-width>
+      <line-width type="extend">1</line-width>
+      <line-width type="leger">1.6</line-width>
+      <line-width type="pedal">1.1</line-width>
+      <line-width type="octave shift">1.1</line-width>
+      <line-width type="slur middle">2.1</line-width>
+      <line-width type="slur tip">0.5</line-width>
+      <line-width type="staff">1.1</line-width>
+      <line-width type="stem">1</line-width>
+      <line-width type="tie middle">2.1</line-width>
+      <line-width type="tie tip">0.5</line-width>
+      <line-width type="tuplet bracket">1</line-width>
+      <line-width type="wedge">1.2</line-width>
+      <note-size type="cue">70</note-size>
+      <note-size type="grace">70</note-size>
+      <note-size type="grace-cue">49</note-size>
+      </appearance>
+    <music-font font-family="Leland"/>
+    <word-font font-family="Edwin" font-size="10"/>
+    <lyric-font font-family="Edwin" font-size="10"/>
+    </defaults>
+  <credit page="1">
+    <credit-type>title</credit-type>
+    <credit-words default-x="600" default-y="1622.85" justify="center" valign="top" font-size="23">test_clef_change_on_invisible_note_norma_fantasy_1605</credit-words>
+    </credit>
+  <credit page="1">
+    <credit-type>subtitle</credit-type>
+    <credit-words default-x="600" default-y="1565.82" justify="center" valign="top" font-size="11">Vincenzo Bellini's Opera Norma 
+</credit-words>
+    <credit-words>Grand Fantaisie
+</credit-words>
+    <credit-words>S.394</credit-words>
+    </credit>
+  <credit page="1">
+    <credit-type>composer</credit-type>
+    <credit-words default-x="1114.29" default-y="1481.83" justify="right" valign="top">Franz Liszt
+</credit-words>
+    <credit-words>(1811-1886)</credit-words>
+    </credit>
+  <credit page="1">
+    <credit-type>lyricist</credit-type>
+    <credit-words default-x="85.7143" default-y="1430.54" justify="left" valign="top">d</credit-words>
+    </credit>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+      <score-instrument id="P1-I1">
+        <instrument-name/>
+        <instrument-sound>keyboard.piano</instrument-sound>
+        </score-instrument>
+      <midi-device id="P1-I1" port="1"/>
+      <midi-instrument id="P1-I1">
+        <midi-channel>1</midi-channel>
+        <midi-program>1</midi-program>
+        <volume>78.7402</volume>
+        <pan>0</pan>
+        </midi-instrument>
+      </score-part>
+    </part-list>
+  <part id="P1">
+    <measure number="1" width="223.07">
+      <print>
+        <system-layout>
+          <system-margins>
+            <left-margin>50.00</left-margin>
+            <right-margin>0.00</right-margin>
+            </system-margins>
+          <top-system-distance>170.00</top-system-distance>
+          </system-layout>
+        <staff-layout number="2">
+          <staff-distance>104.83</staff-distance>
+          </staff-layout>
+        <staff-layout number="3">
+          <staff-distance>65.00</staff-distance>
+          </staff-layout>
+        </print>
+      <attributes>
+        <divisions>480</divisions>
+        <key>
+          <fifths>-2</fifths>
+          </key>
+        <time symbol="common">
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+          </time>
+        <staves>3</staves>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+          </clef>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+          </clef>
+        <clef number="3">
+          <sign>G</sign>
+          <line>2</line>
+          </clef>
+        </attributes>
+      <direction placement="above">
+        <direction-type>
+          <words default-y="4.88" relative-y="10.00" font-weight="bold" font-size="12">Tempo giusto </words>
+          </direction-type>
+        <staff>1</staff>
+        </direction>
+      <direction placement="below">
+        <direction-type>
+          <dynamics default-x="3.84" default-y="-47.25" relative-y="-25.00">
+            <ff/>
+            </dynamics>
+          </direction-type>
+        <staff>1</staff>
+        <sound dynamics="131.11"/>
+        </direction>
+      <direction placement="below">
+        <direction-type>
+          <dynamics default-x="7.46" default-y="-42.92" relative-y="-25.00">
+            <other-dynamics> marcato</other-dynamics>
+            </dynamics>
+          </direction-type>
+        <staff>1</staff>
+        <sound dynamics="131.11"/>
+        </direction>
+      <direction placement="below">
+        <direction-type>
+          <pedal type="resume" line="yes" sign="yes" default-y="-108.97"/>
+          </direction-type>
+        <staff>1</staff>
+        </direction>
+      <note default-x="112.65" default-y="-45.00" data-note-id="P1-1-1">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>1920</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <staff>1</staff>
+        </note>
+      <note default-x="112.65" default-y="-30.00" data-note-id="P1-1-2">
+        <chord/>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>1920</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <staff>1</staff>
+        </note>
+      <backup>
+        <duration>1920</duration>
+        </backup>
+      <direction placement="above">
+        <direction-type>
+          <words default-y="5.78" relative-y="10.00">Piano</words>
+          </direction-type>
+        <staff>2</staff>
+        </direction>
+      <note default-x="112.65" default-y="-149.83" data-note-id="P1-1-3">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>1920</duration>
+        <voice>5</voice>
+        <type>whole</type>
+        <staff>2</staff>
+        </note>
+      <note default-x="112.65" default-y="-139.83" data-note-id="P1-1-4">
+        <chord/>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>3</octave>
+          </pitch>
+        <duration>1920</duration>
+        <voice>5</voice>
+        <type>whole</type>
+        <staff>2</staff>
+        </note>
+      <backup>
+        <duration>1920</duration>
+        </backup>
+      <note default-x="150.94" default-y="-259.83" data-note-id="P1-1-5">
+        <rest measure="yes"/>
+        <duration>1920</duration>
+        <voice>9</voice>
+        <staff>3</staff>
+        </note>
+      </measure>
+    <measure number="24" width="1028.57">
+      <print new-system="yes">
+        <system-layout>
+          <system-margins>
+            <left-margin>-0.00</left-margin>
+            <right-margin>0.00</right-margin>
+            </system-margins>
+          <system-distance>313.73</system-distance>
+          </system-layout>
+        <staff-layout number="2">
+          <staff-distance>65.00</staff-distance>
+          </staff-layout>
+        <staff-layout number="3">
+          <staff-distance>65.00</staff-distance>
+          </staff-layout>
+        </print>
+      <note default-x="539.44" default-y="-10.00" data-note-id="P1-24-1">
+        <rest measure="yes"/>
+        <duration>1920</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+        </note>
+      <backup>
+        <duration>1920</duration>
+        </backup>
+      <note default-x="95.02" default-y="-160.00" data-note-id="P1-24-2">
+        <pitch>
+          <step>D</step>
+          <alter>-1</alter>
+          <octave>2</octave>
+          </pitch>
+        <duration>480</duration>
+        <voice>5</voice>
+        <type>quarter</type>
+        <accidental>flat</accidental>
+        <stem>up</stem>
+        <staff>2</staff>
+        <notations>
+          <articulations>
+            <staccatissimo/>
+            </articulations>
+          </notations>
+        </note>
+      <note default-x="95.02" default-y="-145.00" data-note-id="P1-24-3">
+        <chord/>
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+          </pitch>
+        <duration>480</duration>
+        <voice>5</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        <staff>2</staff>
+        </note>
+      <note default-x="95.02" default-y="-135.00" data-note-id="P1-24-4">
+        <chord/>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>2</octave>
+          </pitch>
+        <duration>480</duration>
+        <voice>5</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        <staff>2</staff>
+        </note>
+      <note default-x="95.02" default-y="-120.00" data-note-id="P1-24-5">
+        <chord/>
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>3</octave>
+          </pitch>
+        <duration>480</duration>
+        <voice>5</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        <staff>2</staff>
+        </note>
+      <note default-x="361.23" default-y="-125.00" data-note-id="P1-24-6">
+        <rest/>
+        <duration>480</duration>
+        <voice>5</voice>
+        <type>quarter</type>
+        <staff>2</staff>
+        </note>
+      <note default-x="627.45" default-y="-125.00" data-note-id="P1-24-7">
+        <rest/>
+        <duration>960</duration>
+        <voice>5</voice>
+        <type>half</type>
+        <staff>2</staff>
+        </note>
+      <backup>
+        <duration>1920</duration>
+        </backup>
+      <note default-x="539.44" default-y="-220.00" data-note-id="P1-24-8">
+        <rest measure="yes"/>
+        <duration>1920</duration>
+        <voice>9</voice>
+        <staff>3</staff>
+        </note>
+      </measure>
+    <measure number="25" width="1028.57">
+      <print new-system="yes">
+        <system-layout>
+          <system-margins>
+            <left-margin>-0.00</left-margin>
+            <right-margin>0.00</right-margin>
+            </system-margins>
+          <system-distance>313.73</system-distance>
+          </system-layout>
+        <staff-layout number="2">
+          <staff-distance>76.43</staff-distance>
+          </staff-layout>
+        <staff-layout number="3">
+          <staff-distance>65.00</staff-distance>
+          </staff-layout>
+        </print>
+      <note default-x="90.10" default-y="-20.00" print-object="no" data-note-id="P1-25-1" data-orig-note-id="P1-25-1">
+        <rest/>
+        <duration>240</duration>
+        <voice>1</voice>
+        <type size="cue">eighth</type>
+        <staff>1</staff>
+        </note>
+      <attributes>
+        <clef number="1">
+          <sign>F</sign>
+          <line>4</line>
+          </clef>
+        </attributes>
+      <direction placement="below">
+        <direction-type>
+          <pedal type="resume" line="yes" sign="yes" default-y="-105.90"/>
+          </direction-type>
+        <staff>1</staff>
+        </direction>
+      <note default-x="152.92" default-y="-20.00" data-note-id="P1-25-2" data-orig-note-id="P1-25-2" print-object="no">
+        <rest/>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <staff>1</staff>
+        <notations>
+          <tuplet type="start" bracket="no" show-number="both"/>
+          </notations>
+        </note>
+      <note default-x="182.40" default-y="-30.00" data-note-id="P1-25-3" data-orig-note-id="P1-25-3">
+        <pitch>
+          <step>B</step>
+          <octave>2</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <accidental>natural</accidental>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <beam number="3">begin</beam>
+        <notations>
+          <slur type="start" orientation="over" placement="above" number="1"/>
+          </notations>
+        </note>
+      <note default-x="201.05" default-y="-25.00" data-note-id="P1-25-4" data-orig-note-id="P1-25-4">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="219.71" default-y="-15.00" data-note-id="P1-25-5" data-orig-note-id="P1-25-5">
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>3</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <direction placement="below">
+        <direction-type>
+          <wedge type="stop" number="1"/>
+          </direction-type>
+        <staff>1</staff>
+        </direction>
+      <note default-x="238.36" default-y="0.00" data-note-id="P1-25-6" data-orig-note-id="P1-25-6">
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>3</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <accidental>flat</accidental>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="264.19" default-y="5.00" data-note-id="P1-25-7" data-orig-note-id="P1-25-7">
+        <pitch>
+          <step>B</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <accidental>natural</accidental>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="283.99" default-y="10.00" data-note-id="P1-25-8" data-orig-note-id="P1-25-8">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <attributes>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+          </clef>
+        </attributes>
+      <note default-x="335.48" default-y="-40.00" data-note-id="P1-25-9" data-orig-note-id="P1-25-9">
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="354.13" default-y="-25.00" data-note-id="P1-25-10" data-orig-note-id="P1-25-10">
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <accidental>flat</accidental>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="379.97" default-y="-20.00" data-note-id="P1-25-11" data-orig-note-id="P1-25-11">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <accidental>natural</accidental>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="399.79" default-y="-15.00" data-note-id="P1-25-12" data-orig-note-id="P1-25-12">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="418.45" default-y="-5.00" data-note-id="P1-25-13" data-orig-note-id="P1-25-13">
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>5</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="437.10" default-y="10.00" data-note-id="P1-25-14" data-orig-note-id="P1-25-14">
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>5</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <accidental>flat</accidental>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="468.53" default-y="15.00" data-note-id="P1-25-15" data-orig-note-id="P1-25-15">
+        <pitch>
+          <step>B</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <accidental>natural</accidental>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="487.19" default-y="-15.00" data-note-id="P1-25-16" data-orig-note-id="P1-25-16">
+        <pitch>
+          <step>C</step>
+          <octave>6</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="505.84" default-y="-5.00" data-note-id="P1-25-17" data-orig-note-id="P1-25-17">
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>6</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="524.50" default-y="10.00" data-note-id="P1-25-18" data-orig-note-id="P1-25-18">
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>6</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <beam number="3">end</beam>
+        </note>
+      <backup><duration>1073</duration></backup><direction placement="below">
+        <direction-type>
+          <dynamics default-x="1.15" default-y="-64.60" relative-y="-25.00">
+            <p/>
+            </dynamics>
+          </direction-type>
+        <staff>2</staff>
+        <sound dynamics="114.44"/>
+        </direction>
+      <note default-x="92.05" default-y="-181.43" data-note-id="P1-25-19" data-orig-note-id="P1-25-41">
+        <pitch>
+          <step>B</step>
+          <octave>1</octave>
+          </pitch>
+        <duration>120</duration>
+        <voice>5</voice>
+        <type size="cue">16th</type>
+        <accidental>natural</accidental>
+        <stem>up</stem>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" orientation="under" placement="below" number="1"/>
+          </notations>
+        </note>
+      <note default-x="123.46" default-y="-176.43" data-note-id="P1-25-20" data-orig-note-id="P1-25-42">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+          </pitch>
+        <duration>120</duration>
+        <voice>5</voice>
+        <type size="cue">16th</type>
+        <stem>up</stem>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        </note>
+      <note default-x="152.92" default-y="-166.43" data-note-id="P1-25-21" data-orig-note-id="P1-25-43">
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>2</octave>
+          </pitch>
+        <duration>480</duration>
+        <voice>5</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+          </time-modification>
+        <stem>up</stem>
+        <staff>2</staff>
+        <notations>
+          <slur type="stop" number="1"/>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+            </ornaments>
+          </notations>
+        </note>
+      <note default-x="152.92" default-y="-151.43" data-note-id="P1-25-22" data-orig-note-id="P1-25-44">
+        <chord/>
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>2</octave>
+          </pitch>
+        <duration>480</duration>
+        <voice>5</voice>
+        <type>half</type>
+        <accidental>flat</accidental>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+          </time-modification>
+        <stem>up</stem>
+        <staff>2</staff>
+        </note>
+      <note default-x="393.96" default-y="-176.43" data-note-id="P1-25-23" data-orig-note-id="P1-25-45">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+          </pitch>
+        <duration>353</duration>
+        <voice>5</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+          </time-modification>
+        <stem>up</stem>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+            </ornaments>
+          </notations>
+        </note>
+      <backup><duration>1073</duration></backup><note default-x="539.44" default-y="-231.43" data-note-id="P1-25-24" data-orig-note-id="P1-25-49">
+        <rest measure="yes"/>
+        <duration>1073</duration>
+        <voice>9</voice>
+        <staff>3</staff>
+        </note>
+      <barline location="right"><bar-style>none</bar-style></barline></measure>
+    <measure number="26" width="1028.57"><direction placement="below">
+        <direction-type>
+          <wedge type="stop" number="1"/>
+          </direction-type>
+        <staff>1</staff>
+        </direction>
+      <note default-x="546.59" default-y="15.00" data-note-id="P1-26-1" data-orig-note-id="P1-25-19">
+        <pitch>
+          <step>B</step>
+          <octave>6</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <beam number="3">begin</beam>
+        </note>
+      <note default-x="568.69" default-y="20.00" data-note-id="P1-26-2" data-orig-note-id="P1-25-20">
+        <pitch>
+          <step>C</step>
+          <octave>7</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="590.79" default-y="35.00" data-note-id="P1-26-3" data-orig-note-id="P1-25-21">
+        <pitch>
+          <step>F</step>
+          <octave>7</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        <notations>
+          <articulations>
+            <strong-accent type="up"/>
+            </articulations>
+          </notations>
+        </note>
+      <note default-x="612.88" default-y="30.00" data-note-id="P1-26-4" data-orig-note-id="P1-25-22">
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>7</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="634.98" default-y="20.00" data-note-id="P1-26-5" data-orig-note-id="P1-25-23">
+        <pitch>
+          <step>C</step>
+          <octave>7</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="657.08" default-y="10.00" data-note-id="P1-26-6" data-orig-note-id="P1-25-24">
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>6</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="675.73" default-y="0.00" data-note-id="P1-26-7" data-orig-note-id="P1-25-25">
+        <pitch>
+          <step>F</step>
+          <octave>6</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="694.38" default-y="-5.00" data-note-id="P1-26-8" data-orig-note-id="P1-25-26">
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>6</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="713.04" default-y="-15.00" data-note-id="P1-26-9" data-orig-note-id="P1-25-27">
+        <pitch>
+          <step>C</step>
+          <octave>6</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="731.69" default-y="-25.00" data-note-id="P1-26-10" data-orig-note-id="P1-25-28">
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="750.35" default-y="0.00" data-note-id="P1-26-11" data-orig-note-id="P1-25-29">
+        <pitch>
+          <step>F</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="769.00" default-y="-5.00" data-note-id="P1-26-12" data-orig-note-id="P1-25-30">
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>5</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="787.65" default-y="-15.00" data-note-id="P1-26-13" data-orig-note-id="P1-25-31">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="807.48" default-y="-25.00" data-note-id="P1-26-14" data-orig-note-id="P1-25-32">
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="826.13" default-y="-35.00" data-note-id="P1-26-15" data-orig-note-id="P1-25-33">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="844.78" default-y="-40.00" data-note-id="P1-26-16" data-orig-note-id="P1-25-34">
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <attributes>
+        <clef number="1">
+          <sign>F</sign>
+          <line>4</line>
+          </clef>
+        </attributes>
+      <note default-x="897.04" default-y="10.00" data-note-id="P1-26-17" data-orig-note-id="P1-25-35">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="915.70" default-y="0.00" data-note-id="P1-26-18" data-orig-note-id="P1-25-36">
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>3</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="934.35" default-y="-10.00" data-note-id="P1-26-19" data-orig-note-id="P1-25-37">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="953.01" default-y="-15.00" data-note-id="P1-26-20" data-orig-note-id="P1-25-38">
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>3</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <note default-x="971.66" default-y="-25.00" data-note-id="P1-26-21" data-orig-note-id="P1-25-39">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        </note>
+      <direction placement="below">
+        <direction-type>
+          <pedal type="stop" line="yes" sign="no"/>
+          </direction-type>
+        <staff>1</staff>
+        </direction>
+      <note default-x="998.77" default-y="-35.00" data-note-id="P1-26-22" data-orig-note-id="P1-25-40">
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>2</octave>
+          </pitch>
+        <duration>49</duration>
+        <voice>1</voice>
+        <type size="cue">32nd</type>
+        <accidental>flat</accidental>
+        <time-modification>
+          <actual-notes>39</actual-notes>
+          <normal-notes>32</normal-notes>
+          </time-modification>
+        <stem>down</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <beam number="3">end</beam>
+        <notations>
+          <tuplet type="stop"/>
+          <slur type="stop" number="1"/>
+          </notations>
+        </note>
+      <note print-object="no" data-note-id="P1-26-23"><rest/><duration>9</duration><staff>1</staff><voice>1</voice></note><backup><duration>1087</duration></backup><note print-object="no" data-note-id="P1-26-24"><rest/><duration>127</duration><staff>2</staff><voice>5</voice></note><note default-x="601.83" default-y="-166.43" data-note-id="P1-26-25" data-orig-note-id="P1-25-46">
+        <pitch>
+          <step>E</step>
+          <alter>-1</alter>
+          <octave>2</octave>
+          </pitch>
+        <duration>480</duration>
+        <voice>5</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+          </time-modification>
+        <stem>up</stem>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+            </ornaments>
+          </notations>
+        </note>
+      <note default-x="601.83" default-y="-151.43" data-note-id="P1-26-26" data-orig-note-id="P1-25-47">
+        <chord/>
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>2</octave>
+          </pitch>
+        <duration>480</duration>
+        <voice>5</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+          </time-modification>
+        <stem>up</stem>
+        <staff>2</staff>
+        </note>
+      <note default-x="793.49" default-y="-176.43" data-note-id="P1-26-27" data-orig-note-id="P1-25-48">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+          </pitch>
+        <duration>480</duration>
+        <voice>5</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+          </time-modification>
+        <stem>up</stem>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+            </ornaments>
+          </notations>
+        </note>
+      <backup><duration>1087</duration></backup>
+      </measure>
+    </part>
+  </score-partwise>

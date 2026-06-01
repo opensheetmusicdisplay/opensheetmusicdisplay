@@ -9,6 +9,7 @@ import {AbstractExpression} from "./AbstractExpression";
 import {PlacementEnum} from "./AbstractExpression";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { Pedal } from "./ContinuousExpressions/Pedal";
+import { WavyLine } from "./ContinuousExpressions/WavyLine";
 
 export class MultiExpression {
 
@@ -34,6 +35,8 @@ export class MultiExpression {
     private octaveShiftEnd: OctaveShift;
     public PedalStart: Pedal;
     public PedalEnd: Pedal;
+    public WavyLineStart: WavyLine;
+    public WavyLineEnd: WavyLine;
 
     public get SourceMeasureParent(): SourceMeasure {
         return this.sourceMeasure;

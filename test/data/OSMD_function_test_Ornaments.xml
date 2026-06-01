@@ -457,9 +457,45 @@
         <voice>1</voice>
         <type>quarter</type>
         </note>
-      <barline location="right">
-        <bar-style>light-heavy</bar-style>
-        </barline>
+      </measure>
+    <measure number="11">
+      <note>
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>8</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <accidental>natural</accidental>
+        <stem>down</stem>
+        <notations>
+          <ornaments>
+            <trill-mark/>
+            <wavy-line type="start" number="1"/>
+            </ornaments>
+          </notations>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>Trill+wavy</text>
+          </lyric>
+        </note>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>8</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <accidental>natural</accidental>
+        <stem>down</stem>
+        <notations>
+          <ornaments>
+            <wavy-line type="stop" number="1"/>
+            </ornaments>
+          </notations>
+        </note>
       </measure>
     </part>
   </score-partwise>

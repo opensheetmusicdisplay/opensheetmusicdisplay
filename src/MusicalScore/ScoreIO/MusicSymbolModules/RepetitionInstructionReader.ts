@@ -118,6 +118,11 @@ export class RepetitionInstructionReader {
             const newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.Ending,
                                                                                     AlignmentType.End, undefined, endingIndices);
             this.addInstruction(this.repetitionInstructions, newInstruction);
+          } else if (type === "discontinue") {
+            const newInstruction: RepetitionInstruction = new RepetitionInstruction(
+              this.currentMeasureIndex, RepetitionInstructionEnum.Ending,
+              AlignmentType.Discontinue, undefined, endingIndices);
+            this.addInstruction(this.repetitionInstructions, newInstruction);
           }
           if (direction === "backward") {
             const newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.BackJumpLine);

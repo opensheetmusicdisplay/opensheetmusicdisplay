@@ -439,8 +439,7 @@ export class TabNote extends StemmableNote {
       const glyph = this.glyphs[i];
 
       let currentGlyphWidth = glyph.getWidth();
-      if (currentGlyphWidth === 0 && glyph.text && glyph.text.toString() && glyph.text.toString().length) {
-        // above: glyph.text?.toString()?.length would be shorter, but fails appveyor build
+      if (currentGlyphWidth === 0 && glyph.text?.toString()?.length) {
         // VexflowPatch: workaround for generateImages script -> SVG export
         currentGlyphWidth = glyph.text.toString().length * 7;
       }

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise>
+	<work>
+		<work-title>test_direction_read_multiple_direction-type_nodes_1175</work-title>
+	</work>
+    <part-list>
+        <score-part id="P1">
+            <part-name>Music</part-name>
+        </score-part>
+    </part-list>
+    <part id="P1">
+        <measure number="1">
+            <attributes>
+                <divisions>1</divisions>
+                <key>
+                    <fifths>0</fifths>
+                </key>
+                <time>
+                    <beats>4</beats>
+                    <beat-type>4</beat-type>
+                </time>
+                <clef>
+                    <sign>G</sign>
+                    <line>2</line>
+                </clef>
+            </attributes>
+            <direction directive="yes" placement="above">
+                <direction-type>
+                    <words default-y="40" font-size="28" font-weight="bold" xml:space="preserve">Moderato  </words>
+                </direction-type>
+                <direction-type>
+                    <metronome font-family="EngraverTextT" font-size="24" font-weight="normal" parentheses="yes">
+                        <beat-unit>quarter</beat-unit>
+                        <per-minute>c. 108</per-minute>
+                    </metronome>
+                </direction-type>
+                <sound tempo="108"/>
+            </direction>
+            <note>
+                <pitch>
+                    <step>C</step>
+                    <octave>4</octave>
+                </pitch>
+                <duration>4</duration>
+                <type>whole</type>
+            </note>
+        </measure>
+    </part>
+</score-partwise>

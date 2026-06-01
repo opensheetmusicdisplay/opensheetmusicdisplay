@@ -122,6 +122,10 @@ export abstract class MusicSystem extends GraphicalObject {
         return this.id;
     }
 
+    public get MaxLabelLength(): number {
+        return this.maxLabelLength;
+    }
+
     /**
      * Create the left vertical Line connecting all staves of the [[MusicSystem]].
      * @param lineWidth

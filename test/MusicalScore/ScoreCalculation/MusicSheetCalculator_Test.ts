@@ -1,3 +1,4 @@
+import { expect } from "chai";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import {MusicSheetReader} from "../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import {MusicSheet} from "../../../src/MusicalScore/MusicSheet";
@@ -7,7 +8,7 @@ import {VexFlowMusicSheetCalculator} from "../../../src/MusicalScore/Graphical/V
 import {GraphicalMusicSheet} from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {VexFlowTextMeasurer} from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer";
 import {TestUtils} from "../../Util/TestUtils";
-import {EngravingRules} from "../../../src";
+import { EngravingRules } from "../../../src/MusicalScore/Graphical/EngravingRules";
 
 describe("Music Sheet Calculator", () => {
     const filename: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
@@ -21,9 +22,9 @@ describe("Music Sheet Calculator", () => {
         MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(new EngravingRules());
         // Load the XML file
         const xml: Document = TestUtils.getScore(filename);
-        chai.expect(xml).to.not.be.undefined;
+        expect(xml).to.not.be.undefined;
         score = new IXmlElement(TestUtils.getPartWiseElement(xml));
-        chai.expect(score).to.not.be.undefined;
+        expect(score).to.not.be.undefined;
         sheet = reader.createMusicSheet(score, "path-of-" + filename);
 
         const graphicalSheet: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calculator);

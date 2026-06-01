@@ -56,9 +56,9 @@ export class Barline extends StaveModifier {
     this.paddings[TYPE.SINGLE] = 0;
     this.paddings[TYPE.DOUBLE] = 0;
     this.paddings[TYPE.DOUBLE_HEAVY] = 0;
-    this.paddings[TYPE.END] = 0;
-    this.paddings[TYPE.REPEAT_BEGIN] = 15;
-    this.paddings[TYPE.REPEAT_END] = 15;
+    this.paddings[TYPE.END] = 5; // for multimeasurerest (#1329)
+    this.paddings[TYPE.REPEAT_BEGIN] = 10; // for multimeasurerest
+    this.paddings[TYPE.REPEAT_END] = 10; // for multimeasurerest
     this.paddings[TYPE.REPEAT_BOTH] = 15;
     this.paddings[TYPE.NONE] = 0;
 

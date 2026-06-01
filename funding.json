@@ -1,0 +1,128 @@
+{
+  "version": "v1.0.0",
+  "entity": {
+    "type": "organisation",
+    "role": "owner",
+    "name": "PhonicScore (Open Sheet Music Display)",
+    "email": "support@opensheetmusicdisplay.org",
+    "phone": "",
+    "description": "PhonicScore is a music-tech company based in Vienna, Austria. We create solutions for musicians, sheet music publishers, app developers, music stores and researchers, including open source software, sheet music display and playback, and native and web apps. We are the primary maintainers of Open Sheet Music Display (OSMD).",
+    "webpageUrl": {
+      "url": "https://opensheetmusicdisplay.org"
+    }
+  },
+  "projects": [
+    {
+      "guid": "opensheetmusicdisplay",
+      "name": "Open Sheet Music Display (OSMD)",
+      "description": "Open Sheet Music Display is a TypeScript-based open source library that renders MusicXML sheet music in the browser and headless with Node.js. Built on top of VexFlow, OSMD lets developers ship MusicXML sheet music apps without having to write rendering logic from scratch, and it is free and open source forever to keep the entry barrier for sheet music tooling as low as possible.\n\nOver the past releases the library has grown well beyond pure rendering. An audio player is now available, transposing is supported out of the box, and users can attach annotations directly to the score. On the engraving side, OSMD now handles wavy lines and pedal signs, closing important gaps in MusicXML coverage.\n\nLooking ahead, our roadmap focuses on making OSMD both more inclusive and more capable. We plan to add music braille notation so that visually impaired musicians can use scores rendered by OSMD, and we are preparing the upgrade to VexFlow 5, which will modernise the rendering backbone. In parallel we are investing in rendering performance optimisation to keep large scores fluid, working towards a built-in editor, and developing audio file synchronisation with the cursor so that recordings can follow the score in real time.",
+      "webpageUrl": {
+        "url": "https://opensheetmusicdisplay.org"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
+      },
+      "licenses": ["spdx:BSD-3-Clause"],
+      "tags": [
+        "music",
+        "sheet-music",
+        "musicxml",
+        "music-notation",
+        "typescript",
+        "javascript",
+        "library",
+        "rendering",
+        "audio",
+        "education"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "github-sponsors",
+        "type": "payment-provider",
+        "address": "https://github.com/sponsors/opensheetmusicdisplay",
+        "description": "GitHub Sponsors page for Open Sheet Music Display. Supports monthly and one-time contributions. Monthly sponsors of 14 USD or above get access to the sponsor repository including the OSMD Audio Player and other exclusive features."
+      },
+      {
+        "guid": "phonicscore-bank",
+        "type": "bank",
+        "address": "PhonicScore bank account (Austria, EUR). Contact support@phonicscore.com for IBAN/BIC and invoicing details.",
+        "description": "Direct bank transfer to PhonicScore's account in Austria. Used for larger custom funding plans (e.g. annual maintenance contracts) where GitHub Sponsors is not a fit. Invoice issued by PhonicScore."
+      }
+    ],
+    "plans": [
+      {
+        "guid": "music-enthusiast",
+        "status": "active",
+        "name": "The Music Enthusiast",
+        "description": "For supporters who like OSMD and want to back its development. Includes (optionally): your name listed as a supporter on our webpages; early access to features and builds (OSMD Audio Player, advanced MusicXML features such as pedal symbols/lines and wavy-lines, and more); a supporter-exclusive Discord channel; future access to OSMD screencasts; an OSMD T-shirt and stickers; and a postcard from Vienna personally written by the Vienna team members.",
+        "amount": 14,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": ["github-sponsors"]
+      },
+      {
+        "guid": "generous-enthusiast",
+        "status": "active",
+        "name": "The Generous Enthusiast",
+        "description": "For supporters who can spare a more generous amount. Includes all rewards from the Music Enthusiast tier, plus (optionally) your name listed as a generous supporter on our webpages.",
+        "amount": 29,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": ["github-sponsors"]
+      },
+      {
+        "guid": "music-developer",
+        "status": "active",
+        "name": "The Music Developer",
+        "description": "For developers building on OSMD. Includes all previous rewards, plus access to an exclusive Discord developer chat and a linked logo on our webpages.",
+        "amount": 99,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": ["github-sponsors"]
+      },
+      {
+        "guid": "business-agency",
+        "status": "active",
+        "name": "The Business / Agency",
+        "description": "For businesses and agencies relying on OSMD. Includes all previous rewards, plus: 1.5 hours of monthly support from our developers via video chat (if required); listing as a sponsor on our webpages with a big linked logo; a private Discord channel to ask us support questions; and priority for bug fixes.",
+        "amount": 499,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": ["github-sponsors"]
+      },
+      {
+        "guid": "maestro-sponsor",
+        "status": "active",
+        "name": "The Maestro Sponsor",
+        "description": "For organisations making a significant investment in OSMD. Includes all previous rewards, plus: 3 hours of monthly support (not cumulative) from our developers via video chat (if required); insight into the OSMD roadmap; and influence on feature priority and new features.",
+        "amount": 990,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": ["github-sponsors"]
+      },
+      {
+        "guid": "developer-fund",
+        "status": "active",
+        "name": "The Developer Fund",
+        "description": "Top monthly tier. Includes all previous rewards, plus: financing a developer dedicated to OSMD and the specific improvements you need for your projects, greatly accelerating the pace of development and the time we can dedicate to your custom needs; regular 1:1 support and dedicated development time from our developers.",
+        "amount": 1990,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": ["github-sponsors"]
+      },
+      {
+        "guid": "annual-maintenance",
+        "status": "active",
+        "name": "Annual Project Maintenance (1 Developer / 1 Year)",
+        "description": "Custom funding plan, not available on GitHub Sponsors. Covers one full year of project maintenance work by one dedicated OSMD developer, including bug fixes, feature work and direct project support. Payable in USD via bank transfer to the PhonicScore bank account in Austria; PhonicScore issues an invoice. Contact support@phonicscore.com to arrange.",
+        "amount": 50000,
+        "currency": "USD",
+        "frequency": "one-time",
+        "channels": ["phonicscore-bank"]
+      }
+    ]
+  }
+}

@@ -15,6 +15,7 @@ import { GraphicalSlur } from "./GraphicalSlur";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 import { GraphicalPedal } from "./GraphicalPedal";
 import { GraphicalGlissando } from "./GraphicalGlissando";
+import { GraphicalWavyLine } from "./GraphicalWavyLine";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -173,6 +174,7 @@ export abstract class StaffLine extends GraphicalObject {
     }
 
     public Pedals: GraphicalPedal[] = [];
+    public WavyLines: GraphicalWavyLine[] = [];
 
     public get StaffHeight(): number {
         return this.staffHeight;

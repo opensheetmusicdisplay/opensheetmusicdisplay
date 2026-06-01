@@ -26,7 +26,7 @@ if (!Array.prototype.clear) {
     Object.defineProperty(Array.prototype, "clear", {
         enumerable: false,
         writable: true,
-        value: function<T>(): void {
+        value: function(): void {
             this.length = 0;
         }
     });

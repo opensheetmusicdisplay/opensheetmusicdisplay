@@ -1,3 +1,4 @@
+import { expect } from "chai";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {MusicSheet} from "../../../../src/MusicalScore/MusicSheet";
@@ -25,9 +26,9 @@ describe("Clef Converter MusicXML to VexFlow", () => {
      */
     function getMusicSheetWithClef(sign: string, line?: number, clefOcatveChange?: number, additional?: string, size?: string): MusicSheet {
       const doc: Document = parser.parseFromString(getMusicXmlWithClef(sign, line, clefOcatveChange, additional, size), "text/xml");
-      chai.expect(doc).to.not.be.undefined;
+      expect(doc).to.not.be.undefined;
       const score: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
-      chai.expect(score).to.not.be.undefined;
+      expect(score).to.not.be.undefined;
       return reader.createMusicSheet(score, "template.xml");
     }
 

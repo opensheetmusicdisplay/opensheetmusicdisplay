@@ -7,19 +7,16 @@ import { SourceMeasure } from "./SourceMeasure";
 
 export class TabNote extends Note {
     constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch, sourceMeasure: SourceMeasure,
-                stringNumber: number, fretNumber: number, bendArray: { bendalter: number, direction: string }[],
-                vibratoStroke: boolean) {
+                stringNumber: number, fretNumber: number, bendArray: { bendalter: number, direction: string }[]) {
         super(voiceEntry, parentStaffEntry, length, pitch, sourceMeasure);
         this.stringNumberTab = stringNumber;
         this.fretNumber = fretNumber;
         this.bendArray = bendArray;
-        this.vibratoStroke = vibratoStroke;
     }
 
     private stringNumberTab: number; // there can also be string numbers for e.g. violin in treble clef.
     private fretNumber: number;
     private bendArray: { bendalter: number, direction: string }[];
-    private vibratoStroke: boolean;
 
     /** Returns the string number the note should be played on. Note there can also be violin string numbers in treble clef. */
     public get StringNumberTab(): number {
@@ -34,11 +31,13 @@ export class TabNote extends Note {
         return this.bendArray;
     }
 
-    public get VibratoStroke(): boolean {
-        return this.vibratoStroke;
+    public hasTabEffects(): boolean {
+        return this.bendArray?.length > 0;
+        // || this.vibratoStroke // vibratoStroke is handled by wavy-line (difference to public OSMD)
     }
 
-    public hasTabEffects(): boolean {
-        return this.bendArray?.length > 0 || this.vibratoStroke;
-    }
+    // handled by wavy-line
+    // public get VibratoStroke(): boolean {
+    //     return this.vibratoStroke;
+    // }
 }

@@ -57,6 +57,8 @@ export class RepetitionInstruction /*implements IComparable*/ {
     public type: RepetitionInstructionEnum;
     public alignment: AlignmentType;
     public parentRepetition: Repetition;
+    /** How many times this should be repeated */
+    public Times: number;
 
     public CompareTo(obj: Object): number {
         const other: RepetitionInstruction = <RepetitionInstruction>obj;
@@ -166,4 +168,6 @@ export enum RepetitionInstructionEnum {
 export enum AlignmentType {
     Begin,
     End,
+    Mid,
+    Discontinue
 }

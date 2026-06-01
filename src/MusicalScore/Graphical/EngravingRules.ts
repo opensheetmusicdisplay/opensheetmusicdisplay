@@ -24,7 +24,7 @@ import { Note } from "../VoiceData/Note";
  *  like Render* to (not) render certain elements (e.g. osmd.rules.RenderRehearsalMarks = false)
  */
 export class EngravingRules {
-    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
+    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow at osmd.Zoom = 1 (default). */
     public static unit: number = 1.0;
     public SamplingUnit: number;
     public StaccatoShorteningFactor: number;
@@ -242,13 +242,23 @@ export class EngravingRules {
     public TabUseXNoteheadAlternativeGlyph: boolean;
     public TabXNoteheadScale: number;
 
+    /** Whether the first measure is allowed to have a left repeat barline, if explicitly given in the MusicXML. */
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
     public RepetitionEndingLabelXOffset: number;
     public RepetitionEndingLabelYOffset: number;
     public RepetitionEndingLineYLowerOffset: number;
     public RepetitionEndingLineYUpperOffset: number;
+    /** Whether the cursor should ignore / skip repetitions (alternative name: SkipRepetitions). False by default */
+    public CursorIgnoreRepetitions: boolean;
     public VoltaOffset: number;
+    /** X offset applied after label was moved to not overflow the staffline to the left.
+     * Without this offset, simply removing the overflow is usually too strict, moving it too far unnecessarily.
+     * e.g. see Beethoven Geliebte sample ("Ziemlich langsam")
+     */
+    public LabelXOffsetForStafflineLeftOverflowCheck: number;
+    public TempoExpressionTextAlignment: TextAlignmentEnum;
+    public UnknownExpressionTextAlignment: TextAlignmentEnum;
     /** Default alignment of lyrics.
      * Left alignments will extend text to the right of the bounding box,
      * which facilitates spacing by extending measure width.
@@ -282,6 +292,14 @@ export class EngravingRules {
     /** Last note in measure needs less padding because of measure bar and bar start/end padding. */
     public LyricsXPaddingReductionForLastNoteInMeasure: number;
     public LyricsXPaddingForLastNoteInMeasure: boolean;
+    /** Reduction applied for the last note of a measure when its lyric is a multi-syllable
+     *  mid-word continuation (a dash trails to the next syllable, which lives in the next measure).
+     *  Lower than LyricsXPaddingReductionForLastNoteInMeasure because the next measure's first note
+     *  has a syllable + dash glyph right at its start — the usual measure-end buffer doesn't apply.
+     *  Set to 0 for maximum cross-measure clearance (no reduction), or up to
+     *  LyricsXPaddingReductionForLastNoteInMeasure for the same reduction as a normal last note.
+     *  Default 1.0 (regular note 1.2). */
+    public LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord: number;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
     public BetweenSyllableMaximumDistance: number;
@@ -476,6 +494,7 @@ export class EngravingRules {
     public RenderTimeSignatures: boolean;
     public RenderFirstTempoExpression: boolean;
     public RenderPedals: boolean;
+    public RenderWavyLines: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
     public IgnoreRepeatedDynamics: boolean;
@@ -555,6 +574,10 @@ export class EngravingRules {
     public SkyBottomLineWebGLMinMeasures: number;
     /** Whether to always set preferred backend (WebGL or Plain) automatically, depending on browser and number of measures. */
     public AlwaysSetPreferredSkyBottomLineBackendAutomatically: boolean;
+
+    // Playback settings
+    /** Currently only used in audio player */
+    public UseInterpolatedTempoForAccelerandoEtc: boolean;
 
     constructor() {
         this.loadDefaultValues();
@@ -797,7 +820,13 @@ export class EngravingRules {
         this.RepetitionEndingLabelYOffset = 0.3;
         this.RepetitionEndingLineYLowerOffset = 0.5;
         this.RepetitionEndingLineYUpperOffset = 0.3;
+        this.CursorIgnoreRepetitions = false;
         this.VoltaOffset = 2.5;
+
+        // <direction><word> nodes text alignment
+        this.LabelXOffsetForStafflineLeftOverflowCheck = -1.2; // see Beethoven Geliebte, Function Test Brooke
+        this.TempoExpressionTextAlignment = TextAlignmentEnum.CenterBottom;
+        this.UnknownExpressionTextAlignment = TextAlignmentEnum.CenterBottom;
 
         // Lyrics
         this.LyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
@@ -812,6 +841,9 @@ export class EngravingRules {
         this.LyricsXPaddingReductionForLongNotes = 0.7;
         this.LyricsXPaddingReductionForLastNoteInMeasure = 1.2;
         this.LyricsXPaddingForLastNoteInMeasure = true;
+        this.LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord = 1.0;
+        // 1.0 avoids too much padding/measure width e.g. in Schubert measure 9 end, Mozart Veilchen measure 18 and 19 end
+
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
@@ -940,6 +972,7 @@ export class EngravingRules {
         this.RenderTimeSignatures = true;
         this.RenderFirstTempoExpression = true;
         this.RenderPedals = true;
+        this.RenderWavyLines = true;
         this.ArticulationPlacementFromXML = true;
         this.BreathMarkDistance = 0.8;
         this.FingeringPosition = PlacementEnum.AboveOrBelow; // AboveOrBelow = correct bounding boxes
@@ -981,6 +1014,11 @@ export class EngravingRules {
         this.DisableWebGLInFirefox = true;
         this.DisableWebGLInSafariAndIOS = true;
         this.setPreferredSkyBottomLineBackendAutomatically();
+
+        // Playback
+        this.UseInterpolatedTempoForAccelerandoEtc = false; // wait for rit support etc. can also make
+        //   player features like syncing more difficult to implement.
+        //   Also, the end of an accelerando is usually not marked, so this makes it difficult to find an end timestamp.
 
         // this.populateDictionaries(); // these values aren't used currently
         try {

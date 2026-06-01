@@ -35,6 +35,7 @@ import { VexFlowGlissando } from "./VexFlowGlissando";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { SvgVexFlowBackend } from "./SvgVexFlowBackend";
 import { Staff } from "../../VoiceData/Staff";
+import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -528,6 +529,18 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 (pedalMarking as any).render_options.color = this.rules.DefaultColorMusic;
                 pedalMarking.setContext(ctx);
                 pedalMarking.draw();
+            }
+        }
+    }
+
+    protected drawWavyLines(staffLine: StaffLine): void {
+        for (const graphicalWavyLine of staffLine.WavyLines) {
+            if (graphicalWavyLine) {
+                const vexFlowVibratoBracket: VexFlowVibratoBracket = graphicalWavyLine as VexFlowVibratoBracket;
+                const ctx: Vex.IRenderContext = this.backend.getContext();
+                const vfVibratoBracket: Vex.Flow.VibratoBracket = vexFlowVibratoBracket.getVibratoBracket();
+                (vfVibratoBracket as any).setContext(ctx);
+                vfVibratoBracket.draw();
             }
         }
     }

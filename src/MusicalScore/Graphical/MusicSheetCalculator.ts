@@ -20,7 +20,7 @@ import { Articulation } from "../VoiceData/Articulation";
 import { Tuplet } from "../VoiceData/Tuplet";
 import { MusicSystem } from "./MusicSystem";
 import { GraphicalTie } from "./GraphicalTie";
-import { RepetitionInstruction } from "../VoiceData/Instructions/RepetitionInstruction";
+import { RepetitionInstruction, RepetitionInstructionEnum, AlignmentType } from "../VoiceData/Instructions/RepetitionInstruction";
 import { MultiExpression, MultiExpressionEntry } from "../VoiceData/Expressions/MultiExpression";
 import { StaffEntryLink } from "../VoiceData/StaffEntryLink";
 import { MusicSystemBuilder } from "./MusicSystemBuilder";
@@ -47,6 +47,7 @@ import { AccidentalCalculator } from "./AccidentalCalculator";
 import { MidiInstrument } from "../VoiceData/Instructions/ClefInstruction";
 import { Staff } from "../VoiceData/Staff";
 import { OctaveShift } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { NoteHeadShape } from "../VoiceData/Notehead";
 import log from "loglevel";
 import { Dictionary } from "typescript-collections";
 import { GraphicalLyricEntry } from "./GraphicalLyricEntry";
@@ -59,7 +60,7 @@ import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AbstractGraphicalInstruction } from "./AbstractGraphicalInstruction";
 import { GraphicalInstantaneousTempoExpression } from "./GraphicalInstantaneousTempoExpression";
-import { InstantaneousTempoExpression, TempoEnum } from "../VoiceData/Expressions/InstantaneousTempoExpression";
+import { InstantaneousTempoExpression, TempoType } from "../VoiceData/Expressions/InstantaneousTempoExpression";
 import { ContinuousTempoExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousTempoExpression";
 import { FontStyles } from "../../Common/Enums/FontStyles";
 import { AbstractTempoExpression } from "../VoiceData/Expressions/AbstractTempoExpression";
@@ -773,6 +774,16 @@ export abstract class MusicSheetCalculator {
         measureIndex: number, staffIndex: number): void;
 
     /**
+     * Calculate a single Wavy Line for a [[MultiExpression]].
+     * @param sourceMeasure
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
+    protected abstract calculateSingleWavyLine(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
+        measureIndex: number, staffIndex: number): void;
+
+    /**
      * Calculate all the textual [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
      * @param repetitionInstruction
      * @param measureIndex
@@ -1001,7 +1012,11 @@ export abstract class MusicSheetCalculator {
                 // calculate all Pedal Expressions
                 this.calculatePedals();
             }
-            // calcualte RepetitionInstructions (Dal Segno, Coda, etc)
+            //calculate all wavy lines (vibrato, trill marks)
+            if (this.rules.RenderWavyLines) {
+                this.calculateWavyLines();
+            }
+            // calculate RepetitionInstructions (Dal Segno, Coda, etc)
             this.calculateWordRepetitionInstructions();
         }
         // calculate endings last, so they appear above measure numbers
@@ -1474,6 +1489,11 @@ export abstract class MusicSheetCalculator {
         const endOfMeasure: number = parentMeasure.PositionAndShape.AbsolutePosition.x + parentMeasure.PositionAndShape.BorderRight;
         let maxNoteLength: Fraction = new Fraction(0, 0, 0);
         for (const staffEntry of container.StaffEntries) {
+            if (staffEntry?.sourceStaffEntry.ParentStaff !== staffLine.ParentStaff) {
+                // note: null check handles rare cases of undefined staffEntries, e.g. in test_wedge_cresc_dim_simultaneous_quartet.musicxml
+                continue;
+                // don't let notes in other staffs (not the wedge's staff) affect the wedge length (see #1477)
+            }
             const currentMaxLength: Fraction = staffEntry?.sourceStaffEntry?.calculateMaxNoteLength(false);
             if ( currentMaxLength?.gt(maxNoteLength) ) {
                 maxNoteLength = currentMaxLength;
@@ -1968,6 +1988,12 @@ export abstract class MusicSheetCalculator {
             left = right - graphLabel.PositionAndShape.MarginSize.width;
             relative.x = left - graphLabel.PositionAndShape.BorderMarginLeft;
         }
+        if (left < staffLine.PositionAndShape.BorderMarginLeft) {
+            const rightShift: number = staffLine.PositionAndShape.BorderMarginLeft - left + this.rules.LabelXOffsetForStafflineLeftOverflowCheck;
+            left += rightShift;
+            right += rightShift;
+            relative.x += rightShift;
+        }
 
         // find allowed position (where the Label can be positioned) from Sky- BottomLine
         let drawingHeight: number;
@@ -2058,7 +2084,7 @@ export abstract class MusicSheetCalculator {
 
             // const addAtLastList: GraphicalObject[] = [];
             for (const entry of multiTempoExpression.EntriesList) {
-                let textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom;
+                let textAlignment: TextAlignmentEnum = this.rules.TempoExpressionTextAlignment;
                 if (this.rules.CompactMode) {
                     textAlignment = TextAlignmentEnum.LeftBottom;
                 }
@@ -2093,7 +2119,7 @@ export abstract class MusicSheetCalculator {
                     }
                     // in case of metronome mark:
                     if (this.rules.MetronomeMarksDrawn) {
-                        if ((entry.Expression as InstantaneousTempoExpression).Enum === TempoEnum.metronomeMark) {
+                        if ((entry.Expression as InstantaneousTempoExpression).TempoType === TempoType.metronomeMark) {
                             this.createMetronomeMark((entry.Expression as InstantaneousTempoExpression));
                             continue;
                         }
@@ -2773,16 +2799,28 @@ export abstract class MusicSheetCalculator {
         const accidentalCalculators: AccidentalCalculator[] = [];
         const firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
         if (firstSourceMeasure) {
+            const transposeHalftones: number = this.graphicalMusicSheet.ParentMusicSheet.Transpose;
             for (let i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
                 const accidentalCalculator: AccidentalCalculator = new AccidentalCalculator();
                 accidentalCalculators.push(accidentalCalculator);
-                accidentalCalculator.Transpose = this.graphicalMusicSheet.ParentMusicSheet.Transpose;
+                accidentalCalculator.Transpose = transposeHalftones;
                 if (firstSourceMeasure.FirstInstructionsStaffEntries[i]) {
                     for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
                         const abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
                         if (abstractNotationInstruction instanceof KeyInstruction) {
-                            const keyInstruction: KeyInstruction = <KeyInstruction>abstractNotationInstruction;
-                            accidentalCalculator.ActiveKeyInstruction = keyInstruction;
+                            // Create a new KeyInstruction using keyTypeOriginal to ensure correct starting point (#1383)
+                            // This ensures that when transpose=0, we get the original key (e.g., C major)
+                            // rather than a previously transposed key (e.g., Db major from transpose=1)
+                            const originalKey: KeyInstruction = <KeyInstruction>abstractNotationInstruction;
+                            const key: KeyInstruction = new KeyInstruction(originalKey.Parent, originalKey.keyTypeOriginal, originalKey.Mode);
+                            // Then transpose if needed (skip percussion instruments)
+                            const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.Staves[i];
+                            if (transposeHalftones !== 0 &&
+                                staff?.ParentInstrument?.MidiInstrumentId !== MidiInstrument.Percussion &&
+                                MusicSheetCalculator.transposeCalculator) {
+                                MusicSheetCalculator.transposeCalculator.transposeKey(key, transposeHalftones);
+                            }
+                            accidentalCalculator.ActiveKeyInstruction = key;
                         }
                     }
                 }
@@ -2865,8 +2903,14 @@ export abstract class MusicSheetCalculator {
             for (let idx: number = 0, len: number = sourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions.length; idx < len; ++idx) {
                 const instruction: AbstractNotationInstruction = sourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[idx];
                 if (instruction instanceof KeyInstruction) {
-                    const key: KeyInstruction = KeyInstruction.copy(instruction);
+                    // Create a new KeyInstruction using keyTypeOriginal to ensure correct starting point (#1383)
+                    // This ensures that when transpose=0, we get the original key (e.g., C major)
+                    // rather than a previously transposed key (e.g., Db major from transpose=1)
+                    const key: KeyInstruction = new KeyInstruction(instruction.Parent, instruction.keyTypeOriginal, instruction.Mode);
                     const transposeHalftones: number = measure.getTransposedHalftones();
+                    if (transposeHalftones !== 0 && MusicSheetCalculator.transposeCalculator === undefined) {
+                        log.info("[OSMD] transpose requested, but TransposeCalculator undefined. Use osmd.TransposeCalculator = new TransposeCalculator()");
+                    }
                     if (transposeHalftones !== 0 &&
                         measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
                         MusicSheetCalculator.transposeCalculator) {
@@ -2937,10 +2981,12 @@ export abstract class MusicSheetCalculator {
                 }
                 // check for possible OctaveShift
                 let octaveShiftValue: OctaveEnum = OctaveEnum.NONE;
+                let activeOctaveShift: OctaveShift;
                 if (openOctaveShifts[staffIndex]) {
                     if (openOctaveShifts[staffIndex].getAbsoluteStartTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
                         sourceStaffEntry.AbsoluteTimestamp.lte(openOctaveShifts[staffIndex].getAbsoluteEndTimestamp)) {
                         octaveShiftValue = openOctaveShifts[staffIndex].getOpenOctaveShift.Type;
+                        activeOctaveShift = openOctaveShifts[staffIndex].getOpenOctaveShift;
                     }
                 }
                 if (octaveShiftValue === OctaveEnum.NONE) {
@@ -2955,6 +3001,7 @@ export abstract class MusicSheetCalculator {
                         if (targetOctaveShift?.ParentStartMultiExpression?.AbsoluteTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
                             !targetOctaveShift.ParentEndMultiExpression?.AbsoluteTimestamp.lt(sourceStaffEntry.AbsoluteTimestamp)) {
                                 octaveShiftValue = targetOctaveShift.Type;
+                                activeOctaveShift = targetOctaveShift;
                                 break;
                             }
                     }
@@ -2962,6 +3009,15 @@ export abstract class MusicSheetCalculator {
                 // for each visible Voice create the corresponding GraphicalNotes
                 for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                     const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
+                    // When an octave shift stop falls between grace notes at the same timestamp,
+                    // turn off the shift for VoiceEntries parsed after the stop.
+                    if (octaveShiftValue !== OctaveEnum.NONE && activeOctaveShift &&
+                        activeOctaveShift.endVoiceEntryIndex > 0 && // without this, last note in bracket is drawn an octave too high
+                        activeOctaveShift.ParentEndMultiExpression?.AbsoluteTimestamp.Equals(sourceStaffEntry.AbsoluteTimestamp) &&
+                        idx >= activeOctaveShift.endVoiceEntryIndex) {
+                        octaveShiftValue = OctaveEnum.NONE;
+                        activeOctaveShift = undefined;
+                    }
                     // Normal Notes...
                     octaveShiftValue = this.handleVoiceEntry(
                         voiceEntry, graphicalStaffEntry,
@@ -2972,9 +3028,13 @@ export abstract class MusicSheetCalculator {
                     );
                 }
                 // SourceStaffEntry has inStaff ClefInstruction -> create graphical clef
-                if (sourceStaffEntry.Instructions.length > 0) {
-                    const clefInstruction: ClefInstruction = <ClefInstruction>sourceStaffEntry.Instructions[0];
-                    MusicSheetCalculator.symbolFactory.createInStaffClef(graphicalStaffEntry, clefInstruction);
+                for (const instruction of sourceStaffEntry.Instructions) {
+                    if (instruction instanceof ClefInstruction) {
+                        MusicSheetCalculator.symbolFactory.createInStaffClef(
+                            graphicalStaffEntry, instruction as ClefInstruction
+                        );
+                        break;
+                    }
                 }
                 if (this.rules.RenderChordSymbols && sourceStaffEntry.ChordContainers?.length > 0) {
                     sourceStaffEntry.ParentStaff.ParentInstrument.HasChordSymbols = true;
@@ -3074,6 +3134,10 @@ export abstract class MusicSheetCalculator {
                 accidentalCalculator.ActiveKeyInstruction, activeClef, transposeHalftones, octaveEnum
             );
             graphicalNote.sourceNote.TransposedPitch = pitch;
+        } else {
+            // Clear any previously set TransposedPitch when not transposing,
+            // to avoid stale state affecting accidental calculation (#1383)
+            graphicalNote.sourceNote.TransposedPitch = undefined;
         }
         graphicalNote.sourceNote.halfTone = pitch.getHalfTone();
         accidentalCalculator.checkAccidental(graphicalNote, pitch);
@@ -3604,6 +3668,11 @@ export abstract class MusicSheetCalculator {
         let endStaffEntry: GraphicalStaffEntry = undefined;
         let endStaffLine: StaffLine = undefined;
         const staffIndex: number = startStaffEntry.parentMeasure.ParentStaff.idInMusicSheet;
+        if (!startStaffEntry.parentVerticalContainer) {
+            // shouldn't happen since calculateVerticalContainersList covers all measure.staffEntries,
+            // but skip rather than crash if some upstream parsing left a staff entry without a container
+            return;
+        }
         for (let index: number = startStaffEntry.parentVerticalContainer.Index + 1;
             index < this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length;
             ++index) {
@@ -3790,6 +3859,24 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    private calculateWavyLines(): void {
+        for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
+            const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+            for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
+                if (!this.graphicalMusicSheet.MeasureList[i] || !this.graphicalMusicSheet.MeasureList[i][j]) {
+                    continue;
+                }
+                if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.isVisible()) {
+                    for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
+                        if ((sourceMeasure.StaffLinkedExpressions[j][k].WavyLineStart)) {
+                            this.calculateSingleWavyLine(sourceMeasure, sourceMeasure.StaffLinkedExpressions[j][k], i, j);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private getFirstLeftNotNullStaffEntryFromContainer(horizontalIndex: number, verticalIndex: number, multiStaffInstrument: boolean): GraphicalStaffEntry {
         if (this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers[horizontalIndex].StaffEntries[verticalIndex]) {
             return this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers[horizontalIndex].StaffEntries[verticalIndex];
@@ -3815,8 +3902,38 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateWordRepetitionInstructions(): void {
+        // Track currently active volta spans (can have multiple nested or sequential)
+        // Each span tracks: startMeasure index, endingIndices
+        const activeVoltaSpans: {startMeasure: number, endingIndices: number[]}[] = [];
+
         for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+
+            // Check if this measure has a Begin or End ending instruction
+            let hasBeginEnding: boolean = false;
+            let hasEndEnding: boolean = false;
+            let beginEndingIndices: number[] = undefined;
+
+            for (const instruction of sourceMeasure.FirstRepetitionInstructions) {
+                if (instruction.type === RepetitionInstructionEnum.Ending && instruction.alignment === AlignmentType.Begin) {
+                    hasBeginEnding = true;
+                    beginEndingIndices = instruction.endingIndices;
+                }
+            }
+
+            for (const instruction of sourceMeasure.LastRepetitionInstructions) {
+                if (instruction.type === RepetitionInstructionEnum.Ending &&
+                    (instruction.alignment === AlignmentType.End || instruction.alignment === AlignmentType.Discontinue)) {
+                    hasEndEnding = true;
+                }
+            }
+
+            // If this is a Begin ending, start tracking a new volta span
+            if (hasBeginEnding) {
+                activeVoltaSpans.push({startMeasure: i, endingIndices: beginEndingIndices});
+            }
+
+            // Process all regular instructions
             for (let idx: number = 0, len: number = sourceMeasure.FirstRepetitionInstructions.length; idx < len; ++idx) {
                 const instruction: RepetitionInstruction = sourceMeasure.FirstRepetitionInstructions[idx];
                 this.calculateWordRepetitionInstruction(instruction, i);
@@ -3824,6 +3941,26 @@ export abstract class MusicSheetCalculator {
             for (let idx: number = 0, len: number = sourceMeasure.LastRepetitionInstructions.length; idx < len; ++idx) {
                 const instruction: RepetitionInstruction = sourceMeasure.LastRepetitionInstructions[idx];
                 this.calculateWordRepetitionInstruction(instruction, i);
+            }
+
+            // Add continuing volta line:
+            //   If this measure has no Begin or End volta/instruction but we have active volta spans,
+            //   and this measure is AFTER the start of the span (not the same measure),
+            //   then add a MID volta. (continuing volta line in a measure between start and end volta measure)
+            if (!hasBeginEnding && !hasEndEnding && activeVoltaSpans.length > 0) {
+                // Use the most recent active span
+                const activeSpan: {startMeasure: number, endingIndices: number[]} = activeVoltaSpans[activeVoltaSpans.length - 1];
+                if (i > activeSpan.startMeasure) {
+                    const midInstruction: RepetitionInstruction = new RepetitionInstruction(
+                        i, RepetitionInstructionEnum.Ending, AlignmentType.Mid, undefined, activeSpan.endingIndices
+                    );
+                    this.calculateWordRepetitionInstruction(midInstruction, i);
+                }
+            }
+
+            // If this is an End ending, close the active volta span
+            if (hasEndEnding && activeVoltaSpans.length > 0) {
+                activeVoltaSpans.pop();
             }
         }
     }
@@ -3867,12 +4004,30 @@ export abstract class MusicSheetCalculator {
                 if (!this.graphicalMusicSheet.MeasureList[i] || !this.graphicalMusicSheet.MeasureList[i][j]) {
                     continue;
                 }
-                if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.isVisible()) {
-                    for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
-                        if ((sourceMeasure.StaffLinkedExpressions[j][k].MoodList.length > 0) ||
-                            (sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length > 0)) {
-                            this.calculateMoodAndUnknownExpression(sourceMeasure.StaffLinkedExpressions[j][k], i, j);
+                let staffIndexToUse: number = j;
+                if (!this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.isVisible()) {
+                    // If this staff is hidden and it's the first staff (j === 0) (see #1621),
+                    // find the first visible staff to render expressions on (similar to rehearsal mark fix #1555)
+                    if (j === 0) {
+                        let foundVisibleStaff: boolean = false;
+                        for (let s: number = 0; s < this.graphicalMusicSheet.MeasureList[i].length; s++) {
+                            if (this.graphicalMusicSheet.MeasureList[i][s]?.ParentStaff.isVisible()) {
+                                staffIndexToUse = s; // render words on this staff instead of first/invisible staff (see #1621)
+                                foundVisibleStaff = true;
+                                break;
+                            }
                         }
+                        if (!foundVisibleStaff) {
+                            continue; // No visible staff found, skip this expression
+                        }
+                    } else {
+                        continue; // Non-first staff is hidden, skip its expressions
+                    }
+                }
+                for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
+                    if ((sourceMeasure.StaffLinkedExpressions[j][k].MoodList.length > 0) ||
+                        (sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length > 0)) {
+                        this.calculateMoodAndUnknownExpression(sourceMeasure.StaffLinkedExpressions[j][k], i, staffIndexToUse);
                     }
                 }
             }
@@ -3925,10 +4080,17 @@ export abstract class MusicSheetCalculator {
         const beam: Beam = voiceEntry.Notes[0].NoteBeam;
         if (beam) {
             // if there is a beam, find any already set stemDirection in the beam:
+            // Skip hidden notes (notehead="none") when determining beam direction
             for (const note of beam.Notes) {
                 // if (note.ParentVoiceEntry === voiceEntry) {
                 //     continue; // this could cause a misreading, also potentially in cross-staf beams, in any case it's unnecessary.
                 //} else if
+
+                // Skip notes with NONE notehead - they shouldn't influence beam direction
+                if (note.Notehead?.Shape === NoteHeadShape.NONE) {
+                    continue;
+                }
+
                 if (note.ParentVoiceEntry.WantedStemDirection !== StemDirectionType.Undefined) {
                     if (note.ParentVoiceEntry.ParentSourceStaffEntry.ParentStaff.Id === voiceEntry.ParentSourceStaffEntry.ParentStaff.Id) {
                         // set the stem direction

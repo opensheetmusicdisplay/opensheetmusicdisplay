@@ -116,6 +116,14 @@ export class MultiTempoExpression {
 
         return false;
     }
+
+    public clearInstantaneousTempo(): void {
+        this.instantaneousTempo = undefined;
+    }
+
+    public clearContinuousTempo(): void {
+        this.continuousTempo = undefined;
+    }
 }
 
 export class TempoExpressionEntry {

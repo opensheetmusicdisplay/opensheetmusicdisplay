@@ -1,4 +1,5 @@
-import { OpenSheetMusicDisplay, CanvasVexFlowBackend } from "../../src";
+import { CanvasVexFlowBackend } from "../../src/MusicalScore/Graphical/VexFlow/CanvasVexFlowBackend";
+import { OpenSheetMusicDisplay } from "../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "./TestUtils";
 //import fs from "fs";
 
@@ -58,6 +59,6 @@ describe("GeneratePNGImages", () => {
             //fs.writeFileSync(fileName, imageBuffer, { encoding: "base64" });
 
             done();
-            }, 30000);
+            });
     }
 });

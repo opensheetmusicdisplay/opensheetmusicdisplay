@@ -1,3 +1,4 @@
+import { expect } from "chai";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
@@ -18,27 +19,27 @@ describe("VexFlow GraphicalNote", () => {
                  const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
                  const note1: VexFlowGraphicalNote = (gm.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
                  const noteSVG: SVGGElement = note1.getSVGGElement();
-                 chai.expect(noteSVG).to.not.be.null;
-                 chai.expect(noteSVG).to.not.be.undefined;
+                 expect(noteSVG).to.not.be.null;
+                 expect(noteSVG).to.not.be.undefined;
                  // const noteSVGId: string = "vf-" + firstNote.getSVGId();
                  // const noteSVG: HTMLElement = document.getElementById(noteSVGId);
                  //const stemSVGId: string = noteSVGId + "-stem";
                  //const stemSVG: HTMLElement = document.getElementById(stemSVGId);
                  const stemSVG: HTMLElement = note1.getStemSVG();
-                 chai.expect(stemSVG).to.not.be.null;
-                 chai.expect(stemSVG).to.not.be.undefined;
+                 expect(stemSVG).to.not.be.null;
+                 expect(stemSVG).to.not.be.undefined;
                  // const beamSVGId: string = noteSVGId + "-beam";
                  // const beamSVG: HTMLElement = document.getElementById(beamSVGId);
                  const beamSVGs: HTMLElement[] = note1.getBeamSVGs();
-                 chai.expect(beamSVGs.length).to.equal(1); // 8th beam start. (16th beam starts on note2)
-                 chai.expect(beamSVGs[0]).to.not.be.null;
-                 chai.expect(beamSVGs[0]).to.not.be.undefined;
+                 expect(beamSVGs.length).to.equal(1); // 8th beam start. (16th beam starts on note2)
+                 expect(beamSVGs[0]).to.not.be.null;
+                 expect(beamSVGs[0]).to.not.be.undefined;
                  const note2: VexFlowGraphicalNote = (gm.staffEntries[1].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
-                 chai.expect(note2.getBeamSVGs().length).to.equal(1); // start of 16th beam
+                 expect(note2.getBeamSVGs().length).to.equal(1); // start of 16th beam
                  const note3: VexFlowGraphicalNote = (gm.staffEntries[2].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
-                 chai.expect(note3.getBeamSVGs().length).to.equal(0); // end of 16th beam
+                 expect(note3.getBeamSVGs().length).to.equal(0); // end of 16th beam
                  const note4: VexFlowGraphicalNote = (gm.staffEntries[3].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
-                 chai.expect(note4.getBeamSVGs().length).to.equal(2); // 16th beams start
+                 expect(note4.getBeamSVGs().length).to.equal(2); // 16th beams start
                  done();
             },
             done

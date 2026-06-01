@@ -1,3 +1,4 @@
+import { expect } from "chai";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import {VexFlowMusicSheetDrawer} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
@@ -13,9 +14,9 @@ describe("VexFlow Music Sheet Drawer", () => {
 
     it("draws sheet \"Clementi pt. 1\"", (done: Mocha.Done) => {
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
-        chai.expect(score).to.not.be.undefined;
+        expect(score).to.not.be.undefined;
         const partwise: Element = TestUtils.getPartWiseElement(score);
-        chai.expect(partwise).to.not.be.undefined;
+        expect(partwise).to.not.be.undefined;
         const reader: MusicSheetReader = new MusicSheetReader();
         const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
         const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), "** missing path **");
@@ -35,9 +36,9 @@ describe("VexFlow Music Sheet Drawer", () => {
     // and in any case, this test doesn't test that the cursor is actually drawn, there are no expects for that etc.
     // it.only("draws cursor (as rectangle)", (done: Mocha.Done) => {
     //     const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
-    //     chai.expect(score).to.not.be.undefined;
+    //     expect(score).to.not.be.undefined;
     //     const partwise: Element = TestUtils.getPartWiseElement(score);
-    //     chai.expect(partwise).to.not.be.undefined;
+    //     expect(partwise).to.not.be.undefined;
     //     const reader: MusicSheetReader = new MusicSheetReader();
     //     const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
     //     const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), "** missing path **");

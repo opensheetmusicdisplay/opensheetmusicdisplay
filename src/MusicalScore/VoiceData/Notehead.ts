@@ -64,6 +64,8 @@ export class Notehead {
         switch (shapeTypeXml.toLowerCase()) {
             case "normal":
                 return NoteHeadShape.NORMAL;
+            case "none":
+                return NoteHeadShape.NONE;
             case "x":
                 return NoteHeadShape.X;
             case "slash":
@@ -95,6 +97,7 @@ export enum NoteHeadShape {
     CIRCLEX,
     DIAMOND,
     NORMAL,
+    NONE,
     RECTANGLE,
     SLASH,
     SQUARE,
