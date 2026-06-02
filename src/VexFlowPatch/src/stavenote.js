@@ -55,7 +55,12 @@ function centerRest(rest, noteU, noteL) {
  * and the other not), or - when EngravingRules.StaggerSameWholeNotes is set - for two
  * identical whole notes. Notes that differ only in dots or duration still overlap:
  * the shared notehead carries both stems (and the dotted voice's augmentation dot),
- * so the two voices stay legible - matching MuseScore and engraved editions. Shared
+ * so the two voices stay legible - matching MuseScore and engraved editions. The one
+ * exception is when both voices are dotted with *different* dot counts (e.g. a single-
+ * vs triple-dotted unison): their augmentation dots would collide at the shared column,
+ * and engraving has no settled rule for that case (it doesn't occur in real music), so
+ * those stay staggered. A dot count of 0 on one side - the common dotted-vs-plain or
+ * dotted-vs-tuplet unison - has no second dot to collide and still overlaps. Shared
  * by the two-voice and three-voice collision paths so the same decision is used in
  * both (the divergence between them is what previously left three-voice unisons
  * staggered).
@@ -78,6 +83,9 @@ function mergeableUnison(a, b, staggerSameWholeNotes) {
   }
   if (halfNoteCount === 1 || wholeNoteCount === 1) return false; // mismatched notehead shapes
   if (staggerSameWholeNotes && wholeNoteCount === 2) return false; // keep identical whole notes apart
+  // Both voices dotted with different dot counts -> their augmentation dots would collide
+  // at the shared column; keep them staggered (one zero-dot side has nothing to collide).
+  if (a.note.dots > 0 && b.note.dots > 0 && a.note.dots !== b.note.dots) return false;
   return true;
 }
 
