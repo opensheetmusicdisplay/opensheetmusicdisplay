@@ -126,6 +126,8 @@ export interface IOSMDOptions {
     drawLyricist?: boolean;
     /** Whether to draw metronome marks. Default true. (currently OSMD can only draw one at the beginning) */
     drawMetronomeMarks?: boolean;
+    /** Whether to replace metronome marks with a "Swing" text label. Default false. */
+    drawSwingOnly?: boolean;
     /** Whether to draw part (instrument) names. Setting this to false also disables drawPartAbbreviations,
      *  unless explicitly enabled (drawPartNames: false, drawPartAbbreviations: true).
      */

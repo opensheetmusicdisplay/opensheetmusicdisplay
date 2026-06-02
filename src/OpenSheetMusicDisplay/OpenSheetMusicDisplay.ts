@@ -750,6 +750,9 @@ export class OpenSheetMusicDisplay {
         if (options.drawMetronomeMarks !== undefined) {
             this.rules.MetronomeMarksDrawn = options.drawMetronomeMarks;
         }
+        if (options.drawSwingOnly !== undefined) {
+            this.rules.DrawSwingOnly = options.drawSwingOnly;
+        }
         if (options.drawPartNames !== undefined) {
             this.drawingParameters.DrawPartNames = options.drawPartNames; // indirectly writes to EngravingRules
 

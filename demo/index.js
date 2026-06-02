@@ -106,6 +106,7 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
         resetCursorBtn,
         followCursorCheckbox,
         drawPartAbbreviationsOnFirstSystemCheckbox,
+        drawSwingOnlyCheckbox,
         showCursorBtn,
         hideCursorBtn,
         backendSelect,
@@ -287,6 +288,7 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
         resetCursorBtn = document.getElementById("reset-cursor-btn");
         followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
         drawPartAbbreviationsOnFirstSystemCheckbox = document.getElementById("draw-part-abbr-first-system-checkbox");
+        drawSwingOnlyCheckbox = document.getElementById("draw-swing-only-checkbox");
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
         backendSelect = document.getElementById("backend-select");
@@ -867,6 +869,18 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
             drawPartAbbreviationsOnFirstSystemCheckbox.onchange = function () {
                 openSheetMusicDisplay.setOptions({
                     drawPartAbbreviationsOnFirstSystem: drawPartAbbreviationsOnFirstSystemCheckbox.checked
+                });
+                if (openSheetMusicDisplay.graphic) {
+                    openSheetMusicDisplay.renderAndScrollBack();
+                }
+            };
+        }
+        if (drawSwingOnlyCheckbox) {
+            drawSwingOnlyCheckbox.checked =
+                !!openSheetMusicDisplay.EngravingRules.DrawSwingOnly;
+            drawSwingOnlyCheckbox.onchange = function () {
+                openSheetMusicDisplay.setOptions({
+                    drawSwingOnly: drawSwingOnlyCheckbox.checked
                 });
                 if (openSheetMusicDisplay.graphic) {
                     openSheetMusicDisplay.renderAndScrollBack();
@@ -1493,6 +1507,10 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
         if (drawPartAbbreviationsOnFirstSystemCheckbox && openSheetMusicDisplay && openSheetMusicDisplay.EngravingRules) {
             drawPartAbbreviationsOnFirstSystemCheckbox.checked =
                 !!openSheetMusicDisplay.EngravingRules.RenderPartAbbreviationsOnFirstSystem;
+        }
+        if (drawSwingOnlyCheckbox && openSheetMusicDisplay && openSheetMusicDisplay.EngravingRules) {
+            drawSwingOnlyCheckbox.checked =
+                !!openSheetMusicDisplay.EngravingRules.DrawSwingOnly;
         }
         
         // Enable controls again

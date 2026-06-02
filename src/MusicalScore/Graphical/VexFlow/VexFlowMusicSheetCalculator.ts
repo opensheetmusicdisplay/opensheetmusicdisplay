@@ -1003,7 +1003,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine?.SkyLine;
 
-    if (metronomeExpression.metronomeNoteGroupLeft && metronomeExpression.metronomeNoteGroupRight) {
+    if (this.rules.DrawSwingOnly) {
+      if (this.hasExistingSwingLabel(this.graphicalMusicSheet.ParentMusicSheet)) {
+        vfMeasure.hasMetronomeMark = true;
+        return;
+      }
+      (vfStave as any).setTempo(
+        {
+          name: "Swing"
+        },
+        yShift * unitInPixels
+      );
+    } else if (metronomeExpression.metronomeNoteGroupLeft && metronomeExpression.metronomeNoteGroupRight) {
       // Complex metronome mark (note equation, e.g. swing notation)
       const noteEquation: any = this.buildNoteEquationForVexFlow(
         metronomeExpression.metronomeNoteGroupLeft,
@@ -1036,6 +1047,35 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       skyline[0] = Math.min(skyline[0], -4.5 + yShift);
     }
     // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
+  }
+
+  private hasExistingSwingLabel(parentMusicSheet: any): boolean {
+    if (!parentMusicSheet) {
+      return false;
+    }
+    for (const measure of parentMusicSheet.SourceMeasures || []) {
+      // 1. Check TempoExpressions
+      for (const tempoExpr of measure.TempoExpressions || []) {
+        for (const entry of tempoExpr.EntriesList || []) {
+          const label: string = (entry.label || "").trim().toLowerCase();
+          if (label === "swing" || label === "shuffle" || label === "swung" || label.includes("swing eighths") || label.includes("swing 8ths")) {
+            return true;
+          }
+        }
+      }
+      // 2. Check StaffLinkedExpressions
+      for (const staffExprs of measure.StaffLinkedExpressions || []) {
+        for (const expr of staffExprs || []) {
+          for (const entry of expr.EntriesList || []) {
+            const label: string = (entry.label || "").trim().toLowerCase();
+            if (label === "swing" || label === "shuffle" || label === "swung" || label.includes("swing eighths") || label.includes("swing 8ths")) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
   /** Convert MetronomeNoteGroup data into the format expected by VexFlow's StaveTempo.drawNoteEquation(). */

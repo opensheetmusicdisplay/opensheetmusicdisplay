@@ -412,6 +412,7 @@ export class EngravingRules {
     public MeasureDynamicsMaxScalingFactor: number;
     public WholeRestXShiftVexflow: number;
     public MetronomeMarksDrawn: boolean;
+    public DrawSwingOnly: boolean;
     public MetronomeMarkXShift: number;
     public MetronomeMarkYShift: number;
     public SoftmaxFactorVexFlow: number;
@@ -917,6 +918,7 @@ export class EngravingRules {
         this.MeasureDynamicsMaxScalingFactor = 2.5;
         this.WholeRestXShiftVexflow = -1.5; // VexFlow draws rest notes too far to the right
         this.MetronomeMarksDrawn = true;
+        this.DrawSwingOnly = false;
         this.MetronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.MetronomeMarkYShift = -1.0; // note this is correlated with TempoYSpacing: one-sided change can cause collisions
         this.SoftmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
