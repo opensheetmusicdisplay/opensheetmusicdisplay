@@ -1622,22 +1622,31 @@ export class OpenSheetMusicDisplay {
     }
 
     /**
-     * Read-ahead helper: set the opacity of notes within a single measure, optionally only for the
-     * first `hiddenBeats` quarter-note beats of that measure. This is used by the sight-reading
-     * "read ahead" mode to hide the notes the player is currently reading.
+     * Read-ahead helper: set the opacity of notes within a single measure. This is used by the
+     * sight-reading "read ahead" mode to hide a rolling window of beats so the player has to read
+     * ahead of where they are currently playing.
      * @param measureListIndex 0-based index into the measure list (`SourceMeasure.measureListIndex`).
-     * @param hiddenBeats 0 hides the whole measure (legacy behavior); N > 0 hides only the first N
-     * quarter-note beats, leaving the remainder of the measure visible.
+     * @param hiddenBeats 0 hides the whole measure (legacy behavior); N > 0 hides a window of N
+     * quarter-note beats starting at `fromBeatInMeasure`. Notes outside the window are made fully
+     * visible so the window can slide forward across repeated calls.
      * @param opacity opacity applied to the hidden notes (default 0 = fully hidden).
+     * @param fromBeatInMeasure quarter-note beats from the measure start where the hidden window
+     * begins (default 0). Ignored when `hiddenBeats <= 0`.
      */
-    public setReadAheadMeasureOpacity(measureListIndex: number, hiddenBeats: number = 0, opacity: number = 0): void {
+    public setReadAheadMeasureOpacity(
+        measureListIndex: number,
+        hiddenBeats: number = 0,
+        opacity: number = 0,
+        fromBeatInMeasure: number = 0
+    ): void {
         if (!this.sheet || !this.graphic) {
             return;
         }
         // relInMeasureTimestamp.RealValue is expressed in whole notes (a quarter note = 0.25),
-        // so N quarter-note beats map to a cutoff of N * 0.25.
+        // so beats map to whole-note units via * 0.25.
         const quarterNoteFraction: number = 0.25;
-        const cutoff: number = hiddenBeats > 0 ? hiddenBeats * quarterNoteFraction : Number.POSITIVE_INFINITY;
+        const windowStart: number = hiddenBeats > 0 ? fromBeatInMeasure * quarterNoteFraction : 0;
+        const windowEnd: number = hiddenBeats > 0 ? (fromBeatInMeasure + hiddenBeats) * quarterNoteFraction : Number.POSITIVE_INFINITY;
         const epsilon: number = 1e-6;
 
         for (const verticalContainer of this.graphic.VerticalGraphicalStaffEntryContainers) {
@@ -1646,15 +1655,21 @@ export class OpenSheetMusicDisplay {
                     continue;
                 }
                 const inMeasureTime: number = staffEntry.relInMeasureTimestamp?.RealValue ?? 0;
-                const shouldHide: boolean = hiddenBeats <= 0 || inMeasureTime < cutoff - epsilon;
-                if (!shouldHide) {
-                    continue;
-                }
+                // hiddenBeats <= 0: whole measure hidden. Otherwise hide only the [windowStart, windowEnd) window
+                // and explicitly reveal entries outside it so a previously-hidden beat reappears as the window slides.
+                const inWindow: boolean =
+                    hiddenBeats <= 0 ||
+                    (inMeasureTime >= windowStart - epsilon && inMeasureTime < windowEnd - epsilon);
+                const targetOpacity: number = inWindow ? opacity : 1.0;
                 for (const graphicalVoiceEntry of staffEntry.graphicalVoiceEntries ?? []) {
                     for (const graphicalNote of graphicalVoiceEntry?.notes ?? []) {
                         if (graphicalNote) {
-                            graphicalNote.setOpacity(opacity);
-                            this.readAheadOpacityTouchedGraphicalNotes.add(graphicalNote);
+                            graphicalNote.setOpacity(targetOpacity);
+                            if (inWindow) {
+                                this.readAheadOpacityTouchedGraphicalNotes.add(graphicalNote);
+                            } else {
+                                this.readAheadOpacityTouchedGraphicalNotes.delete(graphicalNote);
+                            }
                         }
                     }
                 }
