@@ -1655,8 +1655,7 @@ export class OpenSheetMusicDisplay {
                     continue;
                 }
                 const inMeasureTime: number = staffEntry.relInMeasureTimestamp?.RealValue ?? 0;
-                // hiddenBeats <= 0: whole measure hidden. Otherwise hide only the [windowStart, windowEnd) window
-                // and explicitly reveal entries outside it so a previously-hidden beat reappears as the window slides.
+                // hiddenBeats <= 0: whole measure hidden. Otherwise hide only [windowStart, windowEnd).
                 const inWindow: boolean =
                     hiddenBeats <= 0 ||
                     (inMeasureTime >= windowStart - epsilon && inMeasureTime < windowEnd - epsilon);
@@ -1670,6 +1669,50 @@ export class OpenSheetMusicDisplay {
                             } else {
                                 this.readAheadOpacityTouchedGraphicalNotes.delete(graphicalNote);
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Read-ahead helper: hide a beat range within a single measure without restoring notes outside
+     * that range. This supports cumulative read-ahead where each playback beat only hides newly
+     * reached future notes.
+     * @param measureListIndex 0-based index into the measure list (`SourceMeasure.measureListIndex`).
+     * @param fromBeatInMeasure quarter-note beats from the measure start where hiding begins.
+     * @param beatCount number of quarter-note beats to hide from `fromBeatInMeasure`.
+     * @param opacity opacity applied to hidden notes (default 0 = fully hidden).
+     */
+    public hideReadAheadMeasureBeatRange(
+        measureListIndex: number,
+        fromBeatInMeasure: number,
+        beatCount: number,
+        opacity: number = 0
+    ): void {
+        if (!this.sheet || !this.graphic || beatCount <= 0) {
+            return;
+        }
+        const quarterNoteFraction: number = 0.25;
+        const windowStart: number = Math.max(0, fromBeatInMeasure) * quarterNoteFraction;
+        const windowEnd: number = Math.max(0, fromBeatInMeasure + beatCount) * quarterNoteFraction;
+        const epsilon: number = 1e-6;
+
+        for (const verticalContainer of this.graphic.VerticalGraphicalStaffEntryContainers) {
+            for (const staffEntry of verticalContainer?.StaffEntries ?? []) {
+                if (staffEntry?.parentMeasure?.parentSourceMeasure?.measureListIndex !== measureListIndex) {
+                    continue;
+                }
+                const inMeasureTime: number = staffEntry.relInMeasureTimestamp?.RealValue ?? 0;
+                if (inMeasureTime < windowStart - epsilon || inMeasureTime >= windowEnd - epsilon) {
+                    continue;
+                }
+                for (const graphicalVoiceEntry of staffEntry.graphicalVoiceEntries ?? []) {
+                    for (const graphicalNote of graphicalVoiceEntry?.notes ?? []) {
+                        if (graphicalNote) {
+                            graphicalNote.setOpacity(opacity);
+                            this.readAheadOpacityTouchedGraphicalNotes.add(graphicalNote);
                         }
                     }
                 }
