@@ -140,6 +140,8 @@ export class OpenSheetMusicDisplay {
     private readonly rangeOpacityTouchedGraphicalNotes: Set<GraphicalNote> = new Set<GraphicalNote>();
     private readonly rangeOpacityTouchedNoteheadElements: Set<SVGElement> = new Set<SVGElement>();
     private readonly rangeOpacityTouchedElements: Set<Element> = new Set<Element>();
+    /** Notes whose opacity was lowered by read-ahead (kept separate from range selection so they never clash). */
+    private readonly readAheadOpacityTouchedGraphicalNotes: Set<GraphicalNote> = new Set<GraphicalNote>();
     private readonly rangeSelectionElementCollector: RangeSelectionElementCollector = new RangeSelectionElementCollector();
     private needsCommittedRangeAnchorRefresh: boolean = false;
     private hoverAnchor: RangeSelectionAnchor;
@@ -1617,6 +1619,58 @@ export class OpenSheetMusicDisplay {
                 }
             }
         }
+    }
+
+    /**
+     * Read-ahead helper: set the opacity of notes within a single measure, optionally only for the
+     * first `hiddenBeats` quarter-note beats of that measure. This is used by the sight-reading
+     * "read ahead" mode to hide the notes the player is currently reading.
+     * @param measureListIndex 0-based index into the measure list (`SourceMeasure.measureListIndex`).
+     * @param hiddenBeats 0 hides the whole measure (legacy behavior); N > 0 hides only the first N
+     * quarter-note beats, leaving the remainder of the measure visible.
+     * @param opacity opacity applied to the hidden notes (default 0 = fully hidden).
+     */
+    public setReadAheadMeasureOpacity(measureListIndex: number, hiddenBeats: number = 0, opacity: number = 0): void {
+        if (!this.sheet || !this.graphic) {
+            return;
+        }
+        // relInMeasureTimestamp.RealValue is expressed in whole notes (a quarter note = 0.25),
+        // so N quarter-note beats map to a cutoff of N * 0.25.
+        const quarterNoteFraction: number = 0.25;
+        const cutoff: number = hiddenBeats > 0 ? hiddenBeats * quarterNoteFraction : Number.POSITIVE_INFINITY;
+        const epsilon: number = 1e-6;
+
+        for (const verticalContainer of this.graphic.VerticalGraphicalStaffEntryContainers) {
+            for (const staffEntry of verticalContainer?.StaffEntries ?? []) {
+                if (staffEntry?.parentMeasure?.parentSourceMeasure?.measureListIndex !== measureListIndex) {
+                    continue;
+                }
+                const inMeasureTime: number = staffEntry.relInMeasureTimestamp?.RealValue ?? 0;
+                const shouldHide: boolean = hiddenBeats <= 0 || inMeasureTime < cutoff - epsilon;
+                if (!shouldHide) {
+                    continue;
+                }
+                for (const graphicalVoiceEntry of staffEntry.graphicalVoiceEntries ?? []) {
+                    for (const graphicalNote of graphicalVoiceEntry?.notes ?? []) {
+                        if (graphicalNote) {
+                            graphicalNote.setOpacity(opacity);
+                            this.readAheadOpacityTouchedGraphicalNotes.add(graphicalNote);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** Restores the opacity of every note hidden by {@link setReadAheadMeasureOpacity}. */
+    public resetReadAheadOpacity(): void {
+        if (this.readAheadOpacityTouchedGraphicalNotes.size === 0) {
+            return;
+        }
+        for (const graphicalNote of this.readAheadOpacityTouchedGraphicalNotes) {
+            graphicalNote.setOpacity(1.0);
+        }
+        this.readAheadOpacityTouchedGraphicalNotes.clear();
     }
 
     private syncInteractiveRangeSelection(): void {
