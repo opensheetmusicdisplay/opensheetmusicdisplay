@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for dotted-unison alignment.
+    A single staff with two voices that play the same pitch (G4) on beat 1, but with
+    different dot counts: voice 1 is a dotted quarter, voice 2 a plain quarter. Their
+    noteheads have the same shape, so the unison shares one horizontal position
+    (overlapping noteheads + a single augmentation dot), matching MuseScore and engraved
+    editions - e.g. Schumann Kinderszenen No. 1 m10, a dotted eighth in unison with an
+    eighth-triplet note. Both notes carry stems, so the two voices stay legible.
+    Each voice continues with a pitched note (voice 1: an eighth A4, voice 2: a quarter
+    D4) so the differing note values - and thus the two-voice rhythm - are visible rather
+    than hidden behind rests.
+  -->
+  <part-list>
+    <score-part id="P1"><part-name>Music</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+
+      <!-- Voice 1 (upper): dotted quarter on beat 1, then an eighth A4 -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><dot/><stem>up</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem></note>
+
+      <backup><duration>4</duration></backup>
+
+      <!-- Voice 2 (lower): plain quarter on beat 1 (unison with voice 1), then a quarter D4 -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
+  </part>
+</score-partwise>
