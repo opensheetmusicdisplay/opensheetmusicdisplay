@@ -15,6 +15,7 @@ export default defineConfig(
             "build/",
             "demo/",
             "export/",
+            "external/",
             "karma.conf.js",
             "osmd-native/",
             "react-native/",
