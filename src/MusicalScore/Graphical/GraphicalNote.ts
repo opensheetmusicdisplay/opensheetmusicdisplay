@@ -81,7 +81,10 @@ export class GraphicalNote extends GraphicalObject {
 
     public getLyricsSVGs(): HTMLElement[] {
       const lyricsEntries: HTMLElement[] = [];
-      for (const lyricsEntry of this.parentVoiceEntry?.parentStaffEntry.LyricsEntries) {
+      if (!this.parentVoiceEntry) {
+        return lyricsEntries;
+      }
+      for (const lyricsEntry of this.parentVoiceEntry.parentStaffEntry.LyricsEntries) {
         lyricsEntries.push(lyricsEntry.GraphicalLabel?.SVGNode as HTMLElement);
       }
       return lyricsEntries;

@@ -62,6 +62,7 @@ async function init () {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const fs = require('fs')
     // Create the image directory if it doesn't exist.
     fs.mkdirSync(imageDir, { recursive: true })
@@ -94,6 +95,7 @@ async function init () {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const puppeteer = require('puppeteer')
     const browser = await puppeteer.launch({ headless: true })
     const page = await browser.newPage() // TODO set width/height
@@ -103,9 +105,9 @@ async function init () {
 
     // fix navigation error
     var responseEventOccurred = false
-    var responseHandler = function (event) { responseEventOccurred = true }
+    var responseHandler = function (_event) { responseEventOccurred = true }
 
-    var responseWatcher = new Promise(function (resolve, reject) {
+    var responseWatcher = new Promise(function (resolve, _reject) {
         setTimeout(function () {
             if (!responseEventOccurred) {
                 resolve(true)

@@ -1,14 +1,25 @@
-import chai = require("chai");
+import { expect } from "chai";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../Util/TestUtils";
-import { VoiceEntry, Instrument, Note, Staff, Voice, GraphicalStaffEntry, GraphicalNote,
-            Fraction, Pitch, AccidentalEnum, DrawingParametersEnum, IOSMDOptions, Cursor } from "../../../src";
+import { IOSMDOptions } from "../../../src/OpenSheetMusicDisplay/OSMDOptions";
+import { DrawingParametersEnum } from "../../../src/Common/Enums/DrawingParametersEnum";
+import { Cursor } from "../../../src/OpenSheetMusicDisplay/Cursor";
+import { MusicPartManagerIterator } from "../../../src/MusicalScore/MusicParts/MusicPartManagerIterator";
+import { VoiceEntry } from "../../../src/MusicalScore/VoiceData/VoiceEntry";
+import { Instrument } from "../../../src/MusicalScore/Instrument";
+import { Note } from "../../../src/MusicalScore/VoiceData/Note";
+import { Staff } from "../../../src/MusicalScore/VoiceData/Staff";
+import { Voice } from "../../../src/MusicalScore/VoiceData/Voice";
+import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
+import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
+import { Fraction } from "../../../src/Common/DataObjects/Fraction";
+import { AccidentalEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
 
     it("no container", (done: Mocha.Done) => {
-        chai.expect(() => {
+        expect(() => {
             return new OpenSheetMusicDisplay(undefined);
         }).to.throw(/container/);
         done();
@@ -16,7 +27,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
 
     it("container", (done: Mocha.Done) => {
         const div: HTMLElement = TestUtils.getDivElement(document);
-        chai.expect(() => {
+        expect(() => {
             return new OpenSheetMusicDisplay(div);
         }).to.not.throw(Error);
         done();
@@ -62,24 +73,24 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                                 fullMusicSheet.render();
 
                                 // Verify that the music sheet fragment has its options set correctly.
-                                chai.expect(musicSheetFragment.Sheet.Rules.RenderComposer).to.equal(musicSheetFragmentOptions.drawComposer);
-                                chai.expect(musicSheetFragment.Sheet.Rules.RenderFingerings).to.equal(musicSheetFragmentOptions.drawFingerings);
-                                chai.expect(musicSheetFragment.Sheet.Rules.RenderLyricist).to.equal(musicSheetFragmentOptions.drawLyricist);
-                                chai.expect(musicSheetFragment.Sheet.Rules.RenderPartAbbreviations).to.equal(musicSheetFragmentOptions.drawPartAbbreviations);
-                                chai.expect(musicSheetFragment.Sheet.Rules.RenderPartNames).to.equal(musicSheetFragmentOptions.drawPartNames);
-                                chai.expect(musicSheetFragment.Sheet.Rules.RenderSubtitle).to.equal(musicSheetFragmentOptions.drawSubtitle);
-                                chai.expect(musicSheetFragment.Sheet.Rules.RenderTitle).to.equal(musicSheetFragmentOptions.drawTitle);
-                                chai.expect(musicSheetFragment.Sheet.Rules.MaxMeasureToDrawIndex).to.equal(musicSheetFragmentOptions.drawUpToMeasureNumber - 1);
+                                expect(musicSheetFragment.Sheet.Rules.RenderComposer).to.equal(musicSheetFragmentOptions.drawComposer);
+                                expect(musicSheetFragment.Sheet.Rules.RenderFingerings).to.equal(musicSheetFragmentOptions.drawFingerings);
+                                expect(musicSheetFragment.Sheet.Rules.RenderLyricist).to.equal(musicSheetFragmentOptions.drawLyricist);
+                                expect(musicSheetFragment.Sheet.Rules.RenderPartAbbreviations).to.equal(musicSheetFragmentOptions.drawPartAbbreviations);
+                                expect(musicSheetFragment.Sheet.Rules.RenderPartNames).to.equal(musicSheetFragmentOptions.drawPartNames);
+                                expect(musicSheetFragment.Sheet.Rules.RenderSubtitle).to.equal(musicSheetFragmentOptions.drawSubtitle);
+                                expect(musicSheetFragment.Sheet.Rules.RenderTitle).to.equal(musicSheetFragmentOptions.drawTitle);
+                                expect(musicSheetFragment.Sheet.Rules.MaxMeasureToDrawIndex).to.equal(musicSheetFragmentOptions.drawUpToMeasureNumber - 1);
 
                                 // Verify that the full music sheet has its options set correctly.
-                                chai.expect(fullMusicSheet.Sheet.Rules.RenderComposer).to.not.equal(musicSheetFragmentOptions.drawComposer);
-                                chai.expect(fullMusicSheet.Sheet.Rules.RenderFingerings).to.not.equal(musicSheetFragmentOptions.drawFingerings);
-                                chai.expect(fullMusicSheet.Sheet.Rules.RenderLyricist).to.not.equal(musicSheetFragmentOptions.drawLyricist);
-                                chai.expect(fullMusicSheet.Sheet.Rules.RenderPartAbbreviations).to.not.equal(musicSheetFragmentOptions.drawPartAbbreviations);
-                                chai.expect(fullMusicSheet.Sheet.Rules.RenderPartNames).to.not.equal(musicSheetFragmentOptions.drawPartNames);
-                                chai.expect(fullMusicSheet.Sheet.Rules.RenderSubtitle).to.not.equal(musicSheetFragmentOptions.drawSubtitle);
-                                chai.expect(fullMusicSheet.Sheet.Rules.RenderTitle).to.not.equal(musicSheetFragmentOptions.drawTitle);
-                                chai.expect(fullMusicSheet.Sheet.Rules.MaxMeasureToDrawIndex).to.equal(fullMusicSheetOptions.drawUpToMeasureNumber - 1);
+                                expect(fullMusicSheet.Sheet.Rules.RenderComposer).to.not.equal(musicSheetFragmentOptions.drawComposer);
+                                expect(fullMusicSheet.Sheet.Rules.RenderFingerings).to.not.equal(musicSheetFragmentOptions.drawFingerings);
+                                expect(fullMusicSheet.Sheet.Rules.RenderLyricist).to.not.equal(musicSheetFragmentOptions.drawLyricist);
+                                expect(fullMusicSheet.Sheet.Rules.RenderPartAbbreviations).to.not.equal(musicSheetFragmentOptions.drawPartAbbreviations);
+                                expect(fullMusicSheet.Sheet.Rules.RenderPartNames).to.not.equal(musicSheetFragmentOptions.drawPartNames);
+                                expect(fullMusicSheet.Sheet.Rules.RenderSubtitle).to.not.equal(musicSheetFragmentOptions.drawSubtitle);
+                                expect(fullMusicSheet.Sheet.Rules.RenderTitle).to.not.equal(musicSheetFragmentOptions.drawTitle);
+                                expect(fullMusicSheet.Sheet.Rules.MaxMeasureToDrawIndex).to.equal(fullMusicSheetOptions.drawUpToMeasureNumber - 1);
                             });
     });
 
@@ -189,7 +200,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                 }
             }
         );
-    }, 5000);
+    });
 
     it("load invalid URL", (done: Mocha.Done) => {
         const url: string = "https://www.afjkhfjkauu2ui3z2uiu.com";
@@ -207,7 +218,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                 }
             }
         );
-    }, 5000);
+    });
 
     it("load invalid XML string", (done: Mocha.Done) => {
         const xml: string = "<?xml";
@@ -230,7 +241,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
     it("render without loading", (done: Mocha.Done) => {
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
-        chai.expect(() => {
+        expect(() => {
             return opensheetmusicdisplay.render();
         }).to.throw(/load/);
         done();
@@ -253,7 +264,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         opensheetmusicdisplay.load(score).then(
             (_: {}) => {
                 opensheetmusicdisplay.render();
-                chai.expect(div.offsetWidth).to.equal(500);
+                expect(div.offsetWidth).to.equal(500);
                 done();
             },
             done
@@ -268,7 +279,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         opensheetmusicdisplay.load(score).then(
             (_: {}) => {
                 opensheetmusicdisplay.render();
-                chai.expect(div.offsetWidth).to.equal(200);
+                expect(div.offsetWidth).to.equal(200);
                 done();
             },
             done
@@ -296,7 +307,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                 osmd.cursors[0].next();
             }
             // After 100 steps in the visible score, cursor reached 3rd note from 17, a C
-            chai.expect(osmd.cursors[0].NotesUnderCursor()[0].halfTone).to.equal(60);
+            expect(osmd.cursors[0].NotesUnderCursor()[0].halfTone).to.equal(60);
         });
     });
     describe("cursor", () => {
@@ -318,47 +329,67 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         describe("next() and previous()", () => {
             it("is able to advance past end and beginning of sheet", () => {
                 const cursor: Cursor = opensheetmusicdisplay.cursors[0];
-                chai.expect(cursor.NotesUnderCursor().length).to.greaterThanOrEqual(1);
+                expect(cursor.NotesUnderCursor().length).to.greaterThanOrEqual(1);
                 cursor.previous(); // do previous from first timestamp in sheet ("beyond beginning")
-                chai.expect(cursor.NotesUnderCursor().length).to.equal(0);
+                expect(cursor.NotesUnderCursor().length).to.equal(0);
                 cursor.next();
-                chai.expect(cursor.NotesUnderCursor().length).to.greaterThanOrEqual(1);
-                chai.expect(cursor.Iterator.currentTimeStamp.RealValue).to.equal(0);
+                expect(cursor.NotesUnderCursor().length).to.greaterThanOrEqual(1);
+                expect(cursor.Iterator.currentTimeStamp.RealValue).to.equal(0);
                 // go past end of sheet if repetitions are ignored, which we don't do here (anymore). So, we should not reach the end here.
                 for (let i: number = 1; i <= 260; i++) {
                     cursor.next();
                 }
-                chai.expect(cursor.Iterator.EndReached).to.equal(false);
+                expect(cursor.Iterator.EndReached).to.equal(false);
                 // go past end of sheet
                 for (let i: number = 1; i <= 260; i++) {
                     cursor.next();
                     // go past end of sheet:
                     //   after ~520 times (260 * 2) in Clementi 36/1/1, the last timestamp is reached
                 }
-                chai.expect(cursor.Iterator.EndReached).to.equal(true);
+                expect(cursor.Iterator.EndReached).to.equal(true);
                 // try to go back again after going beyond end of sheet
                 cursor.previous();
                 cursor.previous();
-                chai.expect(cursor.Iterator.EndReached).to.equal(false);
+                expect(cursor.Iterator.EndReached).to.equal(false);
+            });
+        });
+
+        describe("iterator.clone()", () => {
+            it("clone() advancing does not corrupt the original iterator (#1674)", () => {
+                const cursor: Cursor = opensheetmusicdisplay.cursors[0];
+                cursor.reset(); // reset to first timestamp / notes in the sheet
+
+                const notesBefore: number = cursor.GNotesUnderCursor().length;
+                expect(notesBefore).to.be.greaterThan(0);
+
+                // Clone and advance — the common "peek at next position" pattern.
+                // Before the fix, the clone shared currentVoiceEntries with the original,
+                // so moveToNext() inside the clone wiped the original's entries.
+                const clone: MusicPartManagerIterator = cursor.iterator.clone();
+                clone.moveToNextVisibleVoiceEntry(false);
+
+                const notesAfter: number = cursor.GNotesUnderCursor().length;
+                expect(notesAfter).to.equal(notesBefore);
+                // note that cursor.Iterator.CurrentSourceTimestamp was unaffected by this bug, so we have to check e.g. GNotesUnderCursor or NotesUnderCursor.
             });
         });
 
         describe("get AllVoicesUnderCursor", () => {
             it("retrieves all voices under cursor", () => {
                 const voiceEntries: VoiceEntry[] = opensheetmusicdisplay.cursors[0].VoicesUnderCursor();
-                chai.expect(voiceEntries.length).to.equal(2);
+                expect(voiceEntries.length).to.equal(2);
             });
         });
 
         describe("VoicesUnderCursor", () => {
             it("retrieves voices for a specific instrument under cursor", () => {
                 const voiceEntries: VoiceEntry[] = opensheetmusicdisplay.cursors[0].VoicesUnderCursor();
-                chai.expect(voiceEntries.length).to.equal(2);
+                expect(voiceEntries.length).to.equal(2);
             });
             it("retrieves all voices under cursor when instrument not specified", () => {
                 const instrument: Instrument = opensheetmusicdisplay.Sheet.Instruments[1];
                 const voiceEntries: VoiceEntry[] = opensheetmusicdisplay.cursors[0].VoicesUnderCursor(instrument);
-                chai.expect(voiceEntries.length).to.equal(1);
+                expect(voiceEntries.length).to.equal(1);
             });
         });
 
@@ -366,12 +397,12 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             it("gets notes for a specific instrument under cursor", () => {
                 const instrument: Instrument = opensheetmusicdisplay.Sheet.Instruments[0];
                 const notes: Note[] = opensheetmusicdisplay.cursors[0].NotesUnderCursor(instrument);
-                chai.expect(notes.length).to.equal(1);
+                expect(notes.length).to.equal(1);
             });
 
             it("gets all notes under cursor when instrument unspecified", () => {
                 const notes: Note[] = opensheetmusicdisplay.cursors[0].NotesUnderCursor();
-                chai.expect(notes.length).to.equal(2);
+                expect(notes.length).to.equal(2);
             });
         });
 
@@ -387,7 +418,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                     const graphicalStaffEntry: GraphicalStaffEntry = opensheetmusicdisplay.GraphicSheet.getStaffEntry(0);
                     const graphicalNotes: GraphicalNote[] = graphicalStaffEntry.findVoiceEntryGraphicalNotes(voiceEntry);
 
-                    chai.expect(graphicalNotes.length).to.equal(numNotesBefore);
+                    expect(graphicalNotes.length).to.equal(numNotesBefore);
                 }
 
                 const newNote: Note = new Note(
@@ -408,7 +439,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                     const graphicalStaffEntry: GraphicalStaffEntry = opensheetmusicdisplay.GraphicSheet.getStaffEntry(0);
                     const graphicalNotes: GraphicalNote[] = graphicalStaffEntry.findVoiceEntryGraphicalNotes(voiceEntry);
 
-                    chai.expect(graphicalNotes.length).to.equal(numNotesBefore + 1);
+                    expect(graphicalNotes.length).to.equal(numNotesBefore + 1);
                 }
             });
         });
@@ -435,26 +466,26 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             osmd.cursors[0].show();
 
             // Start at first visible note (C4 in treble clef reads as C4 = 60)
-            chai.expect(osmd.cursors[0].Iterator.currentTimeStamp.RealValue).to.equal(0);
+            expect(osmd.cursors[0].Iterator.currentTimeStamp.RealValue).to.equal(0);
             const firstNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
-            chai.expect(firstNotes.length).to.be.greaterThan(0);
+            expect(firstNotes.length).to.be.greaterThan(0);
             const firstHalfTone: number = firstNotes[0].halfTone;
 
             // Move to next - should skip the D4 (notehead none) and go to next visible note
             osmd.cursors[0].next();
             const secondNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
-            chai.expect(secondNotes.length).to.be.greaterThan(0);
+            expect(secondNotes.length).to.be.greaterThan(0);
             const secondHalfTone: number = secondNotes[0].halfTone;
             // Second note should be different from first (skipped the invisible note)
-            chai.expect(secondHalfTone).to.not.equal(firstHalfTone);
+            expect(secondHalfTone).to.not.equal(firstHalfTone);
 
             // Move to next - should skip another notehead none entry and reach the final measure
             osmd.cursors[0].next();
             const thirdNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
-            chai.expect(thirdNotes.length).to.be.greaterThan(0);
+            expect(thirdNotes.length).to.be.greaterThan(0);
             const thirdHalfTone: number = thirdNotes[0].halfTone;
             // Third note should be different from second
-            chai.expect(thirdHalfTone).to.not.equal(secondHalfTone);
+            expect(thirdHalfTone).to.not.equal(secondHalfTone);
         });
 
         it("should not skip entries with notehead none when SkipInvisibleNotes is false", () => {
@@ -462,30 +493,30 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             osmd.cursors[0].show();
 
             // Start at first note
-            chai.expect(osmd.cursors[0].Iterator.currentTimeStamp.RealValue).to.equal(0);
+            expect(osmd.cursors[0].Iterator.currentTimeStamp.RealValue).to.equal(0);
             const firstNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
-            chai.expect(firstNotes.length).to.be.greaterThan(0);
+            expect(firstNotes.length).to.be.greaterThan(0);
 
             // Move through all 4 notes in measure 1 (including the invisible ones)
             osmd.cursors[0].next();
             const secondNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
-            chai.expect(secondNotes.length).to.be.greaterThan(0);
+            expect(secondNotes.length).to.be.greaterThan(0);
 
             osmd.cursors[0].next();
             const thirdNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
-            chai.expect(thirdNotes.length).to.be.greaterThan(0);
+            expect(thirdNotes.length).to.be.greaterThan(0);
 
             osmd.cursors[0].next();
             const fourthNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
-            chai.expect(fourthNotes.length).to.be.greaterThan(0);
+            expect(fourthNotes.length).to.be.greaterThan(0);
 
             // One more next should move to measure 2
             osmd.cursors[0].next();
             const fifthNotes: Note[] = osmd.cursors[0].NotesUnderCursor();
-            chai.expect(fifthNotes.length).to.be.greaterThan(0);
+            expect(fifthNotes.length).to.be.greaterThan(0);
 
             // Verify we've advanced 5 times total (4 notes in measure 1 + 1 in measure 2)
-            chai.expect(osmd.cursors[0].Iterator.currentTimeStamp.RealValue).to.be.greaterThan(0);
+            expect(osmd.cursors[0].Iterator.currentTimeStamp.RealValue).to.be.greaterThan(0);
         });
     });
 

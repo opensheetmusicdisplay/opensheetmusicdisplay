@@ -109,7 +109,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     }
     public renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                       heightInPixel: number, screenPosition: PointF2D,
-                      color: string = undefined, fontFamily: string = undefined): Node  {
+                      color: string = undefined, fontFamily: string = undefined): Node {
         const old: string = this.CanvasRenderingCtx.font;
         this.CanvasRenderingCtx.save();
         this.CanvasRenderingCtx.font = VexFlowConverter.font(

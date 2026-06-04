@@ -1,3 +1,4 @@
+import { expect } from "chai";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { IXmlElement } from "../../../src/Common/FileIO/Xml";
 import { TestUtils } from "../../Util/TestUtils";
@@ -9,7 +10,7 @@ describe("MXL Tests", () => {
     it(`reads ${scoreName}`, (done: Mocha.Done) => {
       // Load the xml file content
       const mxl: string = TestUtils.getMXL(scoreName);
-      chai.expect(mxl).to.not.be.undefined;
+      expect(mxl).to.not.be.undefined;
       // Extract XML from MXL
       // Warning: the sheet is loaded asynchronously,
       // (with Promises), thus we need a little fix
@@ -17,8 +18,8 @@ describe("MXL Tests", () => {
       // make Mocha work asynchronously
       MXLHelper.MXLtoIXmlElement(mxl).then(
         (score: IXmlElement) => {
-          chai.expect(score).to.not.be.undefined;
-          chai.expect(score.name).to.equal("score-partwise");
+          expect(score).to.not.be.undefined;
+          expect(score.name).to.equal("score-partwise");
           done();
         },
         (exc: any) => { throw exc; }
@@ -39,8 +40,8 @@ describe("MXL Tests", () => {
   it("Corrupted file", (done: Mocha.Done) => {
     MXLHelper.MXLtoIXmlElement("").then(
       (score: IXmlElement) => {
-        chai.expect(score).to.not.be.undefined;
-        chai.expect(score.name).to.equal("score-partwise");
+        expect(score).to.not.be.undefined;
+        expect(score.name).to.equal("score-partwise");
         done(new Error("Empty zip file was loaded correctly. How is that even possible?"));
       },
       (exc: any) => { done(); }

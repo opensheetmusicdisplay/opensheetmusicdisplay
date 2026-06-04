@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for three-voice unison alignment.
+    A single staff with three voices. Voice 3 (B3) sits a sixth below the middle
+    voice, close enough that the middle voice's stem reaches it - so the generic
+    "shift middle note" collision rule would fire. On beat 1, voices 1 and 2 play
+    the same pitch (G4): that unison should still share one horizontal position
+    (overlapping noteheads), the unison taking priority over the nearby bass voice.
+    On beat 2, voice 1 (A4) and voice 2 (G4) are a second apart - a genuine
+    collision that must still be staggered.
+  -->
+  <part-list>
+    <score-part id="P1"><part-name>Music</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+
+      <!-- Voice 1 (upper) -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+
+      <backup><duration>2</duration></backup>
+
+      <!-- Voice 2 (middle) -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+
+      <backup><duration>2</duration></backup>
+
+      <!-- Voice 3 (lower): a sixth below the middle voice, close enough that the
+           middle voice's stem reaches it (so the generic collision rule fires). -->
+      <note><pitch><step>B</step><octave>3</octave></pitch><duration>1</duration><voice>3</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>B</step><octave>3</octave></pitch><duration>1</duration><voice>3</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
+  </part>
+</score-partwise>

@@ -35,10 +35,6 @@ module.exports = {
         ]
     },
     plugins: [
-        new webpack.ProvidePlugin({
-            $: 'jquery',
-            jQuery: 'jquery'
-        }),
         new webpack.EnvironmentPlugin({
             STATIC_FILES_SUBFOLDER: false, // Set to other directory if NOT using webpack-dev-server
             DEBUG: false,

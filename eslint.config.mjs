@@ -1,0 +1,216 @@
+// @ts-check
+import eslint from "@eslint/js";
+import { defineConfig } from "eslint/config";
+import globals from "globals";
+import tseslint from "typescript-eslint";
+import stylistic from "@stylistic/eslint-plugin";
+import jsdoc from "eslint-plugin-jsdoc";
+
+export default defineConfig(
+    {
+        ignores: ["webpack*.js",
+            "**/*.d.ts",
+            "*_min.ts",
+            ".karma_temp/",
+            "build/",
+            "demo/",
+            "export/",
+            "karma.conf.js",
+            "osmd-native/",
+            "react-native/",
+            "src/SamplePlayerPatch/",
+            "src/SoundfontPlayerPatch/",
+            "src/VexFlowPatch/",
+        ],
+    },
+    eslint.configs.recommended,
+    tseslint.configs.recommended,
+    {
+        files: ["**/*.ts"],
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node,
+            },
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname, // needs node v20+, but eslint >=9 needs it anyways
+            },
+        },
+        plugins: {
+            "@stylistic": stylistic,
+            jsdoc,
+        },
+        rules: {
+            "@typescript-eslint/dot-notation": "error",
+            "@typescript-eslint/explicit-function-return-type": "error",
+            "@typescript-eslint/explicit-member-accessibility": [
+                "off",
+                {
+                    accessibility: "explicit",
+                },
+            ],
+            "@stylistic/member-delimiter-style": [
+                "error",
+                {
+                    multiline: {
+                        delimiter: "semi",
+                        requireLast: true,
+                    },
+                    singleline: {
+                        delimiter: "comma",
+                        requireLast: false,
+                    },
+                },
+            ],
+            "@typescript-eslint/member-ordering": "off",
+            "@typescript-eslint/naming-convention": "off",
+            "@typescript-eslint/no-empty-function": "error",
+            "@typescript-eslint/no-empty-object-type": "off",
+            "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/no-inferrable-types": "off",
+            "@typescript-eslint/parameter-properties": "error",
+            "@typescript-eslint/no-require-imports": "error",
+            "@typescript-eslint/no-shadow": [
+                "error",
+                {
+                    hoist: "all",
+                },
+            ],
+            "@typescript-eslint/no-this-alias": "off",
+            "@typescript-eslint/no-unused-expressions": "error",
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                {
+                    args: "none",
+                    varsIgnorePattern: "^_",
+                    caughtErrorsIgnorePattern: "^_|^e$|^err$|^exc$",
+                },
+            ],
+            "@typescript-eslint/no-wrapper-object-types": "off",
+            "@typescript-eslint/prefer-namespace-keyword": "error",
+            "@stylistic/quotes": [
+                "error",
+                "double",
+                {
+                    avoidEscape: true,
+                },
+            ],
+            "@stylistic/semi": ["error"],
+            "@typescript-eslint/typedef": [
+                "error",
+                {
+                    arrowParameter: false,
+                    variableDeclaration: true,
+                },
+            ],
+            "@stylistic/type-annotation-spacing": "error",
+            "brace-style": ["off", "1tbs"],
+            "comma-dangle": "off",
+            curly: "error",
+            "default-case": "error",
+            "eol-last": "error",
+            eqeqeq: ["error", "smart"],
+            "guard-for-in": "error",
+            "id-match": "error",
+            "jsdoc/check-alignment": "error",
+            "jsdoc/check-indentation": "off",
+            "max-len": [
+                "error",
+                {
+                    code: 160,
+                },
+            ],
+            "no-bitwise": "error",
+            "no-caller": "error",
+            "no-cond-assign": "error",
+            "no-console": [
+                "error",
+                {
+                    allow: [
+                        "log",
+                        "warn",
+                        "dir",
+                        "timeLog",
+                        "assert",
+                        "clear",
+                        "count",
+                        "countReset",
+                        "group",
+                        "groupEnd",
+                        "table",
+                        "dirxml",
+                        "error",
+                        "groupCollapsed",
+                        "Console",
+                        "profile",
+                        "profileEnd",
+                        "timeStamp",
+                        "context",
+                    ],
+                },
+            ],
+            "no-debugger": "error",
+            "no-empty": "error",
+            "no-eval": "error",
+            "no-fallthrough": "error",
+            "no-multiple-empty-lines": "off",
+            "no-new-wrappers": "error",
+            "no-prototype-builtins": "off",
+            "no-redeclare": "error",
+            "for-direction": "off",
+            "no-case-declarations": "off",
+            "no-constant-binary-expression": "off",
+            "no-constant-condition": "off",
+            "no-irregular-whitespace": "error",
+            "no-trailing-spaces": "error",
+            "no-underscore-dangle": "off",
+            "no-unexpected-multiline": "off",
+            "no-unsafe-optional-chaining": "error",
+            "no-unused-labels": "error",
+            "no-useless-assignment": "off",
+            "no-var": "error",
+            "prefer-const": "error",
+            radix: "error",
+            "spaced-comment": [
+                "off",
+                "always",
+                {
+                    markers: ["/"],
+                },
+            ],
+        },
+    },
+    {
+        files: ["test/**/*.ts"],
+        languageOptions: {
+            globals: {
+                ...globals.mocha,
+                chai: "readonly",
+                Mocha: "readonly",
+            },
+        },
+    },
+    {
+        files: ["test/Util/*.js", "test/Util/*.mjs"],
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node,
+                ...globals.mocha,
+            },
+        },
+        rules: {
+            "@typescript-eslint/explicit-function-return-type": "off",
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                {
+                    argsIgnorePattern: "^_",
+                    varsIgnorePattern: "^_",
+                },
+            ],
+            "@typescript-eslint/typedef": "off",
+            "no-useless-assignment": "off",
+        },
+    },
+);

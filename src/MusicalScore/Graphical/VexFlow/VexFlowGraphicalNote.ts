@@ -280,7 +280,10 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             return this.parentVoiceEntry.parentStaffEntry.parentMeasure.multiRestElement;
         }
         const note: SVGGElement = this.getSVGGElement();
-        for (const noteChild of note?.children) {
+        if (!note) {
+            return undefined;
+        }
+        for (const noteChild of note.children) {
             if (noteChild.classList.contains("vf-note")) {
                 return noteChild as HTMLElement;
             }
@@ -291,8 +294,11 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public getModifierSVGs(): HTMLElement[] {
         const stavenote: SVGGElement = this.getSVGGElement();
         const modifierSVGs: HTMLElement[] = [];
-        if (stavenote?.children?.length) {
-            for (const noteChild of stavenote?.children) {
+        if (!stavenote?.children) {
+            return modifierSVGs;
+        }
+        if (stavenote.children.length) {
+            for (const noteChild of stavenote.children) {
                 if (noteChild.classList.contains("vf-modifiers")) {
                     modifierSVGs.push(noteChild as HTMLElement);
                 }

@@ -32,7 +32,7 @@ import { TemposCalculator } from "../MusicalScore/ScoreIO/MusicSymbolModules/Tem
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "1.9.7-dev"; // getter: this.Version
+    protected version: string = "1.9.9-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -391,7 +391,10 @@ export class OpenSheetMusicDisplay {
 
     // for now SVG only, see generateImages_browserless (PNG/SVG)
     public exportSVG(): void {
-        for (const backend of this.drawer?.Backends) {
+        if (!this.drawer) {
+            return;
+        }
+        for (const backend of this.drawer.Backends) {
             if (backend instanceof SvgVexFlowBackend) {
                 (backend as SvgVexFlowBackend).export();
             }
@@ -694,7 +697,7 @@ export class OpenSheetMusicDisplay {
             }
             // validate strings input
             for (const colorString of options.coloringSetCustom) {
-                const regExp: RegExp = /^\#[0-9a-fA-F]{6}$/;
+                const regExp: RegExp = /^#[0-9a-fA-F]{6}$/;
                 if (!regExp.test(colorString)) {
                     throw new Error(
                         "One of the color strings in options.coloringSetCustom was not a valid HTML Hex color:\n" + colorString);

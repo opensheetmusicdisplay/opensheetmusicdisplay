@@ -276,6 +276,21 @@ export class InstrumentReader {
           const restNote: boolean = xmlNode.element("rest") !== undefined;
           // let isTuplet: boolean = false; // unused now
           if (xmlNode.element("duration")) {
+            // some MusicXML exporters place <attributes><divisions> after the first notes of measure 1
+            // (see Jingle_Bell_Rock.xml). Without divisions, noteDuration becomes NaN and propagates
+            // through every staff entry's Timestamp, breaking later layout (e.g. lyric extends).
+            if (this.divisions === 0 && this.currentXmlMeasureIndex === 0) {
+              this.divisions = this.readDivisionsFromNotes();
+              if (this.divisions === 0) {
+                const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError",
+                  "Invalid divisions value at Instrument: ");
+                divisionsException = true;
+                throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
+              }
+              this.musicSheet.SheetErrors.push(
+                ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ")
+                  + this.instrument.Name);
+            }
             noteDivisions = parseInt(xmlNode.element("duration").value, 10);
             if (!isNaN(noteDivisions)) {
               noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
@@ -963,8 +978,8 @@ export class InstrumentReader {
       const typeList: IXmlElement[] = [];
       for (let idx: number = 0, len: number = timeList.length; idx < len; ++idx) {
         const xmlNode: IXmlElement = timeList[idx];
-        beatsList.push.apply(beatsList, xmlNode.elements("beats"));
-        typeList.push.apply(typeList, xmlNode.elements("beat-type"));
+        beatsList.push(...xmlNode.elements("beats"));
+        typeList.push(...xmlNode.elements("beat-type"));
       }
       if (!senzaMisura) {
         try {
