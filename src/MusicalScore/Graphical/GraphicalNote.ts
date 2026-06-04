@@ -41,6 +41,7 @@ export class GraphicalNote extends GraphicalObject {
     public baseFingeringXOffset: number;
     public baseStringNumberXOffset: number;
     public lineShift: number = 0;
+    public opacity: number = 1.0;
 
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         let transposedPitch: Pitch = this.sourceNote.Pitch;

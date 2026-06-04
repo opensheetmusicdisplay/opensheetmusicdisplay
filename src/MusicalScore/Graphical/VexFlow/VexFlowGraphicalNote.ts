@@ -482,10 +482,39 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     }
 
     public setOpacity(opacity: number): void {
-        const beams: HTMLElement[] = this.getBeamSVGs();
-        for (const beam of beams) {
+        this.opacity = opacity;
+
+        let targetBeamOpacity: number = opacity;
+        if (this.sourceNote.NoteBeam) {
+            let maxOpacity: number = 0;
+            for (const note of this.sourceNote.NoteBeam.Notes) {
+                const gNote: GraphicalNote = this.rules.GNote(note);
+                if (gNote) {
+                    const op: number = gNote === this ? opacity : (gNote.opacity !== undefined ? gNote.opacity : 1.0);
+                    if (op > maxOpacity) {
+                        maxOpacity = op;
+                    }
+                }
+            }
+            targetBeamOpacity = maxOpacity;
+        }
+
+        let beamSVGs: HTMLElement[] = [];
+        if (this.sourceNote.NoteBeam) {
+            const firstNote: Note = this.sourceNote.NoteBeam.Notes[0];
+            if (firstNote) {
+                const firstGNote: GraphicalNote = this.rules.GNote(firstNote);
+                if (firstGNote) {
+                    beamSVGs = (firstGNote as VexFlowGraphicalNote).getBeamSVGs();
+                }
+            }
+        } else {
+            beamSVGs = this.getBeamSVGs();
+        }
+
+        for (const beam of beamSVGs) {
             for (const beamPath of beam.children) {
-                beamPath.setAttribute("opacity", opacity.toString());
+                beamPath.setAttribute("opacity", targetBeamOpacity.toString());
             }
         }
 
