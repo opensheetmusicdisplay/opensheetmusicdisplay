@@ -262,7 +262,13 @@ export interface IOSMDOptions {
      */
     cursorsOptions?: CursorOptions[];
     /**
-     * Defines which skyline and bottom-line batch calculation algorithm to use.
+     * Whether to calculate the skyline and bottom-line geometrically, from the extents of the VexFlow draw calls,
+     * instead of drawing each measure on a hidden canvas and reading back its pixels, which is much slower. Default true.
+     * If set to false, the previous pixel-based calculation is used, see preferredSkyBottomLineBatchCalculatorBackend.
+     */
+    useGeometricSkyBottomLineCalculation?: boolean;
+    /**
+     * Defines which skyline and bottom-line batch calculation algorithm to use, if useGeometricSkyBottomLineCalculation is false.
      */
     preferredSkyBottomLineBatchCalculatorBackend?: SkyBottomLineBatchCalculatorBackendType;
     /**

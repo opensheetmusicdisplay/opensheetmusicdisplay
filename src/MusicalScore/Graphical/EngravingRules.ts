@@ -556,7 +556,13 @@ export class EngravingRules {
      */
     public RenderCount: number = 0;
 
-    /** The skyline and bottom-line batch calculation algorithm to use.
+    /** Whether to calculate the skyline and bottom-line geometrically, from the extents of the VexFlow draw calls,
+     *  instead of drawing each measure on a hidden canvas and reading back its pixels (getImageData), which is much slower (see #937).
+     *  Default true. If set to false, the previous pixel-based calculation is used,
+     *  see PreferredSkyBottomLineBatchCalculatorBackend etc.
+     */
+    public UseGeometricSkyBottomLineCalculation: boolean;
+    /** The skyline and bottom-line batch calculation algorithm to use, if UseGeometricSkyBottomLineCalculation is false.
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
      */
     public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
@@ -1011,6 +1017,7 @@ export class EngravingRules {
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
         this.NoteToGraphicalNoteMapObjectCount = 0;
 
+        this.UseGeometricSkyBottomLineCalculation = true;
         this.SkyBottomLineBatchMinMeasures = 5;
         this.SkyBottomLineWebGLMinMeasures = 80;
         this.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;

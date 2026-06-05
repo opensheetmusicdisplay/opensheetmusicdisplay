@@ -1887,6 +1887,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   protected calculateSkyBottomLines(): void {
     const staffLines: StaffLine[] = CollectionUtil.flat(this.musicSystems.map(musicSystem => musicSystem.StaffLines));
+    if (this.rules.UseGeometricSkyBottomLineCalculation) {
+      // geometric calculation doesn't need batching: no canvas allocation or pixel readback (getImageData) is involved
+      for (const staffLine of staffLines) {
+        staffLine.SkyBottomLineCalculator.calculateLines();
+      }
+      return;
+    }
     //const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
     let numMeasures: number = 0; // number of graphical measures that are rendered
     for (const staffline of staffLines) {

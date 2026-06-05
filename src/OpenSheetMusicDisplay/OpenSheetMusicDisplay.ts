@@ -675,6 +675,9 @@ export class OpenSheetMusicDisplay {
                 follow: true
             }];
         }
+        if (options.useGeometricSkyBottomLineCalculation !== undefined) {
+            this.rules.UseGeometricSkyBottomLineCalculation = options.useGeometricSkyBottomLineCalculation;
+        }
         if (options.preferredSkyBottomLineBatchCalculatorBackend !== undefined) {
             this.rules.PreferredSkyBottomLineBatchCalculatorBackend = options.preferredSkyBottomLineBatchCalculatorBackend;
         }
