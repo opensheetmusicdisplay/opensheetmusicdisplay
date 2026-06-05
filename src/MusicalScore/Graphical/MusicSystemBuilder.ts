@@ -761,6 +761,12 @@ export class MusicSystemBuilder {
         measure.PositionAndShape.BorderBottom = this.rules.StaffHeight;
         const width: number = this.rules.MeasureLeftMargin + measure.beginInstructionsWidth + this.rules.MeasureRightMargin;
         measure.PositionAndShape.BorderRight = width;
+        // Set minimumStaffEntriesWidth so stretchMusicSystem uses a correct value (not -1 from the constructor):
+        // an instruction-only measure has no staff entries, all its width is in beginInstructionsWidth.
+        // With -1, stretchMusicSystem subtracted the system's scaling factor from the width, which made
+        // these measures slightly too narrow in normal systems, and gave them negative widths in strongly
+        // stretched systems (e.g. one measure per system, see test_octaveshift_extragraphicalmeasure).
+        measure.minimumStaffEntriesWidth = 0;
         currentSystem.StaffLines[visStaffIdx].Measures.push(measure);
         return width;
     }

@@ -157,8 +157,10 @@ describe("GeometricSkyBottomLineCalculation", () => {
     });
 
     it("agrees with the raster calculation on the first render with extra graphical measures", async function (): Promise<void> {
-        // extra graphical measures can have negative widths on the first render, which the raster method
-        // ran through canvas.width coercion - the geometric calculation has to mirror that (#937)
+        // extra graphical measures used to get negative widths in stretched systems (fixed in
+        // MusicSystemBuilder.addExtraInstructionMeasure); the raster method ran such widths through
+        // canvas.width coercion, which the geometric calculation mirrors as defense against any
+        // remaining source of invalid widths (#937)
         this.timeout(30000);
         await compareGeometricWithRaster("test_octaveshift_extragraphicalmeasure.musicxml",
             { firstRender: true, newSystemAttribute: true });
