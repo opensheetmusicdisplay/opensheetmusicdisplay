@@ -83,8 +83,8 @@ export class Note {
     public IsGraceNote: boolean;
     /** The stem direction asked for in XML. Not necessarily final or wanted stem direction. */
     private stemDirectionXml: StemDirectionType;
-    /** The number of tremolo strokes this note has (16th tremolo = 2 strokes).
-     * Could be a Tremolo object in future when there is more data like tremolo between two notes.
+    /** Tremolo information for this note, e.g. the number of tremolo strokes (16th tremolo = 2 strokes),
+     * or the TremoloBetweenNotes object for a tremolo between two notes.
      */
     public TremoloInfo: TremoloInfo;
     /** Color of the stem given in the XML Stem tag. RGB Hexadecimal, like #00FF00.
@@ -317,8 +317,32 @@ export enum Appearance {
 }
 
 export interface TremoloInfo {
+    /** Number of tremolo strokes (e.g. 16th tremolo = 2 strokes).
+     * For a tremolo between notes, the number of strokes ("tremolo beams") drawn between the two notes. */
     tremoloStrokes: number;
     /** Buzz roll (type="unmeasured" in XML) */
     tremoloUnmeasured: boolean;
-    // could in future be extended e.g. for tremolo between notes
+    /** Whether this note starts a tremolo between (two) notes (type="start" in XML). */
+    tremoloBetweenNotesStart?: boolean;
+    /** Whether this note stops/ends a tremolo between (two) notes (type="stop" in XML). */
+    tremoloBetweenNotesStop?: boolean;
+    /** The tremolo between (two) notes this note is part of, linking start and stop note.
+     * This object is shared between the start note and the stop note,
+     * set in VoiceGenerator.handleTremoloBetweenNotes(). */
+    tremoloBetweenNotes?: TremoloBetweenNotes;
+}
+
+/** A tremolo between two notes, e.g. two alternating half notes with 3 strokes ("tremolo beams") between them,
+ * often seen in orchestral string parts. (<tremolo type="start"> and type="stop" in MusicXML)
+ * Note that for these tremolos, each note is notated with the full duration of the tremolo,
+ * but only played for half of it (e.g. notated two half notes = tremolo over one half note duration),
+ * so Note.TypeLength is twice the Note.Length here.
+ * The strokes are drawn in VexFlowMusicSheetDrawer.drawTremolosBetweenNotes(). */
+export interface TremoloBetweenNotes {
+    /** Number of strokes ("tremolo beams") drawn between the two notes. */
+    strokes: number;
+    /** The first/left note of the tremolo. */
+    startNote: Note;
+    /** The second/right note of the tremolo. Undefined until the stop note is read. */
+    stopNote: Note;
 }

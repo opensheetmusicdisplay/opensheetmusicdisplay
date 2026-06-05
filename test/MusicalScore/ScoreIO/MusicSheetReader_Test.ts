@@ -4,6 +4,8 @@ import {MusicSheetReader} from "../../../src/MusicalScore/ScoreIO/MusicSheetRead
 import {MusicSheet} from "../../../src/MusicalScore/MusicSheet";
 import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 import {NoteHeadShape} from "../../../src/MusicalScore/VoiceData/Notehead";
+import {Note, TremoloInfo} from "../../../src/MusicalScore/VoiceData/Note";
+import {VoiceEntry} from "../../../src/MusicalScore/VoiceData/VoiceEntry";
 
 describe("Music Sheet Reader", () => {
     const path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
@@ -135,6 +137,86 @@ describe("Music Sheet Reader", () => {
             if (note.Notehead) {
                 expect(note.Notehead.Shape).to.not.equal(NoteHeadShape.NONE);
             }
+            done();
+        });
+    });
+
+    describe("Tremolo between two notes", () => {
+        const tremoloBetweenNotesPath: string = "test/data/test_tremolo_between_notes_short.musicxml";
+        let tremoloSheet: MusicSheet;
+
+        before((): void => {
+            const doc: Document = getSheet(tremoloBetweenNotesPath);
+            expect(doc).to.not.be.undefined;
+            const tremoloScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            tremoloSheet = reader.createMusicSheet(tremoloScore, tremoloBetweenNotesPath);
+        });
+
+        it("links start and stop notes of tremolos between two notes", (done: Mocha.Done) => {
+            expect(tremoloSheet).to.not.be.undefined;
+            let tremoloCount: number = 0;
+            for (const instrument of tremoloSheet.Instruments) {
+                for (const voice of instrument.Voices) {
+                    let openTremoloStartNote: Note = undefined;
+                    for (const voiceEntry of voice.VoiceEntries) {
+                        for (const note of voiceEntry.Notes) {
+                            const tremoloInfo: TremoloInfo = note.TremoloInfo;
+                            expect(tremoloInfo, "every note in the test sample has tremolo info").to.not.be.undefined;
+                            expect(tremoloInfo.tremoloBetweenNotes, "start and stop notes are linked").to.not.be.undefined;
+                            expect(tremoloInfo.tremoloBetweenNotes.strokes).to.equal(3);
+                            if (tremoloInfo.tremoloBetweenNotesStart) {
+                                expect(tremoloInfo.tremoloBetweenNotes.startNote).to.equal(note);
+                                openTremoloStartNote = note;
+                            } else {
+                                expect(tremoloInfo.tremoloBetweenNotesStop, "note is start or stop note").to.be.true;
+                                expect(tremoloInfo.tremoloBetweenNotes.stopNote).to.equal(note);
+                                expect(tremoloInfo.tremoloBetweenNotes.startNote,
+                                       "stop note is linked to the previous start note in the same voice").to.equal(openTremoloStartNote);
+                                // start and stop note share the same TremoloBetweenNotes object:
+                                expect(openTremoloStartNote.TremoloInfo.tremoloBetweenNotes).to.equal(tremoloInfo.tremoloBetweenNotes);
+                                tremoloCount++;
+                            }
+                        }
+                    }
+                }
+            }
+            expect(tremoloCount, "the test sample has 4 tremolos between two notes").to.equal(4);
+            done();
+        });
+
+        it("does not add single note tremolo strokes for tremolos between two notes", (done: Mocha.Done) => {
+            for (const instrument of tremoloSheet.Instruments) {
+                for (const voice of instrument.Voices) {
+                    for (const voiceEntry of voice.VoiceEntries) {
+                        for (const note of voiceEntry.Notes) {
+                            // tremoloStrokes is set (for drawing the strokes between the notes),
+                            //   but the notes shouldn't be treated as single note tremolos:
+                            expect(note.TremoloInfo.tremoloStrokes).to.equal(3);
+                            expect(note.TremoloInfo.tremoloUnmeasured).to.be.undefined;
+                        }
+                    }
+                }
+            }
+            done();
+        });
+    });
+
+    describe("Tremolo without type attribute", () => {
+        it("reads a tremolo without type attribute as single note tremolo (MusicXML default)", (done: Mocha.Done) => {
+            const noTypePath: string = "test/data/test_tremolo_no_type_attribute.musicxml";
+            const doc: Document = getSheet(noTypePath);
+            expect(doc).to.not.be.undefined;
+            const noTypeScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            const noTypeSheet: MusicSheet = reader.createMusicSheet(noTypeScore, noTypePath);
+
+            const voiceEntries: VoiceEntry[] = noTypeSheet.Instruments[0].Voices[0].VoiceEntries;
+            const noTypeNote: Note = voiceEntries[0].Notes[0]; // <tremolo>3</tremolo> (no type attribute)
+            const singleTypeNote: Note = voiceEntries[1].Notes[0]; // <tremolo type="single">3</tremolo>
+            expect(noTypeNote.TremoloInfo.tremoloStrokes, "tremolo without type attribute defaults to single").to.equal(3);
+            expect(noTypeNote.TremoloInfo.tremoloUnmeasured).to.be.undefined;
+            expect(noTypeNote.TremoloInfo.tremoloBetweenNotesStart).to.be.undefined;
+            expect(noTypeNote.TremoloInfo.tremoloBetweenNotesStop).to.be.undefined;
+            expect(noTypeNote.TremoloInfo.tremoloStrokes).to.equal(singleTypeNote.TremoloInfo.tremoloStrokes);
             done();
         });
     });

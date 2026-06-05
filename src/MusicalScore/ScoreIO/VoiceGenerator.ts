@@ -2,7 +2,7 @@ import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { Voice } from "../VoiceData/Voice";
 import { MusicSheet } from "../MusicSheet";
 import { VoiceEntry, StemDirectionType } from "../VoiceData/VoiceEntry";
-import { Note, TremoloInfo } from "../VoiceData/Note";
+import { Note, TremoloBetweenNotes, TremoloInfo } from "../VoiceData/Note";
 import { SourceMeasure } from "../VoiceData/SourceMeasure";
 import { SourceStaffEntry } from "../VoiceData/SourceStaffEntry";
 import { Beam } from "../VoiceData/Beam";
@@ -70,6 +70,8 @@ export class VoiceGenerator {
   private currentOctaveShift: number = 0;
   private tupletDict: { [_: number]: Tuplet } = {};
   private openTupletNumber: number = 0;
+  /** The last tremolo between (two) notes started in this voice, awaiting its stop note. */
+  private openTremoloBetweenNotes: TremoloBetweenNotes;
 
   public get GetVoice(): Voice {
     return this.voice;
@@ -508,6 +510,9 @@ export class VoiceGenerator {
     note.IsGraceNote = isGraceNote;
     note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
     note.TremoloInfo = tremoloInfo;
+    if (tremoloInfo?.tremoloBetweenNotesStart || tremoloInfo?.tremoloBetweenNotesStop) {
+      this.handleTremoloBetweenNotes(tremoloInfo, note);
+    }
     note.PlaybackInstrumentId = playbackInstrumentId;
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
@@ -575,6 +580,37 @@ export class VoiceGenerator {
       // add IsGraceNote for rest notes like with Notes?
       // add PlaybackInstrumentId for rest notes?
     }
+
+  /**
+   * Links the start and stop note of a tremolo between (two) notes (XML tremolo type="start"/"stop")
+   * via a shared TremoloBetweenNotes object (note.TremoloInfo.tremoloBetweenNotes).
+   */
+  private handleTremoloBetweenNotes(tremoloInfo: TremoloInfo, note: Note): void {
+    const openTremolo: TremoloBetweenNotes = this.openTremoloBetweenNotes;
+    if (tremoloInfo.tremoloBetweenNotesStart) {
+      if (openTremolo && !openTremolo.stopNote && openTremolo.startNote?.ParentVoiceEntry === note.ParentVoiceEntry) {
+        // chord note: the tremolo start was already given on a previous note of this chord
+        tremoloInfo.tremoloBetweenNotes = openTremolo;
+        return;
+      }
+      this.openTremoloBetweenNotes = {
+        strokes: tremoloInfo.tremoloStrokes,
+        startNote: note,
+        stopNote: undefined
+      };
+      tremoloInfo.tremoloBetweenNotes = this.openTremoloBetweenNotes;
+    } else if (tremoloInfo.tremoloBetweenNotesStop) {
+      if (openTremolo && !openTremolo.stopNote) {
+        openTremolo.stopNote = note;
+        tremoloInfo.tremoloBetweenNotes = openTremolo;
+      } else if (openTremolo?.stopNote?.ParentVoiceEntry === note.ParentVoiceEntry) {
+        // chord note: the tremolo stop was already given on a previous note of this chord
+        tremoloInfo.tremoloBetweenNotes = openTremolo;
+      } else {
+        log.debug("VoiceGenerator.handleTremoloBetweenNotes: tremolo stop without preceding tremolo start. ignoring it.");
+      }
+    }
+  }
 
   /**
    * Handle the currentVoiceBeam.

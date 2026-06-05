@@ -1478,27 +1478,40 @@ export class InstrumentReader {
   private getTremoloInfo(ornamentsNode: IXmlElement): TremoloInfo {
     let tremoloStrokes: number;
     let tremoloUnmeasured: boolean;
+    let tremoloBetweenNotesStart: boolean;
+    let tremoloBetweenNotesStop: boolean;
     const tremoloNode: IXmlElement = ornamentsNode.element("tremolo");
     if (tremoloNode) {
-      const tremoloType: Attr = tremoloNode.attribute("type");
-      if (tremoloType) {
-        if (tremoloType.value === "single") {
-          const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
-          if (tremoloStrokesGiven > 0) {
-            tremoloStrokes = tremoloStrokesGiven;
-          }
-        } else {
-          tremoloStrokes = 0;
+      let tremoloType: string = tremoloNode.attribute("type")?.value;
+      if (!tremoloType) {
+        tremoloType = "single"; // the type attribute is optional in MusicXML and defaults to "single"
+      }
+      if (tremoloType === "single") {
+        const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+        if (tremoloStrokesGiven > 0) {
+          tremoloStrokes = tremoloStrokesGiven;
         }
-        if (tremoloType.value === "unmeasured") {
-          tremoloUnmeasured = true;
+      } else {
+        tremoloStrokes = 0;
+      }
+      if (tremoloType === "unmeasured") {
+        tremoloUnmeasured = true;
+      } else if (tremoloType === "start" || tremoloType === "stop") {
+        // tremolo between (two) notes. The notes are linked in VoiceGenerator.handleTremoloBetweenNotes(),
+        //   the strokes between the notes are drawn in VexFlowMusicSheetDrawer.drawTremolosBetweenNotes().
+        tremoloBetweenNotesStart = tremoloType === "start";
+        tremoloBetweenNotesStop = tremoloType === "stop";
+        const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+        if (tremoloStrokesGiven > 0) {
+          tremoloStrokes = tremoloStrokesGiven;
         }
-        // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
       }
     }
     return {
       tremoloStrokes: tremoloStrokes,
-      tremoloUnmeasured: tremoloUnmeasured
+      tremoloUnmeasured: tremoloUnmeasured,
+      tremoloBetweenNotesStart: tremoloBetweenNotesStart,
+      tremoloBetweenNotesStop: tremoloBetweenNotesStop
     };
   }
 

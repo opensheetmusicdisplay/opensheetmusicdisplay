@@ -283,6 +283,54 @@ export class SkyBottomLineCalculator {
     }
 
     /**
+     * This method merges a line (e.g. the top edge of a tremolo stroke between two notes) into the SkyLine,
+     * updating the SkyLine only where the line lies above it (preserving more extreme existing values),
+     * unlike updateSkyLineWithWedge, which overwrites the existing values.
+     * @param start Start point of the line, relative to the staffline (like the SkyLine values), in units
+     * @param end End point of the line
+     */
+    public mergeSkyLineWithLine(start: PointF2D, end: PointF2D): void {
+        const lineLength: number = end.x - start.x;
+        if (lineLength <= 0 || !this.SkyLine?.length) {
+            return;
+        }
+        const startIndex: number = Math.max(0, Math.floor(start.x * this.SamplingUnit));
+        const endIndex: number = Math.min(this.SkyLine.length, Math.ceil(end.x * this.SamplingUnit));
+        const slope: number = (end.y - start.y) / lineLength;
+        for (let i: number = startIndex; i < endIndex; i++) {
+            const lineX: number = Math.min(Math.max(i / this.SamplingUnit - start.x, 0), lineLength); // clamp to line segment
+            const lineY: number = start.y + slope * lineX;
+            if (lineY < this.SkyLine[i]) {
+                this.SkyLine[i] = lineY;
+            }
+        }
+    }
+
+    /**
+     * This method merges a line (e.g. the bottom edge of a tremolo stroke between two notes) into the BottomLine,
+     * updating the BottomLine only where the line lies below it (preserving more extreme existing values),
+     * unlike updateBottomLineWithWedge, which overwrites the existing values.
+     * @param start Start point of the line, relative to the staffline (like the BottomLine values), in units
+     * @param end End point of the line
+     */
+    public mergeBottomLineWithLine(start: PointF2D, end: PointF2D): void {
+        const lineLength: number = end.x - start.x;
+        if (lineLength <= 0 || !this.BottomLine?.length) {
+            return;
+        }
+        const startIndex: number = Math.max(0, Math.floor(start.x * this.SamplingUnit));
+        const endIndex: number = Math.min(this.BottomLine.length, Math.ceil(end.x * this.SamplingUnit));
+        const slope: number = (end.y - start.y) / lineLength;
+        for (let i: number = startIndex; i < endIndex; i++) {
+            const lineX: number = Math.min(Math.max(i / this.SamplingUnit - start.x, 0), lineLength); // clamp to line segment
+            const lineY: number = start.y + slope * lineX;
+            if (lineY > this.BottomLine[i]) {
+                this.BottomLine[i] = lineY;
+            }
+        }
+    }
+
+    /**
      * This method updates the SkyLine for a given range with a given value
      * //param  to update the SkyLine for
      * @param startIndex Start index of the range

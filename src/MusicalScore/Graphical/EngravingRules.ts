@@ -350,6 +350,22 @@ export class EngravingRules {
     public TremoloStrokeScale: number;
     public TremoloYSpacingScale: number;
     public TremoloBuzzRollThickness: number;
+    /** Vertical thickness of one stroke ("tremolo beam") of a tremolo between two notes, in units (1 unit = staff space). */
+    public TremoloBetweenNotesStrokeThickness: number;
+    /** Vertical gap between the strokes of a tremolo between two notes, in units. */
+    public TremoloBetweenNotesStrokeGap: number;
+    /** Minimum horizontal padding between the strokes of a tremolo between two notes and the stems (or noteheads for stemless notes), in units. */
+    public TremoloBetweenNotesXPadding: number;
+    /** Maximum length of the strokes of a tremolo between two notes,
+     * as a fraction of the space between the stems (or noteheads for stemless notes).
+     * (Gould - Behind Bars: the strokes span about two thirds of the space between the notes) */
+    public TremoloBetweenNotesMaxLengthFactor: number;
+    /** Maximum vertical rise/fall (slant) of the strokes of a tremolo between two notes, in units. */
+    public TremoloBetweenNotesMaxSlant: number;
+    /** Vertical padding between the strokes of a tremolo between two notes and the notehead (edge), in units.
+     * Stems are lengthened where necessary to make room for the strokes (e.g. for 4+ strokes),
+     * as recommended by Gould (Behind Bars). */
+    public TremoloBetweenNotesYPadding: number;
     public StaffLineWidth: number;
     public StaffLineColor: string;
     public LedgerLineWidth: number;
@@ -855,6 +871,12 @@ export class EngravingRules {
         this.TremoloStrokeScale = 1;
         this.TremoloYSpacingScale = 1;
         this.TremoloBuzzRollThickness = 0.25;
+        this.TremoloBetweenNotesStrokeThickness = 0.4; // like beam thickness
+        this.TremoloBetweenNotesStrokeGap = 0.4;
+        this.TremoloBetweenNotesXPadding = 0.55;
+        this.TremoloBetweenNotesMaxLengthFactor = 0.667; // Gould (Behind Bars) recommends the tremolo strokes to take up 2/3 of the space between notes
+        this.TremoloBetweenNotesMaxSlant = 1.0;
+        this.TremoloBetweenNotesYPadding = 0.45;
         this.StemWidth = 0.15; // originally 0.13. vexflow default 0.15. should probably be adjusted when increasing vexFlowDefaultNotationFontScale,
         this.StaffLineWidth = 0.10; // originally 0.12, but this will be pixels in Vexflow (*10).
         this.StaffLineColor = undefined; // if undefined, vexflow default (grey). not a width, but affects visual line clarity.
