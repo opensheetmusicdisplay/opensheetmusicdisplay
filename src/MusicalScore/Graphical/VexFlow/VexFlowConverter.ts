@@ -24,7 +24,7 @@ import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContain
 import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
-import { Note, TremoloInfo } from "../../../MusicalScore/VoiceData/Note";
+import { Note, TremoloBetweenNotes, TremoloInfo } from "../../../MusicalScore/VoiceData/Note";
 import StaveNote = VF.StaveNote;
 import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
@@ -701,6 +701,26 @@ export class VexFlowConverter {
                 (tremolo as any).extra_stroke_scale = rules.TremoloStrokeScale;
                 (tremolo as any).y_spacing_scale = rules.TremoloYSpacingScale;
                 vfnote.addModifier(i, tremolo);
+            }
+        }
+
+        // tremolo between two notes: lengthen the stem if necessary to make room for the strokes (e.g. for 4+ strokes),
+        //   as recommended by Gould (Behind Bars). The strokes are drawn in VexFlowMusicSheetDrawer.drawTremolosBetweenNotes().
+        let tremoloBetweenNotes: TremoloBetweenNotes;
+        for (const note of notes) {
+            if (note.sourceNote.TremoloInfo?.tremoloBetweenNotes) {
+                tremoloBetweenNotes = note.sourceNote.TremoloInfo.tremoloBetweenNotes;
+                break;
+            }
+        }
+        if (tremoloBetweenNotes?.strokes > 0 && !gve.parentVoiceEntry.IsGrace && vfnote.hasStem()) {
+            const strokesHeight: number = tremoloBetweenNotes.strokes * rules.TremoloBetweenNotesStrokeThickness +
+                (tremoloBetweenNotes.strokes - 1) * rules.TremoloBetweenNotesStrokeGap;
+            // strokes + padding towards notehead and stem tip + half notehead height (the strokes region starts at the notehead's edge):
+            const wantedStemLengthPx: number = (strokesHeight + 2 * rules.TremoloBetweenNotesYPadding + 0.5) * unitInPixels;
+            if (wantedStemLengthPx > (VF.Stem as any).HEIGHT) { // default stem length (35px = 3.5 units)
+                (vfnote as any).setStemLength(wantedStemLengthPx); // sets vfnote.stemExtensionOverride
+                vfnote.getStem()?.setExtension(vfnote.getStemExtension()); // apply to the already built stem
             }
         }
 

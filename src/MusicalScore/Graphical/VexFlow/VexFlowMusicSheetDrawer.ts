@@ -363,11 +363,23 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             return strokeId; // invisible notes (print-object="no")
         }
 
+        // stroke dimensions (in units):
+        const strokeThickness: number = this.rules.TremoloBetweenNotesStrokeThickness;
+        const strokePeriod: number = strokeThickness + this.rules.TremoloBetweenNotesStrokeGap;
+        const totalStrokesHeight: number = tremolo.strokes * strokeThickness + (tremolo.strokes - 1) * this.rules.TremoloBetweenNotesStrokeGap;
+        const yPadding: number = this.rules.TremoloBetweenNotesYPadding;
+
         // calculate the anchor points of the line on which the strokes are centered (in pixels):
         let startXPx: number;
         let stopXPx: number;
         let startYPx: number;
         let stopYPx: number;
+        // allowed y range for the stroke group center at each note (in units), so that the strokes
+        //   keep their distance from the noteheads and don't exceed the stem tips (used for stemmed notes):
+        let startCenterMinY: number = -Infinity;
+        let startCenterMaxY: number = Infinity;
+        let stopCenterMinY: number = -Infinity;
+        let stopCenterMaxY: number = Infinity;
         const startNoteHasStem: boolean = (vfStartNote as any).hasStem?.() && !!vfStartNote.getStem();
         const stopNoteHasStem: boolean = (vfStopNote as any).hasStem?.() && !!vfStopNote.getStem();
         if (startNoteHasStem && stopNoteHasStem && vfStartNote.getStemDirection() === vfStopNote.getStemDirection()) {
@@ -383,8 +395,23 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             // measure the free stem region from the notehead's outer edge (~0.5 units from its center),
             //   so that the strokes get equal visual clearance from notehead and stem tip:
             const noteheadEdgeOffsetPx: number = direction * 0.5 * unitInPixels;
-            startYPx = (vfStartNote.getStemExtents().topY + startInnerNoteheadY - noteheadEdgeOffsetPx) / 2;
-            stopYPx = (vfStopNote.getStemExtents().topY + stopInnerNoteheadY - noteheadEdgeOffsetPx) / 2;
+            const startTipY: number = vfStartNote.getStemExtents().topY / unitInPixels;
+            const stopTipY: number = vfStopNote.getStemExtents().topY / unitInPixels;
+            const startNoteheadEdgeY: number = (startInnerNoteheadY - noteheadEdgeOffsetPx) / unitInPixels;
+            const stopNoteheadEdgeY: number = (stopInnerNoteheadY - noteheadEdgeOffsetPx) / unitInPixels;
+            startYPx = (startTipY + startNoteheadEdgeY) / 2 * unitInPixels;
+            stopYPx = (stopTipY + stopNoteheadEdgeY) / 2 * unitInPixels;
+            if (direction === 1) { // stems up: tips above the noteheads (lower y)
+                startCenterMinY = startTipY + totalStrokesHeight / 2; // group must not exceed the stem tip
+                startCenterMaxY = startNoteheadEdgeY - yPadding - totalStrokesHeight / 2; // group must keep its distance from the notehead
+                stopCenterMinY = stopTipY + totalStrokesHeight / 2;
+                stopCenterMaxY = stopNoteheadEdgeY - yPadding - totalStrokesHeight / 2;
+            } else { // stems down: tips below the noteheads
+                startCenterMinY = startNoteheadEdgeY + yPadding + totalStrokesHeight / 2;
+                startCenterMaxY = startTipY - totalStrokesHeight / 2;
+                stopCenterMinY = stopNoteheadEdgeY + yPadding + totalStrokesHeight / 2;
+                stopCenterMaxY = stopTipY - totalStrokesHeight / 2;
+            }
         } else {
             // stemless notes (e.g. whole notes) or opposite stem directions: anchor the strokes between the noteheads
             const startBoundingBox: VF.BoundingBox = vfStartNote.getBoundingBox();
@@ -421,13 +448,24 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (Math.abs(slant) > maxSlant) {
             slant = Math.sign(slant) * maxSlant;
         }
-        const startY: number = yMiddle - slant / 2;
-        const stopY: number = yMiddle + slant / 2;
+        let startY: number = yMiddle - slant / 2;
+        let stopY: number = yMiddle + slant / 2;
+
+        // shift the stroke group vertically if necessary to keep it within the allowed range at both notes,
+        //   e.g. when the slant was limited above (for notes far apart),
+        //   which moves the group out of the middle of the stems' free regions:
+        const minimumYShift: number = Math.max(startCenterMinY - startY, stopCenterMinY - stopY);
+        const maximumYShift: number = Math.min(startCenterMaxY - startY, stopCenterMaxY - stopY);
+        let yShift: number = 0;
+        if (minimumYShift <= maximumYShift) {
+            yShift = Math.min(Math.max(0, minimumYShift), maximumYShift); // smallest shift that satisfies both ranges
+        } else {
+            yShift = (minimumYShift + maximumYShift) / 2; // both ranges can't be satisfied (e.g. very short stems): balance the violations
+        }
+        startY += yShift;
+        stopY += yShift;
 
         // draw the strokes as parallelograms (like beams), stacked vertically around the center line:
-        const strokeThickness: number = this.rules.TremoloBetweenNotesStrokeThickness;
-        const strokePeriod: number = strokeThickness + this.rules.TremoloBetweenNotesStrokeGap;
-        const totalStrokesHeight: number = tremolo.strokes * strokeThickness + (tremolo.strokes - 1) * this.rules.TremoloBetweenNotesStrokeGap;
         const color: string = this.rules.DefaultColorMusic;
         for (let strokeIndex: number = 0; strokeIndex < tremolo.strokes; strokeIndex++) {
             const strokeStartTopY: number = startY - totalStrokesHeight / 2 + strokeIndex * strokePeriod;

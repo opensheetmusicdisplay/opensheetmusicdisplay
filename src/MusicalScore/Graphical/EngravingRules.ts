@@ -362,6 +362,10 @@ export class EngravingRules {
     public TremoloBetweenNotesMaxLengthFactor: number;
     /** Maximum vertical rise/fall (slant) of the strokes of a tremolo between two notes, in units. */
     public TremoloBetweenNotesMaxSlant: number;
+    /** Vertical padding between the strokes of a tremolo between two notes and the notehead (edge), in units.
+     * Stems are lengthened where necessary to make room for the strokes (e.g. for 4+ strokes),
+     * as recommended by Gould (Behind Bars). */
+    public TremoloBetweenNotesYPadding: number;
     public StaffLineWidth: number;
     public StaffLineColor: string;
     public LedgerLineWidth: number;
@@ -872,6 +876,7 @@ export class EngravingRules {
         this.TremoloBetweenNotesXPadding = 0.55;
         this.TremoloBetweenNotesMaxLengthFactor = 0.667;
         this.TremoloBetweenNotesMaxSlant = 1.0;
+        this.TremoloBetweenNotesYPadding = 0.45;
         this.StemWidth = 0.15; // originally 0.13. vexflow default 0.15. should probably be adjusted when increasing vexFlowDefaultNotationFontScale,
         this.StaffLineWidth = 0.10; // originally 0.12, but this will be pixels in Vexflow (*10).
         this.StaffLineColor = undefined; // if undefined, vexflow default (grey). not a width, but affects visual line clarity.
