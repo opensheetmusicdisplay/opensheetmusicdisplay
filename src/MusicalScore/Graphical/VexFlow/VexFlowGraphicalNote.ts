@@ -501,11 +501,15 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 
         let beamSVGs: HTMLElement[] = [];
         if (this.sourceNote.NoteBeam) {
-            const firstNote: Note = this.sourceNote.NoteBeam.Notes[0];
-            if (firstNote) {
-                const firstGNote: GraphicalNote = this.rules.GNote(firstNote);
-                if (firstGNote) {
-                    beamSVGs = (firstGNote as VexFlowGraphicalNote).getBeamSVGs();
+            for (const note of this.sourceNote.NoteBeam.Notes) {
+                const gNote: GraphicalNote = this.rules.GNote(note);
+                if (gNote) {
+                    const noteBeams: HTMLElement[] = (gNote as VexFlowGraphicalNote).getBeamSVGs();
+                    for (const beam of noteBeams) {
+                        if (beamSVGs.indexOf(beam) === -1) {
+                            beamSVGs.push(beam);
+                        }
+                    }
                 }
             }
         } else {
