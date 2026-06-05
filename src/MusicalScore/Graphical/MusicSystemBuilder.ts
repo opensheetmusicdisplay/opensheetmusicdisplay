@@ -1173,6 +1173,12 @@ export class MusicSystemBuilder {
                 maxDistance += this.rules.MinSkyBottomDistBetweenStaves;
                 // 3. Take the maximum between previous value and user defined value for staff line minimum distance
                 maxDistance = Math.max(maxDistance, this.rules.StaffHeight + this.rules.MinimumStaffLineDistance);
+                // Round to half pixels (0.05 units), the granularity the pixel-based skyline calculation
+                // produced naturally: this keeps stafflines on consistent sub-pixel y positions, so the
+                // anti-aliased weight of the (1px) staff lines doesn't vary between systems.
+                // (The geometric skyline values are exact instead of pixel-quantized, which would otherwise
+                // propagate arbitrary fractional y positions here. No change for pixel-based values.)
+                maxDistance = Math.round(maxDistance * 20) / 20;
                 const lowerStafflineYPos: number = maxDistance + musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y;
                 this.updateStaffLinesRelativePosition(musicSystem, i + 1, lowerStafflineYPos);
             }
@@ -1279,6 +1285,8 @@ export class MusicSystemBuilder {
                 distance += this.rules.MinSkyBottomDistBetweenSystems;
 
                 distance = Math.max(distance, this.rules.MinimumDistanceBetweenSystems + prevSystemLastStaffline.StaffHeight);
+                // Round to half pixels for consistent staff line anti-aliasing, see optimizeDistanceBetweenStaffLines:
+                distance = Math.round(distance * 20) / 20;
                 const newYPosition: number =    currentYPosition +
                                                 prevSystemLastStaffLineBB.RelativePosition.y +
                                                 distance;
