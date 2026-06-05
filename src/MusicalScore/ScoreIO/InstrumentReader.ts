@@ -1478,6 +1478,8 @@ export class InstrumentReader {
   private getTremoloInfo(ornamentsNode: IXmlElement): TremoloInfo {
     let tremoloStrokes: number;
     let tremoloUnmeasured: boolean;
+    let tremoloBetweenNotesStart: boolean;
+    let tremoloBetweenNotesStop: boolean;
     const tremoloNode: IXmlElement = ornamentsNode.element("tremolo");
     if (tremoloNode) {
       const tremoloType: Attr = tremoloNode.attribute("type");
@@ -1492,13 +1494,23 @@ export class InstrumentReader {
         }
         if (tremoloType.value === "unmeasured") {
           tremoloUnmeasured = true;
+        } else if (tremoloType.value === "start" || tremoloType.value === "stop") {
+          // tremolo between (two) notes. The notes are linked in VoiceGenerator.handleTremoloBetweenNotes(),
+          //   the strokes between the notes are drawn in VexFlowMusicSheetDrawer.drawTremolosBetweenNotes().
+          tremoloBetweenNotesStart = tremoloType.value === "start";
+          tremoloBetweenNotesStop = tremoloType.value === "stop";
+          const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+          if (tremoloStrokesGiven > 0) {
+            tremoloStrokes = tremoloStrokesGiven;
+          }
         }
-        // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
       }
     }
     return {
       tremoloStrokes: tremoloStrokes,
-      tremoloUnmeasured: tremoloUnmeasured
+      tremoloUnmeasured: tremoloUnmeasured,
+      tremoloBetweenNotesStart: tremoloBetweenNotesStart,
+      tremoloBetweenNotesStop: tremoloBetweenNotesStop
     };
   }
 

@@ -24,7 +24,7 @@ import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContain
 import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
-import { Note } from "../../../MusicalScore/VoiceData/Note";
+import { Note, TremoloInfo } from "../../../MusicalScore/VoiceData/Note";
 import StaveNote = VF.StaveNote;
 import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
@@ -691,9 +691,12 @@ export class VexFlowConverter {
                 vfnote.addAccidental(i, new VF.Accidental(accidentals[i])); // normal accidental
             }
 
-            // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
-            const tremoloStrokes: number = notes[i].sourceNote.TremoloStrokes;
-            if (tremoloStrokes > 0) {
+            // add Tremolo strokes for single note tremolos
+            //   (strokes for tremolos between two notes are drawn in VexFlowMusicSheetDrawer.drawTremolosBetweenNotes())
+            const tremoloInfo: TremoloInfo = notes[i].sourceNote.TremoloInfo;
+            const tremoloStrokes: number = tremoloInfo?.tremoloStrokes;
+            const isTremoloBetweenNotes: boolean = tremoloInfo?.tremoloBetweenNotesStart || tremoloInfo?.tremoloBetweenNotesStop;
+            if (tremoloStrokes > 0 && !isTremoloBetweenNotes) {
                 const tremolo: VF.Tremolo = new VF.Tremolo(tremoloStrokes);
                 (tremolo as any).extra_stroke_scale = rules.TremoloStrokeScale;
                 (tremolo as any).y_spacing_scale = rules.TremoloYSpacingScale;

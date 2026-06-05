@@ -54,6 +54,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             "OSMD Function Test - Tabulature MultiBends": "OSMD_Function_Test_Tablature_Multibends.musicxml",
             "OSMD Function Test - Tabulature All Effects": "OSMD_Function_Test_Tablature_Alleffects.musicxml",
             "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
+            "OSMD Function Test - Tremolo between two notes": "test_tremolo_between_notes.musicxml",
             "OSMD Function Test - Labels": "OSMD_Function_Test_Labels.musicxml",
             "OSMD Function Test - High Slur Test": "test_slurs_highNotes.musicxml",
             "OSMD Function Test - Auto Multirest Measures Single Staff": "Test_Auto_Multirest_1.musicxml",
