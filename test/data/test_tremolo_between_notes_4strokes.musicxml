@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <!DOCTYPE score-partwise PUBLIC '-//Recordare//DTD MusicXML 4.0 Partwise//EN' 'http://www.musicxml.org/dtds/partwise.dtd'>
 <score-partwise version='4.0'>
-	<movement-title>test_tremolo_between_notes</movement-title>
+	<movement-title>test_tremolo_between_notes_4strokes</movement-title>
 	<identification>
 		<encoding>
 			<software>Sibelius 2024.6</software>
@@ -60,7 +60,7 @@
 	</defaults>
 	<credit page='1'>
 		<credit-type>title</credit-type>
-		<credit-words default-x='617' default-y='1524' justify='center' valign='top' font-weight='bold' font-size='22'>test_tremolo_between_notes</credit-words>
+		<credit-words default-x='617' default-y='1524' justify='center' valign='top' font-weight='bold' font-size='22'>test_tremolo_between_notes_4strokes</credit-words>
 	</credit>
 	<part-list>
 		<score-part id='P1'>
