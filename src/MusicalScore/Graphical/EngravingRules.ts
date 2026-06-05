@@ -401,6 +401,15 @@ export class EngravingRules {
     public GraceLineWidth: number;
     public MinimumStaffLineDistance: number;
     public MinSkyBottomDistBetweenStaves: number;
+    /** Whether to snap the y positions of stafflines and music systems to positions where the
+     *  (1px) staff lines render as crisp single pixel rows, instead of being spread (anti-aliased)
+     *  over two half-covered, gray-ish pixel rows. Default true.
+     *  This makes the staff line weight consistent across all systems (and across releases:
+     *  otherwise sub-pixel layout changes shift the anti-aliasing per system, which shows up as
+     *  bolder/lighter staff lines, e.g. in visual regression tests).
+     *  Exact at zoom 1 (and its integer multiples), within a page.
+     */
+    public SnapStafflinesToCrispPixels: boolean;
     public MinimumCrossedBeamDifferenceMargin: number;
 
     /** Maximum width of sheet / HTMLElement containing the score. Canvas is limited to 32767 in current browsers, though SVG isn't.
@@ -619,6 +628,7 @@ export class EngravingRules {
         this.BetweenStaffDistance = 5.0;
         this.MinimumStaffLineDistance = 4.0;
         this.MinSkyBottomDistBetweenStaves = 1.0; // default. compacttight mode sets it to 1.0 (as well).
+        this.SnapStafflinesToCrispPixels = true;
 
         // System Sizing and Label Variables
         this.StaffHeight = 4.0;
