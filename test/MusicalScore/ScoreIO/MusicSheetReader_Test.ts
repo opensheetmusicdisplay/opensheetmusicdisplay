@@ -5,6 +5,7 @@ import {MusicSheet} from "../../../src/MusicalScore/MusicSheet";
 import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 import {NoteHeadShape} from "../../../src/MusicalScore/VoiceData/Notehead";
 import {Note, TremoloInfo} from "../../../src/MusicalScore/VoiceData/Note";
+import {VoiceEntry} from "../../../src/MusicalScore/VoiceData/VoiceEntry";
 
 describe("Music Sheet Reader", () => {
     const path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
@@ -196,6 +197,26 @@ describe("Music Sheet Reader", () => {
                     }
                 }
             }
+            done();
+        });
+    });
+
+    describe("Tremolo without type attribute", () => {
+        it("reads a tremolo without type attribute as single note tremolo (MusicXML default)", (done: Mocha.Done) => {
+            const noTypePath: string = "test/data/test_tremolo_no_type_attribute.musicxml";
+            const doc: Document = getSheet(noTypePath);
+            expect(doc).to.not.be.undefined;
+            const noTypeScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            const noTypeSheet: MusicSheet = reader.createMusicSheet(noTypeScore, noTypePath);
+
+            const voiceEntries: VoiceEntry[] = noTypeSheet.Instruments[0].Voices[0].VoiceEntries;
+            const noTypeNote: Note = voiceEntries[0].Notes[0]; // <tremolo>3</tremolo> (no type attribute)
+            const singleTypeNote: Note = voiceEntries[1].Notes[0]; // <tremolo type="single">3</tremolo>
+            expect(noTypeNote.TremoloInfo.tremoloStrokes, "tremolo without type attribute defaults to single").to.equal(3);
+            expect(noTypeNote.TremoloInfo.tremoloUnmeasured).to.be.undefined;
+            expect(noTypeNote.TremoloInfo.tremoloBetweenNotesStart).to.be.undefined;
+            expect(noTypeNote.TremoloInfo.tremoloBetweenNotesStop).to.be.undefined;
+            expect(noTypeNote.TremoloInfo.tremoloStrokes).to.equal(singleTypeNote.TremoloInfo.tremoloStrokes);
             done();
         });
     });
