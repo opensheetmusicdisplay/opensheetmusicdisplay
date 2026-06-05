@@ -1,17 +1,20 @@
-// Temporary validation harness: compares skyline/bottomline arrays between the geometric calculation
+// Validation harness: compares skyline/bottomline arrays between the geometric calculation
 // (GeometricSkyBottomLineContext) and the pixel-based (raster) calculations, for all test samples.
 // The arrays are captured directly after SkyBottomLineCalculator.updateLines(), i.e. before later layout
 // steps (lyrics, dynamics, ...) modify them, isolating the calculator difference.
 // Values are in OSMD units (1 unit = 1 staff space = 10px). Differences < ~0.1 units are expected
 // (raster quantizes to pixels and includes the anti-aliasing halo, geometric is exact).
 //
-// Usage: node test/performance/skylineParity.mjs [filterRegex] [maxSamples] [--with-batch]
+// Usage: node test/performance/skylineParity.mjs [filterRegex] [maxSamples] [--with-batch] [--first-render]
+// --first-render compares the very first render after load (what the visual pipeline produces)
+// instead of a settled re-render; some state (e.g. extra graphical measure widths) differs there.
 import FS from "fs";
 import jsdom from "jsdom";
 import OSMD from "../../build/opensheetmusicdisplay.min.js";
 
 const args = process.argv.slice(2).filter(a => !a.startsWith("--"));
 const withBatch = process.argv.includes("--with-batch");
+const firstRender = process.argv.includes("--first-render");
 const filterRegex = args[0] && args[0] !== "all" ? args[0] : "";
 const maxSamples = args[1] ? parseInt(args[1], 10) : Infinity;
 
@@ -89,11 +92,19 @@ const modeNames = withBatch ? ["geo", "single", "batch"] : ["geo", "single"];
 // with the mode under test. The settle render's skyline values feed into some element placements of
 // the next render (pre-existing re-render behavior, independent of this comparison), so the settle
 // must use the same method for all modes to give every capture render identical input state.
+// With --first-render, the settle render is skipped and the capture comes from the very first render
+// after a fresh load (per mode) - this is what the actual visual rendering pipeline does, and some
+// state (e.g. extra graphical measure widths) only occurs on the first render.
 async function capturedModeRender(modeName, loadParameter, sampleName) {
-    MODES.geo(osmd.EngravingRules);
-    await osmd.load(loadParameter, sampleName);
-    osmd.render(); // settle render (first render after load also differs slightly from re-renders)
-    MODES[modeName](osmd.EngravingRules);
+    if (firstRender) {
+        MODES[modeName](osmd.EngravingRules);
+        await osmd.load(loadParameter, sampleName);
+    } else {
+        MODES.geo(osmd.EngravingRules);
+        await osmd.load(loadParameter, sampleName);
+        osmd.render(); // settle render (first render after load also differs slightly from re-renders)
+        MODES[modeName](osmd.EngravingRules);
+    }
     capture = [];
     osmd.render();
     const result = capture;

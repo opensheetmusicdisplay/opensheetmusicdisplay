@@ -32,6 +32,9 @@ Object.defineProperties(window.HTMLElement.prototype, {
 
 const osmd = new OSMD.OpenSheetMusicDisplay(div, { autoResize: false, backend: "svg", pageFormat: "Endless" });
 osmd.setLogLevel("warn");
+if (process.env.NEWSYSTEM_RULE) { // e.g. for test_octaveshift_extragraphicalmeasure, like generateImages --osmdtesting
+    osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
+}
 
 // ---- capture hook (updateLines) ----
 let capture = null;

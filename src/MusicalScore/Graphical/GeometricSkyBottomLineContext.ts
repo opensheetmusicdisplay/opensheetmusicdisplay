@@ -668,16 +668,22 @@ export class GeometricSkyBottomLineContext {
             y0 = y1;
             y1 = tmp;
         }
-        const firstColumn: number = Math.max(0, Math.floor(x0));
-        const lastColumn: number = Math.min(this.width - 1, Math.floor(x1));
-        if (lastColumn < firstColumn) {
-            return; // outside the measure (horizontal clipping like on the per-measure canvas)
-        }
         if (x1 - x0 < 1e-7) {
-            // (nearly) vertical segment: a single column
+            // (Nearly) vertical segment: a single column.
+            // If it lies exactly on a column boundary, it covers nothing of either column, and the
+            // rasterizer paints nothing - e.g. the end cap of a stroke ending exactly at x = 0,
+            // which occurs for the negative-width staves of some extra graphical measures
+            // (see test_octaveshift_extragraphicalmeasure): claiming the column there would also
+            // poison the "fill empty columns from neighbors" step for such mostly empty measures.
+            if (x0 === Math.trunc(x0)) {
+                return;
+            }
+            const column: number = Math.floor(x0);
+            if (column < 0 || column >= this.width) {
+                return; // outside the measure (horizontal clipping like on the per-measure canvas)
+            }
             const lo: number = Math.min(y0, y1);
             const hi: number = Math.max(y0, y1);
-            const column: number = firstColumn;
             if (lo < this.minY[column]) {
                 this.minY[column] = lo;
             }
@@ -685,6 +691,12 @@ export class GeometricSkyBottomLineContext {
                 this.maxY[column] = hi;
             }
             return;
+        }
+        const firstColumn: number = Math.max(0, Math.floor(x0));
+        // a segment whose right end lies exactly on a column boundary covers nothing of that column:
+        const lastColumn: number = Math.min(this.width - 1, Math.floor(x1 - 1e-9));
+        if (lastColumn < firstColumn) {
+            return; // outside the measure (horizontal clipping like on the per-measure canvas)
         }
         const slope: number = (y1 - y0) / (x1 - x0);
         for (let column: number = firstColumn; column <= lastColumn; column++) {

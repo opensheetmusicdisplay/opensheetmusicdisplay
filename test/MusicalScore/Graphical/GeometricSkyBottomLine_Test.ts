@@ -54,17 +54,31 @@ describe("GeometricSkyBottomLineCalculation", () => {
         return "";
     }
 
+    interface ICompareOptions {
+        /** Capture the very first render after load (like the actual rendering pipeline) instead of a
+         *  settled re-render. Some state (e.g. extra graphical measure widths) differs on the first render. */
+        firstRender?: boolean;
+        /** Sets EngravingRules.NewSystemAtXMLNewSystemAttribute, e.g. for test_octaveshift_extragraphicalmeasure. */
+        newSystemAttribute?: boolean;
+    }
+
     /** Fresh load + a settle render with the geometric method, then one captured render with the given method.
      *  The settle render's skylines feed into some element placements of the next render (pre-existing re-render
      *  behavior, independent of the skyline method), so both captures must start from identical input state:
-     *  a fresh load and a settle render that uses the same (geometric) method for both. */
-    async function capturedRender(osmd: OpenSheetMusicDisplay, score: Document, geometric: boolean): Promise<ICapturedLine[]> {
-        osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = true;
+     *  a fresh load and a settle render that uses the same (geometric) method for both.
+     *  With options.firstRender, the settle render is skipped and the first render is captured instead
+     *  (fresh loads at the same render index are also identical input states). */
+    async function capturedRender(osmd: OpenSheetMusicDisplay, score: Document, geometric: boolean,
+                                  options: ICompareOptions): Promise<ICapturedLine[]> {
+        osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = options.firstRender ? geometric : true;
         osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
         osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 9999999; // use the non-batched raster path
+        osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = !!options.newSystemAttribute;
         await osmd.load(score);
-        osmd.render(); // settle render (the first render after load also differs slightly from re-renders)
-        osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geometric;
+        if (!options.firstRender) {
+            osmd.render(); // settle render (the first render after load also differs slightly from re-renders)
+            osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geometric;
+        }
         capture = [];
         osmd.render();
         const result: ICapturedLine[] = capture;
@@ -75,12 +89,12 @@ describe("GeometricSkyBottomLineCalculation", () => {
         return result;
     }
 
-    async function compareGeometricWithRaster(filename: string): Promise<void> {
+    async function compareGeometricWithRaster(filename: string, options: ICompareOptions = {}): Promise<void> {
         const score: Document = TestUtils.getScore(filename);
         const div: HTMLElement = TestUtils.getDivElement(document);
         const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, { autoResize: false });
-        const geometric: ICapturedLine[] = await capturedRender(osmd, score, true);
-        const raster: ICapturedLine[] = await capturedRender(osmd, score, false);
+        const geometric: ICapturedLine[] = await capturedRender(osmd, score, true, options);
+        const raster: ICapturedLine[] = await capturedRender(osmd, score, false, options);
 
         expect(geometric.length, "number of stafflines").to.equal(raster.length);
         expect(geometric.length, "number of stafflines").to.be.greaterThan(0);
@@ -140,5 +154,13 @@ describe("GeometricSkyBottomLineCalculation", () => {
     it("agrees with the raster calculation for tablature with effects", async function (): Promise<void> {
         this.timeout(30000);
         await compareGeometricWithRaster("OSMD_Function_Test_Tablature_Alleffects.musicxml");
+    });
+
+    it("agrees with the raster calculation on the first render with extra graphical measures", async function (): Promise<void> {
+        // extra graphical measures can have negative widths on the first render, which the raster method
+        // ran through canvas.width coercion - the geometric calculation has to mirror that (#937)
+        this.timeout(30000);
+        await compareGeometricWithRaster("test_octaveshift_extragraphicalmeasure.musicxml",
+            { firstRender: true, newSystemAttribute: true });
     });
 });

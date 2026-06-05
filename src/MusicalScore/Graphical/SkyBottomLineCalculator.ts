@@ -231,8 +231,17 @@ export class SkyBottomLineCalculator {
                 log.warn("SkyBottomLineCalculator: width not > 0 in measure " + measure.MeasureNumber);
                 width = 50;
             }
-            // the raster method truncated the width to an integer via canvas.width, kept for identical results:
-            width = Math.floor(width);
+            // Mirror the raster method's "canvas.width = width" coercion (HTMLCanvasElement reflection)
+            // for identical results, including its quirks: fractional widths truncate, and negative widths
+            // (which occur for some extra graphical measures, see test_octaveshift_extragraphicalmeasure)
+            // fall back to the default canvas width of 300, so such measures contribute the same
+            // (drawn) entries to the skyline as on the raster path instead of a single empty one.
+            width = Math.trunc(width);
+            if (!isFinite(width)) {
+                width = 0;
+            } else if (width < 0) {
+                width = 300;
+            }
             geometricContext.initialize(width);
 
             // This magic number is an offset from the top image border so that
