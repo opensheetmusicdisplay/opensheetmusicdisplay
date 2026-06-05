@@ -79,6 +79,14 @@ export class GeometricSkyBottomLineContext {
     private static measureTextWarningLogged: boolean = false;
     /** Character ink extents, cached by font + character (see measureCharacter()). */
     private static characterExtentsCache: Map<string, ICharacterExtents> = new Map<string, ICharacterExtents>();
+    /** Flattened line segments of glyph outlines (quadruples x0,y0,x1,y1, relative to the glyph
+     *  origin, already scaled and y-inverted), cached per outline (by reference) and scale, see
+     *  drawCachedGlyphOutline(). VexFlow caches the outline arrays on its font glyph entries,
+     *  so they are stable keys that live as long as the font. */
+    private static glyphSegmentsCache: WeakMap<object, Map<number, Float64Array>> =
+        new WeakMap<object, Map<number, Float64Array>>();
+    /** Scratch context used to flatten glyph outlines (reused, see computeGlyphSegments()). */
+    private static glyphSegmentsScratch: GeometricSkyBottomLineContext;
     /** Tiny hidden canvas used to probe the exact rasterized ink extents of single characters
      *  (once per font + character, then cached forever in characterExtentsCache). */
     private static characterProbeCanvas: HTMLCanvasElement;
@@ -437,6 +445,37 @@ export class GeometricSkyBottomLineContext {
         return {width: this.fontSizeInPixels() * GeometricSkyBottomLineContext.FALLBACK_CHAR_WIDTH * text.length} as TextMetrics;
     }
 
+    /**
+     * Fast path for glyphs, called by VexFlow's (patched) Glyph.renderOutline() instead of issuing
+     * the outline's dozens of path commands: merges the glyph outline's flattened line segments,
+     * cached once per outline + scale (the curve flattening and command parsing are the expensive
+     * part of glyph drawing, and the same glyphs repeat constantly: noteheads, accidentals, ...).
+     * The merged segments are identical to the ones the normal path commands would produce,
+     * so the result is exactly the same.
+     * Returns true if handled (VexFlow then skips the normal path commands).
+     */
+    public drawCachedGlyphOutline(outline: object, scale: number, xPos: number, yPos: number): boolean {
+        if (this.scaleX !== 1 || this.scaleY !== 1) {
+            return false; // segments are cached per glyph scale only: use the normal path commands instead
+        }
+        if (this.fillTransparent) {
+            return true; // invisible glyph (e.g. "#00000000"): nothing to merge, like in fill()
+        }
+        const deviceX: number = this.deviceX(xPos);
+        const deviceY: number = this.deviceY(yPos);
+        if (!isFinite(deviceX) || !isFinite(deviceY) || !isFinite(scale)) {
+            return true; // canvas ignores non-finite coordinates
+        }
+        const segments: Float64Array = this.getGlyphSegments(outline as string[], scale);
+        for (let i: number = 0; i < segments.length; i += 4) {
+            this.mergeSegment(
+                segments[i] + deviceX, segments[i + 1] + deviceY,
+                segments[i + 2] + deviceX, segments[i + 3] + deviceY);
+        }
+        this.beginPath(); // the normal path would have cleared the current path, mirror that
+        return true;
+    }
+
     //#endregion
 
     //#region state
@@ -713,6 +752,64 @@ export class GeometricSkyBottomLineContext {
         }
         const size: number = parseFloat(match[1]);
         return match[2] === "pt" ? size * GeometricSkyBottomLineContext.PT_TO_PX : size;
+    }
+
+    /** Returns the cached flattened segments for a glyph outline at the given scale,
+     *  computing them on first use (see drawCachedGlyphOutline()). */
+    private getGlyphSegments(outline: string[], scale: number): Float64Array {
+        const statics: typeof GeometricSkyBottomLineContext = GeometricSkyBottomLineContext;
+        let segmentsByScale: Map<number, Float64Array> = statics.glyphSegmentsCache.get(outline);
+        if (!segmentsByScale) {
+            segmentsByScale = new Map<number, Float64Array>();
+            statics.glyphSegmentsCache.set(outline, segmentsByScale);
+        }
+        let segments: Float64Array = segmentsByScale.get(scale);
+        if (!segments) {
+            segments = statics.computeGlyphSegments(outline, scale);
+            segmentsByScale.set(scale, segments);
+        }
+        return segments;
+    }
+
+    /** Flattens a glyph outline at the given scale into line segments relative to the glyph origin,
+     *  by replaying the outline (the same way VexFlow's Glyph.processOutline does, with y inverted)
+     *  into a scratch context's path, so the segments are identical to the normal path commands'. */
+    private static computeGlyphSegments(outline: string[], scale: number): Float64Array {
+        if (!GeometricSkyBottomLineContext.glyphSegmentsScratch) {
+            GeometricSkyBottomLineContext.glyphSegmentsScratch = new GeometricSkyBottomLineContext();
+        }
+        const scratch: GeometricSkyBottomLineContext = GeometricSkyBottomLineContext.glyphSegmentsScratch;
+        scratch.initialize(0); // only the path is used, nothing is merged
+        // replay the outline like VexFlow's processOutline(outline, 0, 0, scale, -scale, ...):
+        let i: number = 0;
+        while (i < outline.length) {
+            switch (outline[i++]) {
+                case "m":
+                    scratch.moveTo(Number(outline[i++]) * scale, Number(outline[i++]) * -scale);
+                    break;
+                case "l":
+                    scratch.lineTo(Number(outline[i++]) * scale, Number(outline[i++]) * -scale);
+                    break;
+                case "q": {
+                    const x: number = Number(outline[i++]) * scale;
+                    const y: number = Number(outline[i++]) * -scale;
+                    scratch.quadraticCurveTo(Number(outline[i++]) * scale, Number(outline[i++]) * -scale, x, y);
+                    break;
+                }
+                case "b": {
+                    const x: number = Number(outline[i++]) * scale;
+                    const y: number = Number(outline[i++]) * -scale;
+                    scratch.bezierCurveTo(
+                        Number(outline[i++]) * scale, Number(outline[i++]) * -scale,
+                        Number(outline[i++]) * scale, Number(outline[i++]) * -scale,
+                        x, y);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+        return Float64Array.from(scratch.pathSegments);
     }
 
     /** Measures the ink extents of a single character in the current font, cached.
