@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
+import { expect } from "chai";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
@@ -86,24 +87,24 @@ describe("VexFlow Measure - Fermata Positioning", () => {
   it("Should have upright fermata centered on notehead (ABOVE, stem UP)", (done: Mocha.Done) => {
     const gms: GraphicalMusicSheet = buildGMS("test_fermata_inverted_placement.musicxml");
     const fermatas: FermataInfo[] = collectFermatas(gms);
-    chai.expect(fermatas.length).to.equal(2, "should have exactly 2 fermata articulations");
+    expect(fermatas.length).to.equal(2, "should have exactly 2 fermata articulations");
 
     const upright: FermataInfo | undefined = fermatas.find(f => f.artType === "a@a");
-    chai.expect(upright).to.not.be.undefined;
+    expect(upright).to.not.be.undefined;
     if (!upright) { done(); return; }
 
-    chai.expect(upright.stemDir).to.equal(1, "upright fermata note should be stem UP");
-    chai.expect(upright.artPos).to.equal(VF.Modifier.Position.ABOVE);
+    expect(upright.stemDir).to.equal(1, "upright fermata note should be stem UP");
+    expect(upright.artPos).to.equal(VF.Modifier.Position.ABOVE);
 
     // getModifierStartXY must return the notehead center (used by draw as anchor)
-    chai.expect(upright.modStartX).to.equal(upright.noteCenterX,
+    expect(upright.modStartX).to.equal(upright.noteCenterX,
       `fermata anchor ${upright.modStartX.toFixed(2)} should be notehead center ${upright.noteCenterX.toFixed(2)}`);
 
     // Fermata glyph must have a measured width > 0 (draw uses getWidth()/2 to center)
-    chai.expect(upright.artWidth).to.be.greaterThan(0,
+    expect(upright.artWidth).to.be.greaterThan(0,
       `fermata glyph width should be > 0, got ${upright.artWidth}`);
     // Fermata glyph should be substantially wider than the staccato dot (~4-5px)
-    chai.expect(upright.artWidth).to.be.greaterThan(10,
+    expect(upright.artWidth).to.be.greaterThan(10,
       `fermata glyph should be wide (got ${upright.artWidth.toFixed(1)}px)`);
 
     done();
@@ -114,17 +115,17 @@ describe("VexFlow Measure - Fermata Positioning", () => {
     const fermatas: FermataInfo[] = collectFermatas(gms);
 
     const inverted: FermataInfo | undefined = fermatas.find(f => f.artType === "a@u");
-    chai.expect(inverted).to.not.be.undefined;
+    expect(inverted).to.not.be.undefined;
     if (!inverted) { done(); return; }
 
-    chai.expect(inverted.artPos).to.equal(VF.Modifier.Position.BELOW);
+    expect(inverted.artPos).to.equal(VF.Modifier.Position.BELOW);
 
-    chai.expect(inverted.modStartX).to.equal(inverted.noteCenterX,
+    expect(inverted.modStartX).to.equal(inverted.noteCenterX,
       `fermata anchor ${inverted.modStartX.toFixed(2)} should be notehead center ${inverted.noteCenterX.toFixed(2)}`);
 
-    chai.expect(inverted.artWidth).to.be.greaterThan(0,
+    expect(inverted.artWidth).to.be.greaterThan(0,
       `fermata glyph width should be > 0, got ${inverted.artWidth}`);
-    chai.expect(inverted.artWidth).to.be.greaterThan(10,
+    expect(inverted.artWidth).to.be.greaterThan(10,
       `fermata glyph should be wide (got ${inverted.artWidth.toFixed(1)}px)`);
 
     done();

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
+import { expect } from "chai";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 
@@ -142,19 +143,19 @@ describe("VexFlow Measure - Voice Alignment Across Staves", () => {
   it("Should align notes across staves in full score", (done: Mocha.Done) => {
     const path: string = "OSMD_Function_Test_Voice_Alignment.musicxml";
     const score: any = TestUtils.getScore(path);
-    chai.expect(score).to.not.be.undefined;
+    expect(score).to.not.be.undefined;
     const partwise: any = TestUtils.getPartWiseElement(score);
-    chai.expect(partwise).to.not.be.undefined;
+    expect(partwise).to.not.be.undefined;
     const reader: MusicSheetReader = new MusicSheetReader();
     const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
     const sheet: any = reader.createMusicSheet(new IXmlElement(partwise), path);
     const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
     calc.calculate();
 
-    chai.expect(gms.MeasureList.length).to.be.greaterThan(0);
+    expect(gms.MeasureList.length).to.be.greaterThan(0);
 
     const { misalignedCount, checkedCount }: { misalignedCount: number, checkedCount: number } = checkAlignment(gms);
-    chai.expect(misalignedCount).to.equal(0,
+    expect(misalignedCount).to.equal(0,
       `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned rendered X positions (>2px)`);
     done();
   });
@@ -162,19 +163,19 @@ describe("VexFlow Measure - Voice Alignment Across Staves", () => {
   it("Should align voices in reduced grand staff score", (done: Mocha.Done) => {
     const path: string = "OSMD_Function_Test_Voice_Alignment_reduced.musicxml";
     const score: any = TestUtils.getScore(path);
-    chai.expect(score).to.not.be.undefined;
+    expect(score).to.not.be.undefined;
     const partwise: any = TestUtils.getPartWiseElement(score);
-    chai.expect(partwise).to.not.be.undefined;
+    expect(partwise).to.not.be.undefined;
     const reader: MusicSheetReader = new MusicSheetReader();
     const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
     const sheet: any = reader.createMusicSheet(new IXmlElement(partwise), path);
     const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
     calc.calculate();
 
-    chai.expect(gms.MeasureList.length).to.be.greaterThan(0);
+    expect(gms.MeasureList.length).to.be.greaterThan(0);
 
     const { misalignedCount, checkedCount }: { misalignedCount: number, checkedCount: number } = checkAlignment(gms);
-    chai.expect(misalignedCount).to.equal(0,
+    expect(misalignedCount).to.equal(0,
       `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned rendered X positions (>2px)`);
     done();
   });
@@ -182,19 +183,19 @@ describe("VexFlow Measure - Voice Alignment Across Staves", () => {
   it("Should keep reference staff (treble/green) xShift unchanged while aligning colored score", (done: Mocha.Done) => {
     const path: string = "OSMD_Function_Test_Voice_Alignment_colored.musicxml";
     const score: any = TestUtils.getScore(path);
-    chai.expect(score).to.not.be.undefined;
+    expect(score).to.not.be.undefined;
     const partwise: any = TestUtils.getPartWiseElement(score);
-    chai.expect(partwise).to.not.be.undefined;
+    expect(partwise).to.not.be.undefined;
     const reader: MusicSheetReader = new MusicSheetReader();
     const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
     const sheet: any = reader.createMusicSheet(new IXmlElement(partwise), path);
     const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
     calc.calculate();
 
-    chai.expect(gms.MeasureList.length).to.be.greaterThan(0);
+    expect(gms.MeasureList.length).to.be.greaterThan(0);
 
     const { misalignedCount, checkedCount }: { misalignedCount: number, checkedCount: number } = checkAlignment(gms);
-    chai.expect(misalignedCount).to.equal(0,
+    expect(misalignedCount).to.equal(0,
       `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned rendered X positions (>2px)`);
 
     done();

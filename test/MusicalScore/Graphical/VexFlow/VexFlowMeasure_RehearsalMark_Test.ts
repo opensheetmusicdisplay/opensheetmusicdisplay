@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
+import { expect } from "chai";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
@@ -57,17 +58,17 @@ describe("VexFlow Measure - Rehearsal Mark Positioning", () => {
     const gms: GraphicalMusicSheet = buildGMS("JosephHaydn_ConcertanteCello.xml");
     const marks: RehearsalMarkInfo[] = collectRehearsalMarks(gms);
 
-    chai.expect(marks.length).to.be.greaterThan(0, "should have at least one rehearsal mark");
+    expect(marks.length).to.be.greaterThan(0, "should have at least one rehearsal mark");
 
     const markF: RehearsalMarkInfo | undefined = marks.find(m => m.label === "F");
-    chai.expect(markF).to.not.be.undefined;
+    expect(markF).to.not.be.undefined;
     if (!markF) { done(); return; }
 
-    chai.expect(markF.measureNumber).to.equal(201, "rehearsal mark 'F' should be on measure 201");
+    expect(markF.measureNumber).to.equal(201, "rehearsal mark 'F' should be on measure 201");
     // StaveSection metrics define padding=2 (see Metrics.ts)
-    chai.expect(markF.padding).to.equal(2, "StaveSection padding should be 2");
+    expect(markF.padding).to.equal(2, "StaveSection padding should be 2");
     // EngravingRules.RehearsalMarkXOffsetDefault = 10
-    chai.expect(markF.xShift).to.equal(10,
+    expect(markF.xShift).to.equal(10,
       `xShift should be RehearsalMarkXOffsetDefault (10), got ${markF.xShift}`);
 
     done();

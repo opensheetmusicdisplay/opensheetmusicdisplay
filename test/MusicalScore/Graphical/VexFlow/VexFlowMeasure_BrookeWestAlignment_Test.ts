@@ -1,5 +1,5 @@
-import { expect } from "chai";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
+import { expect } from "chai";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
@@ -9,12 +9,16 @@ import { VexFlowMeasure } from "../../../../src/MusicalScore/Graphical/VexFlow/V
 import { VexFlowVoiceEntry } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
 import * as VF from "vexflow";
 
-function buildGMS(path: string, overrides?: { pageWidth?: number, voiceSpacingMultiplier?: number }): GraphicalMusicSheet {
+function buildGMS(path: string, overrides?: { pageWidth?: number, voiceSpacingMultiplier?: number, newSystemAtXML?: boolean }): GraphicalMusicSheet {
   const score: Document = TestUtils.getScore(path);
   const partwise: Element = TestUtils.getPartWiseElement(score);
   const reader: MusicSheetReader = new MusicSheetReader();
   if (overrides?.voiceSpacingMultiplier !== undefined) {
     reader.rules.VoiceSpacingMultiplierVexflow = overrides.voiceSpacingMultiplier;
+  }
+  if (overrides?.newSystemAtXML !== undefined) {
+    reader.rules.NewSystemAtXMLNewSystemAttribute = overrides.newSystemAtXML;
+    reader.rules.NewSystemAtXMLNewPageAttribute = overrides.newSystemAtXML;
   }
   const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
   const sheet: any = reader.createMusicSheet(new IXmlElement(partwise), path);
@@ -143,7 +147,7 @@ describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
     // Bug: measures 10 and 11 end up in different systems when the system break
     // should happen at measure 10 (per MusicXML new-system="yes").
     // Without NewSystemAtXMLNewSystemAttribute, these get split across sys1/sys2.
-    const gms: GraphicalMusicSheet = buildGMS("BrookeWestSample.musicxml");
+    const gms: GraphicalMusicSheet = buildGMS("BrookeWestSample.musicxml", { newSystemAtXML: true });
 
     const measure10: VexFlowMeasure = gms.findGraphicalMeasureByMeasureNumber(10, 0) as VexFlowMeasure;
     const measure11: VexFlowMeasure = gms.findGraphicalMeasureByMeasureNumber(11, 0) as VexFlowMeasure;
@@ -151,8 +155,6 @@ describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
     const sl10: any = measure10.ParentStaffLine;
     const sl11: any = measure11.ParentStaffLine;
 
-    // Both should be in the same StaffLine (same instrument row).
-    // When this fails, the fix likely involves NewSystemAtXMLNewSystemAttribute.
     const sameStaffLine: boolean = sl10 === sl11;
     expect(sameStaffLine,
       `m10 (sys=${sl10?.ParentMusicSystem?.id}) and m11 (sys=${sl11?.ParentMusicSystem?.id}) ` +
@@ -165,7 +167,7 @@ describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
     // System layout: system breaks at m5, m10, m15.
     // Measures 10-14 should be one system. Verify that m10 is the first measure
     // in its system (stave X = 0 or left margin) and m11 follows it.
-    const gms: GraphicalMusicSheet = buildGMS("BrookeWestSample.musicxml");
+    const gms: GraphicalMusicSheet = buildGMS("BrookeWestSample.musicxml", { newSystemAtXML: true });
 
     // Find all graphical measures for staff 0 (Voice)
     const voiceMeasures10to14: VexFlowMeasure[] = [];

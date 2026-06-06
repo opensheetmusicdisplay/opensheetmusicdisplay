@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
+import { expect } from "chai";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
@@ -41,11 +42,11 @@ describe("VexFlow Measure - In-Measure Clef Changes", () => {
 
   it("Should NOT repeat in-measure clef as system-start clef on next line", (done: Mocha.Done) => {
     const gms: GraphicalMusicSheet = buildGMS("OSMD_function_test_in-measure-clefs.xml");
-    chai.expect(gms.MeasureList.length).to.be.greaterThan(1, "should have at least 2 measures");
+    expect(gms.MeasureList.length).to.be.greaterThan(1, "should have at least 2 measures");
 
     // Bar 1 staff 2: verify in-measure treble clef change exists
     const bar1Staff2: VexFlowMeasure = findMeasure(gms, 1, 2);
-    chai.expect(bar1Staff2, "bar 1 staff 2 should exist").to.not.be.undefined;
+    expect(bar1Staff2, "bar 1 staff 2 should exist").to.not.be.undefined;
     const srcMeasure: any = bar1Staff2.parentSourceMeasure;
     const entries: any[] = srcMeasure.getEntriesPerStaff(1);
     let foundTreble: boolean = false;
@@ -57,21 +58,21 @@ describe("VexFlow Measure - In-Measure Clef Changes", () => {
         }
       }
     }
-    chai.expect(foundTreble).to.be.true,
+    expect(foundTreble).to.be.true,
       "bar 1 staff 2 should have an in-measure treble clef change";
 
     // Bar 2 staff 2: should NOT have a redundant system-start clef
     const bar2Staff2: VexFlowMeasure = findMeasure(gms, 2, 2);
-    chai.expect(bar2Staff2, "bar 2 staff 2 should exist").to.not.be.undefined;
+    expect(bar2Staff2, "bar 2 staff 2 should exist").to.not.be.undefined;
 
     const beginClefs2: VF.StaveModifier[] = getBeginClefs(bar2Staff2);
-    chai.expect(beginClefs2.length).to.equal(0,
+    expect(beginClefs2.length).to.equal(0,
       "bar 2 staff 2 should NOT have a system-start clef — " +
       "the in-measure treble on bar 1 beat 4 already shows the clef");
 
     // Internal tracking still knows active clef (treble) for accidentals etc.
-    chai.expect(bar2Staff2.InitiallyActiveClef).to.not.be.undefined;
-    chai.expect(bar2Staff2.InitiallyActiveClef.ClefType).to.equal(ClefEnum.G,
+    expect(bar2Staff2.InitiallyActiveClef).to.not.be.undefined;
+    expect(bar2Staff2.InitiallyActiveClef.ClefType).to.equal(ClefEnum.G,
       "internal clef tracking should still be treble");
 
     done();
@@ -79,18 +80,18 @@ describe("VexFlow Measure - In-Measure Clef Changes", () => {
 
   it("Should show system-start clef on stave whose clef changed from previous system", (done: Mocha.Done) => {
     const gms: GraphicalMusicSheet = buildGMS("OSMD_function_test_in-measure-clefs.xml");
-    chai.expect(gms.MeasureList.length).to.be.greaterThan(1, "should have at least 2 measures");
+    expect(gms.MeasureList.length).to.be.greaterThan(1, "should have at least 2 measures");
 
     // Bar 2 staff 1: should have a system-start clef because it changed from bass (bar 1 beat 2)
     // to treble (explicit in bar 2 attributes).
     const bar2Staff1: VexFlowMeasure = findMeasure(gms, 2, 1);
-    chai.expect(bar2Staff1, "bar 2 staff 1 should exist").to.not.be.undefined;
+    expect(bar2Staff1, "bar 2 staff 1 should exist").to.not.be.undefined;
 
     const beginClefs1: VF.StaveModifier[] = getBeginClefs(bar2Staff1);
-    chai.expect(beginClefs1.length).to.equal(1,
+    expect(beginClefs1.length).to.equal(1,
       "bar 2 staff 1 should have a system-start clef (treble, from bar 2 attributes)");
-    chai.expect(bar2Staff1.InitiallyActiveClef).to.not.be.undefined;
-    chai.expect(bar2Staff1.InitiallyActiveClef.ClefType).to.equal(ClefEnum.G,
+    expect(bar2Staff1.InitiallyActiveClef).to.not.be.undefined;
+    expect(bar2Staff1.InitiallyActiveClef.ClefType).to.equal(ClefEnum.G,
       "bar 2 staff 1 clef should be treble");
 
     done();

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
+import { expect } from "chai";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
@@ -69,7 +70,7 @@ describe("VexFlow Measure - Tremolo Buzz Roll", () => {
   it("Should parse 4 unmeasured tremolo (buzz roll) notes", (done: Mocha.Done) => {
     const gms: GraphicalMusicSheet = buildGMS("test_tremolo_unmeasured_buzz_roll.musicxml");
     const rolls: BuzzRollInfo[] = collectBuzzRolls(gms);
-    chai.expect(rolls.length).to.equal(4,
+    expect(rolls.length).to.equal(4,
       `expected 4 buzz roll notes, got ${rolls.length}`);
     done();
   });
@@ -79,7 +80,7 @@ describe("VexFlow Measure - Tremolo Buzz Roll", () => {
     const rolls: BuzzRollInfo[] = collectBuzzRolls(gms);
 
     for (const r of rolls) {
-      chai.expect(r.stemLength).to.be.greaterThan(0,
+      expect(r.stemLength).to.be.greaterThan(0,
         `buzz roll note ${r.pitch} should have non-zero stem length, got ${r.stemLength}`);
     }
     done();
@@ -92,16 +93,16 @@ describe("VexFlow Measure - Tremolo Buzz Roll", () => {
     const expectedPitches: string[] = ["G1", "C2", "E2", "A1"];
     for (const expected of expectedPitches) {
       const found: BuzzRollInfo | undefined = rolls.find(r => r.pitch === expected);
-      chai.expect(found).to.not.be.undefined,
+      expect(found).to.not.be.undefined,
         `missing buzz roll on ${expected}`;
     }
 
     // Verify stem extents needed for z-drawing:
     // drawBuzzRolls uses stem tip x/y and stem length to position the z.
     for (const r of rolls) {
-      chai.expect(r.stemLength).to.be.greaterThan(0,
+      expect(r.stemLength).to.be.greaterThan(0,
         `note ${r.pitch}: stem length must be > 0 for buzz roll`);
-      chai.expect(r.stemDir).to.not.equal(0,
+      expect(r.stemDir).to.not.equal(0,
         `note ${r.pitch}: stem direction must be set`);
     }
 
