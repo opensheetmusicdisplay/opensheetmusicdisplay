@@ -101,17 +101,16 @@ function installContextHook() {
     };
 }
 
-// per mode: fresh load + settle render with a FIXED method (geometric), then one captured render with
-// the mode under test, so both modes' capture renders start from identical input state
-// (the settle render's skylines feed into some element placements of the next render).
+// per mode: fresh load + one captured (first) render with the mode under test.
+// Renders are deterministic (re-renders equal the first render, see the state resets in
+// VexFlowMusicSheetCalculator), so fresh loads give both modes identical input state.
+// extraWarmups can insert extra renders before the capture (all equal anyway, kept for experiments).
 async function render(geo) {
-    osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = true;
+    osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geo;
     osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
     osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 9999999;
     await osmd.load(loadParameter, sample);
-    osmd.render(); // settle render
     for (let i = 0; i < extraWarmups; i++) { osmd.render(); }
-    osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geo;
     capture = [];
     if (geo) { drawLog = []; }
     osmd.render();

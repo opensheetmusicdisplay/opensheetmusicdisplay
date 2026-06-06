@@ -101,6 +101,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected clearRecreatedObjects(): void {
     super.clearRecreatedObjects();
     MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
+    // Reset the measure-to-measure carry state of the lyrics/chord symbol elongation calculation:
+    // it is rebuilt during each render's width calculation, but without the reset, the trailing
+    // overflow of the last lyric measure leaked into the *next* render's first measures
+    // (when no later measure with staff entries overwrote it), making re-renders elongate
+    // slightly differently than the first render.
+    this.previousLyricOverflowsByStaff.clear();
+    this.previousChordOverflowsByStaff.clear();
+    this.dashSpace = undefined;
     for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
       for (const graphicalMeasure of graphicalMeasures) {
         (<VexFlowMeasure>graphicalMeasure)?.clean();
@@ -204,6 +212,52 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         log.debug("Found a measure with no voices. Continuing anyway.", mvoices);
         // no need to log this, measures with no voices/notes are fine. see OSMDOptions.fillEmptyMeasuresWithWholeRest
         continue;
+      }
+      // Reset formatting state left over from a previous render on the (reused) VexFlow notes back
+      // to its initial values, so that all calculations read the same state on every render - it is
+      // recalculated during each render anyway, but partly later than some readers:
+      // - center_x_shift (only set for center-aligned tickables, i.e. whole measure rests):
+      //   read by the early VexFlowStaffEntry.calculateXPosition() call below (Note.getAbsoluteX()).
+      //   Without the reset, a re-render reads the previous render's centered whole rest position
+      //   there, where the first render read the unshifted one - making e.g. the lyrics/chord symbol
+      //   elongation of the following measures (and thus the whole layout) differ from the first render.
+      // - the beam-applied stem extension (same reset as the VexFlowPatch beam.js postFormat fix
+      //   for #1636, which only runs when the beam is drawn): Articulation.draw() positions
+      //   articulations at the stem tip *before* the beams (re-)extend the stems, so without the
+      //   reset, articulations on beamed notes sit higher on re-renders than on the first render.
+      // - TabNote widths: TabNote.setStave() re-measures the fret text width once a stave has a
+      //   rendering context, i.e. during the draws at the end of a render. updateWidth() restores
+      //   the construction-time width (from VexFlow's glyph table), which is what the first
+      //   render's width calculation saw.
+      // - stemExtensionOverride: StaveNote.format()'s voice-collision handling shortens stems via
+      //   setStemLength() during a render. Restore the value it had before the first render
+      //   (usually none - but e.g. the tremolo-between-notes stem lengthening of VexFlowConverter
+      //   sets it at creation, which must survive), snapshotted on the first render.
+      // - rest positions: StaveNote.format()'s shiftRestVertical() moves colliding rests
+      //   *relative* to their current line (possibly several times during the first render's
+      //   format passes), and the moved line persists on the VexFlow note - so a re-render
+      //   would move them even further. Freeze the rests at their converged first-render
+      //   positions instead (same pattern as the existing shiftRestVerticalDisabled
+      //   workaround for ledger-lined rests; centerRest() is absolute, i.e. harmless).
+      for (const voice of voices) {
+        for (const tickable of voice.getTickables()) {
+          const note: any = tickable as any;
+          note.center_x_shift = 0;
+          if (note.osmdInitialStemExtensionOverride === undefined) {
+            note.osmdInitialStemExtensionOverride = note.stemExtensionOverride ?? null; // first render: snapshot
+          } else {
+            note.stemExtensionOverride = note.osmdInitialStemExtensionOverride;
+            if (note.isRest?.()) {
+              note.shiftRestVerticalDisabled = true; // re-render: freeze rest at its current position
+            }
+          }
+          if (note.stem && note.getStemExtension) {
+            note.stem.setExtension(note.getStemExtension());
+          }
+          if (note.updateWidth && note.glyphs) { // TabNote
+            note.updateWidth();
+          }
+        }
       }
       // all voices that belong to one stave are collectively added to create a common context in VexFlow.
       formatter.joinVoices(voices);

@@ -841,6 +841,22 @@ export abstract class MusicSheetCalculator {
             staffEntriesWithGraphicalTie.GraphicalTies.length = 0;
         }
         this.staffEntriesWithGraphicalTies.length = 0;
+        // Reset the tuplet number visibility decisions of calculateTupletNumbers() to the default:
+        // it runs after calculateSkyBottomLines(), so without the reset, a re-render's skyline
+        // would include the previous render's decisions, where the first render's skyline saw the
+        // default (true) - making re-renders differ from the first render.
+        // (Also makes sure all numbers come back when TupletNumberLimitConsecutiveRepetitions is
+        // disabled between renders, as calculateTupletNumbers() then doesn't re-activate them.)
+        for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
+            for (const voice of instrument.Voices) {
+                for (const ve of voice.VoiceEntries) {
+                    const tuplet: Tuplet = ve.Notes[0]?.NoteTuplet;
+                    if (tuplet && !tuplet.RenderTupletNumber) {
+                        tuplet.RenderTupletNumber = true;
+                    }
+                }
+            }
+        }
         return;
     }
 
