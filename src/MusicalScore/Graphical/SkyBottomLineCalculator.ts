@@ -219,7 +219,10 @@ export class SkyBottomLineCalculator {
         const results: SkyBottomLineCalculationResult[] = [];
 
         // The virtual rendering context, replacing the temporary canvas of the raster method. Reused for all measures.
-        const geometricContext: GeometricSkyBottomLineContext = new GeometricSkyBottomLineContext();
+        // The caches (text measurements, flattened glyph outlines) live in the EngravingRules,
+        // so they persist across stafflines and renders (per OSMD instance, no static state).
+        const geometricContext: GeometricSkyBottomLineContext =
+            new GeometricSkyBottomLineContext(0, 300, this.mRules.GeometricSkyBottomLineCaches);
         // search through all Measures
         for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
             // must calculate first AbsolutePositions

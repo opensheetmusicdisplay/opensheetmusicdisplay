@@ -14,6 +14,7 @@ import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum, AccidentalEnum } from "../../Common/DataObjects/Pitch";
 import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
+import { GeometricSkyBottomLineCaches } from "./GeometricSkyBottomLineContext";
 import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
 
@@ -571,6 +572,10 @@ export class EngravingRules {
      *  see PreferredSkyBottomLineBatchCalculatorBackend etc.
      */
     public UseGeometricSkyBottomLineCalculation: boolean;
+    /** Caches for the geometric skyline calculation (text measurements, flattened glyph outlines).
+     *  Owned here (per OSMD instance, like NoteToGraphicalNoteMap) instead of statically,
+     *  so that multiple OSMD instances stay independent. */
+    public GeometricSkyBottomLineCaches: GeometricSkyBottomLineCaches;
     /** The skyline and bottom-line batch calculation algorithm to use, if UseGeometricSkyBottomLineCalculation is false.
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
      */
@@ -1028,6 +1033,7 @@ export class EngravingRules {
         this.NoteToGraphicalNoteMapObjectCount = 0;
 
         this.UseGeometricSkyBottomLineCalculation = true;
+        this.GeometricSkyBottomLineCaches = new GeometricSkyBottomLineCaches();
         this.SkyBottomLineBatchMinMeasures = 5;
         this.SkyBottomLineWebGLMinMeasures = 80;
         this.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;

@@ -1,30 +1,5 @@
 import log from "loglevel";
 
-/** Ink extents of a single character, in px for the font it was measured with.
- *  inkLeft/inkRight are relative to the pen position (inkLeft can be slightly negative,
- *  e.g. italic overhang, and inkRight can exceed the advance width). */
-interface ICharacterExtents {
-    advance: number;
-    ascent: number;
-    descent: number;
-    inkLeft: number;
-    inkRight: number;
-}
-
-/** Drawing state that can be saved/restored with save()/restore(), mirroring canvas semantics. */
-interface IGeometricContextState {
-    translateX: number;
-    translateY: number;
-    scaleX: number;
-    scaleY: number;
-    lineWidth: number;
-    fillStyle: string;
-    fillTransparent: boolean;
-    strokeStyle: string;
-    strokeTransparent: boolean;
-    font: string;
-}
-
 /**
  * A virtual VexFlow rendering context that computes the vertical extents (min and max y)
  * of everything drawn into it, per (pixel) column, instead of rasterizing to a canvas.
@@ -61,37 +36,21 @@ interface IGeometricContextState {
  */
 export class GeometricSkyBottomLineContext {
     /** Conversion factor pt -> px for font sizes, as used by canvas. */
-    private static readonly PT_TO_PX: number = 4 / 3;
+    private readonly PT_TO_PX: number = 4 / 3;
     /** Fallback font ascent as a fraction of the font size in px, if TextMetrics.actualBoundingBoxAscent is unavailable. */
-    private static readonly FALLBACK_FONT_ASCENT: number = 0.9;
+    private readonly FALLBACK_FONT_ASCENT: number = 0.9;
     /** Fallback font descent as a fraction of the font size in px, if TextMetrics.actualBoundingBoxDescent is unavailable. */
-    private static readonly FALLBACK_FONT_DESCENT: number = 0.25;
+    private readonly FALLBACK_FONT_DESCENT: number = 0.25;
     /** Fallback per-character width as a fraction of the font size in px, if no 2D context is available for measureText. */
-    private static readonly FALLBACK_CHAR_WIDTH: number = 0.6;
+    private readonly FALLBACK_CHAR_WIDTH: number = 0.6;
     /** Maximum number of line segments a Bézier curve or arc is flattened into. */
-    private static readonly MAX_FLATTENING_SEGMENTS: number = 64;
+    private readonly MAX_FLATTENING_SEGMENTS: number = 64;
     /** Target length (in px) of the line segments a Bézier curve is flattened into. */
-    private static readonly FLATTENING_SEGMENT_LENGTH: number = 3;
+    private readonly FLATTENING_SEGMENT_LENGTH: number = 3;
 
-    /** Shared hidden canvas context used only for measureText() (cheap, no pixel readback). */
-    private static textMeasureContext: CanvasRenderingContext2D;
-    private static textMeasureContextCreationFailed: boolean = false;
-    private static measureTextWarningLogged: boolean = false;
-    /** Character ink extents, cached by font + character (see measureCharacter()). */
-    private static characterExtentsCache: Map<string, ICharacterExtents> = new Map<string, ICharacterExtents>();
-    /** Flattened line segments of glyph outlines (quadruples x0,y0,x1,y1, relative to the glyph
-     *  origin, already scaled and y-inverted), cached per outline (by reference) and scale, see
-     *  drawCachedGlyphOutline(). VexFlow caches the outline arrays on its font glyph entries,
-     *  so they are stable keys that live as long as the font. */
-    private static glyphSegmentsCache: WeakMap<object, Map<number, Float64Array>> =
-        new WeakMap<object, Map<number, Float64Array>>();
-    /** Scratch context used to flatten glyph outlines (reused, see computeGlyphSegments()). */
-    private static glyphSegmentsScratch: GeometricSkyBottomLineContext;
-    /** Tiny hidden canvas used to probe the exact rasterized ink extents of single characters
-     *  (once per font + character, then cached forever in characterExtentsCache). */
-    private static characterProbeCanvas: HTMLCanvasElement;
-    private static characterProbeContext: CanvasRenderingContext2D;
-    private static characterProbeCreationFailed: boolean = false;
+    /** Caches for text measurements and glyph outline flattening, typically owned by EngravingRules
+     *  (one per OSMD instance) so they persist across measures, stafflines and renders. */
+    private readonly caches: GeometricSkyBottomLineCaches;
 
     /** Minimum drawn y per pixel column (the skyline, in device pixels). +Infinity = column untouched. */
     private minY: Float64Array = new Float64Array(0);
@@ -126,7 +85,8 @@ export class GeometricSkyBottomLineContext {
     public canvas: {width: number, height: number} = {width: 0, height: 0};
     // note: no "svg" property, so VexFlow's "if (ctx.svg)" checks correctly take the canvas branch.
 
-    constructor(width: number = 0, height: number = 300) {
+    constructor(width: number = 0, height: number = 300, caches?: GeometricSkyBottomLineCaches) {
+        this.caches = caches ?? new GeometricSkyBottomLineCaches();
         this.initialize(width, height);
     }
 
@@ -299,7 +259,7 @@ export class GeometricSkyBottomLineContext {
             }
         }
         const segments: number = Math.min(
-            GeometricSkyBottomLineContext.MAX_FLATTENING_SEGMENTS,
+            this.MAX_FLATTENING_SEGMENTS,
             Math.max(4, Math.ceil(r * Math.abs(sweep) / 2)));
         const startX: number = cx + r * Math.cos(startAngle);
         const startY: number = cy + r * Math.sin(startAngle);
@@ -438,11 +398,11 @@ export class GeometricSkyBottomLineContext {
         if (metrics) {
             return metrics;
         }
-        if (!GeometricSkyBottomLineContext.measureTextWarningLogged) {
-            GeometricSkyBottomLineContext.measureTextWarningLogged = true;
+        if (!this.caches.measureTextWarningLogged) {
+            this.caches.measureTextWarningLogged = true;
             log.info("GeometricSkyBottomLineContext: no 2D context available for measureText, using estimates.");
         }
-        return {width: this.fontSizeInPixels() * GeometricSkyBottomLineContext.FALLBACK_CHAR_WIDTH * text.length} as TextMetrics;
+        return {width: this.fontSizeInPixels() * this.FALLBACK_CHAR_WIDTH * text.length} as TextMetrics;
     }
 
     /**
@@ -525,7 +485,7 @@ export class GeometricSkyBottomLineContext {
 
     public setFillStyle(style: string): GeometricSkyBottomLineContext {
         this.currentFillStyle = style;
-        this.fillTransparent = GeometricSkyBottomLineContext.isTransparent(style);
+        this.fillTransparent = isTransparent(style);
         return this;
     }
 
@@ -539,7 +499,7 @@ export class GeometricSkyBottomLineContext {
 
     public setStrokeStyle(style: string): GeometricSkyBottomLineContext {
         this.currentStrokeStyle = style;
-        this.strokeTransparent = GeometricSkyBottomLineContext.isTransparent(style);
+        this.strokeTransparent = isTransparent(style);
         return this;
     }
 
@@ -654,8 +614,8 @@ export class GeometricSkyBottomLineContext {
 
     private flatteningSegments(controlPolygonLength: number): number {
         return Math.min(
-            GeometricSkyBottomLineContext.MAX_FLATTENING_SEGMENTS,
-            Math.max(2, Math.ceil(controlPolygonLength / GeometricSkyBottomLineContext.FLATTENING_SEGMENT_LENGTH)));
+            this.MAX_FLATTENING_SEGMENTS,
+            Math.max(2, Math.ceil(controlPolygonLength / this.FLATTENING_SEGMENT_LENGTH)));
     }
 
     /** Merges a line segment (in device coordinates) into the extent arrays. */
@@ -760,24 +720,23 @@ export class GeometricSkyBottomLineContext {
     private fontSizeInPixels(): number {
         const match: RegExpMatchArray = this.currentFont?.match(/([0-9.]+)\s*(pt|px)/);
         if (!match) {
-            return 10 * GeometricSkyBottomLineContext.PT_TO_PX;
+            return 10 * this.PT_TO_PX;
         }
         const size: number = parseFloat(match[1]);
-        return match[2] === "pt" ? size * GeometricSkyBottomLineContext.PT_TO_PX : size;
+        return match[2] === "pt" ? size * this.PT_TO_PX : size;
     }
 
     /** Returns the cached flattened segments for a glyph outline at the given scale,
      *  computing them on first use (see drawCachedGlyphOutline()). */
     private getGlyphSegments(outline: string[], scale: number): Float64Array {
-        const statics: typeof GeometricSkyBottomLineContext = GeometricSkyBottomLineContext;
-        let segmentsByScale: Map<number, Float64Array> = statics.glyphSegmentsCache.get(outline);
+        let segmentsByScale: Map<number, Float64Array> = this.caches.glyphSegments.get(outline);
         if (!segmentsByScale) {
             segmentsByScale = new Map<number, Float64Array>();
-            statics.glyphSegmentsCache.set(outline, segmentsByScale);
+            this.caches.glyphSegments.set(outline, segmentsByScale);
         }
         let segments: Float64Array = segmentsByScale.get(scale);
         if (!segments) {
-            segments = statics.computeGlyphSegments(outline, scale);
+            segments = this.computeGlyphSegments(outline, scale);
             segmentsByScale.set(scale, segments);
         }
         return segments;
@@ -786,11 +745,11 @@ export class GeometricSkyBottomLineContext {
     /** Flattens a glyph outline at the given scale into line segments relative to the glyph origin,
      *  by replaying the outline (the same way VexFlow's Glyph.processOutline does, with y inverted)
      *  into a scratch context's path, so the segments are identical to the normal path commands'. */
-    private static computeGlyphSegments(outline: string[], scale: number): Float64Array {
-        if (!GeometricSkyBottomLineContext.glyphSegmentsScratch) {
-            GeometricSkyBottomLineContext.glyphSegmentsScratch = new GeometricSkyBottomLineContext();
+    private computeGlyphSegments(outline: string[], scale: number): Float64Array {
+        if (!this.caches.glyphSegmentsScratch) {
+            this.caches.glyphSegmentsScratch = new GeometricSkyBottomLineContext(0, 300, this.caches);
         }
-        const scratch: GeometricSkyBottomLineContext = GeometricSkyBottomLineContext.glyphSegmentsScratch;
+        const scratch: GeometricSkyBottomLineContext = this.caches.glyphSegmentsScratch;
         scratch.initialize(0); // only the path is used, nothing is merged
         // replay the outline like VexFlow's processOutline(outline, 0, 0, scale, -scale, ...):
         let i: number = 0;
@@ -829,7 +788,7 @@ export class GeometricSkyBottomLineContext {
      *  with estimates from the font size as a fallback. */
     private measureCharacter(character: string): ICharacterExtents {
         const cacheKey: string = this.currentFont + " " + character;
-        let extents: ICharacterExtents = GeometricSkyBottomLineContext.characterExtentsCache.get(cacheKey);
+        let extents: ICharacterExtents = this.caches.characterExtents.get(cacheKey);
         if (extents) {
             return extents;
         }
@@ -854,23 +813,23 @@ export class GeometricSkyBottomLineContext {
             if (!extents) {
                 extents = {
                     advance,
-                    ascent: fontSizePx * GeometricSkyBottomLineContext.FALLBACK_FONT_ASCENT,
-                    descent: fontSizePx * GeometricSkyBottomLineContext.FALLBACK_FONT_DESCENT,
+                    ascent: fontSizePx * this.FALLBACK_FONT_ASCENT,
+                    descent: fontSizePx * this.FALLBACK_FONT_DESCENT,
                     inkLeft: 0,
                     inkRight: character.trim().length === 0 ? 0 : advance,
                 };
             }
         } else {
-            const advance: number = fontSizePx * GeometricSkyBottomLineContext.FALLBACK_CHAR_WIDTH;
+            const advance: number = fontSizePx * this.FALLBACK_CHAR_WIDTH;
             extents = {
                 advance,
-                ascent: fontSizePx * GeometricSkyBottomLineContext.FALLBACK_FONT_ASCENT,
-                descent: fontSizePx * GeometricSkyBottomLineContext.FALLBACK_FONT_DESCENT,
+                ascent: fontSizePx * this.FALLBACK_FONT_ASCENT,
+                descent: fontSizePx * this.FALLBACK_FONT_DESCENT,
                 inkLeft: 0,
                 inkRight: character.trim().length === 0 ? 0 : advance,
             };
         }
-        GeometricSkyBottomLineContext.characterExtentsCache.set(cacheKey, extents);
+        this.caches.characterExtents.set(cacheKey, extents);
         return extents;
     }
 
@@ -879,19 +838,19 @@ export class GeometricSkyBottomLineContext {
      *  (a few hundred pixels), so this has none of the performance issues of the per-measure
      *  getImageData calls of the raster method. Returns undefined if no canvas is available. */
     private probeCharacterInk(character: string, advance: number, fontSizePx: number): ICharacterExtents {
-        const statics: typeof GeometricSkyBottomLineContext = GeometricSkyBottomLineContext;
-        if (!statics.characterProbeContext && !statics.characterProbeCreationFailed) {
+        const caches: GeometricSkyBottomLineCaches = this.caches;
+        if (!caches.characterProbeContext && !caches.characterProbeCreationFailed) {
             try {
-                statics.characterProbeCanvas = document.createElement("canvas");
-                statics.characterProbeContext = statics.characterProbeCanvas.getContext("2d", {willReadFrequently: true}) as CanvasRenderingContext2D;
+                caches.characterProbeCanvas = document.createElement("canvas");
+                caches.characterProbeContext = caches.characterProbeCanvas.getContext("2d", {willReadFrequently: true}) as CanvasRenderingContext2D;
             } catch (e) {
                 // e.g. document does not exist (pure node without DOM)
             }
-            if (!statics.characterProbeContext) {
-                statics.characterProbeCreationFailed = true;
+            if (!caches.characterProbeContext) {
+                caches.characterProbeCreationFailed = true;
             }
         }
-        const context: CanvasRenderingContext2D = statics.characterProbeContext;
+        const context: CanvasRenderingContext2D = caches.characterProbeContext;
         if (!context) {
             return undefined;
         }
@@ -901,7 +860,7 @@ export class GeometricSkyBottomLineContext {
         const penX: number = padding;
         const baselineY: number = Math.ceil(2 * fontSizePx);
         try {
-            const canvas: HTMLCanvasElement = statics.characterProbeCanvas;
+            const canvas: HTMLCanvasElement = caches.characterProbeCanvas;
             if (canvas.width < width) {
                 canvas.width = width;
             }
@@ -948,24 +907,25 @@ export class GeometricSkyBottomLineContext {
                 inkRight: maxX + 1 - penX,
             };
         } catch (e) {
-            statics.characterProbeCreationFailed = true; // e.g. canvas without 2D rasterizer
+            caches.characterProbeCreationFailed = true; // e.g. canvas without 2D rasterizer
             return undefined;
         }
     }
 
     private measureTextInternal(text: string): TextMetrics {
-        if (!GeometricSkyBottomLineContext.textMeasureContext && !GeometricSkyBottomLineContext.textMeasureContextCreationFailed) {
+        const caches: GeometricSkyBottomLineCaches = this.caches;
+        if (!caches.textMeasureContext && !caches.textMeasureContextCreationFailed) {
             try {
                 const canvas: HTMLCanvasElement = document.createElement("canvas");
-                GeometricSkyBottomLineContext.textMeasureContext = canvas.getContext("2d");
+                caches.textMeasureContext = canvas.getContext("2d");
             } catch (e) {
                 // e.g. document does not exist (pure node without DOM): fall back to estimates
             }
-            if (!GeometricSkyBottomLineContext.textMeasureContext) {
-                GeometricSkyBottomLineContext.textMeasureContextCreationFailed = true;
+            if (!caches.textMeasureContext) {
+                caches.textMeasureContextCreationFailed = true;
             }
         }
-        const context: CanvasRenderingContext2D = GeometricSkyBottomLineContext.textMeasureContext;
+        const context: CanvasRenderingContext2D = caches.textMeasureContext;
         if (!context) {
             return undefined;
         }
@@ -975,31 +935,85 @@ export class GeometricSkyBottomLineContext {
         return context.measureText(text);
     }
 
-    /** Whether a fill/stroke style is completely transparent, i.e. invisible,
-     *  like "#12345600" (8-digit hex with alpha 00, as used by OSMD for invisible elements) or "rgba(0,0,0,0)".
-     *  The raster method ignored these via its alpha > 0 pixel test. */
-    private static isTransparent(style: string): boolean {
-        if (!style || typeof style !== "string") {
-            return false; // unknown style (e.g. gradient object): assume visible
+    //#endregion
+}
+
+/** Whether a fill/stroke style is completely transparent, i.e. invisible,
+ *  like "#12345600" (8-digit hex with alpha 00, as used by OSMD for invisible elements) or "rgba(0,0,0,0)".
+ *  The raster method ignored these via its alpha > 0 pixel test. */
+function isTransparent(style: string): boolean {
+    if (!style || typeof style !== "string") {
+        return false; // unknown style (e.g. gradient object): assume visible
+    }
+    if (style === "none" || style === "transparent") {
+        return true;
+    }
+    if (style[0] === "#") {
+        if (style.length === 9) { // #rrggbbaa
+            return style[7] === "0" && style[8] === "0";
         }
-        if (style === "none" || style === "transparent") {
-            return true;
-        }
-        if (style[0] === "#") {
-            if (style.length === 9) { // #rrggbbaa
-                return style[7] === "0" && style[8] === "0";
-            }
-            if (style.length === 5) { // #rgba
-                return style[4] === "0";
-            }
-            return false;
-        }
-        const rgbaMatch: RegExpMatchArray = style.match(/^rgba\s*\([^,]+,[^,]+,[^,]+,\s*([0-9.]+)\s*\)/i);
-        if (rgbaMatch) {
-            return parseFloat(rgbaMatch[1]) === 0;
+        if (style.length === 5) { // #rgba
+            return style[4] === "0";
         }
         return false;
     }
+    const rgbaMatch: RegExpMatchArray = style.match(/^rgba\s*\([^,]+,[^,]+,[^,]+,\s*([0-9.]+)\s*\)/i);
+    if (rgbaMatch) {
+        return parseFloat(rgbaMatch[1]) === 0;
+    }
+    return false;
+}
 
-    //#endregion
+/**
+ * Caches and shared helper objects for GeometricSkyBottomLineContext. All cached values are pure
+ * functions of their keys (font + character, glyph outline + scale), so they could in principle be
+ * shared globally - but they are kept as an instanced object (owned by EngravingRules, like e.g.
+ * NoteToGraphicalNoteMap) to avoid mutable static state, so that multiple OSMD instances on one
+ * page stay fully independent (and the caches are freed with the instance).
+ */
+export class GeometricSkyBottomLineCaches {
+    /** Shared hidden canvas context used only for measureText() (cheap, no pixel readback). */
+    public textMeasureContext: CanvasRenderingContext2D;
+    public textMeasureContextCreationFailed: boolean = false;
+    public measureTextWarningLogged: boolean = false;
+    /** Character ink extents, cached by font + character (see measureCharacter()). */
+    public characterExtents: Map<string, ICharacterExtents> = new Map<string, ICharacterExtents>();
+    /** Flattened line segments of glyph outlines (quadruples x0,y0,x1,y1, relative to the glyph
+     *  origin, already scaled and y-inverted), cached per outline (by reference) and scale, see
+     *  drawCachedGlyphOutline(). VexFlow caches the outline arrays on its font glyph entries,
+     *  so they are stable keys that live as long as the font. */
+    public glyphSegments: WeakMap<object, Map<number, Float64Array>> =
+        new WeakMap<object, Map<number, Float64Array>>();
+    /** Scratch context used to flatten glyph outlines (reused, see computeGlyphSegments()). */
+    public glyphSegmentsScratch: GeometricSkyBottomLineContext;
+    /** Tiny hidden canvas used to probe the exact rasterized ink extents of single characters
+     *  (once per font + character, then cached in characterExtents). */
+    public characterProbeCanvas: HTMLCanvasElement;
+    public characterProbeContext: CanvasRenderingContext2D;
+    public characterProbeCreationFailed: boolean = false;
+}
+
+/** Ink extents of a single character, in px for the font it was measured with.
+ *  inkLeft/inkRight are relative to the pen position (inkLeft can be slightly negative,
+ *  e.g. italic overhang, and inkRight can exceed the advance width). */
+interface ICharacterExtents {
+    advance: number;
+    ascent: number;
+    descent: number;
+    inkLeft: number;
+    inkRight: number;
+}
+
+/** Drawing state that can be saved/restored with save()/restore(), mirroring canvas semantics. */
+interface IGeometricContextState {
+    translateX: number;
+    translateY: number;
+    scaleX: number;
+    scaleY: number;
+    lineWidth: number;
+    fillStyle: string;
+    fillTransparent: boolean;
+    strokeStyle: string;
+    strokeTransparent: boolean;
+    font: string;
 }
