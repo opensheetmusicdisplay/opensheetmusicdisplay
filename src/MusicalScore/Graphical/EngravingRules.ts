@@ -14,6 +14,7 @@ import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum, AccidentalEnum } from "../../Common/DataObjects/Pitch";
 import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
+import { GeometricSkyBottomLineCaches } from "./GeometricSkyBottomLineContext";
 import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
 
@@ -401,6 +402,15 @@ export class EngravingRules {
     public GraceLineWidth: number;
     public MinimumStaffLineDistance: number;
     public MinSkyBottomDistBetweenStaves: number;
+    /** Whether to snap the y positions of stafflines and music systems to positions where the
+     *  (1px) staff lines render as crisp single pixel rows, instead of being spread (anti-aliased)
+     *  over two half-covered, gray-ish pixel rows. Default true.
+     *  This makes the staff line weight consistent across all systems (and across releases:
+     *  otherwise sub-pixel layout changes shift the anti-aliasing per system, which shows up as
+     *  bolder/lighter staff lines, e.g. in visual regression tests).
+     *  Exact at zoom 1 (and its integer multiples), within a page.
+     */
+    public SnapStafflinesToCrispPixels: boolean;
     public MinimumCrossedBeamDifferenceMargin: number;
 
     /** Maximum width of sheet / HTMLElement containing the score. Canvas is limited to 32767 in current browsers, though SVG isn't.
@@ -556,7 +566,17 @@ export class EngravingRules {
      */
     public RenderCount: number = 0;
 
-    /** The skyline and bottom-line batch calculation algorithm to use.
+    /** Whether to calculate the skyline and bottom-line geometrically, from the extents of the VexFlow draw calls,
+     *  instead of drawing each measure on a hidden canvas and reading back its pixels (getImageData), which is much slower (see #937).
+     *  Default true. If set to false, the previous pixel-based calculation is used,
+     *  see PreferredSkyBottomLineBatchCalculatorBackend etc.
+     */
+    public UseGeometricSkyBottomLineCalculation: boolean;
+    /** Caches for the geometric skyline calculation (text measurements, flattened glyph outlines).
+     *  Owned here (per OSMD instance, like NoteToGraphicalNoteMap) instead of statically,
+     *  so that multiple OSMD instances stay independent. */
+    public GeometricSkyBottomLineCaches: GeometricSkyBottomLineCaches;
+    /** The skyline and bottom-line batch calculation algorithm to use, if UseGeometricSkyBottomLineCalculation is false.
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
      */
     public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
@@ -613,6 +633,7 @@ export class EngravingRules {
         this.BetweenStaffDistance = 5.0;
         this.MinimumStaffLineDistance = 4.0;
         this.MinSkyBottomDistBetweenStaves = 1.0; // default. compacttight mode sets it to 1.0 (as well).
+        this.SnapStafflinesToCrispPixels = true;
 
         // System Sizing and Label Variables
         this.StaffHeight = 4.0;
@@ -1011,6 +1032,8 @@ export class EngravingRules {
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
         this.NoteToGraphicalNoteMapObjectCount = 0;
 
+        this.UseGeometricSkyBottomLineCalculation = true;
+        this.GeometricSkyBottomLineCaches = new GeometricSkyBottomLineCaches();
         this.SkyBottomLineBatchMinMeasures = 5;
         this.SkyBottomLineWebGLMinMeasures = 80;
         this.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;

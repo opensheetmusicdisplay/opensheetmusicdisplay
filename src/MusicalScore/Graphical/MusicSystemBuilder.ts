@@ -761,6 +761,12 @@ export class MusicSystemBuilder {
         measure.PositionAndShape.BorderBottom = this.rules.StaffHeight;
         const width: number = this.rules.MeasureLeftMargin + measure.beginInstructionsWidth + this.rules.MeasureRightMargin;
         measure.PositionAndShape.BorderRight = width;
+        // Set minimumStaffEntriesWidth so stretchMusicSystem uses a correct value (not -1 from the constructor):
+        // an instruction-only measure has no staff entries, all its width is in beginInstructionsWidth.
+        // With -1, stretchMusicSystem subtracted the system's scaling factor from the width, which made
+        // these measures slightly too narrow in normal systems, and gave them negative widths in strongly
+        // stretched systems (e.g. one measure per system, see test_octaveshift_extragraphicalmeasure).
+        measure.minimumStaffEntriesWidth = 0;
         currentSystem.StaffLines[visStaffIdx].Measures.push(measure);
         return width;
     }
@@ -1167,6 +1173,19 @@ export class MusicSystemBuilder {
                 maxDistance += this.rules.MinSkyBottomDistBetweenStaves;
                 // 3. Take the maximum between previous value and user defined value for staff line minimum distance
                 maxDistance = Math.max(maxDistance, this.rules.StaffHeight + this.rules.MinimumStaffLineDistance);
+                if (this.rules.SnapStafflinesToCrispPixels) {
+                    // Round to whole pixels (0.1 units): all stafflines of the system then share the same
+                    // sub-pixel phase, which calculateMusicSystemsRelativePositions snaps to crisp
+                    // staff line rendering for the whole system.
+                    maxDistance = Math.round(maxDistance * 10) / 10;
+                } else {
+                    // Round to half pixels (0.05 units), the granularity the pixel-based skyline calculation
+                    // produced naturally: this keeps stafflines on consistent sub-pixel y positions, so the
+                    // anti-aliased weight of the (1px) staff lines doesn't vary between systems.
+                    // (The geometric skyline values are exact instead of pixel-quantized, which would otherwise
+                    // propagate arbitrary fractional y positions here. No change for pixel-based values.)
+                    maxDistance = Math.round(maxDistance * 20) / 20;
+                }
                 const lowerStafflineYPos: number = maxDistance + musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y;
                 this.updateStaffLinesRelativePosition(musicSystem, i + 1, lowerStafflineYPos);
             }
@@ -1175,6 +1194,22 @@ export class MusicSystemBuilder {
         musicSystem.PositionAndShape.BorderTop = firstStaffLine.PositionAndShape.RelativePosition.y + firstStaffLine.PositionAndShape.BorderTop;
         const lastStaffLine: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
         musicSystem.PositionAndShape.BorderBottom = lastStaffLine.PositionAndShape.RelativePosition.y + lastStaffLine.PositionAndShape.BorderBottom;
+    }
+
+    /** Snaps a system's y position (in units) so that its staff lines render as crisp single pixel
+     *  rows: the lines are 1px wide (at zoom 1), so their centers need to lie at half-pixel positions
+     *  (a line centered between two pixel rows is anti-aliased over both at half opacity instead).
+     *  The stafflines within the system share the same sub-pixel phase
+     *  (see optimizeDistanceBetweenStaffLines), so snapping the system y aligns all of them.
+     *  Shifts the system by at most half a pixel. No-op if EngravingRules.SnapStafflinesToCrispPixels is off. */
+    protected snapSystemYToCrispStaffLines(musicSystem: MusicSystem, systemY: number): number {
+        if (!this.rules.SnapStafflinesToCrispPixels || !musicSystem.StaffLines[0]) {
+            return systemY;
+        }
+        const firstStafflineY: number = systemY + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
+        // line centers at firstStafflineY * 10 (+ whole pixels): snap to the nearest x.5 pixel position
+        const snappedStafflineY: number = (Math.round(firstStafflineY * 10 - 0.5) + 0.5) / 10;
+        return systemY + snappedStafflineY - firstStafflineY;
     }
 
     /** Calculates the relative Positions of all MusicSystems.
@@ -1246,6 +1281,7 @@ export class MusicSystemBuilder {
                 //         currentYPosition += -currentSystem.PositionAndShape.BorderTop;
                 //     }
                 // }
+                currentYPosition = this.snapSystemYToCrispStaffLines(currentSystem, currentYPosition);
                 const relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin,
                                                                 currentYPosition);
                 currentSystem.PositionAndShape.RelativePosition = relativePosition;
@@ -1273,9 +1309,12 @@ export class MusicSystemBuilder {
                 distance += this.rules.MinSkyBottomDistBetweenSystems;
 
                 distance = Math.max(distance, this.rules.MinimumDistanceBetweenSystems + prevSystemLastStaffline.StaffHeight);
-                const newYPosition: number =    currentYPosition +
+                // Round to half pixels for consistent staff line anti-aliasing, see optimizeDistanceBetweenStaffLines:
+                distance = Math.round(distance * 20) / 20;
+                let newYPosition: number =      currentYPosition +
                                                 prevSystemLastStaffLineBB.RelativePosition.y +
                                                 distance;
+                newYPosition = this.snapSystemYToCrispStaffLines(currentSystem, newYPosition);
 
                 // calculate the needed height for placing the current system on the page,
                 // to see if it still fits:

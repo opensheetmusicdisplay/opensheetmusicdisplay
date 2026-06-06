@@ -1844,7 +1844,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const fontSize: number = (textBracket as any).font.size / 10;
 
     if ((<any>textBracket).position === VF.TextBracket.Positions.TOP) {
-      const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
+      // Math.ceil with a small tolerance: the geometric skyline calculation gives exact values where
+      // the pixel-based one snapped to pixels (often exact integers, e.g. a note top exactly 1 unit
+      // above the staff), and without the tolerance, a skyline minimum a fraction of a pixel inside
+      // an integer boundary would lose a whole unit of headroom to the ceil (e.g. ceil(-0.97) = 0,
+      // putting the octave bracket into the note, see test_octaveshift_extragraphicalmeasure).
+      // The tolerance is smaller than the pixel-based values' granularity (0.1), so their results are unchanged.
+      const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX) - 0.05);
       if (headroom === Infinity) { // will cause Vexflow error
         return;
       }
@@ -1887,6 +1893,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   protected calculateSkyBottomLines(): void {
     const staffLines: StaffLine[] = CollectionUtil.flat(this.musicSystems.map(musicSystem => musicSystem.StaffLines));
+    if (this.rules.UseGeometricSkyBottomLineCalculation) {
+      // geometric calculation doesn't need batching: no canvas allocation or pixel readback (getImageData) is involved
+      for (const staffLine of staffLines) {
+        staffLine.SkyBottomLineCalculator.calculateLines();
+      }
+      return;
+    }
     //const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
     let numMeasures: number = 0; // number of graphical measures that are rendered
     for (const staffline of staffLines) {
