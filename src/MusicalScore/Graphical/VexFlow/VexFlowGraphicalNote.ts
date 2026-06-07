@@ -486,17 +486,17 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 
         let targetBeamOpacity: number = opacity;
         if (this.sourceNote.NoteBeam) {
-            let maxOpacity: number = 0;
+            let minOpacity: number = 1;
             for (const note of this.sourceNote.NoteBeam.Notes) {
                 const gNote: GraphicalNote = this.rules.GNote(note);
                 if (gNote) {
                     const op: number = gNote === this ? opacity : (gNote.opacity !== undefined ? gNote.opacity : 1.0);
-                    if (op > maxOpacity) {
-                        maxOpacity = op;
+                    if (op < minOpacity) {
+                        minOpacity = op;
                     }
                 }
             }
-            targetBeamOpacity = maxOpacity;
+            targetBeamOpacity = minOpacity;
         }
 
         let beamSVGs: HTMLElement[] = [];

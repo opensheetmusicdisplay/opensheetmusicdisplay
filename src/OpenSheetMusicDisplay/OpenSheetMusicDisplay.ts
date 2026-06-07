@@ -142,6 +142,7 @@ export class OpenSheetMusicDisplay {
     private readonly rangeOpacityTouchedElements: Set<Element> = new Set<Element>();
     /** Notes whose opacity was lowered by read-ahead (kept separate from range selection so they never clash). */
     private readonly readAheadOpacityTouchedGraphicalNotes: Set<GraphicalNote> = new Set<GraphicalNote>();
+    private readonly readAheadOpacityTouchedElements: Set<Element> = new Set<Element>();
     private readonly rangeSelectionElementCollector: RangeSelectionElementCollector = new RangeSelectionElementCollector();
     private needsCommittedRangeAnchorRefresh: boolean = false;
     private hoverAnchor: RangeSelectionAnchor;
@@ -1672,6 +1673,9 @@ export class OpenSheetMusicDisplay {
                         }
                     }
                 }
+                for (const fingeringEntry of staffEntry.FingeringEntries ?? []) {
+                    this.setReadAheadGraphicalLabelOpacity(fingeringEntry, targetOpacity);
+                }
             }
         }
     }
@@ -1716,19 +1720,48 @@ export class OpenSheetMusicDisplay {
                         }
                     }
                 }
+                for (const fingeringEntry of staffEntry.FingeringEntries ?? []) {
+                    this.setReadAheadGraphicalLabelOpacity(fingeringEntry, opacity);
+                }
             }
         }
     }
 
     /** Restores the opacity of every note hidden by {@link setReadAheadMeasureOpacity}. */
     public resetReadAheadOpacity(): void {
-        if (this.readAheadOpacityTouchedGraphicalNotes.size === 0) {
+        if (this.readAheadOpacityTouchedGraphicalNotes.size === 0 && this.readAheadOpacityTouchedElements.size === 0) {
             return;
         }
         for (const graphicalNote of this.readAheadOpacityTouchedGraphicalNotes) {
             graphicalNote.setOpacity(1.0);
         }
+        for (const element of this.readAheadOpacityTouchedElements) {
+            if (element?.isConnected) {
+                element.setAttribute("opacity", "1");
+            }
+        }
         this.readAheadOpacityTouchedGraphicalNotes.clear();
+        this.readAheadOpacityTouchedElements.clear();
+    }
+
+    private setReadAheadGraphicalLabelOpacity(label: GraphicalLabel, opacity: number): void {
+        if (!label?.SVGNode) {
+            return;
+        }
+        const labelNode: Element = label.SVGNode as Element;
+        this.setReadAheadElementOpacity(labelNode, opacity);
+    }
+
+    private setReadAheadElementOpacity(element: Element, opacity: number): void {
+        if (!element) {
+            return;
+        }
+        element.setAttribute("opacity", opacity.toString());
+        if (opacity < 1.0) {
+            this.readAheadOpacityTouchedElements.add(element);
+        } else {
+            this.readAheadOpacityTouchedElements.delete(element);
+        }
     }
 
     private syncInteractiveRangeSelection(): void {
