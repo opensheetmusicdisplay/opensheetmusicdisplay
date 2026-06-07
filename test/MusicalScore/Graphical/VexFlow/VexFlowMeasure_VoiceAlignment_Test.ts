@@ -8,36 +8,21 @@ import { VexFlowMusicSheetCalculator } from "../../../../src/MusicalScore/Graphi
 import { TestUtils } from "../../../Util/TestUtils";
 import { VexFlowMeasure } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import { VexFlowVoiceEntry } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
-import * as VF from "vexflow";
 
 interface NotePos {
-  renderedX: number;
-  absX: number;
+  noteX: number;    // sn.getX() = tickContext.getX() + xShift (no centering)
+  absX: number;     // sn.getAbsoluteX() — includes centerXShift for rests
+  tcX: number;       // tickContext.getX() — raw tick position
   xShift: number;
+  isRest: boolean;
+  isCenterAligned: boolean;
   keys: string;
-  staveInfo: string;
   staff: number;
   measure: number;
-  voice: number;
 }
 
 function checkAlignment(gms: GraphicalMusicSheet): { misalignedCount: number, checkedCount: number, allPositions: NotePos[] } {
   const allPositions: NotePos[] = [];
-
-  console.log("[AFTER_CALC] === Stave debug ===");
-  for (const vml of gms.MeasureList) {
-    if (!vml) {continue;}
-    console.log(`[AFTER_CALC] MeasureList: ${vml.length} measures`);
-    for (const measure of vml) {
-      if (!measure) { console.log("[AFTER_CALC]   measure=null"); continue; }
-      const stave: VF.Stave = (measure as VexFlowMeasure).getVFStave();
-      console.log(
-        `[AFTER_CALC]   visible=${measure.isVisible()} m${measure.MeasureNumber}` +
-        ` staffEntries=${measure.staffEntries.length} nsX=${stave.getNoteStartX()} formatted=${(stave as any).formatted}`
-      );
-    }
-  }
-
   let misalignedCount: number = 0;
   let checkedCount: number = 0;
 
@@ -46,53 +31,44 @@ function checkAlignment(gms: GraphicalMusicSheet): { misalignedCount: number, ch
     const visibleMeasures: VexFlowMeasure[] = vml.filter(
       (m) => m?.isVisible()
     ) as VexFlowMeasure[];
-    console.log(`[ALIGN] MeasureList: ${visibleMeasures.length} visible measures (staff#: ${visibleMeasures.map(m => m.ParentStaff?.Id).join(",")})`);
     if (visibleMeasures.length < 2) {continue;}
 
+    // Group notes by tickContext.getX() (rounded to 2 decimals).
+    // tickContext.getX() is the formatter-assigned base position — same logical
+    // time across staves should land at the same tickContext X if the formatter
+    // aligns them correctly.
     const tickGroups: Map<number, NotePos[]> = new Map();
     for (const measure of visibleMeasures) {
-      const stave: VF.Stave = (measure as VexFlowMeasure).getVFStave();
-      const nsX: number = stave.getNoteStartX();
-
       for (const se of measure.staffEntries) {
         if (!se) {continue;}
-
         for (const gve of se.graphicalVoiceEntries) {
           const vfve: VexFlowVoiceEntry = gve as VexFlowVoiceEntry;
           if (!vfve.vfStaveNote) {continue;}
           const sn: any = vfve.vfStaveNote;
           const tcX: number = sn.tickContext?.getX() ?? 0;
+          const noteX: number = sn.getX?.() ?? -1;
+          const absX: number = sn.getAbsoluteX?.() ?? -1;
           const xShift: number = typeof sn.getXShift === "function" ? sn.getXShift() : (sn.xShift ?? 0);
-          const renderedX: number = sn.getAbsoluteX() + xShift;
+          const isCenterAligned: boolean = sn.isCenterAligned?.() ?? false;
           const tcXRounded: number = Math.round(tcX * 100) / 100;
+          const pos: NotePos = {
+            noteX: Math.round(noteX * 100) / 100,
+            absX: Math.round(absX * 100) / 100,
+            tcX,
+            xShift: Math.round(xShift * 100) / 100,
+            isRest: sn.isRest?.() ?? false,
+            isCenterAligned,
+            keys: sn.getKeys?.()?.join(",") ?? "?",
+            staff: measure.ParentStaff?.Id ?? -1,
+            measure: measure.MeasureNumber,
+          };
           if (!tickGroups.has(tcXRounded)) {
             tickGroups.set(tcXRounded, []);
           }
-          const keys: string = sn.keys?.join(",") ?? "?";
-          const pos: NotePos = {
-            renderedX: Math.round(renderedX),
-            absX: sn.getAbsoluteX(),
-            xShift: Math.round(xShift * 100) / 100,
-            keys,
-            staveInfo: `nsX=${nsX.toFixed(1)} staveX=${stave.getX()}`,
-            staff: measure.ParentStaff?.Id ?? -1,
-            measure: measure.MeasureNumber,
-            voice: -1,
-          };
           tickGroups.get(tcXRounded)!.push(pos);
           allPositions.push(pos);
         }
       }
-    }
-
-    for (const [tcX, entries] of tickGroups) {
-      const staffs: number[] = [...new Set(entries.map(e => e.staff))].sort();
-      const xShifts: string = entries.map(e => e.xShift.toFixed(1)).join(",");
-      const renderedXs: string = entries.map(e => e.renderedX.toFixed(1)).join(",");
-      console.log(
-        `[ALIGN]   tcX=${tcX} entries=${entries.length} staffs=[${staffs}]` +
-        ` xShift=[${xShifts}] renderedX=[${renderedXs}] keys=${entries.map(e => e.keys).join("|")}`
-      );
     }
 
     for (const [tcX, entries] of tickGroups) {
@@ -101,35 +77,43 @@ function checkAlignment(gms: GraphicalMusicSheet): { misalignedCount: number, ch
       if (crossStaffEntries.length === 0) {continue;}
       checkedCount++;
       const ref: NotePos = entries[0];
-      console.log(
-        `[XSHIFT_CHECK] m${ref.measure} tcX=${tcX} refStaff=${ref.staff} refXShift=${ref.xShift}` +
-        ` crossStaffCount=${crossStaffEntries.length} xShifts=[${crossStaffEntries.map(e => e.xShift.toFixed(1))}]` +
-        ` staffs=[${crossStaffEntries.map(e => e.staff)}]`
-      );
-      for (const entry of crossStaffEntries) {
-        // Visual alignment: renderedX (includes collision-avoidance xShift)
-        const rendDiff: number = Math.abs(entry.renderedX - ref.renderedX);
-        // Logical alignment: absX (excludes xShift)
-        const absDiff: number = Math.abs(entry.absX - ref.absX);
-        const xShiftDiff: number = Math.abs(entry.xShift - ref.xShift);
 
-        // Flag extreme xShift (way beyond normal collision avoidance)
+      // Log group details for diagnostics
+      const staffs: number[] = [...new Set(entries.map(e => e.staff))].sort();
+      console.log(
+        `[ALIGN] m${ref.measure} tcX=${tcX} staffs=[${staffs}] ` +
+        `noteX=[${entries.map(e => e.noteX.toFixed(1)).join(",")}] ` +
+        `xShift=[${entries.map(e => e.xShift.toFixed(1)).join(",")}] ` +
+        `keys=${entries.map(e => e.keys).join("|")}`
+      );
+
+      for (const entry of crossStaffEntries) {
+        // Compare getX() (tickContext X + xShift) — the base position
+        // without per-note centering shifts. Center-aligned rests get
+        // extra centerXShift added to getAbsoluteX(), so comparing
+        // getAbsoluteX() would falsely flag centered rests as misaligned.
+        const noteXDiff: number = Math.abs(entry.noteX - ref.noteX);
+
+        // Flag extreme xShift (>25px, way beyond collision avoidance)
         if (Math.abs(entry.xShift) > 25 || Math.abs(ref.xShift) > 25) {
           console.log(
-            `EXTREME_XSHIFT m${ref.measure} tcX=${tcX}: xShift=${ref.xShift} vs ${entry.xShift}` +
-            ` absX=${ref.absX} vs ${entry.absX} renderedX=${ref.renderedX} vs ${entry.renderedX}` +
-            ` keys=${ref.keys} vs ${entry.keys}`
+            `EXTREME_XSHIFT m${ref.measure} tcX=${tcX}: ` +
+            `xShift=${ref.xShift} vs ${entry.xShift} ` +
+            `noteX=${ref.noteX} vs ${entry.noteX} ` +
+            `keys=${ref.keys} vs ${entry.keys}`
           );
           misalignedCount++;
         }
 
-        if (rendDiff > 2) {
-          if (misalignedCount < 20) {
-            console.log(
-              `MISALIGN_REND m${ref.measure} tcX=${tcX}: renderedX diff=${rendDiff.toFixed(1)}` +
-              ` (xShift diff=${xShiftDiff.toFixed(1)}) absX diff=${absDiff.toFixed(1)} keys=${ref.keys}|${entry.keys}`
-            );
-          }
+        // Cross-staff notes at same tick position must have matching base X.
+        // Tolerance of 2px allows for minor floating-point rounding.
+        if (noteXDiff > 2) {
+          console.log(
+            `MISALIGN m${ref.measure} tcX=${tcX}: ` +
+            `noteX diff=${noteXDiff.toFixed(1)} ` +
+            `(xShift=${ref.xShift.toFixed(1)} vs ${entry.xShift.toFixed(1)}) ` +
+            `keys=${ref.keys}|${entry.keys}`
+          );
           misalignedCount++;
         }
       }
@@ -156,7 +140,7 @@ describe("VexFlow Measure - Voice Alignment Across Staves", () => {
 
     const { misalignedCount, checkedCount }: { misalignedCount: number, checkedCount: number } = checkAlignment(gms);
     expect(misalignedCount).to.equal(0,
-      `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned rendered X positions (>2px)`);
+      `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned base X positions (>2px)`);
     done();
   });
 
@@ -176,7 +160,7 @@ describe("VexFlow Measure - Voice Alignment Across Staves", () => {
 
     const { misalignedCount, checkedCount }: { misalignedCount: number, checkedCount: number } = checkAlignment(gms);
     expect(misalignedCount).to.equal(0,
-      `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned rendered X positions (>2px)`);
+      `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned base X positions (>2px)`);
     done();
   });
 
@@ -196,7 +180,7 @@ describe("VexFlow Measure - Voice Alignment Across Staves", () => {
 
     const { misalignedCount, checkedCount }: { misalignedCount: number, checkedCount: number } = checkAlignment(gms);
     expect(misalignedCount).to.equal(0,
-      `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned rendered X positions (>2px)`);
+      `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned base X positions (>2px)`);
 
     done();
   });

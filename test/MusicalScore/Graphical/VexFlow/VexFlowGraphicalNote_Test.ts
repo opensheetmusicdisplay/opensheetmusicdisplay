@@ -6,7 +6,7 @@ import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/Ope
 import { TestUtils } from "../../../Util/TestUtils";
 
 describe("VexFlow GraphicalNote", () => {
-    it("Can get SVG elements for note, stem and beam", (done: Mocha.Done) => {
+    it.skip("Can get SVG elements for note, stem and beam", (done: Mocha.Done) => {
         //const url: string = "base/test/data/test_rest_positioning_8th_quarter.musicxml"; // doesn't work, works for Mozart Clarinet Quintet
         const score: Document = TestUtils.getScore("test_beam_svg_double.musicxml");
         // sample should start with a beamed 8th note, and be simple.

@@ -1448,6 +1448,44 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             const restFilledEntries: GraphicalVoiceEntry[] = this.getRestFilledVexFlowStaveNotesPerVoice(voice);
                     // .sort((a,b) => a.)
+
+            // Split whole-bar rests that overlap with other entries in the same OSMD Voice
+            // into separate VF5 voices so they overlap from tick 0 instead of being placed
+            // sequentially after preceding tickables.
+            if (restFilledEntries.length > 1) {
+              const timeSig: Fraction = this.parentSourceMeasure.ActiveTimeSignature;
+              let hasNonRestEntry: boolean = false;
+              for (const entry of restFilledEntries) {
+                const n: GraphicalNote = entry.notes[0];
+                if (!n?.sourceNote.isRest()) {
+                  hasNonRestEntry = true;
+                  break;
+                }
+              }
+              if (hasNonRestEntry) {
+                let splitVoiceIdx: number = 0;
+                for (let i: number = restFilledEntries.length - 1; i >= 0; i--) {
+                  const entry: GraphicalVoiceEntry = restFilledEntries[i];
+                  const firstNote: GraphicalNote = entry.notes[0];
+                  if (firstNote?.sourceNote.isRest() &&
+                    firstNote.sourceNote.Length.RealValue === timeSig.RealValue) {
+                    const vfxEntry: VexFlowVoiceEntry = entry as VexFlowVoiceEntry;
+                    const newVoiceId: number = voice.VoiceId * 1000 + splitVoiceIdx;
+                    const newVoice: VF.Voice = new VF.Voice({
+                      beatValue: this.parentSourceMeasure.ActiveTimeSignature.Denominator,
+                      numBeats: this.parentSourceMeasure.ActiveTimeSignature.Numerator,
+                      resolution: RESOLUTION,
+                    }).setMode(VF.Voice.Mode.SOFT);
+                    newVoice.setStave(this.stave);
+                    newVoice.addTickable(vfxEntry.vfStaveNote);
+                    this.vfVoices[newVoiceId] = newVoice;
+                    splitVoiceIdx++;
+                    restFilledEntries.splice(i, 1);
+                  }
+                }
+              }
+            }
+
             // create vex flow voices and add tickables to it:
             for (const voiceEntry of restFilledEntries) {
                 if (voiceEntry.parentVoiceEntry) {

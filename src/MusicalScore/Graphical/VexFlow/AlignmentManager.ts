@@ -90,11 +90,17 @@ export class AlignmentManager {
                         const prevExpression: AbstractGraphicalExpression = exprIdx > 0 ? aes[exprIdx - 1] : undefined;
                         if (nextExpression) {
                             const overlapRight: PointF2D = this.getOverlap(expr.PositionAndShape, nextExpression.PositionAndShape);
-                            (expr as VexFlowContinuousDynamicExpression).squeeze(-(overlapRight.x + this.rules.DynamicExpressionSpacer));
+                            const spacerRight: number = this.getDynamicSpacer(expr, nextExpression);
+                            if (overlapRight.x + spacerRight > 0) {
+                                (expr as VexFlowContinuousDynamicExpression).squeeze(-(overlapRight.x + spacerRight));
+                            }
                         }
                         if (prevExpression) {
                             const overlapLeft: PointF2D = this.getOverlap(prevExpression.PositionAndShape, expr.PositionAndShape);
-                            (expr as VexFlowContinuousDynamicExpression).squeeze(overlapLeft.x + this.rules.DynamicExpressionSpacer);
+                            const spacerLeft: number = this.getDynamicSpacer(prevExpression, expr);
+                            if (overlapLeft.x + spacerLeft > 0) {
+                                (expr as VexFlowContinuousDynamicExpression).squeeze(overlapLeft.x + spacerLeft);
+                            }
                         }
                     }
                 }
@@ -125,5 +131,14 @@ export class AlignmentManager {
     private getOverlap(a: BoundingBox, b: BoundingBox): PointF2D {
         return new PointF2D((a.RelativePosition.x + a.BorderMarginRight) - (b.RelativePosition.x + b.BorderMarginLeft),
                             (a.RelativePosition.y + a.BorderMarginBottom) - (b.RelativePosition.y + b.BorderMarginTop));
+    }
+
+    private getDynamicSpacer(left: AbstractGraphicalExpression, right: AbstractGraphicalExpression): number {
+        const leftIsNonVerbalWedge: boolean = left instanceof VexFlowContinuousDynamicExpression && !left.IsVerbal;
+        const rightIsNonVerbalWedge: boolean = right instanceof VexFlowContinuousDynamicExpression && !right.IsVerbal;
+        if (leftIsNonVerbalWedge && rightIsNonVerbalWedge) {
+            return 0;
+        }
+        return this.rules.DynamicExpressionSpacer;
     }
 }

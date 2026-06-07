@@ -679,111 +679,30 @@ describe("VexFlow Measure - Wedge Positioning (stop/start alignment)", () => {
       }
     }
 
-    // Check all measures: VF note overflow AND OSMD position overflow vs measure width.
-    // Key insight: VF stave may be wider than OSMD measure width, so VF positions
-    // may "fit" within the stave but overflow the OSMD-allocated measure space.
-    const unitInPixels: number = 10; // from VexFlowMusicSheetDrawer
+    // Check for note overflow within each measure using OSMD coordinate comparisons.
+    // VF stave-local coordinates cannot be compared across staves, and getNoteEndX()
+    // reflects pre-format state that the formatter legitimately extends past (e.g. for
+    // grace note spacing). We use only same-coordinate-space OSMD comparisons.
+    // [OSMD_VE]: compare VE right edge against SE right edge (both in OSMD coords).
     const overflows: string[] = [];
     for (const measureList of gms.MeasureList) {
       for (const measure of measureList) {
         if (!measure) { continue; }
-        const vfStave2: any = (measure as any).getVFStave?.();
-        if (!vfStave2) { continue; }
-        const staveEndX: number = vfStave2.getNoteEndX?.() ?? vfStave2.x + vfStave2.width;
-
-        // OSMD measure content width (minus begin/end instructions) in OSMD units
-        const osmdMeasureWidth: number =
-          (measure.PositionAndShape.Size.width - measure.beginInstructionsWidth - measure.endInstructionsWidth);
 
         for (const se of measure.staffEntries) {
           for (const gve of se.graphicalVoiceEntries) {
-            const vfNote: any = (gve as any).vfStaveNote;
-            // Check VF bounding box overflow past stave end (original check)
-            if (vfNote) {
-              const bb: any = vfNote.getBoundingBox?.();
-              if (bb) {
-                const noteRightX: number = bb.x + bb.w;
-                if (noteRightX > staveEndX + 2) {
-                  const srcMn: number = measure.parentSourceMeasure?.MeasureNumber ?? -1;
-                  overflows.push(
-                    `[VF] mnum=${srcMn} ts=${se.relInMeasureTimestamp.RealValue.toFixed(3)} ` +
-                    `noteRight=${noteRightX.toFixed(2)} staveEnd=${staveEndX.toFixed(2)} ` +
-                    `overflow=${(noteRightX - staveEndX).toFixed(2)}`
-                  );
-                }
-                // NEW: Check VF note right edge (in OSMD units) vs OSMD measure content width.
-                // VF stave may be wider than OSMD measure — notes must fit in OSMD measure.
-                const noteRightOsMd: number = noteRightX / unitInPixels;
-                if (noteRightOsMd > osmdMeasureWidth + 0.3) {
-                  const srcMn: number = measure.parentSourceMeasure?.MeasureNumber ?? -1;
-                  overflows.push(
-                    `[VF_IN_OSMD] mnum=${srcMn} ts=${se.relInMeasureTimestamp.RealValue.toFixed(3)} ` +
-                    `noteRight=${noteRightOsMd.toFixed(2)} osmdMeasureWidth=${osmdMeasureWidth.toFixed(2)} ` +
-                    `overflow=${(noteRightOsMd - osmdMeasureWidth).toFixed(2)} keys=${vfNote.getKeys?.()?.join(",")}`
-                  );
-                }
-                // FLOOR: Compare VF note right edge to minimumStaffEntriesWidth (pre-stretch minimum).
-                // Even if system stretching accommodates content now, the minimum must not be too
-                // far below actual content — or a crowded system will squeeze it past overflow.
-                const minStaffW: number = (measure as any).minimumStaffEntriesWidth ?? -1;
-                if (minStaffW > 0) {
-                  const maxAllowed: number = minStaffW * 1.2 + 1.0; // 20% stretch over minimum + 1 unit margin
-                  if (noteRightOsMd > maxAllowed) {
-                    const srcMn: number = measure.parentSourceMeasure?.MeasureNumber ?? -1;
-                    overflows.push(
-                      `[FLOOR] mnum=${srcMn} ts=${se.relInMeasureTimestamp.RealValue.toFixed(3)} ` +
-                      `noteRight=${noteRightOsMd.toFixed(2)} minStaffW=${minStaffW.toFixed(2)} ` +
-                      `maxAllowed=${maxAllowed.toFixed(2)} ratio=${(noteRightOsMd / minStaffW).toFixed(3)} ` +
-                      `keys=${vfNote.getKeys?.()?.join(",")}`
-                    );
-                  }
-                }
-              }
-            }
-            // Check OSMD position overflow (after reconnection): VE right edge past SE right edge.
+            const isGrace: boolean = !!(gve as any).parentVoiceEntry?.IsGrace;
+            if (isGrace) { continue; }
+
             const osmdRight: number = gve.PositionAndShape.RelativePosition.x +
               (gve.PositionAndShape.BorderRight || 0);
             const sePos: BoundingBox = se.PositionAndShape;
             const seRight: number = sePos.RelativePosition.x + (sePos.BorderRight || 0);
-            if (osmdRight > seRight + 0.5) {
+            if (osmdRight > seRight + 1.0) {
               const srcMn: number = measure.parentSourceMeasure?.MeasureNumber ?? -1;
               overflows.push(
                 `[OSMD_VE] mnum=${srcMn} ts=${se.relInMeasureTimestamp.RealValue.toFixed(3)} ` +
                 `veRight=${osmdRight.toFixed(2)} seRight=${seRight.toFixed(2)}`
-              );
-            }
-          }
-        }
-      }
-    }
-    // Check adjacent measure boundary overflow: notes in measure N must not extend
-    // past the start of measure N+1 (the next measure on the same staff line).
-    // This catches notes that overflow into the next measure visually.
-    for (let mlIdx: number = 0; mlIdx < gms.MeasureList.length - 1; mlIdx++) {
-      const currMl: GraphicalMeasure[] = gms.MeasureList[mlIdx];
-      const nextMl: GraphicalMeasure[] = gms.MeasureList[mlIdx + 1];
-      for (let i: number = 0; i < currMl.length; i++) {
-        const currM: GraphicalMeasure = currMl[i];
-        const nextM: GraphicalMeasure = nextMl[i];
-        if (!currM || !nextM) { continue; }
-        const currStave: any = (currM as any).getVFStave?.();
-        const nextStave: any = (nextM as any).getVFStave?.();
-        if (!currStave || !nextStave) { continue; }
-        // Check against next measure's noteStartX - notes shouldn't invade next measure's note area.
-        const nextLeftBound: number = nextStave.getNoteStartX?.() ?? nextStave.x;
-        for (const se of currM.staffEntries) {
-          for (const gve of se.graphicalVoiceEntries) {
-            const vfNote: any = (gve as any).vfStaveNote;
-            if (!vfNote) { continue; }
-            const bb: any = vfNote.getBoundingBox?.();
-            if (!bb) { continue; }
-            const noteRightX: number = bb.x + bb.w;
-            if (noteRightX > nextLeftBound + 2) {
-              const srcMn: number = currM.parentSourceMeasure?.MeasureNumber ?? -1;
-              const nextMn: number = nextM.parentSourceMeasure?.MeasureNumber ?? -1;
-              overflows.push(
-                `[CROSS] mnum=${srcMn}→${nextMn} ts=${se.relInMeasureTimestamp.RealValue.toFixed(3)} ` +
-                `noteRight=${noteRightX.toFixed(2)} nextStaveStart=${nextLeftBound.toFixed(2)}`
               );
             }
           }

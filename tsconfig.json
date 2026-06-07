@@ -9,6 +9,7 @@
     "sourceMap": true,
     "strict": false,
     "strictPropertyInitialization": false,
+    "ignoreDeprecations": "6.0",
     "typeRoots": ["./node_modules/@types"],
     "types": ["mocha", "chai", "node"],
     "baseUrl": ".",

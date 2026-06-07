@@ -171,9 +171,11 @@ describe("VexFlow Measure - Rest Positioning", () => {
       expect(halfRest.alignCenterFlag).to.be.false,
         "half rest must NOT have _alignCenter flag (only whole-bar rests get it)";
 
-      // Half rest should be center-aligned after formatter fix
-      expect(halfRest.hasAlignCenter).to.be.true,
-        "half rest should be center-aligned after slot-based centering";
+      // Half rest should be slot-centered via centerXShift (not VF5 alignCenter,
+      // which would incorrectly center to the measure center).
+      // centerXShift > 0 confirms slot-based centering was applied.
+      expect(halfRest.centerXShift).to.be.greaterThan(0,
+        "half rest should have positive centerXShift after slot-based centering");
 
       // Half rest is the last tickable in voice 1, measure 1.
       // Its time slot spans from the rest's context X (in absolute coords)

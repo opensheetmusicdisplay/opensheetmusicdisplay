@@ -32,7 +32,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         this.PositionAndShape.BorderBottom = boundingBox.h / unitInPixels;
         const halfStavenoteWidth: number = (staveNote.width - ((staveNote as any).paddingRight ?? 0)) / 2;
         this.PositionAndShape.BorderLeft = -(modifierWidth + halfStavenoteWidth) / unitInPixels; // Left of our X origin is the modifier
-        this.PositionAndShape.BorderRight = (boundingBox.w - modifierWidth) / unitInPixels; // Right of x origin is the note
+        this.PositionAndShape.BorderRight = halfStavenoteWidth / unitInPixels; // Right of x origin: notehead extends right from nhBeginX
     }
 
     public set vfStaveNote(value: VF.StemmableNote) {

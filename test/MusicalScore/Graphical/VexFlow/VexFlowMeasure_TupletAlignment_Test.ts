@@ -190,7 +190,7 @@ describe("VexFlow Measure - Cross-Staff Tuplet Alignment", () => {
 
       // The third note of each triplet (G4) is notated on the upper staff, so the lower
       // staff fills that slot with a ghost note. A triplet eighth lasts RESOLUTION / 12 ticks.
-      const tripletEighthTicks: number = VF.RESOLUTION / 12;
+      const tripletEighthTicks: number = VF.VexFlow.RESOLUTION / 12;
       const tickables: VF.Note[] = tupletVoice.getTickables() as VF.Note[];
       const ghostTickables: VF.Note[] = tickables.filter((t: VF.Note) => t.isRest());
       expect(ghostTickables.length).to.equal(2, "each of the two triplets should leave exactly one ghost-filled slot");
@@ -201,7 +201,7 @@ describe("VexFlow Measure - Cross-Staff Tuplet Alignment", () => {
 
       // The whole voice should still add up to the measure length (2/4 = RESOLUTION / 2).
       const totalTicks: number = tickables.reduce((sum: number, t: VF.Note) => sum + t.getTicks().value(), 0);
-      expect(totalTicks).to.be.closeTo(VF.RESOLUTION / 2, 0.001,
+      expect(totalTicks).to.be.closeTo(VF.VexFlow.RESOLUTION / 2, 0.001,
          "tuplet voice ticks should sum to the measure duration");
 
       done();
@@ -215,7 +215,7 @@ describe("VexFlow Measure - Cross-Staff Tuplet Alignment", () => {
       expect(eighthVoice, "eighth-note voice (id 5) should exist on the lower staff").to.not.be.undefined;
 
       // Cumulative tick position where each voice reaches beat 2 (a quarter into a 2/4 measure).
-      const beat2Ticks: number = VF.RESOLUTION / 4;
+      const beat2Ticks: number = VF.VexFlow.RESOLUTION / 4;
 
       function cumulativePositions(voice: VF.Voice): number[] {
          const positions: number[] = [];

@@ -24,10 +24,11 @@ function sleep (ms) {
 }
 
 let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 12);
+const dumpPositions = process.argv.includes("--dump-positions");
 imageFormat = imageFormat?.toLowerCase();
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
-        "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]");
+        "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime] [--batch|--webgl] [--dump-positions]");
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)');
     console.log("example: node test/Util/generateImages_browserless.mjs ../../build ./test/data/ ./export png");
@@ -41,9 +42,7 @@ if (!mode) { mode = ""; }
 async function init () {
     debug("init");
 
-    // cross-blob is ESM-only; dynamically import it from CJS
-    const { default: Blob } = await import("cross-blob");
-    globalThis.Blob = Blob;
+    // globalThis.Blob available since Node 18, no polyfill needed
 
     const vexflowFontsDir = path.resolve(__dirname, "../../external/vexflow/node_modules/@vexflow-fonts");
     registerFont(path.join(vexflowFontsDir, "bravura/bravura.otf"), { family: "Bravura" });
@@ -306,7 +305,463 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             debug("got svg markup data, saving to: " + pageFilename, DEBUG);
             FS.writeFileSync(pageFilename, markup, { encoding: "utf-8" });
         }
+
+        if (dumpPositions) {
+            const jsonFilename = pageFilename.replace(new RegExp(`\\.${imageFormat}$`), ".positions.json");
+            try {
+                const dump = dumpGraphicalPositions(osmdInstance, sampleFilename, pageIndex);
+                FS.writeFileSync(jsonFilename, JSON.stringify(dump, null, 1), { encoding: "utf-8" });
+                debug("wrote positions dump: " + jsonFilename, DEBUG);
+            } catch (ex) {
+                debug("error dumping positions for " + sampleFilename + " page " + pageIndex + ": " + ex, true);
+            }
+            // Copy source musicxml alongside positions.json for debugging
+            const xmlDestFilename = pageFilename.replace(new RegExp(`\\.${imageFormat}$`), ".musicxml");
+            try {
+                FS.copyFileSync(samplePath, xmlDestFilename);
+                debug("copied musicxml: " + xmlDestFilename, DEBUG);
+            } catch (ex) {
+                debug("error copying musicxml for " + sampleFilename + ": " + ex, true);
+            }
+        }
     }
+}
+
+function dumpGraphicalPositions(osmdInstance, sampleFilename, pageIndex) {
+    const gs = osmdInstance.graphic;
+    if (!gs || !gs.MusicPages) { return { error: "No graphic sheet or MusicPages" }; }
+
+    const page = gs.MusicPages[pageIndex];
+    if (!page) { return { error: `Page ${pageIndex} not found` }; }
+
+    const pageWidth = page.PositionAndShape?.Size?.width;
+    const pageHeight = page.PositionAndShape?.Size?.height;
+    let totalCount = 0;
+
+    function extractBBox(ps) {
+        if (!ps) { return null; }
+        return {
+            absX: ps.AbsolutePosition ? ps.AbsolutePosition.x : undefined,
+            absY: ps.AbsolutePosition ? ps.AbsolutePosition.y : undefined,
+            relX: ps.RelativePosition ? ps.RelativePosition.x : undefined,
+            relY: ps.RelativePosition ? ps.RelativePosition.y : undefined,
+            w: ps.Size ? ps.Size.width : undefined,
+            h: ps.Size ? ps.Size.height : undefined,
+            bl: ps.BorderLeft,
+            br: ps.BorderRight,
+            bt: ps.BorderTop,
+            bb: ps.BorderBottom,
+            bml: ps.BorderMarginLeft,
+            bmr: ps.BorderMarginRight,
+        };
+    }
+
+    var DYNAMIC_ENUM_NAMES = ["pppppp","ppppp","pppp","ppp","pp","p","mp","mf","f","ff","fff","ffff","fffff","ffffff","sf","sff","sfp","sfpp","fp","rf","rfz","sfz","sffz","fz","other"];
+
+    function detectExpressionType(expr) {
+        if (expr.Lines !== undefined && expr.ContinuousDynamic !== undefined) {
+            if (expr.IsVerbal) { return "verbalDynamic"; }
+            var dt = expr.ContinuousDynamic.DynamicType;
+            if (dt === 0) { return "crescendo"; }
+            if (dt === 1) { return "diminuendo"; }
+            return "continuousDynamic";
+        }
+        if (expr.getOctaveShift !== undefined || expr.octaveSymbol !== undefined) { return "octaveShift"; }
+        if (expr.getPedal !== undefined || expr.pedalSymbol !== undefined) { return "pedal"; }
+        if (expr.SourceExpression !== undefined) {
+            var se = expr.SourceExpression;
+            if (se && se.DynEnum !== undefined) { return "instantaneousDynamic"; }
+            if (se && se.TempoInBpm !== undefined) { return "instantaneousTempo"; }
+            return "expression";
+        }
+        return "unknown";
+    }
+
+    function extractExpressionFields(expr, measureAbsX) {
+        const fields = {};
+        if (expr.Placement !== undefined) { fields.placement = expr.Placement; }
+        if (expr.Lines && Array.isArray(expr.Lines)) {
+            fields.lines = expr.Lines.map(function(l) {
+                const sx = l.Start ? l.Start.x : undefined;
+                const ex = l.End ? l.End.x : undefined;
+                return {
+                    sx: sx,
+                    sy: l.Start ? l.Start.y : undefined,
+                    ex: ex,
+                    ey: l.End ? l.End.y : undefined,
+                    absSx: measureAbsX !== undefined && sx !== undefined ? measureAbsX + sx : undefined,
+                    absEx: measureAbsX !== undefined && ex !== undefined ? measureAbsX + ex : undefined,
+                };
+            });
+        }
+        if (expr.ContinuousDynamic) {
+            fields.startTimestamp = expr.ContinuousDynamic.StartMultiExpression?.AbsoluteTimestamp?.RealValue;
+            fields.endTimestamp = expr.ContinuousDynamic.EndMultiExpression?.AbsoluteTimestamp?.RealValue;
+        }
+        if (expr.StartMeasure) { fields.startMeasureNum = expr.StartMeasure.MeasureNumber; }
+        if (expr.EndMeasure) { fields.endMeasureNum = expr.EndMeasure.MeasureNumber; }
+        if (expr.getOctaveShift) { fields.octaveType = expr.getOctaveShift.Type; }
+        if (expr.getPedal) {
+            fields.pedalType = expr.getPedal.Type;
+            fields.pedalLine = expr.getPedal.IsLine;
+            fields.pedalSign = expr.getPedal.IsSign;
+        }
+        if (expr.SourceExpression && expr.SourceExpression.DynEnum !== undefined) {
+            var de = expr.SourceExpression.DynEnum;
+            fields.dynamic = de < DYNAMIC_ENUM_NAMES.length ? DYNAMIC_ENUM_NAMES[de] : "unknown";
+            fields.midiVolume = expr.SourceExpression.MidiVolume;
+        }
+        if (expr.SourceExpression && expr.SourceExpression.TempoInBpm !== undefined) {
+            fields.tempoBpm = expr.SourceExpression.TempoInBpm;
+            fields.tempoType = expr.SourceExpression.TempoType;
+        }
+        return fields;
+    }
+
+    function extractNoteFields(note) {
+        const fields = {};
+        fields.staffLine = note.staffLine;
+        if (note.sourceNote) {
+            fields.isRest = note.sourceNote.isRest ? note.sourceNote.isRest() : false;
+            if (note.sourceNote.Pitch) {
+                fields.pitch = note.sourceNote.Pitch.ToString ? note.sourceNote.Pitch.ToString() : undefined;
+            }
+            if (note.sourceNote.Length) {
+                fields.noteLength = note.sourceNote.Length.RealValue;
+            }
+            fields.drawnAccidental = note.sourceNote.DrawnAccidental;
+        }
+        if (note.vfnote) {
+            fields.vfAbsX = note.vfnote[0].getAbsoluteX ? note.vfnote[0].getAbsoluteX() : undefined;
+            fields.xShift = note.vfnote[0].xShift;
+        }
+        return fields;
+    }
+
+    if (!page.MusicSystems) { return { sample: sampleFilename, page: pageIndex + 1, pageWidth, pageHeight, elementCount: 0 }; }
+
+    const systems = [];
+
+    for (let si = 0; si < page.MusicSystems.length; si++) {
+        const sys = page.MusicSystems[si];
+        if (!sys || !sys.PositionAndShape) { continue; }
+        totalCount++;
+
+        // --- system-level children ---
+        const systemLines = [];
+        if (sys.SystemLines && Array.isArray(sys.SystemLines)) {
+            for (let li = 0; li < sys.SystemLines.length; li++) {
+                const sl = sys.SystemLines[li];
+                totalCount++;
+                systemLines.push({ type: "systemLine", path: `s${si}.sline${li}`, bbox: extractBBox(sl.PositionAndShape) });
+            }
+        }
+
+        const groupBrackets = [];
+        const instrumentBrackets = [];
+        const bracketArrays = [
+            { arr: sys.InstrumentBrackets, label: "instrumentBracket", target: instrumentBrackets },
+            { arr: sys.GroupBrackets, label: "groupBracket", target: groupBrackets },
+        ];
+        for (const ba of bracketArrays) {
+            if (!ba.arr || !Array.isArray(ba.arr)) { continue; }
+            for (let bi = 0; bi < ba.arr.length; bi++) {
+                const bracket = ba.arr[bi];
+                totalCount++;
+                ba.target.push({ type: ba.label, path: `s${si}.${ba.label[0]}${bi}`, bbox: extractBBox(bracket.PositionAndShape) });
+            }
+        }
+
+        // --- staffLines ---
+        const staffLines = [];
+        if (sys.StaffLines && Array.isArray(sys.StaffLines)) {
+            for (let sli = 0; sli < sys.StaffLines.length; sli++) {
+                const staffLine = sys.StaffLines[sli];
+                if (!staffLine) { continue; }
+                const slPrefix = `s${si}.sl${sli}`;
+                const slChildren = []; // horizontal 5-line staff lines
+
+                if (staffLine.StaffLines && Array.isArray(staffLine.StaffLines)) {
+                    for (let hli = 0; hli < staffLine.StaffLines.length; hli++) {
+                        const hl = staffLine.StaffLines[hli];
+                        if (!hl || !hl.Start || !hl.End) { continue; }
+                        totalCount++;
+                        slChildren.push({
+                            type: "staffLine",
+                            path: `${slPrefix}.hline${hli}`,
+                            startX: hl.Start.x, startY: hl.Start.y,
+                            endX: hl.End.x, endY: hl.End.y,
+                            lineWidth: hl.Width,
+                        });
+                    }
+                }
+
+                const lyricLines = [];
+                if (staffLine.LyricLines && Array.isArray(staffLine.LyricLines)) {
+                    for (let lli = 0; lli < staffLine.LyricLines.length; lli++) {
+                        const ll = staffLine.LyricLines[lli];
+                        if (!ll) { continue; }
+                        totalCount++;
+                        lyricLines.push({ type: "lyricLine", path: `${slPrefix}.lline${lli}`, bbox: extractBBox(ll.PositionAndShape) });
+                    }
+                }
+
+                const slurs = [];
+                if (staffLine.GraphicalSlurs && Array.isArray(staffLine.GraphicalSlurs)) {
+                    for (let gsi = 0; gsi < staffLine.GraphicalSlurs.length; gsi++) {
+                        const slur = staffLine.GraphicalSlurs[gsi];
+                        if (!slur) { continue; }
+                        totalCount++;
+                        slurs.push({
+                            type: "slur",
+                            path: `${slPrefix}.slur${gsi}`,
+                            placement: slur.placement,
+                            staffEntryCount: slur.staffEntries ? slur.staffEntries.length : 0,
+                        });
+                    }
+                }
+
+                // --- measures ---
+                const measures = [];
+                if (staffLine.Measures && Array.isArray(staffLine.Measures)) {
+                    for (let mi = 0; mi < staffLine.Measures.length; mi++) {
+                        const measure = staffLine.Measures[mi];
+                        if (!measure) { continue; }
+                        totalCount++;
+                        const mPrefix = `${slPrefix}.m${mi}`;
+
+                        // --- staffEntries ---
+                        const staffEntries = [];
+                        if (measure.staffEntries && Array.isArray(measure.staffEntries)) {
+                            for (let sei = 0; sei < measure.staffEntries.length; sei++) {
+                                const se = measure.staffEntries[sei];
+                                if (!se) { continue; }
+                                totalCount++;
+                                const sePrefix = `${mPrefix}.se${sei}`;
+                                const seTags = [];
+                                if (se.relInMeasureTimestamp) {
+                                    seTags.push("ts=" + se.relInMeasureTimestamp.RealValue);
+                                }
+
+                                // --- voiceEntries ---
+                                const voiceEntries = [];
+                                if (se.graphicalVoiceEntries && Array.isArray(se.graphicalVoiceEntries)) {
+                                    for (let vei = 0; vei < se.graphicalVoiceEntries.length; vei++) {
+                                        const ve = se.graphicalVoiceEntries[vei];
+                                        if (!ve) { continue; }
+                                        totalCount++;
+                                        const vePrefix = `${sePrefix}.ve${vei}`;
+                                        const veInfo = { type: "voiceEntry", path: vePrefix, bbox: extractBBox(ve.PositionAndShape) };
+                                        if (ve.vfStaveNote) {
+                                            veInfo.xShift = ve.vfStaveNote.xShift;
+                                            veInfo.vfAbsX = ve.vfStaveNote.getAbsoluteX ? ve.vfStaveNote.getAbsoluteX() : undefined;
+                                        }
+
+                                        // --- notes ---
+                                        const notes = [];
+                                        if (ve.notes && Array.isArray(ve.notes)) {
+                                            for (let ni = 0; ni < ve.notes.length; ni++) {
+                                                const note = ve.notes[ni];
+                                                if (!note) { continue; }
+                                                totalCount++;
+                                                notes.push({ type: "note", path: `${vePrefix}.n${ni}`, bbox: extractBBox(note.PositionAndShape), ...extractNoteFields(note) });
+                                            }
+                                        }
+                                        veInfo.notes = notes;
+                                        voiceEntries.push(veInfo);
+                                    }
+                                }
+
+                                // --- graphicalInstructions ---
+                                const graphicalInstructions = [];
+                                if (se.GraphicalInstructions && Array.isArray(se.GraphicalInstructions)) {
+                                    for (let gii = 0; gii < se.GraphicalInstructions.length; gii++) {
+                                        const gi = se.GraphicalInstructions[gii];
+                                        if (!gi) { continue; }
+                                        totalCount++;
+                                        let giType = "instruction";
+                                        if (gi.clef !== undefined || gi.Clef !== undefined) { giType = "clef"; }
+                                        else if (gi.Key !== undefined || gi.keySig !== undefined) { giType = "keySignature"; }
+                                        else if (gi.timeSig !== undefined || gi.Time !== undefined) { giType = "timeSignature"; }
+                                        graphicalInstructions.push({ type: giType, path: `${sePrefix}.instr${gii}`, bbox: extractBBox(gi.PositionAndShape) });
+                                    }
+                                }
+
+                                // --- ties ---
+                                const ties = [];
+                                if (se.GraphicalTies && Array.isArray(se.GraphicalTies)) {
+                                    for (let ti = 0; ti < se.GraphicalTies.length; ti++) {
+                                        const tie = se.GraphicalTies[ti];
+                                        if (!tie) { continue; }
+                                        totalCount++;
+                                        const tieInfo = { type: "tie", path: `${sePrefix}.tie${ti}` };
+                                        if (tie.StartNote && tie.StartNote.sourceNote && tie.StartNote.sourceNote.Pitch) {
+                                            tieInfo.startPitch = tie.StartNote.sourceNote.Pitch.ToString ? tie.StartNote.sourceNote.Pitch.ToString() : undefined;
+                                        }
+                                        if (tie.EndNote && tie.EndNote.sourceNote && tie.EndNote.sourceNote.Pitch) {
+                                            tieInfo.endPitch = tie.EndNote.sourceNote.Pitch.ToString ? tie.EndNote.sourceNote.Pitch.ToString() : undefined;
+                                        }
+                                        ties.push(tieInfo);
+                                    }
+                                }
+
+                                // --- lyrics ---
+                                const lyrics = [];
+                                if (se.LyricsEntries && Array.isArray(se.LyricsEntries)) {
+                                    for (let lyi = 0; lyi < se.LyricsEntries.length; lyi++) {
+                                        const ly = se.LyricsEntries[lyi];
+                                        if (!ly) { continue; }
+                                        totalCount++;
+                                        const lyInfo = { type: "lyric", path: `${sePrefix}.ly${lyi}` };
+                                        if (ly.GraphicalLabel && ly.GraphicalLabel.PositionAndShape) {
+                                            lyInfo.bbox = extractBBox(ly.GraphicalLabel.PositionAndShape);
+                                        }
+                                        if (ly.GraphicalLabel && ly.GraphicalLabel.TextLines) {
+                                            lyInfo.text = ly.GraphicalLabel.TextLines.join("");
+                                        }
+                                        lyrics.push(lyInfo);
+                                    }
+                                }
+
+                                // --- chordSymbols ---
+                                const chordSymbols = [];
+                                if (se.graphicalChordContainers && Array.isArray(se.graphicalChordContainers)) {
+                                    for (let cci = 0; cci < se.graphicalChordContainers.length; cci++) {
+                                        const cc = se.graphicalChordContainers[cci];
+                                        if (!cc) { continue; }
+                                        totalCount++;
+                                        const ccInfo = { type: "chordSymbol", path: `${sePrefix}.chord${cci}` };
+                                        if (cc.GraphicalLabel && cc.GraphicalLabel.PositionAndShape) {
+                                            ccInfo.bbox = extractBBox(cc.GraphicalLabel.PositionAndShape);
+                                        }
+                                        if (cc.GraphicalLabel && cc.GraphicalLabel.TextLines) {
+                                            ccInfo.text = cc.GraphicalLabel.TextLines.join("");
+                                        }
+                                        chordSymbols.push(ccInfo);
+                                    }
+                                }
+
+                                staffEntries.push({
+                                    type: "staffEntry",
+                                    path: sePrefix,
+                                    bbox: extractBBox(se.PositionAndShape),
+                                    tags: seTags.join(" "),
+                                    voiceEntries: voiceEntries,
+                                    graphicalInstructions: graphicalInstructions,
+                                    ties: ties,
+                                    lyrics: lyrics,
+                                    chordSymbols: chordSymbols,
+                                });
+                            }
+                        }
+
+                        measures.push({
+                            type: "measure",
+                            path: mPrefix,
+                            bbox: extractBBox(measure.PositionAndShape),
+                            measureNumber: measure.MeasureNumber,
+                            beginInstructionsWidth: measure.beginInstructionsWidth,
+                            endInstructionsWidth: measure.endInstructionsWidth,
+                            isExtraGraphicalMeasure: measure.IsExtraGraphicalMeasure,
+                            isMultiRestMeasure: measure.isMultiRestMeasure ? measure.isMultiRestMeasure() : false,
+                            staffEntries: staffEntries,
+                        });
+                    }
+                }
+
+                // --- expressions (attached to staffLine) ---
+                const firstMeasureAbsX = measures.length > 0 && measures[0].bbox ? measures[0].bbox.absX : undefined;
+                const expressions = [];
+                // OctaveShifts
+                if (staffLine.OctaveShifts && Array.isArray(staffLine.OctaveShifts)) {
+                    for (let oi = 0; oi < staffLine.OctaveShifts.length; oi++) {
+                        const expr = staffLine.OctaveShifts[oi];
+                        if (!expr) { continue; }
+                        totalCount++;
+                        expressions.push({
+                            type: "octaveShift",
+                            path: `${slPrefix}.oct${oi}`,
+                            bbox: extractBBox(expr.PositionAndShape),
+                            octaveType: expr.getOctaveShift ? expr.getOctaveShift.Type : undefined,
+                        });
+                    }
+                }
+                // Pedals
+                if (staffLine.Pedals && Array.isArray(staffLine.Pedals)) {
+                    for (let pi = 0; pi < staffLine.Pedals.length; pi++) {
+                        const expr = staffLine.Pedals[pi];
+                        if (!expr) { continue; }
+                        totalCount++;
+                        expressions.push({
+                            type: "pedal",
+                            path: `${slPrefix}.ped${pi}`,
+                            bbox: extractBBox(expr.PositionAndShape),
+                            pedalType: expr.getPedal ? expr.getPedal.Type : undefined,
+                        });
+                    }
+                }
+                // WavyLines
+                if (staffLine.WavyLines && Array.isArray(staffLine.WavyLines)) {
+                    for (let wi = 0; wi < staffLine.WavyLines.length; wi++) {
+                        const expr = staffLine.WavyLines[wi];
+                        if (!expr) { continue; }
+                        totalCount++;
+                        expressions.push({
+                            type: "wavyLine",
+                            path: `${slPrefix}.wavy${wi}`,
+                            bbox: extractBBox(expr.PositionAndShape),
+                        });
+                    }
+                }
+                // AbstractExpressions (wedges, dynamics, tempo)
+                if (staffLine.AbstractExpressions && Array.isArray(staffLine.AbstractExpressions)) {
+                    for (let ei = 0; ei < staffLine.AbstractExpressions.length; ei++) {
+                        const expr = staffLine.AbstractExpressions[ei];
+                        if (!expr) { continue; }
+                        totalCount++;
+                        const subtype = detectExpressionType(expr);
+                        const exprInfo = {
+                            type: "expression",
+                            subtype: subtype,
+                            path: `${slPrefix}.expr${ei}`,
+                            bbox: extractBBox(expr.PositionAndShape),
+                        };
+                        Object.assign(exprInfo, extractExpressionFields(expr, firstMeasureAbsX));
+                        expressions.push(exprInfo);
+                    }
+                }
+
+                staffLines.push({
+                    type: "staffLineGroup",
+                    path: slPrefix,
+                    staffLines: slChildren,
+                    lyricLines: lyricLines,
+                    slurs: slurs,
+                    measures: measures,
+                    expressions: expressions,
+                });
+            }
+        }
+
+        systems.push({
+            type: "system",
+            path: `s${si}`,
+            bbox: extractBBox(sys.PositionAndShape),
+            systemLines: systemLines,
+            groupBrackets: groupBrackets,
+            instrumentBrackets: instrumentBrackets,
+            staffLineGroups: staffLines,
+        });
+    }
+
+    return {
+        sample: sampleFilename,
+        page: pageIndex + 1,
+        pageWidth: pageWidth,
+        pageHeight: pageHeight,
+        elementCount: totalCount,
+        systems: systems,
+    };
 }
 
 function debug (msg, debugEnabled = true) {
