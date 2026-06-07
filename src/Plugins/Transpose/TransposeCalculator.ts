@@ -32,9 +32,11 @@ export class TransposeCalculator implements ITransposeCalculator {
         for (let i: number = 0; i < TransposeCalculator.noteEnums.length; i++) {
             const currentValue: number = <number>TransposeCalculator.noteEnums[i];
             if (currentValue === transposedHalfTone) {
-                // In minor keys, a raised note (sharp accidental) that lands exactly on a natural note
+                // In sharp-key minor keys, a raised note that lands exactly on a natural note
                 // must be spelled as the raised degree below (e.g. E# in F# minor, not F♮; B# in C# minor, not C♮).
-                if (hasSharpAccidental && isMinorKey) {
+                // Flat-key minor keys (C minor, F minor, Bb minor…) are excluded: their raised 7th
+                // lands on a natural note that is correctly spelled with a ♮ sign (B♮, E♮, A♮).
+                if (hasSharpAccidental && isMinorKey && currentKeyInstruction.Key > 0) {
                     let noteIndex: number = i - 1;
                     if (noteIndex < 0) {
                         noteIndex += 7;
