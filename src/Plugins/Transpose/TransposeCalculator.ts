@@ -1,6 +1,6 @@
 import { ITransposeCalculator } from "../../MusicalScore/Interfaces";
 import { Pitch, NoteEnum, AccidentalEnum } from "../../Common/DataObjects";
-import { KeyInstruction } from "../../MusicalScore/VoiceData/Instructions";
+import { KeyInstruction, KeyEnum } from "../../MusicalScore/VoiceData/Instructions";
 
 /** Calculates transposition of individual notes and keys,
  * which is used by multiple OSMD classes to transpose the whole sheet.
@@ -24,11 +24,29 @@ export class TransposeCalculator implements ITransposeCalculator {
         let transposedHalfTone: number = result.halftone;
         let octaveChange: number = result.overflow;
 
+        const accidentalHalfTones: number = Pitch.HalfTonesFromAccidental(pitch.Accidental);
+        const hasSharpAccidental: boolean = accidentalHalfTones > 0;
+        const hasFlatAccidental: boolean = accidentalHalfTones < 0;
+        const isMinorKey: boolean = currentKeyInstruction.Mode !== KeyEnum.major;
+
         for (let i: number = 0; i < TransposeCalculator.noteEnums.length; i++) {
             const currentValue: number = <number>TransposeCalculator.noteEnums[i];
             if (currentValue === transposedHalfTone) {
-                const noteIndex: number = i;
-                transposedFundamentalNote = TransposeCalculator.noteEnums[noteIndex];
+                // In minor keys, a raised note (sharp accidental) that lands exactly on a natural note
+                // must be spelled as the raised degree below (e.g. E# in F# minor, not F♮; B# in C# minor, not C♮).
+                if (hasSharpAccidental && isMinorKey) {
+                    let noteIndex: number = i - 1;
+                    if (noteIndex < 0) {
+                        noteIndex += 7;
+                        transposedHalfTone += 12;
+                        octaveChange--;
+                    }
+                    transposedFundamentalNote = TransposeCalculator.noteEnums[noteIndex];
+                    transposedAccidental = Pitch.AccidentalFromHalfTones(transposedHalfTone - <number>transposedFundamentalNote);
+                    transposedOctave = <number>(pitch.Octave + octaveChange);
+                    return new Pitch(transposedFundamentalNote, transposedOctave, transposedAccidental);
+                }
+                transposedFundamentalNote = TransposeCalculator.noteEnums[i];
                 transposedOctave = <number>(pitch.Octave + octaveChange);
                 transposedAccidental = AccidentalEnum.NONE;
                 return new Pitch(transposedFundamentalNote, transposedOctave, transposedAccidental);
@@ -41,9 +59,6 @@ export class TransposeCalculator implements ITransposeCalculator {
             if (currentValue > transposedHalfTone) {
                 let noteIndex: number = i;
 
-                const accidentalHalfTones: number = Pitch.HalfTonesFromAccidental(pitch.Accidental);
-                const hasSharpAccidental: boolean = accidentalHalfTones > 0;
-                const hasFlatAccidental: boolean = accidentalHalfTones < 0;
                 const keyHasSharps: boolean = currentKeyInstruction.Key > 0;
                 const keyHasFlats: boolean = currentKeyInstruction.Key < 0;
                 let preferSharps: boolean = true;
@@ -51,7 +66,11 @@ export class TransposeCalculator implements ITransposeCalculator {
                 // Choose enharmonic (sharp vs flat) based on the transposed key signature (#1345),
                 //   but keep the original accidental when the key has no preference
                 //   (e.g. Beethoven Geliebte measure 6, transposing -3 to C major: keep flat instead of sharp).
-                if (keyHasSharps) {
+                // In minor keys, a raised note (sharp accidental) must stay sharp regardless of key flats,
+                //   so the leading tone is spelled as raised 7th degree (e.g. C# in D minor, F# in G minor).
+                if (hasSharpAccidental && isMinorKey) {
+                    preferSharps = true;
+                } else if (keyHasSharps) {
                     preferSharps = true;
                 } else if (keyHasFlats) {
                     preferSharps = false;
