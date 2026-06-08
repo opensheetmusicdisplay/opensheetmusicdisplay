@@ -2205,8 +2205,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
                       // Add a Graphical Slur to the staffline, if the recent note is the Startnote of a slur
                       const gSlur: GraphicalSlur = new GraphicalSlur(slur, this.rules);
-                      openGraphicalSlurs.push(gSlur);
                       staffLine.addSlurToStaffline(gSlur);
+                      if (slur.isCrossed()) {
+                        // A cross-staff slur (e.g. left hand to right hand) ends on a different staff, so it
+                        // would never be closed by the per-staff open/close mechanism below - which would leave
+                        // it open and spawn phantom continuation slurs on every following staffline. Keep it out
+                        // of openGraphicalSlurs; its curve is calculated separately at draw time (spanning both
+                        // stafflines). It still needs a staffEntry for GraphicalSlur.Compare's sorting.
+                        gSlur.staffEntries = [graphicalStaffEntry];
+                      } else {
+                        openGraphicalSlurs.push(gSlur);
+                      }
 
                       /* VexFlow Version - for later use
                       const vfSlur: VexFlowSlur = new VexFlowSlur(slur);

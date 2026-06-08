@@ -54,14 +54,21 @@ export class SlurReader {
                             }
                             slur.StartNote = currentNote;
                             slur.PlacementXml = slurPlacementXml;
+                            if (slur.EndNote) {
+                                // The stop was read before the start. This happens for cross-staff slurs (e.g. left
+                                // hand to right hand): MusicXML writes the end note's staff before a <backup> and the
+                                // start note's staff after it, so the slur's stop appears before its start.
+                                this.linkSlurToNotes(slur);
+                                delete this.openSlurDict[slurNumber];
+                            }
                         } else if (type === "stop") {
-                            const slur: Slur = this.openSlurDict[slurNumber];
-                            if (slur) {
-                                const nodeName: string = slurNode.name;
-                                if (nodeName === "slide" || nodeName === "glissando") {
-                                    // TODO for now, we abuse the SlurReader to also process slides and glissandi, to avoid a lot of duplicate code.
-                                    //   though we might want to separate the code a bit, at least use its own openGlissDict instead of openSlurDict.
-                                    //   also see variable glissElements later on
+                            const nodeName: string = slurNode.name;
+                            if (nodeName === "slide" || nodeName === "glissando") {
+                                // TODO for now, we abuse the SlurReader to also process slides and glissandi, to avoid a lot of duplicate code.
+                                //   though we might want to separate the code a bit, at least use its own openGlissDict instead of openSlurDict.
+                                //   also see variable glissElements later on
+                                const slur: Slur = this.openSlurDict[slurNumber];
+                                if (slur) {
                                     const startNote: Note = slur.StartNote;
                                     const newGlissando: Glissando = new Glissando(startNote);
                                     newGlissando.AddNote(currentNote);
@@ -69,17 +76,21 @@ export class SlurReader {
                                     currentNote.NoteGlissando = newGlissando;
                                     // TODO use its own dict, openSlideDict? Can this cause problems if slur and slide have the same number?
                                     delete this.openSlurDict[slurNumber];
-                                } else {
-                                    slur.EndNote = currentNote;
-                                    // check if not already a slur with same notes has been given:
-                                    if (!currentNote.isDuplicateSlur(slur)) {
-                                        // if not, link slur to notes:
-                                        currentNote.NoteSlurs.push(slur);
-                                        const slurStartNote: Note = slur.StartNote;
-                                        slurStartNote.NoteSlurs.push(slur);
-                                    }
+                                }
+                            } else {
+                                let slur: Slur = this.openSlurDict[slurNumber];
+                                if (!slur) {
+                                    // The stop was read before the start (cross-staff slur written end-staff-first,
+                                    // see the start branch above). Open the slur now and complete it when the start arrives.
+                                    slur = new Slur();
+                                    this.openSlurDict[slurNumber] = slur;
+                                }
+                                slur.EndNote = currentNote;
+                                if (slur.StartNote) {
+                                    this.linkSlurToNotes(slur);
                                     delete this.openSlurDict[slurNumber];
                                 }
+                                // else: wait for the matching start node to complete the slur
                             }
                         }
                     }
@@ -88,6 +99,16 @@ export class SlurReader {
         } catch (err) {
             const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/SlurError", "Error while reading slur.");
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+        }
+    }
+
+    /** Links a fully-defined slur (both StartNote and EndNote set) to its two notes, unless it duplicates an existing one. */
+    private linkSlurToNotes(slur: Slur): void {
+        const endNote: Note = slur.EndNote;
+        // check that a slur with the same notes hasn't already been added:
+        if (!endNote.isDuplicateSlur(slur)) {
+            endNote.NoteSlurs.push(slur);
+            slur.StartNote.NoteSlurs.push(slur);
         }
     }
 }

@@ -333,6 +333,11 @@ export class EngravingRules {
     public SlurHeightFlattenLongSlursCutoffWidth: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
     public SlurMaximumYControlPointDistance: number;
+    /** How much a cross-staff slur (e.g. left hand to right hand) bows out, as a factor of the distance
+     * between its two notes. See [[SlurCrossStaffMinBow]] and [[SlurCrossStaffMaxBow]] for the limits. */
+    public SlurCrossStaffBowFactor: number;
+    public SlurCrossStaffMinBow: number;
+    public SlurCrossStaffMaxBow: number;
     public GlissandoNoteOffset: number;
     public GlissandoStafflineStartMinimumWidth: number;
     public GlissandoStafflineStartYDistanceToNote: number;
@@ -826,6 +831,10 @@ export class EngravingRules {
         this.SlursStartingAtSameStaffEntryYOffset = 0.8;
         //Maximum y difference between control points. Forces slurs to have less 'weight' either way in the x direction
         this.SlurMaximumYControlPointDistance = undefined;
+        // Cross-staff slurs (e.g. left hand to right hand): how far the curve bows out from the line between the notes.
+        this.SlurCrossStaffBowFactor = 0.12;
+        this.SlurCrossStaffMinBow = 0.8;
+        this.SlurCrossStaffMaxBow = 2.5;
 
         // Glissandi
         this.GlissandoNoteOffset = 0.5;
