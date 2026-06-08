@@ -3,7 +3,6 @@
 "use strict";
 const FS = require("fs");
 const path = require("path");
-const jsdom = require("jsdom");
 const { registerFont } = require("canvas");
 const OSMD = require("../../build/opensheetmusicdisplay.min.js");
 
@@ -72,7 +71,8 @@ async function init () {
     const endlessPage = !(pageHeight > 0 && pageWidth > 0);
     if (!endlessPage) { pageFormat = `${pageWidth}x${pageHeight}`; }
 
-    const dom = new jsdom.JSDOM("<!DOCTYPE html></html>");
+    const { JSDOM } = await import("jsdom");
+    const dom = new JSDOM("<!DOCTYPE html></html>");
     global.window = dom.window;
     global.document = window.document;
     global.HTMLElement = window.HTMLElement;

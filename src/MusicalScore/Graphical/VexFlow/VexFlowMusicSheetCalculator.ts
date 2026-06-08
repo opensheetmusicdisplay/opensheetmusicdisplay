@@ -411,7 +411,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // Zero xShift after formatting. VF5 applies collision-avoidance
         // xShift per-context, which can misalign same-tick notes across
         // staves. Zero unless a tickable's notehead would overlap another
-        // on the same staff (second interval).
+        // on the same staff (unison or second interval).
         const tctxs: any = formatter.getTickContexts();
         if (tctxs) {
           const noteStep: Record<string, number> = { c:0, d:1, e:2, f:3, g:4, a:5, b:6 };
@@ -425,12 +425,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 const b: any = tickables[j] as any;
                 const sa: any = a.getStave?.();
                 const sb: any = b.getStave?.();
-                if (!sa || !sb || sa !== sb) { continue; }
+                if (sa !== sb) { continue; }
                 const ka: string[] = a.getKeys?.() ?? [];
                 const kb: string[] = b.getKeys?.() ?? [];
-                let isSecond: boolean = false;
+                let isOverlapping: boolean = false;
                 for (const k1 of ka) {
-                  if (isSecond) { break; }
+                  if (isOverlapping) { break; }
                   for (const k2 of kb) {
                     const [n1, o1] = k1.split("/");
                     const [n2, o2] = k2.split("/");
@@ -439,13 +439,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     if (s1 >= 0 && s2 >= 0) {
                       const d1: number = parseInt(o1, 10) * 7 + s1;
                       const d2: number = parseInt(o2, 10) * 7 + s2;
-                      if (Math.abs(d1 - d2) === 1) {
-                        isSecond = true;
+                      if (Math.abs(d1 - d2) <= 1) {
+                        isOverlapping = true;
                       }
                     }
                   }
                 }
-                if (isSecond) {
+                if (isOverlapping) {
                   needsXShift.add(a);
                   needsXShift.add(b);
                 }
@@ -454,11 +454,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             for (const tickable of tickables) {
               const t: any = tickable as any;
               if (needsXShift.has(tickable)) {
-                console.log(`[KEEP_XSHIFT] tickKey=${tickKey} keys=${t.getKeys?.()?.join("|")} stave=${t.getStave?.()?.getNum?.()}`);
                 continue;
               }
               if (typeof t.setXShift === "function" && t.getXShift() !== 0) {
-                console.log(`[ZERO_XSHIFT] tickKey=${tickKey} keys=${t.getKeys?.()?.join("|")} stave=${t.getStave?.()?.getNum?.()}`);
                 t.setXShift(0);
               }
             }
@@ -652,6 +650,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         spacingNeededToMeasureEnd = labelWidth - overlapAllowedIntoNextMeasure;
         if (lastEntryDict[currentContainerIndex]) {
           spacingNeededToLastContainer = lastEntryDict[currentContainerIndex].labelWidth + minSpacing;
+          // VF5 softmax distributes extra width unevenly when long-duration
+          // items (e.g. whole rests in another voice) skew the tick weights.
+          // Later gaps get progressively less extra width, so boost their
+          // elongation factor requirements to compensate and add breathing room.
+          const verseGapIndex: number = (lastEntryDict[currentContainerIndex].gapIndex ?? 0) + 1;
+          if (verseGapIndex >= 3) {
+            spacingNeededToLastContainer = spacingNeededToLastContainer * 1.5 + 1.5;
+          }
         }
       }
 
@@ -693,9 +699,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
 
       // set up information about this lyric entry of verse j for next lyric entry of verse j
+      const previousGapIndex: number = lastEntryDict[currentContainerIndex]?.gapIndex ?? 0;
       lastEntryDict[currentContainerIndex] = {
         cumulativeOverlap: overlap,
         extend: container instanceof GraphicalLyricEntry ? container.LyricsEntry.extend : false,
+        gapIndex: previousGapIndex + 1,
         labelWidth: labelWidth,
         measureNumber: measureNumber,
         sourceNoteDuration: container instanceof GraphicalLyricEntry ? (container.LyricsEntry && container.LyricsEntry.Parent.Notes[0].Length) : false,
@@ -782,9 +790,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     }
     elongationFactorForMeasureWidth = Math.min(elongationFactorForMeasureWidth, this.rules.MaximumLyricsElongationFactor);
-    // console.log(`elongationFactor for measure ${measuresVertical[0]?.MeasureNumber}: ${elongationFactorForMeasureWidth}`);
-    // TODO check when this is > 2.0. See PR #1474
-
     const newMinimumStaffEntriesWidth: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
 
     return newMinimumStaffEntriesWidth;
