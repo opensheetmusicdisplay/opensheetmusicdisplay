@@ -57,7 +57,12 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                     const noteWidth: number = noteGlyph ? noteGlyph.getWidth() : gve.vfStaveNote.getWidth();
                     bboxToAdjust.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + noteWidth) / unitInPixels;
                 } else {
-                    bboxToAdjust.RelativePosition.x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
+                    // VF5: for center-aligned tickables, getBoundingBox().getX() may not
+                    // include centerXShift, so use getAbsoluteX() which does.
+                    const isCenterAligned: boolean = !!(gve.vfStaveNote as any).isCenterAligned?.();
+                    bboxToAdjust.RelativePosition.x = isCenterAligned
+                        ? gve.vfStaveNote.getAbsoluteX() / unitInPixels
+                        : gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
                     if (isSecondaryWholeRest) {
                         bboxToAdjust.RelativePosition.x -= stave.getNoteStartX() / unitInPixels;
                         bboxToAdjust.RelativePosition.x -= 1.3;
@@ -66,10 +71,12 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 }
                 const sourceNote: Note = gve.notes[0].sourceNote;
                 if (sourceNote.isRest() && sourceNote.Length.RealValue === this.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue) {
-                    // whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
-                    // see Note.isWholeRest(), which is currently not safe
-                    bboxToAdjust.RelativePosition.x +=
-                        this.parentMeasure.parentSourceMeasure.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
+                    // whole rest: length = measure length.
+                    const isVF5CenterAligned: boolean = !!(gve.vfStaveNote as any)._alignCenter;
+                    if (!isVF5CenterAligned) {
+                        bboxToAdjust.RelativePosition.x +=
+                            this.parentMeasure.parentSourceMeasure.Rules.WholeRestXShiftVexflow - 0.1;
+                    }
                     gve.PositionAndShape.BorderLeft = -0.7;
                     gve.PositionAndShape.BorderRight = 0.7;
                 }

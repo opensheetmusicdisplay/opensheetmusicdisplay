@@ -951,7 +951,7 @@ export class VexFlowConverter {
         let vfOrna: VF.Ornament = undefined;
         switch (oContainer.GetOrnament) {
             case OrnamentEnum.DelayedInvertedTurn: {
-                vfOrna = new VF.Ornament("turn_inverted");
+                vfOrna = new VF.Ornament("turnInverted");
                 vfOrna.setDelayed(true);
                 break;
             }
@@ -966,12 +966,12 @@ export class VexFlowConverter {
                 break;
             }
             case OrnamentEnum.InvertedTurn: {
-                vfOrna = new VF.Ornament("turn_inverted");
+                vfOrna = new VF.Ornament("turnInverted");
                 vfOrna.setDelayed(false);
                 break;
             }
             case OrnamentEnum.Mordent: {
-                vfOrna = new VF.Ornament("mordent_inverted");
+                vfOrna = new VF.Ornament("mordentInverted");
                 vfOrna.setDelayed(false);
                 break;
             }

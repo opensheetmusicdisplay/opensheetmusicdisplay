@@ -416,7 +416,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           for (const tickKey of tctxs.list) {
             const ctx: any = tctxs.map[tickKey];
             const tickables: any[] = ctx.getTickables();
-            if (tickables.length < 2) { continue; }
             const needsXShift: Set<any> = new Set();
             for (let i: number = 0; i < tickables.length; i++) {
               for (let j: number = i + 1; j < tickables.length; j++) {
