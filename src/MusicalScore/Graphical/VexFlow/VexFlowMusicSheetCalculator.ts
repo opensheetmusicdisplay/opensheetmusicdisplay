@@ -1088,6 +1088,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   private buildNoteEquationForVexFlow(left: MetronomeNoteGroup, right: MetronomeNoteGroup): any {
     const convertGroup: (group: MetronomeNoteGroup) => any[] = (group) => {
       const items: any[] = [];
+      const hasBracket: boolean = group.tuplet?.bracket === true && group.notes.length > 1;
       for (let i: number = 0; i < group.notes.length; i++) {
         const note: MetronomeNote = group.notes[i];
         const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(note.type);
@@ -1102,6 +1103,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (group.tuplet) {
           item.tupletNum = group.tuplet.actualNotes;
           item.notesOccupied = group.tuplet.normalNotes;
+        }
+        if (hasBracket && i === 0) {
+          item.bracketStart = true;
+        }
+        if (hasBracket && i === group.notes.length - 1) {
+          item.bracketEnd = true;
         }
         items.push(item);
       }
