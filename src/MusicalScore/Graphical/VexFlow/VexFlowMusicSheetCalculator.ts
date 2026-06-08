@@ -47,7 +47,7 @@ import { GraphicalSlur } from "../GraphicalSlur";
 import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
-import { InstantaneousTempoExpression, MetronomeNoteGroup, TempoType } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
+import { InstantaneousTempoExpression, MetronomeNote, MetronomeNoteGroup, TempoType } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
@@ -1084,33 +1084,30 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
   }
 
-  /** Convert MetronomeNoteGroup data into the format expected by VexFlow's StaveTempo.drawNoteEquation(). */
+  /** Convert MetronomeNoteGroup data into the VF5 NoteEquationItem[] format. */
   private buildNoteEquationForVexFlow(left: MetronomeNoteGroup, right: MetronomeNoteGroup): any {
-    const convertGroup: (group: MetronomeNoteGroup) => any = (group) => {
-      const notes: any[] = group.notes.map(note => {
+    const convertGroup: (group: MetronomeNoteGroup) => any[] = (group) => {
+      const items: any[] = [];
+      for (let i: number = 0; i < group.notes.length; i++) {
+        const note: MetronomeNote = group.notes[i];
         const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(note.type);
         const vfDuration: string = VexFlowConverter.durations(duration, false)[0];
-        return {
+        const item: any = {
           duration: vfDuration,
           dots: note.dots,
-          beam: note.beam,
         };
-      });
-      const result: any = { notes };
-      if (group.tuplet) {
-        result.tuplet = {
-          actualNotes: group.tuplet.actualNotes,
-          normalNotes: group.tuplet.normalNotes,
-          bracket: group.tuplet.bracket,
-          showNumber: group.tuplet.showNumber,
-        };
+        if (note.beam) {
+          item.beam = note.beam;
+        }
+        if (group.tuplet) {
+          item.tupletNum = group.tuplet.actualNotes;
+          item.notesOccupied = group.tuplet.normalNotes;
+        }
+        items.push(item);
       }
-      return result;
+      return items;
     };
-    return {
-      left: convertGroup(left),
-      right: convertGroup(right),
-    };
+    return [...convertGroup(left), ...convertGroup(right)];
   }
 
   protected calculateRehearsalMark(measure: SourceMeasure): void {
