@@ -593,4 +593,50 @@ describe("VexFlow Measure - Rest Positioning", () => {
     done();
   });
 
+  it("quarter rests on beat 1 should NOT be shifted by centerWholeBarRests in Mozart_Clarinet_Quintet_Excerpt", (done: Mocha.Done) => {
+    const mxl: string = TestUtils.getMXL("Mozart_Clarinet_Quintet_Excerpt.mxl");
+    const div: HTMLElement = TestUtils.getDivElement(document);
+    const osmd: any = TestUtils.createOpenSheetMusicDisplay(div);
+    osmd.load(mxl).then(() => {
+      osmd.render();
+      const gms: GraphicalMusicSheet = osmd.graphic;
+
+      // Collect quarter rests at beat 1 in measures 1-5.
+      // Verify their xShift is near 0 (not shifted by centerWholeBarRests).
+      const badShifts: string[] = [];
+      for (const vml of gms.MeasureList) {
+        if (!vml) { continue; }
+        for (const measure of vml) {
+          const mnum: number = measure.MeasureNumber;
+          if (mnum < 1 || mnum > 5) { continue; }
+          if (!measure?.isVisible()) { continue; }
+          for (const se of measure.staffEntries) {
+            for (const gve of se.graphicalVoiceEntries) {
+              const vfve: any = gve;
+              const sn: any = vfve?.vfStaveNote;
+              if (!sn) { continue; }
+              const tc: any = sn.tickContext;
+              if (!tc) { continue; }
+              const tcTicks: number = tc.getCurrentTick?.()?.value?.() ?? -1;
+              if (tcTicks > 0.01) { continue; } // beat 1 only
+              const dur: string = sn.getDuration?.() ?? "?";
+              if (!sn.isRest?.() || dur !== "q") { continue; }
+
+              const xShift: number = sn.getXShift?.() ?? sn.xShift ?? 0;
+              if (Math.abs(xShift) > 1) {
+                badShifts.push(
+                  `m${mnum} s${measure.ParentStaff?.idInMusicSheet ?? -1}: ` +
+                  `xShift=${xShift.toFixed(1)} (should be ~0 for quarter rest at beat 1)`
+                );
+              }
+            }
+          }
+        }
+      }
+
+      expect(badShifts, `Quarter rests at beat 1 should NOT have large xShift:\n${badShifts.join("\n")}`).to.be.empty;
+      done();
+    }).catch(done);
+  });
+
 });
