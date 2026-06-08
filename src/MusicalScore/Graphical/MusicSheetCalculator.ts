@@ -2213,7 +2213,11 @@ export abstract class MusicSheetCalculator {
             graphicalStaffEntry.addGraphicalNoteToListAtCorrectYPosition(gve, graphicalNote);
             graphicalNote.PositionAndShape.calculateBoundingBox();
             if (!this.leadSheet) {
-                if (note.NoteBeam !== undefined && note.PrintObject) {
+                // Include the note in its beam if it's visible, or if its notehead is hidden but shared with a
+                // visible unison note in another voice (print-object="no") - then its stem still has to join the
+                // beam (emanating from the shared notehead) instead of becoming an orphan flagged note.
+                // E.g. Beethoven Moonlight Sonata 1st mvt. m.37 (test_unison_notehead_moonlight_sonata_measure37).
+                if (note.NoteBeam !== undefined && (note.PrintObject || note.sharesNoteheadWithVisibleUnisonNote())) {
                     if (!(note instanceof TabNote) || this.rules.TabBeamsRendered) {
                         this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
                     }

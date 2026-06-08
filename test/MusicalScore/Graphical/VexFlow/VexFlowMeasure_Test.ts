@@ -175,4 +175,45 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // Non-regression test for a beamed note whose notehead is hidden because it's shared with a unison note in
+   // another voice (print-object="no"). Its stem must still join the beam (not become an orphan flagged note with
+   // a transparent stem, which made the beam look like it was hanging in the air).
+   // E.g. Beethoven Moonlight Sonata 1st mvt. m.37: an eighth note shares a notehead with a dotted quarter.
+   it("Renders the stem of a beamed note sharing a hidden unison notehead, joined to the beam", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_unison_notehead_moonlight_sonata_measure37.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         // find the single invisible (print-object="no") note - the eighth note that shares the unison notehead
+         let invisibleVfNote: any;
+         for (let staffIdx: number = 0; staffIdx < 2; staffIdx++) {
+            const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, staffIdx);
+            for (const se of gm.staffEntries) {
+               for (const gve of se.graphicalVoiceEntries) {
+                  for (const note of gve.notes) {
+                     if (!note.sourceNote.isRest() && !note.sourceNote.PrintObject) {
+                        invisibleVfNote = (gve as VexFlowVoiceEntry).vfStaveNote;
+                     }
+                  }
+               }
+            }
+         }
+         expect(invisibleVfNote, "should find the invisible unison note").to.not.be.undefined;
+         // it must be part of the beam (not an orphan flagged eighth note) ...
+         expect(invisibleVfNote.beam, "invisible unison note should be beamed").to.be.ok;
+         // ... and its stem must be visible (not transparent), so the beam doesn't hang in the air
+         const stemStyle: { fillStyle?: string } = invisibleVfNote.getStem()?.getStyle();
+         if (stemStyle?.fillStyle) {
+            expect(stemStyle.fillStyle, "unison note stem must not be transparent").to.not.equal("#00000000");
+         }
+         done();
+      }).catch(done);
+   });
+
 });
