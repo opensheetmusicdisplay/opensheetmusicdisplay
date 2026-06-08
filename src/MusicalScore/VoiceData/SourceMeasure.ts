@@ -73,6 +73,11 @@ export class SourceMeasure {
 
     private measureNumber: number;
     public MeasureNumberXML: number;
+    /** Whether the measure was marked implicit="yes" in the MusicXML (e.g. a pickup measure, or a measure without
+     *  a proper meter like in Satie's Gnossiennes). Unlike ImplicitMeasure, this comes straight from the XML attribute
+     *  and is not derived from the measure duration. By default such measures don't show a measure number
+     *  (see EngravingRules.RenderMeasureNumbersForImplicitMeasures). */
+    public ImplicitMeasureFromXml: boolean = false;
     public MeasureNumberPrinted: number; // measureNumber if MeasureNumberXML undefined or NaN. Set in getPrintedMeasureNumber()
     public RhythmPrinted: RhythmInstruction; // the rhythm printed (rendered) in this measure
     public multipleRestMeasures: number; // usually undefined (0), unless "multiple-rest" given in XML (e.g. 4 measure rest)

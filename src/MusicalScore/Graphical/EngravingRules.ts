@@ -506,6 +506,10 @@ export class EngravingRules {
     public RenderFingerings: boolean;
     public RenderMeasureNumbers: boolean;
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
+    /** Whether to render measure numbers for measures marked implicit (e.g. implicit="yes" in the MusicXML, like
+     * pickup measures or measures without a meter as in Satie's Gnossiennes). Default false: implicit measures
+     * don't show a measure number, as per the MusicXML standard. */
+    public RenderMeasureNumbersForImplicitMeasures: boolean;
     public UseXMLMeasureNumbers: boolean;
     public RenderLyrics: boolean;
     public RenderChordSymbols: boolean;
@@ -1004,6 +1008,7 @@ export class EngravingRules {
         this.RenderFingerings = true;
         this.RenderMeasureNumbers = true;
         this.RenderMeasureNumbersOnlyAtSystemStart = false;
+        this.RenderMeasureNumbersForImplicitMeasures = false;
         this.UseXMLMeasureNumbers = true;
         this.RenderLyrics = true;
         this.RenderChordSymbols = true;

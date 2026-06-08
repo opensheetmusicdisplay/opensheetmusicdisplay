@@ -145,6 +145,9 @@ export class InstrumentReader {
             currentMeasure.MeasureNumberXML = measureNumberXml;
         }
       }
+      if (measureNode.attribute("implicit")?.value === "yes") {
+        currentMeasure.ImplicitMeasureFromXml = true; // by default these don't show a measure number, see RenderMeasureNumbersForImplicitMeasures
+      }
       const widthFactorAttr: IXmlAttribute = measureNode.attribute("osmdWidthFactor"); // custom xml attribute
       if (widthFactorAttr) {
         const widthFactorValue: number = Number.parseFloat(widthFactorAttr.value);

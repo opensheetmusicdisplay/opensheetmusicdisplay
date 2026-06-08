@@ -216,4 +216,44 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // Non-regression test for EngravingRules.RenderMeasureNumbersForImplicitMeasures.
+   // Measures marked implicit="yes" in the MusicXML (e.g. measures without a meter like in Satie's Gnossiennes)
+   // don't show a measure number by default, as per the MusicXML standard, but do when the rule is enabled.
+   it("Does not render a measure number for implicit measures, unless the rule is enabled", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_time_signature_missing_deliberately_gnossienne.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const xml: string = new XMLSerializer().serializeToString(score);
+
+      function measureNumberLabels(osmd: OpenSheetMusicDisplay): string[] {
+         const labels: string[] = [];
+         for (const page of osmd.GraphicSheet.MusicPages) {
+            for (const system of page.MusicSystems) {
+               for (const label of system.MeasureNumberLabels) {
+                  labels.push(label.Label.text);
+               }
+            }
+         }
+         return labels;
+      }
+
+      const osmdDefault: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      const osmdRuleOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmdDefault.load(xml).then(() => {
+         osmdDefault.render();
+         // the single measure is implicit="yes", so its number ("0") is not rendered
+         expect(measureNumberLabels(osmdDefault), "default: no measure number for an implicit measure").to.not.include("0");
+
+         return osmdRuleOn.load(xml);
+      }).then(() => {
+         osmdRuleOn.EngravingRules.RenderMeasureNumbersForImplicitMeasures = true;
+         osmdRuleOn.render();
+         expect(measureNumberLabels(osmdRuleOn), "rule enabled: implicit measure number is rendered").to.include("0");
+         done();
+      }).catch(done);
+   });
+
 });

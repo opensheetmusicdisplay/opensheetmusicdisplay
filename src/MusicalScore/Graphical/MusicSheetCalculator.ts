@@ -489,10 +489,17 @@ export abstract class MusicSheetCalculator {
 
             const isFirstMeasureAndNotPrintedOne: boolean = this.rules.UseXMLMeasureNumbers &&
                 measure.MeasureNumber === 1 && measure.parentSourceMeasure.getPrintedMeasureNumber() !== 1;
-            if ((measure.MeasureNumber === previousMeasureNumber ||
-                measure.MeasureNumber >= previousMeasureNumber + this.rules.MeasureNumberLabelOffset) &&
-                !measure.parentSourceMeasure.ImplicitMeasure ||
-                isFirstMeasureAndNotPrintedOne) {
+            // Implicit measures (a pickup measure, or implicit="yes" in the MusicXML - e.g. measures without a meter
+            // like in Satie's Gnossiennes) don't show a measure number by default, as per the MusicXML standard.
+            // (parentSourceMeasure is undefined for extra instruction-only measures, e.g. mid-system clef changes.)
+            const sourceMeasure: SourceMeasure = measure.parentSourceMeasure;
+            const measureIsImplicit: boolean = sourceMeasure !== undefined &&
+                (sourceMeasure.ImplicitMeasure || sourceMeasure.ImplicitMeasureFromXml);
+            const renderNumberForImplicit: boolean = !measureIsImplicit || this.rules.RenderMeasureNumbersForImplicitMeasures;
+            if (((measure.MeasureNumber === previousMeasureNumber ||
+                measure.MeasureNumber >= previousMeasureNumber + this.rules.MeasureNumberLabelOffset) ||
+                isFirstMeasureAndNotPrintedOne) &&
+                renderNumberForImplicit) {
                 if (measure.MeasureNumber !== 1 ||
                     (measure.MeasureNumber === 1 && measure !== staffLine.Measures[0]) ||
                     isFirstMeasureAndNotPrintedOne
