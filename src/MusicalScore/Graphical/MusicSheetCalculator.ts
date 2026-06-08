@@ -2229,8 +2229,11 @@ export abstract class MusicSheetCalculator {
                         this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
                     }
                 }
-                if (note.NoteTuplet !== undefined && note.PrintObject) {
-                    this.handleTuplet(graphicalNote, note.NoteTuplet, openTuplets);
+                if (note.NoteTuplets.length > 0 && note.PrintObject) {
+                    // a note can be part of more than one tuplet (nested tuplets); add it to each of them
+                    for (const noteTuplet of note.NoteTuplets) {
+                        this.handleTuplet(graphicalNote, noteTuplet, openTuplets);
+                    }
                 }
             }
 
@@ -2248,8 +2251,8 @@ export abstract class MusicSheetCalculator {
                 graphicalTabNote.PositionAndShape.calculateBoundingBox();
 
                 if (!this.leadSheet) {
-                    if (note.NoteTuplet) {
-                        this.handleTuplet(graphicalTabNote, note.NoteTuplet, openTuplets);
+                    for (const noteTuplet of note.NoteTuplets) {
+                        this.handleTuplet(graphicalTabNote, noteTuplet, openTuplets);
                     }
                 }
             }

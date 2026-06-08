@@ -184,6 +184,9 @@ export class Note {
     public set NoteTuplet(value: Tuplet) {
         this.tuplet = value;
     }
+    /** All tuplets this note is part of, from outermost to innermost (for nested tuplets). Usually a single tuplet.
+     *  NoteTuplet stays the innermost one for backwards compatibility; this list adds the enclosing tuplet(s). */
+    public NoteTuplets: Tuplet[] = [];
     public get NoteGlissando(): Glissando {
         return this.glissando;
     }

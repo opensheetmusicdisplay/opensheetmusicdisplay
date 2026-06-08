@@ -19,6 +19,8 @@ import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/Grap
 import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
+import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
 
 describe("VexFlow Measure", () => {
 
@@ -252,6 +254,45 @@ describe("VexFlow Measure", () => {
          osmdRuleOn.EngravingRules.RenderMeasureNumbersForImplicitMeasures = true;
          osmdRuleOn.render();
          expect(measureNumberLabels(osmdRuleOn), "rule enabled: implicit measure number is rendered").to.include("0");
+         done();
+      }).catch(done);
+   });
+
+   // Non-regression test for nested tuplets (issue #1583). The measure has an outer 3:2 tuplet spanning all 5 notes
+   // and an inner 9:4 tuplet over the last 3 (beamed) eighth notes that displays "3" (its <tuplet-actual> number).
+   // Before the fix the outer tuplet only covered its first two notes and the inner showed "9".
+   it("Parses nested tuplets: outer tuplet spans all notes, inner uses its tuplet-actual number", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_tuplet_nested_issue_1583.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         // collect the distinct tuplets the notes belong to
+         const tuplets: Set<Tuplet> = new Set<Tuplet>();
+         for (const voiceEntry of osmd.Sheet.Instruments[0].Voices[0].VoiceEntries) {
+            for (const note of voiceEntry.Notes) {
+               for (const tuplet of note.NoteTuplets) {
+                  tuplets.add(tuplet);
+               }
+            }
+         }
+         const noteCount: (t: Tuplet) => number = (t: Tuplet) => t.Notes.reduce((sum: number, sub: Note[]) => sum + sub.length, 0);
+         const tupletList: Tuplet[] = Array.from(tuplets);
+         expect(tupletList.length, "there should be two (nested) tuplets").to.equal(2);
+
+         const outer: Tuplet = tupletList.find((t: Tuplet) => noteCount(t) === 5);
+         const inner: Tuplet = tupletList.find((t: Tuplet) => noteCount(t) === 3);
+         // the outer tuplet has to include all 5 notes so its bracket spans the whole group
+         expect(outer, "outer tuplet should span all 5 notes").to.not.be.undefined;
+         expect(inner, "inner tuplet should span 3 notes").to.not.be.undefined;
+         expect(outer.TupletLabelNumber, "outer tuplet number").to.equal(3);
+         // the inner number comes from <tuplet-actual><tuplet-number>3, not the time-modification actual-notes (9)
+         expect(inner.TupletLabelNumber, "inner tuplet number from tuplet-actual").to.equal(3);
          done();
       }).catch(done);
    });
