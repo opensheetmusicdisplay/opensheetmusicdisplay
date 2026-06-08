@@ -515,6 +515,10 @@ export class EngravingRules {
     public RenderClefsAtBeginningOfStaffline: boolean;
     public RenderKeySignatures: boolean;
     public RenderTimeSignatures: boolean;
+    /** Whether to render a (default) time signature for samples that don't have a time signature in the source (e.g. MusicXML),
+     * like Satie's Gnossiennes. Default false, i.e. these samples are rendered without a time signature, as intended.
+     * For normal samples that do have a time signature, this rule has no effect (use RenderTimeSignatures to control those). */
+    public RenderTimeSignaturesForSamplesWithoutTimeSignature: boolean;
     public RenderFirstTempoExpression: boolean;
     public RenderPedals: boolean;
     public RenderWavyLines: boolean;
@@ -1009,6 +1013,7 @@ export class EngravingRules {
         this.RenderClefsAtBeginningOfStaffline = true;
         this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
+        this.RenderTimeSignaturesForSamplesWithoutTimeSignature = false;
         this.RenderFirstTempoExpression = true;
         this.RenderPedals = true;
         this.RenderWavyLines = true;

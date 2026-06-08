@@ -142,4 +142,37 @@ describe("VexFlow Measure", () => {
       );
    });
 
+   // Non-regression test for EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature.
+   // Pieces without a time signature in the source (e.g. Satie's Gnossiennes) should not render a
+   // (synthesized default 4/4) time signature by default, but should when the rule is enabled.
+   it("Does not render a time signature for samples without one, unless the rule is enabled", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_time_signature_missing_deliberately_gnossienne.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const xml: string = new XMLSerializer().serializeToString(score);
+
+      function firstMeasureHasTimeSignature(osmd: OpenSheetMusicDisplay): boolean {
+         const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+         const stave: any = (gm as any).stave; // VexFlowMeasure.stave is protected, only need it here in the test
+         return stave.getModifiers().some((m: { getCategory(): string }) => m.getCategory() === "timesignatures");
+      }
+
+      const osmdDefault: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      const osmdRuleOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmdDefault.load(xml).then(() => {
+         osmdDefault.render();
+         expect(firstMeasureHasTimeSignature(osmdDefault), "default: no time signature for a piece without one").to.equal(false);
+
+         return osmdRuleOn.load(xml);
+      }).then(() => {
+         osmdRuleOn.EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature = true;
+         osmdRuleOn.render();
+         expect(firstMeasureHasTimeSignature(osmdRuleOn), "rule enabled: time signature is rendered").to.equal(true);
+         done();
+      }).catch(done);
+   });
+
 });
