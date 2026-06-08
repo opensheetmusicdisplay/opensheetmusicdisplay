@@ -6,8 +6,7 @@ import log from "loglevel";
 import { ITextTranslation } from "../../Interfaces/ITextTranslation";
 import { PlacementEnum } from "../../VoiceData/Expressions";
 import { Glissando } from "../../VoiceData/Glissando";
-import { Staff } from "../../VoiceData/Staff";
-import { SourceMeasure } from "../../VoiceData/SourceMeasure";
+import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
 
 export class SlurReader {
     private musicSheet: MusicSheet;
@@ -129,24 +128,27 @@ export class SlurReader {
         }
     }
 
-    /** Whether a slur stop that was read before its start (endNote) and a later start note form a genuine
-     * cross-staff slur: the two notes must be on different staves and close together (same or adjacent measure).
-     * This avoids wrongly pairing an orphan stop (e.g. from a grace-note slur whose start is skipped) with an
-     * unrelated later start that happens to reuse the same slur number. */
+    /** Whether a slur stop that was read before its start (endNote) and a later start note (startNote) form a
+     * genuine cross-staff slur. A cross-staff slur written end-staff-first has its start and stop on different
+     * staves but in the SAME measure (the <backup> that reorders them is within a measure), and runs forward in
+     * time (start no later than stop). Requiring all of this rejects orphan stops - e.g. from grace-note slurs
+     * whose start is skipped by the reader - which would otherwise be wrongly paired with an unrelated later
+     * start that reuses the same slur number (across a barline and/or backwards in time). */
     private isCrossStaffSlurMatch(startNote: Note, endNote: Note): boolean {
         if (!startNote || !endNote) {
             return false;
         }
-        const startStaff: Staff = startNote.ParentStaffEntry?.ParentStaff;
-        const endStaff: Staff = endNote.ParentStaffEntry?.ParentStaff;
-        if (!startStaff || !endStaff || startStaff === endStaff) {
+        const startStaffEntry: SourceStaffEntry = startNote.ParentStaffEntry;
+        const endStaffEntry: SourceStaffEntry = endNote.ParentStaffEntry;
+        if (!startStaffEntry || !endStaffEntry) {
+            return false;
+        }
+        if (startStaffEntry.ParentStaff === endStaffEntry.ParentStaff) {
             return false; // a cross-staff slur connects two different staves
         }
-        const startMeasure: SourceMeasure = startNote.SourceMeasure;
-        const endMeasure: SourceMeasure = endNote.SourceMeasure;
-        if (startMeasure && endMeasure && Math.abs(startMeasure.MeasureNumber - endMeasure.MeasureNumber) > 1) {
-            return false; // too far apart in the score to plausibly be a single slur
+        if (startNote.SourceMeasure !== endNote.SourceMeasure) {
+            return false; // start and stop of a cross-staff slur are in the same measure
         }
-        return true;
+        return endStaffEntry.Timestamp.RealValue >= startStaffEntry.Timestamp.RealValue; // slur runs forward in time
     }
 }
