@@ -482,11 +482,6 @@
         <voice>1</voice>
         <type>whole</type>
         <staff>1</staff>
-        <notations>
-          <articulations>
-            <fermata/>
-          </articulations>
-        </notations>
         </note>
       <backup>
         <duration>32</duration>
