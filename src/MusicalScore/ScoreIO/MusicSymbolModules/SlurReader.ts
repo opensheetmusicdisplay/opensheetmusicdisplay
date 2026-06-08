@@ -1,4 +1,4 @@
-﻿import { MusicSheet } from "../../MusicSheet";
+import { MusicSheet } from "../../MusicSheet";
 import { IXmlElement, IXmlAttribute } from "../../../Common/FileIO/Xml";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { Note } from "../../VoiceData/Note";
@@ -6,10 +6,15 @@ import log from "loglevel";
 import { ITextTranslation } from "../../Interfaces/ITextTranslation";
 import { PlacementEnum } from "../../VoiceData/Expressions";
 import { Glissando } from "../../VoiceData/Glissando";
+import { Staff } from "../../VoiceData/Staff";
+import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 
 export class SlurReader {
     private musicSheet: MusicSheet;
     private openSlurDict: { [_: number]: Slur } = {};
+    /** Slur stops that were read before their matching start, kept separate from openSlurDict so they don't
+     * interfere with normal start-before-stop slurs that reuse the same slur number. See addSlur(). */
+    private openStopBeforeStartDict: { [_: number]: Slur } = {};
     constructor(musicSheet: MusicSheet) {
         this.musicSheet = musicSheet;
     }
@@ -47,19 +52,28 @@ export class SlurReader {
                             }
                         }
                         if (type === "start") {
-                            let slur: Slur = this.openSlurDict[slurNumber];
-                            if (!slur) {
-                                slur = new Slur();
-                                this.openSlurDict[slurNumber] = slur;
+                            // A cross-staff slur's stop can be read before its start: MusicXML writes the end
+                            // note's staff before a <backup> and the start note's staff after it, so for e.g. a
+                            // left-hand-to-right-hand slur the stop appears before the start. Such a stop was
+                            // deferred to openStopBeforeStartDict; a deferred stop is only valid for the next
+                            // start of its number, so we take and clear it here either way.
+                            const isSlur: boolean = slurNode.name === "slur";
+                            const pendingCrossStaffStop: Slur = isSlur ? this.openStopBeforeStartDict[slurNumber] : undefined;
+                            if (isSlur) {
+                                delete this.openStopBeforeStartDict[slurNumber];
                             }
-                            slur.StartNote = currentNote;
-                            slur.PlacementXml = slurPlacementXml;
-                            if (slur.EndNote) {
-                                // The stop was read before the start. This happens for cross-staff slurs (e.g. left
-                                // hand to right hand): MusicXML writes the end note's staff before a <backup> and the
-                                // start note's staff after it, so the slur's stop appears before its start.
-                                this.linkSlurToNotes(slur);
-                                delete this.openSlurDict[slurNumber];
+                            if (pendingCrossStaffStop && this.isCrossStaffSlurMatch(currentNote, pendingCrossStaffStop.EndNote)) {
+                                pendingCrossStaffStop.StartNote = currentNote;
+                                pendingCrossStaffStop.PlacementXml = slurPlacementXml;
+                                this.linkSlurToNotes(pendingCrossStaffStop);
+                            } else {
+                                let slur: Slur = this.openSlurDict[slurNumber];
+                                if (!slur) {
+                                    slur = new Slur();
+                                    this.openSlurDict[slurNumber] = slur;
+                                }
+                                slur.StartNote = currentNote;
+                                slur.PlacementXml = slurPlacementXml;
                             }
                         } else if (type === "stop") {
                             const nodeName: string = slurNode.name;
@@ -78,19 +92,22 @@ export class SlurReader {
                                     delete this.openSlurDict[slurNumber];
                                 }
                             } else {
-                                let slur: Slur = this.openSlurDict[slurNumber];
-                                if (!slur) {
-                                    // The stop was read before the start (cross-staff slur written end-staff-first,
-                                    // see the start branch above). Open the slur now and complete it when the start arrives.
-                                    slur = new Slur();
-                                    this.openSlurDict[slurNumber] = slur;
-                                }
-                                slur.EndNote = currentNote;
-                                if (slur.StartNote) {
+                                const slur: Slur = this.openSlurDict[slurNumber];
+                                if (slur) {
+                                    // normal case: the matching start of this number was read first
+                                    slur.EndNote = currentNote;
                                     this.linkSlurToNotes(slur);
                                     delete this.openSlurDict[slurNumber];
+                                } else {
+                                    // No open start with this number. Either a cross-staff slur whose start is
+                                    // written after the stop (completed in the start branch above), or an orphan
+                                    // stop with no start (e.g. a slur started on a grace note, whose start is
+                                    // skipped by the reader - see VoiceGenerator). Defer it without touching
+                                    // openSlurDict, so it can't disturb normal slurs that reuse this number.
+                                    const deferredStop: Slur = new Slur();
+                                    deferredStop.EndNote = currentNote;
+                                    this.openStopBeforeStartDict[slurNumber] = deferredStop;
                                 }
-                                // else: wait for the matching start node to complete the slur
                             }
                         }
                     }
@@ -110,5 +127,26 @@ export class SlurReader {
             endNote.NoteSlurs.push(slur);
             slur.StartNote.NoteSlurs.push(slur);
         }
+    }
+
+    /** Whether a slur stop that was read before its start (endNote) and a later start note form a genuine
+     * cross-staff slur: the two notes must be on different staves and close together (same or adjacent measure).
+     * This avoids wrongly pairing an orphan stop (e.g. from a grace-note slur whose start is skipped) with an
+     * unrelated later start that happens to reuse the same slur number. */
+    private isCrossStaffSlurMatch(startNote: Note, endNote: Note): boolean {
+        if (!startNote || !endNote) {
+            return false;
+        }
+        const startStaff: Staff = startNote.ParentStaffEntry?.ParentStaff;
+        const endStaff: Staff = endNote.ParentStaffEntry?.ParentStaff;
+        if (!startStaff || !endStaff || startStaff === endStaff) {
+            return false; // a cross-staff slur connects two different staves
+        }
+        const startMeasure: SourceMeasure = startNote.SourceMeasure;
+        const endMeasure: SourceMeasure = endNote.SourceMeasure;
+        if (startMeasure && endMeasure && Math.abs(startMeasure.MeasureNumber - endMeasure.MeasureNumber) > 1) {
+            return false; // too far apart in the score to plausibly be a single slur
+        }
+        return true;
     }
 }
