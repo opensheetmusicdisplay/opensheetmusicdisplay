@@ -142,6 +142,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
         for (const graphicalSlur of vfstaffLine.GraphicalSlurs) {
             if (graphicalSlur.slur.isCrossed()) {
+                if (!this.rules.RenderSlursAcrossStaves) {
+                    continue; // cross-staff slurs disabled (supplementary to RenderSlurs)
+                }
                 // A cross-staff slur spans two stafflines, so its curve is calculated here (at draw time, when
                 // both stafflines have their final positions) rather than in calculateSlurs(). It is attached
                 // to the start note's staffline, so absolutePos already refers to that staffline.

@@ -457,6 +457,10 @@ export class EngravingRules {
     public ArpeggiosGoAcrossVoices: boolean;
     public RenderArpeggios: boolean;
     public RenderSlurs: boolean;
+    /** Whether to render slurs that go across staves (e.g. left hand to right hand for piano). Supplementary to
+     * [[RenderSlurs]]: with RenderSlurs = true and RenderSlursAcrossStaves = false, all slurs are rendered except
+     * the ones across staves. */
+    public RenderSlursAcrossStaves: boolean;
     public RenderGlissandi: boolean;
     public ColoringMode: ColoringMode;
     public ColoringEnabled: boolean;
@@ -967,6 +971,7 @@ export class EngravingRules {
         this.ArpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
         this.RenderArpeggios = true;
         this.RenderSlurs = true;
+        this.RenderSlursAcrossStaves = true;
         this.RenderGlissandi = true;
         this.ColoringMode = ColoringMode.XML;
         this.ColoringEnabled = true;
