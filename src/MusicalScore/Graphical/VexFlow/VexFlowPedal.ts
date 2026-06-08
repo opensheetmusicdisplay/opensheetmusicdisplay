@@ -131,7 +131,9 @@ export class VexFlowPedal extends GraphicalPedal {
         }
         pedalMarking.setType(this.vfStyle);
         pedalMarking.setLine(this.line);
-        pedalMarking.setCustomText(this.DepressText, this.ReleaseText);
+        if (this.DepressText !== undefined) {
+            pedalMarking.setCustomText(this.DepressText, this.ReleaseText);
+        }
         //If our end note is at the end of a stave, set that value
         if(!this.endVfVoiceEntry ||
             this.getPedal.EndsStave

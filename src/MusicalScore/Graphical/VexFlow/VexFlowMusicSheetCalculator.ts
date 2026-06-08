@@ -1715,7 +1715,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //VF also measures from the bottom line, whereas our bottom line is from the top staff line
       const yLineForPedalMarking: number = (pedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
       //VF Uses a margin offset for rendering. Take this into account
-      const pedalMarkingMarginXOffset: number = pedalMarking.renderOptions.text_margin_right / 10;
+      const pedalMarkingMarginXOffset: number = pedalMarking.renderOptions.textMarginRight / 10;
       //TODO: Most of this should be in the bounding box calculation
       let startX: number = startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - pedalMarkingMarginXOffset;
 
@@ -1736,7 +1736,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       //We have the two seperate symbols, with two bounding boxes
       if (vfPedal.EndSymbolPositionAndShape) {
-        const symbolHalfHeight: number = pedalMarking.renderOptions.glyph_point_size / 20;
+        const symbolHalfHeight: number = (pedalMarking._fontInfo?.size || 30) / 20;
         //Width of the Ped. symbol
         stopX = startX + 3.4;
         const startX2: number = endBbox.AbsolutePosition.x - pedalMarkingMarginXOffset;
@@ -1754,7 +1754,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + symbolHalfHeight);
         parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX2, stopX2, footroom + symbolHalfHeight);
       } else {
-        const bracketHeight: number = pedalMarking.renderOptions.bracket_height / 10;
+        const bracketHeight: number = pedalMarking.renderOptions.bracketHeight / 10;
 
         if(pedalMarking.EndsStave){
           if(endVfVoiceEntry){
@@ -1765,7 +1765,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             stopX = endBbox.AbsolutePosition.x + endBbox.Size.width;
           }
         } else {
-          switch (pedalMarking.style) {
+          switch (pedalMarking.type) {
             case PEDAL_STYLES_ENUM.BRACKET_OPEN_END:
             case PEDAL_STYLES_ENUM.BRACKET_OPEN_BOTH:
             case PEDAL_STYLES_ENUM.MIXED_OPEN_END:
@@ -1805,7 +1805,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const yLineForOtherPedalMarking: number = (otherPedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
         //Only do these changes if current footroom is higher
         if(footroom > yLineForOtherPedalMarking) {
-          const otherPedalMarkingMarginXOffset: number = otherPedalMarking.renderOptions.text_margin_right / 10;
+          const otherPedalMarkingMarginXOffset: number = otherPedalMarking.renderOptions.textMarginRight / 10;
           let otherPedalStartX: number = vfOtherPedal.startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
           let otherPedalStopX: number = undefined;
           vfOtherPedal.setLine(footroom - 3 - (parentStaffline.StaffLines.length - 1));
@@ -1814,7 +1814,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             otherPedalEndBBox = vfOtherPedal.endMeasure.PositionAndShape;
           }
           if (vfOtherPedal.EndSymbolPositionAndShape) {
-            const otherSymbolHalfHeight: number = pedalMarking.renderOptions.glyph_point_size / 20;
+            const otherSymbolHalfHeight: number = (pedalMarking._fontInfo?.size || 30) / 20;
             //Width of the Ped. symbol
             otherPedalStopX = otherPedalStartX + 3.4;
             const otherPedalStartX2: number = otherPedalEndBBox.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
@@ -1823,12 +1823,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX, otherPedalStopX, footroom + otherSymbolHalfHeight);
             parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX2, otherPedalStopX2, footroom + otherSymbolHalfHeight);
           } else {
-            const otherPedalBracketHeight: number = otherPedalMarking.renderOptions.bracket_height / 10;
+            const otherPedalBracketHeight: number = otherPedalMarking.renderOptions.bracketHeight / 10;
 
             if(otherPedalMarking.EndsStave){
                 otherPedalStopX = otherPedalEndBBox.AbsolutePosition.x + otherPedalEndBBox.Size.width - otherPedalMarkingMarginXOffset;
             } else {
-              switch (pedalMarking.style) {
+              switch (pedalMarking.type) {
                 case PEDAL_STYLES_ENUM.BRACKET_OPEN_END:
                 case PEDAL_STYLES_ENUM.BRACKET_OPEN_BOTH:
                 case PEDAL_STYLES_ENUM.MIXED_OPEN_END:

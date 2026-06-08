@@ -478,7 +478,7 @@ describe("VexFlow Measure - Rest Positioning", () => {
   it("whole-bar rest should be centered in measure 3 of OSMD_function_test_all", (done: Mocha.Done) => {
     const gms: GraphicalMusicSheet = buildGMS("OSMD_function_test_all.xml");
     const rests: RestInfo[] = collectRests(gms);
-    const m3Rests: RestInfo[] = rests.filter(r => r.measure === 3);
+    const m3Rests: RestInfo[] = rests.filter(x => x.measure === 3);
     expect(m3Rests.length).to.equal(1, `expected 1 rest in m3, got ${m3Rests.length}`);
     const r: RestInfo = m3Rests[0];
     expect(r.duration).to.equal("w", `expected whole rest, got ${r.duration}`);
