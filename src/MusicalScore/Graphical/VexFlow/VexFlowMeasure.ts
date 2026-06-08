@@ -1015,7 +1015,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         }
                     }
                     if (beamHasQuarterNoteOrLonger) {
-                        log.debug("Beam between note >= quarter, likely tremolo, currently unsupported. continuing.");
+                        log.debug("Beam between notes >= quarter, likely a tremolo between two notes. Not creating a beam." +
+                            " (tremolo strokes are drawn in VexFlowMusicSheetDrawer.drawTremolosBetweenNotes instead)");
                         continue;
                     }
 

@@ -841,6 +841,22 @@ export abstract class MusicSheetCalculator {
             staffEntriesWithGraphicalTie.GraphicalTies.length = 0;
         }
         this.staffEntriesWithGraphicalTies.length = 0;
+        // Reset the tuplet number visibility decisions of calculateTupletNumbers() to the default:
+        // it runs after calculateSkyBottomLines(), so without the reset, a re-render's skyline
+        // would include the previous render's decisions, where the first render's skyline saw the
+        // default (true) - making re-renders differ from the first render.
+        // (Also makes sure all numbers come back when TupletNumberLimitConsecutiveRepetitions is
+        // disabled between renders, as calculateTupletNumbers() then doesn't re-activate them.)
+        for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
+            for (const voice of instrument.Voices) {
+                for (const ve of voice.VoiceEntries) {
+                    const tuplet: Tuplet = ve.Notes[0]?.NoteTuplet;
+                    if (tuplet && !tuplet.RenderTupletNumber) {
+                        tuplet.RenderTupletNumber = true;
+                    }
+                }
+            }
+        }
         return;
     }
 
@@ -1035,7 +1051,16 @@ export abstract class MusicSheetCalculator {
                 }
                 musicSystem.calculateBorders(this.rules);
             }
-            const distance: number = graphicalMusicPage.MusicSystems[0].PositionAndShape.BorderTop;
+            let distance: number = graphicalMusicPage.MusicSystems[0].PositionAndShape.BorderTop;
+            // This shifts all systems of the page (by the skyline-derived BorderTop), i.e. also the
+            // sub-pixel positions the stafflines were snapped/rounded to for consistent staff line
+            // anti-aliasing (see MusicSystemBuilder.snapSystemYToCrispStaffLines):
+            // round to whole pixels to keep them, or to the half-pixel grid if not snapping.
+            if (this.rules.SnapStafflinesToCrispPixels) {
+                distance = Math.round(distance * 10) / 10;
+            } else {
+                distance = Math.round(distance * 20) / 20;
+            }
             for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
                 const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                 // let newPosition: PointF2D = new PointF2D(musicSystem.PositionAndShape.RelativePosition.x,

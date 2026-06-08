@@ -193,7 +193,7 @@ export default defineConfig(
         },
     },
     {
-        files: ["test/Util/*.js", "test/Util/*.mjs", "test/Util/*.cjs"],
+        files: ["test/Util/*.js", "test/Util/*.mjs", "test/Util/*.cjs", "test/performance/*.mjs"],
         languageOptions: {
             globals: {
                 ...globals.browser,

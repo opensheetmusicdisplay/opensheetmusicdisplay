@@ -223,8 +223,13 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         return node;
     }
 
-    public renderPath(points: PointF2D[], fill: boolean = true, id?: string): Node {
+    public renderPath(points: PointF2D[], fill: boolean = true, id?: string, color?: string): Node {
+        this.ctx.save();
         const node: Node = this.ctx.openGroup("path", id);
+        if (color) {
+            this.ctx.attributes.fill = color;
+            this.ctx.attributes.stroke = color;
+        }
         this.ctx.beginPath();
         let currentPoint: PointF2D;
         for (const point of points) {
@@ -244,6 +249,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         }
         this.ctx.stroke();
         this.ctx.closeGroup();
+        this.ctx.restore();
         return node;
     }
 

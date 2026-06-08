@@ -7,6 +7,7 @@ import log from "loglevel";
 import { BoundingBox } from "./BoundingBox";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
+import { GeometricSkyBottomLineContext } from "./GeometricSkyBottomLineContext";
 /**
  * This class calculates and holds the skyline and bottom line information.
  * It also has functions to update areas of the two lines if new elements are
@@ -104,6 +105,10 @@ export class SkyBottomLineCalculator {
      * This method calculates the Sky- and BottomLines for a StaffLine.
      */
     public calculateLines(): void {
+        if (this.mRules.UseGeometricSkyBottomLineCalculation) {
+            this.calculateLinesGeometric();
+            return;
+        }
         const samplingUnit: number = this.mRules.SamplingUnit;
         const results: SkyBottomLineCalculationResult[] = [];
 
@@ -204,6 +209,86 @@ export class SkyBottomLineCalculator {
         this.updateLines(results);
     }
 
+    /**
+     * This method calculates the Sky- and BottomLines for a StaffLine geometrically, from the extents
+     * of the VexFlow draw calls of each measure, instead of drawing each measure on a canvas
+     * and reading back its pixels (see calculateLines()), which is much slower (see #937).
+     * Same flow as calculateLines(), with the canvas replaced by a GeometricSkyBottomLineContext.
+     */
+    private calculateLinesGeometric(): void {
+        const samplingUnit: number = this.mRules.SamplingUnit;
+        const results: SkyBottomLineCalculationResult[] = [];
+
+        // The virtual rendering context, replacing the temporary canvas of the raster method. Reused for all measures.
+        // The caches (text measurements, flattened glyph outlines) live in the EngravingRules,
+        // so they persist across stafflines and renders (per OSMD instance, no static state).
+        const geometricContext: GeometricSkyBottomLineContext =
+            new GeometricSkyBottomLineContext(0, 300, this.mRules.GeometricSkyBottomLineCaches);
+        // search through all Measures
+        for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
+            // must calculate first AbsolutePositions
+            measure.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
+
+            const vsStaff: any = measure.getVFStave();
+            let width: number = vsStaff.getWidth();
+            if (!(width > 0) && !measure.IsExtraGraphicalMeasure) {
+                log.warn("SkyBottomLineCalculator: width not > 0 in measure " + measure.MeasureNumber);
+                width = 50;
+            }
+            // Mirror the raster method's "canvas.width = width" coercion (HTMLCanvasElement reflection)
+            // for identical results, including its quirks: fractional widths truncate, and negative widths
+            // (which occur for some extra graphical measures, see test_octaveshift_extragraphicalmeasure)
+            // fall back to the default canvas width of 300, so such measures contribute the same
+            // (drawn) entries to the skyline as on the raster path instead of a single empty one.
+            width = Math.trunc(width);
+            if (!isFinite(width)) {
+                width = 0;
+            } else if (width < 0) {
+                width = 300;
+            }
+            geometricContext.initialize(width);
+
+            // This magic number is an offset from the top image border so that
+            // elements above the staffline can be drawn correctly.
+            // (Kept from the raster method for identical side effects. The stave position is set again by the drawer later.)
+            vsStaff.setY(vsStaff.y + 100);
+            const oldMeasureWidth: number = vsStaff.getWidth();
+            // We need to tell the VexFlow stave about the canvas width. This looks
+            // redundant because it should know the canvas but somehow it doesn't.
+            // Maybe I am overlooking something but for now this does the trick
+            vsStaff.setWidth(width);
+            measure.format();
+            vsStaff.setWidth(oldMeasureWidth);
+            try {
+                measure.draw(geometricContext as any);
+                // Vexflow errors can happen here, then our complete rendering loop would halt without catching errors.
+            } catch (ex) {
+                log.warn("SkyBottomLineCalculator.calculateLinesGeometric.draw", ex);
+            }
+
+            const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * samplingUnit), 1);
+            const tmpSkyLine: number[] = new Array(measureArrayLength);
+            const tmpBottomLine: number[] = new Array(measureArrayLength);
+            geometricContext.copyExtentsInto(tmpSkyLine, tmpBottomLine);
+
+            // fill columns where nothing was drawn, like in the raster method:
+            for (let idx: number = 0; idx < tmpSkyLine.length; idx++) {
+                if (tmpSkyLine[idx] === undefined) {
+                    tmpSkyLine[idx] = Math.max(this.findPreviousValidNumber(idx, tmpSkyLine), this.findNextValidNumber(idx, tmpSkyLine));
+                }
+            }
+            for (let idx: number = 0; idx < tmpBottomLine.length; idx++) {
+                if (tmpBottomLine[idx] === undefined) {
+                    tmpBottomLine[idx] = Math.max(this.findPreviousValidNumber(idx, tmpBottomLine), this.findNextValidNumber(idx, tmpBottomLine));
+                }
+            }
+
+            results.push(new SkyBottomLineCalculationResult(tmpSkyLine, tmpBottomLine));
+        }
+
+        this.updateLines(results);
+    }
+
     public updateSkyLineWithLine(start: PointF2D, end: PointF2D, value: number): void {
         const startIndex: number = Math.floor(start.x * this.SamplingUnit);
         const endIndex: number = Math.ceil(end.x * this.SamplingUnit);
@@ -280,6 +365,54 @@ export class SkyBottomLineCalculator {
         this.BottomLine[startIndex] = start.y;
         for (let i: number = startIndex + 1; i < endIndex; i++) {
             this.BottomLine[i] = this.BottomLine[i - 1] + slope / this.SamplingUnit;
+        }
+    }
+
+    /**
+     * This method merges a line (e.g. the top edge of a tremolo stroke between two notes) into the SkyLine,
+     * updating the SkyLine only where the line lies above it (preserving more extreme existing values),
+     * unlike updateSkyLineWithWedge, which overwrites the existing values.
+     * @param start Start point of the line, relative to the staffline (like the SkyLine values), in units
+     * @param end End point of the line
+     */
+    public mergeSkyLineWithLine(start: PointF2D, end: PointF2D): void {
+        const lineLength: number = end.x - start.x;
+        if (lineLength <= 0 || !this.SkyLine?.length) {
+            return;
+        }
+        const startIndex: number = Math.max(0, Math.floor(start.x * this.SamplingUnit));
+        const endIndex: number = Math.min(this.SkyLine.length, Math.ceil(end.x * this.SamplingUnit));
+        const slope: number = (end.y - start.y) / lineLength;
+        for (let i: number = startIndex; i < endIndex; i++) {
+            const lineX: number = Math.min(Math.max(i / this.SamplingUnit - start.x, 0), lineLength); // clamp to line segment
+            const lineY: number = start.y + slope * lineX;
+            if (lineY < this.SkyLine[i]) {
+                this.SkyLine[i] = lineY;
+            }
+        }
+    }
+
+    /**
+     * This method merges a line (e.g. the bottom edge of a tremolo stroke between two notes) into the BottomLine,
+     * updating the BottomLine only where the line lies below it (preserving more extreme existing values),
+     * unlike updateBottomLineWithWedge, which overwrites the existing values.
+     * @param start Start point of the line, relative to the staffline (like the BottomLine values), in units
+     * @param end End point of the line
+     */
+    public mergeBottomLineWithLine(start: PointF2D, end: PointF2D): void {
+        const lineLength: number = end.x - start.x;
+        if (lineLength <= 0 || !this.BottomLine?.length) {
+            return;
+        }
+        const startIndex: number = Math.max(0, Math.floor(start.x * this.SamplingUnit));
+        const endIndex: number = Math.min(this.BottomLine.length, Math.ceil(end.x * this.SamplingUnit));
+        const slope: number = (end.y - start.y) / lineLength;
+        for (let i: number = startIndex; i < endIndex; i++) {
+            const lineX: number = Math.min(Math.max(i / this.SamplingUnit - start.x, 0), lineLength); // clamp to line segment
+            const lineY: number = start.y + slope * lineX;
+            if (lineY > this.BottomLine[i]) {
+                this.BottomLine[i] = lineY;
+            }
         }
     }
 

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>OSMD skyline benchmark: geometric vs raster (browser)</title>
+<style>
+    body { font-family: sans-serif; margin: 16px; }
+    table { border-collapse: collapse; margin: 12px 0; }
+    td, th { border: 1px solid #999; padding: 4px 10px; text-align: right; }
+    td:first-child, th:first-child { text-align: left; }
+    #osmdContainer { width: 1080px; border: 1px solid #ddd; height: 250px; overflow: auto; opacity: 0.6; }
+    #status { font-weight: bold; margin: 8px 0; }
+</style>
+<!-- serve from the repo root, e.g.: npx http-server -p 8081 .   then open http://localhost:8081/test/performance/skylineBenchBrowser.html -->
+<script src="../../build/opensheetmusicdisplay.min.js"></script>
+</head>
+<body>
+<h2>OSMD skyline benchmark: geometric vs raster getImageData (real browser)</h2>
+<div id="status">loading…</div>
+<div id="results"></div>
+<div id="osmdContainer"></div>
+<script>
+const OSMD = window.opensheetmusicdisplay;
+const RUNS = 3;
+const SAMPLES = [
+    "OSMD_function_test_all.xml",
+    "Beethoven_AnDieFerneGeliebte.xml",
+    "MuzioClementi_SonatinaOpus36No3_Part1.xml",
+    "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
+    "ScottJoplin_The_Entertainer.xml",
+    "JosephHaydn_ConcertanteCello.xml",
+    "ActorPreludeSample.xml",
+];
+const MODES = {
+    geo: (r) => { r.UseGeometricSkyBottomLineCalculation = true; },
+    rasterSingle: (r) => {
+        r.UseGeometricSkyBottomLineCalculation = false;
+        r.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
+        r.SkyBottomLineBatchMinMeasures = 9999999;
+    },
+    rasterBatchPlain: (r) => {
+        r.UseGeometricSkyBottomLineCalculation = false;
+        r.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
+        r.SkyBottomLineBatchMinMeasures = 2;
+        r.PreferredSkyBottomLineBatchCalculatorBackend = 0; // Plain
+    },
+    rasterBatchWebGL: (r) => {
+        r.UseGeometricSkyBottomLineCalculation = false;
+        r.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
+        r.SkyBottomLineBatchMinMeasures = 2;
+        r.PreferredSkyBottomLineBatchCalculatorBackend = 1; // WebGL
+    },
+};
+
+// time the skyline phase by wrapping calculateSkyBottomLines
+let skylineMs = 0;
+const calcProto = OSMD.VexFlowMusicSheetCalculator.prototype;
+const origCalc = calcProto.calculateSkyBottomLines;
+calcProto.calculateSkyBottomLines = function () {
+    const t0 = performance.now();
+    origCalc.call(this);
+    skylineMs += performance.now() - t0;
+};
+
+const median = (a) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
+const status = (s) => { document.getElementById("status").textContent = s; };
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function run() {
+    const container = document.getElementById("osmdContainer");
+    const osmd = new OSMD.OpenSheetMusicDisplay(container, { autoResize: false, backend: "svg", pageFormat: "Endless" });
+    osmd.setLogLevel("warn");
+    const rows = [];
+    for (const sample of SAMPLES) {
+        let xml;
+        try {
+            xml = await (await fetch("../data/" + sample)).text();
+        } catch (e) {
+            console.warn("could not fetch " + sample, e);
+            continue;
+        }
+        const row = { sample, modes: {} };
+        for (const [modeName, applyMode] of Object.entries(MODES)) {
+            status(`${sample} — ${modeName} …`);
+            await sleep(30); // let the status render
+            applyMode(osmd.EngravingRules);
+            await osmd.load(xml, sample);
+            osmd.render(); // settle
+            const totals = [], skylines = [];
+            for (let i = 0; i < RUNS; i++) {
+                skylineMs = 0;
+                const t0 = performance.now();
+                osmd.render();
+                totals.push(performance.now() - t0);
+                skylines.push(skylineMs);
+            }
+            row.modes[modeName] = { total: median(totals), skyline: median(skylines) };
+            osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = true;
+            osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
+            osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 5;
+        }
+        rows.push(row);
+        renderTable(rows);
+    }
+    status("done. (medians of " + RUNS + " runs; ratios are vs geometric)");
+}
+
+function renderTable(rows) {
+    let html = "<table><tr><th>sample</th><th>geo total</th><th>geo skyline</th>"
+        + "<th>single total</th><th>batchPlain total</th><th>batchWebGL total</th>"
+        + "<th>skyline single</th><th>skyline batchPlain</th><th>skyline batchWebGL</th></tr>";
+    for (const r of rows) {
+        const g = r.modes.geo;
+        const f = (m) => m ? `${m.total.toFixed(0)}ms (x${(m.total / g.total).toFixed(2)})` : "-";
+        const fs = (m) => m ? `${m.skyline.toFixed(1)}ms (x${(m.skyline / g.skyline).toFixed(1)})` : "-";
+        html += `<tr><td>${r.sample}</td><td>${g.total.toFixed(0)}ms</td><td>${g.skyline.toFixed(1)}ms</td>`
+            + `<td>${f(r.modes.rasterSingle)}</td><td>${f(r.modes.rasterBatchPlain)}</td><td>${f(r.modes.rasterBatchWebGL)}</td>`
+            + `<td>${fs(r.modes.rasterSingle)}</td><td>${fs(r.modes.rasterBatchPlain)}</td><td>${fs(r.modes.rasterBatchWebGL)}</td></tr>`;
+    }
+    html += "</table>";
+    document.getElementById("results").innerHTML = html;
+}
+
+run();
+</script>
+</body>
+</html>

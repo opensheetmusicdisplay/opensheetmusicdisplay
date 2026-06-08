@@ -24,7 +24,7 @@ import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContain
 import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
-import { Note } from "../../../MusicalScore/VoiceData/Note";
+import { Note, TremoloBetweenNotes, TremoloInfo } from "../../../MusicalScore/VoiceData/Note";
 import StaveNote = VF.StaveNote;
 import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
@@ -705,13 +705,36 @@ export class VexFlowConverter {
                 vfnote.addModifier(new VF.Accidental(accidentals[i]), i); // normal accidental
             }
 
-            // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
-            const tremoloStrokes: number = notes[i].sourceNote.TremoloStrokes;
-            if (tremoloStrokes > 0) {
+            // add Tremolo strokes for single note tremolos
+            //   (strokes for tremolos between two notes are drawn in VexFlowMusicSheetDrawer.drawTremolosBetweenNotes())
+            const tremoloInfo: TremoloInfo = notes[i].sourceNote.TremoloInfo;
+            const tremoloStrokes: number = tremoloInfo?.tremoloStrokes;
+            const isTremoloBetweenNotes: boolean = tremoloInfo?.tremoloBetweenNotesStart || tremoloInfo?.tremoloBetweenNotesStop;
+            if (tremoloStrokes > 0 && !isTremoloBetweenNotes) {
                 const tremolo: VF.Tremolo = new VF.Tremolo(tremoloStrokes);
                 (tremolo as any).extra_stroke_scale = rules.TremoloStrokeScale;
                 (tremolo as any).y_spacing_scale = rules.TremoloYSpacingScale;
                 vfnote.addModifier(tremolo, i);
+            }
+        }
+
+        // tremolo between two notes: lengthen the stem if necessary to make room for the strokes (e.g. for 4+ strokes),
+        //   as recommended by Gould (Behind Bars). The strokes are drawn in VexFlowMusicSheetDrawer.drawTremolosBetweenNotes().
+        let tremoloBetweenNotes: TremoloBetweenNotes;
+        for (const note of notes) {
+            if (note.sourceNote.TremoloInfo?.tremoloBetweenNotes) {
+                tremoloBetweenNotes = note.sourceNote.TremoloInfo.tremoloBetweenNotes;
+                break;
+            }
+        }
+        if (tremoloBetweenNotes?.strokes > 0 && !gve.parentVoiceEntry.IsGrace && vfnote.hasStem()) {
+            const strokesHeight: number = tremoloBetweenNotes.strokes * rules.TremoloBetweenNotesStrokeThickness +
+                (tremoloBetweenNotes.strokes - 1) * rules.TremoloBetweenNotesStrokeGap;
+            // strokes + padding towards notehead and stem tip + half notehead height (the strokes region starts at the notehead's edge):
+            const wantedStemLengthPx: number = (strokesHeight + 2 * rules.TremoloBetweenNotesYPadding + 0.5) * unitInPixels;
+            if (wantedStemLengthPx > (VF.Stem as any).HEIGHT) { // default stem length (35px = 3.5 units)
+                (vfnote as any).setStemLength(wantedStemLengthPx); // sets vfnote.stemExtensionOverride
+                vfnote.getStem()?.setExtension(vfnote.getStemExtension()); // apply to the already built stem
             }
         }
 

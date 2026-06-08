@@ -675,6 +675,9 @@ export class OpenSheetMusicDisplay {
                 follow: true
             }];
         }
+        if (options.useGeometricSkyBottomLineCalculation !== undefined) {
+            this.rules.UseGeometricSkyBottomLineCalculation = options.useGeometricSkyBottomLineCalculation;
+        }
         if (options.preferredSkyBottomLineBatchCalculatorBackend !== undefined) {
             this.rules.PreferredSkyBottomLineBatchCalculatorBackend = options.preferredSkyBottomLineBatchCalculatorBackend;
         }
@@ -865,8 +868,15 @@ export class OpenSheetMusicDisplay {
         }
         this.resizeHandlerAttached = true;
 
-        window.setTimeout(startCallback, 0);
-        window.setTimeout(endCallback, 1);
+        // If the sheet was already rendered when autoResize was enabled, adapt it to the
+        // current width right away. (Only in that case: otherwise - e.g. with the default
+        // autoResize on creation - these initial timers would re-render the first sheet the
+        // application loads and renders a second time, once the timers fire.)
+        const renderedBeforeAttach: boolean = this.rules.RenderCount > 0;
+        if (renderedBeforeAttach) {
+            window.setTimeout(startCallback, 0);
+            window.setTimeout(endCallback, 1);
+        }
     }
 
     /** Enable or disable (hide) the cursor.

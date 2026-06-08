@@ -178,7 +178,13 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         return undefined;
     }
 
-    public renderPath(points: PointF2D[], fill: boolean = true, id?: string): Node {
+    public renderPath(points: PointF2D[], fill: boolean = true, id?: string, color?: string): Node {
+        const oldFillStyle: string | CanvasGradient | CanvasPattern = this.CanvasRenderingCtx.fillStyle;
+        const oldStrokeStyle: string | CanvasGradient | CanvasPattern = this.CanvasRenderingCtx.strokeStyle;
+        if (color) {
+            this.CanvasRenderingCtx.fillStyle = color;
+            this.CanvasRenderingCtx.strokeStyle = color;
+        }
         this.ctx.beginPath();
         let currentPoint: PointF2D;
         for (const point of points) {
@@ -196,6 +202,8 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         } else {
             this.ctx.stroke(); // just trace outline, don't fill inner area
         }
+        this.CanvasRenderingCtx.fillStyle = oldFillStyle;
+        this.CanvasRenderingCtx.strokeStyle = oldStrokeStyle;
         return undefined;
     }
 

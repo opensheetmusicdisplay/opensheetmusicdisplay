@@ -63,7 +63,6 @@ typings
 .idea/
 .vscode/
 .idea/encodings.xml
-*.md
 node_modules/
 
 # Private key for GH pages deploy
@@ -73,3 +72,6 @@ package-lock.json
 
 #local env files
 webpack.local.js
+
+# Markdown files (CLAUDE.md etc.)
+*.md
