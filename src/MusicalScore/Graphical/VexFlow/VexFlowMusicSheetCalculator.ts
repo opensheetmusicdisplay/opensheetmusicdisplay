@@ -76,6 +76,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   private dashSpace: number;
   private previousLyricOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
   private previousChordOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
+  private octaveShiftSkylineOriginals: Map<StaffLine, number[]> = new Map();
+  private octaveShiftBottomlineOriginals: Map<StaffLine, number[]> = new Map();
   public beamsNeedUpdate: boolean = false;
 
   constructor(rules: EngravingRules) {
@@ -1901,23 +1903,49 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     vfOctaveShift.PositionAndShape.Size.width = stopX - startX;
     const textBracket: VF.TextBracket = vfOctaveShift.getTextBracket();
-    const fontSize: number = (textBracket as any).font.size / 10;
+    // VF5: Element.font returns CSS string, not object. Use fontInfo.size (number | string)
+    // or fontSizeInPoints (always number) to get numeric point size.
+    const fontSize: number = textBracket.fontSizeInPoints / 10;
 
     if ((<any>textBracket).position === VF.TextBracketPosition.TOP) {
-      const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX) - 0.05);
-      if (headroom === Infinity) { // will cause Vexflow error
+      // Use snapshot of the original SkyLine so that sequential octave shifts on the same
+      // staff line don't accumulate headroom (each reading the previous one's skyline push).
+      let skySnapshot: number[] = this.octaveShiftSkylineOriginals.get(parentStaffline);
+      if (!skySnapshot) {
+        skySnapshot = [...parentStaffline.SkyBottomLineCalculator.SkyLine];
+        this.octaveShiftSkylineOriginals.set(parentStaffline, skySnapshot);
+      }
+      const samplingUnit: number = parentStaffline.SkyBottomLineCalculator.SamplingUnit;
+      const sidx: number = Math.max(0, Math.floor(startX * samplingUnit));
+      const eidx: number = Math.min(skySnapshot.length, Math.ceil(stopX * samplingUnit) + 1);
+      const skyMin: number = sidx < eidx ? Math.min(...skySnapshot.slice(sidx, eidx)) : Infinity;
+      const headroom: number = Math.ceil(skyMin - 0.05);
+      if (headroom === Infinity) {
         return;
       }
       (textBracket.start.getStave().options as any).topTextPosition = Math.abs(headroom);
       parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
+      vfOctaveShift.PositionAndShape.BorderTop = -(fontSize * 2);
+      vfOctaveShift.PositionAndShape.Size.height = fontSize * 2;
     } else {
-      const footroom: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
-      if (footroom === Infinity) { // will cause Vexflow error
+      let bottomSnapshot: number[] = this.octaveShiftBottomlineOriginals.get(parentStaffline);
+      if (!bottomSnapshot) {
+        bottomSnapshot = [...parentStaffline.SkyBottomLineCalculator.BottomLine];
+        this.octaveShiftBottomlineOriginals.set(parentStaffline, bottomSnapshot);
+      }
+      const samplingUnit: number = parentStaffline.SkyBottomLineCalculator.SamplingUnit;
+      const sidx: number = Math.max(0, Math.floor(startX * samplingUnit));
+      const eidx: number = Math.min(bottomSnapshot.length, Math.ceil(stopX * samplingUnit) + 1);
+      const bottomMax: number = sidx < eidx ? Math.max(...bottomSnapshot.slice(sidx, eidx)) : -Infinity;
+      const footroom: number = bottomMax;
+      if (footroom === -Infinity) {
         return;
       }
       (textBracket.start.getStave().options as any).bottomTextPosition = footroom;
       //Vexflow positions top vs. bottom text in a slightly inconsistent way it seems
       parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);
+      vfOctaveShift.PositionAndShape.BorderBottom = fontSize * 1.5;
+      vfOctaveShift.PositionAndShape.Size.height = fontSize * 1.5;
     }
   }
 
