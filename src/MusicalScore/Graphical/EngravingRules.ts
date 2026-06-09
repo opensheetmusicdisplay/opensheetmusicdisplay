@@ -397,6 +397,8 @@ export class EngravingRules {
      */
     public FixedMeasureWidthFixedValue: number;
     public FixedMeasureWidthUseForPickupMeasures: boolean;
+    /** When true, distribute system width so per-duration spacing is consistent across measures. */
+    public BalanceMeasureWidths: boolean;
     public DistanceBetweenVerticalSystemLines: number;
     public DistanceBetweenDotAndLine: number;
     public RepeatEndStartPadding: number;
@@ -946,6 +948,7 @@ export class EngravingRules {
         this.FixedMeasureWidth = false;
         this.FixedMeasureWidthFixedValue = undefined; // only set to a number x if the width should be always x
         this.FixedMeasureWidthUseForPickupMeasures = false;
+        this.BalanceMeasureWidths = true;
 
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;

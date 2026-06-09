@@ -357,6 +357,29 @@ export abstract class MusicSheetCalculator {
                     MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, targetWidth);
                 }
             }
+            if (this.rules.BalanceMeasureWidths) {
+                // Compute per-measure tickable count as canonical target width.
+                // Measures with more tickables (denser content) get proportionally
+                // more of the system's extra width during stretchMusicSystem.
+                for (const measureColumn of this.graphicalMusicSheet.MeasureList) {
+                    let tickableCount: number = 0;
+                    for (const measure of measureColumn) {
+                        if (!measure) { continue; }
+                        for (const se of measure.staffEntries) {
+                            for (const gve of se.graphicalVoiceEntries) {
+                                if ((gve as any).vfStaveNote) {
+                                    tickableCount++;
+                                }
+                            }
+                        }
+                    }
+                    for (const measure of measureColumn) {
+                        if (measure) {
+                            measure.canonicalTargetWidth = tickableCount;
+                        }
+                    }
+                }
+            }
         }
         // this.graphicalMusicSheet.MinAllowedSystemWidth = minLength; // currently unused
     }

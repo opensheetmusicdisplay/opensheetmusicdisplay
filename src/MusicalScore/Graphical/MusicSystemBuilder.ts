@@ -1069,6 +1069,96 @@ export class MusicSystemBuilder {
             scalingFactor = Math.min(scalingFactor, this.rules.LastSystemMaxScalingFactor);
         }
         const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
+
+        // Build per-measure stretch factors. Default: uniform scalingFactor.
+        const firstStaffMeasures: GraphicalMeasure[] = currentSystem.StaffLines[0].Measures;
+        const sysMeasureCount: number = firstStaffMeasures.length;
+        const measureFactors: number[] = new Array(sysMeasureCount).fill(scalingFactor);
+
+        if (this.rules.BalanceMeasureWidths && sysMeasureCount > 1 && scalingFactor > 1.0) {
+            let totalTarget: number = 0;
+            const targets: number[] = [];
+            let totalMinSEW: number = 0;
+            const minSEWs: number[] = [];
+            for (const m of firstStaffMeasures) {
+                const t: number = m.canonicalTargetWidth ?? 0;
+                targets.push(t);
+                totalTarget += t;
+                const minSEW: number = m.minimumStaffEntriesWidth;
+                minSEWs.push(minSEW);
+                totalMinSEW += minSEW;
+            }
+            if (totalTarget > 0) {
+                // Compute system-wide canonical minimum width per tickable.
+                // This normalizes away VF5 formatter differences between measures
+                // with comparable content, so similar-density measures get similar widths.
+                const canonicalMinPerTickable: number = totalMinSEW / totalTarget;
+                const totalVarWidth: number = this.currentSystemParams.currentSystemVarWidth * scalingFactor;
+
+                // First pass: compute effective minimums
+                const effectiveMins: number[] = [];
+                let totalEffMin: number = 0;
+                for (let i: number = 0; i < sysMeasureCount; i++) {
+                    const canonicalMin: number = canonicalMinPerTickable * targets[i];
+                    // Floor: actual minSEW (prevent overlaps). Ceiling: 2x canonical (prevent bloat).
+                    const effMin: number = Math.max(minSEWs[i], Math.min(canonicalMin * 2.0, canonicalMin));
+                    effectiveMins.push(effMin);
+                    totalEffMin += effMin;
+                }
+
+                if (totalEffMin >= totalVarWidth) {
+                    // Not enough room for effective mins — fall back to proportional
+                    // distribution anchored at the actual minSEW floor.
+                    for (let i: number = 0; i < sysMeasureCount; i++) {
+                        const proportion: number = targets[i] / totalTarget;
+                        const idealVarWidth: number = totalVarWidth * proportion;
+                        const clamped: number = Math.max(minSEWs[i], Math.min(minSEWs[i] * 2.0, idealVarWidth));
+                        measureFactors[i] = clamped / Math.max(minSEWs[i], 0.01);
+                    }
+                } else {
+                    // Distribute remaining width proportionally to tickable counts
+                    const remaining: number = totalVarWidth - totalEffMin;
+                    for (let i: number = 0; i < sysMeasureCount; i++) {
+                        const extra: number = remaining * (targets[i] / totalTarget);
+                        let varWidth: number = effectiveMins[i] + extra;
+                        // Soft cap: don't exceed 2x the original minSEW
+                        varWidth = Math.min(varWidth, minSEWs[i] * 2.0);
+                        // Hard floor: never below actual minSEW
+                        varWidth = Math.max(varWidth, minSEWs[i]);
+                        measureFactors[i] = varWidth / Math.max(minSEWs[i], 0.01);
+                    }
+                }
+                // Normalize: clamp measureFactors so the total variable width exactly
+                // matches totalVarWidth, but never push any factor below 1.0
+                // (measures must not go below their minimum width).
+                let sumVarWidth: number = 0;
+                for (let i: number = 0; i < sysMeasureCount; i++) {
+                    sumVarWidth += minSEWs[i] * measureFactors[i];
+                }
+                if (sumVarWidth > totalVarWidth + 0.0001) {
+                    // Total exceeds available width. Pull factors above 1.0 down toward 1.0
+                    // proportionally until the total fits.
+                    let excessAboveMin: number = 0;
+                    let totalAboveMin: number = 0;
+                    for (let i: number = 0; i < sysMeasureCount; i++) {
+                        if (measureFactors[i] > 1.0) {
+                            totalAboveMin += minSEWs[i] * (measureFactors[i] - 1.0);
+                        }
+                    }
+                    excessAboveMin = sumVarWidth - totalVarWidth;
+                    if (totalAboveMin > 0.0001 && excessAboveMin > 0) {
+                        const shrinkRatio: number = Math.max(0, 1.0 - excessAboveMin / totalAboveMin);
+                        for (let i: number = 0; i < sysMeasureCount; i++) {
+                            if (measureFactors[i] > 1.0) {
+                                const aboveOne: number = measureFactors[i] - 1.0;
+                                measureFactors[i] = 1.0 + aboveOne * shrinkRatio;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         for (let visStaffIdx: number = 0, len: number = currentSystem.StaffLines.length; visStaffIdx < len; ++visStaffIdx) {
             const staffLine: StaffLine = currentSystem.StaffLines[visStaffIdx];
             let currentXPosition: number = 0.0;
@@ -1081,7 +1171,7 @@ export class MusicSystemBuilder {
                 //         beginInstructionsWidth *= 1; // TODO the first measure in a system is always slightly too big. why? try e.g. 0.6
                 //     }
                 // }
-                measure.setWidth(beginInstructionsWidth + measure.minimumStaffEntriesWidth * scalingFactor + measure.endInstructionsWidth);
+                measure.setWidth(beginInstructionsWidth + measure.minimumStaffEntriesWidth * measureFactors[measureIndex] + measure.endInstructionsWidth);
                 if (measureIndex < this.currentSystemParams.systemMeasures.length) {
                     const startLine: SystemLinesEnum = this.currentSystemParams.systemMeasures[measureIndex].beginLine;
                     const lineWidth: number = measure.getLineWidth(SystemLinesEnum.BoldThinDots);
@@ -1097,7 +1187,7 @@ export class MusicSystemBuilder {
                         default:
                     }
                 }
-                measure.staffEntriesScaleFactor = scalingFactor;
+                measure.staffEntriesScaleFactor = measureFactors[measureIndex];
                 measure.layoutSymbols();
                 const nextMeasureHasRepStartLine: boolean = measureIndex + 1 < this.currentSystemParams.systemMeasures.length
                     && this.currentSystemParams.systemMeasures[measureIndex + 1].beginLine === SystemLinesEnum.BoldThinDots;

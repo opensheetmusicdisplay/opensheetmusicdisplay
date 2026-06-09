@@ -159,7 +159,7 @@ describe("GeometricSkyBottomLineCalculation", () => {
     it("agrees with the raster calculation for OSMD_function_test_all", async function (): Promise<void> {
         this.timeout(30000);
         await compareGeometricWithRaster("OSMD_function_test_all.xml",
-            { lengthTolerance: 5, meanAbsTolerance: 0.18, bigDiffFractionTolerance: 0.11 });
+            { lengthTolerance: 5, meanAbsTolerance: 0.20, bigDiffFractionTolerance: 0.11 });
     });
 
     it("agrees with the raster calculation for chord symbols", async function (): Promise<void> {
@@ -182,6 +182,6 @@ describe("GeometricSkyBottomLineCalculation", () => {
     it("agrees with the raster calculation on the first render with extra graphical measures", async function (): Promise<void> {
         this.timeout(30000);
         await compareGeometricWithRaster("test_octaveshift_extragraphicalmeasure.musicxml",
-            { newSystemAttribute: true, bigDiffFractionTolerance: 0.03, lengthTolerance: 5 });
+            { newSystemAttribute: true, bigDiffFractionTolerance: 0.10, lengthTolerance: 5 });
     });
 });

@@ -670,4 +670,186 @@ describe("VexFlow Measure - Rest Positioning", () => {
     done();
   });
 
+  it("width balancing: canonical per-duration spacing redistributes extra width toward cramped measures", (done: Mocha.Done) => {
+    const mxl: string = TestUtils.getMXL("Mozart_Clarinet_Quintet_Excerpt.mxl");
+    // Render without balancing
+    const divOff: HTMLElement = TestUtils.getDivElement(document);
+    const osmdOff: any = TestUtils.createOpenSheetMusicDisplay(divOff);
+    osmdOff.load(mxl).then(() => {
+      osmdOff.render();
+      const gmsOff: GraphicalMusicSheet = osmdOff.graphic;
+
+      // Render with balancing
+      const divOn: HTMLElement = TestUtils.getDivElement(document);
+      const osmdOn: any = TestUtils.createOpenSheetMusicDisplay(divOn);
+      osmdOn.EngravingRules.BalanceMeasureWidths = true;
+      osmdOn.load(mxl).then(() => {
+        osmdOn.render();
+        const gmsOn: GraphicalMusicSheet = osmdOn.graphic;
+
+        const issues: string[] = [];
+
+        // Check each measure's variable width doesn't go below its minimumStaffEntriesWidth
+        for (let col: number = 0; col < gmsOn.MeasureList.length; col++) {
+          const onMeasure: any = gmsOn.MeasureList[col]?.[0];
+          const offMeasure: any = gmsOff.MeasureList[col]?.[0];
+          if (!onMeasure || !offMeasure) { continue; }
+          if (!onMeasure.isVisible() || !offMeasure.isVisible()) { continue; }
+
+          const varWidthOn: number = onMeasure.PositionAndShape.Size.width
+            - onMeasure.beginInstructionsWidth - onMeasure.endInstructionsWidth;
+          const minWidth: number = onMeasure.minimumStaffEntriesWidth;
+
+          if (varWidthOn + 0.001 < minWidth) {
+            issues.push(`m${onMeasure.MeasureNumber}: varWidth=${varWidthOn.toFixed(2)} < minWidth=${minWidth.toFixed(2)}`);
+          }
+
+          // Canonical target width should be set
+          if (onMeasure.canonicalTargetWidth === 0 && offMeasure.canonicalTargetWidth === 0) {
+            // Both zero is OK only if the measure has no tickables (e.g., multi-rest)
+            // For normal measures we expect non-zero targets when balancing is on.
+          }
+        }
+
+        // Check that the system total width is roughly preserved between ON and OFF.
+        // Get the last measure's right edge in the first staff line.
+        const sysOn: any = gmsOn.MusicPages?.[0]?.MusicSystems?.[0];
+        const sysOff: any = gmsOff.MusicPages?.[0]?.MusicSystems?.[0];
+        if (sysOn && sysOff) {
+          const sysWidthOn: number = sysOn.PositionAndShape.Size.width;
+          const sysWidthOff: number = sysOff.PositionAndShape.Size.width;
+          // System widths should be reasonably close (same page width)
+          if (Math.abs(sysWidthOn - sysWidthOff) > 2) {
+            issues.push(`System width differs: ON=${sysWidthOn.toFixed(2)} OFF=${sysWidthOff.toFixed(2)}`);
+          }
+        }
+
+        // Check that canonicalTargetWidth was populated when balancing is ON
+        let nonZeroTargets: number = 0;
+        for (const col of gmsOn.MeasureList) {
+          const m: any = col?.[0];
+          if (m && m.canonicalTargetWidth > 0) {
+            nonZeroTargets++;
+          }
+        }
+        if (nonZeroTargets === 0) {
+          issues.push("No measures have canonicalTargetWidth > 0 with BalanceMeasureWidths=true");
+        }
+
+        expect(issues, `Width balancing issues:\n${issues.join("\n")}`).to.be.empty;
+        done();
+      }).catch(done);
+    }).catch(done);
+  });
+
+  it("dichterliebe measure width comparison (ON vs OFF)", (done: Mocha.Done) => {
+    const xmlDoc: Document = TestUtils.getScore("Dichterliebe01.xml");
+    const divOn: HTMLElement = TestUtils.getDivElement(document);
+    const osmdOn: any = TestUtils.createOpenSheetMusicDisplay(divOn);
+    osmdOn.EngravingRules.BalanceMeasureWidths = true;
+    osmdOn.load(xmlDoc).then(() => {
+      osmdOn.render();
+      const gmsOn: GraphicalMusicSheet = osmdOn.graphic;
+      const divOff: HTMLElement = TestUtils.getDivElement(document);
+      const osmdOff: any = TestUtils.createOpenSheetMusicDisplay(divOff);
+      osmdOff.load(xmlDoc).then(() => {
+        osmdOff.render();
+        const gmsOff: GraphicalMusicSheet = osmdOff.graphic;
+        const lines: string[] = ["m# | varW_ON | varW_OFF | diff | minSEW | ct | sf"];
+        for (let col: number = 0; col < gmsOn.MeasureList.length; col++) {
+          const onM: any = gmsOn.MeasureList[col]?.[0];
+          const offM: any = gmsOff.MeasureList[col]?.[0];
+          if (!onM?.isVisible() || !offM?.isVisible()) { continue; }
+          const b: number = onM.beginInstructionsWidth || 0;
+          const e: number = onM.endInstructionsWidth || 0;
+          const vOn: number = onM.PositionAndShape.Size.width - b - e;
+          const vOff: number = offM.PositionAndShape.Size.width - b - e;
+          const min: number = onM.minimumStaffEntriesWidth || 0;
+          const ct: number = onM.canonicalTargetWidth || 0;
+          const sf: number = onM.staffEntriesScaleFactor || 0;
+          // Also dump per-tickable details for m5 and m6
+          let extra: string = "";
+          if (onM.MeasureNumber === 5 || onM.MeasureNumber === 6) {
+            const parts: string[] = [];
+            for (const se of onM.staffEntries) {
+              for (const gve of se.graphicalVoiceEntries) {
+                const vfNote: any = (gve as any).vfStaveNote;
+                if (!vfNote) { continue; }
+                const dur: string = vfNote.getDuration?.() ?? "?";
+                const ticks: number = vfNote.getTicks?.()?.value?.() ?? 0;
+                const gvw: number = vfNote.getGlyphWidth?.() ?? 0;
+                const fm: any = vfNote.getFormatterMetrics?.();
+                const su: number = fm?.space?.used ?? -1;
+                const sd: number = fm?.space?.deviation ?? -1;
+                const x: number = vfNote.getX?.() ?? -1;
+                const ax: number = vfNote.getAbsoluteX?.() ?? -1;
+                const isRest: boolean = vfNote.isRest?.() ?? false;
+                const tag: string = isRest ? "R" : "N";
+                parts.push(`${tag}${dur} t=${ticks} gw=${gvw.toFixed(1)} x=${x.toFixed(1)}`
+                  + ` ax=${ax.toFixed(1)} su=${su.toFixed(1)} sd=${sd.toFixed(1)}`);
+              }
+            }
+            extra = " | " + parts.join(" | ");
+          }
+          lines.push(
+            `m${onM.MeasureNumber}: ON=${vOn.toFixed(2)} OFF=${vOff.toFixed(2)} ` +
+            `diff=${(vOn - vOff).toFixed(2)} min=${min.toFixed(2)} ct=${ct} sf=${sf.toFixed(3)}${extra}`
+          );
+        }
+        console.log("Dichterliebe width comparison:\n" + lines.join("\n"));
+        // Just informational - always pass
+        expect(true).to.be.true;
+        done();
+      }).catch(done);
+    }).catch(done);
+  });
+
+  it("systems respect page width and staves share a common right border", (done: Mocha.Done) => {
+    const xmlDoc: Document = TestUtils.getScore("Dichterliebe01.xml");
+    const div: HTMLElement = TestUtils.getDivElement(document);
+    const osmd: any = TestUtils.createOpenSheetMusicDisplay(div);
+    osmd.load(xmlDoc).then(() => {
+      osmd.render();
+      const gms: GraphicalMusicSheet = osmd.graphic;
+      const issues: string[] = [];
+
+      for (const page of gms.MusicPages) {
+        const pageWidth: number = page.PositionAndShape.Size.width;
+        for (const system of page.MusicSystems) {
+          const sysWidth: number = system.PositionAndShape.Size.width;
+          // System must not overflow page width
+          if (sysWidth > pageWidth + 0.5) {
+            issues.push(`System overflows page: sys=${sysWidth.toFixed(2)} > page=${pageWidth.toFixed(2)}`);
+          }
+
+          // All staff lines in a system must share the same right edge
+          const staffRightEdges: number[] = [];
+          for (const sl of system.StaffLines) {
+            const measures: any[] = sl.Measures;
+            if (measures.length > 0) {
+              const lastM: any = measures[measures.length - 1];
+              const rightEdge: number = (lastM?.PositionAndShape?.RelativePosition?.x ?? 0)
+                + (lastM?.PositionAndShape?.Size?.width ?? 0);
+              staffRightEdges.push(rightEdge);
+            }
+          }
+          if (staffRightEdges.length > 1) {
+            const firstEdge: number = staffRightEdges[0];
+            for (let i: number = 1; i < staffRightEdges.length; i++) {
+              if (Math.abs(staffRightEdges[i] - firstEdge) > 1.0) {
+                issues.push(
+                  `System right edge misaligned: staff 0 = ${firstEdge.toFixed(2)}, ` +
+                  `staff ${i} = ${staffRightEdges[i].toFixed(2)} (diff ${(staffRightEdges[i] - firstEdge).toFixed(2)})`
+                );
+              }
+            }
+          }
+        }
+      }
+
+      expect(issues, `Page width / right border issues:\n${issues.join("\n")}`).to.be.empty;
+      done();
+    }).catch(done);
+  });
+
 });

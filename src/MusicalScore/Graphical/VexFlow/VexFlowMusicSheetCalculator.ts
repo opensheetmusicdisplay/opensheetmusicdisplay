@@ -311,10 +311,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const staffEntryFactor: number = 0.3;
 
     if (allVoices.length > 0) {
-      minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
+      // Use the formatter's base width (sum of tick context widths) rather than
+      // the full preCalculateMinTotalWidth result which includes unstable padding
+      // terms (variance-based padmax, unaligned per-context padding) that can
+      // make comparable measures differ by 3x+. The base width tracks actual
+      // glyph content proportionally; OSMD adds its own spacing via
+      // VoiceSpacingMultiplier / VoiceSpacingAddend / staffEntryFactor.
+      formatter.preCalculateMinTotalWidth(allVoices);
+      minStaffEntriesWidth = formatter.getMinTotalWidth() / unitInPixels
       * this.rules.VoiceSpacingMultiplierVexflow
       + this.rules.VoiceSpacingAddendVexflow
-      + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
+      + maxStaffEntries * staffEntryFactor;
 
       // Grace notes are VF modifiers (GraceNoteGroup), not tickables.
       // Their horizontal space is included in preCalculateMinTotalWidth via the

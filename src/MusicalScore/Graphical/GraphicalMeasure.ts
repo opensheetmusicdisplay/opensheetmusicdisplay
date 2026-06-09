@@ -52,6 +52,9 @@ export abstract class GraphicalMeasure extends GraphicalObject {
      * The minimum possible x-width of all staff entries without overlapping.
      */
     public minimumStaffEntriesWidth: number;
+    /** Sum of canonical per-duration spacing targets for this measure's tickables.
+     *  Used by stretchMusicSystem() to distribute width proportionally to content. */
+    public canonicalTargetWidth: number = 0;
     /**
      * Will be set by music system builder while building systems.
      */
