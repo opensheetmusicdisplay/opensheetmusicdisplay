@@ -16,6 +16,18 @@ import { StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
 import * as VF from "vexflow";
 
+/** Return staff-relative Y of notehead center from VF5 geometry.
+ *  VF5 getYForNote(line) = stave.y + headroom*spacing + 5*spacing - line*spacing
+ *  OSMD staff-relative origin is top staff line (Y=0, increasing downward).
+ *  osmdY = (getYForNote(line) - topStaffLine) / unitInPixels = 5 - line */
+function getVF5NoteheadStaffY(note: GraphicalNote): number {
+    const vfgNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
+    if (vfgNote.notehead) {
+        return 5 - vfgNote.notehead().line;
+    }
+    return note.PositionAndShape?.RelativePosition?.y ?? 0;
+}
+
 export class GraphicalSlur extends GraphicalCurve {
     // private intersection: PointF2D;
 
@@ -123,7 +135,15 @@ export class GraphicalSlur extends GraphicalCurve {
                                                         + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
                                                         endY);
             if (slurEndNote) {
+                // When there are 3+ staff entries, BorderLeft on the last entry can
+                // include predecessors in the same measure, narrowing the skyline query
+                // so much that intermediate entries are missed. Use endX to bound the
+                // query on the right so all intermediate entries are covered.
+                if (this.staffEntries.length > 2) {
+                    endUpperLeft.x = endX;
+                } else {
                     endUpperLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
+                }
             } else {
                     // Slur continues to next StaffLine - must reach the end of current StaffLine
                     endUpperLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
@@ -137,6 +157,7 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // SkyLinePointsList between firstStaffEntry startUpperRightPoint and lastStaffentry endUpperLeftPoint
             points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
+
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endUpperLeft.x - startUpperRight.x) / 2 + startUpperRight.x,
@@ -296,7 +317,11 @@ export class GraphicalSlur extends GraphicalCurve {
                                                         + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
                                                         endY);
             if (slurEndNote) {
-                endLowerLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
+                if (this.staffEntries.length > 2) {
+                    endLowerLeft.x = endX;
+                } else {
+                    endLowerLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
+                }
             } else {
                 // Slur continues to next StaffLine - must reach the end of current StaffLine
                 endLowerLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
@@ -480,28 +505,42 @@ export class GraphicalSlur extends GraphicalCurve {
             // Determine Start/End Point coordinates with the VoiceEntry of the Start/EndNote of the slur
             const slurStartVE: GraphicalVoiceEntry = slurStartNote.parentVoiceEntry;
 
+            // Get extreme notehead staff Y from VF5 notehead geometry (line * 0.5).
+            // PositionAndShape.RelativePosition.y on notes is a centering offset, NOT staff position.
+            let extremeNoteStaffY: number = getVF5NoteheadStaffY(slurStartNote);
+
+            if (slurStartVE.notes.length > 1) {
+                if (this.placement === PlacementEnum.Above) {
+                    for (const n of slurStartVE.notes) {
+                        const ny: number = getVF5NoteheadStaffY(n);
+                        if (ny < extremeNoteStaffY) { extremeNoteStaffY = ny; }
+                    }
+                } else {
+                    for (const n of slurStartVE.notes) {
+                        const ny: number = getVF5NoteheadStaffY(n);
+                        if (ny > extremeNoteStaffY) { extremeNoteStaffY = ny; }
+                    }
+                }
+            }
+
             if (this.placement === PlacementEnum.Above) {
-                startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
+                if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Down) {
+                    startY = extremeNoteStaffY - 0.5; // notehead top (stem away from slur)
+                } else {
+                    startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
+                }
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     startY = Math.min(endY, slurStartVE.parentStaffEntry.getSkylineMin());
-                    // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
-                    //     if (articulation.placement === PlacementEnum.Above) {
-                    //         startY -= this.rules.SlurEndArticulationYOffset;
-                    //         break;
-                    //     }
-                    // }
                 }
             } else {
-                startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
+                if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
+                    startY = extremeNoteStaffY + 0.5; // notehead bottom (stem away from slur)
+                } else {
+                    startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
+                }
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     startY = Math.max(endY, slurStartVE.parentStaffEntry.getBottomlineMax());
                 }
-                // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
-                //     if (articulation.placement === PlacementEnum.Below) {
-                //         startY += 1;
-                //         break;
-                //     }
-                // }
             }
 
             // If the stem points towards the starting point of the slur, shift the slur by a small amount to start (approximately) at the x-position
@@ -559,8 +598,28 @@ export class GraphicalSlur extends GraphicalCurve {
                     }
                 }
             }
+            // Get extreme notehead staff Y from VF5 notehead geometry (line * 0.5).
+            let endExtremeNoteStaffY: number = getVF5NoteheadStaffY(slurEndNote);
+            if (slurEndVE.notes.length > 1) {
+                if (this.placement === PlacementEnum.Above) {
+                    for (const n of slurEndVE.notes) {
+                        const ny: number = getVF5NoteheadStaffY(n);
+                        if (ny < endExtremeNoteStaffY) { endExtremeNoteStaffY = ny; }
+                    }
+                } else {
+                    for (const n of slurEndVE.notes) {
+                        const ny: number = getVF5NoteheadStaffY(n);
+                        if (ny > endExtremeNoteStaffY) { endExtremeNoteStaffY = ny; }
+                    }
+                }
+            }
+
             if (this.placement === PlacementEnum.Above) {
-                endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
+                if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down) {
+                    endY = endExtremeNoteStaffY - 0.5; // notehead top (stem away from slur)
+                } else {
+                    endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
+                }
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     endY = Math.min(endY, slurEndVE.parentStaffEntry.getSkylineMin());
                 }
@@ -568,7 +627,11 @@ export class GraphicalSlur extends GraphicalCurve {
                     endY -= this.rules.SlurEndArticulationYOffset;
                 }
             } else {
-                endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
+                if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
+                    endY = endExtremeNoteStaffY + 0.5; // notehead bottom (stem away from slur)
+                } else {
+                    endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
+                }
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     endY = Math.max(endY, slurEndVE.parentStaffEntry.getBottomlineMax());
                 }
@@ -647,12 +710,15 @@ export class GraphicalSlur extends GraphicalCurve {
             } else { endY += rules.SlursStartingAtSameStaffEntryYOffset; }
         }
 
+        // Cap slurs to within staff area. Use notehead-based positioning from
+        // calculateStartAndEnd as the primary anchor; the cap only prevents
+        // pathologic values (e.g., unset start/end). 4.0 = staff height, generous margin.
         if (this.placement === PlacementEnum.Above) {
-            startY = Math.min(startY, 1.5);
-            endY = Math.min(endY, 1.5);
+            startY = Math.min(startY, 4.0);
+            endY = Math.min(endY, 4.0);
         } else {
-            startY = Math.max(startY, staffLine.StaffHeight - 1.5);
-            endY = Math.max(endY, staffLine.StaffHeight - 1.5);
+            startY = Math.max(startY, -4.0);
+            endY = Math.max(endY, -4.0);
         }
 
         return {startX, startY, endX, endY};
