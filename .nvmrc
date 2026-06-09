@@ -1,2 +1,10 @@
-v20
-# v14 is only necessary for MacOS for build issues, see OSMD issue 1239
+v24
+# Recommended Node version; matches what CI uses (.github/workflows/ci.yml). v24 is the current LTS.
+# Minimum is Node 20.19 / 22.13 / 24+: ESLint 10 (run by the lint step) won't start on older Node,
+# and Node 18 is no longer supported.
+#
+# `gl` (headless-gl) is an optionalDependency used only by test/Util/generateImages_browserless.mjs
+# for WebGL visual-regression images. It's imported lazily in a try/catch (#1160), so a failed build
+# doesn't affect the library, its tests, or end users - but its native build can still error and,
+# despite being optional, occasionally fail `npm install` on some systems (notably macOS); see #1239:
+https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1239
