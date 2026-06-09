@@ -119,6 +119,10 @@ export class EngravingRules {
     public GraceNoteXOffset: number;
     /** Set this to e.g. -0.5 or -0.8 to put grace notes a lot closer to the main note. */
     public GraceNoteGroupXMargin: number;
+    /** Extra horizontal spacing (OSMD units) added to minStaffEntriesWidth per grace note.
+     *  Grace notes are VF modifiers, not tickables, so preCalculateMinTotalWidth does not
+     *  account for them. This spacing prevents collisions with preceding notes. */
+    public GraceNoteExtraSpacing: number;
     public WedgeOpeningLength: number;
     public WedgeMeasureEndOpeningLength: number;
     public WedgeMeasureBeginOpeningLength: number;
@@ -700,6 +704,7 @@ export class EngravingRules {
         this.GraceNoteScalingFactor = 0.6;
         this.GraceNoteXOffset = 0.2;
         this.GraceNoteGroupXMargin = 0.0; // More than 0 leads to too much space in most cases.
+        this.GraceNoteExtraSpacing = 1.5;  // OSMD units per grace note, prevents collision with preceding notes
         //  see test_end_clef_measure. only potential 'tight' case: test_graceslash_simple
 
         // Wedge Variables

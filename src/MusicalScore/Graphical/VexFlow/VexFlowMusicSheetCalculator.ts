@@ -317,28 +317,25 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
 
       // Grace notes are VF modifiers (GraceNoteGroup), not tickables.
-      // Detect them at the OSMD level via staff entries' IsGrace flag.
-      let hasGrace: boolean = false;
+      // Their horizontal space is included in preCalculateMinTotalWidth via the
+      // modifierContext (joinVoices -> addToModifierContext -> StaveNote.preFormat
+      // -> modifierContext.preFormat -> GraceNoteGroup.format -> state.leftShift).
+      // The fix for collisions with preceding notes is in GraceNoteGroup.format():
+      // spacingFromNextModifier gets extra padding to push grace notes rightward
+      // away from the previous note. This per-measure padding provides additional
+      // min-width insurance for tight measures.
+      let graceCount: number = 0;
       for (const measure of measures) {
         for (const staffEntry of measure.staffEntries) {
           for (const gve of staffEntry.graphicalVoiceEntries) {
             if (gve.parentVoiceEntry.IsGrace) {
-              hasGrace = true;
-              break;
+              graceCount++;
             }
           }
-          if (hasGrace) { break; }
         }
-        if (hasGrace) { break; }
       }
-      if (hasGrace) {
-        const rawEstimate: number = formatter.getMinTotalWidth() / unitInPixels;
-        const graceFloor: number = rawEstimate * 0.90
-          + this.rules.VoiceSpacingAddendVexflow
-          + maxStaffEntries * staffEntryFactor;
-        if (graceFloor > minStaffEntriesWidth) {
-          minStaffEntriesWidth = graceFloor;
-        }
+      if (graceCount > 0) {
+        minStaffEntriesWidth += graceCount * this.rules.GraceNoteExtraSpacing;
       }
 
       // Propagate stave from voices to tickables (Voice.setStave only
