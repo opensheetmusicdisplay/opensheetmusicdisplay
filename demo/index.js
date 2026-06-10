@@ -335,27 +335,35 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         var slideButton = document.getElementById("slideControlsButton");
         if (slideButton) {
-            slideButton.onclick=function slideButtonClicked(){
-                var slideContainer = document.getElementById("slideContainer");
-                slideContainer.addEventListener("animationend", function(e){
-                    e.preventDefault();
-    
-                    if(slideContainer.style.animationName == "slide-left"){
-                        divControls.style.display = "block";
-                    }
-                });
-    
-                if(divControls.style.display == "block"){
-                    divControls.style.display = "flex";
-                    slideContainer.style.animation = "0.7s slide-right";
-                    slideContainer.style.animationFillMode = "forwards"
-                    slideButton.style.background = "url('resources/arrow-left-s-line.svg') 50% no-repeat var(--theme-color-light)"
-                    return;
+            // Minimize/restore the controls sidebar. On desktop the sidebar is solid and reserves width
+            //   (see demo.css: #divControls + #osmdCanvasDiv margin-left), so collapsing/expanding it changes the
+            //   score width and needs a re-render. We re-render only once -- when the slide finishes (collapse) or
+            //   right away (expand) -- not on every animation frame. The slide itself is a CSS transform transition.
+            //   The arrow icon is swapped via CSS (body.controls-collapsed #slideControlsButton).
+            slideButton.onclick = function slideButtonClicked(){
+                var collapsed = document.body.classList.toggle("controls-collapsed");
+                if (!window.matchMedia("(min-width: 768px)").matches) {
+                    return; // mobile/portrait uses its own collapsible; there is no reserved width to reclaim
                 }
-                slideContainer.style.animation = "0.7s slide-left"
-                slideContainer.style.animationFillMode = "forwards"
-                slideButton.style.background = "url('resources/arrow-right-s-line.svg') 50% no-repeat var(--theme-color-light)"
-            }
+                if (collapsed) {
+                    // wait until the sidebar has slid out, then hand the freed width to the score
+                    var onSlideEnd = function(e){
+                        if (e.target !== divControls || e.propertyName !== "transform") {
+                            return;
+                        }
+                        divControls.removeEventListener("transitionend", onSlideEnd);
+                        if (document.body.classList.contains("controls-collapsed")) { // not toggled back meanwhile
+                            canvas.style.marginLeft = "0px";
+                            renderAndScrollBack();
+                        }
+                    };
+                    divControls.addEventListener("transitionend", onSlideEnd);
+                } else {
+                    // restore the reserved width (CSS-driven, breakpoint-correct) and re-render, then the sidebar slides back in
+                    canvas.style.marginLeft = "";
+                    renderAndScrollBack();
+                }
+            };
         }
 
         const optionalControls = document.getElementById('optionalControls');

@@ -330,21 +330,35 @@ select {
 
   #divControls{
     background-color: var(--theme-color-very-light);
-    height: 100%;
     width: var(--desktop-divControls-width) !important;
     margin-right: auto;
     font-size: var(--desktop-font-size);
-    padding-bottom: 5%;
     border-top: var(--controls-border-color) solid var(--thick-border-size);
     border-right: var(--controls-border-color) solid var(--thick-border-size);
     display:block;
     padding-bottom: 10%;
-    top:79px;
-    opacity: 0.5;
+    left: 0;
+    top: 79px;
+    height: calc(100vh - 79px);
+    overflow-y: auto;
+    /* solid sidebar that reserves space (see #osmdCanvasDiv margin-left), not a translucent overlay.
+       was: opacity 0.5 with an opacity 0.95 :hover (looked like a glitch, and hover doesn't work on touch). */
+    transition: transform 0.4s ease;
   }
 
-  #divControls:hover {
-    opacity: 0.95;
+  /* reserve space for the solid sidebar so it doesn't cover the score (desktop only) */
+  #osmdCanvasDiv{
+    margin-left: var(--desktop-divControls-width);
+  }
+
+  /* minimized: slide the sidebar (and its toggle button) off to the left. index.js then frees the
+     reserved width and re-renders once, when the slide finishes (collapse) / right away (expand). */
+  body.controls-collapsed #divControls{
+    transform: translateX(-100%);
+  }
+  body.controls-collapsed #slideControlsButton{
+    transform: translateX(calc(-1 * var(--desktop-divControls-width) + 1px));
+    background-image: url('resources/arrow-right-s-line.svg');
   }
 
   #slideControlsButton{
@@ -355,9 +369,10 @@ select {
     margin-left: calc(var(--desktop-divControls-width) - 1px);
     position: fixed;
     order:1;
-    z-index: 1;
+    z-index: 2;
     border: var(--controls-border-color) solid 1px;
     top:79px;
+    transition: transform 0.4s ease;
   }
 
   #versionDiv{
@@ -377,7 +392,11 @@ select {
     border-radius: 5px;
     border-width: var(--thick-border-size);
     margin-bottom: 0;
-
+    /* Stay clear of the fixed controls sidebar when the window is narrow, so the "Select a sample:"
+       title isn't cut off by it. max(25%, ...) keeps the box centered at wide widths (>=1440px, where
+       25% of the width already clears the sidebar) and clamps its left edge to the sidebar width below that. */
+    margin-left: max(25%, var(--desktop-divControls-width));
+    margin-right: auto;
   }
   #selectSampleTitle{
     height:100%;
@@ -545,19 +564,5 @@ table {
     width: 100%;
 }
 
-@keyframes slide-left{
-  from{
-    margin-left: 0%;
-  }
-  to{
-    margin-left: calc(var(--desktop-divControls-width) * -1 + 6px);
-  }
-}
-@keyframes slide-right {
-  from{
-    margin-left: calc(var(--desktop-divControls-width) * -1 + 6px);
-  }
-  to{
-    margin-left: 0%;
-  }
-}
+/* (the old slide-left / slide-right keyframes were replaced by a CSS transform transition on
+   #divControls + #slideControlsButton, toggled via the body.controls-collapsed class; see index.js) */
