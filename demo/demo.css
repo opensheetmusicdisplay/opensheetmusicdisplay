@@ -339,7 +339,10 @@ select {
     padding-bottom: 10%;
     left: 0;
     top: 79px;
-    height: calc(100vh - 79px);
+    /* max-height (not height) so the panel sizes to its content: the vertical scrollbar only appears
+       when the controls are taller than the viewport, not always. (A fixed height combined with the
+       inner #advancedSettings min-height:98% forced a permanent overflow.) */
+    max-height: calc(100vh - 79px);
     overflow-y: auto;
     /* solid sidebar that reserves space (see #osmdCanvasDiv margin-left), not a translucent overlay.
        was: opacity 0.5 with an opacity 0.95 :hover (looked like a glitch, and hover doesn't work on touch). */
