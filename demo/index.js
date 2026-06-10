@@ -96,8 +96,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         followCursorCheckbox,
         showCursorBtn,
         hideCursorBtn,
-        backendSelect,
-        backendSelectDiv,
         debugReRenderBtn,
         debugClearBtn,
         selectPageSizes,
@@ -204,18 +202,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         var horizontalScrolling = paramHorizontalScrolling === '1';
         var singleHorizontalStaffline = paramSingleHorizontalStaffline === '1';
         
-        // set the backendSelect debug controls dropdown menu selected item
-        //console.log("true: " + backendSelect && backendType.toLowerCase && backendType.toLowerCase() === "canvas");
-        // TODO somehow backendSelect becomes undefined here:
-        /*if (backendSelect && backendType.toLowerCase && backendType.toLowerCase() === "canvas") {
-            console.log("here1");
-            for (var i=0; i<backendSelect.options.length; i++) {
-                if (backendSelect.options[i].value.toLowerCase() === "canvas") {
-                    backendSelect.selectedIndex = i;
-                }
-            }
-            backendSelect.value = "Canvas";
-        }*/
 
         divControls = document.getElementById('divControls');
         zoomControls = document.getElementById('zoomControls');
@@ -249,8 +235,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
-        backendSelect = document.getElementById("backend-select");
-        backendSelectDiv = document.getElementById("backend-select-div");
         debugReRenderBtn = document.getElementById("debug-re-render-btn");
         debugClearBtn = document.getElementById("debug-clear-btn");
         selectPageSizes = [];
@@ -270,7 +254,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         showDebugControls = paramDebugControls !== '0';
         if (showDebugControls) {
             var elementsToEnable = [
-                selectSample, selectBounding, selectPageSizes[0], backendSelect, backendSelectDiv, divControls
+                selectSample, selectBounding, selectPageSizes[0], divControls
             ];
             for (var i=0; i<elementsToEnable.length; i++) {
                 if (elementsToEnable[i]) { // make sure this element is not null/exists in the index.html, e.g. github.io demo has different index.html
@@ -645,26 +629,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             }
         });
 
-        backendSelect.addEventListener("change", function (e) {
-            var value = e.target.value;
-            var createNewOsmd = true;
-
-            if (createNewOsmd) {
-                // clears the canvas element
-                canvas.innerHTML = "";
-                //openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value }); // resets EngravingRules
-                openSheetMusicDisplay.setOptions({backend: value});
-                openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to get more detailed control flow information
-                if (openSheetMusicDisplay.graphic) {
-                    openSheetMusicDisplay.renderAndScrollBack();
-                }
-            } else {
-                // alternative, doesn't work yet, see setOptions():
-                openSheetMusicDisplay.setOptions({ backend: value });
-            }
-            console.log("[OSMD] selectSampleOnChange addEventListener change");
-            // selectSampleOnChange();
-        });
         if(transposeBtn && transpose){
             transposeBtn.onclick = function(){
                 var transposeValue = parseInt(transpose.value);
