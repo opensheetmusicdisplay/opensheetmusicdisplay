@@ -1010,12 +1010,15 @@ export class GraphicalSlur extends GraphicalCurve {
         const cutoffAngle: number = this.rules.SlurHeightFlattenLongSlursCutoffAngle;
         const cutoffWidth: number = this.rules.SlurHeightFlattenLongSlursCutoffWidth;
         // console.log("width: " + endX);
-        if (startAngle > cutoffAngle && endX > cutoffWidth) { // steep and wide slurs
-            // console.log("steep angle: " + startAngle);
-            widthFlattenFactor += endX / 70 * this.rules.SlurHeightFlattenLongSlursFactorByWidth; // double flattening for width = 70, factorByWidth = 1
-            widthFlattenFactor *= 1 + (startAngle / 30 * this.rules.SlurHeightFlattenLongSlursFactorByAngle); // flatten more for higher angles.
-            // TODO use sin or cos instead of startAngle directly
-            heightFactor /= widthFlattenFactor; // flatten long slurs more
+        if (startAngle > cutoffAngle && endX > cutoffWidth) {
+            // Steep and wide: full formula with angle-dependent multiplier.
+            widthFlattenFactor += endX / 70 * this.rules.SlurHeightFlattenLongSlursFactorByWidth;
+            widthFlattenFactor *= 1 + (startAngle / 30 * this.rules.SlurHeightFlattenLongSlursFactorByAngle);
+            heightFactor /= widthFlattenFactor;
+        } else if (endX > cutoffWidth * 2) {
+            // Wide but not steep: stronger pure-width flattening.
+            widthFlattenFactor += endX / 18 * this.rules.SlurHeightFlattenLongSlursFactorByWidth;
+            heightFactor /= widthFlattenFactor;
         }
         // TODO also offer a widthFlattenFactor for smaller slurs?
 
