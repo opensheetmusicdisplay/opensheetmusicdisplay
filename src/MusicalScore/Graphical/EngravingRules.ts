@@ -177,6 +177,10 @@ export class EngravingRules {
     /** y offset added to avoid collisions of rehearsal marks (e.g. "A" or "Verse") with multiple measure rest numbers. */
     public RehearsalMarkYOffsetAddedForRehearsalMarks: number;
     public RehearsalMarkFontSize: number;
+    /** Lift a rehearsal mark above a chord symbol in the same measure so the two don't overlap, and reserve
+     *  skyline space for it. The mark is a fixed-offset VexFlow StaveSection that isn't part of the skyline,
+     *  while chord symbols are placed (earlier) against the skyline and can end up right where the mark goes. */
+    public RehearsalMarkAboveChordSymbol: boolean;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
     public MeasureNumberLabelXOffset: number;
@@ -782,6 +786,7 @@ export class EngravingRules {
         this.RehearsalMarkYOffsetAddedForRehearsalMarks = -12;
         this.RehearsalMarkYOffset = 0; // user defined
         this.RehearsalMarkFontSize = 10; // vexflow default: 12, too big with chord symbols
+        this.RehearsalMarkAboveChordSymbol = true;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.MeasureNumberLabelHeight = 1.5 * EngravingRules.unit;

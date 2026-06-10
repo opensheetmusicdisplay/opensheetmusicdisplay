@@ -15,6 +15,7 @@ export class StaveSection extends StaveModifier {
     this.x = x;
     this.shift_x = 0;
     this.shift_y = shift_y;
+    this.minBottomY = undefined; // VexFlowPatch: if set, shift the box up so its bottom doesn't exceed this y (px), to clear chord symbols
     this.font = {
       family: 'sans-serif',
       size: 12,
@@ -46,7 +47,17 @@ export class StaveSection extends StaveModifier {
     if (width < 18) width = 18;
     const height = text_height + this.font.size / 10; // font.size / 10: padding
     //  Seems to be a good default y
-    const y = stave.getYForTopText(3) + 19 - (height * 1.15) + this.shift_y;
+    let y = stave.getYForTopText(3) + 19 - (height * 1.15) + this.shift_y;
+    // VexFlowPatch: shift the section up so its box bottom doesn't exceed the clearance line (e.g. to sit above a chord
+    //   symbol). minBottomY is given relative to the top stave line (getYForLine(0)), since the caller (OSMD) doesn't
+    //   know the final absolute stave y when it computes the clearance.
+    if (this.minBottomY !== undefined && this.minBottomY !== null) {
+      const minBottomYAbsolute = stave.getYForLine(0) + this.minBottomY;
+      const boxBottom = y + text_height / 4 + height;
+      if (boxBottom > minBottomYAbsolute) {
+        y -= boxBottom - minBottomYAbsolute;
+      }
+    }
     let x = this.x + shift_x;
     ctx.beginPath();
     ctx.lineWidth = 2;

@@ -1125,9 +1125,60 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // const section: VF.StaveSection = new VF.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
       // (vfStave as any).modifiers.push(section);
       const fontSize: number = this.rules.RehearsalMarkFontSize;
-      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
+
+      // Lift the rehearsal mark above a chord symbol in the same measure so they don't overlap,
+      //   and reserve skyline space for the lifted mark (otherwise it can collide with whatever is above the system).
+      //   The mark is a fixed-offset VexFlow StaveSection that isn't part of the skyline, while chord symbols were
+      //   already placed (calculateChordSymbols, earlier) against the skyline and can sit right where the mark goes.
+      let minBottomY: number; // undefined -> no clamping in StaveSection.draw (VexFlowPatch)
+      const staffLine: StaffLine = gMeasure.ParentStaffLine;
+      const chord: GraphicalChordSymbolContainer = this.rules.RehearsalMarkAboveChordSymbol
+        ? this.getFirstChordSymbolAbove(gMeasure) : undefined;
+      if (staffLine && chord) {
+        const containerPsh: BoundingBox = chord.PositionAndShape;
+        const xInUnits: number = containerPsh.Parent.AbsolutePosition.x + containerPsh.RelativePosition.x;
+        const start: number = containerPsh.BorderMarginLeft + xInUnits;
+        const end: number = containerPsh.BorderMarginRight + xInUnits;
+        // chord top relative to the staffline's top staff line (negative = above it), read from the skyline.
+        //   The chord's own absolute y is unreliable here: it can still reflect the pre-alignment position, and
+        //   isn't final until calculateSystemYLayout (which runs after calculateRehearsalMarks). The skyline, however,
+        //   was updated to the final chord top by calculateChordSymbols (earlier).
+        const chordTopRelative: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(start, end);
+        if (chordTopRelative < 0) { // only lift if something actually rises above the staff here
+          const marginInUnits: number = 0.5; // small gap between mark bottom and chord top
+          // StaveSection.draw (VexFlowPatch) shifts the mark up so its box bottom doesn't exceed
+          //   stave.getYForLine(0) + minBottomY (px), i.e. it keeps the mark above the chord:
+          minBottomY = (chordTopRelative - marginInUnits) * unitInPixels;
+          // reserve skyline over the chord's x-range so updateStaffLineBorders/calculateSystemYLayout make room for the lifted mark
+          const markHeightInUnits: number = fontSize / unitInPixels * 1.6 + marginInUnits; // conservative StaveSection box height
+          staffLine.SkyBottomLineCalculator.updateSkyLineInRange(start, end, chordTopRelative - markHeightInUnits);
+        }
+      }
+
+      // fontSize and minBottomY are extra arguments from VexFlowPatch (stave.js / stavesection.js)
+      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize, minBottomY);
       return; // only draw one rehearsal mark at top (visible) instrument
     }
+  }
+
+  /** Returns the leftmost (smallest x) Above-placed chord symbol container in the measure, or undefined if there is none.
+   *  The rehearsal mark sits at the measure start, so this is the chord it can collide with (see calculateRehearsalMark). */
+  private getFirstChordSymbolAbove(gMeasure: GraphicalMeasure): GraphicalChordSymbolContainer {
+    let first: GraphicalChordSymbolContainer = undefined;
+    let firstX: number = Number.MAX_VALUE;
+    for (const staffEntry of gMeasure.staffEntries) {
+      for (const chordContainer of staffEntry.graphicalChordContainers ?? []) {
+        if (chordContainer.GetChordSymbolContainer.Placement !== PlacementEnum.Above) {
+          continue;
+        }
+        const x: number = chordContainer.PositionAndShape.AbsolutePosition.x; // x layout is final here, unlike y
+        if (x < firstX) {
+          firstX = x;
+          first = chordContainer;
+        }
+      }
+    }
+    return first;
   }
 
   /**
