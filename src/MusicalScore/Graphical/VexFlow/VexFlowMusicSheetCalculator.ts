@@ -353,11 +353,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
 
       if (parentSourceMeasure?.ImplicitMeasure) {
-        // shrink width in the ratio that the pickup measure is shorter compared to a full measure('s time signature):
-        minStaffEntriesWidth = parentSourceMeasure.Duration.RealValue / parentSourceMeasure.ActiveTimeSignature.RealValue * minStaffEntriesWidth;
-        // e.g. a 1/4 pickup measure in a 3/4 time signature should be 1/4 / 3/4 = 1/3 as long (a third)
-        // it seems like this should be respected by staffEntries.length and preCaculateMinTotalWidth, but apparently not,
-        //   without this the pickup measures were always too long.
+        const shrinkFactor: number = parentSourceMeasure.Duration.RealValue / parentSourceMeasure.ActiveTimeSignature.RealValue;
+        // VF5 formatter already partially accounts for content-proportional width.
+        // Apply dampened shrink: exponent 0.7 instead of 1.0 (full ratio).
+        minStaffEntriesWidth *= Math.pow(shrinkFactor, 0.7);
 
         let barlineSpacing: number = 0;
         const measureListIndex: number = parentSourceMeasure.measureListIndex;

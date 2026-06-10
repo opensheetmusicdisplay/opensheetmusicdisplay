@@ -746,8 +746,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (!stave) { return; }
         const localCenterX: number = stave.getNoteStartX() + (stave.getNoteEndX() - stave.getNoteStartX()) / 2;
         const centerX: number = refCenterX >= 0 ? refCenterX : localCenterX;
-        // Group all rests by tick context X (rounded to .01).
-        const tickGroups: Map<string, VF.StemmableNote[]> = new Map();
+        const tickGroups: Map<number, VF.StemmableNote[]> = new Map();
+        const voiceTotalTicks: Map<any, number> = new Map();
         for (const voice of this.getVoicesWithinMeasure()) {
             for (const ve of voice.VoiceEntries) {
                 for (const note of ve.Notes) {
@@ -755,7 +755,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const vfnote: VF.StemmableNote = gNote?.vfnote?.[0];
                     if (!vfnote || !vfnote.isRest?.()) { continue; }
                     const tcX: number = vfnote.getTickContext?.()?.getX() ?? 0;
-                    const key: string = (Math.round(tcX * 100)).toString();
+                    const key: number = Math.round(tcX * 100);
                     if (!tickGroups.has(key)) { tickGroups.set(key, []); }
                     tickGroups.get(key)!.push(vfnote);
                 }
@@ -765,12 +765,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const hasAlignCenter: boolean = notes.some(n => (n as any)._alignCenter);
             if (!hasAlignCenter) { continue; }
             for (const vfnote of notes) {
-                // VF5 already centers via setCenterXShift when alignCenter is set in struct.
-                // Skip to avoid double-centering. Only xShift fill rests sharing the tick.
                 if ((vfnote as any).isCenterAligned?.()) { continue; }
-                // Only shift full-measure rests (not quarter rests at beat 1 sharing tcX=0).
+                const vfVoice: any = vfnote.getVoice?.();
+                let totalTicks: number = voiceTotalTicks.get(vfVoice);
+                if (totalTicks === undefined) {
+                    totalTicks = vfVoice?.getTotalTicks?.()?.value?.() ?? 0;
+                    voiceTotalTicks.set(vfVoice, totalTicks);
+                }
                 const vfTicks: number = vfnote.getTicks?.()?.value?.() ?? 0;
-                const totalTicks: number = vfnote.getVoice?.()?.getTotalTicks?.()?.value?.() ?? 0;
                 if (vfTicks !== totalTicks) { continue; }
                 const glyphWidth: number = vfnote.getGlyphWidth();
                 const ax: number = vfnote.getAbsoluteX();
@@ -838,11 +840,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * Returns all the voices that are present in this measure
      */
     public getVoicesWithinMeasure(): Voice[] {
+        const seen: Set<Voice> = new Set();
         const voices: Voice[] = [];
         for (const gse of this.staffEntries) {
            for (const gve of gse.graphicalVoiceEntries) {
-                if (voices.indexOf(gve.parentVoiceEntry.ParentVoice) === -1) {
-                    voices.push(gve.parentVoiceEntry.ParentVoice);
+                const v: Voice = gve.parentVoiceEntry.ParentVoice;
+                if (!seen.has(v)) {
+                    seen.add(v);
+                    voices.push(v);
                 }
             }
         }
