@@ -326,6 +326,24 @@ select {
     width: 100%;
     z-index: 2;
     margin-top: 0;
+    /* center the title over the score area (right of the controls sidebar), not the whole window.
+       left:0 pins the fixed bar to the viewport (without it, its static position is already shifted by
+       #topBar's padding, double-shifting the title). padding-left is removed when collapsed (below). */
+    left: 0;
+    box-sizing: border-box;
+    padding-left: var(--desktop-divControls-width);
+    transition: padding-left 0.4s ease;
+  }
+
+  /* reserve the sidebar's width for the top bar (sample selector, version) as well, so those center
+     over the score area like the title and the score itself. Removed when the sidebar is collapsed. */
+  #topBar{
+    padding-left: var(--desktop-divControls-width);
+    transition: padding-left 0.4s ease;
+  }
+  body.controls-collapsed #header,
+  body.controls-collapsed #topBar{
+    padding-left: 0;
   }
 
   #divControls{
@@ -398,11 +416,8 @@ select {
     border-radius: 5px;
     border-width: var(--thick-border-size);
     margin-bottom: 0;
-    /* Stay clear of the fixed controls sidebar when the window is narrow, so the "Select a sample:"
-       title isn't cut off by it. max(25%, ...) keeps the box centered at wide widths (>=1440px, where
-       25% of the width already clears the sidebar) and clamps its left edge to the sidebar width below that. */
-    margin-left: max(25%, var(--desktop-divControls-width));
-    margin-right: auto;
+    /* centered (margin:auto from the base rule) inside #topBar, which reserves the sidebar width on the
+       left -- so the box centers over the score area and can no longer be cut off by the sidebar. */
   }
   #selectSampleTitle{
     height:100%;
