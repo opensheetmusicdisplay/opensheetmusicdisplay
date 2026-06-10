@@ -108,6 +108,11 @@ export interface IOSMDOptions {
      * Default is false.
      */
     followCursorPolyfill?: boolean;
+    /**
+     * When followCursorPolyfill is true, pixels to offset the scroll position from the top (scroll-margin-top equivalent).
+     * Defaults to 128 if not set.
+     */
+    followCursorPolyfillOffsetY?: number;
     /** Broad Parameters like compact or preview mode.
      * Also try "compacttight", which is like compact but also reduces margins.
      * To see what this mode does and maybe adjust the spacing parameters yourself instead of using the mode,
@@ -385,4 +390,9 @@ export interface CursorOptions {
      * Default is false.
      */
     followCursorPolyfill?: boolean;
+    /**
+     * When followCursorPolyfill is true, the number of pixels to offset the scroll position from the top
+     * (mimics scroll-margin-top). Defaults to 128 if not set.
+     */
+    followCursorPolyfillOffsetY?: number;
 }

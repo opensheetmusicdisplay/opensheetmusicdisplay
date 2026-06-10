@@ -238,9 +238,8 @@ export class Cursor {
           const yChanged: boolean = this.previousY === undefined || Math.abs(this.previousY - y) > 0.1;
 
           if (yChanged) {
-             // Mimic scroll-margin-top: 8em. 1em ~ 16px usually, so 8em ~ 128px.
-             // This keeps some context above the cursor.
-             SmoothScroll.scrollIntoView(this.cursorElement, { block: "start", duration: 400, offsetY: 128 });
+             const offsetY: number = this.cursorOptions.followCursorPolyfillOffsetY ?? 128;
+             SmoothScroll.scrollIntoView(this.cursorElement, { block: "start", duration: 400, offsetY });
           }
 
           // Update previous Y position for next comparison

@@ -913,13 +913,16 @@ export class OpenSheetMusicDisplay {
             // Preserve existing polyfill setting if not explicitly overridden
             const existingPolyfill: boolean = this.cursorsOptions?.[0]?.followCursorPolyfill;
             const newPolyfill: boolean = options.followCursorPolyfill !== undefined ? options.followCursorPolyfill : existingPolyfill;
+            const existingOffsetY: number | undefined = this.cursorsOptions?.[0]?.followCursorPolyfillOffsetY;
+            const newOffsetY: number | undefined = options.followCursorPolyfillOffsetY !== undefined ? options.followCursorPolyfillOffsetY : existingOffsetY;
 
             this.cursorsOptions = [{
                 type: CursorType.Standard,
                 color: this.EngravingRules.DefaultColorCursor,
                 alpha: 0.5,
                 follow: true,
-                followCursorPolyfill: newPolyfill
+                followCursorPolyfill: newPolyfill,
+                followCursorPolyfillOffsetY: newOffsetY,
             }];
         }
         if (options.preferredSkyBottomLineBatchCalculatorBackend !== undefined) {
