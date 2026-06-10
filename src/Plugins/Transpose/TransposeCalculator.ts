@@ -32,11 +32,13 @@ export class TransposeCalculator implements ITransposeCalculator {
         for (let i: number = 0; i < TransposeCalculator.noteEnums.length; i++) {
             const currentValue: number = <number>TransposeCalculator.noteEnums[i];
             if (currentValue === transposedHalfTone) {
-                // In sharp-key minor keys, a raised note that lands exactly on a natural note
-                // must be spelled as the raised degree below (e.g. E# in F# minor, not F♮; B# in C# minor, not C♮).
-                // Flat-key minor keys (C minor, F minor, Bb minor…) are excluded: their raised 7th
-                // lands on a natural note that is correctly spelled with a ♮ sign (B♮, E♮, A♮).
-                if (hasSharpAccidental && isMinorKey && currentKeyInstruction.Key > 0) {
+                // In sharp-key contexts (minor or major), a non-flat note that lands exactly on a note
+                // the key sharps must be spelled as the raised degree below (e.g. E# in F# minor/A major,
+                // not F♮; B# in C# minor/E major, not C♮; G→F𝄪 in G# minor/B major).
+                // Flat-key contexts are excluded: their raised notes land on naturals correctly
+                // spelled with a ♮ sign (B♮ in C/G minor, E♮ in F minor, etc.).
+                if (!hasFlatAccidental && currentKeyInstruction.Key > 0 &&
+                    currentKeyInstruction.willAlterateNote(TransposeCalculator.noteEnums[i])) {
                     let noteIndex: number = i - 1;
                     if (noteIndex < 0) {
                         noteIndex += 7;
@@ -68,14 +70,14 @@ export class TransposeCalculator implements ITransposeCalculator {
                 // Choose enharmonic (sharp vs flat) based on the transposed key signature (#1345),
                 //   but keep the original accidental when the key has no preference
                 //   (e.g. Beethoven Geliebte measure 6, transposing -3 to C major: keep flat instead of sharp).
-                // In minor keys, a raised note (sharp accidental) must stay sharp regardless of key flats,
-                //   so the leading tone is spelled as raised 7th degree (e.g. C# in D minor, F# in G minor).
-                if (hasSharpAccidental && isMinorKey) {
+                // In minor keys, a non-flat note must stay sharp (e.g. C# in D minor, F# in G minor).
+                // In flat major keys (F, Bb…), respect the original accidental: C# stays C# even in F major.
+                if (!hasFlatAccidental && isMinorKey) {
                     preferSharps = true;
                 } else if (keyHasSharps) {
                     preferSharps = true;
                 } else if (keyHasFlats) {
-                    preferSharps = false;
+                    preferSharps = hasSharpAccidental;
                 } else if (hasSharpAccidental || hasFlatAccidental) {
                     preferSharps = hasSharpAccidental;
                 }
