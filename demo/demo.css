@@ -344,6 +344,9 @@ select {
        inner #advancedSettings min-height:98% forced a permanent overflow.) */
     max-height: calc(100vh - 79px);
     overflow-y: auto;
+    /* explicit overflow-x: hidden -- otherwise overflow-y:auto promotes the default overflow-x:visible to
+       'auto', which shows an (ugly) horizontal scrollbar on the slightest overflow (e.g. wide OS scrollbar). */
+    overflow-x: hidden;
     /* solid sidebar that reserves space (see #osmdCanvasDiv margin-left), not a translucent overlay.
        was: opacity 0.5 with an opacity 0.95 :hover (looked like a glitch, and hover doesn't work on touch). */
     transition: transform 0.4s ease;
@@ -429,8 +432,9 @@ select {
   }
   #advancedSettings{
     background-color: var(--theme-color-light);
-    margin-left: 20px;
-    margin-right: 20px;
+    /* was 20px each: too much inset, and it left less room for the controls (could cause a horizontal scrollbar) */
+    margin-left: 8px;
+    margin-right: 8px;
     border-width: var(--thick-border-size);
     height:fit-content;
     margin-top: 10px;
@@ -450,8 +454,9 @@ select {
   #zoomControls{
     display: flex;
     position:relative;
-    margin-left: 20px;
-    margin-right: 20px;
+    /* keep aligned with #advancedSettings (was 20px) */
+    margin-left: 8px;
+    margin-right: 8px;
     order:-1;
     width: 100%;
     margin-top: 7.5px;
