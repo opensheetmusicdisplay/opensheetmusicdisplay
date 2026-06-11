@@ -3273,12 +3273,13 @@ export abstract class MusicSheetCalculator {
                             //   // bulk fingering = more than one fingering per note given in MusicXML. (some programs export like this sometimes)
                             // console.log("isBulkFingering: " + isBulkFingering);
                             const distinctPitchedNotes: boolean = fingerings.every(
-                                (fingering, index) => fingering.sourceNote?.Pitch !== undefined &&
-                                    fingerings.findIndex(other => other.sourceNote === fingering.sourceNote) === index);
+                                (fingering: TechnicalInstruction, index: number) => fingering.sourceNote?.Pitch !== undefined &&
+                                    fingerings.findIndex((other: TechnicalInstruction) => other.sourceNote === fingering.sourceNote) === index);
                             if (distinctPitchedNotes) {
                                 // stack fingerings in the pitch order of their notes, mirroring the chord (lowest note's fingering at the bottom).
                                 //   sorting handles notes collected from multiple voices, which are not necessarily in pitch order.
-                                fingerings.sort((a, b) => a.sourceNote.Pitch.getHalfTone() - b.sourceNote.Pitch.getHalfTone());
+                                fingerings.sort((a: TechnicalInstruction, b: TechnicalInstruction) =>
+                                    a.sourceNote.Pitch.getHalfTone() - b.sourceNote.Pitch.getHalfTone());
                                 if (placement === PlacementEnum.Below) {
                                     fingerings.reverse();
                                 }

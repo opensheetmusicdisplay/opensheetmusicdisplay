@@ -1,0 +1,306 @@
+webpack was not included as a framework in karma configuration, setting this automatically...
+
+START:
+Webpack bundling...
+assets by path [1m[32m../build/dist/src/MusicalScore/[39m[22m 362 KiB 177 assets
+assets by path [1m[32m../build/dist/src/Common/[39m[22m 14.9 KiB 23 assets
+assets by path [1m[32m*.js[39m[22m 9.51 MiB 21 assets
+assets by path [1m[32m../build/dist/test/[39m[22m 965 bytes 19 assets
+assets by path [1m[32m../build/dist/src/OpenSheetMusicDisplay/*.ts[39m[22m 28.9 KiB
+  asset [1m[32m../build/dist/src/OpenSheetMusicDisplay/OSMDOptions.d.ts[39m[22m 17.7 KiB [1m[33m[compared for emit][39m[22m
+  + 4 assets
+assets by path [1m[32m../build/dist/src/Util/*.ts[39m[22m 1.93 KiB
+  asset [1m[32m../build/dist/src/Util/CollectionUtil.d.ts[39m[22m 1.43 KiB [1m[33m[compared for emit][39m[22m
+  + 3 assets
+assets by path [1m[32m../build/dist/src/Plugins/[39m[22m 849 bytes
+  asset [1m[32m../build/dist/src/Plugins/Transpose/TransposeCalculator.d.ts[39m[22m 781 bytes [1m[33m[compared for emit][39m[22m
+  + 2 assets
+asset [1m[32m../build/dist/src/index.d.ts[39m[22m 150 bytes [1m[33m[compared for emit][39m[22m
+webpack 5.107.2 compiled [1m[32msuccessfully[39m[22m in 4930 ms
+[32m02 06 2026 20:28:53.912:INFO [karma-server]: [39mKarma v6.4.4 server started at http://localhost:9876/
+[32m02 06 2026 20:28:53.913:INFO [launcher]: [39mLaunching browsers ChromeHeadlessNoSandbox with concurrency unlimited
+[32m02 06 2026 20:28:53.916:INFO [launcher]: [39mStarting browser ChromeHeadless
+[32m02 06 2026 20:28:55.062:INFO [Chrome Headless 148.0.0.0 (Mac OS 10.15.7)]: [39mConnected on socket Z0ATHjSHEl-gjePrAAAB with id 72065016
+  Fraction Unit Tests:
+    Construct Fraction, check properties
+      ✔ Numerator and Denominator
+      ✔ Real value
+    Compare fractions
+      ✔ lt attribute
+  MusicXML parser for element 'key'
+    for group traditional keys
+      ✔ enforces single occurrence of element 'fifths'
+      ✔ reads key signature with no optional 'mode' element present
+      major keys
+        ✔ reads key signature C-major
+        ✔ reads key signature G-major
+        ✔ reads key signature D-major
+        ✔ reads key signature A-major
+        ✔ reads key signature E-major
+        ✔ reads key signature B-major
+        ✔ reads key signature F#-major
+        ✔ reads key signature C#-major
+        ✔ reads key signature G#-major
+        ✔ reads key signature F-major
+        ✔ reads key signature Bb-major
+        ✔ reads key signature Eb-major
+        ✔ reads key signature Ab-major
+        ✔ reads key signature Db-major
+        ✔ reads key signature Gb-major
+        ✔ reads key signature Fb-major
+      minor keys
+        ✔ reads key signature a-minor
+        ✔ reads key signature e-minor
+        ✔ reads key signature b-minor
+        ✔ reads key signature f#-minor
+        ✔ reads key signature c#-minor
+        ✔ reads key signature g#-minor
+        ✔ reads key signature d#-minor
+        ✔ reads key signature a#-minor
+        ✔ reads key signature d-minor
+        ✔ reads key signature g-minor
+        ✔ reads key signature c-minor
+        ✔ reads key signature f-minor
+        ✔ reads key signature bb-minor
+        ✔ reads key signature eb-minor
+        ✔ reads key signature ab-minor
+  VexFlowConverter for element 'key'
+    ✔ gives key signature G-major with no optional 'mode' element present
+  InstrumentReader for element 'time'
+    ✔ gives common time RythmSymbolEnum from xml
+    ✔ gives alla breve/cut time RythmSymbolEnum from xml
+  Music Sheet Calculator
+    ✔ calculates music sheet
+  Music Sheet Reader
+    ✔ checks XML
+    ✔ reads title and composer
+    ✔ reads measures
+    ✔ reads instruments
+    ✔ reads notes
+    Notehead None (Hidden Notes)
+      ✔ loads file with notehead='none' without errors
+      ✔ correctly parses notehead='none' as NoteHeadShape.NONE
+      ✔ hidden notes (notehead='none') should not have PrintObject set to false by default
+      ✔ visible notes (normal notehead) in same measure should remain visible
+  MXL Tests
+    ✔ reads Mozart_Clarinet_Quintet_Excerpt.mxl
+    ✔ reads test_mxl_with_utf-16_xml.mxl
+ERROR: Error: End of data reached (data length = 0, asked index = 4). Corrupted zip ?
+Error: End of data reached (data length = 0, asked index = 4). Corrupted zip ?
+    at i.checkIndex (http://localhost:9876/base/.karma_temp/commons.js?2f5363ba4bed67f48943d7694cfaf53ce8feb943:22:18735)
+    at i.checkOffset (http://localhost:9876/base/.karma_temp/commons.js?2f5363ba4bed67f48943d7694cfaf53ce8feb943:22:18648)
+    at i.readData (http://localhost:9876/base/.karma_temp/commons.js?2f5363ba4bed67f48943d7694cfaf53ce8feb943:22:20442)
+    at i.readString (http://localhost:9876/base/.karma_temp/commons.js?2f5363ba4bed67f48943d7694cfaf53ce8feb943:22:19154)
+    at h.isSignature (http://localhost:9876/base/.karma_temp/commons.js?2f5363ba4bed67f48943d7694cfaf53ce8feb943:22:36294)
+    at h.readEndOfCentral (http://localhost:9876/base/.karma_temp/commons.js?2f5363ba4bed67f48943d7694cfaf53ce8feb943:22:38539)
+    at h.load (http://localhost:9876/base/.karma_temp/commons.js?2f5363ba4bed67f48943d7694cfaf53ce8feb943:22:40286)
+    at http://localhost:9876/base/.karma_temp/commons.js?2f5363ba4bed67f48943d7694cfaf53ce8feb943:22:11369
+    ✔ Corrupted file
+  NoteType
+    ✔ parses 32nd note correctly (sample value)
+    ✔ parses all NoteType values from string correctly (in XML: <note><type>)
+  Notehead
+    ✔ parses 'none' notehead shape correctly
+    ✔ parses 'normal' notehead shape correctly
+    ✔ parses 'x' notehead shape correctly
+    ✔ parses 'diamond' notehead shape correctly
+    ✔ parses 'slash' notehead shape correctly
+    ✔ parses 'triangle' notehead shape correctly
+    ✔ parses 'inverted triangle' notehead shape correctly
+    ✔ parses 'square' notehead shape correctly
+    ✔ parses 'rectangle' notehead shape correctly
+    ✔ parses 'circle-x' notehead shape correctly
+    ✔ handles case insensitivity for notehead shapes
+    ✔ defaults to NORMAL for unknown notehead shapes
+  OpenSheetMusicDisplay Main Export
+    ✔ no container
+    ✔ container
+    ✔ multiple instances
+    ✔ load MXL from string
+ERROR: Error: Corrupted zip: can't find end of central directory
+Error: Corrupted zip: can't find end of central directory
+    at h.readEndOfCentral (http://localhost:9876/base/.karma_temp/commons.js?2f5363ba4bed67f48943d7694cfaf53ce8feb943:22:38723)
+    at h.load (http://localhost:9876/base/.karma_temp/commons.js?2f5363ba4bed67f48943d7694cfaf53ce8feb943:22:40286)
+    at http://localhost:9876/base/.karma_temp/commons.js?2f5363ba4bed67f48943d7694cfaf53ce8feb943:22:11369
+    ✔ load invalid MXL from string
+    ✔ load XML string
+    ✔ load XML Document
+    ✖ Timeout from server (skipped)
+    ✔ load MXL Document by URL
+    ✖ load something invalid by URL (skipped)
+    ✔ load invalid URL
+ERROR: 'Could not parse MusicXML, no valid partwise element found'
+    ✔ load invalid XML string
+    ✔ render without loading
+    ✔ test width 500
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+    ✔ test width 200
+    cursor with hidden instrument
+      ✔ should move cursor after instrument is hidden
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+    cursor
+      next() and previous()
+        ✔ is able to advance past end and beginning of sheet
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+      iterator.clone()
+        ✔ clone() advancing does not corrupt the original iterator (#1674)
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+      get AllVoicesUnderCursor
+        ✔ retrieves all voices under cursor
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+      VoicesUnderCursor
+        ✔ retrieves voices for a specific instrument under cursor
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+        ✔ retrieves all voices under cursor when instrument not specified
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+      NotesUnderCursor
+        ✔ gets notes for a specific instrument under cursor
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+        ✔ gets all notes under cursor when instrument unspecified
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+WARN: 'SkyBottomLineBatchCalculatorBackend: width not > 0 in measure 1'
+      updateGraphic
+        ✔ updates the graphical sheet with mutations on the music sheet
+    cursor with notehead none (invisible notes)
+      ✔ should skip entries where all notes have notehead none when SkipInvisibleNotes is true
+      ✔ should not skip entries with notehead none when SkipInvisibleNotes is false
+  Pitch Unit Tests:
+    transpose Pitch
+      ✔ should be 1 octave higher and same fundamental
+    calculate Frequency from Pitch
+      ✔ should be 440Hz
+    calculate fractional key
+      ✔ pitch key should equal midi key
+    calculate Pitch from Frequency
+      ✔ calcedPitch equals original, note: 0, octave: 1, accidental; 5
+      ✔ calcedPitch equals original, note: 0, octave: 1, accidental; 1
+      ✔ calcedPitch equals original, note: 0, octave: 1, accidental; 2
+      ✔ calcedPitch equals original, note: 0, octave: 1, accidental; 0
+      ✔ calcedPitch equals original, note: 0, octave: 1, accidental; 4
+      ✔ calcedPitch equals original, note: 2, octave: 1, accidental; 5
+      ✔ calcedPitch equals original, note: 2, octave: 1, accidental; 1
+      ✔ calcedPitch equals original, note: 2, octave: 1, accidental; 2
+      ✔ calcedPitch equals original, note: 2, octave: 1, accidental; 0
+      ✔ calcedPitch equals original, note: 2, octave: 1, accidental; 4
+      ✔ calcedPitch equals original, note: 4, octave: 1, accidental; 5
+      ✔ calcedPitch equals original, note: 4, octave: 1, accidental; 1
+      ✔ calcedPitch equals original, note: 4, octave: 1, accidental; 2
+      ✔ calcedPitch equals original, note: 4, octave: 1, accidental; 0
+      ✔ calcedPitch equals original, note: 4, octave: 1, accidental; 4
+      ✔ calcedPitch equals original, note: 5, octave: 1, accidental; 5
+      ✔ calcedPitch equals original, note: 5, octave: 1, accidental; 1
+      ✔ calcedPitch equals original, note: 5, octave: 1, accidental; 2
+      ✔ calcedPitch equals original, note: 5, octave: 1, accidental; 0
+      ✔ calcedPitch equals original, note: 5, octave: 1, accidental; 4
+      ✔ calcedPitch equals original, note: 7, octave: 1, accidental; 5
+      ✔ calcedPitch equals original, note: 7, octave: 1, accidental; 1
+      ✔ calcedPitch equals original, note: 7, octave: 1, accidental; 2
+      ✔ calcedPitch equals original, note: 7, octave: 1, accidental; 0
+      ✔ calcedPitch equals original, note: 7, octave: 1, accidental; 4
+      ✔ calcedPitch equals original, note: 9, octave: 1, accidental; 5
+      ✔ calcedPitch equals original, note: 9, octave: 1, accidental; 1
+      ✔ calcedPitch equals original, note: 9, octave: 1, accidental; 2
+      ✔ calcedPitch equals original, note: 9, octave: 1, accidental; 0
+      ✔ calcedPitch equals original, note: 9, octave: 1, accidental; 4
+      ✔ calcedPitch equals original, note: 11, octave: 1, accidental; 5
+      ✔ calcedPitch equals original, note: 11, octave: 1, accidental; 1
+      ✔ calcedPitch equals original, note: 11, octave: 1, accidental; 2
+      ✔ calcedPitch equals original, note: 11, octave: 1, accidental; 0
+      ✔ calcedPitch equals original, note: 11, octave: 1, accidental; 4
+    get Pitch from fractional key
+      ✔ calcedPitch equals original, note: 0, octave: 5, accidental; 5
+      ✔ calcedPitch equals original, note: 0, octave: 5, accidental; 1
+      ✔ calcedPitch equals original, note: 0, octave: 5, accidental; 2
+      ✔ calcedPitch equals original, note: 0, octave: 5, accidental; 0
+      ✔ calcedPitch equals original, note: 0, octave: 5, accidental; 4
+      ✔ calcedPitch equals original, note: 2, octave: 5, accidental; 5
+      ✔ calcedPitch equals original, note: 2, octave: 5, accidental; 1
+      ✔ calcedPitch equals original, note: 2, octave: 5, accidental; 2
+      ✔ calcedPitch equals original, note: 2, octave: 5, accidental; 0
+      ✔ calcedPitch equals original, note: 2, octave: 5, accidental; 4
+      ✔ calcedPitch equals original, note: 4, octave: 5, accidental; 5
+      ✔ calcedPitch equals original, note: 4, octave: 5, accidental; 1
+      ✔ calcedPitch equals original, note: 4, octave: 5, accidental; 2
+      ✔ calcedPitch equals original, note: 4, octave: 5, accidental; 0
+      ✔ calcedPitch equals original, note: 4, octave: 5, accidental; 4
+      ✔ calcedPitch equals original, note: 5, octave: 5, accidental; 5
+      ✔ calcedPitch equals original, note: 5, octave: 5, accidental; 1
+      ✔ calcedPitch equals original, note: 5, octave: 5, accidental; 2
+      ✔ calcedPitch equals original, note: 5, octave: 5, accidental; 0
+      ✔ calcedPitch equals original, note: 5, octave: 5, accidental; 4
+      ✔ calcedPitch equals original, note: 7, octave: 5, accidental; 5
+      ✔ calcedPitch equals original, note: 7, octave: 5, accidental; 1
+      ✔ calcedPitch equals original, note: 7, octave: 5, accidental; 2
+      ✔ calcedPitch equals original, note: 7, octave: 5, accidental; 0
+      ✔ calcedPitch equals original, note: 7, octave: 5, accidental; 4
+      ✔ calcedPitch equals original, note: 9, octave: 5, accidental; 5
+      ✔ calcedPitch equals original, note: 9, octave: 5, accidental; 1
+      ✔ calcedPitch equals original, note: 9, octave: 5, accidental; 2
+      ✔ calcedPitch equals original, note: 9, octave: 5, accidental; 0
+      ✔ calcedPitch equals original, note: 9, octave: 5, accidental; 4
+      ✔ calcedPitch equals original, note: 11, octave: 5, accidental; 5
+      ✔ calcedPitch equals original, note: 11, octave: 5, accidental; 1
+      ✔ calcedPitch equals original, note: 11, octave: 5, accidental; 2
+      ✔ calcedPitch equals original, note: 11, octave: 5, accidental; 0
+      ✔ calcedPitch equals original, note: 11, octave: 5, accidental; 4
+  Clef Converter MusicXML to VexFlow
+    ✔ reads treble key
+  VexFlow GraphicalNote
+    ✔ Can get SVG elements for note, stem and beam
+  VexFlow Measure - Dotted Unison Alignment
+    ✔ Should overlap a unison whose two voices differ only in dot count
+  VexFlow Measure
+    ✔ Can create GraphicalMusicSheet
+    ✔ Can have a single empty Measure
+    ✔ Grace notes should have baseFingeringXOffset calculated per voice entry
+    ✔ Octave shift should apply to grace notes before the stop direction
+  VexFlow Measure - Three-Voice Unison Alignment
+    ✔ Should not stagger a unison between two voices in a three-voice stave
+    ✔ Should still stagger a genuine second-interval collision in a three-voice stave
+  VexFlow Measure - Tuplet Voice Alignment
+    ✔ Should normalize tick denominators for tuplet notes
+    ✔ Should calculate correct tick values for tuplet notes based on graphical length
+    ✔ Should align notes at same timestamp in different voices
+    ✔ Should handle tuplets with different normal-type values correctly
+  VexFlow Measure - Cross-Staff Tuplet Alignment
+    ✔ Should fill a cross-staff tuplet gap with a ghost note of the exact tuplet length
+    ✔ Should align the beat-2 tuplet note with the simultaneous note in the other voice
+  VexFlow Music Sheet Drawer
+    ✔ draws sheet "Clementi pt. 1"
+  XML interface
+    ✔ ActorPreludeSample.xml
+    ✔ Beethoven_AnDieFerneGeliebte.xml
+    ✔ CharlesGounod_Meditation.xml
+    ✔ Debussy_Mandoline.xml
+    ✔ Dichterliebe01.xml
+    ✔ JohannSebastianBach_Air.xml
+    ✔ JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml
+    ✔ JosephHaydn_ConcertanteCello.xml
+    ✔ Mozart_AnChloe.xml
+    ✔ Mozart_DasVeilchen.xml
+    ✔ MuzioClementi_SonatinaOpus36No1_Part1.xml
+    ✔ MuzioClementi_SonatinaOpus36No1_Part2.xml
+    ✔ MuzioClementi_SonatinaOpus36No3_Part1.xml
+    ✔ MuzioClementi_SonatinaOpus36No3_Part2.xml
+    ✔ Saltarello.xml
+    ✔ ScottJoplin_EliteSyncopations.xml
+    ✔ ScottJoplin_The_Entertainer.xml
+    ✔ TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml
+    ✔ TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml
+    ✔ VariousChordTests.musicxml
+    ✔ test IXmlElement
+    ✔ test IXmlAttribute
+
+Finished in 2.85 secs / 2.01 secs @ 20:28:58 GMT+0200 (Central European Summer Time)
+
+SUMMARY:
+✔ 201 tests completed
+ℹ 2 tests skipped
