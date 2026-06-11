@@ -1,6 +1,6 @@
 import { ITransposeCalculator } from "../../MusicalScore/Interfaces";
 import { Pitch, NoteEnum, AccidentalEnum } from "../../Common/DataObjects";
-import { KeyInstruction, KeyEnum } from "../../MusicalScore/VoiceData/Instructions";
+import { KeyInstruction } from "../../MusicalScore/VoiceData/Instructions";
 
 /** Calculates transposition of individual notes and keys,
  * which is used by multiple OSMD classes to transpose the whole sheet.
@@ -27,7 +27,6 @@ export class TransposeCalculator implements ITransposeCalculator {
         const accidentalHalfTones: number = Pitch.HalfTonesFromAccidental(pitch.Accidental);
         const hasSharpAccidental: boolean = accidentalHalfTones > 0;
         const hasFlatAccidental: boolean = accidentalHalfTones < 0;
-        const isMinorKey: boolean = currentKeyInstruction.Mode !== KeyEnum.major;
 
         for (let i: number = 0; i < TransposeCalculator.noteEnums.length; i++) {
             const currentValue: number = <number>TransposeCalculator.noteEnums[i];
@@ -63,23 +62,70 @@ export class TransposeCalculator implements ITransposeCalculator {
             if (currentValue > transposedHalfTone) {
                 let noteIndex: number = i;
 
-                const keyHasSharps: boolean = currentKeyInstruction.Key > 0;
-                const keyHasFlats: boolean = currentKeyInstruction.Key < 0;
+                const key: number = currentKeyInstruction.Key;
                 let preferSharps: boolean = true;
 
-                // Choose enharmonic (sharp vs flat) based on the transposed key signature (#1345),
-                //   but keep the original accidental when the key has no preference
-                //   (e.g. Beethoven Geliebte measure 6, transposing -3 to C major: keep flat instead of sharp).
-                // In minor keys, a non-flat note must stay sharp (e.g. C# in D minor, F# in G minor).
-                // In flat major keys (F, Bb…), respect the original accidental: C# stays C# even in F major.
-                if (!hasFlatAccidental && isMinorKey) {
-                    preferSharps = true;
-                } else if (keyHasSharps) {
-                    preferSharps = true;
-                } else if (keyHasFlats) {
-                    preferSharps = hasSharpAccidental;
-                } else if (hasSharpAccidental || hasFlatAccidental) {
-                    preferSharps = hasSharpAccidental;
+                if (key <= -3) {
+                    // Rule: never use sharps in keys with 3 or more flats
+                    preferSharps = false;
+                } else {
+                    // Check if there is an explicit override for this key and halftone from the clean list
+                    let hasOverride: boolean = false;
+                    let overrideValue: boolean = false;
+
+                    if (key === -2) {
+                        // Bb Major / G minor: Gb -> F#
+                        if (transposedHalfTone === 6) {
+                            hasOverride = true;
+                            overrideValue = true;
+                        }
+                    } else if (key === -1) {
+                        // F Major / D minor: Db -> C#
+                        if (transposedHalfTone === 1) {
+                            hasOverride = true;
+                            overrideValue = true;
+                        }
+                    } else if (key === 0) {
+                        // C Major / A minor: Ab -> G#
+                        if (transposedHalfTone === 8) {
+                            hasOverride = true;
+                            overrideValue = true;
+                        }
+                    } else if (key === 1) {
+                        // G Major / E minor: Eb -> D#
+                        if (transposedHalfTone === 3) {
+                            hasOverride = true;
+                            overrideValue = true;
+                        }
+                    } else if (key === 2) {
+                        // D Major / B minor: Bb -> A#
+                        if (transposedHalfTone === 10) {
+                            hasOverride = true;
+                            overrideValue = true;
+                        }
+                    }
+
+                    if (hasOverride) {
+                        preferSharps = overrideValue;
+                    } else if (hasSharpAccidental || hasFlatAccidental) {
+                        // Respect original accidental if present
+                        preferSharps = hasSharpAccidental;
+                    } else {
+                        // Default based on key signature
+                        if (key > 0) {
+                            preferSharps = true;
+                        } else if (key < 0) {
+                            preferSharps = false;
+                        } else {
+                            // C Major / A minor default:
+                            // We keep Eb (3) and Bb (10) as flats, others as sharps.
+                            if (transposedHalfTone === 3 || transposedHalfTone === 10) {
+                                preferSharps = false;
+                            } else {
+                                preferSharps = true;
+                            }
+                        }
+                    }
                 }
 
                 if (preferSharps) {
