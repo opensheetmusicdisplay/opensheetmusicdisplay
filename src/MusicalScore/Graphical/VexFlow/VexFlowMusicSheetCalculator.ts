@@ -388,7 +388,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // firstMeasure.formatVoices = (w: number) => {
       //     formatter.format(allVoices, w);
       // };
-      MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
 
       const stavesForMeasureColumn: VF.Stave[] = measures.map(m => (m as VexFlowMeasure).getVFStave()).filter(s => s !== undefined);
 
@@ -1073,6 +1072,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       xShift
     );
     vfMeasure.hasMetronomeMark = true;
+    vfMeasure.updateInstructionWidth();
     if (skyline) {
       // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
       skyline[0] = Math.min(skyline[0], -4.5 + yShift);

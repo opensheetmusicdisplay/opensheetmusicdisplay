@@ -111,6 +111,11 @@ export class MusicSystemBuilder {
                 // forceShowRhythm could be a fourth parameter instead in addBeginInstructions, but only affects RhythmInstruction for now.
                 currentMeasureEndInstructionsWidth += this.addEndInstructions(graphicalMeasures);
             }
+            // Add StaveTempo to the VF stave (for rendering) and account for its
+            // width in begin instructions so measures are wide enough to prevent overlap.
+            if ((graphicalMeasures[0] as any).addMetronomeMarksToStave) {
+                currentMeasureBeginInstructionsWidth += (graphicalMeasures[0] as any).addMetronomeMarksToStave();
+            }
             let currentMeasureVarWidth: number = 0;
             for (let i: number = 0; i < this.numberOfVisibleStaffLines; i++) {
                 currentMeasureVarWidth = Math.max(currentMeasureVarWidth, graphicalMeasures[i].minimumStaffEntriesWidth);

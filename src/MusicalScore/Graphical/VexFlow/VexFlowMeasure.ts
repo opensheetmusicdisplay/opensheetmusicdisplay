@@ -9,6 +9,8 @@ import {ClefInstruction, ClefEnum} from "../../VoiceData/Instructions/ClefInstru
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
+import {NoteTypeHandler} from "../../VoiceData/NoteType";
+import {InstantaneousTempoExpression, TempoType} from "../../VoiceData/Expressions/InstantaneousTempoExpression";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
@@ -1864,10 +1866,50 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     /**
+     * Add StaveTempo modifiers to the VF stave and return the total width
+     * they add to beginInstructionsWidth so measures are wide enough to
+     * prevent overlap. StaveTempo sits ABOVE the stave — it does NOT affect
+     * noteStartX, so rests stay centered in the musical content area.
+     * Called during buildMusicSystems; calculateTempoExpressions later sees
+     * hasMetronomeMark=true and skips, so no duplicates.
+     */
+    public addMetronomeMarksToStave(): number {
+        if (this.hasMetronomeMark) { return 0; }
+        const sourceMeasure: SourceMeasure | undefined = this.parentSourceMeasure;
+        if (!sourceMeasure) { return 0; }
+        let addedWidth: number = 0;
+        for (const multiTempoExpression of sourceMeasure.TempoExpressions) {
+            for (const entry of multiTempoExpression.EntriesList) {
+                const expr: any = entry.Expression;
+                if (!(expr instanceof InstantaneousTempoExpression)) { continue; }
+                if (expr.TempoType !== TempoType.metronomeMark) { continue; }
+                let vexflowDuration: string = "q";
+                if (expr.beatUnit) {
+                    const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(expr.beatUnit);
+                    vexflowDuration = VexFlowConverter.durations(duration, false)[0];
+                }
+                this.stave.setTempo(
+                    {
+                        bpm: expr.TempoInBpm,
+                        dots: expr.dotted ? 1 : 0,
+                        duration: vexflowDuration,
+                    },
+                    this.rules.MetronomeMarkYShift * unitInPixels,
+                );
+                const mods: VF.StaveModifier[] = this.stave.getModifiers();
+                const tempo: VF.StaveModifier = mods[mods.length - 1];
+                addedWidth += (tempo.getWidth() + tempo.getPadding(undefined)) / unitInPixels;
+                this.hasMetronomeMark = true;
+            }
+        }
+        return addedWidth;
+    }
+
+    /**
      * After re-running the formatting on the VexFlow Stave, update the
      * space needed by Instructions (in VexFlow: StaveModifiers)
      */
-    protected updateInstructionWidth(): void {
+    public updateInstructionWidth(): void {
         let vfBeginInstructionsWidth: number = 0;
         let vfEndInstructionsWidth: number = 0;
         const modifiers: VF.StaveModifier[] = this.stave.getModifiers();
