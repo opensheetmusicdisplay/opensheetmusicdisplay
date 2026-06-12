@@ -1126,32 +1126,40 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // (vfStave as any).modifiers.push(section);
       const fontSize: number = this.rules.RehearsalMarkFontSize;
 
-      // Lift the rehearsal mark above a chord symbol in the same measure so they don't overlap,
-      //   and reserve skyline space for the lifted mark (otherwise it can collide with whatever is above the system).
-      //   The mark is a fixed-offset VexFlow StaveSection that isn't part of the skyline, while chord symbols were
-      //   already placed (calculateChordSymbols, earlier) against the skyline and can sit right where the mark goes.
+      // Lift the rehearsal mark above whatever rises above the staff under it (high notes, an Above chord
+      //   symbol, ...) so it doesn't overlap them, and reserve skyline space for the lifted mark (otherwise
+      //   it can collide with the system above). The mark is a fixed-offset VexFlow StaveSection that isn't
+      //   part of the skyline, so without this it can sit right on top of tall notes (e.g. the high cymbal
+      //   notes of a drum stave). Only the Above chord symbol was previously considered here; now the notes
+      //   under the mark are too.
       let minBottomY: number; // undefined -> no clamping in StaveSection.draw (VexFlowPatch)
       const staffLine: StaffLine = gMeasure.ParentStaffLine;
-      const chord: GraphicalChordSymbolContainer = this.rules.RehearsalMarkAboveChordSymbol
-        ? this.getFirstChordSymbolAbove(gMeasure) : undefined;
-      if (staffLine && chord) {
-        const containerPsh: BoundingBox = chord.PositionAndShape;
-        const xInUnits: number = containerPsh.Parent.AbsolutePosition.x + containerPsh.RelativePosition.x;
-        const start: number = containerPsh.BorderMarginLeft + xInUnits;
-        const end: number = containerPsh.BorderMarginRight + xInUnits;
-        // chord top relative to the staffline's top staff line (negative = above it), read from the skyline.
-        //   The chord's own absolute y is unreliable here: it can still reflect the pre-alignment position, and
-        //   isn't final until calculateSystemYLayout (which runs after calculateRehearsalMarks). The skyline, however,
-        //   was updated to the final chord top by calculateChordSymbols (earlier).
-        const chordTopRelative: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(start, end);
-        if (chordTopRelative < 0) { // only lift if something actually rises above the staff here
-          const marginInUnits: number = 0.5; // small gap between mark bottom and chord top
+      if (staffLine) {
+        // x-footprint of the rehearsal mark box at the measure start (absolute units, as the skyline is
+        //   indexed). xOffset/fontSize are in px; the label width is a conservative estimate.
+        let start: number = gMeasure.PositionAndShape.AbsolutePosition.x;
+        let end: number = start + (xOffset + rehearsalExpression.label.length * fontSize * 0.6 + fontSize) / unitInPixels;
+        // also clear an Above chord symbol in the measure: it is placed (calculateChordSymbols, earlier)
+        //   against the skyline and can sit right where the mark goes, possibly beyond the mark's footprint.
+        const chord: GraphicalChordSymbolContainer = this.rules.RehearsalMarkAboveChordSymbol
+          ? this.getFirstChordSymbolAbove(gMeasure) : undefined;
+        if (chord) {
+          const containerPsh: BoundingBox = chord.PositionAndShape;
+          const xInUnits: number = containerPsh.Parent.AbsolutePosition.x + containerPsh.RelativePosition.x;
+          start = Math.min(start, containerPsh.BorderMarginLeft + xInUnits);
+          end = Math.max(end, containerPsh.BorderMarginRight + xInUnits);
+        }
+        // highest element above the staff line under the mark (negative = above it), read from the skyline
+        //   (final by now: updated by calculateSkyBottomLines + calculateChordSymbols, both earlier).
+        const topRelative: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(start, end);
+        if (topRelative < 0) { // only lift if something actually rises above the staff here
+          const marginInUnits: number = 0.5; // small gap between mark bottom and what's below it
           // StaveSection.draw (VexFlowPatch) shifts the mark up so its box bottom doesn't exceed
-          //   stave.getYForLine(0) + minBottomY (px), i.e. it keeps the mark above the chord:
-          minBottomY = (chordTopRelative - marginInUnits) * unitInPixels;
-          // reserve skyline over the chord's x-range so updateStaffLineBorders/calculateSystemYLayout make room for the lifted mark
+          //   stave.getYForLine(0) + minBottomY (px), keeping the mark above that element:
+          minBottomY = (topRelative - marginInUnits) * unitInPixels;
+          // reserve skyline over the range so updateStaffLineBorders/calculateSystemYLayout make room for the lifted mark
           const markHeightInUnits: number = fontSize / unitInPixels * 1.6 + marginInUnits; // conservative StaveSection box height
-          staffLine.SkyBottomLineCalculator.updateSkyLineInRange(start, end, chordTopRelative - markHeightInUnits);
+          staffLine.SkyBottomLineCalculator.updateSkyLineInRange(start, end, topRelative - markHeightInUnits);
         }
       }
 
