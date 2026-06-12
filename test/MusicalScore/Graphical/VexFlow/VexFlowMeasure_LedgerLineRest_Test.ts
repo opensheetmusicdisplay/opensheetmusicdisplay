@@ -28,7 +28,7 @@ describe("VexFlow GraphicalNote ledger lines for rests", () => {
         expect(wholeRestNote).to.not.be.undefined;
         expect(wholeRestNote.sourceNote.isRest()).to.be.true;
 
-        // Whole rest at default position (D5) is within staff - no ledger lines needed
+        // Whole rest at D6 (above staff) with display-step/display-octave
         expect(wholeRestNote.vfnote[0].getDuration()).to.equal("w");
 
         // Measure 2: voice 2 has two half rests at C3 (display-step=C, display-octave=3)
@@ -71,5 +71,9 @@ describe("VexFlow GraphicalNote ledger lines for rests", () => {
         // Verify duration is whole
         const duration: string = vfnote.getDuration();
         expect(duration).to.equal("w");
+
+        // Whole rest at D6 (above staff) shows 2 ledger lines (A5 and C6).
+        const ledgerLines: HTMLElement[] = wholeRestNote.getLedgerLineSVGs();
+        expect(ledgerLines.length).to.equal(2);
     });
 });
