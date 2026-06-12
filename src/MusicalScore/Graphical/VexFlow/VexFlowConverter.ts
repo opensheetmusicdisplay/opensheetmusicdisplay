@@ -293,6 +293,24 @@ export class VexFlowConverter {
             // if it is a rest:
             if (note.sourceNote.isRest()) {
                 isRest = true;
+
+                // Check for whole measure rest BEFORE using display-step/display-octave pitch.
+                // Whole rests should be centered on D5 (or B4 for 1-line staves) regardless of
+                // any explicit display position in the MusicXML.
+                const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
+                    baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
+                if (isWholeMeasureRest) {
+                    keys = ["d/5"];
+                    if (gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1) {
+                        keys = ["b/4"];
+                    }
+                    duration = "w";
+                    numDots = 0;
+                    alignCenter = true;
+                    xShift = rules.WholeRestXShiftVexflow * unitInPixels;
+                    break;
+                }
+
                 if (note.sourceNote.Pitch) {
                     const restVfPitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
                     keys = [restVfPitch[0]];
@@ -329,27 +347,6 @@ export class VexFlowConverter {
                             }
                         }
                     }
-                }
-                // TODO do collision checking, place rest e.g. either below staff (A3, for stem direction below voice) or above (C5)
-                // if it is a full measure rest:
-                //   (a whole rest note signifies a whole measure duration, unless the time signature is longer than 4 quarter notes, e.g. 6/4 or 3/2.
-                //   Note: this should not apply to most pickup measures, e.g. with an 8th pickup measure in a 3/4 time signature)
-                // const measureDuration: number = note.sourceNote.SourceMeasure.Duration.RealValue;
-                const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
-                    baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
-                if (isWholeMeasureRest) {
-                    keys = ["d/5"];
-                    if (gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1) {
-                        keys = ["b/4"];
-                    }
-                    duration = "w";
-                    numDots = 0;
-                    // If it's a whole rest we want it smack in the middle. Apparently there is still an issue in vexflow:
-                    // https://github.com/0xfe/vexflow/issues/579 The author reports that he needs to add some negative x shift
-                    // if the measure has no modifiers.
-                    alignCenter = true;
-                    xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
-                    // affects VexFlowStaffEntry.calculateXPosition()
                 }
                 //If we have more than one visible voice entry, shift the rests so no collision occurs
                 if (note.sourceNote.ParentStaff.Voices.length > 1) {
