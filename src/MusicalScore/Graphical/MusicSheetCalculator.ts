@@ -2498,6 +2498,13 @@ export abstract class MusicSheetCalculator {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
 
+        // For RenderSingleHorizontalStaffline we temporarily shrink pageWidth to the content width below, so the
+        // page labels center over the actual content rather than over the ~32767 (SheetMaximumWidth) layout
+        // width. Capture the layout width up front and restore it at the end of this method: pageWidth is the
+        // MusicSystemBuilder's line-break threshold, so leaving it shrunk would make the NEXT calculate() wrongly
+        // break the single horizontal staffline into multiple systems -- i.e. reCalculate() must stay idempotent.
+        const layoutPageWidth: number = this.graphicalMusicSheet.ParentMusicSheet.pageWidth;
+
         // fix width of SVG, sheet and horizontal scroll bar being too long (~32767 = SheetMaximumWidth) for single line scores
         if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
@@ -2647,6 +2654,11 @@ export abstract class MusicSheetCalculator {
             // limit SVG and scroll bar width so it's not ~32767 (SheetMaximumWidth):
             this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width;
             // page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width; // doesn't seem to affect anything
+
+            // Restore the layout (line-break) width so a subsequent reCalculate() lays the single staffline out
+            // the same way (idempotent). The label positions computed above keep their content-centered values;
+            // nothing after calculate() reads pageWidth (the backend sizes from page.Size.width).
+            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = layoutPageWidth;
         }
     }
 
