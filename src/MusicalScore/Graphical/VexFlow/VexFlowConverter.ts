@@ -293,30 +293,28 @@ export class VexFlowConverter {
             // if it is a rest:
             if (note.sourceNote.isRest()) {
                 isRest = true;
-
-                // Check for whole measure rest BEFORE using display-step/display-octave pitch.
-                // Whole rests should be centered on D5 (or B4 for 1-line staves) regardless of
-                // any explicit display position in the MusicXML.
-                const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
-                    baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
-                if (isWholeMeasureRest) {
-                    keys = ["d/5"];
-                    if (gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1) {
-                        keys = ["b/4"];
-                    }
-                    duration = "w";
-                    numDots = 0;
-                    alignCenter = true;
-                    xShift = rules.WholeRestXShiftVexflow * unitInPixels;
-                    break;
-                }
-
                 if (note.sourceNote.Pitch) {
+                    // Rest has explicit display-step/display-octave — respect it.
                     const restVfPitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
                     keys = [restVfPitch[0]];
                     break;
                 } else {
                     keys = ["b/4"]; // default placement
+
+                    // Check for whole measure rest: center on D5 (or B4 for 1-line staves).
+                    const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
+                        baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
+                    if (isWholeMeasureRest) {
+                        keys = ["d/5"];
+                        if (gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1) {
+                            keys = ["b/4"];
+                        }
+                        duration = "w";
+                        numDots = 0;
+                        alignCenter = true;
+                        xShift = rules.WholeRestXShiftVexflow * unitInPixels;
+                        break;
+                    }
 
                     // pause rest encircled by two beamed notes: place rest just below previous note
                     const pauseVoiceEntry: VoiceEntry = note.parentVoiceEntry?.parentVoiceEntry;

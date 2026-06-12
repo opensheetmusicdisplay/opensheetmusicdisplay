@@ -46,7 +46,7 @@ describe("VexFlow GraphicalNote ledger lines for rests", () => {
             expect(restNote.sourceNote.isRest()).to.be.true;
 
             const ledgerLines: HTMLElement[] = restNote.getLedgerLineSVGs();
-            expect(ledgerLines.length).to.be.greaterThan(0);
+            expect(ledgerLines.length).to.equal(1);
         }
     });
 
@@ -64,9 +64,9 @@ describe("VexFlow GraphicalNote ledger lines for rests", () => {
 
         const vfnote: any = wholeRestNote.vfnote[0];
 
-        // Verify the whole-measure rest override set keys to "d/5" (centered on D5)
+        // Verify the whole-measure rest respects MusicXML display-step/display-octave at D6
         const vfKeys: string[] = vfnote.getKeys?.() ?? [];
-        expect(vfKeys).to.deep.equal(["d/5"]);
+        expect(vfKeys).to.deep.equal(["dn/6"]);
 
         // Verify duration is whole
         const duration: string = vfnote.getDuration();
