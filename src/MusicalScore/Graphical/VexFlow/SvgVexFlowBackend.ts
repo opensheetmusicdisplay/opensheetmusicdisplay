@@ -253,38 +253,72 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         return node;
     }
 
-    public export(): void {
-        // See: https://stackoverflow.com/questions/38477972/javascript-save-svg-element-to-file-on-disk
-
-        // first create a clone of our svg node so we don't mess the original one
+    /** Generate the exported SVG string with font CSS injected. */
+    public getExportedSVGString(): string {
         const clone: SVGElement = (this.ctx.svg.cloneNode(true) as SVGElement);
+        this.injectFontCSS(clone);
 
-        // create a doctype that is SVG
         const svgDocType: DocumentType = document.implementation.createDocumentType(
             "svg",
             "-//W3C//DTD SVG 1.1//EN",
             "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"
         );
-        // Create a new svg document
         const svgDoc: Document = document.implementation.createDocument("http://www.w3.org/2000/svg", "svg", svgDocType);
-        // replace the documentElement with our clone
         svgDoc.replaceChild(clone, svgDoc.documentElement);
+        return (new XMLSerializer()).serializeToString(svgDoc);
+    }
 
-        // get the data
-        const svgData: string = (new XMLSerializer()).serializeToString(svgDoc);
-
-        // now you've got your svg data, the following will depend on how you want to download it
-        // e.g yo could make a Blob of it for FileSaver.js
-        /*
-        var blob = new Blob([svgData.replace(/></g, '>\n\r<')]);
-        saveAs(blob, 'myAwesomeSVG.svg');
-        */
-        // here I'll just make a simple a with download attribute
+    public export(): void {
+        const svgData: string = this.getExportedSVGString();
 
         const a: HTMLAnchorElement = document.createElement("a");
         a.href = "data:image/svg+xml; charset=utf8, " + encodeURIComponent(svgData.replace(/></g, ">\n\r<"));
         a.download = "opensheetmusicdisplay_download.svg";
         a.innerHTML = window.location.href + "/download";
         document.body.appendChild(a);
+    }
+
+      /** Inject @font-face rules for music fonts so exported SVGs render correctly. */
+      private injectFontCSS(svg: SVGElement): void {
+          const embedding: string = this.rules.SVGFontEmbedding ?? "import";
+          if (embedding === "none") { return; }
+
+          const musicFonts: string[] = ["Bravura", "Gonville", "Petaluma", "Petaluma Script", "Academico"];
+          const fontsInUse: Set<string> = new Set();
+          const elements: Element[] = [svg as Element];
+          const fontFamilyElements: NodeListOf<Element> = (svg as any).querySelectorAll?.("[font-family]") ?? [];
+          for (let i: number = 0; i < fontFamilyElements.length; i++) {
+              elements.push(fontFamilyElements[i]);
+          }
+          for (const el of elements) {
+              const families: string | null = el.getAttribute("font-family");
+              if (!families) { continue; }
+              for (const name of musicFonts) {
+                  if (families.includes(name)) { fontsInUse.add(name); }
+              }
+          }
+
+          if (fontsInUse.size === 0) { return; }
+
+          let css: string = "";
+          for (const fontName of fontsInUse) {
+              if (embedding === "inline") {
+                  const dataUri: string | undefined = VF.Font.getFontData(fontName);
+                  if (dataUri) {
+                      css += `@font-face { font-family: "${fontName}"; src: url(${dataUri}); font-display: block; }\n`;
+                  }
+              } else {
+                  const cdnUrl: string | undefined = VF.Font.getURLForFont(fontName);
+                  if (cdnUrl) {
+                      css += `@font-face { font-family: "${fontName}"; src: url("${cdnUrl}"); font-display: block; }\n`;
+                  }
+              }
+          }
+
+          if (!css) { return; }
+
+          const style: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", "style");
+          style.textContent = css;
+          svg.insertBefore(style, svg.firstChild);
       }
 }

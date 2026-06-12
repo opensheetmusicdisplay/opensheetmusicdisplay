@@ -467,6 +467,8 @@ export class EngravingRules {
     public DefaultFontFamily: string;
     public DefaultFontStyle: FontStyles;
     public DefaultVexFlowNoteFont: string;
+    /** How to embed music fonts in SVG export: "import" (CDN @import, default), "inline" (data URI), or "none" (no font embedding). */
+    public SVGFontEmbedding: "import" | "inline" | "none";
     public MaxMeasureToDrawIndex: number;
     /** The setting given in osmd.setOptions(), which may lead to a different index if there's a pickup measure. */
     public MaxMeasureToDrawNumber: number;
@@ -962,6 +964,7 @@ export class EngravingRules {
         this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.DefaultFontStyle = FontStyles.Regular;
         this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
+        this.SVGFontEmbedding = "import";
         this.MaxMeasureToDrawIndex = Number.MAX_VALUE;
         this.MaxMeasureToDrawNumber = Number.MAX_VALUE;
         this.MinMeasureToDrawIndex = 0;

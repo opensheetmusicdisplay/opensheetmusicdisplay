@@ -6,43 +6,59 @@ import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/Ope
 import { TestUtils } from "../../../Util/TestUtils";
 
 describe("VexFlow GraphicalNote", () => {
-    it.skip("Can get SVG elements for note, stem and beam", (done: Mocha.Done) => {
-        //const url: string = "base/test/data/test_rest_positioning_8th_quarter.musicxml"; // doesn't work, works for Mozart Clarinet Quintet
+    it("Can get SVG elements for note, stem and beam", (done: Mocha.Done) => {
         const score: Document = TestUtils.getScore("test_beam_svg_double.musicxml");
-        // sample should start with a beamed 8th note, and be simple.
         const div: HTMLElement = TestUtils.getDivElement(document);
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
-        // we need this way of creating the score to get the SVG elements, doesn't work with creating MusicSheet by hand
         osmd.load(score).then(
             (_: {}) => {
-                 osmd.render();
-                 const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
-                 const note1: VexFlowGraphicalNote = (gm.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
-                 const noteSVG: SVGGElement = note1.getSVGGElement();
-                 expect(noteSVG).to.not.be.null;
-                 expect(noteSVG).to.not.be.undefined;
-                 // const noteSVGId: string = "vf-" + firstNote.getSVGId();
-                 // const noteSVG: HTMLElement = document.getElementById(noteSVGId);
-                 //const stemSVGId: string = noteSVGId + "-stem";
-                 //const stemSVG: HTMLElement = document.getElementById(stemSVGId);
-                 const stemSVG: HTMLElement = note1.getStemSVG();
-                 expect(stemSVG).to.not.be.null;
-                 expect(stemSVG).to.not.be.undefined;
-                 // const beamSVGId: string = noteSVGId + "-beam";
-                 // const beamSVG: HTMLElement = document.getElementById(beamSVGId);
-                 const beamSVGs: HTMLElement[] = note1.getBeamSVGs();
-                 expect(beamSVGs.length).to.equal(1); // 8th beam start. (16th beam starts on note2)
-                 expect(beamSVGs[0]).to.not.be.null;
-                 expect(beamSVGs[0]).to.not.be.undefined;
-                 const note2: VexFlowGraphicalNote = (gm.staffEntries[1].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
-                 expect(note2.getBeamSVGs().length).to.equal(1); // start of 16th beam
-                 const note3: VexFlowGraphicalNote = (gm.staffEntries[2].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
-                 expect(note3.getBeamSVGs().length).to.equal(0); // end of 16th beam
-                 const note4: VexFlowGraphicalNote = (gm.staffEntries[3].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
-                 expect(note4.getBeamSVGs().length).to.equal(2); // 16th beams start
-                 done();
+                osmd.render();
+                const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+
+                // Note 1: G#4 8th, start of beam group A (notes 1-3)
+                const note1: VexFlowGraphicalNote = (gm.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
+                const noteSVG: SVGGElement = note1.getSVGGElement();
+                expect(noteSVG).to.not.be.null;
+                expect(noteSVG).to.not.be.undefined;
+
+                const stemSVG: HTMLElement = note1.getStemSVG();
+                expect(stemSVG).to.not.be.null;
+                expect(stemSVG).to.not.be.undefined;
+
+                // VF5: all notes in a beam group share one Beam object
+                const beamSVGs1: HTMLElement[] = note1.getBeamSVGs();
+                expect(beamSVGs1.length).to.equal(1);
+                expect(beamSVGs1[0]).to.not.be.null;
+                expect(beamSVGs1[0]).to.not.be.undefined;
+
+                // Note 2: A4 16th, in same beam group A
+                const note2: VexFlowGraphicalNote = (gm.staffEntries[1].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
+                const beamSVGs2: HTMLElement[] = note2.getBeamSVGs();
+                expect(beamSVGs2.length).to.equal(1);
+                // Same beam group as note1
+                expect(beamSVGs2[0]).to.equal(beamSVGs1[0]);
+
+                // Note 3: B4 16th, end of beam group A
+                const note3: VexFlowGraphicalNote = (gm.staffEntries[2].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
+                const beamSVGs3: HTMLElement[] = note3.getBeamSVGs();
+                expect(beamSVGs3.length).to.equal(1);
+                expect(beamSVGs3[0]).to.equal(beamSVGs1[0]);
+
+                // Note 4: C5 16th, start of beam group B (notes 4-5)
+                const note4: VexFlowGraphicalNote = (gm.staffEntries[3].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
+                const beamSVGs4: HTMLElement[] = note4.getBeamSVGs();
+                expect(beamSVGs4.length).to.equal(1);
+                // Different beam group from note1
+                expect(beamSVGs4[0]).to.not.equal(beamSVGs1[0]);
+
+                // Note 6: rest, no beam
+                const note6: VexFlowGraphicalNote = (gm.staffEntries[5].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
+                expect(note6.getBeamSVGs().length).to.equal(0);
+                expect(note6.getStemSVG()).to.be.undefined;
+
+                done();
             },
             done
         );
-     });
+    });
 });
