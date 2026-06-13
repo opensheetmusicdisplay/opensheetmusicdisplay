@@ -183,64 +183,38 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in SkyLine
                 // and tangent Lines characteristica
-            const startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
-            const endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
-            const startLineD: number = start2.y - start2.x * startLineSlope;
-            const endLineD: number = end2.y - end2.x * endLineSlope;
-
-            // calculate IntersectionPoint of the 2 Lines
-                // if same Slope, then Point.X between Start and End and Point.Y fixed
-            const intersectionPoint: PointF2D = new PointF2D();
-            let sameSlope: boolean = false;
-            if (Math.abs(Math.abs(startLineSlope) - Math.abs(endLineSlope)) < 0.0001) {
-                intersectionPoint.x = end2.x / 2;
-                intersectionPoint.y = 0;
-                sameSlope = true;
-            } else {
-                intersectionPoint.x = (endLineD - startLineD) / (startLineSlope - endLineSlope);
-                intersectionPoint.y = startLineSlope * intersectionPoint.x + startLineD;
-            }
-
+            let startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
+            let endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
             // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
             // and the X-distance from StartPoint to EndPoint
             const heightWidthRatio: number = this.calculateHeightWidthRatio(end2.x, transformedPoints);
 
-            // Shift start- or endPoint and corresponding controlPoint away from note, if needed:
-            // e.g. if there is a close object creating a high slope, better shift it away to reduce the slope:
-            // idea is to compare the half heightWidthRatio of the bounding box of the skyline points with the slope (which is also a ratio: k/1)
-            // if the slope is greater than the half heightWidthRatio (which will 99% be the case),
-            // then add a y-offset to reduce the slope to the same value as the half heightWidthRatio of the bounding box
+            // Cap slope asymmetry: a single skyline point very close to start
+            // or end can create arbitrarily large slopes that balloon the other
+            // side after equalization. Limit ratio to 3:1.
+            const leftAbs: number = Math.abs(startLineSlope);
+            const rightAbs: number = Math.abs(endLineSlope);
+            if (leftAbs > 3 * rightAbs) {
+                startLineSlope = 3 * rightAbs * Math.sign(startLineSlope);
+            } else if (rightAbs > 3 * leftAbs) {
+                endLineSlope = 3 * leftAbs * Math.sign(endLineSlope);
+            }
+
+            // Equalize to the steeper side so real obstacles are cleared.
+            const eqSlope: number = Math.max(startLineSlope, -endLineSlope);
+            startLineSlope = eqSlope;
+            endLineSlope = -eqSlope;
+
             const startYOffset: number = 0;
             const endYOffset: number = 0;
-            /*if (Math.abs(heightWidthRatio) > 0.001) {
-                // 1. start side:
-                const startSlopeRatio: number = Math.abs(startLineSlope / (heightWidthRatio * 2));
-                const maxLeftYOffset: number = Math.abs(startLineSlope);
-                startYOffset = Math.max(0, maxLeftYOffset * (Math.min(10, startSlopeRatio - 1) / 10));
-                // slope has to be adapted now due to the y-offset:
-                startLineSlope -= startYOffset;
-
-                // 2. end side:
-                const endSlopeRatio: number = Math.abs(endLineSlope / (heightWidthRatio * 2));
-                const maxRightYOffset: number = Math.abs(endLineSlope);
-                endYOffset = Math.max(0, maxRightYOffset * (Math.min(10, endSlopeRatio - 1) / 10));
-                // slope has to be adapted now due to the y-offset:
-                endLineSlope += endYOffset;
-            }*/
-
-
 
             // calculate tangent Lines Angles
-                // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
             let startAngle: number = minAngle;
             let endAngle: number = -minAngle;
-            // if the calculated Slopes (start and end) are equal, then Angles have fixed values
-            if (!sameSlope) {
-                const result: {startAngle: number, endAngle: number} =
-                    this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
-                startAngle = result.startAngle;
-                endAngle = result.endAngle;
-            }
+            const result: {startAngle: number, endAngle: number} =
+                this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
+            startAngle = result.startAngle;
+            endAngle = result.endAngle;
 
             // calculate Curve's Control Points
             const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =
@@ -257,14 +231,6 @@ export class GraphicalSlur extends GraphicalCurve {
             endControlPoint = transposeMatrix.vectorMultiplication(endControlPoint);
             endControlPoint.x += startX;
             endControlPoint.y = -endControlPoint.y + startY;
-            // middleControlPoint.x = (startControlPoint.x + endControlPoint.x) / 2;
-            // middleControlPoint.y = (startControlPoint.y + endControlPoint.y) / 2 + 1.0;
-
-            /* for DEBUG only */
-            // this.intersection = transposeMatrix.vectorMultiplication(intersectionPoint);
-            // this.intersection.x += startX;
-            // this.intersection.y = -this.intersection.y + startY;
-            /* for DEBUG only */
 
             // set private members
             this.bezierStartPt = new PointF2D(startX, startY - startYOffset);
@@ -359,61 +325,39 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in BottomLine
             // and tangent Lines characteristica
-            const startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
-            const endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
-            const startLineD: number = start2.y - start2.x * startLineSlope;
-            const endLineD: number = end2.y - end2.x * endLineSlope;
+            let startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
+            let endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
 
-            // calculate IntersectionPoint of the 2 Lines
-            // if same Slope, then Point.X between Start and End and Point.Y fixed
-            const intersectionPoint: PointF2D = new PointF2D();
-            let sameSlope: boolean = false;
-            if (Math.abs(Math.abs(startLineSlope) - Math.abs(endLineSlope)) < 0.0001) {
-                intersectionPoint.x = end2.x / 2;
-                intersectionPoint.y = 0;
-                sameSlope = true;
-            } else {
-                intersectionPoint.x = (endLineD - startLineD) / (startLineSlope - endLineSlope);
-                intersectionPoint.y = startLineSlope * intersectionPoint.x + startLineD;
+            // Cap slope asymmetry: a single skyline point very close to start
+            // or end can create arbitrarily large slopes that balloon the other
+            // side after equalization. Limit ratio to 3:1.
+            const leftAbsB: number = Math.abs(startLineSlope);
+            const rightAbsB: number = Math.abs(endLineSlope);
+            if (leftAbsB > 3 * rightAbsB) {
+                startLineSlope = 3 * rightAbsB * Math.sign(startLineSlope);
+            } else if (rightAbsB > 3 * leftAbsB) {
+                endLineSlope = 3 * leftAbsB * Math.sign(endLineSlope);
             }
+
+            // Equalize to the steeper side so real obstacles are cleared.
+            const eqSlopeB: number = Math.max(startLineSlope, -endLineSlope);
+            startLineSlope = eqSlopeB;
+            endLineSlope = -eqSlopeB;
 
             // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
             // and the X-distance from StartPoint to EndPoint
             const heightWidthRatio: number = this.calculateHeightWidthRatio(end2.x, transformedPoints);
 
-            // Shift start- or endPoint and corresponding controlPoint away from note, if needed:
-            // e.g. if there is a close object creating a high slope, better shift it away to reduce the slope:
-            // idea is to compare the half heightWidthRatio of the bounding box of the skyline points with the slope (which is also a ratio: k/1)
-            // if the slope is greater than the half heightWidthRatio (which will 99% be the case),
-            // then add a y-offset to reduce the slope to the same value as the half heightWidthRatio of the bounding box
             const startYOffset: number = 0;
             const endYOffset: number = 0;
-            /*if (Math.abs(heightWidthRatio) > 0.001) {
-                // 1. start side:
-                const startSlopeRatio: number = Math.abs(startLineSlope / (heightWidthRatio * 2));
-                const maxLeftYOffset: number = Math.abs(startLineSlope);
-                startYOffset = Math.max(0, maxLeftYOffset * (Math.min(10, startSlopeRatio - 1) / 10));
-                // slope has to be adapted now due to the y-offset:
-                startLineSlope -= startYOffset;
-                // 2. end side:
-                const endSlopeRatio: number = Math.abs(endLineSlope / (heightWidthRatio * 2));
-                const maxRightYOffset: number = Math.abs(endLineSlope);
-                endYOffset = Math.max(0, maxRightYOffset * (Math.min(10, endSlopeRatio - 1) / 10));
-                // slope has to be adapted now due to the y-offset:
-                endLineSlope += endYOffset;
-            } */
 
             // calculate tangent Lines Angles
-            // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
             let startAngle: number = minAngle;
             let endAngle: number = -minAngle;
-            // if the calculated Slopes (start and end) are equal, then Angles have fixed values
-            if (!sameSlope) {
-                const result: {startAngle: number, endAngle: number} =
-                    this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
-                startAngle = result.startAngle;
-                endAngle = result.endAngle;
-            }
+            const result: {startAngle: number, endAngle: number} =
+                this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
+            startAngle = result.startAngle;
+            endAngle = result.endAngle;
 
             // calculate Curve's Control Points
             const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =

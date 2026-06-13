@@ -1413,9 +1413,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const graceNoteGroup: VF.GraceNoteGroup = new VF.GraceNoteGroup(graceNotes, graceSlur);
                     let xMargin: number = this.rules.GraceNoteGroupXMargin;
                     if (graceNotes.length > 1) {
-                        xMargin /= 3; // prevent overlap. multiple grace notes end up closer to the main note.
+                        xMargin /= 3;
                     }
-                    (graceNoteGroup as any).spacing = xMargin * 10;
+                    let spacing: number = xMargin * 10;
+                    // Fingerings on grace notes add width beyond what VF5's
+                    // preFormat() measures. Compensate so the last grace note
+                    // does not overflow the target note.
+                    if (this.rules.RenderFingerings) {
+                        let fingeringCount: number = 0;
+                        for (const gveGrace2 of graceGVoiceEntriesBefore) {
+                            for (const note of gveGrace2.notes) {
+                                if (note.sourceNote.Fingering) {
+                                    fingeringCount++;
+                                }
+                            }
+                        }
+                        if (fingeringCount > 0) {
+                            spacing -= fingeringCount * 4.7;
+                        }
+                    }
+                    (graceNoteGroup as any).spacing = spacing;
                     ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(graceNoteGroup, 0);
                     graceGVoiceEntriesBefore = [];
                 }

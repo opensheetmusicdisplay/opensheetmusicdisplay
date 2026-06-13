@@ -512,12 +512,38 @@ function dumpGraphicalPositions(osmdInstance, sampleFilename, pageIndex) {
                         const slur = staffLine.GraphicalSlurs[gsi];
                         if (!slur) { continue; }
                         totalCount++;
-                        slurs.push({
+                        const slurEntry = {
                             type: "slur",
                             path: `${slPrefix}.slur${gsi}`,
                             placement: slur.placement,
                             staffEntryCount: slur.staffEntries ? slur.staffEntries.length : 0,
-                        });
+                        };
+                        // Compute bounding box from Bezier curve
+                        if (slur.bezierStartPt && slur.bezierEndPt) {
+                            const samples = 20;
+                            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                            for (let si = 0; si <= samples; si++) {
+                                const t = si / samples;
+                                const pt = slur.calculateCurvePointAtIndex(t);
+                                if (pt) {
+                                    if (pt.x < minX) { minX = pt.x; }
+                                    if (pt.y < minY) { minY = pt.y; }
+                                    if (pt.x > maxX) { maxX = pt.x; }
+                                    if (pt.y > maxY) { maxY = pt.y; }
+                                }
+                            }
+                            const sysAbsX = sys.PositionAndShape.AbsolutePosition.x;
+                            const sysAbsY = sys.PositionAndShape.AbsolutePosition.y;
+                            slurEntry.bbox = {
+                                absX: sysAbsX + minX,
+                                absY: sysAbsY + minY,
+                                relX: minX,
+                                relY: minY,
+                                w: maxX - minX,
+                                h: maxY - minY,
+                            };
+                        }
+                        slurs.push(slurEntry);
                     }
                 }
 
