@@ -639,4 +639,35 @@ describe("VexFlow Measure - Rest Positioning", () => {
     }).catch(done);
   });
 
+  it("multi-voice rests at same beat must not share y position (test_alignrests_null_error_ghostnote)", (done: Mocha.Done) => {
+    const gms: GraphicalMusicSheet = buildGMS("test_alignrests_null_error_ghostnote.musicxml");
+    const rests: RestInfo[] = collectRests(gms);
+    expect(rests.length).to.be.greaterThan(1,
+      `expected multiple rests, got ${rests.length}`);
+
+    // Find rest pairs from different voices at same x (within 2px).
+    const collisions: {v1: RestInfo, v2: RestInfo, xDiff: number, yDiff: number}[] = [];
+    for (let i: number = 0; i < rests.length; i++) {
+      for (let j: number = i + 1; j < rests.length; j++) {
+        if (rests[i].voiceId === rests[j].voiceId) { continue; }
+        const xDiff: number = Math.abs(rests[i].xPos - rests[j].xPos);
+        if (xDiff < 2) {
+          const yDiff: number = Math.abs(rests[i].yPos - rests[j].yPos);
+          collisions.push({v1: rests[i], v2: rests[j], xDiff, yDiff});
+        }
+      }
+    }
+
+    expect(collisions.length).to.be.greaterThan(0,
+      "should find rests from different voices at the same x position. " +
+      `Got rests: ${rests.map(r => `v=${r.voiceId} x=${r.xPos.toFixed(1)} y=${r.yPos.toFixed(1)} ${r.duration}`).join(" | ")}`);
+
+    for (const c of collisions) {
+      expect(c.yDiff).to.be.greaterThan(2,
+        `Voice ${c.v1.voiceId} and Voice ${c.v2.voiceId} rests at same x=${c.v1.xPos.toFixed(1)} have overlapping y: ` +
+        `v${c.v1.voiceId} y=${c.v1.yPos.toFixed(1)}, v${c.v2.voiceId} y=${c.v2.yPos.toFixed(1)} (dy=${c.yDiff.toFixed(1)})`);
+    }
+    done();
+  });
+
 });

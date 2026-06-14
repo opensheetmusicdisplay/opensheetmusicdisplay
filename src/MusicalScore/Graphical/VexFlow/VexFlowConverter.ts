@@ -402,7 +402,11 @@ export class VexFlowConverter {
                             }
                         }
                     }
-                    if (maxHalftone > 0) {
+                    if (maxHalftone === undefined) {
+                        // All voice entries here are rests — separate vertically by voice to avoid y-overlap.
+                        const isUpperVoiceRest: boolean = restVoiceId === 1 || restVoiceId === 5;
+                        note.lineShift = isUpperVoiceRest ? 0 : 4; // 4 semitones = 2 staff lines down for lower voice
+                    } else if (maxHalftone > 0) {
                         let octaveOffset: number = 3;
                         const restClefInstruction: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
                         switch (restClefInstruction.ClefType) {
@@ -592,7 +596,7 @@ export class VexFlowConverter {
         }
         const lineShift: number = gve.notes[0].lineShift;
         if (lineShift !== 0) {
-            vfnote.getKeyProps()[0].line += lineShift;
+            vfnote.setKeyLine(0, vfnote.getKeyLine(0) + lineShift);
         }
         // check for slash noteheads (among other noteheads)
         if (notes.length > 1) {
