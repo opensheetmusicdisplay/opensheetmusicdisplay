@@ -728,8 +728,8 @@ export class EngravingRules {
         // GraceNote Variables
         this.GraceNoteScalingFactor = 0.6;
         this.GraceNoteXOffset = 0.2;
-        this.GraceNoteGroupXMargin = 0.0; // More than 0 leads to too much space in most cases.
-        this.GraceNoteExtraSpacing = 1.5;  // OSMD units per grace note, prevents collision with preceding notes
+        this.GraceNoteGroupXMargin = 0.15;
+        this.GraceNoteExtraSpacing = 3.0;  // OSMD units per grace note, prevents collision with preceding notes
         //  see test_end_clef_measure. only potential 'tight' case: test_graceslash_simple
 
         // Wedge Variables

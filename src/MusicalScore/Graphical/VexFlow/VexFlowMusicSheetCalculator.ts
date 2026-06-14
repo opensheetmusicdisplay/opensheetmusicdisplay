@@ -317,20 +317,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // make comparable measures differ by 3x+. The base width tracks actual
       // glyph content proportionally; OSMD adds its own spacing via
       // VoiceSpacingMultiplier / VoiceSpacingAddend / staffEntryFactor.
-      formatter.preCalculateMinTotalWidth(allVoices);
+      const fullMinTotalWidth: number = formatter.preCalculateMinTotalWidth(allVoices);
       minStaffEntriesWidth = formatter.getMinTotalWidth() / unitInPixels
-      * this.rules.VoiceSpacingMultiplierVexflow
-      + this.rules.VoiceSpacingAddendVexflow
-      + maxStaffEntries * staffEntryFactor;
+        * this.rules.VoiceSpacingMultiplierVexflow
+        + this.rules.VoiceSpacingAddendVexflow
+        + maxStaffEntries * staffEntryFactor;
 
       // Grace notes are VF modifiers (GraceNoteGroup), not tickables.
       // Their horizontal space is included in preCalculateMinTotalWidth via the
-      // modifierContext (joinVoices -> addToModifierContext -> StaveNote.preFormat
-      // -> modifierContext.preFormat -> GraceNoteGroup.format -> state.leftShift).
-      // The fix for collisions with preceding notes is in GraceNoteGroup.format():
-      // spacingFromNextModifier gets extra padding to push grace notes rightward
-      // away from the previous note. This per-measure padding provides additional
-      // min-width insurance for tight measures.
+      // modifierContext, but getMinTotalWidth() strips the padding terms.
+      // For measures with grace notes, use the full padding-inclusive width
+      // so tick contexts are spaced far enough apart for grace notes to fit.
       let graceCount: number = 0;
       for (const measure of measures) {
         for (const staffEntry of measure.staffEntries) {
@@ -342,7 +339,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
       if (graceCount > 0) {
-        minStaffEntriesWidth += graceCount * this.rules.GraceNoteExtraSpacing;
+        minStaffEntriesWidth = fullMinTotalWidth / unitInPixels
+          * this.rules.VoiceSpacingMultiplierVexflow
+          + this.rules.VoiceSpacingAddendVexflow
+          + maxStaffEntries * staffEntryFactor
+          + graceCount * this.rules.GraceNoteExtraSpacing;
       }
 
       // Propagate stave from voices to tickables (Voice.setStave only
