@@ -5,6 +5,7 @@ import { GraphicalMeasure } from "../GraphicalMeasure";
 import { StaffLine } from "../StaffLine";
 import { Staff } from "../../VoiceData/Staff";
 import { SkyBottomLineBatchCalculator } from "../SkyBottomLineBatchCalculator";
+import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -1138,6 +1139,36 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // const section: VF.StaveSection = new VF.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
       // (vfStave as any).modifiers.push(section);
       const fontSize: number = this.rules.RehearsalMarkFontSize;
+
+      // Check skyline and push rehearsal mark above existing above-staff elements
+      // (direction words, tempo marks etc. — calculated before rehearsal marks in MusicSheetCalculator)
+      const staffLine: StaffLine = gMeasure.ParentStaffLine;
+      if (staffLine) {
+        const sbc: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+        if (sbc.SkyLine.length > 0) {
+          const spacing: number = unitInPixels;
+          const staffTopVF: number = vfStave.getYForLine(0);
+          // Approximate label x range in OSMD units (skyline expects OSMD units, not indices)
+          const labelWidthVF: number = rehearsalExpression.label.length * fontSize * 0.75 + 8;
+          const xStartOsMd: number = (vfStave.getX() + xOffset) / spacing;
+          const xEndOsMd: number = xStartOsMd + labelWidthVF / spacing;
+
+          const skylineMin: number = sbc.getSkyLineMinInRange(xStartOsMd, xEndOsMd);
+          if (skylineMin < 0 && skylineMin !== -Infinity && skylineMin !== Infinity) {
+            // Rehearsal mark box top in VF pixels
+            // height ≈ fontSize + 2*padding (=4), headroom = -descent
+            const boxTopVF: number = vfStave.getYForTopText(1.5) + yOffset - fontSize - 7;
+            const boxTopOsMd: number = (boxTopVF - staffTopVF) / spacing;
+            // If rehearsal mark top is below the highest above-staff element, push it higher.
+            // Account for the full box height so the entire box clears the skyline.
+            if (boxTopOsMd > skylineMin) {
+              const shiftOsMd: number = skylineMin - boxTopOsMd; // negative
+              yOffset += shiftOsMd * spacing - fontSize - 10; // full box height (~14px) + extra gap
+            }
+          }
+        }
+      }
+
       (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
       return; // only draw one rehearsal mark at top (visible) instrument
     }

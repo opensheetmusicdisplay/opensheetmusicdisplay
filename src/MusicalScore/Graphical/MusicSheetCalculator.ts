@@ -1009,6 +1009,9 @@ export abstract class MusicSheetCalculator {
         if (!this.leadSheet) {
             this.calculateTempoExpressions();
         }
+        // calculate all Rehearsal Marks
+        // (must come after mood/unknown expressions so OSMD skyline is populated,
+        //  allowing rehearsal marks to check for overlap and adjust yOffset accordingly)
         this.calculateRehearsalMarks();
 
         // calculate all LyricWords Positions
