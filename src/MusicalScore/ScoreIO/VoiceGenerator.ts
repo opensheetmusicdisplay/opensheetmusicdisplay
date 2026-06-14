@@ -791,6 +791,11 @@ export class VoiceGenerator {
                 throw new MusicSheetReadingException(errorMsg, undefined);
               }
             }
+            // an explicit <tuplet-actual><tuplet-number> overrides the time-modification number (nested tuplets)
+            const tupletActualNumber: number = this.readTupletActualNumber(tupletNode);
+            if (tupletActualNumber > 0) {
+              tupletLabelNumber = tupletActualNumber;
+            }
 
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
             tuplet.Ratioed = ratioed;
@@ -820,7 +825,7 @@ export class VoiceGenerator {
             subnotelist.push(this.currentNote);
             tuplet.Notes.push(subnotelist);
             tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
-            this.currentNote.NoteTuplet = tuplet;
+            this.linkNoteToTuplet(this.currentNote, tuplet);
             this.openTupletNumber = tupletNumber;
           } else if (type.value === "stop") {
             let tupletNumber: number = 1;
@@ -863,7 +868,7 @@ export class VoiceGenerator {
                 }
               }
               tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
-              this.currentNote.NoteTuplet = tuplet;
+              this.linkNoteToTuplet(this.currentNote, tuplet);
               delete this.tupletDict[tupletNumber];
               if (Object.keys(this.tupletDict).length === 0) {
                 this.openTupletNumber = 0;
@@ -914,6 +919,11 @@ export class VoiceGenerator {
             }
 
           }
+          // an explicit <tuplet-actual><tuplet-number> overrides the time-modification number (nested tuplets)
+          const tupletActualNumber: number = this.readTupletActualNumber(n);
+          if (tupletActualNumber > 0) {
+            tupletLabelNumber = tupletActualNumber;
+          }
           if (noTupletNumbering) {
             this.openTupletNumber++;
             tupletnumber = this.openTupletNumber;
@@ -943,7 +953,7 @@ export class VoiceGenerator {
           subnotelist.push(this.currentNote);
           tuplet.Notes.push(subnotelist);
           tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
-          this.currentNote.NoteTuplet = tuplet;
+          this.linkNoteToTuplet(this.currentNote, tuplet);
           this.openTupletNumber = tupletnumber;
         } else if (type === "stop") {
           if (noTupletNumbering) {
@@ -985,7 +995,7 @@ export class VoiceGenerator {
               }
             }
             tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
-            this.currentNote.NoteTuplet = tuplet;
+            this.linkNoteToTuplet(this.currentNote, tuplet);
             if (Object.keys(this.tupletDict).length === 0) {
               this.openTupletNumber = 0;
             } else if (Object.keys(this.tupletDict).length > 1) {
@@ -996,6 +1006,8 @@ export class VoiceGenerator {
         }
       }
     }
+    // a note that (re)opens an inner tuplet is still part of any enclosing tuplet(s) that remain open: add it to them
+    this.addCurrentNoteToOpenTuplets(node);
     return this.openTupletNumber;
   }
 
@@ -1014,22 +1026,18 @@ export class VoiceGenerator {
    * @param noteNode
    */
   private handleTimeModificationNode(noteNode: IXmlElement): void {
-    if (this.tupletDict[this.openTupletNumber]) {
+    const openTupletKeys: string[] = Object.keys(this.tupletDict);
+    if (openTupletKeys.length > 0) {
       try {
-        // Tuplet should already be created
-        const tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
-        const notes: Note[] = CollectionUtil.last(tuplet.Notes);
-        const lastTupletVoiceEntry: VoiceEntry = notes[0].ParentVoiceEntry;
-        let noteList: Note[];
-        if (lastTupletVoiceEntry.Timestamp.Equals(this.currentVoiceEntry.Timestamp)) {
-          noteList = notes;
-        } else {
-          noteList = [];
-          tuplet.Notes.push(noteList);
-          tuplet.Fractions.push(this.getTupletNoteDurationFromType(noteNode));
+        // The note has a time-modification but no explicit tuplet start/stop: it continues all currently-open
+        // tuplets. For nested tuplets there can be more than one (an inner tuplet inside an outer one).
+        for (const key of openTupletKeys) {
+          this.addCurrentNoteToTuplet(this.tupletDict[key], noteNode);
         }
-        noteList.push(this.currentNote);
-        this.currentNote.NoteTuplet = tuplet;
+        // NoteTuplet stays the innermost open tuplet (the others are reachable via NoteTuplets).
+        if (this.tupletDict[this.openTupletNumber]) {
+          this.currentNote.NoteTuplet = this.tupletDict[this.openTupletNumber];
+        }
       } catch (ex) {
         const errorMsg: string = ITextTranslation.translateText(
           "ReaderErrorMessages/TupletNumberError", "Invalid tuplet number."
@@ -1044,9 +1052,66 @@ export class VoiceGenerator {
         const tuplet: Tuplet = firstNote.NoteTuplet;
         const notes: Note[] = CollectionUtil.last(tuplet.Notes);
         notes.push(this.currentNote);
-        this.currentNote.NoteTuplet = tuplet;
+        this.linkNoteToTuplet(this.currentNote, tuplet);
       }
     }
+  }
+
+  /** Record that the given note is part of the tuplet. Sets NoteTuplet (the innermost/primary tuplet) and adds
+   *  the tuplet to the note's NoteTuplets list (which holds all tuplets a note belongs to, for nested tuplets). */
+  private linkNoteToTuplet(note: Note, tuplet: Tuplet): void {
+    note.NoteTuplet = tuplet;
+    if (note.NoteTuplets.indexOf(tuplet) < 0) {
+      note.NoteTuplets.push(tuplet);
+    }
+  }
+
+  /** Add the current note to the given tuplet's note list (reusing the last sub-list for chords at the same
+   *  timestamp, otherwise starting a new one) and add the tuplet to the note's NoteTuplets, without changing
+   *  NoteTuplet. Used to add a note to enclosing/continuing tuplets when nesting. */
+  private addCurrentNoteToTuplet(tuplet: Tuplet, noteNode: IXmlElement): void {
+    const lastNoteList: Note[] = CollectionUtil.last(tuplet.Notes);
+    let noteList: Note[];
+    if (lastNoteList && lastNoteList[0]?.ParentVoiceEntry.Timestamp.Equals(this.currentVoiceEntry.Timestamp)) {
+      noteList = lastNoteList; // same timestamp -> chord, reuse the sub-list
+    } else {
+      noteList = [];
+      tuplet.Notes.push(noteList);
+      tuplet.Fractions.push(this.getTupletNoteDurationFromType(noteNode));
+    }
+    if (noteList.indexOf(this.currentNote) < 0) {
+      noteList.push(this.currentNote);
+    }
+    if (this.currentNote.NoteTuplets.indexOf(tuplet) < 0) {
+      this.currentNote.NoteTuplets.push(tuplet);
+    }
+  }
+
+  /** Add the current note to every still-open tuplet it isn't part of yet. For nested tuplets this adds a note
+   *  to the enclosing (outer) tuplet(s) that are still open while it also starts/continues an inner tuplet. */
+  private addCurrentNoteToOpenTuplets(noteNode: IXmlElement): void {
+    for (const key of Object.keys(this.tupletDict)) {
+      const openTuplet: Tuplet = this.tupletDict[key];
+      if (openTuplet && this.currentNote.NoteTuplets.indexOf(openTuplet) < 0) {
+        this.addCurrentNoteToTuplet(openTuplet, noteNode);
+      }
+    }
+  }
+
+  /** Read an explicit tuplet display number from <tuplet-actual><tuplet-number> if given (used for nested tuplets,
+   *  where the cumulative time-modification actual-notes - e.g. 9 - differs from the number to show - e.g. 3). */
+  private readTupletActualNumber(tupletNode: IXmlElement): number {
+    const tupletActual: IXmlElement = tupletNode.element("tuplet-actual");
+    if (tupletActual) {
+      const tupletNumberElement: IXmlElement = tupletActual.element("tuplet-number");
+      if (tupletNumberElement) {
+        const parsed: number = parseInt(tupletNumberElement.value, 10);
+        if (!isNaN(parsed)) {
+          return parsed;
+        }
+      }
+    }
+    return 0;
   }
 
   private addTie(tieNodeList: IXmlElement[], measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, tieType: TieTypes): void {

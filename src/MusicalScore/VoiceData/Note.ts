@@ -8,7 +8,7 @@ import {Tie} from "./Tie";
 import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 import {NoteState} from "../Graphical/DrawingEnums";
-import {Notehead} from "./Notehead";
+import {Notehead, NoteHeadShape} from "./Notehead";
 import {Arpeggio} from "./Arpeggio";
 import {NoteType} from "./NoteType";
 import { SourceMeasure } from "./SourceMeasure";
@@ -186,6 +186,9 @@ export class Note {
     public set NoteTuplet(value: Tuplet) {
         this.tuplet = value;
     }
+    /** All tuplets this note is part of, from outermost to innermost (for nested tuplets). Usually a single tuplet.
+     *  NoteTuplet stays the innermost one for backwards compatibility; this list adds the enclosing tuplet(s). */
+    public NoteTuplets: Tuplet[] = [];
     public get NoteGlissando(): Glissando {
         return this.glissando;
     }
@@ -215,6 +218,34 @@ export class Note {
     }
     public set PrintObject(value: boolean) {
         this.printObject = value;
+    }
+    /** Whether this note's own notehead is hidden (e.g. print-object="no" or notehead "none") but there is a
+     * visible note on the same staff line in another voice at the same staff entry - i.e. a unison whose visible
+     * notehead this note shares. Used to keep such a note's beam and stem rendered (the stem still emanates from
+     * the shared notehead and joins the beam) instead of dropping it. E.g. an eighth note sharing a notehead with
+     * a dotted quarter in Beethoven's Moonlight Sonata 1st mvt. m.37 (test_unison_notehead_moonlight_sonata_measure37). */
+    public sharesNoteheadWithVisibleUnisonNote(): boolean {
+        if (this.printObject && this.notehead?.Shape !== NoteHeadShape.NONE) {
+            return false; // this note's own notehead is visible, nothing to share
+        }
+        // Grace notes are ornaments before a main note, not a note sounding simultaneously - they share their
+        // staff entry with that main note, so don't treat that as a unison (would falsely keep their stem).
+        if (!this.pitch || !this.parentStaffEntry || this.voiceEntry?.IsGrace) {
+            return false;
+        }
+        for (const otherVoiceEntry of this.parentStaffEntry.VoiceEntries) {
+            if (otherVoiceEntry === this.voiceEntry || otherVoiceEntry.IsGrace) {
+                continue;
+            }
+            for (const otherNote of otherVoiceEntry.Notes) {
+                if (otherNote.printObject && otherNote.notehead?.Shape !== NoteHeadShape.NONE && otherNote.pitch &&
+                    otherNote.pitch.FundamentalNote === this.pitch.FundamentalNote &&
+                    otherNote.pitch.Octave === this.pitch.Octave) {
+                    return true; // visible note on the same staff line in another voice
+                }
+            }
+        }
+        return false;
     }
     public get Arpeggio(): Arpeggio {
         return this.arpeggio;

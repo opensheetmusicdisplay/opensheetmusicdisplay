@@ -7,6 +7,7 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
+import { BoundingBox } from "./BoundingBox";
 import { Matrix2D } from "../../Common/DataObjects/Matrix2D";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
@@ -411,6 +412,96 @@ export class GraphicalSlur extends GraphicalCurve {
         }
     }
 
+
+    /**
+     * Calculates the bezier curve for a slur that crosses between two staves (e.g. left hand to right hand),
+     * where the start and end notes lie on different stafflines that are stacked vertically within the same
+     * MusicSystem. Unlike [[calculateCurve]], this runs at draw time, because it needs the final vertical
+     * positions of both stafflines, which aren't fixed until the system Y-layout (after calculateSlurs()).
+     *
+     * The resulting bezier points are stored relative to the start note's staffline, so the regular drawSlur()
+     * (which adds that staffline's absolute position) renders them at the correct absolute location.
+     * @returns true if the curve was calculated and can be drawn, false otherwise (e.g. missing notes, or the
+     * two staves are not in the same MusicSystem - a cross-staff plus cross-system slur is not supported).
+     */
+    public calculateCurveCrossStaff(rules: EngravingRules): boolean {
+        const slurStartNote: GraphicalNote = rules.GNote(this.slur.StartNote);
+        const slurEndNote: GraphicalNote = rules.GNote(this.slur.EndNote);
+        if (!slurStartNote || !slurEndNote) {
+            return false;
+        }
+        const startStaffLine: StaffLine = slurStartNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
+        const endStaffLine: StaffLine = slurEndNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
+        if (!startStaffLine || !endStaffLine) {
+            return false;
+        }
+        // Only handle staves stacked within the same MusicSystem (the regular cross-staff case).
+        if (startStaffLine.ParentMusicSystem !== endStaffLine.ParentMusicSystem) {
+            return false;
+        }
+        const systemBox: BoundingBox = startStaffLine.ParentMusicSystem.PositionAndShape;
+
+        // notehead positions of both notes, relative to the common MusicSystem
+        const startPos: PointF2D = this.positionRelativeToBox(slurStartNote.PositionAndShape, systemBox);
+        const endPos: PointF2D = this.positionRelativeToBox(slurEndNote.PositionAndShape, systemBox);
+
+        // Express everything relative to the start note's staffline, since drawSlur() adds that staffline's
+        // absolute position to the bezier points.
+        const staffLineOffset: PointF2D = startStaffLine.PositionAndShape.RelativePosition;
+        const startX: number = startPos.x - staffLineOffset.x;
+        const endX: number = endPos.x - staffLineOffset.x;
+        const startNoteY: number = startPos.y - staffLineOffset.y;
+        const endNoteY: number = endPos.y - staffLineOffset.y;
+
+        // The staff higher up on the page has the smaller y value.
+        const endStaffAbove: boolean =
+            endStaffLine.PositionAndShape.RelativePosition.y < startStaffLine.PositionAndShape.RelativePosition.y;
+
+        const noteHeadHalfHeight: number = 0.5;
+        const yGap: number = rules.SlurNoteHeadYOffset; // gap between notehead and slur tip
+        let startY: number;
+        let endY: number;
+        if (endStaffAbove) {
+            // slur leaves the lower (start) note upwards and reaches the higher (end) note from below
+            startY = startNoteY - noteHeadHalfHeight - yGap;
+            endY = endNoteY + noteHeadHalfHeight + yGap;
+            this.placement = PlacementEnum.Above;
+        } else {
+            startY = startNoteY + noteHeadHalfHeight + yGap;
+            endY = endNoteY - noteHeadHalfHeight - yGap;
+            this.placement = PlacementEnum.Below;
+        }
+
+        // The curve bows out (vertically) from the line connecting the two notes.
+        const dx: number = endX - startX;
+        const dy: number = endY - startY;
+        const distance: number = Math.sqrt(dx * dx + dy * dy);
+        const bow: number = Math.max(rules.SlurCrossStaffMinBow,
+                                     Math.min(rules.SlurCrossStaffMaxBow, distance * rules.SlurCrossStaffBowFactor));
+        const bowSign: number = this.placement === PlacementEnum.Above ? -1 : 1; // -1 = upwards (smaller y)
+
+        this.bezierStartPt = new PointF2D(startX, startY);
+        this.bezierStartControlPt = new PointF2D(startX + dx * 0.25, startY + dy * 0.25 + bowSign * bow);
+        this.bezierEndControlPt = new PointF2D(startX + dx * 0.75, startY + dy * 0.75 + bowSign * bow);
+        this.bezierEndPt = new PointF2D(endX, endY);
+        return true;
+    }
+
+    /**
+     * Sums the relative positions from box up to (but not including) the given ancestor box, giving box's
+     * position in the ancestor's coordinate system.
+     */
+    private positionRelativeToBox(box: BoundingBox, ancestor: BoundingBox): PointF2D {
+        let x: number = 0;
+        let y: number = 0;
+        let current: BoundingBox = box;
+        while (current && current !== ancestor) {
+            x += current.RelativePosition.x;
+            y += current.RelativePosition.y;
+            current = current.Parent;
+        }
+        return new PointF2D(x, y);
+    }
 
     /**
      * This method calculates the Start and End Positions of the Slur Curve.

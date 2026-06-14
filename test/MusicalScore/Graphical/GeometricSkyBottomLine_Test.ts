@@ -13,6 +13,7 @@ describe("GeometricSkyBottomLineCalculation", () => {
     // by wrapping SkyBottomLineCalculator.updateLines, which both calculation methods call with their results.
     let capture: ICapturedLine[];
     const originalUpdateLines: any = (SkyBottomLineCalculator.prototype as any).updateLines;
+    let savedOverflowY: string;
 
     before((): void => {
         (SkyBottomLineCalculator.prototype as any).updateLines = function (results: any): void {
@@ -21,10 +22,23 @@ describe("GeometricSkyBottomLineCalculation", () => {
                 capture.push({ sky: [...this.SkyLine], bottom: [...this.BottomLine] });
             }
         };
+        // Always reserve the vertical scrollbar so the container width - and thus the page width, the
+        // system widths and the skyline array lengths - can't change between the two renders compared
+        // below. OSMD reads the page width from the container's offsetWidth at render time; otherwise the
+        // first render of a tall sheet has no scrollbar yet and reads a wider container, then the scrollbar
+        // appears and steals its width (~12px with classic scrollbars, e.g. on Linux/Firefox), so the
+        // second render is narrower. That is a DOM container-size feedback, not covered by the per-render
+        // VexFlow state resets, and environment-dependent: browsers with overlay scrollbars that reserve no
+        // width (e.g. Firefox on Windows) don't show it. It made the geometric (first) and raster (second)
+        // captures disagree on staffline 0's length (352 vs 349) on Linux/Firefox. Reserving the scrollbar
+        // makes the very first render see the settled width, so both captures share one identical layout.
+        savedOverflowY = document.documentElement.style.overflowY;
+        document.documentElement.style.overflowY = "scroll";
     });
 
     after((): void => {
         (SkyBottomLineCalculator.prototype as any).updateLines = originalUpdateLines;
+        document.documentElement.style.overflowY = savedOverflowY;
     });
 
     /** Describes the measure at a given staffline (by capture order) and skyline index, for failure messages. */

@@ -637,7 +637,8 @@ export class MusicSystemBuilder {
             measure.addKeyAtBegin(currentKey, previousKey, currentClef);
             keyAdded = true;
         }
-        if (currentRhythm !== undefined && currentRhythm.PrintObject && this.rules.RenderTimeSignatures) {
+        if (currentRhythm !== undefined && currentRhythm.PrintObject && this.rules.RenderTimeSignatures &&
+            (!currentRhythm.SynthesizedFromNoTimeSignature || this.rules.RenderTimeSignaturesForSamplesWithoutTimeSignature)) {
             let printRhythm: boolean = true;
             // check for previous pickup measure
             // TODO this does not need to be a pickup measure, see #1069

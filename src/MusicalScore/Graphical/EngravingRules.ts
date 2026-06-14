@@ -181,6 +181,10 @@ export class EngravingRules {
     /** y offset added to avoid collisions of rehearsal marks (e.g. "A" or "Verse") with multiple measure rest numbers. */
     public RehearsalMarkYOffsetAddedForRehearsalMarks: number;
     public RehearsalMarkFontSize: number;
+    /** Lift a rehearsal mark above a chord symbol in the same measure so the two don't overlap, and reserve
+     *  skyline space for it. The mark is a fixed-offset VexFlow StaveSection that isn't part of the skyline,
+     *  while chord symbols are placed (earlier) against the skyline and can end up right where the mark goes. */
+    public RehearsalMarkAboveChordSymbol: boolean;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
     public MeasureNumberLabelXOffset: number;
@@ -328,6 +332,11 @@ export class EngravingRules {
     public SlurHeightFlattenLongSlursCutoffWidth: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
     public SlurMaximumYControlPointDistance: number;
+    /** How much a cross-staff slur (e.g. left hand to right hand) bows out, as a factor of the distance
+     * between its two notes. See [[SlurCrossStaffMinBow]] and [[SlurCrossStaffMaxBow]] for the limits. */
+    public SlurCrossStaffBowFactor: number;
+    public SlurCrossStaffMinBow: number;
+    public SlurCrossStaffMaxBow: number;
     public GlissandoNoteOffset: number;
     public GlissandoStafflineStartMinimumWidth: number;
     public GlissandoStafflineStartYDistanceToNote: number;
@@ -447,6 +456,10 @@ export class EngravingRules {
     public ArpeggiosGoAcrossVoices: boolean;
     public RenderArpeggios: boolean;
     public RenderSlurs: boolean;
+    /** Whether to render slurs that go across staves (e.g. left hand to right hand for piano). Supplementary to
+     * [[RenderSlurs]]: with RenderSlurs = true and RenderSlursAcrossStaves = false, all slurs are rendered except
+     * the ones across staves. */
+    public RenderSlursAcrossStaves: boolean;
     public RenderGlissandi: boolean;
     public ColoringMode: ColoringMode;
     public ColoringEnabled: boolean;
@@ -494,6 +507,10 @@ export class EngravingRules {
     public RenderFingerings: boolean;
     public RenderMeasureNumbers: boolean;
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
+    /** Whether to render measure numbers for measures marked implicit (e.g. implicit="yes" in the MusicXML, like
+     * pickup measures or measures without a meter as in Satie's Gnossiennes). Default false: implicit measures
+     * don't show a measure number, as per the MusicXML standard. */
+    public RenderMeasureNumbersForImplicitMeasures: boolean;
     public UseXMLMeasureNumbers: boolean;
     public RenderLyrics: boolean;
     public RenderChordSymbols: boolean;
@@ -503,6 +520,10 @@ export class EngravingRules {
     public RenderClefsAtBeginningOfStaffline: boolean;
     public RenderKeySignatures: boolean;
     public RenderTimeSignatures: boolean;
+    /** Whether to render a (default) time signature for samples that don't have a time signature in the source (e.g. MusicXML),
+     * like Satie's Gnossiennes. Default false, i.e. these samples are rendered without a time signature, as intended.
+     * For normal samples that do have a time signature, this rule has no effect (use RenderTimeSignatures to control those). */
+    public RenderTimeSignaturesForSamplesWithoutTimeSignature: boolean;
     public RenderFirstTempoExpression: boolean;
     public RenderPedals: boolean;
     public RenderWavyLines: boolean;
@@ -763,6 +784,7 @@ export class EngravingRules {
         this.RehearsalMarkYOffsetAddedForRehearsalMarks = -12;
         this.RehearsalMarkYOffset = 0; // user defined
         this.RehearsalMarkFontSize = 10; // vexflow default: 12, too big with chord symbols
+        this.RehearsalMarkAboveChordSymbol = true;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.MeasureNumberLabelHeight = 1.5 * EngravingRules.unit;
@@ -824,6 +846,10 @@ export class EngravingRules {
         this.SlursStartingAtSameStaffEntryYOffset = 0.8;
         //Maximum y difference between control points. Forces slurs to have less 'weight' either way in the x direction
         this.SlurMaximumYControlPointDistance = undefined;
+        // Cross-staff slurs (e.g. left hand to right hand): how far the curve bows out from the line between the notes.
+        this.SlurCrossStaffBowFactor = 0.12;
+        this.SlurCrossStaffMinBow = 0.8;
+        this.SlurCrossStaffMaxBow = 2.5;
 
         // Glissandi
         this.GlissandoNoteOffset = 0.5;
@@ -953,6 +979,7 @@ export class EngravingRules {
         this.ArpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
         this.RenderArpeggios = true;
         this.RenderSlurs = true;
+        this.RenderSlursAcrossStaves = true;
         this.RenderGlissandi = true;
         this.ColoringMode = ColoringMode.XML;
         this.ColoringEnabled = true;
@@ -982,6 +1009,7 @@ export class EngravingRules {
         this.RenderFingerings = true;
         this.RenderMeasureNumbers = true;
         this.RenderMeasureNumbersOnlyAtSystemStart = false;
+        this.RenderMeasureNumbersForImplicitMeasures = false;
         this.UseXMLMeasureNumbers = true;
         this.RenderLyrics = true;
         this.RenderChordSymbols = true;
@@ -991,6 +1019,7 @@ export class EngravingRules {
         this.RenderClefsAtBeginningOfStaffline = true;
         this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
+        this.RenderTimeSignaturesForSamplesWithoutTimeSignature = false;
         this.RenderFirstTempoExpression = true;
         this.RenderPedals = true;
         this.RenderWavyLines = true;

@@ -976,7 +976,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     public handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet): void {
         const voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
-        tuplet = graphicalNote.sourceNote.NoteTuplet;
+        // use the passed tuplet (a note can belong to multiple nested tuplets); previously this was overridden
+        // with the note's single NoteTuplet, which collapsed nested tuplets onto only their innermost tuplet.
         let tuplets: [Tuplet, VexFlowVoiceEntry[]][] = this.tuplets[voiceID];
         if (!tuplets) {
             tuplets = this.tuplets[voiceID] = [];

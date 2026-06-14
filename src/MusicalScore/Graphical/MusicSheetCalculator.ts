@@ -489,10 +489,17 @@ export abstract class MusicSheetCalculator {
 
             const isFirstMeasureAndNotPrintedOne: boolean = this.rules.UseXMLMeasureNumbers &&
                 measure.MeasureNumber === 1 && measure.parentSourceMeasure.getPrintedMeasureNumber() !== 1;
-            if ((measure.MeasureNumber === previousMeasureNumber ||
-                measure.MeasureNumber >= previousMeasureNumber + this.rules.MeasureNumberLabelOffset) &&
-                !measure.parentSourceMeasure.ImplicitMeasure ||
-                isFirstMeasureAndNotPrintedOne) {
+            // Implicit measures (a pickup measure, or implicit="yes" in the MusicXML - e.g. measures without a meter
+            // like in Satie's Gnossiennes) don't show a measure number by default, as per the MusicXML standard.
+            // (parentSourceMeasure is undefined for extra instruction-only measures, e.g. mid-system clef changes.)
+            const sourceMeasure: SourceMeasure = measure.parentSourceMeasure;
+            const measureIsImplicit: boolean = sourceMeasure !== undefined &&
+                (sourceMeasure.ImplicitMeasure || sourceMeasure.ImplicitMeasureFromXml);
+            const renderNumberForImplicit: boolean = !measureIsImplicit || this.rules.RenderMeasureNumbersForImplicitMeasures;
+            if (((measure.MeasureNumber === previousMeasureNumber ||
+                measure.MeasureNumber >= previousMeasureNumber + this.rules.MeasureNumberLabelOffset) ||
+                isFirstMeasureAndNotPrintedOne) &&
+                renderNumberForImplicit) {
                 if (measure.MeasureNumber !== 1 ||
                     (measure.MeasureNumber === 1 && measure !== staffLine.Measures[0]) ||
                     isFirstMeasureAndNotPrintedOne
@@ -2281,13 +2288,20 @@ export abstract class MusicSheetCalculator {
             graphicalStaffEntry.addGraphicalNoteToListAtCorrectYPosition(gve, graphicalNote);
             graphicalNote.PositionAndShape.calculateBoundingBox();
             if (!this.leadSheet) {
-                if (note.NoteBeam !== undefined && note.PrintObject) {
+                // Include the note in its beam if it's visible, or if its notehead is hidden but shared with a
+                // visible unison note in another voice (print-object="no") - then its stem still has to join the
+                // beam (emanating from the shared notehead) instead of becoming an orphan flagged note.
+                // E.g. Beethoven Moonlight Sonata 1st mvt. m.37 (test_unison_notehead_moonlight_sonata_measure37).
+                if (note.NoteBeam !== undefined && (note.PrintObject || note.sharesNoteheadWithVisibleUnisonNote())) {
                     if (!(note instanceof TabNote) || this.rules.TabBeamsRendered) {
                         this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
                     }
                 }
-                if (note.NoteTuplet !== undefined && note.PrintObject) {
-                    this.handleTuplet(graphicalNote, note.NoteTuplet, openTuplets);
+                if (note.NoteTuplets.length > 0 && note.PrintObject) {
+                    // a note can be part of more than one tuplet (nested tuplets); add it to each of them
+                    for (const noteTuplet of note.NoteTuplets) {
+                        this.handleTuplet(graphicalNote, noteTuplet, openTuplets);
+                    }
                 }
             }
 
@@ -2305,8 +2319,8 @@ export abstract class MusicSheetCalculator {
                 graphicalTabNote.PositionAndShape.calculateBoundingBox();
 
                 if (!this.leadSheet) {
-                    if (note.NoteTuplet) {
-                        this.handleTuplet(graphicalTabNote, note.NoteTuplet, openTuplets);
+                    for (const noteTuplet of note.NoteTuplets) {
+                        this.handleTuplet(graphicalTabNote, noteTuplet, openTuplets);
                     }
                 }
             }
@@ -2552,6 +2566,13 @@ export abstract class MusicSheetCalculator {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
 
+        // For RenderSingleHorizontalStaffline we temporarily shrink pageWidth to the content width below, so the
+        // page labels center over the actual content rather than over the ~32767 (SheetMaximumWidth) layout
+        // width. Capture the layout width up front and restore it at the end of this method: pageWidth is the
+        // MusicSystemBuilder's line-break threshold, so leaving it shrunk would make the NEXT calculate() wrongly
+        // break the single horizontal staffline into multiple systems -- i.e. reCalculate() must stay idempotent.
+        const layoutPageWidth: number = this.graphicalMusicSheet.ParentMusicSheet.pageWidth;
+
         // fix width of SVG, sheet and horizontal scroll bar being too long (~32767 = SheetMaximumWidth) for single line scores
         if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
@@ -2701,6 +2722,11 @@ export abstract class MusicSheetCalculator {
             // limit SVG and scroll bar width so it's not ~32767 (SheetMaximumWidth):
             this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width;
             // page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width; // doesn't seem to affect anything
+
+            // Restore the layout (line-break) width so a subsequent reCalculate() lays the single staffline out
+            // the same way (idempotent). The label positions computed above keep their content-centered values;
+            // nothing after calculate() reads pageWidth (the backend sizes from page.Size.width).
+            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = layoutPageWidth;
         }
     }
 

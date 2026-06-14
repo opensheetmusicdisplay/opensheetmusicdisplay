@@ -5,7 +5,6 @@ import { GraphicalMeasure } from "../GraphicalMeasure";
 import { StaffLine } from "../StaffLine";
 import { Staff } from "../../VoiceData/Staff";
 import { SkyBottomLineBatchCalculator } from "../SkyBottomLineBatchCalculator";
-import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -1140,38 +1139,59 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // (vfStave as any).modifiers.push(section);
       const fontSize: number = this.rules.RehearsalMarkFontSize;
 
-      // Check skyline and push rehearsal mark above existing above-staff elements
-      // (direction words, tempo marks etc. — calculated before rehearsal marks in MusicSheetCalculator)
+      // Lift the rehearsal mark above whatever rises above the staff under it (high notes, an Above chord
+      //   symbol, ...) so it doesn't overlap them, and reserve skyline space for the lifted mark (otherwise
+      //   it can collide with the system above).
       const staffLine: StaffLine = gMeasure.ParentStaffLine;
       if (staffLine) {
-        const sbc: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
-        if (sbc.SkyLine.length > 0) {
-          const spacing: number = unitInPixels;
-          const staffTopVF: number = vfStave.getYForLine(0);
-          // Approximate label x range in OSMD units (skyline expects OSMD units, not indices)
-          const labelWidthVF: number = rehearsalExpression.label.length * fontSize * 0.75 + 8;
-          const xStartOsMd: number = (vfStave.getX() + xOffset) / spacing;
-          const xEndOsMd: number = xStartOsMd + labelWidthVF / spacing;
-
-          const skylineMin: number = sbc.getSkyLineMinInRange(xStartOsMd, xEndOsMd);
-          if (skylineMin < 0 && skylineMin !== -Infinity && skylineMin !== Infinity) {
-            // Rehearsal mark box top in VF pixels
-            // height ≈ fontSize + 2*padding (=4), headroom = -descent
-            const boxTopVF: number = vfStave.getYForTopText(1.5) + yOffset - fontSize - 7;
-            const boxTopOsMd: number = (boxTopVF - staffTopVF) / spacing;
-            // If rehearsal mark top is below the highest above-staff element, push it higher.
-            // Account for the full box height so the entire box clears the skyline.
-            if (boxTopOsMd > skylineMin) {
-              const shiftOsMd: number = skylineMin - boxTopOsMd; // negative
-              yOffset += shiftOsMd * spacing - fontSize - 10; // full box height (~14px) + extra gap
-            }
+        let start: number = gMeasure.PositionAndShape.AbsolutePosition.x;
+        let end: number = start + (xOffset + rehearsalExpression.label.length * fontSize * 0.6 + fontSize) / unitInPixels;
+        const chord: GraphicalChordSymbolContainer = this.rules.RehearsalMarkAboveChordSymbol
+          ? this.getFirstChordSymbolAbove(gMeasure) : undefined;
+        if (chord) {
+          const containerPsh: BoundingBox = chord.PositionAndShape;
+          const xInUnits: number = containerPsh.Parent.AbsolutePosition.x + containerPsh.RelativePosition.x;
+          start = Math.min(start, containerPsh.BorderMarginLeft + xInUnits);
+          end = Math.max(end, containerPsh.BorderMarginRight + xInUnits);
+        }
+        const topRelative: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(start, end);
+        if (topRelative < 0) {
+          const marginInUnits: number = 0.5;
+          const minBottomY: number = (topRelative - marginInUnits) * unitInPixels;
+          // VF5 StaveSection has no minBottomY parameter; convert to yOffset adjustment.
+          // Box bottom ≈ getYForTopText(1.5) + yOffset; we need it above getYForLine(0) + minBottomY.
+          const shift: number = (vfStave.getYForLine(0) + minBottomY) - (vfStave.getYForTopText(1.5) + yOffset);
+          if (shift < 0) {
+            yOffset += shift;
           }
+          const markHeightInUnits: number = fontSize / unitInPixels * 1.6 + marginInUnits;
+          staffLine.SkyBottomLineCalculator.updateSkyLineInRange(start, end, topRelative - markHeightInUnits);
         }
       }
 
-      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
+      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize);
       return; // only draw one rehearsal mark at top (visible) instrument
     }
+  }
+
+  /** Returns the leftmost (smallest x) Above-placed chord symbol container in the measure, or undefined if there is none.
+   *  The rehearsal mark sits at the measure start, so this is the chord it can collide with (see calculateRehearsalMark). */
+  private getFirstChordSymbolAbove(gMeasure: GraphicalMeasure): GraphicalChordSymbolContainer {
+    let first: GraphicalChordSymbolContainer = undefined;
+    let firstX: number = Number.MAX_VALUE;
+    for (const staffEntry of gMeasure.staffEntries) {
+      for (const chordContainer of staffEntry.graphicalChordContainers ?? []) {
+        if (chordContainer.GetChordSymbolContainer.Placement !== PlacementEnum.Above) {
+          continue;
+        }
+        const x: number = chordContainer.PositionAndShape.AbsolutePosition.x; // x layout is final here, unlike y
+        if (x < firstX) {
+          firstX = x;
+          first = chordContainer;
+        }
+      }
+    }
+    return first;
   }
 
   /**
@@ -2269,8 +2289,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
                       // Add a Graphical Slur to the staffline, if the recent note is the Startnote of a slur
                       const gSlur: GraphicalSlur = new GraphicalSlur(slur, this.rules);
-                      openGraphicalSlurs.push(gSlur);
                       staffLine.addSlurToStaffline(gSlur);
+                      if (slur.isCrossed()) {
+                        // A cross-staff slur (e.g. left hand to right hand) ends on a different staff, so it
+                        // would never be closed by the per-staff open/close mechanism below - which would leave
+                        // it open and spawn phantom continuation slurs on every following staffline. Keep it out
+                        // of openGraphicalSlurs; its curve is calculated separately at draw time (spanning both
+                        // stafflines). It still needs a staffEntry for GraphicalSlur.Compare's sorting.
+                        gSlur.staffEntries = [graphicalStaffEntry];
+                      } else {
+                        openGraphicalSlurs.push(gSlur);
+                      }
 
                       /* VexFlow Version - for later use
                       const vfSlur: VexFlowSlur = new VexFlowSlur(slur);

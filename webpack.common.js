@@ -18,7 +18,8 @@ module.exports = {
         // Add '.ts' and '.tsx' as a resolvable extension.
         extensions: ['.ts', '.tsx', '.js'],
         alias: {
-            vexflow: path.resolve(__dirname, 'external/vexflow/build/esm/entry/vexflow.js')
+            vexflow: path.resolve(__dirname, 'external/vexflow/build/esm/entry/vexflow.js'),
+            'structured-clone-es.js': path.resolve(__dirname, 'node_modules/structured-clone-es/dist/index.mjs')
         }
     },
     module: {
