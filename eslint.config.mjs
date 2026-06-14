@@ -11,6 +11,8 @@ export default defineConfig(
         ignores: ["webpack*.js",
             "**/*.d.ts",
             "*_min.ts",
+            ".claude/",
+            ".husky/",
             ".karma_temp/",
             "build/",
             "demo/",

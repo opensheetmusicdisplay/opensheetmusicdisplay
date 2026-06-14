@@ -135,12 +135,6 @@ function extractNoteheads(measureEl) {
     return result;
 }
 
-function getStafflineLabel(measureEl) {
-    const staffline = measureEl.closest(".staffline");
-    if (!staffline) { return "?"; }
-    return staffline.getAttribute("id") ?? "?";
-}
-
 // ── Rules ─────────────────────────────────────────────────────────────
 
 function checkRestOverlap(measureEl, opts) {
