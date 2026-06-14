@@ -31,7 +31,7 @@
     "generatePNG:paged": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./export png 210 297 allSmall",
     "generatePNG:paged:debug": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./export png 210 297 all --debug 5000",
     "generatePNG:paged:single": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./export png 0 0 ^Beethoven",
-    "generate:current": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --osmdtesting",
+    "generate:current": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --osmdtesting --svg",
     "generate:current:batch": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --osmdtesting 0 --batch",
     "generate:current:webgl": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --osmdtesting 0 --webgl",
     "generate:current:debug": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --debugosmdtesting",

@@ -6,6 +6,29 @@ const path = require("path");
 const { registerFont } = require("canvas");
 const OSMD = require("../../build/opensheetmusicdisplay.min.js");
 
+// Pre-load music font data URIs for inline SVG font embedding.
+// VF.Font.getFontData() only returns data for fonts loaded via data: URLs.
+// In headless mode, fonts load from CDN, so loadedFontData stays empty.
+// We read the woff2 files directly and build the @font-face CSS ourselves.
+const VEXFLOW_FONTS_DIR = path.resolve(__dirname, "../../external/vexflow/node_modules/@vexflow-fonts");
+const FONT_DATA_URIS = {};
+(function preloadFontDataUris() {
+    const musicFonts = {
+        "Bravura": "bravura/bravura.woff2",
+        "Gonville": "gonville/gonville.woff2",
+        "Petaluma": "petaluma/petaluma.woff2",
+        "Petaluma Script": "petalumascript/petalumascript.woff2",
+        "Academico": "academico/academico.woff2",
+    };
+    for (const [name, relPath] of Object.entries(musicFonts)) {
+        const fullPath = path.join(VEXFLOW_FONTS_DIR, relPath);
+        if (FS.existsSync(fullPath)) {
+            const buf = FS.readFileSync(fullPath);
+            FONT_DATA_URIS[name] = "data:font/woff2;base64," + buf.toString("base64");
+        }
+    }
+})();
+
 /*
   Render each OSMD sample, grab the generated images, and
   dump them into a local directory as PNG or SVG files.
@@ -27,13 +50,15 @@ const dumpPositions = process.argv.includes("--dump-positions");
 imageFormat = imageFormat?.toLowerCase();
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
-        "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime] [--batch|--webgl] [--dump-positions]");
+        "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime] [--batch|--webgl] [--dump-positions] [--svg]");
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)');
     console.log("example: node test/Util/generateImages_browserless.mjs ../../build ./test/data/ ./export png");
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
 }
+const alsoSvg = process.argv.includes("--svg");
+const formatsToRender = alsoSvg && imageFormat !== "svg" ? [imageFormat, "svg"] : [imageFormat];
 const useWhiteTabNumberBackground = true;
 let pageFormat;
 if (!mode) { mode = ""; }
@@ -80,7 +105,8 @@ async function init () {
     global.XMLHttpRequest = window.XMLHttpRequest;
     global.DOMParser = window.DOMParser;
     global.Node = window.Node;
-    if (imageFormat === "png") { global.Canvas = window.Canvas; }
+    global.XMLSerializer = window.XMLSerializer;
+    if (formatsToRender.includes("png")) { global.Canvas = window.Canvas; }
 
     try {
         const { default: headless_gl } = await import("gl");
@@ -155,51 +181,57 @@ async function init () {
         for (let i = 0; i < samplesToProcess.length; i++) { debug(samplesToProcess[i], DEBUG); }
     }
 
-    const backend = imageFormat === "png" ? "canvas" : "svg";
-    const osmdInstance = new OSMD.OpenSheetMusicDisplay(div, {
-        autoResize: false,
-        backend: backend,
-        pageBackgroundColor: "#FFFFFF",
-        pageFormat: pageFormat
-    });
-    osmdInstance.TransposeCalculator = new OSMD.TransposeCalculator();
+    for (const fmt of formatsToRender) {
+        imageFormat = fmt;
+        const backend = fmt === "png" ? "canvas" : "svg";
+        const osmdInstance = new OSMD.OpenSheetMusicDisplay(div, {
+            autoResize: false,
+            backend: backend,
+            pageBackgroundColor: "#FFFFFF",
+            pageFormat: pageFormat
+        });
+        osmdInstance.TransposeCalculator = new OSMD.TransposeCalculator();
 
-    if (useWhiteTabNumberBackground && backend === "png") {
-        osmdInstance.EngravingRules.pageBackgroundColor = "#FFFFFF";
-    }
-    if (DEBUG) {
-        osmdInstance.setLogLevel("debug");
-        debug(`osmd PageFormat idString: ${osmdInstance.EngravingRules.PageFormat.idString}`);
-        debug("PageHeight: " + osmdInstance.EngravingRules.PageHeight);
-    } else {
-        osmdInstance.setLogLevel("info");
-    }
+        if (useWhiteTabNumberBackground && backend === "png") {
+            osmdInstance.EngravingRules.pageBackgroundColor = "#FFFFFF";
+        }
+        if (backend === "svg") {
+            osmdInstance.EngravingRules.SVGFontEmbedding = "inline";
+        }
+        if (DEBUG) {
+            osmdInstance.setLogLevel("debug");
+            debug("osmd PageFormat idString: " + osmdInstance.EngravingRules.PageFormat.idString);
+            debug("PageHeight: " + osmdInstance.EngravingRules.PageHeight);
+        } else {
+            osmdInstance.setLogLevel("info");
+        }
 
-    debug("[OSMD.generateImages] starting loop over samples, saving images to " + imageDir, DEBUG);
-    if (typeof document !== "undefined" && document.fonts) {
-        await document.fonts.ready;
-    }
+        debug("[OSMD.generateImages] starting loop over samples for " + fmt + ", saving to " + imageDir, DEBUG);
+        if (typeof document !== "undefined" && document.fonts) {
+            await document.fonts.ready;
+        }
 
-    for (let i = 0; i < samplesToProcess.length; i++) {
-        const sampleFilename = samplesToProcess[i];
-        debug("sampleFilename: " + sampleFilename, DEBUG);
+        for (let i = 0; i < samplesToProcess.length; i++) {
+            const sampleFilename = samplesToProcess[i];
+            debug("sampleFilename: " + sampleFilename, DEBUG);
 
-        await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {}, DEBUG);
+            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {}, DEBUG);
 
-        if (osmdTestMode) {
-            if (!osmdTestSingleMode && sampleFilename.startsWith("Beethoven") && sampleFilename.includes("Geliebte")) {
-                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
-                    skyBottomLine: true, fileNameAddition: "skyBottomLine"}, DEBUG);
-                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
-                    drawBoundingBoxString: "VexFlowGraphicalNote", fileNameAddition: "bboxVexFlowGraphicalNote_"}, DEBUG);
-            } else if (sampleFilename.startsWith("test_tab_x-alignment_triplet_plus_bracket_below_above")) {
-                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
-                    darkMode: true, fileNameAddition: "darkmode_"}, DEBUG);
-            } else if (sampleFilename.startsWith("JohannSebastianBach_PraeludiumInCDur")) {
-                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
-                    staffVisibility: { 0: true, 1: false}, fileNameAddition: "right_hand_only_"}, DEBUG);
-                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
-                    staffVisibility: { 0: false, 1: true}, fileNameAddition: "left_hand_only_"}, DEBUG);
+            if (osmdTestMode) {
+                if (!osmdTestSingleMode && sampleFilename.startsWith("Beethoven") && sampleFilename.includes("Geliebte")) {
+                    await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                        skyBottomLine: true, fileNameAddition: "skyBottomLine"}, DEBUG);
+                    await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                        drawBoundingBoxString: "VexFlowGraphicalNote", fileNameAddition: "bboxVexFlowGraphicalNote_"}, DEBUG);
+                } else if (sampleFilename.startsWith("test_tab_x-alignment_triplet_plus_bracket_below_above")) {
+                    await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                        darkMode: true, fileNameAddition: "darkmode_"}, DEBUG);
+                } else if (sampleFilename.startsWith("JohannSebastianBach_PraeludiumInCDur")) {
+                    await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                        staffVisibility: { 0: true, 1: false}, fileNameAddition: "right_hand_only_"}, DEBUG);
+                    await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                        staffVisibility: { 0: false, 1: true}, fileNameAddition: "left_hand_only_"}, DEBUG);
+                }
             }
         }
     }
@@ -274,10 +306,17 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             }
             dataUrls.push(canvasImage.toDataURL());
         } else if (imageFormat === "svg") {
-            const svgElement = document.getElementById("osmdSvgPage" + pageNumber);
-            if (!svgElement) { break; }
-            svgElement.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-            markupStrings.push(svgElement.outerHTML);
+            const svgPageId = "osmdSvgPage" + pageNumber;
+            if (!document.getElementById(svgPageId)) { break; }
+            const backend = osmdInstance.drawer.Backends[pageNumber - 1];
+            // Import variant (CDN font URLs)
+            osmdInstance.EngravingRules.SVGFontEmbedding = "import";
+            markupStrings.push({ markup: backend.getExportedSVGString(), suffix: "", pageNumber: pageNumber });
+            // Inline variant (base64 font data URIs) — suppress built-in injectFontCSS
+            osmdInstance.EngravingRules.SVGFontEmbedding = "none";
+            let inlineSvg = backend.getExportedSVGString();
+            inlineSvg = injectFontDataUris(inlineSvg);
+            markupStrings.push({ markup: inlineSvg, suffix: "_font-inline", pageNumber: pageNumber });
         }
     }
 
@@ -297,16 +336,18 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             debug("got image data, saving to: " + pageFilename, DEBUG);
             FS.writeFileSync(pageFilename, imageBuffer, { encoding: "base64" });
         } else if (imageFormat === "svg") {
-            const markup = markupStrings[pageIndex];
-            if (!markup) {
+            const entry = markupStrings[pageIndex];
+            if (!entry || !entry.markup) {
                 debug(`error: could not get markup for page ${pageIndex + 1} of sample: ${sampleFilename}`);
                 continue;
             }
-            debug("got svg markup data, saving to: " + pageFilename, DEBUG);
-            FS.writeFileSync(pageFilename, markup, { encoding: "utf-8" });
+            const svgPageNum = entry.pageNumber ?? (pageIndex + 1);
+            const svgFilename = `${imageDir}/${sampleFilename}_${fileNameAddition}${svgPageNum}${entry.suffix}.${imageFormat}`;
+            debug("got svg markup data, saving to: " + svgFilename, DEBUG);
+            FS.writeFileSync(svgFilename, entry.markup, { encoding: "utf-8" });
         }
 
-        if (dumpPositions) {
+        if (dumpPositions && imageFormat === "png") {
             const jsonFilename = pageFilename.replace(new RegExp(`\\.${imageFormat}$`), ".positions.json");
             try {
                 const dump = dumpGraphicalPositions(osmdInstance, sampleFilename, pageIndex);
@@ -788,6 +829,28 @@ function dumpGraphicalPositions(osmdInstance, sampleFilename, pageIndex) {
         elementCount: totalCount,
         systems: systems,
     };
+}
+
+function injectFontDataUris(svgMarkup) {
+    const usedFonts = [];
+    for (const fontName of Object.keys(FONT_DATA_URIS)) {
+        if (svgMarkup.includes(fontName)) {
+            usedFonts.push(fontName);
+        }
+    }
+    if (usedFonts.length === 0) { return svgMarkup; }
+
+    let css = "";
+    for (const fontName of usedFonts) {
+        css += `@font-face { font-family: "${fontName}"; src: url(${FONT_DATA_URIS[fontName]}); font-display: block; }\n`;
+    }
+
+    // Insert <style> as first child of <svg> element.
+    const svgTagMatch = svgMarkup.match(/<svg[^>]*>/);
+    if (!svgTagMatch) { return svgMarkup; }
+    const svgTagEnd = svgMarkup.indexOf(svgTagMatch[0]) + svgTagMatch[0].length;
+    const styleTag = `<style type="text/css">${css}</style>`;
+    return svgMarkup.slice(0, svgTagEnd) + styleTag + svgMarkup.slice(svgTagEnd);
 }
 
 function debug (msg, debugEnabled = true) {
