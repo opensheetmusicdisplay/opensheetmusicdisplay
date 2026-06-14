@@ -72,3 +72,6 @@ package-lock.json
 
 #local env files
 webpack.local.js
+
+# Markdown files (CLAUDE.md etc.)
+*.md

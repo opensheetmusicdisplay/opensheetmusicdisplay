@@ -1,5 +1,5 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
+
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -32,7 +32,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         this.PositionAndShape.BorderBottom = boundingBox.h / unitInPixels;
         const halfStavenoteWidth: number = (staveNote.width - ((staveNote as any).paddingRight ?? 0)) / 2;
         this.PositionAndShape.BorderLeft = -(modifierWidth + halfStavenoteWidth) / unitInPixels; // Left of our X origin is the modifier
-        this.PositionAndShape.BorderRight = (boundingBox.w - modifierWidth) / unitInPixels; // Right of x origin is the note
+        this.PositionAndShape.BorderRight = halfStavenoteWidth / unitInPixels; // Right of x origin: notehead extends right from nhBeginX
     }
 
     public set vfStaveNote(value: VF.StemmableNote) {
@@ -51,9 +51,9 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         }
         for (let i: number = 0; i < this.notes.length; i++) {
             const note: Note = this.notes[i].sourceNote;
-            if (vfStaveNote.note_heads) { // see VexFlowConverter, needs Vexflow PR
+            if (vfStaveNote._noteHeads) { // VF5: note_heads → _noteHeads
                 if (note.CustomNoteheadVFCode) {
-                    (vfStaveNote.note_heads[i] as any).glyph_code = note.CustomNoteheadVFCode;
+                    (vfStaveNote._noteHeads[i] as any).glyph_code = note.CustomNoteheadVFCode;
                 }
             }
         }
@@ -136,8 +136,8 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             }
 
             if (vfStaveNote) {
-                if (vfStaveNote.note_heads) { // see VexFlowConverter, needs Vexflow PR
-                    const notehead: any = vfStaveNote.note_heads[i];
+                if (vfStaveNote._noteHeads) { // VF5: note_heads → _noteHeads
+                    const notehead: any = vfStaveNote._noteHeads[i];
                     if (notehead) {
                         notehead.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
                     }

@@ -1,5 +1,5 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
+
 import {ColoringOptions, GraphicalNote, VisibilityOptions} from "../GraphicalNote";
 import {Note} from "../../VoiceData/Note";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
@@ -88,9 +88,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         if (!vfnote) {
             vfnote = (this.vfnote[0] as any);
         }
-        const noteheads: any = vfnote.note_heads;
+        const noteheads: any = vfnote._noteHeads; // VF5: note_heads → _noteHeads
         if (noteheads && noteheads.length > this.vfnoteIndex && noteheads[this.vfnoteIndex]) {
-            return vfnote.note_heads[this.vfnoteIndex];
+            return vfnote._noteHeads[this.vfnoteIndex];
         } else {
             return { line: 0 };
         }
@@ -185,33 +185,27 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         if (!this.vfnote) {
             return undefined; // e.g. MultiRestMeasure
         }
-        return this.vfnote[0].getAttribute("el");
+        return this.vfnote[0].getSVGElement() as SVGGElement;
     }
 
     /** Gets the SVG path element of the note's stem. */
     public getStemSVG(): HTMLElement {
-        const groupOrPath: HTMLElement = document.getElementById("vf-" + this.getSVGId() + "-stem");
-        // whether we get the group node or path node depends on whether the note has a beam, for some reason (TODO)
-        if (groupOrPath?.children.length > 0) {
-            return groupOrPath.children[0] as HTMLElement;
-            // We want to return the same type of node every time, not a path node if no beam and a group node if it has a beam.
+        const stem: VF.Stem | undefined = this.vfnote?.[0]?.getStem();
+        const stemGroup: SVGElement | undefined = stem?.getSVGElement();
+        if (stemGroup?.children?.length > 0) {
+            return stemGroup.children[0] as unknown as HTMLElement;
         }
-        return groupOrPath;
-        // more correct, but Vex.Prefix() is not in the definitions:
-        //return document.getElementById((Vex as any).Prefix(this.getSVGId() + "-stem"));
+        return stemGroup as unknown as HTMLElement;
     }
 
     /** Gets the SVG path elements of the beams starting on this note. */
     public getBeamSVGs(): HTMLElement[] {
-        const beamSVGs: HTMLElement[] = [];
-        for (let i: number = 0;; i++) {
-            const newSVG: HTMLElement = document.getElementById(`vf-${this.getSVGId()}-beam${i}`);
-            if (!newSVG) {
-                break;
-            }
-            beamSVGs.push(newSVG);
+        const beam: VF.Beam | undefined = this.vfnote?.[0]?.getBeam();
+        const beamGroup: SVGElement | undefined = beam?.getSVGElement();
+        if (!beamGroup) {
+            return [];
         }
-        return beamSVGs;
+        return [beamGroup as unknown as HTMLElement];
     }
 
     /** Gets the SVG path elements of the note's ledger lines. */

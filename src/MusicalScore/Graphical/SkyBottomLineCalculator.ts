@@ -128,7 +128,8 @@ export class SkyBottomLineCalculator {
             }
             // Headless because we are outside the DOM
             tmpCanvas.initializeHeadless(width);
-            const ctx: any = tmpCanvas.getContext();
+            const vfCtx: any = tmpCanvas.getContext();
+            const nativeCtx: CanvasRenderingContext2D = (tmpCanvas.getCanvas() as HTMLCanvasElement).getContext("2d");
             const canvas: any = tmpCanvas.getCanvas();
             width = canvas.width;
             const height: number = canvas.height;
@@ -144,7 +145,7 @@ export class SkyBottomLineCalculator {
             measure.format();
             vsStaff.setWidth(oldMeasureWidth);
             try {
-                measure.draw(ctx);
+                measure.draw(vfCtx);
                 // Vexflow errors can happen here, then our complete rendering loop would halt without catching errors.
             } catch (ex) {
                 log.warn("SkyBottomLineCalculator.calculateLines.draw", ex);
@@ -153,7 +154,7 @@ export class SkyBottomLineCalculator {
             // imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order
             // RGBA is 32 bit word with 8 bits red, 8 bits green, 8 bits blue and 8 bit alpha. Alpha should be 0 for all background colors.
             // Since we are only interested in black or white we can take 32bit words at once
-            const imageData: any = ctx.getImageData(0, 0, width, height);
+            const imageData: any = nativeCtx.getImageData(0, 0, width, height);
             const rgbaLength: number = 4;
             const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * samplingUnit), 1);
             const tmpSkyLine: number[] = new Array(measureArrayLength);

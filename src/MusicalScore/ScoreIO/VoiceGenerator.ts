@@ -131,6 +131,8 @@ export class VoiceGenerator {
         : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, octavePlusOne,
                              printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloInfo, stemColorXml, noteheadColorXml);
       this.currentNote.DotsXml = dotsXml;
+      // capture xml:id from MusicXML <note> element
+      this.currentNote.xmlId = noteNode.attribute("id")?.value ?? undefined;
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
       if (this.lyricsReader !== undefined && lyricElements) {

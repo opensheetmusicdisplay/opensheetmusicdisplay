@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <staves>2</staves>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <!-- Treble: quarter notes C4 D4 E4 F4 -->
+      <note default-y="-20">
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem><staff>1</staff>
+      </note>
+      <note default-y="-30">
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><staff>1</staff>
+      </note>
+      <note default-y="-35">
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><staff>1</staff>
+      </note>
+      <note default-y="-25">
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><staff>1</staff>
+      </note>
+      <!-- Bass voice 5: quarter notes C3 D3 E3 F3 -->
+      <backup><duration>4</duration></backup>
+      <note default-y="-25">
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <note default-y="-25">
+        <pitch><step>D</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <note default-y="-25">
+        <pitch><step>E</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <note default-y="-25">
+        <pitch><step>F</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <!-- Bass voice 7: quarter notes G3 A3 B3 C4 -->
+      <backup><duration>4</duration></backup>
+      <note default-y="-25">
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>7</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <note default-y="-25">
+        <pitch><step>A</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>7</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <note default-y="-25">
+        <pitch><step>B</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>7</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <note default-y="-25">
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>7</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

@@ -1,5 +1,5 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
+
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 

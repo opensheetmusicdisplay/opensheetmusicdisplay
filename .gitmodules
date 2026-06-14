@@ -1,0 +1,3 @@
+[submodule "external/vexflow"]
+	path = external/vexflow
+	url = https://github.com/c0ntradicti0n/vexflow

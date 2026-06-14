@@ -1,3 +1,4 @@
+import * as VF from "vexflow";
 import {GraphicalMeasure} from "./GraphicalMeasure";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {EngravingRules} from "./EngravingRules";
@@ -109,6 +110,11 @@ export class MusicSystemBuilder {
                                                                                     isFirstSourceMeasure || forceShowRhythm);
                 // forceShowRhythm could be a fourth parameter instead in addBeginInstructions, but only affects RhythmInstruction for now.
                 currentMeasureEndInstructionsWidth += this.addEndInstructions(graphicalMeasures);
+            }
+            // Add StaveTempo to the VF stave (for rendering) and account for its
+            // width in begin instructions so measures are wide enough to prevent overlap.
+            if ((graphicalMeasures[0] as any).addMetronomeMarksToStave) {
+                currentMeasureBeginInstructionsWidth += (graphicalMeasures[0] as any).addMetronomeMarksToStave();
             }
             let currentMeasureVarWidth: number = 0;
             for (let i: number = 0; i < this.numberOfVisibleStaffLines; i++) {
@@ -532,7 +538,7 @@ export class MusicSystemBuilder {
             );
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
         }
-        staves[0].formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
+        VF.Stave.formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
         return totalBeginInstructionLengthX;
     }
 
@@ -580,6 +586,34 @@ export class MusicSystemBuilder {
         if (isSystemStartMeasure) {
             if (!currentClef) {
                 currentClef = this.activeClefs[visibleStaffIdx];
+                // Check if this clef type was already shown as an in-measure change
+                // in the previous measure (e.g., on the last beat). If so, skip
+                // adding it at system start — it's redundant.
+                const prevMeasureIdx: number = this.measureListIndex - 1;
+                if (prevMeasureIdx >= 0 && currentClef) {
+                    const prevSourceMeasure: SourceMeasure =
+                        this.measureList[prevMeasureIdx]?.[0]?.parentSourceMeasure;
+                    if (prevSourceMeasure) {
+                        const staffIdx: number = this.visibleStaffIndices[visibleStaffIdx];
+                        const prevEntries: SourceStaffEntry[] = prevSourceMeasure.getEntriesPerStaff(staffIdx);
+                        for (let e: number = prevEntries.length - 1; e >= 0; e--) {
+                            const entry: SourceStaffEntry = prevEntries[e];
+                            if (!entry?.Instructions) { continue; }
+                            let foundClef: boolean = false;
+                            for (let j: number = entry.Instructions.length - 1; j >= 0; j--) {
+                                const instr: AbstractNotationInstruction = entry.Instructions[j];
+                                if (instr instanceof ClefInstruction) {
+                                    foundClef = true;
+                                    if ((<ClefInstruction>instr).ClefType === currentClef.ClefType) {
+                                        currentClef = undefined;
+                                    }
+                                    break;
+                                }
+                            }
+                            if (foundClef || !currentClef) { break; }
+                        }
+                    }
+                }
             }
             if (!currentKey) {
                 currentKey = KeyInstruction.copy(this.activeKeys[visibleStaffIdx]);
@@ -642,11 +676,11 @@ export class MusicSystemBuilder {
             if (abstractNotationInstruction instanceof ClefInstruction) {
                 const activeClef: ClefInstruction = <ClefInstruction>abstractNotationInstruction;
                 measure.addClefAtEnd(activeClef);
-                for (const otherVerticalMeasure of measures) {
-                    if (otherVerticalMeasure !== measure) {
-                        otherVerticalMeasure.addClefAtEnd(activeClef, false);
-                    }
-                }
+                // Only add end-clef to this measure/staff. Do NOT propagate to other staves —
+                // an invisible end-clef on another staff causes a stale clef to appear at the next
+                // system start for that staff, because updateActiveClefs reads LastInstructionsStaffEntries
+                // and treats it as the active clef for the new system.
+                // (See in-measure-clefs test: bar 2 bass staff showing treble from bar 1 beat 4.)
             }
         }
         return this.rules.MeasureRightMargin + measure.endInstructionsWidth;

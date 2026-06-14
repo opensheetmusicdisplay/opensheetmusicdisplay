@@ -15,8 +15,19 @@ import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { Fraction } from "../../Common/DataObjects/Fraction";
 import { StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
+
+/** Return staff-relative Y of notehead center from VF5 geometry.
+ *  VF5 getYForNote(line) = stave.y + headroom*spacing + 5*spacing - line*spacing
+ *  OSMD staff-relative origin is top staff line (Y=0, increasing downward).
+ *  osmdY = (getYForNote(line) - topStaffLine) / unitInPixels = 5 - line */
+function getVF5NoteheadStaffY(note: GraphicalNote): number {
+    const vfgNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
+    if (vfgNote.notehead) {
+        return 5 - vfgNote.notehead().line;
+    }
+    return note.PositionAndShape?.RelativePosition?.y ?? 0;
+}
 
 export class GraphicalSlur extends GraphicalCurve {
     // private intersection: PointF2D;
@@ -125,7 +136,15 @@ export class GraphicalSlur extends GraphicalCurve {
                                                         + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
                                                         endY);
             if (slurEndNote) {
+                // When there are 3+ staff entries, BorderLeft on the last entry can
+                // include predecessors in the same measure, narrowing the skyline query
+                // so much that intermediate entries are missed. Use endX to bound the
+                // query on the right so all intermediate entries are covered.
+                if (this.staffEntries.length > 2) {
+                    endUpperLeft.x = endX;
+                } else {
                     endUpperLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
+                }
             } else {
                     // Slur continues to next StaffLine - must reach the end of current StaffLine
                     endUpperLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
@@ -139,6 +158,7 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // SkyLinePointsList between firstStaffEntry startUpperRightPoint and lastStaffentry endUpperLeftPoint
             points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
+
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endUpperLeft.x - startUpperRight.x) / 2 + startUpperRight.x,
@@ -164,64 +184,38 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in SkyLine
                 // and tangent Lines characteristica
-            const startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
-            const endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
-            const startLineD: number = start2.y - start2.x * startLineSlope;
-            const endLineD: number = end2.y - end2.x * endLineSlope;
-
-            // calculate IntersectionPoint of the 2 Lines
-                // if same Slope, then Point.X between Start and End and Point.Y fixed
-            const intersectionPoint: PointF2D = new PointF2D();
-            let sameSlope: boolean = false;
-            if (Math.abs(Math.abs(startLineSlope) - Math.abs(endLineSlope)) < 0.0001) {
-                intersectionPoint.x = end2.x / 2;
-                intersectionPoint.y = 0;
-                sameSlope = true;
-            } else {
-                intersectionPoint.x = (endLineD - startLineD) / (startLineSlope - endLineSlope);
-                intersectionPoint.y = startLineSlope * intersectionPoint.x + startLineD;
-            }
-
+            let startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
+            let endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
             // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
             // and the X-distance from StartPoint to EndPoint
             const heightWidthRatio: number = this.calculateHeightWidthRatio(end2.x, transformedPoints);
 
-            // Shift start- or endPoint and corresponding controlPoint away from note, if needed:
-            // e.g. if there is a close object creating a high slope, better shift it away to reduce the slope:
-            // idea is to compare the half heightWidthRatio of the bounding box of the skyline points with the slope (which is also a ratio: k/1)
-            // if the slope is greater than the half heightWidthRatio (which will 99% be the case),
-            // then add a y-offset to reduce the slope to the same value as the half heightWidthRatio of the bounding box
+            // Cap slope asymmetry: a single skyline point very close to start
+            // or end can create arbitrarily large slopes that balloon the other
+            // side after equalization. Limit ratio to 3:1.
+            const leftAbs: number = Math.abs(startLineSlope);
+            const rightAbs: number = Math.abs(endLineSlope);
+            if (leftAbs > 3 * rightAbs) {
+                startLineSlope = 3 * rightAbs * Math.sign(startLineSlope);
+            } else if (rightAbs > 3 * leftAbs) {
+                endLineSlope = 3 * leftAbs * Math.sign(endLineSlope);
+            }
+
+            // Equalize to the steeper side so real obstacles are cleared.
+            const eqSlope: number = Math.max(startLineSlope, -endLineSlope);
+            startLineSlope = eqSlope;
+            endLineSlope = -eqSlope;
+
             const startYOffset: number = 0;
             const endYOffset: number = 0;
-            /*if (Math.abs(heightWidthRatio) > 0.001) {
-                // 1. start side:
-                const startSlopeRatio: number = Math.abs(startLineSlope / (heightWidthRatio * 2));
-                const maxLeftYOffset: number = Math.abs(startLineSlope);
-                startYOffset = Math.max(0, maxLeftYOffset * (Math.min(10, startSlopeRatio - 1) / 10));
-                // slope has to be adapted now due to the y-offset:
-                startLineSlope -= startYOffset;
-
-                // 2. end side:
-                const endSlopeRatio: number = Math.abs(endLineSlope / (heightWidthRatio * 2));
-                const maxRightYOffset: number = Math.abs(endLineSlope);
-                endYOffset = Math.max(0, maxRightYOffset * (Math.min(10, endSlopeRatio - 1) / 10));
-                // slope has to be adapted now due to the y-offset:
-                endLineSlope += endYOffset;
-            }*/
-
-
 
             // calculate tangent Lines Angles
-                // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
             let startAngle: number = minAngle;
             let endAngle: number = -minAngle;
-            // if the calculated Slopes (start and end) are equal, then Angles have fixed values
-            if (!sameSlope) {
-                const result: {startAngle: number, endAngle: number} =
-                    this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
-                startAngle = result.startAngle;
-                endAngle = result.endAngle;
-            }
+            const result: {startAngle: number, endAngle: number} =
+                this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
+            startAngle = result.startAngle;
+            endAngle = result.endAngle;
 
             // calculate Curve's Control Points
             const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =
@@ -238,14 +232,6 @@ export class GraphicalSlur extends GraphicalCurve {
             endControlPoint = transposeMatrix.vectorMultiplication(endControlPoint);
             endControlPoint.x += startX;
             endControlPoint.y = -endControlPoint.y + startY;
-            // middleControlPoint.x = (startControlPoint.x + endControlPoint.x) / 2;
-            // middleControlPoint.y = (startControlPoint.y + endControlPoint.y) / 2 + 1.0;
-
-            /* for DEBUG only */
-            // this.intersection = transposeMatrix.vectorMultiplication(intersectionPoint);
-            // this.intersection.x += startX;
-            // this.intersection.y = -this.intersection.y + startY;
-            /* for DEBUG only */
 
             // set private members
             this.bezierStartPt = new PointF2D(startX, startY - startYOffset);
@@ -298,7 +284,11 @@ export class GraphicalSlur extends GraphicalCurve {
                                                         + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
                                                         endY);
             if (slurEndNote) {
-                endLowerLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
+                if (this.staffEntries.length > 2) {
+                    endLowerLeft.x = endX;
+                } else {
+                    endLowerLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
+                }
             } else {
                 // Slur continues to next StaffLine - must reach the end of current StaffLine
                 endLowerLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
@@ -336,61 +326,39 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in BottomLine
             // and tangent Lines characteristica
-            const startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
-            const endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
-            const startLineD: number = start2.y - start2.x * startLineSlope;
-            const endLineD: number = end2.y - end2.x * endLineSlope;
+            let startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
+            let endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
 
-            // calculate IntersectionPoint of the 2 Lines
-            // if same Slope, then Point.X between Start and End and Point.Y fixed
-            const intersectionPoint: PointF2D = new PointF2D();
-            let sameSlope: boolean = false;
-            if (Math.abs(Math.abs(startLineSlope) - Math.abs(endLineSlope)) < 0.0001) {
-                intersectionPoint.x = end2.x / 2;
-                intersectionPoint.y = 0;
-                sameSlope = true;
-            } else {
-                intersectionPoint.x = (endLineD - startLineD) / (startLineSlope - endLineSlope);
-                intersectionPoint.y = startLineSlope * intersectionPoint.x + startLineD;
+            // Cap slope asymmetry: a single skyline point very close to start
+            // or end can create arbitrarily large slopes that balloon the other
+            // side after equalization. Limit ratio to 3:1.
+            const leftAbsB: number = Math.abs(startLineSlope);
+            const rightAbsB: number = Math.abs(endLineSlope);
+            if (leftAbsB > 3 * rightAbsB) {
+                startLineSlope = 3 * rightAbsB * Math.sign(startLineSlope);
+            } else if (rightAbsB > 3 * leftAbsB) {
+                endLineSlope = 3 * leftAbsB * Math.sign(endLineSlope);
             }
+
+            // Equalize to the steeper side so real obstacles are cleared.
+            const eqSlopeB: number = Math.max(startLineSlope, -endLineSlope);
+            startLineSlope = eqSlopeB;
+            endLineSlope = -eqSlopeB;
 
             // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
             // and the X-distance from StartPoint to EndPoint
             const heightWidthRatio: number = this.calculateHeightWidthRatio(end2.x, transformedPoints);
 
-            // Shift start- or endPoint and corresponding controlPoint away from note, if needed:
-            // e.g. if there is a close object creating a high slope, better shift it away to reduce the slope:
-            // idea is to compare the half heightWidthRatio of the bounding box of the skyline points with the slope (which is also a ratio: k/1)
-            // if the slope is greater than the half heightWidthRatio (which will 99% be the case),
-            // then add a y-offset to reduce the slope to the same value as the half heightWidthRatio of the bounding box
             const startYOffset: number = 0;
             const endYOffset: number = 0;
-            /*if (Math.abs(heightWidthRatio) > 0.001) {
-                // 1. start side:
-                const startSlopeRatio: number = Math.abs(startLineSlope / (heightWidthRatio * 2));
-                const maxLeftYOffset: number = Math.abs(startLineSlope);
-                startYOffset = Math.max(0, maxLeftYOffset * (Math.min(10, startSlopeRatio - 1) / 10));
-                // slope has to be adapted now due to the y-offset:
-                startLineSlope -= startYOffset;
-                // 2. end side:
-                const endSlopeRatio: number = Math.abs(endLineSlope / (heightWidthRatio * 2));
-                const maxRightYOffset: number = Math.abs(endLineSlope);
-                endYOffset = Math.max(0, maxRightYOffset * (Math.min(10, endSlopeRatio - 1) / 10));
-                // slope has to be adapted now due to the y-offset:
-                endLineSlope += endYOffset;
-            } */
 
             // calculate tangent Lines Angles
-            // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
             let startAngle: number = minAngle;
             let endAngle: number = -minAngle;
-            // if the calculated Slopes (start and end) are equal, then Angles have fixed values
-            if (!sameSlope) {
-                const result: {startAngle: number, endAngle: number} =
-                    this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
-                startAngle = result.startAngle;
-                endAngle = result.endAngle;
-            }
+            const result: {startAngle: number, endAngle: number} =
+                this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
+            startAngle = result.startAngle;
+            endAngle = result.endAngle;
 
             // calculate Curve's Control Points
             const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =
@@ -572,28 +540,42 @@ export class GraphicalSlur extends GraphicalCurve {
             // Determine Start/End Point coordinates with the VoiceEntry of the Start/EndNote of the slur
             const slurStartVE: GraphicalVoiceEntry = slurStartNote.parentVoiceEntry;
 
+            // Get extreme notehead staff Y from VF5 notehead geometry (line * 0.5).
+            // PositionAndShape.RelativePosition.y on notes is a centering offset, NOT staff position.
+            let extremeNoteStaffY: number = getVF5NoteheadStaffY(slurStartNote);
+
+            if (slurStartVE.notes.length > 1) {
+                if (this.placement === PlacementEnum.Above) {
+                    for (const n of slurStartVE.notes) {
+                        const ny: number = getVF5NoteheadStaffY(n);
+                        if (ny < extremeNoteStaffY) { extremeNoteStaffY = ny; }
+                    }
+                } else {
+                    for (const n of slurStartVE.notes) {
+                        const ny: number = getVF5NoteheadStaffY(n);
+                        if (ny > extremeNoteStaffY) { extremeNoteStaffY = ny; }
+                    }
+                }
+            }
+
             if (this.placement === PlacementEnum.Above) {
-                startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
+                if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Down) {
+                    startY = extremeNoteStaffY - 0.5; // notehead top (stem away from slur)
+                } else {
+                    startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
+                }
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     startY = Math.min(endY, slurStartVE.parentStaffEntry.getSkylineMin());
-                    // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
-                    //     if (articulation.placement === PlacementEnum.Above) {
-                    //         startY -= this.rules.SlurEndArticulationYOffset;
-                    //         break;
-                    //     }
-                    // }
                 }
             } else {
-                startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
+                if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
+                    startY = extremeNoteStaffY + 0.5; // notehead bottom (stem away from slur)
+                } else {
+                    startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
+                }
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     startY = Math.max(endY, slurStartVE.parentStaffEntry.getBottomlineMax());
                 }
-                // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
-                //     if (articulation.placement === PlacementEnum.Below) {
-                //         startY += 1;
-                //         break;
-                //     }
-                // }
             }
 
             // If the stem points towards the starting point of the slur, shift the slur by a small amount to start (approximately) at the x-position
@@ -651,8 +633,28 @@ export class GraphicalSlur extends GraphicalCurve {
                     }
                 }
             }
+            // Get extreme notehead staff Y from VF5 notehead geometry (line * 0.5).
+            let endExtremeNoteStaffY: number = getVF5NoteheadStaffY(slurEndNote);
+            if (slurEndVE.notes.length > 1) {
+                if (this.placement === PlacementEnum.Above) {
+                    for (const n of slurEndVE.notes) {
+                        const ny: number = getVF5NoteheadStaffY(n);
+                        if (ny < endExtremeNoteStaffY) { endExtremeNoteStaffY = ny; }
+                    }
+                } else {
+                    for (const n of slurEndVE.notes) {
+                        const ny: number = getVF5NoteheadStaffY(n);
+                        if (ny > endExtremeNoteStaffY) { endExtremeNoteStaffY = ny; }
+                    }
+                }
+            }
+
             if (this.placement === PlacementEnum.Above) {
-                endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
+                if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down) {
+                    endY = endExtremeNoteStaffY - 0.5; // notehead top (stem away from slur)
+                } else {
+                    endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
+                }
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     endY = Math.min(endY, slurEndVE.parentStaffEntry.getSkylineMin());
                 }
@@ -660,7 +662,11 @@ export class GraphicalSlur extends GraphicalCurve {
                     endY -= this.rules.SlurEndArticulationYOffset;
                 }
             } else {
-                endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
+                if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
+                    endY = endExtremeNoteStaffY + 0.5; // notehead bottom (stem away from slur)
+                } else {
+                    endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
+                }
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     endY = Math.max(endY, slurEndVE.parentStaffEntry.getBottomlineMax());
                 }
@@ -739,12 +745,15 @@ export class GraphicalSlur extends GraphicalCurve {
             } else { endY += rules.SlursStartingAtSameStaffEntryYOffset; }
         }
 
+        // Cap slurs to within staff area. Use notehead-based positioning from
+        // calculateStartAndEnd as the primary anchor; the cap only prevents
+        // pathologic values (e.g., unset start/end). 4.0 = staff height, generous margin.
         if (this.placement === PlacementEnum.Above) {
-            startY = Math.min(startY, 1.5);
-            endY = Math.min(endY, 1.5);
+            startY = Math.min(startY, 4.0);
+            endY = Math.min(endY, 4.0);
         } else {
-            startY = Math.max(startY, staffLine.StaffHeight - 1.5);
-            endY = Math.max(endY, staffLine.StaffHeight - 1.5);
+            startY = Math.max(startY, -4.0);
+            endY = Math.max(endY, -4.0);
         }
 
         return {startX, startY, endX, endY};
@@ -1036,12 +1045,15 @@ export class GraphicalSlur extends GraphicalCurve {
         const cutoffAngle: number = this.rules.SlurHeightFlattenLongSlursCutoffAngle;
         const cutoffWidth: number = this.rules.SlurHeightFlattenLongSlursCutoffWidth;
         // console.log("width: " + endX);
-        if (startAngle > cutoffAngle && endX > cutoffWidth) { // steep and wide slurs
-            // console.log("steep angle: " + startAngle);
-            widthFlattenFactor += endX / 70 * this.rules.SlurHeightFlattenLongSlursFactorByWidth; // double flattening for width = 70, factorByWidth = 1
-            widthFlattenFactor *= 1 + (startAngle / 30 * this.rules.SlurHeightFlattenLongSlursFactorByAngle); // flatten more for higher angles.
-            // TODO use sin or cos instead of startAngle directly
-            heightFactor /= widthFlattenFactor; // flatten long slurs more
+        if (startAngle > cutoffAngle && endX > cutoffWidth) {
+            // Steep and wide: full formula with angle-dependent multiplier.
+            widthFlattenFactor += endX / 70 * this.rules.SlurHeightFlattenLongSlursFactorByWidth;
+            widthFlattenFactor *= 1 + (startAngle / 30 * this.rules.SlurHeightFlattenLongSlursFactorByAngle);
+            heightFactor /= widthFlattenFactor;
+        } else if (endX > cutoffWidth * 2) {
+            // Wide but not steep: stronger pure-width flattening.
+            widthFlattenFactor += endX / 18 * this.rules.SlurHeightFlattenLongSlursFactorByWidth;
+            heightFactor /= widthFlattenFactor;
         }
         // TODO also offer a widthFlattenFactor for smaller slurs?
 

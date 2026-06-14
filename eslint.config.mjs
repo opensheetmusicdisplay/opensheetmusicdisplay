@@ -11,10 +11,13 @@ export default defineConfig(
         ignores: ["webpack*.js",
             "**/*.d.ts",
             "*_min.ts",
+            ".claude/",
+            ".husky/",
             ".karma_temp/",
             "build/",
             "demo/",
             "export/",
+            "external/",
             "karma.conf.js",
             "osmd-native/",
             "react-native/",
@@ -192,7 +195,7 @@ export default defineConfig(
         },
     },
     {
-        files: ["test/Util/*.js", "test/Util/*.mjs", "test/performance/*.mjs"],
+        files: ["test/Util/*.js", "test/Util/*.mjs", "test/Util/*.cjs", "test/performance/*.mjs"],
         languageOptions: {
             globals: {
                 ...globals.browser,
@@ -202,6 +205,7 @@ export default defineConfig(
         },
         rules: {
             "@typescript-eslint/explicit-function-return-type": "off",
+            "@typescript-eslint/no-require-imports": "off",
             "@typescript-eslint/no-unused-vars": [
                 "error",
                 {
@@ -211,6 +215,18 @@ export default defineConfig(
             ],
             "@typescript-eslint/typedef": "off",
             "no-useless-assignment": "off",
+        },
+    },
+    {
+        files: ["scripts/*.mjs"],
+        languageOptions: {
+            globals: {
+                ...globals.node,
+            },
+        },
+        rules: {
+            "@typescript-eslint/explicit-function-return-type": "off",
+            "@typescript-eslint/typedef": "off",
         },
     },
 );

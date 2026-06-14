@@ -1,5 +1,5 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
+
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
@@ -74,7 +74,7 @@ export abstract class VexFlowBackend {
     // there is unfortunately no built-in container.hasChild(child) method.
   }
 
-public abstract getContext(): Vex.IRenderContext;
+public abstract getContext(): VF.RenderContext;
 
   // public abstract setWidth(width: number): void;
   // public abstract setHeight(height: number): void;
@@ -111,7 +111,7 @@ public abstract getContext(): Vex.IRenderContext;
 
   public abstract renderPath(points: PointF2D[], fill: boolean, id?: string, color?: string): Node;
 
-  public abstract getVexflowBackendType(): VF.Renderer.Backends;
+  public abstract getVexflowBackendType(): VF.RendererBackends;
 
   /** The general type of backend: Canvas or SVG.
    * This is not used for now (only VexflowBackendType used), but it may be useful when we don't want to use a Vexflow class.

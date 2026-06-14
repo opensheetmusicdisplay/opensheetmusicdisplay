@@ -1,5 +1,4 @@
-import Vex, { IRenderContext } from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -62,15 +61,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
         // vexflow 3.x: change default font
         if (this.rules.DefaultVexFlowNoteFont === "gonville") {
-            (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+            VF.VexFlow.setFonts("Gonville", "Bravura");
         } // else keep new vexflow default Bravura (more cursive, bold).
 
         // sizing defaults in Vexflow
-        (Vex.Flow as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
-        (Vex.Flow as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
+        (VF.VexFlow as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
+        (VF.VexFlow as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
         // sets scale/size of notes/rest notes:
-        (Vex.Flow as any).DEFAULT_NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
-        (Vex.Flow as any).DEFAULT_TAB_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
+        VF.VexFlow.NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
+        // VF5: no direct tab font scale equivalent; VF.VexFlow.TABLATURE_FONT_SCALE could be used
 
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
@@ -119,7 +118,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawStaffLine(staffLine: StaffLine): void {
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.RenderContext = this.backend.getContext();
         const stafflineNode: Node = ctx.openGroup();
         if (stafflineNode) {
             (stafflineNode as SVGGElement).classList.add("staffline");
@@ -175,7 +174,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         } else {
             const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;
             if (vfTie) {
-                const context: IRenderContext = this.backend.getContext();
+                const context: VF.RenderContext = this.backend.getContext();
                 vfTie.setContext(context);
                 vfTie.draw();
             }
@@ -263,40 +262,35 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                     }
                     const hasBbox: boolean = (stemElement as any)?.getBbox !== undefined;
                     if (hasBbox) {
-                        // apparently sometimes the stemElement is null, in that case we need to use the canvas method.
                         const rect: SVGRect = (stemElement as any).getBBox();
                         stemTip = new PointF2D(rect.x / 10, rect.y / 10);
                         stemHeight = rect.height / 10;
-                    } else { // if this.backend instanceof CanvasVexFlowBackend // also seems to work for SVG
+                    } else {
                         stemHeight = vfNote.vfnote[0].getStemLength() / 10;
                         stemTip = new PointF2D(
-                            (vfNote.vfnote[0].getStem() as any).x_begin / 10,
-                            (vfNote.vfnote[0].getStem() as any).y_top / 10,
+                            (vfNote.vfnote[0].getStem() as any).xBegin / 10,
+                            (vfNote.vfnote[0].getStem() as any).yTop / 10,
                         );
                         if (directionSign === 1) {
                             stemTip.y -= stemHeight;
                         }
                     }
-                    // this.DrawOverlayLine(stemTip, new PointF2D(stemTip.x + 5, stemTip.y), vfNote.ParentMusicPage); // debug
 
                     let startHeight: number = stemTip.y + stemHeight / 3;
                     if (vfNote.vfnote[0].getBeamCount() > 1) {
                         startHeight = stemTip.y + (stemHeight / 2);
                         if (directionSign === -1) {
-                            // downwards stem, z paints in downwards direction, so we need to start further up
                             startHeight -= (baseHeight + 0.2);
                         }
-                        // note that buzz rolls usually don't appear on notes smaller than 16ths, rather on longer ones
                     }
 
-                    const buzzStartX: number = stemTip.x - 0.5; // top left start point
+                    const buzzStartX: number = stemTip.x - 0.5;
                     const buzzStartY: number = startHeight;
                     const pathPoints: PointF2D[] = [];
-                    // movements to draw the "z" point by point: (drawing by numbers)
                     const movements: PointF2D[] = [
-                        new PointF2D(0, -thickness), // down a bit
-                        new PointF2D(baseLength-thickness, 0), // to the right
-                        new PointF2D(-baseLength+thickness,-baseHeight), // down left (etc)
+                        new PointF2D(0, -thickness),
+                        new PointF2D(baseLength-thickness, 0),
+                        new PointF2D(-baseLength+thickness,-baseHeight),
                         new PointF2D(0, -thickness),
                         new PointF2D(baseLength, 0),
                         new PointF2D(0, thickness),
@@ -671,7 +665,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.RenderContext = this.backend.getContext();
         ctx.openGroup("brace");
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBrace = (brace as VexFlowInstrumentBrace);
@@ -680,7 +674,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawGroupBracket(bracket: GraphicalObject, system: MusicSystem): void {
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.RenderContext = this.backend.getContext();
         ctx.openGroup("bracket");
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBracket = (bracket as VexFlowInstrumentBracket);
@@ -692,10 +686,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalOctaveShift of staffLine.OctaveShifts) {
             if (graphicalOctaveShift) {
                 const vexFlowOctaveShift: VexFlowOctaveShift = graphicalOctaveShift as VexFlowOctaveShift;
-                const ctx: Vex.IRenderContext = this.backend.getContext();
+                const ctx: VF.RenderContext = this.backend.getContext();
                 const textBracket: VF.TextBracket = vexFlowOctaveShift.getTextBracket();
                 if (this.rules.DefaultColorMusic) {
-                    (textBracket as any).render_options.color = this.rules.DefaultColorMusic;
+                    (textBracket as any).renderOptions.color = this.rules.DefaultColorMusic;
                 }
                 textBracket.setContext(ctx);
                 try {
@@ -711,9 +705,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalPedal of staffLine.Pedals) {
             if (graphicalPedal) {
                 const vexFlowPedal: VexFlowPedal = graphicalPedal as VexFlowPedal;
-                const ctx: Vex.IRenderContext = this.backend.getContext();
-                const pedalMarking: Vex.Flow.PedalMarking = vexFlowPedal.getPedalMarking();
-                (pedalMarking as any).render_options.color = this.rules.DefaultColorMusic;
+                const ctx: VF.RenderContext = this.backend.getContext();
+                const pedalMarking: VF.PedalMarking = vexFlowPedal.getPedalMarking();
+                (pedalMarking as any).renderOptions.color = this.rules.DefaultColorMusic;
                 pedalMarking.setContext(ctx);
                 pedalMarking.draw();
             }
@@ -724,8 +718,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalWavyLine of staffLine.WavyLines) {
             if (graphicalWavyLine) {
                 const vexFlowVibratoBracket: VexFlowVibratoBracket = graphicalWavyLine as VexFlowVibratoBracket;
-                const ctx: Vex.IRenderContext = this.backend.getContext();
-                const vfVibratoBracket: Vex.Flow.VibratoBracket = vexFlowVibratoBracket.getVibratoBracket();
+                const ctx: VF.RenderContext = this.backend.getContext();
+                const vfVibratoBracket: VF.VibratoBracket = vexFlowVibratoBracket.getVibratoBracket();
                 (vfVibratoBracket as any).setContext(ctx);
                 vfVibratoBracket.draw();
             }

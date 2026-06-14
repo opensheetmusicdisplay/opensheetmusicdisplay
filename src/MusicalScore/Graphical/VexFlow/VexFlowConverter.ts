@@ -1,5 +1,5 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
+
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
@@ -241,7 +241,7 @@ export class VexFlowConverter {
         // ticks = frac * VF.RESOLUTION, kept as an exact rational via VF.Fraction
         // (e.g. 1/12 -> 16384/12 -> 4096/3) so the voice's resolution multiplier stays correct.
         const vfTicks: VF.Fraction = ghostNote.getTicks();
-        vfTicks.numerator = frac.Numerator * VF.RESOLUTION;
+        vfTicks.numerator = frac.Numerator * VF.VexFlow.RESOLUTION;
         vfTicks.denominator = frac.Denominator;
         vfTicks.simplify();
         return [ghostNote];
@@ -294,11 +294,27 @@ export class VexFlowConverter {
             if (note.sourceNote.isRest()) {
                 isRest = true;
                 if (note.sourceNote.Pitch) {
+                    // Rest has explicit display-step/display-octave — respect it.
                     const restVfPitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
                     keys = [restVfPitch[0]];
                     break;
                 } else {
                     keys = ["b/4"]; // default placement
+
+                    // Check for whole measure rest: center on D5 (or B4 for 1-line staves).
+                    const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
+                        baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
+                    if (isWholeMeasureRest) {
+                        keys = ["d/5"];
+                        if (gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1) {
+                            keys = ["b/4"];
+                        }
+                        duration = "w";
+                        numDots = 0;
+                        alignCenter = true;
+                        xShift = rules.WholeRestXShiftVexflow * unitInPixels;
+                        break;
+                    }
 
                     // pause rest encircled by two beamed notes: place rest just below previous note
                     const pauseVoiceEntry: VoiceEntry = note.parentVoiceEntry?.parentVoiceEntry;
@@ -329,27 +345,6 @@ export class VexFlowConverter {
                             }
                         }
                     }
-                }
-                // TODO do collision checking, place rest e.g. either below staff (A3, for stem direction below voice) or above (C5)
-                // if it is a full measure rest:
-                //   (a whole rest note signifies a whole measure duration, unless the time signature is longer than 4 quarter notes, e.g. 6/4 or 3/2.
-                //   Note: this should not apply to most pickup measures, e.g. with an 8th pickup measure in a 3/4 time signature)
-                // const measureDuration: number = note.sourceNote.SourceMeasure.Duration.RealValue;
-                const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
-                    baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
-                if (isWholeMeasureRest) {
-                    keys = ["d/5"];
-                    if (gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1) {
-                        keys = ["b/4"];
-                    }
-                    duration = "w";
-                    numDots = 0;
-                    // If it's a whole rest we want it smack in the middle. Apparently there is still an issue in vexflow:
-                    // https://github.com/0xfe/vexflow/issues/579 The author reports that he needs to add some negative x shift
-                    // if the measure has no modifiers.
-                    alignCenter = true;
-                    xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
-                    // affects VexFlowStaffEntry.calculateXPosition()
                 }
                 //If we have more than one visible voice entry, shift the rests so no collision occurs
                 if (note.sourceNote.ParentStaff.Voices.length > 1) {
@@ -407,7 +402,11 @@ export class VexFlowConverter {
                             }
                         }
                     }
-                    if (maxHalftone > 0) {
+                    if (maxHalftone === undefined) {
+                        // All voice entries here are rests — separate vertically by voice to avoid y-overlap.
+                        const isUpperVoiceRest: boolean = restVoiceId === 1 || restVoiceId === 5;
+                        note.lineShift = isUpperVoiceRest ? 0 : 4; // 4 semitones = 2 staff lines down for lower voice
+                    } else if (maxHalftone > 0) {
                         let octaveOffset: number = 3;
                         const restClefInstruction: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
                         switch (restClefInstruction.ClefType) {
@@ -458,8 +457,8 @@ export class VexFlowConverter {
 
         let vfnote: VF.StaveNote;
         const vfnoteStruct: any = {
-            align_center: alignCenter,
-            auto_stem: true,
+            alignCenter: alignCenter,
+            autoStem: true,
             clef: vfClefType,
             duration: duration,
             keys: keys,
@@ -468,8 +467,9 @@ export class VexFlowConverter {
 
         const firstNote: Note = gve.notes[0].sourceNote;
         if (firstNote.IsCueNote) {
-            vfnoteStruct.glyph_font_scale = VF.DEFAULT_NOTATION_FONT_SCALE * VF.GraceNote.SCALE;
-            vfnoteStruct.stroke_px = VF.GraceNote.LEDGER_LINE_OFFSET;
+            // VF5: StaveNoteStruct uses strokePx (camelCase) instead of stroke_px.
+            // glyph_font_scale does not exist in VF5's NoteStruct — scaling is built into GraceNote.
+            vfnoteStruct.strokePx = VF.GraceNote.LEDGER_LINE_OFFSET;
         }
 
         if (gve.parentVoiceEntry.IsGrace || gve.notes[0].sourceNote.IsCueNote) {
@@ -568,17 +568,8 @@ export class VexFlowConverter {
                         const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
                         const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
                         const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
-                        // The regular reduction compensates for the natural buffer between the last note
-                        // and the bar line. If this lyric is a multi-syllable mid-word continuation
-                        // (a dash trails to the next syllable in the next measure), that buffer is much
-                        // smaller — the next measure's first note has a syllable + dash glyph right at
-                        // its start. Use a smaller reduction (LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord)
-                        // to add some extra padding without over-padding.
-                        const isCrossMeasureMidWord: boolean = isLastNoteInMeasure && lyricsEntry.hasDashFromLyricWord();
                         if (isLastNoteInMeasure) {
-                            extraExistingPadding += isCrossMeasureMidWord
-                                ? rules.LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord
-                                : rules.LyricsXPaddingReductionForLastNoteInMeasure;
+                            extraExistingPadding += rules.LyricsXPaddingReductionForLastNoteInMeasure; // need less padding
                         }
                         if (!hasShortNotes) {
                             extraExistingPadding += rules.LyricsXPaddingReductionForLongNotes; // quarter or longer notes need less padding
@@ -605,7 +596,7 @@ export class VexFlowConverter {
         }
         const lineShift: number = gve.notes[0].lineShift;
         if (lineShift !== 0) {
-            vfnote.getKeyProps()[0].line += lineShift;
+            vfnote.setKeyLine(0, vfnote.getKeyLine(0) + lineShift);
         }
         // check for slash noteheads (among other noteheads)
         if (notes.length > 1) {
@@ -614,7 +605,14 @@ export class VexFlowConverter {
             for (let n: number = 0; n < notes.length; n++) {
                 const note: VexFlowGraphicalNote = notes[n] as VexFlowGraphicalNote;
                 if (note.sourceNote.Notehead?.Shape === NoteHeadShape.SLASH) {
-                    (vfnote as any).note_heads[n].note_type = "s"; // slash notehead
+                    // VF5 compatibility: note_heads renamed to _noteHeads, note_type to noteType
+                    const vfNoteHeads: any = (vfnote as any).note_heads || (vfnote as any)._noteHeads;
+                    if (vfNoteHeads?.[n]) {
+                        vfNoteHeads[n].note_type = "s";
+                        if (vfNoteHeads[n].noteType !== undefined) {
+                            vfNoteHeads[n].noteType = "s";
+                        }
+                    }
                 }
             }
         }
@@ -647,13 +645,16 @@ export class VexFlowConverter {
             if (stemColor) {
                 //gve.parentVoiceEntry.StemColor = stemColor; // this shouldn't be set by DefaultColorStem
                 vfnote.setStemStyle(stemStyle);
-                if (vfnote.flag && rules.ColorFlags) {
+                if ((vfnote as any).flag && rules.ColorFlags) {
                     vfnote.setFlagStyle(stemStyle);
                 }
             }
         }
 
-        vfnote.x_shift = xShift;
+        vfnote.setXShift(xShift);
+        if (alignCenter) {
+            (vfnote as any)._alignCenter = true;
+        }
 
         if (gve.parentVoiceEntry.IsGrace && gve.notes[0].sourceNote.NoteBeam) {
             // Vexflow seems to have issues with wanted stem direction for beamed grace notes,
@@ -676,19 +677,31 @@ export class VexFlowConverter {
         }
 
         // add accidentals
+        // Store MusicXML note IDs for SVG data-note-id attributes
+        const noteIdMap: Record<number, string> = {};
+        for (let i: number = 0; i < notes.length; i++) {
+            const xmlId: string = notes[i].sourceNote.xmlId;
+            if (xmlId) {
+                noteIdMap[i] = xmlId;
+            }
+        }
+        if (Object.keys(noteIdMap).length > 0) {
+            (vfnote as any)._noteXmlIds = noteIdMap;
+        }
+
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
                 if (accidentals[i] === "###") { // triple sharp
-                    vfnote.addAccidental(i, new VF.Accidental("##"));
-                    vfnote.addAccidental(i, new VF.Accidental("#"));
+                    vfnote.addModifier(new VF.Accidental("##"), i);
+                    vfnote.addModifier(new VF.Accidental("#"), i);
                     continue;
                 } else if (accidentals[i] === "bbs") { // triple flat
-                    vfnote.addAccidental(i, new VF.Accidental("bb"));
-                    vfnote.addAccidental(i, new VF.Accidental("b"));
+                    vfnote.addModifier(new VF.Accidental("bb"), i);
+                    vfnote.addModifier(new VF.Accidental("b"), i);
                     continue;
                 }
-                vfnote.addAccidental(i, new VF.Accidental(accidentals[i])); // normal accidental
+                vfnote.addModifier(new VF.Accidental(accidentals[i]), i); // normal accidental
             }
 
             // add Tremolo strokes for single note tremolos
@@ -700,7 +713,7 @@ export class VexFlowConverter {
                 const tremolo: VF.Tremolo = new VF.Tremolo(tremoloStrokes);
                 (tremolo as any).extra_stroke_scale = rules.TremoloStrokeScale;
                 (tremolo as any).y_spacing_scale = rules.TremoloYSpacingScale;
-                vfnote.addModifier(i, tremolo);
+                vfnote.addModifier(tremolo, i);
             }
         }
 
@@ -743,7 +756,7 @@ export class VexFlowConverter {
         // }
 
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
-            vfnote.addDotToAll();
+            VF.Dot.buildAndAttach([vfnote], { all: true });
         }
         return vfnote;
     }
@@ -752,6 +765,16 @@ export class VexFlowConverter {
                                         rules: EngravingRules): void {
         if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
+        }
+
+        // Remove existing articulations to prevent duplicates when called multiple times
+        if (typeof vfnote.getModifiers === "function") {
+            const modifiers: VF.Modifier[] = vfnote.getModifiers();
+            for (let i: number = modifiers.length - 1; i >= 0; i--) {
+                if (modifiers[i].getCategory?.() === "Articulation") {
+                    modifiers.splice(i, 1);
+                }
+            }
         }
 
         for (const articulation of gNote.sourceNote.ParentVoiceEntry.Articulations) {
@@ -802,11 +825,6 @@ export class VexFlowConverter {
                             }
                         }
                     }
-                    (vfArt as any).render_options = {
-                        ...(vfArt as any).render_options,
-                        extra_left_px: 0,
-                        extra_right_px: 0,
-                    };
                     // Override the articulation's width calculation to prevent extra spacing
                     const originalGetWidth: any = (vfArt as any).getWidth;
                     if (originalGetWidth) {
@@ -918,7 +936,7 @@ export class VexFlowConverter {
             }
             if (vfArt) {
                 vfArt.setPosition(vfArtPosition);
-                (vfnote as StaveNote).addModifier(0, vfArt);
+                (vfnote as StaveNote).addModifier(vfArt, 0);
             }
         }
     }
@@ -932,7 +950,7 @@ export class VexFlowConverter {
         let vfOrna: VF.Ornament = undefined;
         switch (oContainer.GetOrnament) {
             case OrnamentEnum.DelayedInvertedTurn: {
-                vfOrna = new VF.Ornament("turn_inverted");
+                vfOrna = new VF.Ornament("turnInverted");
                 vfOrna.setDelayed(true);
                 break;
             }
@@ -947,12 +965,12 @@ export class VexFlowConverter {
                 break;
             }
             case OrnamentEnum.InvertedTurn: {
-                vfOrna = new VF.Ornament("turn_inverted");
+                vfOrna = new VF.Ornament("turnInverted");
                 vfOrna.setDelayed(false);
                 break;
             }
             case OrnamentEnum.Mordent: {
-                vfOrna = new VF.Ornament("mordent_inverted");
+                vfOrna = new VF.Ornament("mordentInverted");
                 vfOrna.setDelayed(false);
                 break;
             }
@@ -979,11 +997,11 @@ export class VexFlowConverter {
                 vfOrna.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
             }
             vfOrna.setPosition(vfPosition); // Vexflow draws it above right now in any case, never below
-            (vfnote as StaveNote).addModifier(0, vfOrna);
+            (vfnote as StaveNote).addModifier(vfOrna, 0);
         }
     }
 
-    public static StrokeTypeFromArpeggioType(arpeggioType: ArpeggioType): VF.Stroke.Type {
+    public static StrokeTypeFromArpeggioType(arpeggioType: ArpeggioType): number {
         switch (arpeggioType) {
             case ArpeggioType.ARPEGGIO_DIRECTIONLESS:
                 return VF.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
@@ -992,9 +1010,9 @@ export class VexFlowConverter {
             case ArpeggioType.BRUSH_UP:
                 return VF.Stroke.Type.BRUSH_DOWN; // TODO somehow up and down are mixed up in Vexflow right now
             case ArpeggioType.RASQUEDO_DOWN:
-                return VF.Stroke.Type.RASQUEDO_UP;
+                return VF.Stroke.Type.RASGUEADO_UP;
             case ArpeggioType.RASQUEDO_UP:
-                return VF.Stroke.Type.RASQUEDO_DOWN;
+                return VF.Stroke.Type.RASGUEADO_DOWN;
             case ArpeggioType.ROLL_DOWN:
                 return VF.Stroke.Type.ROLL_UP; // TODO somehow up and down are mixed up in Vexflow right now
             case ArpeggioType.ROLL_UP:
@@ -1065,9 +1083,15 @@ export class VexFlowConverter {
         });
         if (isXNotehead) {
             // (vfnote as any).render_options.fretScale = rules.TabXNoteheadScale; // doesn't work, is overwritten later
-            (vfnote as any).render_options.scale = rules.TabXNoteheadScale; // VexFlowPatch
-            (vfnote as any).render_options.TabUseXNoteheadAlternativeGlyph = rules.TabUseXNoteheadAlternativeGlyph; // VexFlowPatch
-            vfnote.updateWidth(); // use .scale, update glyph
+            // VF5: renderOptions, scale for TabNote
+            const vfRenderOptions: any = (vfnote as any).renderOptions;
+            if (vfRenderOptions) {
+                vfRenderOptions.scale = rules.TabXNoteheadScale;
+                vfRenderOptions.TabUseXNoteheadAlternativeGlyph = rules.TabUseXNoteheadAlternativeGlyph;
+            }
+            if (typeof (vfnote as any).updateWidth === "function") {
+                (vfnote as any).updateWidth();
+            }
         }
         if (rules.UsePageBackgroundColorForTabNotes) {
             (vfnote as any).BackgroundColor = rules.PageBackgroundColor; // may be undefined
@@ -1079,11 +1103,12 @@ export class VexFlowConverter {
         }
 
         tabPhrases.forEach(function(phrase: { type: number, text: string, width: number }): void {
-            if (phrase.type === VF.Bend.UP) {
-                vfnote.addModifier (new VF.Bend(phrase.text, false));
-            } else {
-                vfnote.addModifier (new VF.Bend(phrase.text, true));
-            }
+            const bendPhrases: { type: number, text: string, width: number }[] = [{
+                type: phrase.type,
+                text: phrase.text,
+                width: phrase.width,
+            }];
+            vfnote.addModifier(new VF.Bend(bendPhrases));
         });
 
         return vfnote;

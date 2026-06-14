@@ -158,7 +158,7 @@ describe("VexFlow Measure", () => {
       function firstMeasureHasTimeSignature(osmd: OpenSheetMusicDisplay): boolean {
          const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
          const stave: any = (gm as any).stave; // VexFlowMeasure.stave is protected, only need it here in the test
-         return stave.getModifiers().some((m: { getCategory(): string }) => m.getCategory() === "timesignatures");
+         return stave.getModifiers().some((m: { getCategory(): string }) => m.getCategory() === "TimeSignature");
       }
 
       const osmdDefault: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));

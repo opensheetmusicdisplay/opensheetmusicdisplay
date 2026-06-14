@@ -1,8 +1,81 @@
 import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
 import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
+import { Bravura as BravuraDataUri } from '../external/vexflow/build/esm/src/fonts/bravura.js';
 import * as jsPDF  from '../node_modules/jspdf/dist/jspdf.es.min';
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.umd.min';
 import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculator';
+
+// Inject CSS @font-face for Bravura — strip charset param that breaks CSS url() parsing
+(function injectFontFace() {
+    var cleanUri = BravuraDataUri.replace(';charset=utf-8', '');
+    var style = document.createElement('style');
+    style.textContent = '@font-face { font-family: "Bravura"; src: url("' + cleanUri + '") format("woff2"); font-display: block; }';
+    document.head.appendChild(style);
+})();
+
+// Warm up Bravura font for canvas 2D context by rendering a hidden DOM element
+(function warmupCanvasFont() {
+    var el = document.createElement('span');
+    el.style.cssText = 'font-family: "Bravura"; position: absolute; left: -9999px; top: -9999px;';
+    el.textContent = ''; // fermata SMuFL char
+    document.body.appendChild(el);
+})();
+
+// Diagnose canvas font rendering after fonts are loaded
+(async function testCanvasFont() {
+    // Wait for all fonts to be ready
+    await document.fonts.ready;
+    // Explicitly load Bravura
+    try {
+        await document.fonts.load('30pt "Bravura"');
+    } catch(e) {
+        console.log('[OSMD] font load error:', e);
+    }
+    var check30 = document.fonts.check('30pt "Bravura"');
+    var check20 = document.fonts.check('20pt Bravura');
+    var families = '';
+    for (var f of document.fonts.values()) {
+        families += f.family + ',';
+    }
+    console.log('[OSMD] document.fonts families:', families, 'check(30pt Bravura):', check30, 'check(20pt Bravura):', check20);
+
+    var canvas = document.createElement('canvas');
+    canvas.width = 300;
+    canvas.height = 100;
+    canvas.id = 'osmd-font-test-canvas';
+    canvas.style.cssText = 'position: fixed; bottom: 0; right: 0; z-index: 9999; border: 1px solid red; width: 300px; height: 100px; background: white;';
+    document.body.appendChild(canvas);
+    var ctx = canvas.getContext('2d');
+
+    // 1) Bravura + ASCII capital A
+    ctx.font = '40pt "Bravura", Academico, serif';
+    console.log('[OSMD] ctx.font (40pt Bravura):', ctx.font);
+    ctx.fillStyle = '#000';
+    ctx.fillText('A B C', 10, 50);
+
+    // 2) measureText for fermata char
+    var metrics = ctx.measureText('');
+    console.log('[OSMD] measureText fermata:', metrics.width, metrics);
+
+    // 3) Draw fermata char with Bravura
+    ctx.fillText('', 150, 50);
+
+    // 4) Fallback check: draw same char with serif
+    ctx.font = '40pt serif';
+    ctx.fillStyle = '#00f';
+    ctx.fillText('', 220, 50);
+    ctx.fillText('serif-fallback', 10, 90);
+
+    // Count total non-zero pixels
+    var totalPixels = 0;
+    for (var py = 0; py < 100; py++) {
+        for (var px = 0; px < 300; px++) {
+            var pixel = ctx.getImageData(px, py, 1, 1);
+            if (pixel.data[3] > 0) totalPixels++;
+        }
+    }
+    console.log('[OSMD] total non-zero pixels:', totalPixels);
+})();
 
 /*jslint browser:true */
 (function () {
@@ -666,7 +739,10 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
      * If the document keeps the same height/length, the scroll bar position will basically be unchanged.
      * If you just call render() instead of renderAndScrollBack(),
      *   it will scroll you back to the top of the page, even if you were scrolled to the bottom before. */
-    function renderAndScrollBack() {
+    async function renderAndScrollBack() {
+        if (openSheetMusicDisplay && openSheetMusicDisplay.backendType !== BackendType.SVG) {
+            await document.fonts.ready;
+        }
         const previousScrollY = window.scrollY;
         const previousScrollHeight = document.body.scrollHeight; // height of page
         const previousScrollYPercent = previousScrollY / previousScrollHeight;

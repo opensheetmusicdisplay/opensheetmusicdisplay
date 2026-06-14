@@ -65,7 +65,7 @@ import { ContinuousTempoExpression } from "../VoiceData/Expressions/ContinuousEx
 import { FontStyles } from "../../Common/Enums/FontStyles";
 import { AbstractTempoExpression } from "../VoiceData/Expressions/AbstractTempoExpression";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
-import { ContDynamicEnum } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
+import { ContDynamicEnum, ContinuousDynamicExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
 import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
@@ -1016,6 +1016,9 @@ export abstract class MusicSheetCalculator {
         if (!this.leadSheet) {
             this.calculateTempoExpressions();
         }
+        // calculate all Rehearsal Marks
+        // (must come after mood/unknown expressions so OSMD skyline is populated,
+        //  allowing rehearsal marks to check for overlap and adjust yOffset accordingly)
         this.calculateRehearsalMarks();
 
         // calculate all LyricWords Positions
@@ -1457,39 +1460,67 @@ export abstract class MusicSheetCalculator {
 
         const endAbsoluteTimestamp: Fraction = Fraction.createFromFraction(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.AbsoluteTimestamp);
         const container: VerticalGraphicalStaffEntryContainer = this.graphicalMusicSheet.GetVerticalContainerFromTimestamp(endAbsoluteTimestamp);
-        const parentMeasure: GraphicalMeasure = container.getFirstNonNullStaffEntry().parentMeasure;
-        const endOfMeasure: number = parentMeasure.PositionAndShape.AbsolutePosition.x + parentMeasure.PositionAndShape.BorderRight;
-        let maxNoteLength: Fraction = new Fraction(0, 0, 0);
-        for (const staffEntry of container.StaffEntries) {
-            if (staffEntry?.sourceStaffEntry.ParentStaff !== staffLine.ParentStaff) {
-                // note: null check handles rare cases of undefined staffEntries, e.g. in test_wedge_cresc_dim_simultaneous_quartet.musicxml
-                continue;
-                // don't let notes in other staffs (not the wedge's staff) affect the wedge length (see #1477)
-            }
-            const currentMaxLength: Fraction = staffEntry?.sourceStaffEntry?.calculateMaxNoteLength(false);
-            if ( currentMaxLength?.gt(maxNoteLength) ) {
-                maxNoteLength = currentMaxLength;
-            }
-        }
-        const useStaffEntryBorderLeft: boolean = !isSoftAccent &&
-            graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo;
+        const firstContainerStaffEntry: GraphicalStaffEntry = container?.getFirstNonNullStaffEntry();
+        const endOfMeasure: number = endMeasure.PositionAndShape.RelativePosition.x + endMeasure.PositionAndShape.BorderRight;
+        // The end of a diminuendo is its apex (closed end), which belongs at the note center.
+        // BorderLeft would place it at the note's leftmost edge (including accidental space),
+        // which is too far left. Use center for both crescendo end and diminuendo apex.
         const endPosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
             endAbsoluteTimestamp, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
-            useStaffEntryBorderLeft);
+            false);
+        // Track whether the raw end position resolved to a real SE.  When the
+        // timestamp lands after the last SE on this staff (e.g. a whole-note
+        // wedge spanning to measure-end, or a last note of the piece), the
+        // interpolator returns (0,0).  We'll extend to endOfMeasure in that case.
+        const rawEndPosResolved: boolean = endPosInStaffLine.x !== 0;
 
-        const beginOfNextNote: Fraction = Fraction.plus(endAbsoluteTimestamp, maxNoteLength);
-        const placementFraction: Fraction = beginOfNextNote.clone();
-        const endOffsetFraction: Fraction = graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.EndOffsetFraction;
-        if (endOffsetFraction && this.rules.UseEndOffsetForExpressions) {
-            placementFraction.Add(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.EndOffsetFraction);
+        // When the raw wedge is shorter than WedgeMinLength, span the SE borders
+        // to avoid pushing the apex far past the note.
+        // This handles two cases: (a) start and end map to the same SE (zero-length),
+        // (b) adjacent notes are closer than WedgeMinLength but the end timestamp
+        // falls after the last SE, so using the right border gives enough length.
+        if (sameStaffLine && endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength && !isSoftAccent) {
+            // Find the SE on this staff line with the largest absolute timestamp
+            // <= endAbsoluteTimestamp.  Search all measures on the staff line so
+            // we don't pick an SE from the next measure when endTimestamp lands
+            // at a measure boundary.
+            let bestSE: GraphicalStaffEntry = undefined;
+            let bestAbsTs: number = -1;
+            const endTs: number = endAbsoluteTimestamp.RealValue;
+            for (const m of staffLine.Measures) {
+                if (!m) { continue; }
+                const mStartTs: number = m.parentSourceMeasure?.AbsoluteTimestamp?.RealValue ?? 0;
+                for (const se of m.staffEntries) {
+                    if (!se || se.sourceStaffEntry.ParentStaff !== staffLine.ParentStaff) {
+                        continue;
+                    }
+                    const seAbsTs: number = mStartTs + se.relInMeasureTimestamp.RealValue;
+                    if (seAbsTs <= endTs + 0.01 && seAbsTs > bestAbsTs) {
+                        bestAbsTs = seAbsTs;
+                        bestSE = se;
+                    }
+                }
+            }
+            if (bestSE) {
+                const endMeasureRelX: number = endMeasure.PositionAndShape.RelativePosition.x;
+                const seCenter: number = bestSE.PositionAndShape.RelativePosition.x + endMeasureRelX;
+                const seRight: number = seCenter + bestSE.PositionAndShape.BorderRight;
+                if (seRight > endPosInStaffLine.x) {
+                    endPosInStaffLine.x = seRight;
+                }
+                // When the wedge is still shorter than WedgeMinLength after extending
+                // the end to the SE right border, extend the end further instead of pulling
+                // the start leftward. seLeft can include instruction-area padding (e.g. a
+                // whole-note SE whose BorderLeft reaches the measure origin), which would
+                // place the wedge start before clef/key/time.
+                if (endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength) {
+                    endPosInStaffLine.x = startPosInStaffline.x + this.rules.WedgeMinLength;
+                }
+            }
         }
-        // TODO for the last note of the piece (wedge ending after last note), this timestamp is incorrect, being after the last note
-        //   but there's a workaround in getRelativePositionInStaffLineFromTimestamp() via the variable endAfterRightStaffEntry
-        const nextNotePosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-            placementFraction, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
-            graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo);
+
         const wedgePadding: number = this.rules.SoftAccentWedgePadding;
-        const staffEntryWidth: number = container.getFirstNonNullStaffEntry().PositionAndShape.Size.width; // staff entry widths for whole notes is too long
+        const staffEntryWidth: number = firstContainerStaffEntry?.PositionAndShape.Size.width ?? 0; // staff entry widths for whole notes is too long
         const sizeFactor: number = this.rules.SoftAccentSizeFactor;
         //const standardWidth: number = 2;
 
@@ -1499,16 +1530,45 @@ export abstract class MusicSheetCalculator {
             //startPosInStaffline.x -= 1;
             startPosInStaffline.x -= staffEntryWidth / 2 * sizeFactor + wedgePadding;
             endPosInStaffLine.x = startPosInStaffline.x + staffEntryWidth / 2 * sizeFactor;
-        } else if (nextNotePosInStaffLine.x > endPosInStaffLine.x && nextNotePosInStaffLine.x < endOfMeasure) {
-            endPosInStaffLine.x += (nextNotePosInStaffLine.x - endPosInStaffLine.x) / this.rules.WedgeEndDistanceBetweenTimestampsFactor;
-        } else { //Otherwise extend to the end of the measure
-            endPosInStaffLine.x = endOfMeasure - this.rules.WedgeHorizontalMargin;
+        }
+
+        // When a crescendo ends at a timestamp where another non-verbal wedge starts,
+        // pull the open end back before the notehead so the transition gap straddles
+        // the notehead instead of sitting entirely to its right.
+        if (sameStaffLine && !isSoftAccent
+            && graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+            const endingDynamic: ContinuousDynamicExpression = graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression?.EndingContinuousDynamic;
+            if (endingDynamic) {
+                endPosInStaffLine.x -= this.rules.WedgeOpeningLength + this.rules.WedgeHorizontalMargin;
+                if (endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength) {
+                    endPosInStaffLine.x = startPosInStaffline.x + this.rules.WedgeMinLength;
+                }
+            }
+        }
+
+        // Diminuendo ends after the last SE on this staff (interpolator returned 0):
+        // push the apex toward the measure boundary so the wedge spans a reasonable
+        // portion of the measure instead of being clamped to WedgeMinLength.
+        if (!rawEndPosResolved && !isSoftAccent
+            && graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+            const span: number = endOfMeasure - startPosInStaffline.x - this.rules.WedgeHorizontalMargin;
+            endPosInStaffLine.x = Math.max(endPosInStaffLine.x,
+                startPosInStaffline.x + span * 0.87);
         }
 
         const startCollideBox: BoundingBox =
             this.dynamicExpressionMap.get(graphicalContinuousDynamic.ContinuousDynamic.StartMultiExpression.AbsoluteTimestamp.RealValue);
         if (startCollideBox) {
-            if ((startCollideBox.DataObject as any).ParentStaffLine === staffLine) {
+            const collidingExpression: GraphicalContinuousDynamicExpression = startCollideBox.DataObject as GraphicalContinuousDynamicExpression;
+            const collidesWithNonVerbalWedge: boolean = collidingExpression instanceof GraphicalContinuousDynamicExpression &&
+                !collidingExpression.IsVerbal;
+            if ((startCollideBox.DataObject as any).ParentStaffLine === staffLine && collidesWithNonVerbalWedge) {
+                const shifted: number = startCollideBox.RelativePosition.x + startCollideBox.BorderMarginRight
+                    + this.rules.WedgeHorizontalMargin;
+                if (shifted > startPosInStaffline.x) {
+                    startPosInStaffline.x = shifted;
+                }
+            } else if ((startCollideBox.DataObject as any).ParentStaffLine === staffLine) {
                 // TODO the dynamicExpressionMap doesn't distinguish between staffLines, so we may react to a different staffline otherwise
                 //   so the more fundamental solution would be to fix dynamicExpressionMap mapping across stafflines.
                 startPosInStaffline.x = startCollideBox.RelativePosition.x + this.rules.WedgeHorizontalMargin;
@@ -1530,6 +1590,14 @@ export abstract class MusicSheetCalculator {
         // last length check
         if (sameStaffLine && endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength && !isSoftAccent) {
             endPosInStaffLine.x = startPosInStaffline.x + this.rules.WedgeMinLength;
+        }
+
+        // Clamp end position to the endMeasure boundary.  When the end timestamp
+        // falls at a measure boundary (e.g. ts=1.0 = start of next measure), the
+        // interpolator can return a position in the next measure, which puts the
+        // wedge end past the barline.  Keep it inside the declared endMeasure.
+        if (sameStaffLine && !isSoftAccent && endPosInStaffLine.x > endOfMeasure - this.rules.WedgeHorizontalMargin) {
+            endPosInStaffLine.x = endOfMeasure - this.rules.WedgeHorizontalMargin;
         }
 
         // First staff wedge always starts at the given position and the last and inbetween wedges always start at the begin of measure
@@ -3638,11 +3706,6 @@ export abstract class MusicSheetCalculator {
         let endStaffEntry: GraphicalStaffEntry = undefined;
         let endStaffLine: StaffLine = undefined;
         const staffIndex: number = startStaffEntry.parentMeasure.ParentStaff.idInMusicSheet;
-        if (!startStaffEntry.parentVerticalContainer) {
-            // shouldn't happen since calculateVerticalContainersList covers all measure.staffEntries,
-            // but skip rather than crash if some upstream parsing left a staff entry without a container
-            return;
-        }
         for (let index: number = startStaffEntry.parentVerticalContainer.Index + 1;
             index < this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length;
             ++index) {

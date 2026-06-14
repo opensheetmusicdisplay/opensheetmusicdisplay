@@ -1,5 +1,5 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
+
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -52,9 +52,17 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 if (this.parentMeasure.ParentStaff.isTab) {
                     // the x-position could be finetuned for the cursor.
                     // somehow, gve.vfStaveNote.getBoundingBox() is null for a TabNote (which is a StemmableNote).
-                    bboxToAdjust.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + (<any>gve.vfStaveNote).glyph.getWidth()) / unitInPixels;
+                    // VF5: TabNote has no .glyph (only glyphProps), use .getWidth() as fallback.
+                    const noteGlyph: any = (<any>gve.vfStaveNote).glyph;
+                    const noteWidth: number = noteGlyph ? noteGlyph.getWidth() : gve.vfStaveNote.getWidth();
+                    bboxToAdjust.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + noteWidth) / unitInPixels;
                 } else {
-                    bboxToAdjust.RelativePosition.x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
+                    // VF5: for center-aligned tickables, getBoundingBox().getX() may not
+                    // include centerXShift, so use getAbsoluteX() which does.
+                    const isCenterAligned: boolean = !!(gve.vfStaveNote as any).isCenterAligned?.();
+                    bboxToAdjust.RelativePosition.x = isCenterAligned
+                        ? gve.vfStaveNote.getAbsoluteX() / unitInPixels
+                        : gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
                     if (isSecondaryWholeRest) {
                         bboxToAdjust.RelativePosition.x -= stave.getNoteStartX() / unitInPixels;
                         bboxToAdjust.RelativePosition.x -= 1.3;
@@ -63,10 +71,12 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 }
                 const sourceNote: Note = gve.notes[0].sourceNote;
                 if (sourceNote.isRest() && sourceNote.Length.RealValue === this.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue) {
-                    // whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
-                    // see Note.isWholeRest(), which is currently not safe
-                    bboxToAdjust.RelativePosition.x +=
-                        this.parentMeasure.parentSourceMeasure.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
+                    // whole rest: length = measure length.
+                    const isVF5CenterAligned: boolean = !!(gve.vfStaveNote as any)._alignCenter;
+                    if (!isVF5CenterAligned) {
+                        bboxToAdjust.RelativePosition.x +=
+                            this.parentMeasure.parentSourceMeasure.Rules.WholeRestXShiftVexflow - 0.1;
+                    }
                     gve.PositionAndShape.BorderLeft = -0.7;
                     gve.PositionAndShape.BorderRight = 0.7;
                 }

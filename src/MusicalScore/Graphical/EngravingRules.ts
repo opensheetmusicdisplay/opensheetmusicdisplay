@@ -119,6 +119,10 @@ export class EngravingRules {
     public GraceNoteXOffset: number;
     /** Set this to e.g. -0.5 or -0.8 to put grace notes a lot closer to the main note. */
     public GraceNoteGroupXMargin: number;
+    /** Extra horizontal spacing (OSMD units) added to minStaffEntriesWidth per grace note.
+     *  Grace notes are VF modifiers, not tickables, so preCalculateMinTotalWidth does not
+     *  account for them. This spacing prevents collisions with preceding notes. */
+    public GraceNoteExtraSpacing: number;
     public WedgeOpeningLength: number;
     public WedgeMeasureEndOpeningLength: number;
     public WedgeMeasureBeginOpeningLength: number;
@@ -242,7 +246,6 @@ export class EngravingRules {
     public TabUseXNoteheadAlternativeGlyph: boolean;
     public TabXNoteheadScale: number;
 
-    /** Whether the first measure is allowed to have a left repeat barline, if explicitly given in the MusicXML. */
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
     public RepetitionEndingLabelHeight: number;
     public RepetitionEndingLabelXOffset: number;
@@ -292,14 +295,6 @@ export class EngravingRules {
     /** Last note in measure needs less padding because of measure bar and bar start/end padding. */
     public LyricsXPaddingReductionForLastNoteInMeasure: number;
     public LyricsXPaddingForLastNoteInMeasure: boolean;
-    /** Reduction applied for the last note of a measure when its lyric is a multi-syllable
-     *  mid-word continuation (a dash trails to the next syllable, which lives in the next measure).
-     *  Lower than LyricsXPaddingReductionForLastNoteInMeasure because the next measure's first note
-     *  has a syllable + dash glyph right at its start — the usual measure-end buffer doesn't apply.
-     *  Set to 0 for maximum cross-measure clearance (no reduction), or up to
-     *  LyricsXPaddingReductionForLastNoteInMeasure for the same reduction as a normal last note.
-     *  Default 1.0 (regular note 1.2). */
-    public LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord: number;
     public VerticalBetweenLyricsDistance: number;
     public HorizontalBetweenLyricsDistance: number;
     public BetweenSyllableMaximumDistance: number;
@@ -485,6 +480,8 @@ export class EngravingRules {
     public DefaultFontFamily: string;
     public DefaultFontStyle: FontStyles;
     public DefaultVexFlowNoteFont: string;
+    /** How to embed music fonts in SVG export: "import" (CDN @import, default), "inline" (data URI), or "none" (no font embedding). */
+    public SVGFontEmbedding: "import" | "inline" | "none";
     public MaxMeasureToDrawIndex: number;
     /** The setting given in osmd.setOptions(), which may lead to a different index if there's a pickup measure. */
     public MaxMeasureToDrawNumber: number;
@@ -730,6 +727,7 @@ export class EngravingRules {
         this.GraceNoteScalingFactor = 0.6;
         this.GraceNoteXOffset = 0.2;
         this.GraceNoteGroupXMargin = 0.0; // More than 0 leads to too much space in most cases.
+        this.GraceNoteExtraSpacing = 1.5;  // OSMD units per grace note, prevents collision with preceding notes
         //  see test_end_clef_measure. only potential 'tight' case: test_graceslash_simple
 
         // Wedge Variables
@@ -888,9 +886,6 @@ export class EngravingRules {
         this.LyricsXPaddingReductionForLongNotes = 0.7;
         this.LyricsXPaddingReductionForLastNoteInMeasure = 1.2;
         this.LyricsXPaddingForLastNoteInMeasure = true;
-        this.LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord = 1.0;
-        // 1.0 avoids too much padding/measure width e.g. in Schubert measure 9 end, Mozart Veilchen measure 18 and 19 end
-
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
@@ -959,8 +954,8 @@ export class EngravingRules {
         this.SheetMaximumWidth = 32767;
 
         // xSpacing Variables
-        this.VoiceSpacingMultiplierVexflow = 0.85;
-        this.VoiceSpacingAddendVexflow = 3.0;
+        this.VoiceSpacingMultiplierVexflow = 0.65;
+        this.VoiceSpacingAddendVexflow = 1.7;
         this.PickupMeasureWidthMultiplier = 1.0;
         this.PickupMeasureRepetitionSpacing = 0.8;
         this.PickupMeasureSpacingSingleNoteAddend = 1.6;
@@ -972,7 +967,7 @@ export class EngravingRules {
         this.MetronomeMarksDrawn = true;
         this.MetronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.MetronomeMarkYShift = -1.0; // note this is correlated with TempoYSpacing: one-sided change can cause collisions
-        this.SoftmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
+        this.SoftmaxFactorVexFlow = 9; // Vexflow 5 default is 10. Slightly higher for better grace note spacing.
         // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
         // if too low, smaller notes aren't positioned correctly.
         this.StaggerSameWholeNotes = true;
@@ -996,6 +991,7 @@ export class EngravingRules {
         this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.DefaultFontStyle = FontStyles.Regular;
         this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
+        this.SVGFontEmbedding = "import";
         this.MaxMeasureToDrawIndex = Number.MAX_VALUE;
         this.MaxMeasureToDrawNumber = Number.MAX_VALUE;
         this.MinMeasureToDrawIndex = 0;

@@ -29,7 +29,7 @@ describe("VexFlow Measure - Dotted Unison Alignment", () => {
 
    // x-shift applied to a note's notehead within its ModifierContext.
    function xShift(gve: VexFlowVoiceEntry): number {
-      return (gve.vfStaveNote as unknown as { x_shift: number }).x_shift;
+      return (gve.vfStaveNote as unknown as { xShift: number }).xShift;
    }
 
    function voiceEntriesAt(measure: VexFlowMeasure, timestampRealValue: number): VexFlowVoiceEntry[] {

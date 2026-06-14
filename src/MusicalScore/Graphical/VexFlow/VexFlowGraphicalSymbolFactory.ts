@@ -1,5 +1,5 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
+
 import {IGraphicalSymbolFactory} from "../../Interfaces/IGraphicalSymbolFactory";
 import {MusicSystem} from "../MusicSystem";
 import {VexFlowMusicSystem} from "./VexFlowMusicSystem";

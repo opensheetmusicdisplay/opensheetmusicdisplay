@@ -524,9 +524,18 @@ export class GeometricSkyBottomLineContext {
         this.currentLineWidth = width;
     }
 
-    public setFont(family: string, size: number, weight: string|number): GeometricSkyBottomLineContext {
-        // same format as VexFlow's CanvasContext.setFont():
-        this.currentFont = (weight || "") + " " + size + "pt " + family;
+    public setFont(f?: string | Record<string, any>, size?: number, weight?: string | number): GeometricSkyBottomLineContext {
+        // Handle VF5 FontInfo object (e.g. {family, size, weight, style})
+        if (typeof f === "object" && f !== null) {
+            const fi: any = f;
+            const family: string = fi.family || "";
+            const sz: number = typeof fi.size === "number" ? fi.size : parseInt(String(fi.size), 10) || 10;
+            const wt: string = fi.weight && fi.weight !== "normal" ? String(fi.weight) + " " : "";
+            this.currentFont = wt + sz + "pt " + family;
+            return this;
+        }
+        // Handle VF4-style (family: string, size: number, weight?: string|number)
+        this.currentFont = (weight || "") + " " + (size ?? 10) + "pt " + (f || "Arial");
         return this;
     }
 
@@ -550,6 +559,18 @@ export class GeometricSkyBottomLineContext {
     public clear(): void {
         this.minY.fill(Number.POSITIVE_INFINITY, 0, this.width);
         this.maxY.fill(Number.NEGATIVE_INFINITY, 0, this.width);
+    }
+
+    public pointerRect(x: number, y: number, width: number, height: number): this {
+        return this; // no-op: pointer regions are irrelevant for skyline/bottomline extents
+    }
+
+    public openRotation(angleDegrees: number, x: number, y: number): void {
+        // no-op: rotation for stroke decorations (arpeggios, rolls) doesn't affect extents
+    }
+
+    public closeRotation(): void {
+        // no-op
     }
 
     public openGroup(cls?: string, id?: string, attrs?: object): undefined {
