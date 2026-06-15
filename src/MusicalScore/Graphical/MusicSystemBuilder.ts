@@ -1113,7 +1113,7 @@ export class MusicSystemBuilder {
                     for (let i: number = 0; i < sysMeasureCount; i++) {
                         const proportion: number = targets[i] / totalTarget;
                         const idealVarWidth: number = totalVarWidth * proportion;
-                        const clamped: number = Math.max(minSEWs[i], Math.min(minSEWs[i] * 2.0, idealVarWidth));
+                        const clamped: number = Math.max(minSEWs[i], idealVarWidth);
                         measureFactors[i] = clamped / Math.max(minSEWs[i], 0.01);
                     }
                 } else {
@@ -1122,8 +1122,6 @@ export class MusicSystemBuilder {
                     for (let i: number = 0; i < sysMeasureCount; i++) {
                         const extra: number = remaining * (targets[i] / totalTarget);
                         let varWidth: number = effectiveMins[i] + extra;
-                        // Soft cap: don't exceed 2x the original minSEW
-                        varWidth = Math.min(varWidth, minSEWs[i] * 2.0);
                         // Hard floor: never below actual minSEW
                         varWidth = Math.max(varWidth, minSEWs[i]);
                         measureFactors[i] = varWidth / Math.max(minSEWs[i], 0.01);
@@ -1155,6 +1153,14 @@ export class MusicSystemBuilder {
                                 measureFactors[i] = 1.0 + aboveOne * shrinkRatio;
                             }
                         }
+                    }
+                } else if (sumVarWidth < totalVarWidth - 0.0001) {
+                    // Total is smaller than available width (e.g. few measures in a wide
+                    // system were capped below their proportional share). Scale all factors
+                    // up uniformly to fill the system.
+                    const growRatio: number = totalVarWidth / Math.max(sumVarWidth, 0.01);
+                    for (let i: number = 0; i < sysMeasureCount; i++) {
+                        measureFactors[i] *= growRatio;
                     }
                 }
             }
