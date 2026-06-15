@@ -1944,13 +1944,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
             if (this.hasMetronomeMark) { break; }
         }
 
-        // Update skyline so other above-staff elements (lyrics, expressions)
-        // can stack below the metronome mark. Mirrors createMetronomeMark().
-        const skyline: number[] | undefined = this.ParentStaffLine?.SkyLine;
-        if (skyline) {
-            skyline[0] = Math.min(skyline[0], -4.5 + yShift);
-        }
-
         // Only add width that exceeds the space already reserved by begin
         // instructions (clef, key sig, time sig). Metronome marks sit ABOVE
         // the stave and don't need extra horizontal space if they fit within

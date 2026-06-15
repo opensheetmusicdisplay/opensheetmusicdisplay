@@ -1024,13 +1024,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       this.graphicalMusicSheet.findGraphicalMeasureByMeasureNumber(measureNumber, staffNumber) as VexFlowMeasure;
     const firstMetronomeMark: boolean = vfMeasure === this.graphicalMusicSheet.MeasureList[0][0];
     // const vfMeasure: VexFlowMeasure = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure);
-    if (vfMeasure.hasMetronomeMark) {
-      return; // don't create more than one metronome mark per measure;
-      // TODO some measures still seem to have two metronome marks, one less bold than the other (or not bold),
-      //   might be because of both <sound> node and <per-minute> node (within <metronome>) creating metronome marks
-    }
-    const vfStave: VF.Stave = vfMeasure.getVFStave();
-
+    // Compute yShift and update skyline BEFORE the hasMetronomeMark guard.
+    // The StaveTempo may have already been created by addMetronomeMarksToStave()
+    // during buildMusicSystems, but the skyline was not yet populated then.
+    // Now during calculateTempoExpressions the skyline exists, so we must
+    // apply the skyline contribution even when the StaveTempo already exists.
     let yShift: number = this.rules.MetronomeMarkYShift;
     let hasExpressionsAboveStaffline: boolean = false;
     for (const expression of metronomeExpression.parentMeasure.TempoExpressions) {
@@ -1043,14 +1041,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     if (hasExpressionsAboveStaffline) {
       yShift -= 1.4;
-      // TODO improve this with proper skyline / collision detection. unfortunately we don't have a skyline here yet.
-      // let maxSkylineBeginning: number = 0;
-      // for (let i = 0; i < skyline.length / 1; i++) { // search in first 3rd, disregard end of measure
-      //   maxSkylineBeginning = Math.max(skyline[i], maxSkylineBeginning);
-      // }
-      // console.log('max skyline: ' + maxSkylineBeginning);
     }
     const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine?.SkyLine;
+    if (skyline) {
+      // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
+      skyline[0] = Math.min(skyline[0], -4.5 + yShift);
+    }
+
+    if (vfMeasure.hasMetronomeMark) {
+      return; // don't create more than one metronome mark per measure;
+      // TODO some measures still seem to have two metronome marks, one less bold than the other (or not bold),
+      //   might be because of both <sound> node and <per-minute> node (within <metronome>) creating metronome marks
+    }
+    const vfStave: VF.Stave = vfMeasure.getVFStave();
 
     if (metronomeExpression.metronomeNoteGroupLeft && metronomeExpression.metronomeNoteGroupRight) {
       // Complex metronome mark (note equation, e.g. swing notation)
@@ -1081,10 +1084,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     );
     vfMeasure.hasMetronomeMark = true;
     vfMeasure.updateInstructionWidth();
-    if (skyline) {
-      // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
-      skyline[0] = Math.min(skyline[0], -4.5 + yShift);
-    }
     // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
   }
 
