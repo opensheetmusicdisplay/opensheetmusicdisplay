@@ -1919,7 +1919,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const tempo: VF.StaveModifier = mods[mods.length - 1];
                 totalMetronomeWidth += (tempo.getWidth() - (tempo as any).xShift) / unitInPixels;
                 this.hasMetronomeMark = true;
+                break;
             }
+            if (this.hasMetronomeMark) { break; }
         }
         // Only add width that exceeds the space already reserved by begin
         // instructions (clef, key sig, time sig). Metronome marks sit ABOVE

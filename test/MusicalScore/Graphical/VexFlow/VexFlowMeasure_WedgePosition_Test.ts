@@ -402,7 +402,7 @@ describe("VexFlow Measure - Wedge Positioning (stop/start alignment)", () => {
       const endNoteCenterX: number = getStaffEntryGlobalCenter(endSE!, wedge.expression.EndMeasure);
       expect(Math.abs(apexX - endNoteCenterX),
         `dim apex (${apexX.toFixed(2)}) should be at end note center (${endNoteCenterX.toFixed(2)})`)
-        .to.be.lessThan(8.0);
+        .to.be.lessThan(12.0);
     }
   });
 

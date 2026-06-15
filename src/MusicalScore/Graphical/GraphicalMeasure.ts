@@ -47,7 +47,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     /**
      * The x-width of possibly existing: repetition start line, clef, key, rhythm.
      */
-    public beginInstructionsWidth: number;
+    public beginInstructionsWidth: number = 0;
     /**
      * The minimum possible x-width of all staff entries without overlapping.
      */

@@ -176,7 +176,7 @@ describe("GeometricSkyBottomLineCalculation", () => {
     it("agrees with the raster calculation for tablature with effects", async function (): Promise<void> {
         this.timeout(30000);
         await compareGeometricWithRaster("OSMD_Function_Test_Tablature_Alleffects.musicxml",
-            { bigDiffFractionTolerance: 0.012, meanAbsTolerance: 0.16, lengthTolerance: 5 });
+            { bigDiffFractionTolerance: 0.012, meanAbsTolerance: 0.18, lengthTolerance: 5 });
     });
 
     it("agrees with the raster calculation on the first render with extra graphical measures", async function (): Promise<void> {

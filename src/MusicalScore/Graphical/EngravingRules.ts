@@ -957,8 +957,8 @@ export class EngravingRules {
         this.SheetMaximumWidth = 32767;
 
         // xSpacing Variables
-        this.VoiceSpacingMultiplierVexflow = 0.65;
-        this.VoiceSpacingAddendVexflow = 1.7;
+        this.VoiceSpacingMultiplierVexflow = 0.75;
+        this.VoiceSpacingAddendVexflow = 2.0;
         this.PickupMeasureWidthMultiplier = 1.0;
         this.PickupMeasureRepetitionSpacing = 0.8;
         this.PickupMeasureSpacingSingleNoteAddend = 1.6;

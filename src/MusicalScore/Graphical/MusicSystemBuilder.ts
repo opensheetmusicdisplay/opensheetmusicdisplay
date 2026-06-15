@@ -114,7 +114,8 @@ export class MusicSystemBuilder {
             // Add StaveTempo to the VF stave (for rendering) and account for its
             // width in begin instructions so measures are wide enough to prevent overlap.
             if ((graphicalMeasures[0] as any).addMetronomeMarksToStave) {
-                currentMeasureBeginInstructionsWidth += (graphicalMeasures[0] as any).addMetronomeMarksToStave();
+                const added: number = (graphicalMeasures[0] as any).addMetronomeMarksToStave();
+                currentMeasureBeginInstructionsWidth += added;
             }
             let currentMeasureVarWidth: number = 0;
             for (let i: number = 0; i < this.numberOfVisibleStaffLines; i++) {
