@@ -34,44 +34,6 @@ import { TemposCalculator } from "../MusicalScore/ScoreIO/MusicSymbolModules/Tem
  * It can display MusicXML sheet music files in an HTML element container.<br>
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
-/** Options for {@link OpenSheetMusicDisplay.renderNext} (incremental, "system by system" rendering). */
-export interface IRenderNextOptions {
-    /** Target number of visual measures to advance per batch (a multi-rest counts as ONE -- it renders as a
-     *  single GraphicalMeasure). Defaults to 8. This is a TARGET, not an exact count: a batch always ends on a
-     *  whole music-system (line) boundary, so the system the measure count lands inside is deferred to the next
-     *  batch (and a batch always renders at least one whole system). The measures actually drawn may therefore
-     *  be somewhat fewer or more than this -- e.g. 8 lands part-way into a system, so only the complete systems
-     *  before it are drawn; or if 8 doesn't fill one system, the layout extends until one whole system is ready.
-     *  To see what was actually rendered, read the returned {@link IRenderNextResult}: `renderedMeasures` (total
-     *  visual measures drawn so far, cumulative) and `lastRenderedMeasure` (the GraphicalMeasures at the last
-     *  drawn measure position). Ignored when `systems` is set (and applicable). */
-    measures?: number;
-    /** How many whole music systems (lines) to render in this batch, instead of advancing by `measures`.
-     *  Each batch then ends exactly on a system boundary. Takes precedence over `measures` when > 0.
-     *  VERTICAL ONLY: a single horizontal staffline (RenderSingleHorizontalStaffline) is one system, so
-     *  `systems` is ignored there and rendering falls back to `measures`. */
-    systems?: number;
-}
-
-/** Progress returned by {@link OpenSheetMusicDisplay.renderNext}. Measure counts are visual (a multi-rest
- *  counts as one). */
-export interface IRenderNextResult {
-    /** True once the last measure of the sheet has been rendered -- no more batches remain. */
-    done: boolean;
-    /** Visual measures rendered so far, cumulative across batches. */
-    renderedMeasures: number;
-    /** Total visual measures in the sheet. */
-    totalMeasures: number;
-    /** The last measure position rendered so far (highest measure index): all its GraphicalMeasures, one per
-     *  staff/instrument (e.g. 3 for a voice + piano score). Empty if nothing has been rendered yet. They
-     *  share one source measure -- reach it and its number/index via any element's `.parentSourceMeasure` and
-     *  `.parentSourceMeasure.measureListIndex` (0-based). */
-    lastRenderedMeasure: GraphicalMeasure[];
-    /** The next measure position not yet rendered (the frontier): all its GraphicalMeasures (one per staff),
-     *  or empty once `done`. Same `.parentSourceMeasure` / `.parentSourceMeasure.measureListIndex` accessors. */
-    nextUnrenderedMeasure: GraphicalMeasure[];
-}
-
 export class OpenSheetMusicDisplay {
     protected version: string = "1.9.9-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
@@ -1752,4 +1714,42 @@ export class OpenSheetMusicDisplay {
         return this.version;
     }
     //#endregion
+}
+
+/** Options for {@link OpenSheetMusicDisplay.renderNext} (incremental, "system by system" rendering). */
+export interface IRenderNextOptions {
+    /** Target number of visual measures to advance per batch (a multi-rest counts as ONE -- it renders as a
+     *  single GraphicalMeasure). Defaults to 8. This is a TARGET, not an exact count: a batch always ends on a
+     *  whole music-system (line) boundary, so the system the measure count lands inside is deferred to the next
+     *  batch (and a batch always renders at least one whole system). The measures actually drawn may therefore
+     *  be somewhat fewer or more than this -- e.g. 8 lands part-way into a system, so only the complete systems
+     *  before it are drawn; or if 8 doesn't fill one system, the layout extends until one whole system is ready.
+     *  To see what was actually rendered, read the returned {@link IRenderNextResult}: `renderedMeasures` (total
+     *  visual measures drawn so far, cumulative) and `lastRenderedMeasure` (the GraphicalMeasures at the last
+     *  drawn measure position). Ignored when `systems` is set (and applicable). */
+    measures?: number;
+    /** How many whole music systems (lines) to render in this batch, instead of advancing by `measures`.
+     *  Each batch then ends exactly on a system boundary. Takes precedence over `measures` when > 0.
+     *  VERTICAL ONLY: a single horizontal staffline (RenderSingleHorizontalStaffline) is one system, so
+     *  `systems` is ignored there and rendering falls back to `measures`. */
+    systems?: number;
+}
+
+/** Progress returned by {@link OpenSheetMusicDisplay.renderNext}. Measure counts are visual (a multi-rest
+ *  counts as one). */
+export interface IRenderNextResult {
+    /** True once the last measure of the sheet has been rendered -- no more batches remain. */
+    done: boolean;
+    /** Visual measures rendered so far, cumulative across batches. */
+    renderedMeasures: number;
+    /** Total visual measures in the sheet. */
+    totalMeasures: number;
+    /** The last measure position rendered so far (highest measure index): all its GraphicalMeasures, one per
+     *  staff/instrument (e.g. 3 for a voice + piano score). Empty if nothing has been rendered yet. They
+     *  share one source measure -- reach it and its number/index via any element's `.parentSourceMeasure` and
+     *  `.parentSourceMeasure.measureListIndex` (0-based). */
+    lastRenderedMeasure: GraphicalMeasure[];
+    /** The next measure position not yet rendered (the frontier): all its GraphicalMeasures (one per staff),
+     *  or empty once `done`. Same `.parentSourceMeasure` / `.parentSourceMeasure.measureListIndex` accessors. */
+    nextUnrenderedMeasure: GraphicalMeasure[];
 }
