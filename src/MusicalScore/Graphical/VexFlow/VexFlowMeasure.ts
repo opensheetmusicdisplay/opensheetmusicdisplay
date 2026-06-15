@@ -1884,18 +1884,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     /**
-     * Add StaveTempo modifiers to the VF stave and return the total width
-     * they add to beginInstructionsWidth so measures are wide enough to
-     * prevent overlap. StaveTempo sits ABOVE the stave — it does NOT affect
-     * noteStartX, so rests stay centered in the musical content area.
-     * Called during buildMusicSystems; calculateTempoExpressions later sees
-     * hasMetronomeMark=true and skips, so no duplicates.
+     * Add StaveTempo modifiers to the VF stave. Does not return any width
+     * because StaveTempo sits ABOVE the stave and does not need horizontal
+     * space within the measure. Called during buildMusicSystems;
+     * calculateTempoExpressions later sees hasMetronomeMark=true and skips.
      */
     public addMetronomeMarksToStave(): number {
         if (this.hasMetronomeMark) { return 0; }
         const sourceMeasure: SourceMeasure | undefined = this.parentSourceMeasure;
         if (!sourceMeasure) { return 0; }
-        let addedWidth: number = 0;
         for (const multiTempoExpression of sourceMeasure.TempoExpressions) {
             for (const entry of multiTempoExpression.EntriesList) {
                 const expr: any = entry.Expression;
@@ -1914,13 +1911,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     },
                     this.rules.MetronomeMarkYShift * unitInPixels,
                 );
-                const mods: VF.StaveModifier[] = this.stave.getModifiers();
-                const tempo: VF.StaveModifier = mods[mods.length - 1];
-                addedWidth += (tempo.getWidth() + tempo.getPadding(undefined)) / unitInPixels;
                 this.hasMetronomeMark = true;
             }
         }
-        return addedWidth;
+        return 0;
     }
 
     /**
