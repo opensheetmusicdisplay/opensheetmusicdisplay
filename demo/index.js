@@ -94,6 +94,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         nextCursorBtn,
         resetCursorBtn,
         followCursorCheckbox,
+        incrementalCheckbox,
         showCursorBtn,
         hideCursorBtn,
         debugReRenderBtn,
@@ -233,6 +234,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         nextCursorBtn = document.getElementById("next-cursor-btn");
         resetCursorBtn = document.getElementById("reset-cursor-btn");
         followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
+        incrementalCheckbox = document.getElementById("incremental-checkbox");
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
         debugReRenderBtn = document.getElementById("debug-re-render-btn");
@@ -614,6 +616,11 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 openSheetMusicDisplay.FollowCursor = !openSheetMusicDisplay.FollowCursor;
             }
         }
+        if (incrementalCheckbox) {
+            incrementalCheckbox.onchange = function () {
+                renderAndScrollBack(); // re-render in the newly selected mode (incremental on, full off)
+            }
+        }
         hideCursorBtn.addEventListener("click", function () {
             if (openSheetMusicDisplay.cursor) {
                 openSheetMusicDisplay.cursor.hide();
@@ -667,6 +674,14 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
      * If you just call render() instead of renderAndScrollBack(),
      *   it will scroll you back to the top of the page, even if you were scrolled to the bottom before. */
     function renderAndScrollBack() {
+        if (incrementalCheckbox && incrementalCheckbox.checked) {
+            // Incremental ("system by system") rendering: paint the first batch now and append more as the
+            //   user scrolls toward the not-yet-rendered edge (page bottom, or the right edge for a single
+            //   horizontal staffline). Faster first paint on large scores. Re-entrant: render()/load()/resize
+            //   route back here and restart the session cleanly. A normal render() resets it (see OSMD).
+            openSheetMusicDisplay.enableIncrementalRenderingOnScroll();
+            return; // starts fresh at the top; nothing to scroll back to
+        }
         const previousScrollY = window.scrollY;
         const previousScrollHeight = document.body.scrollHeight; // height of page
         const previousScrollYPercent = previousScrollY / previousScrollHeight;
@@ -1024,6 +1039,9 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
      *   rendering issues with unicode and transparency).
      */
     async function createPdf(pdfName, scale, exportMode) {
+        // If an incremental render is mid-flight, finish it first: PDF export reads the backend SVG, which
+        //   otherwise only holds the batches scrolled into view so far. No-op for a normal/complete render.
+        openSheetMusicDisplay.renderRemaining();
         if (scale === undefined) {
             scale = 2;
         }

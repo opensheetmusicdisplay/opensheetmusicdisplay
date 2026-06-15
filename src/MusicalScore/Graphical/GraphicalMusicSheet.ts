@@ -1015,8 +1015,13 @@ export class GraphicalMusicSheet {
             const nextSystemLeftBorderTimeStamp: number = nextStaffEntry.parentMeasure.parentSourceMeasure.AbsoluteTimestamp.RealValue;
             let fraction: number;
             let interpolatedXPosition: number;
-            if (currentTimeStamp < nextSystemLeftBorderTimeStamp && previousStaffEntryMusicSystem.StaffLines[0]) {
-                // previousStaffEntryMusicSystem.StaffLines[0]: fix for drawing range set (previous system not rendered)
+            // .StaffLines[0] guards: a MusicSystem can be present in the graphic but not rendered (empty
+            //   StaffLines) when a draw range is set or under lazy rendering (and transiently mid-relayout),
+            //   in which case GetLeft/RightBorderAbsoluteXPosition would dereference an undefined StaffLines[0].
+            //   Position the cursor in whichever of the two systems is actually rendered.
+            if ((currentTimeStamp < nextSystemLeftBorderTimeStamp || !nextStaffEntryMusicSystem.StaffLines[0])
+                && previousStaffEntryMusicSystem.StaffLines[0]) {
+                // previous (rendered) system; clamps to its right border once the timestamp reaches the next system
                 currentMusicSystem = previousStaffEntryMusicSystem;
                 const previousStaffEntryPositionX: number = previousStaffEntry.PositionAndShape.AbsolutePosition.x;
                 const previousSystemRightBorderX: number = currentMusicSystem.GetRightBorderAbsoluteXPosition();
@@ -1024,7 +1029,8 @@ export class GraphicalMusicSheet {
                     (nextSystemLeftBorderTimeStamp - previousStaffEntry.getAbsoluteTimestamp().RealValue);
                 fraction = Math.min(1, Math.max(0, fraction));
                 interpolatedXPosition = previousStaffEntryPositionX + fraction * (previousSystemRightBorderX - previousStaffEntryPositionX);
-            } else {
+            } else if (nextStaffEntryMusicSystem.StaffLines[0]) {
+                // next (rendered) system
                 currentMusicSystem = nextStaffEntryMusicSystem;
                 const nextStaffEntryPositionX: number = nextStaffEntry.PositionAndShape.AbsolutePosition.x;
                 const nextSystemLeftBorderX: number = currentMusicSystem.GetLeftBorderAbsoluteXPosition();
@@ -1032,6 +1038,12 @@ export class GraphicalMusicSheet {
                     (nextStaffEntry.getAbsoluteTimestamp().RealValue - nextSystemLeftBorderTimeStamp);
                 fraction = Math.min(1, Math.max(0, fraction));
                 interpolatedXPosition = nextSystemLeftBorderX + fraction * (nextStaffEntryPositionX - nextSystemLeftBorderX);
+            } else {
+                // Neither system is rendered (timestamp outside the lazily-rendered range): no on-screen
+                //   position -- fall back to the previous staff entry's own x without crashing. The cursor's
+                //   caller positions harmlessly and a later render repositions it once the system is drawn.
+                currentMusicSystem = previousStaffEntryMusicSystem;
+                interpolatedXPosition = previousStaffEntry.PositionAndShape.AbsolutePosition.x;
             }
             return [interpolatedXPosition, currentMusicSystem];
         }

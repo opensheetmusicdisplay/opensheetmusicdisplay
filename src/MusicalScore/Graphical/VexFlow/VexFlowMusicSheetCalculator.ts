@@ -2005,7 +2005,57 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected calculateSkyBottomLines(): void {
-    const staffLines: StaffLine[] = CollectionUtil.flat(this.musicSystems.map(musicSystem => musicSystem.StaffLines));
+    const allStaffLines: StaffLine[] = CollectionUtil.flat(this.musicSystems.map(musicSystem => musicSystem.StaffLines));
+
+    // Lazy rendering: reuse the sky/bottom lines of stable interior systems computed in an
+    // earlier growing-prefix batch, and only (re)compute the rest. The skyline pass is the dominant layout
+    // cost; on a big score this turns the per-batch O(prefix) re-measure into O(new systems). The FIRST
+    // system and the LAST system of the prefix are never cached/reused: empirically their lines change as
+    // the prefix grows (first system) or as the last, unstretched system later becomes stretched/interior.
+    // Only the geometric skyline path's side effects are replayable for reuse (see
+    // SkyBottomLineCalculator.applyGeometricSkylineSideEffectsOnly); the raster path computes everything.
+    const lazyCache: boolean = this.rules.LazyConsistentGraphic && this.rules.UseGeometricSkyBottomLineCalculation;
+    const staffLinesToCompute: StaffLine[] = lazyCache ? [] : allStaffLines;
+    const toCache: { key: string, staffLine: StaffLine }[] = [];
+    if (lazyCache) {
+      const lastSystemIndex: number = this.musicSystems.length - 1;
+      for (let si: number = 0; si < this.musicSystems.length; si++) {
+        const cacheable: boolean = si !== 0 && si !== lastSystemIndex;
+        const systemStaffLines: StaffLine[] = this.musicSystems[si].StaffLines;
+        for (let li: number = 0; li < systemStaffLines.length; li++) {
+          const staffLine: StaffLine = systemStaffLines[li];
+          const key: string = this.skyBottomLineCacheKey(staffLine, li);
+          const cached: { sky: number[], bottom: number[] } = key ? this.skyBottomLineCache.get(key) : undefined;
+          if (cached) {
+            // Replay the skyline calc's per-measure side effects (the VexFlow formatter is not idempotent,
+            // so skipping them would shift later passes by ~1px), then reuse the verified byte-identical
+            // cached lines instead of re-measuring extents (the expensive part).
+            staffLine.SkyBottomLineCalculator.applyGeometricSkylineSideEffectsOnly();
+            staffLine.SkyBottomLineCalculator.setLinesDirectly(cached.sky.slice(), cached.bottom.slice());
+          } else {
+            staffLinesToCompute.push(staffLine);
+            if (cacheable && key) {
+              toCache.push({ key, staffLine });
+            }
+          }
+        }
+      }
+    }
+
+    this.computeSkyBottomLinesFor(staffLinesToCompute);
+
+    for (const entry of toCache) {
+      this.skyBottomLineCache.set(entry.key, { sky: entry.staffLine.SkyLine.slice(), bottom: entry.staffLine.BottomLine.slice() });
+    }
+  }
+
+  /** Compute (not reuse) the sky/bottom lines for the given staff lines: geometric, or the batched /
+   *  per-staff-line path. This is the original calculateSkyBottomLines body, extracted so the lazy reuse
+   *  path can feed it just the staff lines that actually need computing. */
+  private computeSkyBottomLinesFor(staffLines: StaffLine[]): void {
+    if (staffLines.length === 0) {
+      return;
+    }
     if (this.rules.UseGeometricSkyBottomLineCalculation) {
       // geometric calculation doesn't need batching: no canvas allocation or pixel readback (getImageData) is involved
       for (const staffLine of staffLines) {
@@ -2013,7 +2063,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       return;
     }
-    //const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
     let numMeasures: number = 0; // number of graphical measures that are rendered
     for (const staffline of staffLines) {
       for (const measure of staffline.Measures) {

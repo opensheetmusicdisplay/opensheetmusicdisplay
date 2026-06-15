@@ -505,6 +505,10 @@ export class EngravingRules {
     public RenderCopyright: boolean;
     public RenderPartNames: boolean;
     public RenderPartAbbreviations: boolean;
+    /** Internal cache-gate for lazy (renderAppend) rendering: when true, the lazy reuse caches (skyline)
+     *  are active. Set by OpenSheetMusicDisplay.renderAppend() and forced false by a normal render(), so
+     *  the caches never affect a non-lazy render. Not a user toggle. */
+    public LazyConsistentGraphic: boolean;
     /** Whether two render system labels on page 2+. This doesn't affect the default endless PageFormat. */
     public RenderSystemLabelsAfterFirstPage: boolean;
     public RenderFingerings: boolean;
@@ -1009,6 +1013,7 @@ export class EngravingRules {
         this.RenderCopyright = false;
         this.RenderPartNames = true;
         this.RenderPartAbbreviations = true;
+        this.LazyConsistentGraphic = false;
         this.RenderSystemLabelsAfterFirstPage = true;
         this.RenderFingerings = true;
         this.RenderMeasureNumbers = true;

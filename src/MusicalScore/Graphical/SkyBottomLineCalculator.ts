@@ -225,39 +225,10 @@ export class SkyBottomLineCalculator {
             new GeometricSkyBottomLineContext(0, 300, this.mRules.GeometricSkyBottomLineCaches);
         // search through all Measures
         for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
-            // must calculate first AbsolutePositions
-            measure.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
-
-            const vsStaff: any = measure.getVFStave();
-            let width: number = vsStaff.getWidth();
-            if (!(width > 0) && !measure.IsExtraGraphicalMeasure) {
-                log.warn("SkyBottomLineCalculator: width not > 0 in measure " + measure.MeasureNumber);
-                width = 50;
-            }
-            // Mirror the raster method's "canvas.width = width" coercion (HTMLCanvasElement reflection)
-            // for identical results, including its quirks: fractional widths truncate, and negative widths
-            // (which occur for some extra graphical measures, see test_octaveshift_extragraphicalmeasure)
-            // fall back to the default canvas width of 300, so such measures contribute the same
-            // (drawn) entries to the skyline as on the raster path instead of a single empty one.
-            width = Math.trunc(width);
-            if (!isFinite(width)) {
-                width = 0;
-            } else if (width < 0) {
-                width = 300;
-            }
+            // Prepare the measure (normalize positions, format at the skyline-canvas width). Extracted so
+            // the lazy skyline reuse can replay these exact side effects without re-measuring extents.
+            const width: number = this.prepareMeasureForGeometricSkyline(measure);
             geometricContext.initialize(width);
-
-            // This magic number is an offset from the top image border so that
-            // elements above the staffline can be drawn correctly.
-            // (Kept from the raster method for identical side effects. The stave position is set again by the drawer later.)
-            vsStaff.setY(vsStaff.y + 100);
-            const oldMeasureWidth: number = vsStaff.getWidth();
-            // We need to tell the VexFlow stave about the canvas width. This looks
-            // redundant because it should know the canvas but somehow it doesn't.
-            // Maybe I am overlooking something but for now this does the trick
-            vsStaff.setWidth(width);
-            measure.format();
-            vsStaff.setWidth(oldMeasureWidth);
             try {
                 measure.draw(geometricContext as any);
                 // Vexflow errors can happen here, then our complete rendering loop would halt without catching errors.
@@ -286,6 +257,63 @@ export class SkyBottomLineCalculator {
         }
 
         this.updateLines(results);
+    }
+
+    /** The per-measure side effects the geometric skyline calc applies before measuring extents: normalize
+     *  absolute positions, bump the stave Y, and format the measure at the truncated skyline-canvas width.
+     *  Later layout passes read this state (the VexFlow formatter is not idempotent), so the lazy skyline
+     *  reuse must replay it via applyGeometricSkylineSideEffectsOnly. Returns the skyline-canvas width. */
+    private prepareMeasureForGeometricSkyline(measure: VexFlowMeasure): number {
+        // must calculate first AbsolutePositions
+        measure.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
+
+        const vsStaff: any = measure.getVFStave();
+        let width: number = vsStaff.getWidth();
+        if (!(width > 0) && !measure.IsExtraGraphicalMeasure) {
+            log.warn("SkyBottomLineCalculator: width not > 0 in measure " + measure.MeasureNumber);
+            width = 50;
+        }
+        // Mirror the raster method's "canvas.width = width" coercion (HTMLCanvasElement reflection)
+        // for identical results, including its quirks: fractional widths truncate, and negative widths
+        // (which occur for some extra graphical measures, see test_octaveshift_extragraphicalmeasure)
+        // fall back to the default canvas width of 300, so such measures contribute the same
+        // (drawn) entries to the skyline as on the raster path instead of a single empty one.
+        width = Math.trunc(width);
+        if (!isFinite(width)) {
+            width = 0;
+        } else if (width < 0) {
+            width = 300;
+        }
+
+        // This magic number is an offset from the top image border so that
+        // elements above the staffline can be drawn correctly.
+        // (Kept from the raster method for identical side effects. The stave position is set again by the drawer later.)
+        vsStaff.setY(vsStaff.y + 100);
+        const oldMeasureWidth: number = vsStaff.getWidth();
+        // We need to tell the VexFlow stave about the canvas width. This looks
+        // redundant because it should know the canvas but somehow it doesn't.
+        // Maybe I am overlooking something but for now this does the trick
+        vsStaff.setWidth(width);
+        measure.format();
+        vsStaff.setWidth(oldMeasureWidth);
+        return width;
+    }
+
+    /** Replay the geometric skyline calc's per-measure side effects WITHOUT the expensive extent
+     *  measurement, so lazy rendering can reuse cached sky/bottom lines while leaving the measures in the exact
+     *  state a normal render would. (calculateLinesGeometric does correctNotePositions inside measure.draw;
+     *  here we call it directly since the draw is skipped.) No-op for the non-default raster skyline path. */
+    public applyGeometricSkylineSideEffectsOnly(): void {
+        if (!this.mRules.UseGeometricSkyBottomLineCalculation) {
+            return;
+        }
+        for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
+            if (!measure) {
+                continue;
+            }
+            this.prepareMeasureForGeometricSkyline(measure);
+            measure.correctNotePositions();
+        }
     }
 
     public updateSkyLineWithLine(start: PointF2D, end: PointF2D, value: number): void {
@@ -452,6 +480,14 @@ export class SkyBottomLineCalculator {
      */
     public resetBottomLineInRange(startIndex: number, endIndex: number): void {
         this.setInRange(this.BottomLine, startIndex, endIndex);
+    }
+
+    /** Replace the sky- and bottom-line arrays directly (lazy rendering reuses the
+     *  previously-computed lines of stable interior systems instead of re-measuring them; see
+     *  VexFlowMusicSheetCalculator.calculateSkyBottomLines). */
+    public setLinesDirectly(skyLine: number[], bottomLine: number[]): void {
+        this.mSkyLine = skyLine;
+        this.mBottomLine = bottomLine;
     }
 
     /**

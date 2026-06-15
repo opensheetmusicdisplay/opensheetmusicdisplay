@@ -94,6 +94,11 @@ export abstract class MusicSheetCalculator {
     protected graphicalMusicSheet: GraphicalMusicSheet;
     protected rules: EngravingRules;
     protected musicSystems: MusicSystem[];
+    /** Lazy rendering: cache of computed sky/bottom lines, keyed per staff line by its system's
+     *  measure range + staff index. A growing-prefix batch re-runs the (expensive) skyline pass over the
+     *  whole prefix; this lets stable interior systems reuse the lines computed in an earlier batch instead
+     *  of re-measuring them. Only used when EngravingRules.LazyConsistentGraphic; cleared per lazy session. */
+    protected skyBottomLineCache: Map<string, { sky: number[], bottom: number[] }> = new Map();
 
     private abstractNotImplementedErrorMessage: string = "abstract, not implemented";
 
@@ -301,6 +306,24 @@ export abstract class MusicSheetCalculator {
         // transform Relative to Absolute Positions
         //This is called for each measure in calculate music systems (calculateLines -> calculateSkyBottomLines)
         GraphicalMusicSheet.transformRelativeToAbsolutePosition(this.graphicalMusicSheet);
+    }
+
+    /** Drop the lazy sky/bottom-line reuse cache (call when starting a fresh lazy session). */
+    public clearSkyBottomLineCache(): void {
+        this.skyBottomLineCache.clear();
+    }
+
+    /** Stable per-staff-line key for the lazy sky/bottom-line cache: the system's measure range pins the
+     *  system (systems partition the measures), the staff index picks the line within it. Returns undefined
+     *  for a staff line with no usable measures (so it is never cached/reused). */
+    protected skyBottomLineCacheKey(staffLine: StaffLine, staffIndexInSystem: number): string {
+        const measures: GraphicalMeasure[] = staffLine.Measures;
+        const first: GraphicalMeasure = measures[0];
+        const last: GraphicalMeasure = measures[measures.length - 1];
+        if (!first || !last) {
+            return undefined;
+        }
+        return first.MeasureNumber + ":" + last.MeasureNumber + ":" + staffIndexInSystem;
     }
 
     public calculateXLayout(graphicalMusicSheet: GraphicalMusicSheet, maxInstrNameLabelLength: number): void {
@@ -3700,6 +3723,8 @@ export abstract class MusicSheetCalculator {
             }
             // second Underscore in the endStaffLine until endStaffEntry (if endStaffEntry isn't the first StaffEntry of the StaffLine))
             if (endStaffEntry.parentMeasure.ParentStaffLine && endStaffEntry.parentMeasure.staffEntries &&
+                // the end staffline's first measure can be missing when it isn't laid out (e.g. a lazy/incremental render batch)
+                endStaffLine.Measures[0]?.staffEntries[0] &&
                 !(endStaffEntry === endStaffEntry.parentMeasure.staffEntries[0] &&
                 endStaffEntry.parentMeasure === endStaffEntry.parentMeasure.ParentStaffLine.Measures[0])) {
                 const secondStartX: number = endStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;
