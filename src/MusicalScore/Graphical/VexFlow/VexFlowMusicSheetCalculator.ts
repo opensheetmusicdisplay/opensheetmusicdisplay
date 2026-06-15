@@ -1129,9 +1129,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // Lift the rehearsal mark above whatever rises above the staff under it (high notes, an Above chord
       //   symbol, ...) so it doesn't overlap them, and reserve skyline space for the lifted mark (otherwise
       //   it can collide with the system above). The mark is a fixed-offset VexFlow StaveSection that isn't
-      //   part of the skyline, so without this it can sit right on top of tall notes (e.g. the high cymbal
-      //   notes of a drum stave). Only the Above chord symbol was previously considered here; now the notes
-      //   under the mark are too.
+      //   part of the skyline, so without this it can sit right on top of tall notes -- which happens in
+      //   normal rendering (e.g. high drum-stave notes) and in lazy/incremental rendering (the mark's measure can be
+      //   drawn at a slightly different x, over taller notes, than a normal render). Only the Above chord
+      //   symbol was previously considered here; now the notes under the mark are too.
       let minBottomY: number; // undefined -> no clamping in StaveSection.draw (VexFlowPatch)
       const staffLine: StaffLine = gMeasure.ParentStaffLine;
       if (staffLine) {
