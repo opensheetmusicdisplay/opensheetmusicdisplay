@@ -73,41 +73,31 @@ describe("VexFlow Measure - Metronome Mark Collision", () => {
 
     expect(tempoPositions.length, "should find 6 metronome marks").to.equal(6);
 
-    // StaveTempo floats above the stave — it doesn't need horizontal space in
-    // beginInstructionsWidth. M1 has clef+key sig+time sig (expected), M2+ should
-    // only have barline (~0.7 units).
-    for (const bw of beginWidths) {
-      if (bw.measure === 1) {
-        // M1: clef + key sig + time sig. Should NOT include metronome.
-        expect(
-          bw.beginInstructionsWidth,
-          `measure ${bw.measure} beginInstructionsWidth (${bw.beginInstructionsWidth.toFixed(2)}) ` +
-          "too large — StaveTempo should not inflate beginInstructionsWidth",
-        ).to.be.lessThan(10);
-      } else {
-        expect(
-          bw.beginInstructionsWidth,
-          `measure ${bw.measure} beginInstructionsWidth (${bw.beginInstructionsWidth.toFixed(2)}) ` +
-          "too large — StaveTempo should not inflate beginInstructionsWidth",
-        ).to.be.lessThan(2);
-      }
-    }
-
-    // Consecutive metronome marks may overlap the previous measure's content area
-    // (they float above the stave). Check they don't textually overlap each other.
+    // Each metronome mark's endX should not overlap the NEXT mark's startX
     for (let i: number = 1; i < tempoPositions.length; i++) {
       const prev: { measure: number, x: number, width: number, endX: number } = tempoPositions[i - 1];
       const curr: { measure: number, x: number, width: number, endX: number } = tempoPositions[i];
-      // Each metronome mark should not overlap the PREVIOUS metronome mark text.
-      // Tolerance: allow the mark to start before prev.endX but not before prev.x.
       expect(
         curr.x,
         `metronome mark m${curr.measure} (x=${curr.x.toFixed(2)}) ` +
-        `overlaps m${prev.measure} metronome text (prev endX=${prev.endX.toFixed(2)})`,
-      ).to.be.at.least(prev.x);
+        `should be after m${prev.measure} endX (${prev.endX.toFixed(2)})`,
+      ).to.be.at.least(prev.endX - 1);
+    }
+
+    // Each measure's beginInstructionsWidth must include the StaveTempo width.
+    // Without the fix, measures 2-6 had beginInstructionsWidth ~0.7 (only barline).
+    // With the fix, all measures should have beginInstructionsWidth > 1.
+    for (const bw of beginWidths) {
+      expect(
+        bw.beginInstructionsWidth,
+        `measure ${bw.measure} beginInstructionsWidth (${bw.beginInstructionsWidth.toFixed(2)}) ` +
+        "too small — StaveTempo width not counted in layout",
+      ).to.be.greaterThan(1);
     }
 
     // Rest centering: each measure's note area must be within the stave bounds.
+    // (Metronome marks fly ABOVE the stave — they may horizontally overlap
+    // the note area without issue. Only rests must not overflow right barline.)
     for (const area of measureAreas) {
       expect(
         area.noteStartX,
