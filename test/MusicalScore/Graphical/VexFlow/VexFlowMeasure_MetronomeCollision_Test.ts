@@ -16,7 +16,8 @@ describe("VexFlow Measure - Metronome Mark Collision", () => {
   });
 
   it("consecutive metronome marks should not overlap", () => {
-    const tempoPositions: Array<{ measure: number, x: number, width: number, endX: number }> = [];
+    // Collect tempo marks per system — cross-system overlap is fine (new line).
+    const systemTempoPositions: Array<Array<{ measure: number, x: number, width: number, endX: number }>> = [];
     const beginWidths: Array<{ measure: number, beginInstructionsWidth: number }> = [];
     const measureAreas: Array<{
       measure: number;
@@ -27,6 +28,7 @@ describe("VexFlow Measure - Metronome Mark Collision", () => {
 
     for (const page of osmd.GraphicSheet.MusicPages) {
       for (const system of page.MusicSystems) {
+        const sysTempi: Array<{ measure: number, x: number, width: number, endX: number }> = [];
         for (const staffLine of system.StaffLines) {
           for (const measure of staffLine.Measures) {
             if (!measure?.isVisible?.()) { continue; }
@@ -34,7 +36,6 @@ describe("VexFlow Measure - Metronome Mark Collision", () => {
             const vfStave: VF.Stave | undefined = vfMeasure.getVFStave?.();
             if (!vfStave) { continue; }
 
-            // Record beginInstructionsWidth for each measure
             const biw: number = vfMeasure.beginInstructionsWidth ?? 0;
             beginWidths.push({
               measure: measure.MeasureNumber,
@@ -45,14 +46,13 @@ describe("VexFlow Measure - Metronome Mark Collision", () => {
             const noteEndX: number = vfStave.getNoteEndX();
             const staveRightX: number = vfStave.getX() + vfStave.getWidth();
 
-            // Record StaveTempo positions
             const modifiers: VF.StaveModifier[] = vfStave.getModifiers();
             for (const mod of modifiers) {
               if (mod.getCategory() !== "StaveTempo") { continue; }
               const st: any = mod;
               const x: number = st.getX?.() ?? st.x ?? 0;
               const width: number = st.getWidth?.() ?? st.width ?? 0;
-              tempoPositions.push({
+              sysTempi.push({
                 measure: measure.MeasureNumber,
                 x,
                 width,
@@ -68,25 +68,31 @@ describe("VexFlow Measure - Metronome Mark Collision", () => {
             });
           }
         }
+        if (sysTempi.length > 0) {
+          systemTempoPositions.push(sysTempi);
+        }
       }
     }
 
-    expect(tempoPositions.length, "should find 6 metronome marks").to.equal(6);
+    // Total metronome marks across all systems
+    const allTempi: Array<{ measure: number, x: number, width: number, endX: number }> =
+      systemTempoPositions.flat();
+    expect(allTempi.length, "should find 6 metronome marks").to.equal(6);
 
-    // Each metronome mark's endX should not overlap the NEXT mark's startX
-    for (let i: number = 1; i < tempoPositions.length; i++) {
-      const prev: { measure: number, x: number, width: number, endX: number } = tempoPositions[i - 1];
-      const curr: { measure: number, x: number, width: number, endX: number } = tempoPositions[i];
-      expect(
-        curr.x,
-        `metronome mark m${curr.measure} (x=${curr.x.toFixed(2)}) ` +
-        `should be after m${prev.measure} endX (${prev.endX.toFixed(2)})`,
-      ).to.be.at.least(prev.endX - 1);
+    // Within each system, consecutive marks must not overlap
+    for (const sysTempi of systemTempoPositions) {
+      for (let i: number = 1; i < sysTempi.length; i++) {
+        const prev: { measure: number, x: number, width: number, endX: number } = sysTempi[i - 1];
+        const curr: { measure: number, x: number, width: number, endX: number } = sysTempi[i];
+        expect(
+          curr.x,
+          `metronome mark m${curr.measure} (x=${curr.x.toFixed(2)}) ` +
+          `should be after m${prev.measure} endX (${prev.endX.toFixed(2)})`,
+        ).to.be.at.least(prev.endX - 1);
+      }
     }
 
     // Each measure's beginInstructionsWidth must include the StaveTempo width.
-    // Without the fix, measures 2-6 had beginInstructionsWidth ~0.7 (only barline).
-    // With the fix, all measures should have beginInstructionsWidth > 1.
     for (const bw of beginWidths) {
       expect(
         bw.beginInstructionsWidth,
@@ -96,8 +102,6 @@ describe("VexFlow Measure - Metronome Mark Collision", () => {
     }
 
     // Rest centering: each measure's note area must be within the stave bounds.
-    // (Metronome marks fly ABOVE the stave — they may horizontally overlap
-    // the note area without issue. Only rests must not overflow right barline.)
     for (const area of measureAreas) {
       expect(
         area.noteStartX,

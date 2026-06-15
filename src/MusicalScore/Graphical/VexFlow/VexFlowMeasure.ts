@@ -1896,7 +1896,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (this.hasMetronomeMark) { return 0; }
         const sourceMeasure: SourceMeasure | undefined = this.parentSourceMeasure;
         if (!sourceMeasure) { return 0; }
-        let addedWidth: number = 0;
+        let totalMetronomeWidth: number = 0;
         for (const multiTempoExpression of sourceMeasure.TempoExpressions) {
             for (const entry of multiTempoExpression.EntriesList) {
                 const expr: any = entry.Expression;
@@ -1917,11 +1917,16 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 );
                 const mods: VF.StaveModifier[] = this.stave.getModifiers();
                 const tempo: VF.StaveModifier = mods[mods.length - 1];
-                addedWidth += (tempo.getWidth() + tempo.getPadding(undefined)) / unitInPixels;
+                totalMetronomeWidth += (tempo.getWidth() - (tempo as any).xShift) / unitInPixels;
                 this.hasMetronomeMark = true;
             }
         }
-        return addedWidth;
+        // Only add width that exceeds the space already reserved by begin
+        // instructions (clef, key sig, time sig). Metronome marks sit ABOVE
+        // the stave and don't need extra horizontal space if they fit within
+        // the existing begin-instruction area.
+        const excess: number = totalMetronomeWidth - this.beginInstructionsWidth;
+        return excess > 0 ? excess : 0;
     }
 
     /**
