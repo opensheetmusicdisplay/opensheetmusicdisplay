@@ -1897,6 +1897,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const sourceMeasure: SourceMeasure | undefined = this.parentSourceMeasure;
         if (!sourceMeasure) { return 0; }
         let totalMetronomeWidth: number = 0;
+
+        // Check for non-metronome tempo expressions placed above the staffline
+        // (e.g. "Not fast" verbal text). Same logic as createMetronomeMark().
+        let yShift: number = this.rules.MetronomeMarkYShift;
+        let hasExpressionsAboveStaffline: boolean = false;
+        for (const multiTempoExpression of sourceMeasure.TempoExpressions) {
+            if (multiTempoExpression.getPlacementOfFirstEntry() !== PlacementEnum.Above) { continue; }
+            for (const entry of multiTempoExpression.EntriesList) {
+                const e: any = entry.Expression;
+                if (e instanceof InstantaneousTempoExpression && e.TempoType !== TempoType.metronomeMark) {
+                    hasExpressionsAboveStaffline = true;
+                    break;
+                }
+            }
+            if (hasExpressionsAboveStaffline) { break; }
+        }
+        if (hasExpressionsAboveStaffline) {
+            yShift -= 1.4;
+        }
+
         for (const multiTempoExpression of sourceMeasure.TempoExpressions) {
             for (const entry of multiTempoExpression.EntriesList) {
                 const expr: any = entry.Expression;
@@ -1913,7 +1933,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         dots: expr.dotted ? 1 : 0,
                         duration: vexflowDuration,
                     },
-                    this.rules.MetronomeMarkYShift * unitInPixels,
+                    yShift * unitInPixels,
                 );
                 const mods: VF.StaveModifier[] = this.stave.getModifiers();
                 const tempo: VF.StaveModifier = mods[mods.length - 1];
@@ -1923,6 +1943,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
             if (this.hasMetronomeMark) { break; }
         }
+
+        // Update skyline so other above-staff elements (lyrics, expressions)
+        // can stack below the metronome mark. Mirrors createMetronomeMark().
+        const skyline: number[] | undefined = this.ParentStaffLine?.SkyLine;
+        if (skyline) {
+            skyline[0] = Math.min(skyline[0], -4.5 + yShift);
+        }
+
         // Only add width that exceeds the space already reserved by begin
         // instructions (clef, key sig, time sig). Metronome marks sit ABOVE
         // the stave and don't need extra horizontal space if they fit within
