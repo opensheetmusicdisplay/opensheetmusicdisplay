@@ -110,6 +110,10 @@ export class SourceMeasure {
     private rules: EngravingRules;
     private tempoInBPM: number;
     private verticalMeasureList: GraphicalMeasure[]; // useful, see GraphicalMusicSheet.GetGraphicalFromSourceStaffEntry
+    /** Whether this measure was drawn in the last render. Set by the drawer (and the incremental/lazy
+     *  render path) per drawn measure, reset to false at the start of each render(). Lets callers tell which
+     *  measures are currently on-screen, e.g. under a draw range or incremental rendering. */
+    public WasRendered: boolean = false;
 
     public get MeasureNumber(): number {
         return this.measureNumber;
