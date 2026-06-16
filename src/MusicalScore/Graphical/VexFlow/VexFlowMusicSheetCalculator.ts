@@ -206,16 +206,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     measures = visibleMeasures;
 
-    // Format the voices
-    const allVoices: VF.Voice[] = [];
-    const formatter: VF.Formatter = new VF.Formatter({
-      // maxIterations: 2,
-      softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
-    });
+    // Format the voices — per-staff formatters so accidental space (modLeftPx)
+    // on one staff doesn't inflate the first tick context's totalLeftPx for
+    // other staves in the measure column.
+    const perStaffVoices: VF.Voice[][] = measures.map(() => []);
+    const perStaffFormatters: VF.Formatter[] = measures.map(() => new VF.Formatter({
+      softmaxFactor: this.rules.SoftmaxFactorVexFlow,
+    }));
 
     let maxStaffEntries: number = measures[0].staffEntries.length;
     let maxStaffEntriesPlusAccidentals: number = 1;
-    for (const measure of measures) {
+    for (let si: number = 0; si < measures.length; si++) {
+      const measure: GraphicalMeasure = measures[si];
       if (!measure) {
         continue;
       }
@@ -239,7 +241,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             // Vexflow 1.2.93: needs VexFlowPatch for formatter.js (see #1187)
           }
           voices.push(mvoice);
-          allVoices.push(mvoice);
+          perStaffVoices[si].push(mvoice);
         }
       }
 
@@ -303,7 +305,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
       // all voices that belong to one stave are collectively added to create a common context in VexFlow.
-      formatter.joinVoices(voices);
+      perStaffFormatters[si].joinVoices(voices);
     }
 
     let minStaffEntriesWidth: number = 12; // a typical measure has roughly a length of 3*StaffHeight (3*4 = 12)
@@ -311,15 +313,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // the voicing space bonus addition makes the voicing more relaxed. With a bonus of 0 the notes are basically completely squeezed together.
     const staffEntryFactor: number = 0.3;
 
-    if (allVoices.length > 0) {
+    if (perStaffVoices.some(v => v.length > 0)) {
       // Use the formatter's base width (sum of tick context widths) rather than
       // the full preCalculateMinTotalWidth result which includes unstable padding
       // terms (variance-based padmax, unaligned per-context padding) that can
       // make comparable measures differ by 3x+. The base width tracks actual
       // glyph content proportionally; OSMD adds its own spacing via
       // VoiceSpacingMultiplier / VoiceSpacingAddend / staffEntryFactor.
-      const fullMinTotalWidth: number = formatter.preCalculateMinTotalWidth(allVoices);
-      minStaffEntriesWidth = formatter.getMinTotalWidth() / unitInPixels
+      let fullMinTotalWidth: number = 0;
+      let maxFormattedMinWidth: number = 0;
+      for (let si: number = 0; si < perStaffVoices.length; si++) {
+        if (perStaffVoices[si].length === 0) { continue; }
+        fullMinTotalWidth = Math.max(fullMinTotalWidth, perStaffFormatters[si].preCalculateMinTotalWidth(perStaffVoices[si]));
+        maxFormattedMinWidth = Math.max(maxFormattedMinWidth, perStaffFormatters[si].getMinTotalWidth());
+      }
+      minStaffEntriesWidth = maxFormattedMinWidth / unitInPixels
         * this.rules.VoiceSpacingMultiplierVexflow
         + this.rules.VoiceSpacingAddendVexflow
         + maxStaffEntries * staffEntryFactor;
@@ -349,7 +357,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       // Propagate stave from voices to tickables (Voice.setStave only
       // sets it on the voice object; tickables need it for stave detection).
-      for (const v of allVoices) {
+      for (const v of perStaffVoices.flat()) {
         const voiceStave: VF.Stave | null = v.getStave();
         if (voiceStave) {
           for (const tickable of v.getTickables()) {
@@ -400,87 +408,93 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       const stavesForMeasureColumn: VF.Stave[] = measures.map(m => (m as VexFlowMeasure).getVFStave()).filter(s => s !== undefined);
 
-      const formatVoicesCore: (w: number, p: VexFlowMeasure, alignRests: boolean) => void = (w, p, alignRests) => {
-        if (stavesForMeasureColumn.length > 1) {
-          VF.Stave.formatBegModifiers(stavesForMeasureColumn);
-        }
-        if (alignRests) {
-          formatter.formatToStave(allVoices, p.getVFStave(), {
-            alignRests: true,
-            context: undefined
-          });
-        } else {
-          formatter.formatToStave(allVoices, p.getVFStave());
-        }
-        // Zero xShift after formatting. VF5 applies collision-avoidance
-        // xShift per-context, which can misalign same-tick notes across
-        // staves. Zero unless a tickable's notehead would overlap another
-        // on the same staff (unison or second interval).
-        const tctxs: any = formatter.getTickContexts();
-        if (tctxs) {
-          const noteStep: Record<string, number> = { c:0, d:1, e:2, f:3, g:4, a:5, b:6 };
-          for (const tickKey of tctxs.list) {
-            const ctx: any = tctxs.map[tickKey];
-            const tickables: any[] = ctx.getTickables();
-            const needsXShift: Set<any> = new Set();
-            for (let i: number = 0; i < tickables.length; i++) {
-              for (let j: number = i + 1; j < tickables.length; j++) {
-                const a: any = tickables[i] as any;
-                const b: any = tickables[j] as any;
-                const sa: any = a.getStave?.();
-                const sb: any = b.getStave?.();
-                if (sa !== sb) { continue; }
-                const ka: string[] = a.getKeys?.() ?? [];
-                const kb: string[] = b.getKeys?.() ?? [];
-                let isOverlapping: boolean = false;
-                for (const k1 of ka) {
-                  if (isOverlapping) { break; }
-                  for (const k2 of kb) {
-                    const [n1, o1] = k1.split("/");
-                    const [n2, o2] = k2.split("/");
-                    const s1: number = noteStep[n1[0]] ?? -1;
-                    const s2: number = noteStep[n2[0]] ?? -1;
-                    if (s1 >= 0 && s2 >= 0) {
-                      const d1: number = parseInt(o1, 10) * 7 + s1;
-                      const d2: number = parseInt(o2, 10) * 7 + s2;
-                      if (Math.abs(d1 - d2) <= 1) {
-                        isOverlapping = true;
+      // Per-staff formatVoicesCore: each stave's formatter only sees its own voices,
+      // so accidental space (modLeftPx) doesn't contaminate other staves' first tick context.
+      for (let si: number = 0; si < measures.length; si++) {
+        const staffVoices: VF.Voice[] = perStaffVoices[si];
+        const staffFormatter: VF.Formatter = perStaffFormatters[si];
+        const measure: VexFlowMeasure = measures[si] as VexFlowMeasure;
+        if (!measure || staffVoices.length === 0) { continue; }
+
+        const formatVoicesCore: (w: number, p: VexFlowMeasure, alignRests: boolean) => void = (w, p, alignRests): void => {
+          if (stavesForMeasureColumn.length > 1) {
+            VF.Stave.formatBegModifiers(stavesForMeasureColumn);
+          }
+          if (alignRests) {
+            staffFormatter.formatToStave(staffVoices, p.getVFStave(), {
+              alignRests: true,
+              context: undefined
+            });
+          } else {
+            staffFormatter.formatToStave(staffVoices, p.getVFStave());
+          }
+          // Zero xShift after formatting. VF5 applies collision-avoidance
+          // xShift per-context. Since each staff now has its own formatter,
+          // only same-staff collisions need xShift (unison or second interval).
+          const tctxs: any = staffFormatter.getTickContexts();
+          if (tctxs) {
+            const noteStep: Record<string, number> = { c:0, d:1, e:2, f:3, g:4, a:5, b:6 };
+            for (const tickKey of tctxs.list) {
+              const ctx: any = tctxs.map[tickKey];
+              const tickables: any[] = ctx.getTickables();
+              const needsXShift: Set<any> = new Set();
+              for (let i: number = 0; i < tickables.length; i++) {
+                for (let j: number = i + 1; j < tickables.length; j++) {
+                  const a: any = tickables[i];
+                  const b: any = tickables[j];
+                  const sa: any = a.getStave?.();
+                  const sb: any = b.getStave?.();
+                  if (sa !== sb) { continue; }
+                  const ka: string[] = a.getKeys?.() ?? [];
+                  const kb: string[] = b.getKeys?.() ?? [];
+                  let isOverlapping: boolean = false;
+                  for (const k1 of ka) {
+                    if (isOverlapping) { break; }
+                    for (const k2 of kb) {
+                      const [n1, o1] = k1.split("/");
+                      const [n2, o2] = k2.split("/");
+                      const s1: number = noteStep[n1[0]] ?? -1;
+                      const s2: number = noteStep[n2[0]] ?? -1;
+                      if (s1 >= 0 && s2 >= 0) {
+                        const d1: number = parseInt(o1, 10) * 7 + s1;
+                        const d2: number = parseInt(o2, 10) * 7 + s2;
+                        if (Math.abs(d1 - d2) <= 1) {
+                          isOverlapping = true;
+                        }
                       }
                     }
                   }
-                }
-                if (isOverlapping) {
-                  needsXShift.add(a);
-                  needsXShift.add(b);
+                  if (isOverlapping) {
+                    needsXShift.add(a);
+                    needsXShift.add(b);
+                  }
                 }
               }
-            }
-            for (const tickable of tickables) {
-              const t: any = tickable as any;
-              if (needsXShift.has(tickable)) {
-                continue;
-              }
-              if (typeof t.setXShift === "function" && t.getXShift() !== 0) {
-                t.setXShift(0);
+              for (const tickable of tickables) {
+                const t: any = tickable;
+                if (needsXShift.has(tickable)) {
+                  continue;
+                }
+                if (typeof t.setXShift === "function" && t.getXShift() !== 0) {
+                  t.setXShift(0);
+                }
               }
             }
           }
-        }
-      };
+        };
 
-      const formatVoicesDefault: (w: number, p: VexFlowMeasure) => void = (w, p) => {
-        formatVoicesCore(w, p, false);
-      };
-      const formatVoicesAlignRests: (w: number,  p: VexFlowMeasure) => void = (w, p) => {
-        formatVoicesCore(w, p, true);
-      };
+        const formatVoicesDefault: (w: number, p: VexFlowMeasure) => void = (w, p) => {
+          formatVoicesCore(w, p, false);
+        };
+        const formatVoicesAlignRests: (w: number, p: VexFlowMeasure) => void = (w, p) => {
+          formatVoicesCore(w, p, true);
+        };
 
-      for (const measure of measures) {
-        // determine whether to align rests
+        // Determine whether to align rests for this measure
         if (this.rules.AlignRests === AlignRestOption.Never) {
-          (measure as VexFlowMeasure).formatVoices = formatVoicesDefault;
+          measure.formatVoices = formatVoicesDefault;
         } else if (this.rules.AlignRests === AlignRestOption.Always) {
-          (measure as VexFlowMeasure).formatVoices = formatVoicesAlignRests;
+          measure.formatVoices = formatVoicesAlignRests;
         } else if (this.rules.AlignRests === AlignRestOption.Auto) {
           let alignRests: boolean = false;
           for (const staffEntry of measure.staffEntries) {
@@ -488,19 +502,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             let numberOfRests: number = 0;
             for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
               if (!voiceEntry.parentVoiceEntry.IsGrace) {
-                if (voiceEntry && voiceEntry.notes && voiceEntry.notes[0] && voiceEntry.notes[0].sourceNote) {// TODO null chaining, TS 3.7
-                  if (voiceEntry.notes[0].sourceNote.PrintObject) { // only respect collision when not invisible
+                if (voiceEntry && voiceEntry.notes && voiceEntry.notes[0] && voiceEntry.notes[0].sourceNote) {
+                  if (voiceEntry.notes[0].sourceNote.PrintObject) {
                     collidableVoiceEntries++;
                   }
                 }
               }
-              if (voiceEntry && voiceEntry.notes && voiceEntry.notes[0] && voiceEntry.notes[0].sourceNote) {// TODO null chaining, TS 3.7
+              if (voiceEntry && voiceEntry.notes && voiceEntry.notes[0] && voiceEntry.notes[0].sourceNote) {
                 if (voiceEntry.notes[0].sourceNote.isRest() && voiceEntry.notes[0].sourceNote.PrintObject) {
-                  numberOfRests++; // only align rests if there is actually a rest (which could collide)
+                  numberOfRests++;
                 }
               }
               if (collidableVoiceEntries > 1 && numberOfRests >= 1) {
-                // TODO could add further checks like if any of the already checked voice entries actually collide
                 alignRests = true;
                 break;
               }
@@ -509,26 +522,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               break;
             }
           }
-
-          // set measure's format function
           if (alignRests) {
-            (measure as VexFlowMeasure).formatVoices = formatVoicesAlignRests;
+            measure.formatVoices = formatVoicesAlignRests;
           } else {
-            (measure as VexFlowMeasure).formatVoices = formatVoicesDefault;
+            measure.formatVoices = formatVoicesDefault;
           }
         }
 
-        // format first measure with minimum width
+        // Format first measure column with minimum width for each staff
         if (measure === measures[0]) {
-          const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
-          // prepare format function for voices, will be called later for formatting measure again
-          //vexflowMeasure.formatVoices = formatVoicesDefault;
-
-          // format now for minimum width, calculateMeasureWidthFromLyrics later
-          vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels, vexflowMeasure);
-        } else {
-          //(measure as VexFlowMeasure).formatVoices = undefined;
-          // TODO why was the formatVoices function disabled for other measures? would now disable the new align rests option.
+          measure.formatVoices(minStaffEntriesWidth * unitInPixels, measure);
         }
       }
     }
@@ -544,7 +547,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     //Can't quite figure out why, but this is the calculation that needs redone to have consistent rendering.
     //The first render of a sheet vs. subsequent renders are calculated differently by vexflow without this re-joining of the voices
-    for (const measure of measures) {
+    for (let si: number = 0; si < measures.length; si++) {
+      const measure: GraphicalMeasure = measures[si];
       if (!measure) {
         continue;
       }
@@ -558,11 +562,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       if (voices.length === 0) {
         log.debug("Found a measure with no voices. Continuing anyway.", mvoices);
-        // no need to log this, measures with no voices/notes are fine. see OSMDOptions.fillEmptyMeasuresWithWholeRest
         continue;
       }
       // all voices that belong to one stave are collectively added to create a common context in VexFlow.
-      formatter.joinVoices(voices);
+      perStaffFormatters[si].joinVoices(voices);
     }
 
     // calculateMeasureWidthFromLyrics() will be called from MusicSheetCalculator after this
