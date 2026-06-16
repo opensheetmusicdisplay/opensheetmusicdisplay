@@ -399,6 +399,8 @@ export class EngravingRules {
     public FixedMeasureWidthUseForPickupMeasures: boolean;
     /** When true, distribute system width so per-duration spacing is consistent across measures. */
     public BalanceMeasureWidths: boolean;
+    /** Weight added to tickable density per accidental. 0.3 means a note with 1 accidental counts as 1.3 tickables. */
+    public AccidentalDensityWeight: number;
     public DistanceBetweenVerticalSystemLines: number;
     public DistanceBetweenDotAndLine: number;
     public RepeatEndStartPadding: number;
@@ -949,6 +951,7 @@ export class EngravingRules {
         this.FixedMeasureWidthFixedValue = undefined; // only set to a number x if the width should be always x
         this.FixedMeasureWidthUseForPickupMeasures = false;
         this.BalanceMeasureWidths = true;
+        this.AccidentalDensityWeight = 0.3;
 
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;

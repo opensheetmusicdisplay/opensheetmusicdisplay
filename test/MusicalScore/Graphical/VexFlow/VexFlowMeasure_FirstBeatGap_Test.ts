@@ -211,4 +211,133 @@ describe("VexFlow Measure - First Beat Gap", () => {
             "M82 bass accidental left edge must not extend left of noteStartX")
             .to.be.at.least(-0.15);
     });
+
+    /** End-padding data for a measure's last note. */
+    interface EndPaddingInfo {
+        measureNumber: number;
+        lastNoteDurationDiv: number;   // duration in MusicXML divisions
+        lastNoteRightEdge: number;     // note right edge in OSMD units
+        staveNoteEndX: number;         // stave.getNoteEndX() in OSMD units
+        endPadding: number;            // staveNoteEndX - lastNoteRightEdge (in OSMD units)
+    }
+
+    /** Get end-padding info for the last note of the given measure/staff. */
+    function analyzeEndPadding(measureNumber: number, staffIndex: number): EndPaddingInfo | null {
+        const pages: any[] = osmd.GraphicSheet.MusicPages;
+        for (const page of pages) {
+            for (const system of page.MusicSystems) {
+                for (const sl of system.StaffLines) {
+                    if (system.StaffLines.indexOf(sl) !== staffIndex) { continue; }
+                    for (const m of sl.Measures) {
+                        const vfm: VexFlowMeasure = m as VexFlowMeasure;
+                        if (vfm.MeasureNumber !== measureNumber) { continue; }
+
+                        // Find the last staff entry that has a note.
+                        const staffEntries: VexFlowStaffEntry[] = vfm.staffEntries as VexFlowStaffEntry[];
+                        if (!staffEntries || staffEntries.length === 0) { return null; }
+
+                        let lastGve: VexFlowVoiceEntry | undefined;
+                        let lastSe: VexFlowStaffEntry | undefined;
+                        // Walk backwards to find the final note-bearing entry.
+                        for (let idx: number = staffEntries.length - 1; idx >= 0; idx--) {
+                            const se: VexFlowStaffEntry = staffEntries[idx];
+                            if (!se || !se.graphicalVoiceEntries) { continue; }
+                            for (const gve of se.graphicalVoiceEntries) {
+                                const vgve: VexFlowVoiceEntry = gve as VexFlowVoiceEntry;
+                                if (vgve.vfStaveNote) {
+                                    lastGve = vgve;
+                                    lastSe = se;
+                                    break;
+                                }
+                            }
+                            if (lastGve) { break; }
+                        }
+                        if (!lastGve || !lastSe) { return null; }
+
+                        const note: any = lastGve.vfStaveNote;
+                        const stave: any = vfm.getVFStave();
+                        // eslint-disable-next-line @typescript-eslint/typedef
+                        const metrics = note.getMetrics();
+                        const noteAbsX: number = note.getAbsoluteX() / unitInPixels;
+                        const rightEdge: number = noteAbsX
+                            + (metrics.notePx as number) / unitInPixels
+                            + (metrics.rightDisplacedHeadPx as number) / unitInPixels
+                            + (metrics.modRightPx as number) / unitInPixels;
+                        const staveNoteEndX: number = stave.getNoteEndX() / unitInPixels;
+
+                        // Duration from the VF tick context (e.g. 16, 32, 64 divisions).
+                        const tc: any = note.checkTickContext();
+                        const lastNoteDurationDiv: number = tc.getMaxTicks().value();
+
+                        return {
+                            measureNumber,
+                            lastNoteDurationDiv,
+                            lastNoteRightEdge: rightEdge,
+                            staveNoteEndX,
+                            endPadding: staveNoteEndX - rightEdge,
+                        };
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    it("final note end padding is proportional to note duration (16th < 8th < quarter)", () => {
+        // Pick treble staff measures with clean single-voice endings.
+        // M3 ends with a 16th, M2 ends with an 8th, M60 ends with a quarter.
+        // eslint-disable-next-line @typescript-eslint/typedef
+        const m2 = analyzeEndPadding(2, 0);   // 8th ending
+        // eslint-disable-next-line @typescript-eslint/typedef
+        const m3 = analyzeEndPadding(3, 0);   // 16th ending
+        // eslint-disable-next-line @typescript-eslint/typedef
+        const m60 = analyzeEndPadding(60, 0); // quarter ending
+
+        const logEp: (label: string, ep: EndPaddingInfo | null) => void = (label, ep) => {
+            console.log("  " + label
+                + ": durDiv=" + ep?.lastNoteDurationDiv
+                + " rightEdge=" + ep?.lastNoteRightEdge?.toFixed(2)
+                + " noteEndX=" + ep?.staveNoteEndX?.toFixed(2)
+                + " endPad=" + ep?.endPadding?.toFixed(2));
+        };
+        console.log("=== End Padding Proportionality ===");
+        logEp("M3 (16th) ", m3);
+        logEp("M2 (8th)  ", m2);
+        logEp("M60 (qtr) ", m60);
+
+        expect(m2, "M2 must exist").to.not.be.null;
+        expect(m3, "M3 must exist").to.not.be.null;
+        expect(m60, "M60 must exist").to.not.be.null;
+
+        // Proportionality: 16th end padding < 8th end padding < quarter end padding.
+        // End padding should scale with note duration.
+        console.log("  M3/M2 pad ratio: " + (m3!.endPadding / m2!.endPadding).toFixed(3)
+            + " (expect < 1, 16th < 8th)");
+        console.log("  M2/M60 pad ratio: " + (m2!.endPadding / m60!.endPadding).toFixed(3)
+            + " (expect < 1, 8th < quarter)");
+
+        // 16th note (dur=16) should have less end padding than 8th (dur=32).
+        expect(m3!.endPadding,
+            "M3 (16th final) end padding must be less than M2 (8th final)")
+            .to.be.below(m2!.endPadding);
+
+        // 8th note (dur=32) should have less end padding than quarter (dur=64).
+        expect(m2!.endPadding,
+            "M2 (8th final) end padding must be less than M60 (quarter final)")
+            .to.be.below(m60!.endPadding);
+
+        // Quantitative: 16th padding should be roughly half of 8th padding.
+        // Allow 30% tolerance for minimum-padding clamping effects.
+        // eslint-disable-next-line @typescript-eslint/typedef
+        const ratio16_8 = m3!.endPadding / m2!.endPadding;
+        expect(ratio16_8,
+            "M3/M2 end-pad ratio should be at most 0.8 (16th clearly tighter than 8th)")
+            .to.be.at.most(0.8);
+
+        // eslint-disable-next-line @typescript-eslint/typedef
+        const ratio8_q = m2!.endPadding / m60!.endPadding;
+        expect(ratio8_q,
+            "M2/M60 end-pad ratio should be at most 0.9 (8th tighter than quarter)")
+            .to.be.at.most(0.9);
+    });
 });

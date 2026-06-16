@@ -12,6 +12,7 @@ import { LyricWord } from "../VoiceData/Lyrics/LyricsWord";
 import { SourceMeasure } from "../VoiceData/SourceMeasure";
 import { GraphicalMusicPage } from "./GraphicalMusicPage";
 import { GraphicalNote } from "./GraphicalNote";
+import { AccidentalEnum } from "../../Common/DataObjects/Pitch";
 import { Beam } from "../VoiceData/Beam";
 import { OctaveEnum } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { VoiceEntry, StemDirectionType } from "../VoiceData/VoiceEntry";
@@ -358,24 +359,31 @@ export abstract class MusicSheetCalculator {
                 }
             }
             if (this.rules.BalanceMeasureWidths) {
-                // Compute per-measure tickable count as canonical target width.
-                // Measures with more tickables (denser content) get proportionally
+                // Compute per-measure weighted tickable count as canonical target width.
+                // Each tickable weighted by 1 + accidentalCount * AccidentalDensityWeight.
+                // Measures with more accidentals (denser content) get proportionally
                 // more of the system's extra width during stretchMusicSystem.
                 for (const measureColumn of this.graphicalMusicSheet.MeasureList) {
-                    let tickableCount: number = 0;
+                    let weightedCount: number = 0;
                     for (const measure of measureColumn) {
                         if (!measure) { continue; }
                         for (const se of measure.staffEntries) {
                             for (const gve of se.graphicalVoiceEntries) {
                                 if ((gve as any).vfStaveNote) {
-                                    tickableCount++;
+                                    let accidentalCount: number = 0;
+                                    for (const note of gve.notes) {
+                                        if (note.DrawnAccidental !== AccidentalEnum.NONE) {
+                                            accidentalCount++;
+                                        }
+                                    }
+                                    weightedCount += 1 + accidentalCount * this.rules.AccidentalDensityWeight;
                                 }
                             }
                         }
                     }
                     for (const measure of measureColumn) {
                         if (measure) {
-                            measure.canonicalTargetWidth = tickableCount;
+                            measure.canonicalTargetWidth = weightedCount;
                         }
                     }
                 }
