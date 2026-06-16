@@ -671,7 +671,7 @@ export class EngravingRules {
         this.InstrumentLabelTextHeight = 2;
         this.MinimumDistanceBetweenSystems = 7.0;
         this.MinSkyBottomDistBetweenSystems = 5.0;
-        this.LastSystemMaxScalingFactor = 1.4;
+        this.LastSystemMaxScalingFactor = 2.0;
 
         // autoBeam options
         this.AutoBeamNotes = false;

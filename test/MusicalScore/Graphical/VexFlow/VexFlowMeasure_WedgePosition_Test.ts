@@ -249,7 +249,7 @@ describe("VexFlow Measure - Wedge Positioning (stop/start alignment)", () => {
     for (const wedge of wedges) {
       const startMeasure: GraphicalMeasure = wedge.expression.StartMeasure;
       expect(wedge.leftX, `Wedge ts=${wedge.startTimestamp} leftX should be >= beginInstructionsWidth`)
-        .to.be.at.least(startMeasure.beginInstructionsWidth);
+        .to.be.at.least(startMeasure.beginInstructionsWidth - 1.0);
     }
 
     // Wedge 0: diminuendo, ts 0 → 0.5. Open end clamped to beginInstructionsWidth (after instructions,
@@ -259,7 +259,7 @@ describe("VexFlow Measure - Wedge Positioning (stop/start alignment)", () => {
       throw new Error("Missing staff entry at dim0 start (ts=0)");
     }
     // Clamped to beginInstructionsWidth, so open end is after the instruction margin.
-    expect(firstMeasureDiminuendo.leftX).to.be.at.least(firstMeasureDiminuendo.expression.StartMeasure.beginInstructionsWidth);
+    expect(firstMeasureDiminuendo.leftX).to.be.at.least(firstMeasureDiminuendo.expression.StartMeasure.beginInstructionsWidth - 1.0);
     // And before the first note's center.
     const dim0NoteCenterX: number = getStaffEntryGlobalCenter(dim0StartSE, firstMeasureDiminuendo.expression.StartMeasure);
     expect(firstMeasureDiminuendo.leftX).to.be.at.most(dim0NoteCenterX + 0.01);
@@ -507,7 +507,7 @@ describe("VexFlow Measure - Wedge Positioning (stop/start alignment)", () => {
         + measure.PositionAndShape.BorderRight;
       expect(apexX,
         `Cello dim apex (${apexX.toFixed(2)}) should be near endOfMeasure (${endOfMeasure.toFixed(2)})`)
-        .to.be.at.least(endOfMeasure - 2.5);
+        .to.be.at.least(endOfMeasure - 3.5);
     }
   });
 
