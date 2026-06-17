@@ -196,15 +196,15 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                 continue;
             }
             let parentBbox: BoundingBox = graphicalStaffEntry.PositionAndShape;
-            if (graphicalStaffEntry.graphicalVoiceEntries.length === 1 &&
-                graphicalStaffEntry.graphicalVoiceEntries[0].notes.length === 1 &&
-                graphicalStaffEntry.graphicalVoiceEntries[0].notes[0].sourceNote.isWholeRest()) {
-                // graphicalStaffEntry.graphicalVoiceEntries[0]?.notes[0]?.sourceNote.IsWholeMeasureRest // not yet set apparently
-                // whole measure rests: position at start of measure instead of middle like the rest note
-                // xShift -= graphicalStaffEntry.PositionAndShape.RelativePosition.x; // unfortunately relative x is 0 here
+            const allRests: boolean = graphicalStaffEntry.graphicalVoiceEntries.length > 0 &&
+                graphicalStaffEntry.graphicalVoiceEntries.every(gve =>
+                    gve.notes.every(n => n.sourceNote.isRest()));
+            if (allRests) {
+                // rest-only staff entries may be centered or shifted by the formatter;
+                // position chord at start of measure instead
                 parentBbox = graphicalStaffEntry.parentMeasure.PositionAndShape;
-                xShift += graphicalStaffEntry.parentMeasure.beginInstructionsWidth;
-                xShift += rules.ChordSymbolWholeMeasureRestXOffset; // margin to start of measure / bar
+                // beginInstructionsWidth is added by calculateChordSymbols() on the container
+                xShift += rules.ChordSymbolWholeMeasureRestXOffset;
             }
             const graphicalChordSymbolContainer: GraphicalChordSymbolContainer =
               new GraphicalChordSymbolContainer(chordSymbolContainer,

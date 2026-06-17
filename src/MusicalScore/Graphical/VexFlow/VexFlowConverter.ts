@@ -284,7 +284,7 @@ export class VexFlowConverter {
         let alignCenter: boolean = false;
         let xShift: number = 0;
         let isRest: boolean = false;
-        let restYPitch: Pitch;
+
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
@@ -378,7 +378,7 @@ export class VexFlowConverter {
                                 } else if (isUpperVoiceRest) {
                                     linesShift += 1;
                                 } else {
-                                    linesShift += 2;
+                                    linesShift += 4;
                                 }
                                 if (!duration.includes("8")) { // except for 8th rests, rests are middle-aligned in vexflow (?)
                                     //linesShift += 3;
@@ -403,25 +403,20 @@ export class VexFlowConverter {
                         }
                     }
                     if (maxHalftone === undefined) {
-                        // All voice entries here are rests — separate vertically by voice to avoid y-overlap.
-                        const isUpperVoiceRest: boolean = restVoiceId === 1 || restVoiceId === 5;
-                        note.lineShift = isUpperVoiceRest ? 0 : 4; // 4 semitones = 2 staff lines down for lower voice
-                    } else if (maxHalftone > 0) {
-                        let octaveOffset: number = 3;
-                        const restClefInstruction: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
-                        switch (restClefInstruction.ClefType) {
-                            case ClefEnum.F:
-                                octaveOffset = 5;
-                                break;
-                            case ClefEnum.C:
-                                octaveOffset = 4;
-                                // if (restClefInstruction.Line == 4) // tenor clef quarter rests can be off
-                                break;
-                            default:
-                                break;
+                        // No notes from other voices at this beat — only shift if multiple
+                        // voices have rests at this exact position (to avoid overlap).
+                        let restGveCount: number = 0;
+                        for (const staffGve of staffGves) {
+                            if (staffGve.notes.some(n => n.sourceNote.isRest())) {
+                                restGveCount++;
+                            }
                         }
-                        restYPitch = Pitch.fromHalftone(maxHalftone);
-                        keys = [VexFlowConverter.pitch(restYPitch, true, restClefInstruction, undefined, octaveOffset)[0]];
+                        if (restGveCount > 1) {
+                            const isUpperVoiceRest: boolean = restVoiceId === 1 || restVoiceId === 5;
+                            // VF5 getYForNote uses -line*spacing, so higher keyLine = higher on screen.
+                            // Voice 2 rests go DOWN → negative lineShift.
+                            note.lineShift = isUpperVoiceRest ? 0 : -4;
+                        }
                     }
                 }
                 // vfClefType seems to be undefined for rest notes, but setting it seems to break rest positioning.

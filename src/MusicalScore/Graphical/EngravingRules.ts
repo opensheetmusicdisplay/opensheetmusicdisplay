@@ -885,7 +885,7 @@ export class EngravingRules {
         this.LyricsExtraXShiftForShortLyrics = 0.5; // also see ChordSymbolExtraXShiftForShortChordSymbols, same principle
         this.LyricsExtraXShiftForShortLyricsWidthThreshold = 1.4; // width of '+': 1.12, 'II': 1.33 (benefits from x-shift), 'III': 1.99 (doesn't benefit)
         this.LyricsUseXPaddingForLongLyrics = true;
-        this.LyricsXPaddingFactorForLongLyrics = 1.0;
+        this.LyricsXPaddingFactorForLongLyrics = 0.6;
         this.LyricsXPaddingWidthThreshold = 1.7; // generateImages script with png might need more for 8th notes, e.g. Chloe
         this.LyricsXPaddingReductionForLongNotes = 0.7;
         this.LyricsXPaddingReductionForLastNoteInMeasure = 1.2;
@@ -896,7 +896,7 @@ export class EngravingRules {
         this.BetweenSyllableMinimumDistance = 0.5; // + 1.0 for CenterAlignment added in lyrics spacing
         this.LyricOverlapAllowedIntoNextMeasure = 3.4; // optimal for dashed last lyric, see Land der Berge
         this.MinimumDistanceBetweenDashes = 10;
-        this.MaximumLyricsElongationFactor = 2.5;
+        this.MaximumLyricsElongationFactor = 1.5;
 
         // expressions variables
         this.TempoYSpacing = 0.5; // note this is correlated with MetronomeMarkYShift: one-sided change can cause collisions

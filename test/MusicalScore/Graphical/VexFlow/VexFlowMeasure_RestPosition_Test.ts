@@ -40,6 +40,9 @@ interface RestInfo {
   justifyWidth: number;
   osmdRelY: number;
   osmdBorderBottom: number;
+  lineShift: number;
+  keyLine: number;
+  keys: string[];
 }
 
 function collectRests(gms: GraphicalMusicSheet): RestInfo[] {
@@ -83,6 +86,9 @@ function collectRests(gms: GraphicalMusicSheet): RestInfo[] {
               justifyWidth,
               osmdRelY: note.parentVoiceEntry.PositionAndShape.RelativePosition.y,
               osmdBorderBottom: note.parentVoiceEntry.PositionAndShape.BorderBottom,
+              lineShift: note.lineShift ?? 0,
+              keyLine: sn.getKeyLine?.(0) ?? -999,
+              keys: sn.getKeys?.() ?? [],
             });
           }
         }
@@ -804,6 +810,58 @@ describe("VexFlow Measure - Rest Positioning", () => {
     }).catch(done);
   });
 
+  it("multi-voice rests should not be placed at extreme positions (test_rest_positioning_16th)", (done: Mocha.Done) => {
+    const gms: GraphicalMusicSheet = buildGMS("test_rest_positioning_16th.musicxml");
+    const rests: RestInfo[] = collectRests(gms);
+    expect(rests.length).to.be.greaterThan(0, "should find rests");
+
+    // Log all rest positions for diagnostic purposes
+    console.log("=== Rest positions in test_rest_positioning_16th ===");
+    for (const r of rests) {
+      console.log(
+        `  m${r.measure}/v${r.voiceId}/${r.duration}: ` +
+        `yPos=${r.yPos.toFixed(1)} osmdRelY=${r.osmdRelY.toFixed(3)}`
+      );
+    }
+
+    const extremeRests: string[] = [];
+    for (const r of rests) {
+      if (r.yPos === 0) { continue; }
+      let staveTopY: number = 0;
+      let staveBottomY: number = 0;
+      for (const vml of gms.MeasureList) {
+        for (const measure of vml) {
+          if (!measure) { continue; }
+          if (measure.MeasureNumber !== r.measure) { continue; }
+          const vfStave: any = (measure as any).getVFStave?.();
+          if (!vfStave) { continue; }
+          staveTopY = vfStave.getY?.() ?? 0;
+          staveBottomY = vfStave.getBottomY?.() ?? 0;
+        }
+      }
+      if (staveTopY === 0 && staveBottomY === 0) { continue; }
+
+      const staveHeight: number = staveBottomY - staveTopY;
+      // Rest should be within 0.5 staff heights of the stave edges.
+      // Multi-voice rests may move up/down, but not by more than half a stave.
+      const maxAbove: number = staveTopY - staveHeight * 0.5;
+      const maxBelow: number = staveBottomY + staveHeight * 0.5;
+      if (r.yPos < maxAbove || r.yPos > maxBelow) {
+        extremeRests.push(
+          `m${r.measure}/v${r.voiceId}/${r.duration}: ` +
+          `yPos=${r.yPos.toFixed(1)} stave=[${staveTopY.toFixed(1)},${staveBottomY.toFixed(1)}] ` +
+          `allowed=[${maxAbove.toFixed(1)},${maxBelow.toFixed(1)}]`
+        );
+      }
+    }
+
+    if (extremeRests.length > 0) {
+      console.log(`\n=== Extreme rest positions ===\n${extremeRests.join("\n")}`);
+    }
+    expect(extremeRests, `Rests at extreme positions:\n${extremeRests.join("\n")}`).to.be.empty;
+    done();
+  });
+
   it("systems respect page width and staves share a common right border", (done: Mocha.Done) => {
     const xmlDoc: Document = TestUtils.getScore("Dichterliebe01.xml");
     const div: HTMLElement = TestUtils.getDivElement(document);
@@ -850,6 +908,135 @@ describe("VexFlow Measure - Rest Positioning", () => {
       expect(issues, `Page width / right border issues:\n${issues.join("\n")}`).to.be.empty;
       done();
     }).catch(done);
+  });
+
+  it("multi-voice rests in Voice Alignment m2 should be near staff center, not at ledger lines", (done: Mocha.Done) => {
+    const gms: GraphicalMusicSheet = buildGMS("OSMD_Function_Test_Voice_Alignment.musicxml");
+    const rests: RestInfo[] = collectRests(gms);
+    const m2Rests: RestInfo[] = rests.filter(r => r.measure === 2 && r.staffId === 1);
+
+    expect(m2Rests.length).to.be.greaterThan(0,
+      `should find rests in m2 staff1. All rests: ${rests.map(r => `m${r.measure}/v${r.voiceId}/s${r.staffId}=${r.duration}`).join(", ")}`);
+
+    console.log("=== Voice Alignment m2 rests ===");
+    const extremeRests: string[] = [];
+    for (const r of m2Rests) {
+      let staveTopY: number = 0;
+      let staveBottomY: number = 0;
+      for (const vml of gms.MeasureList) {
+        for (const measure of vml) {
+          if (!measure || measure.MeasureNumber !== 2) { continue; }
+          const vfStave: any = (measure as any).getVFStave?.();
+          if (!vfStave) { continue; }
+          if ((measure.ParentStaff?.Id ?? 0) !== r.staffId) { continue; }
+          staveTopY = vfStave.getY?.() ?? 0;
+          staveBottomY = vfStave.getBottomY?.() ?? 0;
+        }
+      }
+      const staveHeight: number = staveBottomY - staveTopY;
+      const staveCenterY: number = staveTopY + staveHeight / 2;
+      const distFromCenter: number = Math.abs(r.yPos - staveCenterY);
+
+      console.log(
+        `  v${r.voiceId}/${r.duration}: yPos=${r.yPos.toFixed(1)} ` +
+        `stave=[${staveTopY.toFixed(1)},${staveBottomY.toFixed(1)}] ` +
+        `center=${staveCenterY.toFixed(1)} distFromCenter=${distFromCenter.toFixed(1)} ` +
+        `lineShift=${r.lineShift} keyLine=${r.keyLine} keys=${r.keys.join(",")}`
+      );
+
+      if (distFromCenter > staveHeight * 0.6) {
+        extremeRests.push(
+          `v${r.voiceId}/${r.duration}: yPos=${r.yPos.toFixed(1)} ` +
+          `staveCenter=${staveCenterY.toFixed(1)} dist=${distFromCenter.toFixed(1)} ` +
+          `staveH=${staveHeight.toFixed(1)}`
+        );
+      }
+    }
+
+    expect(extremeRests, `Rests far from staff center:\n${extremeRests.join("\n")}`).to.be.empty;
+    done();
+  });
+
+  it("eighth rests must not collide with notes at same beat (piano_two_voices)", (done: Mocha.Done) => {
+    const gms: GraphicalMusicSheet = buildGMS("test_rest_positioning_piano_two_voices.musicxml");
+
+    interface BeatEntry {
+      voiceId: number;
+      isRest: boolean;
+      yPos: number;
+      duration: string;
+      measure: number;
+      staffId: number;
+      lineShift: number;
+      keyLine: number;
+    }
+    // Group entries by staff entry to find rest+note collisions at same beat
+    const collisions: { rest: BeatEntry, note: BeatEntry, yGap: number }[] = [];
+
+    for (const vml of gms.MeasureList) {
+      for (const measure of vml) {
+        if (!measure?.isVisible()) { continue; }
+        for (const se of measure.staffEntries) {
+          const entries: BeatEntry[] = [];
+          for (const gve of se.graphicalVoiceEntries) {
+            for (const n of gve.notes) {
+              const vfn: VexFlowGraphicalNote = n as VexFlowGraphicalNote;
+              const sn: any = vfn.vfnote?.[0];
+              if (!sn) { continue; }
+              const ys: number[] = sn.getYs?.() ?? [];
+              entries.push({
+                voiceId: n.parentVoiceEntry?.parentVoiceEntry?.ParentVoice?.VoiceId ?? 0,
+                isRest: n.sourceNote.isRest(),
+                yPos: ys[0] ?? 0,
+                duration: sn.getDuration?.() ?? "?",
+                measure: measure.MeasureNumber,
+                staffId: n.sourceNote.ParentStaff?.Id ?? 0,
+                lineShift: n.lineShift ?? 0,
+                keyLine: sn.getKeyLine?.(0) ?? -999,
+              });
+            }
+          }
+
+          // Find rest+note pairs from different voices
+          const rests: BeatEntry[] = entries.filter(e => e.isRest);
+          const notes: BeatEntry[] = entries.filter(e => !e.isRest);
+          for (const r of rests) {
+            for (const n of notes) {
+              if (r.voiceId === n.voiceId) { continue; }
+              if (r.staffId !== n.staffId) { continue; }
+              // For notes with multiple Ys (chords), use the closest Y to the rest
+              const yGap: number = Math.abs(r.yPos - n.yPos);
+              collisions.push({ rest: r, note: n, yGap });
+            }
+          }
+        }
+      }
+    }
+
+    expect(collisions.length).to.be.greaterThan(0,
+      "should find rest+note pairs at same beat");
+
+    console.log("=== piano_two_voices rest/note collisions ===");
+    const overlaps: string[] = [];
+    const minGap: number = 8; // minimum pixels between rest and note
+    for (const c of collisions) {
+      console.log(
+        `  m${c.rest.measure}/s${c.rest.staffId}: ` +
+        `rest v${c.rest.voiceId}/${c.rest.duration} y=${c.rest.yPos.toFixed(1)} ` +
+        `lineShift=${c.rest.lineShift} keyLine=${c.rest.keyLine} | ` +
+        `note v${c.note.voiceId} y=${c.note.yPos.toFixed(1)} | gap=${c.yGap.toFixed(1)}`
+      );
+      if (c.yGap < minGap) {
+        overlaps.push(
+          `m${c.rest.measure}/s${c.rest.staffId}: rest v${c.rest.voiceId}/${c.rest.duration} ` +
+          `y=${c.rest.yPos.toFixed(1)} vs note v${c.note.voiceId} y=${c.note.yPos.toFixed(1)} ` +
+          `gap=${c.yGap.toFixed(1)} < ${minGap} lineShift=${c.rest.lineShift}`
+        );
+      }
+    }
+
+    expect(overlaps, `Rest/note collisions:\n${overlaps.join("\n")}`).to.be.empty;
+    done();
   });
 
 });

@@ -1040,6 +1040,7 @@ export abstract class MusicSheetCalculator {
             }
             // calculate RepetitionInstructions (Dal Segno, Coda, etc)
             this.calculateWordRepetitionInstructions();
+            this.harmonizeVoltaHeights();
         }
         // calculate endings last, so they appear above measure numbers
         this.calculateRepetitionEndings();
@@ -4035,6 +4036,10 @@ export abstract class MusicSheetCalculator {
             const repetition: Repetition = musicsheet.Repetitions[idx];
             this.calcGraphicalRepetitionEndingsRecursively(repetition);
         }
+    }
+
+    protected harmonizeVoltaHeights(): void {
+        return;
     }
 
     private calculateTempoExpressions(): void {

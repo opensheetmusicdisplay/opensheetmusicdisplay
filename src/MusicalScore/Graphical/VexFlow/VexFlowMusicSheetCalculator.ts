@@ -2524,4 +2524,61 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
   }
+
+  protected override harmonizeVoltaHeights(): void {
+    interface VoltaEntry {
+      measure: VexFlowMeasure;
+      volta: VF.Volta;
+      measureNumber: number;
+    }
+    const allVoltas: VoltaEntry[] = [];
+
+    for (const vml of this.graphicalMusicSheet.MeasureList) {
+      for (const measure of vml) {
+        if (!measure?.isVisible()) { continue; }
+        const vfm: VexFlowMeasure = measure as VexFlowMeasure;
+        const stave: VF.Stave = vfm.getVFStave();
+        if (!stave) { continue; }
+        for (const mod of stave.getModifiers()) {
+          if (mod instanceof VF.Volta) {
+            allVoltas.push({
+              measure: vfm,
+              volta: mod,
+              measureNumber: vfm.MeasureNumber,
+            });
+            break;
+          }
+        }
+      }
+    }
+
+    if (allVoltas.length < 2) { return; }
+
+    // Group consecutive volta measures into repeat sections.
+    // Measures within <=2 numbers of each other belong to same group.
+    const groups: VoltaEntry[][] = [];
+    let currentGroup: VoltaEntry[] = [allVoltas[0]];
+    for (let i: number = 1; i < allVoltas.length; i++) {
+      if (allVoltas[i].measureNumber - allVoltas[i - 1].measureNumber <= 2) {
+        currentGroup.push(allVoltas[i]);
+      } else {
+        groups.push(currentGroup);
+        currentGroup = [allVoltas[i]];
+      }
+    }
+    groups.push(currentGroup);
+
+    // For each group, find the minimum yShift (highest on screen) and equalize.
+    for (const group of groups) {
+      if (group.length < 2) { continue; }
+      let minYShift: number = Infinity;
+      for (const entry of group) {
+        const yShift: number = entry.volta.getYShift();
+        if (yShift < minYShift) { minYShift = yShift; }
+      }
+      for (const entry of group) {
+        entry.volta.setYShift(minYShift);
+      }
+    }
+  }
 }
