@@ -1097,6 +1097,27 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // Create the StaveTempo if Phase 1 didn't handle it (e.g. noteEquation tempos).
     const vfStave: VF.Stave = vfMeasure.getVFStave();
+
+    // Check for LEFT-position repetition symbols (segno/coda) that share
+    // the same x-range as the metronome mark. These are added by
+    // calculateWordRepetitionInstructions which runs after
+    // calculateSkyBottomLines, so their footprint is not in the skyline.
+    for (const mod of vfStave.getModifiers()) {
+      if ((mod as any).getCategory?.() !== "Repetition") { continue; }
+      if (mod.getPosition() !== VF.StaveModifier.Position.LEFT) { continue; }
+      const numLines: number = vfStave.getNumLines();
+      const refDiffPx: number = vfStave.getYForTopText(numLines) - vfStave.getYForTopText(1);
+      const offsetY: number = (mod as any).symbolType === VF.Repetition.type.SEGNO_LEFT ? 10 : 25;
+      const modYShift: number = (mod as any).yShift ?? 0;
+      const glyphAscent: number = 20;
+      const symbolTopPx: number = refDiffPx + offsetY + modYShift - glyphAscent;
+      const paddingPx: number = 10;
+      const maxYShift: number = (symbolTopPx - paddingPx) / unitInPixels;
+      if (maxYShift < yShift) {
+        yShift = maxYShift;
+      }
+    }
+
     if (!vfMeasure.hasMetronomeMark) {
       if (metronomeExpression.metronomeNoteGroupLeft && metronomeExpression.metronomeNoteGroupRight) {
         const noteEquation: any = this.buildNoteEquationForVexFlow(

@@ -527,4 +527,73 @@ describe("VexFlow Measure - Pedal, Segno, Skyline", () => {
     expect(overflowCount, `${overflowCount} chord symbols overflow system margin`)
       .to.equal(0);
   });
+
+  it("segno and metronome mark should not overlap (stave_repetitions)", async function (): Promise<void> {
+    this.timeout(30000);
+    const score: Document = TestUtils.getScore("test_staverepetitions_coda_etc.musicxml");
+    const div: HTMLElement = TestUtils.getDivElement(document);
+    const o: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, { autoResize: false });
+    await o.load(score);
+    o.render();
+
+    const m1: VexFlowMeasure = o.GraphicSheet.MeasureList[0][0] as VexFlowMeasure;
+    const vfStave: VF.Stave = m1.getVFStave();
+    const mods: VF.StaveModifier[] = vfStave.getModifiers();
+
+    let segno: any;
+    let staveTempo: any;
+    for (const mod of mods) {
+      if ((mod as any).getCategory?.() === "Repetition" &&
+          (mod as any).symbolType === VF.Repetition.type.SEGNO_LEFT) {
+        segno = mod;
+      }
+      if ((mod as any).tempo && (mod as any).tempo.duration) {
+        staveTempo = mod;
+      }
+    }
+
+    expect(segno, "M1 should have SEGNO_LEFT modifier").to.not.be.undefined;
+    expect(staveTempo, "M1 should have StaveTempo modifier").to.not.be.undefined;
+
+    // Font size check
+    const segnoFontPx: number = segno.fontSizeInPixels;
+    expect(segnoFontPx, "segno font should be < 30px (reduced from default)")
+      .to.be.below(30);
+
+    // Compute rendered pixel positions from stave geometry + modifier offsets.
+    // drawSegnoFixed: renderText(ctx, modXShift, getYForTopText(numLines) + offsetY)
+    //   → fills at (modXShift + this.x + this.xShift, yBase + this.y + this.yShift)
+    const numLines: number = vfStave.getNumLines();
+    const segnoOffsetY: number = 10; // Metrics.get('Repetition.segno.offsetY')
+    const segnoLeft: number = vfStave.getModifierXShift(segno.getPosition()) + segno.x + (segno.xShift ?? 0);
+    const segnoBaselineY: number = vfStave.getYForTopText(numLines) + segnoOffsetY + (segno.y ?? 0) + (segno.yShift ?? 0);
+    const segnoTop: number = segnoBaselineY - segnoFontPx;
+    const segnoBottom: number = segnoBaselineY;
+    const segnoRight: number = segnoLeft + (segno.width ?? 0);
+
+    // StaveTempo.draw: y = getYForTopText(1) + this.yShift, x = this.x + modXShift
+    const tempoLeft: number = staveTempo.x + vfStave.getModifierXShift(staveTempo.getPosition());
+    const tempoBaselineY: number = vfStave.getYForTopText(1) + (staveTempo.yShift ?? staveTempo.getYShift() ?? 0);
+    const tempoFontPx: number = staveTempo.fontSizeInPixels ?? 18;
+    const tempoTop: number = tempoBaselineY - tempoFontPx;
+    const tempoBottom: number = tempoBaselineY;
+    const tempoRight: number = tempoLeft + (staveTempo.width ?? 0);
+
+    console.log(`Segno: x=[${segnoLeft.toFixed(1)}..${segnoRight.toFixed(1)}] ` +
+      `y=[${segnoTop.toFixed(1)}..${segnoBottom.toFixed(1)}] font=${segnoFontPx.toFixed(1)}px`);
+    console.log(`Tempo: x=[${tempoLeft.toFixed(1)}..${tempoRight.toFixed(1)}] ` +
+      `y=[${tempoTop.toFixed(1)}..${tempoBottom.toFixed(1)}] font=${tempoFontPx.toFixed(1)}px`);
+
+    // Check bounding box overlap
+    const xOverlap: boolean = segnoLeft < tempoRight && segnoRight > tempoLeft;
+    const yOverlap: boolean = segnoTop < tempoBottom && segnoBottom > tempoTop;
+    const collision: boolean = xOverlap && yOverlap;
+
+    if (collision) {
+      const overlapY: number = Math.min(segnoBottom, tempoBottom) - Math.max(segnoTop, tempoTop);
+      console.log(`COLLISION: y-overlap=${overlapY.toFixed(1)}px`);
+    }
+
+    expect(collision, "segno and metronome mark should not overlap").to.be.false;
+  });
 });
