@@ -1168,6 +1168,7 @@ export abstract class MusicSheetCalculator {
                         maximumOffset = maxOffset;
                     }
                     let previousChordContainer: GraphicalChordSymbolContainer;
+                    let previousChordEnd: number = -Infinity;
                     for (const staffEntry of measure.staffEntries) {
                         if (!staffEntry.graphicalChordContainers || staffEntry.graphicalChordContainers.length === 0) {
                             continue;
@@ -1235,8 +1236,14 @@ export abstract class MusicSheetCalculator {
                                     }
                                 }
                             }
-                            const start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
-                            const end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
+                            let start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
+                            let end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
+                            if (start < previousChordEnd + this.rules.ChordSymbolXSpacing) {
+                                const shift: number = previousChordEnd + this.rules.ChordSymbolXSpacing - start;
+                                gps.RelativePosition.x += shift;
+                                start += shift;
+                                end += shift;
+                            }
                             const placement: PlacementEnum = graphicalChordContainer.GetChordSymbolContainer.Placement;
                             if (placement === PlacementEnum.Below) {
                                 if (!this.rules.ChordSymbolYAlignment || maximumOffset < 0) {
@@ -1273,6 +1280,7 @@ export abstract class MusicSheetCalculator {
                                 skybottomcalculator.updateSkyLineInRange(start, end, minimumOffset + gLabel.PositionAndShape.BorderMarginTop);
                             }
                             previousChordContainer = graphicalChordContainer;
+                            previousChordEnd = end;
                         }
                     }
                 }

@@ -14,6 +14,7 @@ import { VexFlowMeasure } from "../../../../src/MusicalScore/Graphical/VexFlow/V
 import { AbstractGraphicalExpression } from "../../../../src/MusicalScore/Graphical/AbstractGraphicalExpression";
 import { GraphicalSlur } from "../../../../src/MusicalScore/Graphical/GraphicalSlur";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
+import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 
 function buildGMS(path: string): GraphicalMusicSheet {
   const score: any = TestUtils.getScore(path);
@@ -441,5 +442,89 @@ describe("VexFlow Measure - Pedal, Segno, Skyline", () => {
       }
     }
     expect(firstChordY, "should find a chord symbol in M1").to.not.equal(0);
+  });
+
+  it("consecutive chord symbols should not overlap horizontally (chord_spacing)", async function (): Promise<void> {
+    this.timeout(30000);
+    const mxl: string = TestUtils.getMXL("OSMD_function_test_chord_spacing.mxl");
+    const div: HTMLElement = TestUtils.getDivElement(document);
+    const o: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, { autoResize: false });
+    await o.load(mxl);
+    o.render();
+
+    interface ChordPos {
+      measure: number;
+      text: string;
+      left: number;
+      right: number;
+    }
+    const chords: ChordPos[] = [];
+
+    for (const vml of o.GraphicSheet.MeasureList) {
+      const measure: any = vml[0];
+      if (!measure?.isVisible()) { continue; }
+      for (const se of measure.staffEntries) {
+        if (!se.graphicalChordContainers || se.graphicalChordContainers.length === 0) { continue; }
+        for (const cc of se.graphicalChordContainers) {
+          cc.GraphicalLabel.PositionAndShape.calculateAbsolutePosition();
+          const absX: number = cc.GraphicalLabel.PositionAndShape.AbsolutePosition.x;
+          const marginLeft: number = cc.GraphicalLabel.PositionAndShape.BorderMarginLeft ?? 0;
+          const marginRight: number = cc.GraphicalLabel.PositionAndShape.BorderMarginRight ?? 0;
+          chords.push({
+            measure: measure.MeasureNumber,
+            text: cc.GraphicalLabel?.Label?.text ?? "?",
+            left: absX + marginLeft,
+            right: absX + marginRight,
+          });
+        }
+      }
+    }
+
+    expect(chords.length, "should find chord symbols").to.be.greaterThan(1);
+
+    let collisionCount: number = 0;
+    for (let i: number = 0; i < chords.length - 1; i++) {
+      const a: ChordPos = chords[i];
+      const b: ChordPos = chords[i + 1];
+      if (b.left < a.left - 20) { continue; } // system break — x resets far left
+      const overlap: number = a.right - b.left;
+      if (overlap > 0.1) {
+        collisionCount++;
+        console.log(
+          `  OVERLAP: "${a.text}" [${a.left.toFixed(2)}..${a.right.toFixed(2)}] ` +
+          `"${b.text}" [${b.left.toFixed(2)}..${b.right.toFixed(2)}] ` +
+          `overlap=${overlap.toFixed(2)} M${a.measure}→M${b.measure}`);
+      }
+    }
+    expect(collisionCount, `${collisionCount} chord symbol pairs overlap horizontally`)
+      .to.equal(0);
+
+    let overflowCount: number = 0;
+    for (const page of o.GraphicSheet.MusicPages) {
+      for (const system of page.MusicSystems) {
+        for (const sl of system.StaffLines) {
+          sl.PositionAndShape.calculateAbsolutePosition();
+          const systemRight: number = sl.PositionAndShape.AbsolutePosition.x + sl.PositionAndShape.Size.width;
+          for (const measure of sl.Measures) {
+            for (const se of measure.staffEntries) {
+              for (const cc of se.graphicalChordContainers) {
+                cc.GraphicalLabel.PositionAndShape.calculateAbsolutePosition();
+                const chordRight: number = cc.GraphicalLabel.PositionAndShape.AbsolutePosition.x +
+                  (cc.GraphicalLabel.PositionAndShape.BorderMarginRight ?? 0);
+                if (chordRight > systemRight + 0.5) {
+                  overflowCount++;
+                  console.log(
+                    `  OVERFLOW: M${measure.MeasureNumber} "${cc.GraphicalLabel?.Label?.text}" ` +
+                    `right=${chordRight.toFixed(2)} > systemRight=${systemRight.toFixed(2)} ` +
+                    `overflow=${(chordRight - systemRight).toFixed(2)}`);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    expect(overflowCount, `${overflowCount} chord symbols overflow system margin`)
+      .to.equal(0);
   });
 });

@@ -302,6 +302,7 @@ export class EngravingRules {
     public LyricOverlapAllowedIntoNextMeasure: number;
     public MinimumDistanceBetweenDashes: number;
     public MaximumLyricsElongationFactor: number;
+    public MaximumChordSymbolElongationFactor: number;
 
     public SlurPlacementFromXML: boolean;
     public SlurPlacementAtStems: boolean;
@@ -897,6 +898,7 @@ export class EngravingRules {
         this.LyricOverlapAllowedIntoNextMeasure = 3.4; // optimal for dashed last lyric, see Land der Berge
         this.MinimumDistanceBetweenDashes = 10;
         this.MaximumLyricsElongationFactor = 1.5;
+        this.MaximumChordSymbolElongationFactor = 3.0;
 
         // expressions variables
         this.TempoYSpacing = 0.5; // note this is correlated with MetronomeMarkYShift: one-sided change can cause collisions

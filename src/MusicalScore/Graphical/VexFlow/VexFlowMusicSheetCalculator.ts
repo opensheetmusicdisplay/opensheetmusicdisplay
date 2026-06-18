@@ -723,7 +723,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   public calculateElongationFactorFromStaffEntries(staffEntries: GraphicalStaffEntry[], oldMinimumStaffEntriesWidth: number,
-                                                  elongationFactorForMeasureWidth: number, measureNumber: number): number {
+                                                  lyricElongation: number, chordElongation: number,
+                                                  measureNumber: number): { lyricFactor: number, chordFactor: number } {
     interface EntryInfo {
       cumulativeOverlap: number;
       extend: boolean;
@@ -738,7 +739,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       [i: number]: EntryInfo;
     }
 
-    let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
+    let newLyricElongation: number = lyricElongation;
+    let newChordElongation: number = chordElongation;
 
     const lastLyricEntryDict: EntryDict = {}; // holds info about last lyric entries for all verses j???
     const lastChordEntryDict: EntryDict = {}; // holds info about last chord entries for all verses j???
@@ -746,26 +748,26 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
     for (const staffEntry of staffEntries) {
       if (staffEntry.LyricsEntries.length > 0 && this.rules.RenderLyrics) {
-        newElongationFactorForMeasureWidth =
+        newLyricElongation =
           this.calculateElongationFactor(
             staffEntry.LyricsEntries,
             staffEntry,
             lastLyricEntryDict,
             oldMinimumStaffEntriesWidth,
-            newElongationFactorForMeasureWidth,
+            newLyricElongation,
             measureNumber,
             this.rules.HorizontalBetweenLyricsDistance,
             this.rules.LyricOverlapAllowedIntoNextMeasure,
           );
       }
       if (staffEntry.graphicalChordContainers.length > 0 && this.rules.RenderChordSymbols) {
-        newElongationFactorForMeasureWidth =
+        newChordElongation =
           this.calculateElongationFactor(
             staffEntry.graphicalChordContainers,
             staffEntry,
             lastChordEntryDict,
             oldMinimumStaffEntriesWidth,
-            newElongationFactorForMeasureWidth,
+            newChordElongation,
             measureNumber,
             this.rules.ChordSymbolXSpacing,
             this.rules.ChordOverlapAllowedIntoNextMeasure,
@@ -773,31 +775,44 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
 
-    return newElongationFactorForMeasureWidth;
+    return { lyricFactor: newLyricElongation, chordFactor: newChordElongation };
   }
 
   public calculateMeasureWidthFromStaffEntries(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
-    let elongationFactorForMeasureWidth: number = 1;
+    let lyricElongation: number = 1;
+    let chordElongation: number = 1;
+    let chordWidthFloor: number = 0;
 
     for (const measure of measuresVertical) {
       if (!measure || measure.staffEntries.length === 0 || !measure.isVisible()) {
         continue;
       }
 
-      // (measure as VexFlowMeasure).format(); // needed to get vexflow bbox / x-position
-      elongationFactorForMeasureWidth =
+      const result: { lyricFactor: number, chordFactor: number } =
         this.calculateElongationFactorFromStaffEntries(
           measure.staffEntries,
           oldMinimumStaffEntriesWidth,
-          elongationFactorForMeasureWidth,
+          lyricElongation,
+          chordElongation,
           measure.MeasureNumber,
         );
+      lyricElongation = result.lyricFactor;
+      chordElongation = result.chordFactor;
 
+      if (this.rules.RenderChordSymbols) {
+        let totalChordWidth: number = 0;
+        for (const se of measure.staffEntries) {
+          for (const cc of se.graphicalChordContainers) {
+            totalChordWidth += cc.GraphicalLabel.PositionAndShape.Size.width + this.rules.ChordSymbolXSpacing;
+          }
+        }
+        chordWidthFloor = Math.max(chordWidthFloor, totalChordWidth);
+      }
     }
-    elongationFactorForMeasureWidth = Math.min(elongationFactorForMeasureWidth, this.rules.MaximumLyricsElongationFactor);
-    const newMinimumStaffEntriesWidth: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
-
-    return newMinimumStaffEntriesWidth;
+    lyricElongation = Math.min(lyricElongation, this.rules.MaximumLyricsElongationFactor);
+    chordElongation = Math.min(chordElongation, this.rules.MaximumChordSymbolElongationFactor);
+    const elongationFactor: number = Math.max(lyricElongation, chordElongation);
+    return Math.max(oldMinimumStaffEntriesWidth * elongationFactor, chordWidthFloor);
   }
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
