@@ -29,6 +29,23 @@ function getVF5NoteheadStaffY(note: GraphicalNote): number {
     return note.PositionAndShape?.RelativePosition?.y ?? 0;
 }
 
+/** Return staffLine-relative X from VF5's actual rendered position (in OSMD units).
+ *  Falls back to OSMD model positions when VF stave is unavailable. */
+function getVF5SlurX(note: GraphicalNote): number {
+    const vfgNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
+    const vfNote: VF.StaveNote = vfgNote.vfnote?.[0] as VF.StaveNote;
+    const vfStave: VF.Stave | undefined = vfNote?.getStave?.();
+    if (vfNote && vfStave) {
+        const staveX: number = vfStave.getX();
+        const measureRelX: number = note.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
+        const staffLinePixelX: number = staveX - measureRelX * 10;
+        return (vfNote.getAbsoluteX() - staffLinePixelX) / 10;
+    }
+    return note.PositionAndShape.RelativePosition.x
+         + note.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
+         + note.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
+}
+
 export class GraphicalSlur extends GraphicalCurve {
     // private intersection: PointF2D;
 
@@ -521,14 +538,8 @@ export class GraphicalSlur extends GraphicalCurve {
         let endY: number = 0;
 
         if (slurStartNote) {
-            // must be relative to StaffLine
-            startX = slurStartNote.PositionAndShape.RelativePosition.x + slurStartNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
-                                            + slurStartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-
-            // If Slur starts on a Gracenote
-            if (this.graceStart) {
-                startX += slurStartNote.parentVoiceEntry.parentStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-            }
+            // must be relative to StaffLine — use VF5 actual rendered position
+            startX = getVF5SlurX(slurStartNote);
 
             //const first: GraphicalNote = slurStartNote.parentVoiceEntry.notes[0];
 
@@ -597,13 +608,7 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         if (slurEndNote) {
-            endX = slurEndNote.PositionAndShape.RelativePosition.x + slurEndNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
-                + slurEndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-
-            // If Slur ends in a Gracenote
-            if (this.graceEnd) {
-                endX += slurEndNote.parentVoiceEntry.parentStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-            }
+            endX = getVF5SlurX(slurEndNote);
 
             const slurEndVE: GraphicalVoiceEntry = slurEndNote.parentVoiceEntry;
 
