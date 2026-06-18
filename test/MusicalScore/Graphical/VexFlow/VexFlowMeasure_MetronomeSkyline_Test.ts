@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { expect } from "chai";
 import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
+import { SkyBottomLineCalculator } from "../../../../src/MusicalScore/Graphical/SkyBottomLineCalculator";
 import { StaffLine } from "../../../../src/MusicalScore/Graphical/StaffLine";
 import { VexFlowMeasure } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
@@ -27,29 +28,33 @@ describe("VexFlow Measure - Metronome Skyline", () => {
         osmd.render();
     });
 
-    it("metronome mark updates skyline (even when added via addMetronomeMarksToStave)", () => {
-        // First staffline of first system — Entertainer M1 has
-        // "Not fast" (verbal tempo) + "♩ = 72" (metronome mark).
+    it("metronome mark updates skyline in its x-range", () => {
         const staffLine: StaffLine = osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
-        const skyline: number[] = staffLine.SkyBottomLineCalculator.SkyLine;
+        const skyCalc: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+        const skyline: number[] = skyCalc.SkyLine;
         expect(skyline, "skyline must be populated after render").to.not.be.undefined;
         expect(skyline.length, "skyline must have entries").to.be.greaterThan(0);
 
-        // skyline[0] is the minimum in the metronome mark's x-range.
-        // Default yShift = MetronomeMarkYShift (-1.0) - 1.4 (expression above staffline) = -2.4.
-        // Skyline hack deposits -4.5 + yShift = -6.9 at index 0.
-        // Without the fix, only "Not fast" contributes (< ~ -3.5).
-        expect(skyline[0], "skyline[0] must reflect metronome mark (<= -5.0)")
+        // The metronome's skyline footprint starts at measureX + beginW.
+        const measure: VexFlowMeasure = staffLine.Measures[0] as VexFlowMeasure;
+        const measureX: number = measure.PositionAndShape.RelativePosition.x;
+        const beginW: number = measure.beginInstructionsWidth;
+        // getSkyLineMinInRange multiplies by SamplingUnit internally — pass OSMD units
+        const rangeStart: number = measureX + beginW;
+        const skyMin: number = skyCalc.getSkyLineMinInRange(rangeStart, rangeStart + 3);
+
+        // After createMetronomeMark() the skyline in the metronome range
+        // must reflect the mark (typically <= -5.0).
+        expect(skyMin, `skyline in metronome range [${rangeStart}..] must reflect mark (<= -5.0)`)
             .to.be.at.most(-5.0);
     });
 
-    it("StaveTempo yShift is adjusted below default when skyline has beams above staff", () => {
+    it("StaveTempo yShift pushed above stems by skyline check", () => {
         const rules: EngravingRules = osmd.EngravingRules;
         const measure: VexFlowMeasure = osmd.GraphicSheet.MusicPages[0].MusicSystems[0]
             .StaffLines[0].Measures[0] as VexFlowMeasure;
         const vfStave: any = measure.getVFStave();
 
-        // Find the StaveTempo modifier (has tempo.duration).
         let staveTempo: any = undefined;
         for (const mod of vfStave.getModifiers()) {
             if ((mod as any).tempo && (mod as any).tempo.duration) {
@@ -59,16 +64,84 @@ describe("VexFlow Measure - Metronome Skyline", () => {
         }
         expect(staveTempo, "StaveTempo must be present on M1").to.not.be.undefined;
 
-        // Default yShift without skyline adjustment: MetronomeMarkYShift (-1.0)
-        // minus 1.4 for expression above staffline ("Not fast") = -2.4 units = -24 px.
-        // unitInPixels = 10 (OSMD constant, 1 OSMD unit = 10 VF px).
+        // Entertainer M1 has stems extending ~6.7 units above staff in the
+        // metronome range. The skyline check pushes the metronome above them.
         const unitInPixels: number = 10;
-        const defaultYShiftPx: number = (rules.MetronomeMarkYShift - 1.4) * unitInPixels;
+        const baseYShiftPx: number = (rules.MetronomeMarkYShift - 1.4) * unitInPixels;
         const actualYShiftPx: number = staveTempo.getYShift();
 
-        // The skyline in M1 has beams extending above the staff, so the
-        // adjusted yShift must be more negative than the default.
-        expect(actualYShiftPx, "StaveTempo yShift must be more negative than default")
+        expect(actualYShiftPx, "yShift must be pushed below base by skyline")
+            .to.be.below(baseYShiftPx);
+        expect(actualYShiftPx, "yShift must not be excessively pushed")
+            .to.be.at.least(-80);
+    });
+});
+
+/** Verify the StaveTempo stays close to the stave (not pushed far away
+ *  by Phase 1 footprint contamination). */
+describe("VexFlow Measure - Metronome Distance", () => {
+    it("Bach BWV846: metronome pushed above stems by skyline", async function (): Promise<void> {
+        this.timeout(30000);
+        const score: Document = TestUtils.getScore(
+            "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml");
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const o: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, { autoResize: false });
+        await o.load(score);
+        o.render();
+
+        const measure: VexFlowMeasure =
+            o.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0].Measures[0] as VexFlowMeasure;
+        const vfStave: any = measure.getVFStave();
+        let staveTempo: any = undefined;
+        for (const mod of vfStave.getModifiers()) {
+            if ((mod as any).tempo && (mod as any).tempo.duration) {
+                staveTempo = mod;
+                break;
+            }
+        }
+        expect(staveTempo, "StaveTempo must be present").to.not.be.undefined;
+
+        // BWV846 M1 has 16th note arpeggios extending above the staff.
+        // The skyline check detects these and pushes the metronome above them.
+        const unitInPixels: number = 10;
+        const baseYShiftPx: number = (o.EngravingRules.MetronomeMarkYShift - 1.4) * unitInPixels;
+        const actualYShiftPx: number = staveTempo.getYShift();
+
+        expect(actualYShiftPx, "yShift should be pushed below base by skyline")
+            .to.be.below(baseYShiftPx);
+        expect(actualYShiftPx, "yShift must not be excessively negative")
+            .to.be.at.least(-70);
+    });
+
+    it("Bach Air: metronome pushed only as needed by beams", async function (): Promise<void> {
+        this.timeout(30000);
+        const score: Document = TestUtils.getScore("JohannSebastianBach_Air.xml");
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const o: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, { autoResize: false });
+        await o.load(score);
+        o.render();
+
+        const measure: VexFlowMeasure =
+            o.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0].Measures[0] as VexFlowMeasure;
+        const vfStave: any = measure.getVFStave();
+        let staveTempo: any = undefined;
+        for (const mod of vfStave.getModifiers()) {
+            if ((mod as any).tempo && (mod as any).tempo.duration) {
+                staveTempo = mod;
+                break;
+            }
+        }
+        expect(staveTempo, "StaveTempo must be present").to.not.be.undefined;
+
+        const unitInPixels: number = 10;
+        const defaultYShiftPx: number = o.EngravingRules.MetronomeMarkYShift * unitInPixels;
+        const actualYShiftPx: number = staveTempo.getYShift();
+
+        // Air's beams extend above staff enough to push the metronome
+        // moderately, but not excessively.
+        expect(actualYShiftPx, "yShift should be below default (skyline-adjusted for beams)")
             .to.be.below(defaultYShiftPx);
+        expect(actualYShiftPx, "yShift must not be pushed too far away")
+            .to.be.at.least(defaultYShiftPx - 30);
     });
 });

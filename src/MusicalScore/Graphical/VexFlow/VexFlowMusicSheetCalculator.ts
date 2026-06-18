@@ -48,6 +48,7 @@ import { GraphicalSlur } from "../GraphicalSlur";
 import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
+import { AbstractTempoExpression } from "../../VoiceData/Expressions/AbstractTempoExpression";
 import { InstantaneousTempoExpression, MetronomeNote, MetronomeNoteGroup, TempoType } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
@@ -1029,18 +1030,57 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let yShift: number = this.rules.MetronomeMarkYShift;
     let hasExpressionsAboveStaffline: boolean = false;
     for (const expression of metronomeExpression.parentMeasure.TempoExpressions) {
-      const isMetronomeExpression: boolean = expression.InstantaneousTempo?.TempoType === TempoType.metronomeMark;
-      if (expression.getPlacementOfFirstEntry() === PlacementEnum.Above &&
-          !isMetronomeExpression) {
-        hasExpressionsAboveStaffline = true;
-        break;
+      if (expression.getPlacementOfFirstEntry() !== PlacementEnum.Above) { continue; }
+      for (const entry of expression.EntriesList) {
+        const e: AbstractTempoExpression = entry.Expression;
+        if (e instanceof InstantaneousTempoExpression &&
+            (e as InstantaneousTempoExpression).TempoType !== TempoType.metronomeMark) {
+          hasExpressionsAboveStaffline = true;
+          break;
+        }
       }
+      if (hasExpressionsAboveStaffline) { break; }
     }
     if (hasExpressionsAboveStaffline) {
       yShift -= 1.4;
     }
 
-    // Create the StaveTempo if not already done by addMetronomeMarksToStave().
+    // Check non-tempo expressions already placed above the staff
+    // (e.g. "w/brushes"). These are positioned by calculateMoodAndUnknownExpressions
+    // which runs before calculateTempoExpressions.
+    if (vfMeasure.ParentStaffLine) {
+      for (const expr of vfMeasure.ParentStaffLine.AbstractExpressions) {
+        if (!expr.Label?.Label?.text || expr.parentMeasure !== metronomeExpression.parentMeasure) {
+          continue;
+        }
+        const labelBB: BoundingBox = expr.Label.PositionAndShape;
+        const labelBottom: number = labelBB.RelativePosition.y + (labelBB.BorderBottom ?? 0);
+        if (labelBottom >= 0) { continue; }
+        const maxYShift: number = labelBottom + 1.2;
+        if (maxYShift < yShift) {
+          yShift = maxYShift;
+        }
+      }
+    }
+
+    // Check chord symbols on the first beat (positioned by calculateChordSymbols
+    // which runs before calculateTempoExpressions).
+    for (const staffEntry of vfMeasure.staffEntries) {
+      if (staffEntry.graphicalChordContainers.length > 0) {
+        const chordLabel: GraphicalLabel = staffEntry.graphicalChordContainers[0].GraphicalLabel;
+        const chordTop: number = chordLabel.PositionAndShape.RelativePosition.y +
+          (chordLabel.PositionAndShape.BorderMarginTop ?? 0);
+        if (chordTop < 0) {
+          const maxYShift: number = chordTop + 1.2;
+          if (maxYShift < yShift) {
+            yShift = maxYShift;
+          }
+        }
+        break;
+      }
+    }
+
+    // Create the StaveTempo if Phase 1 didn't handle it (e.g. noteEquation tempos).
     const vfStave: VF.Stave = vfMeasure.getVFStave();
     if (!vfMeasure.hasMetronomeMark) {
       if (metronomeExpression.metronomeNoteGroupLeft && metronomeExpression.metronomeNoteGroupRight) {
@@ -1069,41 +1109,53 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       vfMeasure.updateInstructionWidth();
     }
 
-    // Position the StaveTempo above the skyline (beams, stems, other expressions).
-    // The fixed yShift does not account for elements that extend above the staff.
-    // This runs even when hasMetronomeMark was already true, because the skyline
-    // is only populated now (calculateSkyBottomLines ran between buildMusicSystems
-    // and calculateTempoExpressions).
-    const staveTempo: any = this.findStaveTempoModifier(vfStave);
-    if (staveTempo) {
-      const skyBottomLineCalculator: SkyBottomLineCalculator | undefined = vfMeasure.ParentStaffLine?.SkyBottomLineCalculator;
-      if (skyBottomLineCalculator) {
-        const measureX: number = vfMeasure.PositionAndShape.RelativePosition.x;
-        const beginW: number = vfMeasure.beginInstructionsWidth;
-        const xStart: number = Math.round(measureX * this.rules.SamplingUnit);
-        const xEnd: number = Math.round((measureX + beginW) * this.rules.SamplingUnit);
-        const skyMin: number = skyBottomLineCalculator.getSkyLineMinInRange(xStart, xEnd);
+    // Skyline check runs once per measure. The first call queries the clean
+    // skyline and updates it with the metronome footprint. A second call
+    // (e.g. from a dual-staff score) would read that update and over-push.
+    if (vfMeasure.hasMetronomeSkylineCheck) {
+      return;
+    }
+    vfMeasure.hasMetronomeSkylineCheck = true;
 
-        // -4.5 + yShift is the skyline value the metronome mark would push.
-        // If the skyline is already more negative (beams above), adjust yShift
-        // so the metronome mark stacks above the highest element.
-        const padding: number = 0.5;
-        const targetSkyValue: number = skyMin - padding;
-        const neededYShift: number = targetSkyValue + 4.5;
-        if (neededYShift < yShift) {
-          yShift = neededYShift;
-          staveTempo.setYShift(yShift * unitInPixels);
-        }
-        skyBottomLineCalculator.updateSkyLineInRange(xStart, xEnd, -4.5 + yShift);
+    const staveTempo: any = this.findStaveTempoModifier(vfStave);
+    if (!staveTempo) { return; }
+
+    // Apply Phase 2 yShift (accounts for non-tempo expressions above staff
+    // that Phase 1 couldn't detect).
+    staveTempo.setYShift(yShift * unitInPixels);
+
+    const skyBottomLineCalculator: SkyBottomLineCalculator | undefined =
+      vfMeasure.ParentStaffLine?.SkyBottomLineCalculator;
+    if (skyBottomLineCalculator) {
+      const tempoWidthUnits: number = (staveTempo.width ?? 0) / unitInPixels;
+      const measureX: number = vfMeasure.PositionAndShape.RelativePosition.x;
+      const beginW: number = vfMeasure.beginInstructionsWidth;
+      // getSkyLineMinInRange/updateSkyLineInRange multiply by SamplingUnit internally
+      const xStart: number = measureX + beginW;
+      const xEnd: number = measureX + beginW + tempoWidthUnits;
+      const skyMin: number = skyBottomLineCalculator.getSkyLineMinInRange(xStart, xEnd);
+
+      // topTextOffset: getYForTopText(1) sits ~2.0 units above staff top.
+      // glyphDescent: metronome glyph extends ~0.5 units below baseline.
+      const topTextOffset: number = 2.0;
+      const metronomeHeight: number = 2.5;
+      const glyphDescent: number = 0.5;
+      const padding: number = 0.5;
+      const targetSkyValue: number = skyMin - padding - glyphDescent;
+      const neededYShift: number = targetSkyValue + topTextOffset;
+      if (neededYShift < yShift) {
+        yShift = neededYShift;
+        staveTempo.setYShift(yShift * unitInPixels);
       }
+      skyBottomLineCalculator.updateSkyLineInRange(
+        xStart, xEnd, yShift - topTextOffset - metronomeHeight);
     }
   }
 
   /** Find the StaveTempo modifier already added to the VF Stave. */
   private findStaveTempoModifier(vfStave: VF.Stave): any {
     for (const mod of vfStave.getModifiers()) {
-      // StaveTempo is a StaveModifier with a 'tempo' property containing duration/bpm.
-      if ((mod as any).tempo && (mod as any).tempo.duration) {
+      if ((mod as any).tempo && ((mod as any).tempo.duration || (mod as any).tempo.noteEquation)) {
         return mod;
       }
     }

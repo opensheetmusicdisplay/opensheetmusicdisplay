@@ -457,28 +457,23 @@ export class GraphicalSlur extends GraphicalCurve {
         const endStaffAbove: boolean =
             endStaffLine.PositionAndShape.RelativePosition.y < startStaffLine.PositionAndShape.RelativePosition.y;
 
-        const noteHeadHalfHeight: number = 0.5;
-        const yGap: number = rules.SlurNoteHeadYOffset; // gap between notehead and slur tip
-        let startY: number;
-        let endY: number;
-        if (endStaffAbove) {
-            // slur leaves the lower (start) note upwards and reaches the higher (end) note from below
-            startY = startNoteY - noteHeadHalfHeight - yGap;
-            endY = endNoteY + noteHeadHalfHeight + yGap;
-            this.placement = PlacementEnum.Above;
-        } else {
-            startY = startNoteY + noteHeadHalfHeight + yGap;
-            endY = endNoteY - noteHeadHalfHeight - yGap;
-            this.placement = PlacementEnum.Below;
-        }
+        this.placement = PlacementEnum.Above;
+        const yGap: number = rules.SlurNoteHeadYOffset;
+        const startY: number = startNoteY - yGap;
+        const endY: number = endNoteY - yGap;
 
         // The curve bows out (vertically) from the line connecting the two notes.
         const dx: number = endX - startX;
         const dy: number = endY - startY;
         const distance: number = Math.sqrt(dx * dx + dy * dy);
-        const bow: number = Math.max(rules.SlurCrossStaffMinBow,
-                                     Math.min(rules.SlurCrossStaffMaxBow, distance * rules.SlurCrossStaffBowFactor));
-        const bowSign: number = this.placement === PlacementEnum.Above ? -1 : 1; // -1 = upwards (smaller y)
+        let bow: number = Math.max(rules.SlurCrossStaffMinBow,
+                                   Math.min(rules.SlurCrossStaffMaxBow, distance * rules.SlurCrossStaffBowFactor));
+        // For treble→bass: the chord descends steeply (dy > 0). Control point 1
+        // sits at startY + dy*0.25 - bow; ensure bow > dy*0.3 so cp1 arcs above startY.
+        if (!endStaffAbove && dy > 0) {
+            bow = Math.max(bow, dy * 0.3 + 0.5);
+        }
+        const bowSign: number = -1;
 
         this.bezierStartPt = new PointF2D(startX, startY);
         this.bezierStartControlPt = new PointF2D(startX + dx * 0.25, startY + dy * 0.25 + bowSign * bow);

@@ -76,6 +76,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** The repetition instructions given as words or symbols (coda, dal segno..) */
     public vfRepetitionWords: VF.Repetition[] = [];
     public hasMetronomeMark: boolean = false;
+    public hasMetronomeSkylineCheck: boolean = false;
     /** The VexFlow Stave (= one measure in a staffline) */
     protected stave!: VF.Stave;
     /** VexFlow StaveConnectors (vertical lines) */
@@ -125,6 +126,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         (this.stave as any).MeasureNumber = this.MeasureNumber; // for debug info. vexflow automatically uses stave.measure for rendering measure numbers
         // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
         this.hasMetronomeMark = false;
+        this.hasMetronomeSkylineCheck = false;
 
         if (this.ParentStaff) {
             this.setLineNumber(this.ParentStaff.StafflineCount);
@@ -1898,8 +1900,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (!sourceMeasure) { return 0; }
         let totalMetronomeWidth: number = 0;
 
-        // Check for non-metronome tempo expressions placed above the staffline
-        // (e.g. "Not fast" verbal text). Same logic as createMetronomeMark().
         let yShift: number = this.rules.MetronomeMarkYShift;
         let hasExpressionsAboveStaffline: boolean = false;
         for (const multiTempoExpression of sourceMeasure.TempoExpressions) {

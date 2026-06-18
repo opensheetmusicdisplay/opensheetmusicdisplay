@@ -10,6 +10,11 @@ import * as VF from "vexflow";
 import { StaffLine } from "../../../../src/MusicalScore/Graphical/StaffLine";
 import { BoundingBox } from "../../../../src/MusicalScore/Graphical/BoundingBox";
 
+import { VexFlowMeasure } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
+import { AbstractGraphicalExpression } from "../../../../src/MusicalScore/Graphical/AbstractGraphicalExpression";
+import { GraphicalSlur } from "../../../../src/MusicalScore/Graphical/GraphicalSlur";
+import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
+
 function buildGMS(path: string): GraphicalMusicSheet {
   const score: any = TestUtils.getScore(path);
   const partwise: any = TestUtils.getPartWiseElement(score);
@@ -257,5 +262,184 @@ describe("VexFlow Measure - Pedal, Segno, Skyline", () => {
           .to.be.lessThan(10);
       }
     }
+  });
+
+  it("tempo mark should not collide with tempo text (cajon)", () => {
+    const gms: GraphicalMusicSheet = buildGMS("test_cajon_2-note-system.musicxml");
+    const unitInPixels: number = 10;
+
+    const m1: VexFlowMeasure = gms.MeasureList[0][0] as VexFlowMeasure;
+    const vfStave: VF.Stave = m1.getVFStave();
+    let staveTempo: VF.StaveModifier | undefined;
+    for (const mod of vfStave.getModifiers()) {
+      if ((mod as any).tempo && (mod as any).tempo.duration) {
+        staveTempo = mod;
+        break;
+      }
+    }
+    expect(staveTempo, "should find StaveTempo modifier on M1").to.not.be.undefined;
+
+    const tempoYShiftPx: number = (staveTempo as any).y_shift ?? staveTempo.getYShift();
+    const tempoYShiftUnits: number = tempoYShiftPx / unitInPixels;
+    console.log(`StaveTempo yShift: ${tempoYShiftPx}px = ${tempoYShiftUnits.toFixed(2)} units`);
+
+    const sl: StaffLine = m1.ParentStaffLine;
+    const tempoLabels: AbstractGraphicalExpression[] = sl.AbstractExpressions.filter(
+      (expr: AbstractGraphicalExpression) => {
+        const text: string = expr.Label?.Label?.text ?? "";
+        return expr.Label !== undefined && text.length > 0;
+      });
+    expect(tempoLabels.length, "should find tempo text labels").to.be.greaterThan(0);
+
+    for (const expr of tempoLabels) {
+      const label: any = expr.Label;
+      const labelY: number = label.PositionAndShape.RelativePosition.y;
+      const labelBottom: number = labelY + (label.PositionAndShape.BorderBottom ?? 0);
+      console.log(`Tempo text label: y=${labelY.toFixed(2)} bottom=${labelBottom.toFixed(2)} text="${label.Label?.text ?? "?"}"`);
+
+      // The metronome mark occupies ~1.5 units of height. Its top edge is at approximately
+      // tempoYShiftUnits - 1.5. The tempo text's bottom edge is at labelBottom.
+      // For no overlap: metronome top should be above (more negative than) tempo text bottom.
+      const metronomeTop: number = tempoYShiftUnits - 1.5;
+      console.log(`Metronome top: ${metronomeTop.toFixed(2)}, text bottom: ${labelBottom.toFixed(2)}`);
+      expect(metronomeTop,
+        `metronome top (${metronomeTop.toFixed(2)}) should be above text bottom (${labelBottom.toFixed(2)})`)
+        .to.be.lessThan(labelBottom);
+    }
+  });
+
+  it("tempo mark should be adjusted above beams (Bach BWV846)", () => {
+    const gms: GraphicalMusicSheet = buildGMS("JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml");
+    const unitInPixels: number = 10;
+    const baseYShift: number = gms.ParentMusicSheet.Rules.MetronomeMarkYShift;
+
+    const m1: VexFlowMeasure = gms.MeasureList[0][0] as VexFlowMeasure;
+    const vfStave: VF.Stave = m1.getVFStave();
+    let staveTempo: VF.StaveModifier | undefined;
+    for (const mod of vfStave.getModifiers()) {
+      if ((mod as any).tempo && (mod as any).tempo.duration) {
+        staveTempo = mod;
+        break;
+      }
+    }
+    expect(staveTempo, "should find StaveTempo on M1").to.not.be.undefined;
+
+    const tempoYShiftPx: number = (staveTempo as any).y_shift ?? staveTempo.getYShift();
+    const tempoYShiftUnits: number = tempoYShiftPx / unitInPixels;
+    console.log(`StaveTempo yShift: ${tempoYShiftPx}px = ${tempoYShiftUnits.toFixed(2)} units, base: ${baseYShift}`);
+
+    // The skyline check in createMetronomeMark should have adjusted yShift
+    // below the base value to avoid beams/stems above the staff.
+    expect(tempoYShiftUnits,
+      `yShift (${tempoYShiftUnits.toFixed(2)}) should be below base (${baseYShift}) after skyline adjustment`)
+      .to.be.lessThan(baseYShift);
+
+    // The metronome mark's top edge should be at least 4 units above the staff
+    // (comfortably above beams which typically extend ~2-3 units).
+    const metronomeTop: number = tempoYShiftUnits - 4.5;
+    expect(metronomeTop,
+      `metronome top (${metronomeTop.toFixed(2)}) should be at least 4 units above staff`)
+      .to.be.lessThan(-4.0);
+  });
+
+  it("cross-staff slur left-to-right should end near treble note (Above)", () => {
+    const gms: GraphicalMusicSheet = buildGMS("test_slur_across_staves_left_to_right_hand.musicxml");
+    const rules: any = gms.ParentMusicSheet.Rules;
+
+    const crossedSlurs: GraphicalSlur[] = [];
+    for (const system of gms.MusicPages[0].MusicSystems) {
+      for (const sl of system.StaffLines) {
+        for (const slur of sl.GraphicalSlurs) {
+          if (slur.slur.isCrossed()) {
+            slur.calculateCurveCrossStaff(rules);
+            crossedSlurs.push(slur);
+          }
+        }
+      }
+    }
+
+    expect(crossedSlurs.length, "should find crossed slurs").to.be.greaterThan(0);
+    for (const slur of crossedSlurs) {
+      console.log(`L→R slur: placement=${PlacementEnum[slur.placement]} ` +
+        `start=(${slur.bezierStartPt.x.toFixed(2)},${slur.bezierStartPt.y.toFixed(2)}) ` +
+        `end=(${slur.bezierEndPt.x.toFixed(2)},${slur.bezierEndPt.y.toFixed(2)})`);
+      expect(slur.placement, "cross-staff slur should be Above").to.equal(PlacementEnum.Above);
+      // Start should be above start note (negative offset from notehead)
+      expect(slur.bezierStartPt.y, "start Y should be above staff center (< 2.5)")
+        .to.be.lessThan(2.5);
+    }
+  });
+
+  it("cross-staff slur right-to-left should arc above (Above placement)", () => {
+    const gms: GraphicalMusicSheet = buildGMS("test_slur_across_staves_right_to_left_hand.musicxml");
+    const rules: any = gms.ParentMusicSheet.Rules;
+
+    const crossedSlurs: GraphicalSlur[] = [];
+    for (const system of gms.MusicPages[0].MusicSystems) {
+      for (const sl of system.StaffLines) {
+        for (const slur of sl.GraphicalSlurs) {
+          if (slur.slur.isCrossed()) {
+            slur.calculateCurveCrossStaff(rules);
+            crossedSlurs.push(slur);
+          }
+        }
+      }
+    }
+
+    expect(crossedSlurs.length, "should find crossed slurs").to.be.greaterThan(0);
+    for (const slur of crossedSlurs) {
+      console.log(`R→L slur: placement=${PlacementEnum[slur.placement]} ` +
+        `start=(${slur.bezierStartPt.x.toFixed(2)},${slur.bezierStartPt.y.toFixed(2)}) ` +
+        `end=(${slur.bezierEndPt.x.toFixed(2)},${slur.bezierEndPt.y.toFixed(2)}) ` +
+        `ctrl1=(${slur.bezierStartControlPt.x.toFixed(2)},${slur.bezierStartControlPt.y.toFixed(2)}) ` +
+        `ctrl2=(${slur.bezierEndControlPt.x.toFixed(2)},${slur.bezierEndControlPt.y.toFixed(2)})`);
+      expect(slur.placement, "cross-staff slur should be Above").to.equal(PlacementEnum.Above);
+      // Control points should arc above (smaller Y than) both endpoints
+      const maxEndpointY: number = Math.max(slur.bezierStartPt.y, slur.bezierEndPt.y);
+      expect(slur.bezierStartControlPt.y,
+        `ctrl1 Y (${slur.bezierStartControlPt.y.toFixed(2)}) should be above max endpoint Y (${maxEndpointY.toFixed(2)})`)
+        .to.be.lessThan(maxEndpointY);
+      expect(slur.bezierEndControlPt.y,
+        `ctrl2 Y (${slur.bezierEndControlPt.y.toFixed(2)}) should be above max endpoint Y (${maxEndpointY.toFixed(2)})`)
+        .to.be.lessThan(maxEndpointY);
+    }
+  });
+
+  it("tempo mark should not collide with first chord symbol", () => {
+    const gms: GraphicalMusicSheet = buildGMS("OSMD_function_test_chord_symbols.musicxml");
+    const unitInPixels: number = 10;
+
+    const m1: VexFlowMeasure = gms.MeasureList[0][0] as VexFlowMeasure;
+    const vfStave: VF.Stave = m1.getVFStave();
+    let staveTempo: VF.StaveModifier | undefined;
+    for (const mod of vfStave.getModifiers()) {
+      if ((mod as any).tempo && (mod as any).tempo.duration) {
+        staveTempo = mod;
+        break;
+      }
+    }
+    expect(staveTempo, "should find StaveTempo modifier on M1").to.not.be.undefined;
+
+    const tempoYShiftPx: number = (staveTempo as any).y_shift ?? staveTempo.getYShift();
+    const tempoYShiftUnits: number = tempoYShiftPx / unitInPixels;
+    const metronomeBottom: number = tempoYShiftUnits;
+    const metronomeTop: number = tempoYShiftUnits - 1.5;
+
+    let firstChordY: number = 0;
+    for (const staffEntry of m1.staffEntries) {
+      if (staffEntry.graphicalChordContainers.length > 0) {
+        const chord: any = staffEntry.graphicalChordContainers[0];
+        const chordLabel: any = chord.GraphicalLabel;
+        firstChordY = chordLabel.PositionAndShape.RelativePosition.y;
+        const chordTop: number = firstChordY + (chordLabel.PositionAndShape.BorderMarginTop ?? 0);
+        console.log(`Chord symbol: y=${firstChordY.toFixed(2)} top=${chordTop.toFixed(2)} ` +
+          `metronome: top=${metronomeTop.toFixed(2)} bottom=${metronomeBottom.toFixed(2)}`);
+        expect(metronomeTop,
+          `metronome top (${metronomeTop.toFixed(2)}) should be above chord top (${chordTop.toFixed(2)})`)
+          .to.be.lessThan(chordTop);
+        break;
+      }
+    }
+    expect(firstChordY, "should find a chord symbol in M1").to.not.equal(0);
   });
 });

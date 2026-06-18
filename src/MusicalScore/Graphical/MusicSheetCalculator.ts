@@ -2150,6 +2150,16 @@ export abstract class MusicSheetCalculator {
 
             // const addAtLastList: GraphicalObject[] = [];
             for (const entry of multiTempoExpression.EntriesList) {
+                // Metronome marks use createMetronomeMark() which manages its own
+                // skyline check. Skip calculateLabel() to avoid double-counting
+                // (the label's skyline update would inflate the range that
+                // createMetronomeMark reads, pushing the mark too far from the stave).
+                if (entry.Expression instanceof InstantaneousTempoExpression &&
+                    (entry.Expression as InstantaneousTempoExpression).TempoType === TempoType.metronomeMark &&
+                    this.rules.MetronomeMarksDrawn) {
+                    this.createMetronomeMark((entry.Expression as InstantaneousTempoExpression));
+                    continue;
+                }
                 let textAlignment: TextAlignmentEnum = this.rules.TempoExpressionTextAlignment;
                 if (this.rules.CompactMode) {
                     textAlignment = TextAlignmentEnum.LeftBottom;
@@ -2182,13 +2192,6 @@ export abstract class MusicSheetCalculator {
                         // I am actually fooling the linter here and use the created object. This method needs refactoring,
                         // all graphical expression creations should be in one place and have basic stuff like labels, lines, ...
                         // in their constructor
-                    }
-                    // in case of metronome mark:
-                    if (this.rules.MetronomeMarksDrawn) {
-                        if ((entry.Expression as InstantaneousTempoExpression).TempoType === TempoType.metronomeMark) {
-                            this.createMetronomeMark((entry.Expression as InstantaneousTempoExpression));
-                            continue;
-                        }
                     }
                 } else if (entry.Expression instanceof ContinuousTempoExpression) {
                     for (const expr of staffLine.AbstractExpressions) {
