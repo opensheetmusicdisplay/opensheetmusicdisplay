@@ -49,8 +49,8 @@ describe("Debussy Mandoline m11 slur positioning", () => {
       const vfStart: VF.StaveNote = (startNote as VexFlowGraphicalNote).vfnote[0] as VF.StaveNote;
       const vfEnd: VF.StaveNote = (endNote as VexFlowGraphicalNote).vfnote[0] as VF.StaveNote;
 
-      const noteStartPx: number = vfStart.getAbsoluteX();
-      const noteEndPx: number = vfEnd.getAbsoluteX();
+      const noteStartPx: number = vfStart.getAbsoluteX() + vfStart.getGlyphWidth() / 2;
+      const noteEndPx: number = vfEnd.getAbsoluteX() + vfEnd.getGlyphWidth() / 2;
 
       const vfMeasure: VexFlowMeasure = slur.staffEntries[0].parentMeasure as VexFlowMeasure;
       const staveX: number = vfMeasure.getVFStave().getX();

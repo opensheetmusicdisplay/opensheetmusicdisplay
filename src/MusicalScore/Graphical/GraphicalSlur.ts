@@ -39,7 +39,8 @@ function getVF5SlurX(note: GraphicalNote): number {
         const staveX: number = vfStave.getX();
         const measureRelX: number = note.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
         const staffLinePixelX: number = staveX - measureRelX * 10;
-        return (vfNote.getAbsoluteX() - staffLinePixelX) / 10;
+        const centerPx: number = vfNote.getAbsoluteX() + vfNote.getGlyphWidth() / 2;
+        return (centerPx - staffLinePixelX) / 10;
     }
     return note.PositionAndShape.RelativePosition.x
          + note.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
