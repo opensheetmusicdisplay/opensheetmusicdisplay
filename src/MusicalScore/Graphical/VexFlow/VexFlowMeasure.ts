@@ -1922,6 +1922,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const expr: any = entry.Expression;
                 if (!(expr instanceof InstantaneousTempoExpression)) { continue; }
                 if (expr.TempoType !== TempoType.metronomeMark) { continue; }
+                if (expr.metronomeNoteGroupLeft && expr.metronomeNoteGroupRight) { continue; }
                 let vexflowDuration: string = "q";
                 if (expr.beatUnit) {
                     const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(expr.beatUnit);

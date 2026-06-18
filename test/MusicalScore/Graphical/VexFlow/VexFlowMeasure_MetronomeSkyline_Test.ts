@@ -145,3 +145,31 @@ describe("VexFlow Measure - Metronome Distance", () => {
             .to.be.at.least(defaultYShiftPx - 30);
     });
 });
+
+describe("VexFlow Measure - Complex Metronome Mark", () => {
+    it("swing score renders noteEquation StaveTempo, not simple bpm", async function (): Promise<void> {
+        this.timeout(30000);
+        const score: Document = TestUtils.getScore("test_swing_and_complex_metronome_markings.musicxml");
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const o: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, { autoResize: false });
+        await o.load(score);
+        o.render();
+
+        const measure: VexFlowMeasure = o.GraphicSheet.MusicPages[0].MusicSystems[0]
+            .StaffLines[0].Measures[0] as VexFlowMeasure;
+        const vfStave: any = measure.getVFStave();
+
+        let staveTempo: any = undefined;
+        for (const mod of vfStave.getModifiers()) {
+            if ((mod as any).tempo) {
+                staveTempo = mod;
+                break;
+            }
+        }
+        expect(staveTempo, "StaveTempo must be present on M1").to.not.be.undefined;
+        expect(staveTempo.tempo.noteEquation, "must have noteEquation (complex mark)")
+            .to.not.be.undefined;
+        expect(staveTempo.tempo.noteEquation.length, "noteEquation must have items")
+            .to.be.greaterThan(0);
+    });
+});
