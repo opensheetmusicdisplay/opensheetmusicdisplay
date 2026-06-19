@@ -6,6 +6,7 @@ import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicShee
 import { VexFlowMusicSheetCalculator } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import { TestUtils } from "../../../Util/TestUtils";
 import { VexFlowMeasure } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
+import { VexFlowStaffEntry } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowStaffEntry";
 import { ClefInstruction, ClefEnum } from "../../../../src/MusicalScore/VoiceData/Instructions/ClefInstruction";
 import * as VF from "vexflow";
 
@@ -94,6 +95,41 @@ describe("VexFlow Measure - In-Measure Clef Changes", () => {
     expect(bar2Staff1.InitiallyActiveClef.ClefType).to.equal(ClefEnum.G,
       "bar 2 staff 1 clef should be treble");
 
+    done();
+  });
+
+  it("in-measure clef should have adequate spacing from following note", (done: Mocha.Done) => {
+    const gms: GraphicalMusicSheet = buildGMS("OSMD_function_test_in-measure-clefs.xml");
+    const minGapPx: number = 12;
+    let clefCount: number = 0;
+
+    for (const vml of gms.MeasureList) {
+      if (!vml) { continue; }
+      for (const m of vml) {
+        if (!m?.isVisible()) { continue; }
+        for (const se of m.staffEntries) {
+          const vfse: VexFlowStaffEntry = se as VexFlowStaffEntry;
+          if (!vfse.vfClefBefore) { continue; }
+          clefCount++;
+          const clefNote: any = vfse.vfClefBefore;
+          const clefWidth: number = clefNote.getWidth?.() ?? 0;
+          for (const gve of vfse.graphicalVoiceEntries) {
+            const sn: any = (gve as any).vfStaveNote;
+            if (!sn) { continue; }
+            const mods: any[] = sn.getModifiers?.() ?? [];
+            for (const mod of mods) {
+              if (mod.getWidth && mod.subNotes) {
+                const subGroupWidth: number = mod.getWidth();
+                expect(subGroupWidth).to.be.at.least(clefWidth + minGapPx,
+                  `m${m.MeasureNumber}: NoteSubGroup width ${subGroupWidth.toFixed(1)} ` +
+                  `should exceed clefWidth(${clefWidth.toFixed(1)}) + ${minGapPx}px gap`);
+              }
+            }
+          }
+        }
+      }
+    }
+    expect(clefCount).to.be.greaterThan(0, "should find at least one in-measure clef");
     done();
   });
 });
