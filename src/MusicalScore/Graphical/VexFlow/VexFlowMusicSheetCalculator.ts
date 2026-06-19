@@ -207,6 +207,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     measures = visibleMeasures;
 
+    for (const measure of measures) {
+      (measure as VexFlowMeasure).fixCrossStaffTuplets(measures as VexFlowMeasure[]);
+    }
+
     // Format the voices
     const allVoices: VF.Voice[] = [];
     const formatter: VF.Formatter = new VF.Formatter({
