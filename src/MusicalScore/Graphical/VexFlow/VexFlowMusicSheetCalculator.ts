@@ -2148,33 +2148,65 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected calculateSkyBottomLines(): void {
+    // Strip StaveTempo modifiers so bar numbers aren't pushed above tempo marks.
+    // StaveTempo is added during buildMusicSystems (Phase 1) and would pollute
+    // the skyline, causing measure numbers to be placed above tempo marks.
+    const tempoBackup: Map<VF.Stave, {mod: VF.StaveModifier, idx: number}[]> = new Map();
+    for (const system of this.musicSystems) {
+      for (const staffLine of system.StaffLines) {
+        for (const measure of staffLine.Measures) {
+          if (!measure) { continue; }
+          const vfStave: VF.Stave = (measure as VexFlowMeasure).getVFStave();
+          const mods: VF.StaveModifier[] = vfStave.getModifiers();
+          const tempos: {mod: VF.StaveModifier, idx: number}[] = [];
+          for (let i: number = mods.length - 1; i >= 0; i--) {
+            if ((mods[i] as any).tempo) {
+              tempos.push({mod: mods[i], idx: i});
+              mods.splice(i, 1);
+            }
+          }
+          if (tempos.length > 0) {
+            tempoBackup.set(vfStave, tempos.reverse());
+          }
+        }
+      }
+    }
+
     const staffLines: StaffLine[] = CollectionUtil.flat(this.musicSystems.map(musicSystem => musicSystem.StaffLines));
     if (this.rules.UseGeometricSkyBottomLineCalculation) {
       // geometric calculation doesn't need batching: no canvas allocation or pixel readback (getImageData) is involved
       for (const staffLine of staffLines) {
         staffLine.SkyBottomLineCalculator.calculateLines();
       }
-      return;
-    }
-    //const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
-    let numMeasures: number = 0; // number of graphical measures that are rendered
-    for (const staffline of staffLines) {
-      for (const measure of staffline.Measures) {
-        if (measure) { // can be undefined and not rendered in multi-measure rest
-          numMeasures++;
+    } else {
+      //const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
+      let numMeasures: number = 0; // number of graphical measures that are rendered
+      for (const staffline of staffLines) {
+        for (const measure of staffline.Measures) {
+          if (measure) { // can be undefined and not rendered in multi-measure rest
+            numMeasures++;
+          }
+        }
+      }
+      if (this.rules.AlwaysSetPreferredSkyBottomLineBackendAutomatically) {
+        this.rules.setPreferredSkyBottomLineBackendAutomatically(numMeasures);
+      }
+      if (numMeasures >= this.rules.SkyBottomLineBatchMinMeasures) {
+        const calculator: SkyBottomLineBatchCalculator = new SkyBottomLineBatchCalculator(
+          staffLines, this.rules.PreferredSkyBottomLineBatchCalculatorBackend);
+        calculator.calculateLines();
+      } else {
+        for (const staffLine of staffLines) {
+          staffLine.SkyBottomLineCalculator.calculateLines();
         }
       }
     }
-    if (this.rules.AlwaysSetPreferredSkyBottomLineBackendAutomatically) {
-      this.rules.setPreferredSkyBottomLineBackendAutomatically(numMeasures);
-    }
-    if (numMeasures >= this.rules.SkyBottomLineBatchMinMeasures) {
-      const calculator: SkyBottomLineBatchCalculator = new SkyBottomLineBatchCalculator(
-        staffLines, this.rules.PreferredSkyBottomLineBatchCalculatorBackend);
-      calculator.calculateLines();
-    } else {
-      for (const staffLine of staffLines) {
-        staffLine.SkyBottomLineCalculator.calculateLines();
+
+    // Restore StaveTempo modifiers
+    for (const [stave, tempos] of tempoBackup) {
+      const mods: VF.StaveModifier[] = stave.getModifiers();
+      for (const {mod, idx} of tempos) {
+        mods.splice(idx, 0, mod);
       }
     }
   }

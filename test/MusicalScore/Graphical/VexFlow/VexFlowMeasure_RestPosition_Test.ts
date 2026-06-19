@@ -7,6 +7,7 @@ import { VexFlowMusicSheetCalculator } from "../../../../src/MusicalScore/Graphi
 import { TestUtils } from "../../../Util/TestUtils";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { unitInPixels } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
+import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import * as VF from "vexflow";
 
 function buildGMS(path: string): GraphicalMusicSheet {
@@ -1058,5 +1059,54 @@ describe("Cornelius Christbaum rest positioning", () => {
     }
     expect(collisions, `Cornelius rest/note collisions:\n${collisions.join("\n")}`).to.be.empty;
     done();
+  });
+});
+
+describe("Bar number vs tempo mark positioning", () => {
+  it("bar numbers should be closer to staff than tempo marks", async function (): Promise<void> {
+    this.timeout(30000);
+    const score: Document = TestUtils.getScore("JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml");
+    const div: HTMLElement = TestUtils.getDivElement(document);
+    const o: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, { autoResize: false });
+    await o.load(score);
+    o.render();
+
+    const system: any = o.GraphicSheet.MusicPages[0].MusicSystems[0];
+    const staffLine: any = system.StaffLines[0];
+    const staffLineY: number = staffLine.PositionAndShape.RelativePosition.y;
+    const labels: any[] = system.MeasureNumberLabels;
+
+    expect(labels.length).to.be.greaterThan(0, "should have measure number labels");
+
+    for (const label of labels) {
+      const barNumY: number = label.PositionAndShape.RelativePosition.y;
+      const distAboveStaff: number = staffLineY - barNumY;
+      expect(distAboveStaff).to.be.lessThan(3.5,
+        `bar number "${label.label.text}" too far above staff: dist=${distAboveStaff.toFixed(2)}`);
+    }
+
+    for (const measure of staffLine.Measures) {
+      if (!measure) { continue; }
+      const vfStave: any = measure.getVFStave();
+      let tempoMod: any;
+      for (const mod of vfStave.getModifiers()) {
+        if ((mod as any).tempo) { tempoMod = mod; break; }
+      }
+      if (!tempoMod) { continue; }
+      const matchingLabel: any = labels.find((l: any) => {
+        const lx: number = l.PositionAndShape.RelativePosition.x;
+        const mx: number = staffLine.PositionAndShape.RelativePosition.x +
+          measure.PositionAndShape.RelativePosition.x;
+        return Math.abs(lx - mx) < 5;
+      });
+      if (!matchingLabel) { continue; }
+      const tempoYPx: number = vfStave.getYForTopText(1) + tempoMod.getYShift();
+      const staffTopPx: number = vfStave.getYForLine(0);
+      const tempoDistPx: number = staffTopPx - tempoYPx;
+      const barNumDistPx: number = (staffLineY - matchingLabel.PositionAndShape.RelativePosition.y) * unitInPixels;
+      expect(barNumDistPx).to.be.lessThan(tempoDistPx,
+        `m${measure.MeasureNumber}: bar number should be closer to staff than tempo mark ` +
+        `(barDist=${barNumDistPx.toFixed(1)}px tempoDist=${tempoDistPx.toFixed(1)}px)`);
+    }
   });
 });

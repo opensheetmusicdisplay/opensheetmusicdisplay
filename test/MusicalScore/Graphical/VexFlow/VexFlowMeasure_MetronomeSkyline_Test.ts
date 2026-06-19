@@ -102,13 +102,13 @@ describe("VexFlow Measure - Metronome Distance", () => {
         expect(staveTempo, "StaveTempo must be present").to.not.be.undefined;
 
         // BWV846 M1 has 16th note arpeggios extending above the staff.
-        // The skyline check detects these and pushes the metronome above them.
+        // Skyline excludes StaveTempo's own footprint (no self-push feedback).
         const unitInPixels: number = 10;
         const baseYShiftPx: number = (o.EngravingRules.MetronomeMarkYShift - 1.4) * unitInPixels;
         const actualYShiftPx: number = staveTempo.getYShift();
 
-        expect(actualYShiftPx, "yShift should be pushed below base by skyline")
-            .to.be.below(baseYShiftPx);
+        expect(actualYShiftPx, "yShift should be at or below base by skyline")
+            .to.be.at.most(baseYShiftPx);
         expect(actualYShiftPx, "yShift must not be excessively negative")
             .to.be.at.least(-70);
     });
@@ -137,10 +137,10 @@ describe("VexFlow Measure - Metronome Distance", () => {
         const defaultYShiftPx: number = o.EngravingRules.MetronomeMarkYShift * unitInPixels;
         const actualYShiftPx: number = staveTempo.getYShift();
 
-        // Air's beams extend above staff enough to push the metronome
-        // moderately, but not excessively.
-        expect(actualYShiftPx, "yShift should be below default (skyline-adjusted for beams)")
-            .to.be.below(defaultYShiftPx);
+        // Air's beams extend above staff; skyline adjusts if needed.
+        // StaveTempo's own footprint is excluded from skyline (no self-push).
+        expect(actualYShiftPx, "yShift should be at or below default (skyline-adjusted for beams)")
+            .to.be.at.most(defaultYShiftPx);
         expect(actualYShiftPx, "yShift must not be pushed too far away")
             .to.be.at.least(defaultYShiftPx - 30);
     });
