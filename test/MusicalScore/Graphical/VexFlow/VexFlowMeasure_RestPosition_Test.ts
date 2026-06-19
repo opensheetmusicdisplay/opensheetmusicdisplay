@@ -161,62 +161,22 @@ describe("VexFlow Measure - Rest Positioning", () => {
     done();
   });
 
-  it("Half rest should be centered within its time range (second half of measure)", (done: Mocha.Done) => {
+  it("Half rest should NOT be centered", (done: Mocha.Done) => {
     const gms: GraphicalMusicSheet = buildGMS("test_tie_direction.musicxml");
     const rests: RestInfo[] = collectRests(gms);
     const halfRest: RestInfo | undefined = rests.find(
       r => r.measure === 1 && r.voiceId === 1 && r.duration === "h"
     );
-    expect(halfRest).to.not.be.undefined,
-      "should find half rest in m1 voice1. " +
-      `Got: ${rests.map(r => `m${r.measure}/v${r.voiceId}/s${r.staffId}=${r.duration} align=${r.hasAlignCenter}`).join(", ")}`;
+    expect(halfRest, "should find half rest in m1 voice1").to.not.be.undefined;
 
-    if (halfRest) {
-      // Half rest is NOT a whole-bar rest — _alignCenter must be false so the
-      // formatter centering code will process it (guard checks !_alignCenter).
-      expect(halfRest.alignCenterFlag).to.be.false,
-        "half rest must NOT have _alignCenter flag (only whole-bar rests get it)";
-
-      // Half rest should be slot-centered via centerXShift (not VF5 alignCenter,
-      // which would incorrectly center to the measure center).
-      // centerXShift > 0 confirms slot-based centering was applied.
-      expect(halfRest.centerXShift).to.be.greaterThan(0,
-        "half rest should have positive centerXShift after slot-based centering");
-
-      // Half rest is the last tickable in voice 1, measure 1 (q, q, h-rest).
-      // Ticks: 1+1+2=4 in 4/4. At the half rest: ticksAccum=2, tickDuration=2, totalTicks=4.
-      // The formatter uses proportional tick-based centering:
-      //   slotStart  = (ticksAccum / totalTicks) * noteAreaEnd
-      //   slotEnd    = ((ticksAccum + tickDuration) / totalTicks) * noteAreaEnd
-      //   cxs        = (slotStart + slotEnd) / 2 - gw / 2 - ctxX
-      // For this half rest: slotStart=0.5*nEAEnd, slotEnd=nEAEnd
-      //   → cxs = 0.75 * nEAEnd - gw/2 - ctxX
-      const padding: number = VF.Metrics.get("Stave.padding") as number ?? 5;
-      const noteAreaEndContext: number = halfRest.noteEndX - halfRest.noteStartX - padding;
-      const totalTicks: number = 4; // 4/4 time
-      const ticksAccum: number = 2; // q(1) + q(1)
-      const tickDuration: number = 2; // half note
-      const slotStart: number = (ticksAccum / totalTicks) * noteAreaEndContext;
-      const slotEnd: number = ((ticksAccum + tickDuration) / totalTicks) * noteAreaEndContext;
-      const expectedCxs: number = (slotStart + slotEnd) / 2 - halfRest.glyphWidth / 2 - halfRest.contextX;
-      const expectedGlyphCenter: number = halfRest.contextX + halfRest.noteStartX + padding + expectedCxs + halfRest.glyphWidth / 2;
-      const restGlyphCenter: number = halfRest.xPos + halfRest.glyphWidth / 2;
-      const distFromCenter: number = Math.abs(restGlyphCenter - expectedGlyphCenter);
-
-      expect(halfRest.centerXShift).to.be.closeTo(expectedCxs, 0.5,
-        "centerXShift mismatch: " +
-        `cxs=${halfRest.centerXShift.toFixed(2)} expected=${expectedCxs.toFixed(2)} ` +
-        `ctxX=${halfRest.contextX.toFixed(2)} nAreaEnd=${noteAreaEndContext.toFixed(2)} gw=${halfRest.glyphWidth.toFixed(2)}`);
-
-      expect(distFromCenter).to.be.lessThan(0.5,
-        "half rest m1/staff1/voice1: " +
-        `restGlyphCenter=${restGlyphCenter.toFixed(2)} expectedCenter=${expectedGlyphCenter.toFixed(2)} ` +
-        `dist=${distFromCenter.toFixed(2)} xPos=${halfRest.xPos.toFixed(2)} ` +
-        `cxs=${halfRest.centerXShift.toFixed(2)} gw=${halfRest.glyphWidth.toFixed(2)} ` +
-        `ctxX=${halfRest.contextX.toFixed(2)} padding=${padding} ` +
-        `nsX=${halfRest.noteStartX.toFixed(2)} neX=${halfRest.noteEndX.toFixed(2)} ` +
-        `sw=${halfRest.staveWidth.toFixed(2)} jw=${halfRest.justifyWidth.toFixed(2)}`);
-    }
+    expect(halfRest!.duration).to.equal("h",
+      "rest must keep half-rest duration, not be converted to whole");
+    expect(halfRest!.hasAlignCenter).to.be.false,
+      "isCenterAligned() must be false for half rests";
+    expect(halfRest!.alignCenterFlag).to.be.false,
+      "_alignCenter flag must not be set for half rests";
+    expect(halfRest!.centerXShift).to.equal(0,
+      "centerXShift must be zero — formatter must not slot-center half rests");
     done();
   });
 
@@ -1039,4 +999,64 @@ describe("VexFlow Measure - Rest Positioning", () => {
     done();
   });
 
+});
+
+describe("Cornelius Christbaum rest positioning", () => {
+  it("multi-voice rests must not touch notes from other voices", (done: Mocha.Done) => {
+    const gms: GraphicalMusicSheet = buildGMS("Cornelius_P_Christbaum_Opus_8_1_1865.musicxml");
+    const minGap: number = 20;
+    const collisions: string[] = [];
+
+    for (const vml of gms.MeasureList) {
+      for (const measure of vml) {
+        if (!measure?.isVisible()) { continue; }
+        // check all measures
+        for (const se of measure.staffEntries) {
+          const rests: { voiceId: number, y: number, dur: string, lineShift: number }[] = [];
+          const notes: { voiceId: number, y: number, pitch: string }[] = [];
+          for (const gve of se.graphicalVoiceEntries) {
+            for (const n of gve.notes) {
+              const vfn: VexFlowGraphicalNote = n as VexFlowGraphicalNote;
+              const sn: any = vfn.vfnote?.[0];
+              if (!sn) { continue; }
+              const ys: number[] = sn.getYs?.() ?? [];
+              const vid: number = n.parentVoiceEntry?.parentVoiceEntry?.ParentVoice?.VoiceId ?? 0;
+              if (n.sourceNote.isRest()) {
+                rests.push({
+                  voiceId: vid, y: ys[0] ?? 0,
+                  dur: sn.getDuration?.() ?? "?", lineShift: n.lineShift ?? 0,
+                });
+              } else {
+                const p: any = n.sourceNote.Pitch;
+                const name: string = p
+                  ? `${["C","#","D","#","E","F","#","G","#","A","#","B"][p.FundamentalNote]}${p.Octave + 3}`
+                  : "?";
+                notes.push({ voiceId: vid, y: ys[0] ?? 0, pitch: name });
+              }
+            }
+          }
+          for (const r of rests) {
+            for (const n of notes) {
+              if (r.voiceId === n.voiceId) { continue; }
+              const gap: number = Math.abs(r.y - n.y);
+              const staffId: number = measure.ParentStaff?.Id ?? -1;
+              console.log(
+                `  m${measure.MeasureNumber}/s${staffId}: rest v${r.voiceId}/${r.dur} ` +
+                `y=${r.y.toFixed(1)} ls=${r.lineShift} | ` +
+                `note v${n.voiceId} ${n.pitch} y=${n.y.toFixed(1)} | gap=${gap.toFixed(1)}`
+              );
+              if (gap < minGap) {
+                collisions.push(
+                  `m${measure.MeasureNumber}: rest v${r.voiceId}/${r.dur} y=${r.y.toFixed(1)} ` +
+                  `vs note v${n.voiceId} ${n.pitch} y=${n.y.toFixed(1)} gap=${gap.toFixed(1)}`
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+    expect(collisions, `Cornelius rest/note collisions:\n${collisions.join("\n")}`).to.be.empty;
+    done();
+  });
 });
