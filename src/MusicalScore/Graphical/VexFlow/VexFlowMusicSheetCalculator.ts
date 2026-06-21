@@ -139,6 +139,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           // console.log("Total calls to finalizeBeams in VexFlowMusicSheetCalculator took " + totalFinalizeBeamsTime + " milliseconds.");
         }
       }
+      for (const measure of verticalMeasureList) {
+        (measure as VexFlowMeasure).fixCrossStaffTuplets(verticalMeasureList as VexFlowMeasure[]);
+        (measure as VexFlowMeasure).fixCrossStaffBeams(verticalMeasureList as VexFlowMeasure[]);
+      }
     }
     this.beamsNeedUpdate = false;
   }
@@ -207,9 +211,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     measures = visibleMeasures;
 
-    for (const measure of measures) {
-      (measure as VexFlowMeasure).fixCrossStaffTuplets(measures as VexFlowMeasure[]);
-    }
+    // fixCrossStaff* calls moved to formatMeasures() — must run after finalizeBeams() which recreates vfbeams
 
     // Format the voices
     const allVoices: VF.Voice[] = [];

@@ -95,8 +95,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
     private vftuplets: { [voiceID: number]: VF.Tuplet[] } = {};
     /** Maps OSMD Tuplet → VF.Tuplet for cross-staff fixup */
     private osmdTupletToVfTuplet: Map<Tuplet, VF.Tuplet> = new Map();
-    /** Cross-staff beams spanning notes on different staves */
-    private crossStaffBeamData: { beam: VF.Beam, siblingMeasure: VexFlowMeasure }[] = [];
+    /** Maps cross-staff VF.Beam → sibling measure for draw-time positioning */
+    private crossStaffBeamSiblings: Map<VF.Beam, VexFlowMeasure> = new Map();
     // The engraving rules of OSMD.
     public rules: EngravingRules;
 
@@ -632,6 +632,38 @@ export class VexFlowMeasure extends GraphicalMeasure {
         //this.stave.setNoteStartX(this.beginInstructionsWidth * UnitInPixels);
     }
 
+    private positionCrossStaffBeams(): void {
+        for (const [beam, siblingMeasure] of this.crossStaffBeamSiblings) {
+            const localY: number = this.stave.getYForLine(0);
+            const siblingY: number = siblingMeasure.stave.getYForLine(0);
+            const localIsBelow: boolean = localY > siblingY;
+            const upperStave: VF.Stave = localIsBelow ? siblingMeasure.stave : this.stave;
+            const lowerStave: VF.Stave = localIsBelow ? this.stave : siblingMeasure.stave;
+            const upperBottom: number = upperStave.getYForLine(4);
+            const lowerTop: number = lowerStave.getYForLine(0);
+            const beamY: number = upperBottom + (lowerTop - upperBottom) * 0.35;
+
+            const beamAny: any = beam;
+            beamAny.renderOptions.flatBeams = true;
+            beamAny.renderOptions.flatBeamOffset = beamY;
+            beamAny.slope = 0;
+            beamAny.yShift = 0;
+
+            for (const note of beam.getNotes()) {
+                const noteAny: any = note;
+                const noteIsLocal: boolean = (localIsBelow && noteAny.stemDirection > 0) ||
+                                             (!localIsBelow && noteAny.stemDirection < 0);
+                noteAny.stave = noteIsLocal ? this.stave : siblingMeasure.stave;
+                const stem: any = noteAny.stem;
+                if (stem) {
+                    stem.setExtension(note.getStemExtension());
+                }
+            }
+            beamAny.applyStemExtensions();
+            beamAny.postFormatted = true;
+        }
+    }
+
     /**
      * This method is called after the StaffEntriesScaleFactor has been set.
      * Here the final x-positions of the staff entries have to be set.
@@ -664,6 +696,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // this.vfVoices[voiceID].tickables.forEach(t => t.getBoundingBox().draw(ctx));
             }
         }
+        // Position cross-staff beams using current (draw-time) stave coordinates
+        this.positionCrossStaffBeams();
         // Draw beams
         for (const voiceID in this.vfbeams) {
             if (this.vfbeams.hasOwnProperty(voiceID)) {
@@ -683,9 +717,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 for (const beam of this.autoTupletVfBeams) {
                     beam.setContext(ctx).draw();
                 }
-            }
-            for (const data of this.crossStaffBeamData) {
-                this.drawCrossStaffBeam(data.beam, data.siblingMeasure, ctx);
             }
             // Draw tuplets
             for (const voiceID in this.vftuplets) {
@@ -1367,20 +1398,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     public fixCrossStaffTuplets(siblingMeasures: VexFlowMeasure[]): void {
-        this.crossStaffBeamData = [];
         for (const voiceID in this.tuplets) {
             if (!this.tuplets.hasOwnProperty(voiceID)) { continue; }
             for (const builder of this.tuplets[voiceID]) {
                 const osmdTuplet: Tuplet = builder[0];
                 const localEntries: VexFlowVoiceEntry[] = builder[1];
                 if (localEntries.length >= osmdTuplet.Notes.length) { continue; }
-                // Only the staff with the majority of notes creates the cross-staff beam
                 if (localEntries.length * 2 <= osmdTuplet.Notes.length) { continue; }
 
                 const vfTuplet: VF.Tuplet = this.osmdTupletToVfTuplet.get(osmdTuplet);
                 if (!vfTuplet) { continue; }
 
-                const crossStaffNotes: VF.StemmableNote[] = [];
+                // Build map of source notes to VF notes for local entries
+                const noteToVf: Map<Note, VF.StemmableNote> = new Map();
+                for (const entry of localEntries) {
+                    for (const sourceNote of entry.parentVoiceEntry.Notes) {
+                        noteToVf.set(sourceNote, entry.vfStaveNote as StemmableNote);
+                    }
+                }
+
+                // Find cross-staff notes on sibling measures
                 let siblingMeasure: VexFlowMeasure = undefined;
                 for (const noteGroup of osmdTuplet.Notes) {
                     const sourceNote: Note = noteGroup[0];
@@ -1389,7 +1426,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
                     const vfNote: VF.StemmableNote = this.findVfNoteOnSibling(sourceNote, siblingMeasures);
                     if (vfNote) {
-                        crossStaffNotes.push(vfNote);
+                        noteToVf.set(sourceNote, vfNote);
                         if (!siblingMeasure) {
                             for (const sib of siblingMeasures) {
                                 if (sib && sib !== this && sib.ParentStaff === sourceNote.ParentStaffEntry.ParentStaff) {
@@ -1401,42 +1438,59 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                 }
 
-                if (crossStaffNotes.length === 0 || !siblingMeasure) { continue; }
+                if (!siblingMeasure) { continue; }
 
-                for (const csNote of crossStaffNotes) {
-                    vfTuplet.notes.push(csNote as VF.Note);
+                // Build ordered notes array from osmdTuplet time order
+                const allNotes: VF.StemmableNote[] = [];
+                const seen: Set<VF.StemmableNote> = new Set();
+                for (const noteGroup of osmdTuplet.Notes) {
+                    const vf: VF.StemmableNote = noteToVf.get(noteGroup[0]);
+                    if (!vf || seen.has(vf)) { continue; }
+                    seen.add(vf);
+                    allNotes.push(vf);
                 }
+                if (allNotes.length < 2) { continue; }
+
+                // Extend tuplet notes
+                vfTuplet.notes = allNotes as VF.Note[];
                 vfTuplet.setBracketed(false);
 
                 const localIsBelow: boolean = this.ParentStaff.idInMusicSheet > siblingMeasure.ParentStaff.idInMusicSheet;
                 const localDir: number = localIsBelow ? VF.Stem.UP : VF.Stem.DOWN;
-                const allBeamNotes: VF.StemmableNote[] = [];
-                for (const entry of localEntries) {
-                    (entry.vfStaveNote as VF.StemmableNote).setStemDirection(localDir);
-                    allBeamNotes.push(entry.vfStaveNote as StemmableNote);
-                }
-                for (const csNote of crossStaffNotes) {
-                    csNote.setStemDirection(-localDir);
-                    allBeamNotes.push(csNote);
+
+                // Set stem directions via direct field access (avoid preFormat reset)
+                for (const noteGroup of osmdTuplet.Notes) {
+                    const vf: VF.StemmableNote = noteToVf.get(noteGroup[0]);
+                    if (!vf) { continue; }
+                    const isLocal: boolean = noteGroup[0].ParentStaffEntry?.ParentStaff === this.ParentStaff;
+                    const dir: number = isLocal ? localDir : -localDir;
+                    const vfAny: any = vf;
+                    vfAny.stemDirection = dir;
+                    if (vfAny.stem) { vfAny.stem.direction = dir; }
                 }
 
-                if (allBeamNotes.length < 2) { continue; }
-
-                for (let i: number = this.autoTupletVfBeams.length - 1; i >= 0; i--) {
-                    const beamNotes: VF.Note[] = this.autoTupletVfBeams[i].getNotes();
-                    for (const localEntry of localEntries) {
-                        if (beamNotes.indexOf(localEntry.vfStaveNote as VF.Note) >= 0) {
-                            this.autoTupletVfBeams.splice(i, 1);
+                // Find or create beam
+                let existingBeam: VF.Beam = undefined;
+                for (const beam of this.autoTupletVfBeams) {
+                    const beamNotes: VF.Note[] = beam.getNotes();
+                    for (const entry of localEntries) {
+                        if (beamNotes.indexOf(entry.vfStaveNote as VF.Note) >= 0) {
+                            existingBeam = beam;
                             break;
                         }
                     }
+                    if (existingBeam) { break; }
                 }
 
-                try {
-                    const crossBeam: VF.Beam = new VF.Beam(allBeamNotes, false);
-                    this.crossStaffBeamData.push({ beam: crossBeam, siblingMeasure });
-                } catch (e) {
-                    log.debug("Cross-staff beam creation failed: " + e);
+                if (existingBeam) {
+                    (existingBeam as any).notes = allNotes;
+                } else {
+                    existingBeam = new VF.Beam(allNotes as StaveNote[], true);
+                    this.autoTupletVfBeams.push(existingBeam);
+                }
+                this.crossStaffBeamSiblings.set(existingBeam, siblingMeasure);
+                for (const note of allNotes) {
+                    (note as any).beam = existingBeam;
                 }
             }
         }
@@ -1460,48 +1514,81 @@ export class VexFlowMeasure extends GraphicalMeasure {
         return undefined;
     }
 
-    private drawCrossStaffBeam(beam: VF.Beam, siblingMeasure: VexFlowMeasure, ctx: VF.RenderContext): void {
-        const beamAny: any = beam;
-        const notes: VF.StemmableNote[] = beamAny.notes;
-        if (notes.length < 2) { return; }
+    public fixCrossStaffBeams(siblingMeasures: VexFlowMeasure[]): void {
+        for (const voiceID in this.beams) {
+            if (!this.beams.hasOwnProperty(voiceID)) { continue; }
+            for (const builder of this.beams[voiceID]) {
+                const osmdBeam: Beam = builder[0];
+                const localEntries: VexFlowVoiceEntry[] = builder[1];
+                if (osmdBeam.BeamNumber !== 1) { continue; }
+                if (localEntries.length >= osmdBeam.Notes.length) { continue; }
+                if (localEntries.length * 2 <= osmdBeam.Notes.length) { continue; }
 
-        const siblingStave: VF.Stave = siblingMeasure.getVFStave();
-        const localTop: number = this.stave.getYForLine(0);
-        const sibBottom: number = siblingStave.getYForLine(4);
-        const beamY: number = Math.min(localTop, sibBottom) + Math.abs(localTop - sibBottom) * 0.35;
-        const beamWidth: number = 5;
-        const stemWidth: number = 1.5;
+                const vfbeams: VF.Beam[] = this.vfbeams[voiceID];
+                if (!vfbeams) { continue; }
+                let existingBeam: VF.Beam = undefined;
+                for (const vfb of vfbeams) {
+                    const beamNotes: VF.Note[] = vfb.getNotes();
+                    for (const entry of localEntries) {
+                        if (beamNotes.indexOf(entry.vfStaveNote as VF.Note) >= 0) {
+                            existingBeam = vfb;
+                            break;
+                        }
+                    }
+                    if (existingBeam) { break; }
+                }
+                if (!existingBeam) { continue; }
 
-        const stemXs: number[] = [];
-        for (const note of notes) {
-            stemXs.push(note.getStemX());
+                let siblingMeasure: VexFlowMeasure = undefined;
+                const noteToVf: Map<Note, VF.StemmableNote> = new Map();
+                for (const entry of localEntries) {
+                    for (const sourceNote of entry.parentVoiceEntry.Notes) {
+                        noteToVf.set(sourceNote, entry.vfStaveNote as StemmableNote);
+                    }
+                }
+                for (const note of osmdBeam.Notes) {
+                    if (noteToVf.has(note)) { continue; }
+                    if (!note.ParentStaffEntry) { continue; }
+                    if (note.ParentStaffEntry.ParentStaff === this.ParentStaff) { continue; }
+                    const vfNote: VF.StemmableNote = this.findVfNoteOnSibling(note, siblingMeasures);
+                    if (vfNote) {
+                        noteToVf.set(note, vfNote);
+                        if (!siblingMeasure) {
+                            for (const sib of siblingMeasures) {
+                                if (sib && sib !== this && sib.ParentStaff === note.ParentStaffEntry.ParentStaff) {
+                                    siblingMeasure = sib;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!siblingMeasure) { continue; }
+
+                const localIsBelow: boolean = this.ParentStaff.idInMusicSheet > siblingMeasure.ParentStaff.idInMusicSheet;
+                const localDir: number = localIsBelow ? VF.Stem.UP : VF.Stem.DOWN;
+
+                const beamAny: any = existingBeam;
+                const newNotes: VF.StemmableNote[] = [];
+                const seen: Set<VF.StemmableNote> = new Set();
+                for (const note of osmdBeam.Notes) {
+                    const vf: VF.StemmableNote = noteToVf.get(note);
+                    if (!vf || seen.has(vf)) { continue; }
+                    seen.add(vf);
+                    const isLocal: boolean = note.ParentStaffEntry?.ParentStaff === this.ParentStaff;
+                    const dir: number = isLocal ? localDir : -localDir;
+                    const vfAny: any = vf;
+                    vfAny.stemDirection = dir;
+                    if (vfAny.stem) { vfAny.stem.direction = dir; }
+                    newNotes.push(vf);
+                }
+                beamAny.notes = newNotes;
+                this.crossStaffBeamSiblings.set(existingBeam, siblingMeasure);
+                for (const note of newNotes) {
+                    (note as any).beam = existingBeam;
+                }
+            }
         }
-
-        // Draw stems from notehead to beam
-        ctx.openGroup("beam");
-        for (let i: number = 0; i < notes.length; i++) {
-            const note: VF.StemmableNote = notes[i];
-            const noteheadY: number = note.getStemDirection() === VF.Stem.UP
-                ? Math.max(...note.getYs()) : Math.min(...note.getYs());
-            ctx.beginPath();
-            ctx.setLineWidth(stemWidth);
-            ctx.moveTo(stemXs[i], noteheadY);
-            ctx.lineTo(stemXs[i], beamY);
-            ctx.stroke();
-        }
-
-        // Draw beam line
-        const firstX: number = stemXs[0] - stemWidth / 2;
-        const lastX: number = stemXs[stemXs.length - 1] + stemWidth / 2;
-        const beamDir: number = beamAny._stemDirection === VF.Stem.UP ? 1 : -1;
-        ctx.beginPath();
-        ctx.moveTo(firstX, beamY);
-        ctx.lineTo(firstX, beamY + beamWidth * beamDir);
-        ctx.lineTo(lastX, beamY + beamWidth * beamDir);
-        ctx.lineTo(lastX, beamY);
-        ctx.closePath();
-        ctx.fill();
-        ctx.closeGroup();
     }
 
     public layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
