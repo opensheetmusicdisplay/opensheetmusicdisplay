@@ -1458,15 +1458,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const localIsBelow: boolean = this.ParentStaff.idInMusicSheet > siblingMeasure.ParentStaff.idInMusicSheet;
                 const localDir: number = localIsBelow ? VF.Stem.UP : VF.Stem.DOWN;
 
-                // Set stem directions via direct field access (avoid preFormat reset)
                 for (const noteGroup of osmdTuplet.Notes) {
                     const vf: VF.StemmableNote = noteToVf.get(noteGroup[0]);
                     if (!vf) { continue; }
                     const isLocal: boolean = noteGroup[0].ParentStaffEntry?.ParentStaff === this.ParentStaff;
                     const dir: number = isLocal ? localDir : -localDir;
-                    const vfAny: any = vf;
-                    vfAny.stemDirection = dir;
-                    if (vfAny.stem) { vfAny.stem.direction = dir; }
+                    (vf as StaveNote).setStemDirection(dir);
                 }
 
                 // Find or create beam
@@ -1485,12 +1482,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (existingBeam) {
                     (existingBeam as any).notes = allNotes;
                 } else {
-                    existingBeam = new VF.Beam(allNotes as StaveNote[], true);
+                    existingBeam = new VF.Beam(allNotes as StaveNote[], false);
                     this.autoTupletVfBeams.push(existingBeam);
                 }
                 this.crossStaffBeamSiblings.set(existingBeam, siblingMeasure);
                 for (const note of allNotes) {
-                    (note as any).beam = existingBeam;
+                    (note as StaveNote).setBeam(existingBeam);
                 }
             }
         }
@@ -1577,15 +1574,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     seen.add(vf);
                     const isLocal: boolean = note.ParentStaffEntry?.ParentStaff === this.ParentStaff;
                     const dir: number = isLocal ? localDir : -localDir;
-                    const vfAny: any = vf;
-                    vfAny.stemDirection = dir;
-                    if (vfAny.stem) { vfAny.stem.direction = dir; }
+                    (vf as StaveNote).setStemDirection(dir);
                     newNotes.push(vf);
                 }
                 beamAny.notes = newNotes;
                 this.crossStaffBeamSiblings.set(existingBeam, siblingMeasure);
                 for (const note of newNotes) {
-                    (note as any).beam = existingBeam;
+                    (note as StaveNote).setBeam(existingBeam);
                 }
             }
         }
