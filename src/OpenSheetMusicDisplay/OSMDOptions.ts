@@ -133,6 +133,13 @@ export interface IOSMDOptions {
     drawMetronomeMarks?: boolean;
     /** Whether to replace metronome marks with a "Swing" text label. Default false. */
     drawSwingOnly?: boolean;
+    /** When true, the first-system tempo markings (text + metronome mark) are hidden and replaced
+     *  with a tempo word derived from the current BPM (e.g. "Andante"). The word can be updated at
+     *  runtime via osmd.setDynamicTempoLabel(bpm) without re-rendering the whole sheet. Default false. */
+    drawDynamicTempoLabel?: boolean;
+    /** Initial quarter-note BPM used to compute the dynamic tempo label. Only used when
+     *  drawDynamicTempoLabel is true. Updated at runtime via osmd.setDynamicTempoLabel(). */
+    dynamicTempoLabelBpm?: number;
     /** Whether to draw part (instrument) names. Setting this to false also disables drawPartAbbreviations,
      *  unless explicitly enabled (drawPartNames: false, drawPartAbbreviations: true).
      */

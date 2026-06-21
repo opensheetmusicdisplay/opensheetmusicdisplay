@@ -54,7 +54,14 @@ export class StaveTempo extends StaveModifier {
 
     if (name) {
       ctx.setFont(font.family, font.size, font.weight);
-      ctx.fillText(name, x, y);
+      if (this.tempo.dynamic) {
+        // VexFlowPatch: wrap BPM-driven dynamic tempo word so it can be updated in-place in the SVG
+        ctx.openGroup("dynamic-tempo");
+        ctx.fillText(name, x, y);
+        ctx.closeGroup();
+      } else {
+        ctx.fillText(name, x, y);
+      }
       x += ctx.measureText(name).width;
     }
 

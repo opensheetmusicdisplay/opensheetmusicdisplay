@@ -554,8 +554,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 // Draw InstantaneousTempo
             } else if (abstractGraphicalExpression instanceof GraphicalInstantaneousTempoExpression) {
                 if (abstractGraphicalExpression.SourceExpression.parentMeasure?.MeasureNumber <= 1 &&
-                    !this.rules.RenderFirstTempoExpression
+                    (!this.rules.RenderFirstTempoExpression || this.rules.DrawDynamicTempoLabel)
                 ) {
+                    // Hide the score's first-system tempo word; it is replaced by the dynamic BPM label.
                     continue;
                 }
                 const label: GraphicalLabel = (abstractGraphicalExpression as GraphicalInstantaneousTempoExpression).GraphicalLabel;

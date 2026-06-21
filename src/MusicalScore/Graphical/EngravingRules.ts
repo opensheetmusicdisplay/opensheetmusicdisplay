@@ -413,6 +413,10 @@ export class EngravingRules {
     public WholeRestXShiftVexflow: number;
     public MetronomeMarksDrawn: boolean;
     public DrawSwingOnly: boolean;
+    /** When true, hide first-system tempo markings and render a BPM-driven tempo word instead. */
+    public DrawDynamicTempoLabel: boolean;
+    /** Quarter-note BPM used to compute the dynamic tempo word (see DrawDynamicTempoLabel). */
+    public DynamicTempoLabelBpm: number;
     public MetronomeMarkXShift: number;
     public MetronomeMarkYShift: number;
     public SoftmaxFactorVexFlow: number;
@@ -919,6 +923,8 @@ export class EngravingRules {
         this.WholeRestXShiftVexflow = -1.5; // VexFlow draws rest notes too far to the right
         this.MetronomeMarksDrawn = true;
         this.DrawSwingOnly = false;
+        this.DrawDynamicTempoLabel = false;
+        this.DynamicTempoLabelBpm = 0;
         this.MetronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.MetronomeMarkYShift = -1.0; // note this is correlated with TempoYSpacing: one-sided change can cause collisions
         this.SoftmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.

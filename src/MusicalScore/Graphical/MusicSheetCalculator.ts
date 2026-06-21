@@ -1024,6 +1024,8 @@ export abstract class MusicSheetCalculator {
         // calcualte all Tempo Expressions
         if (!this.leadSheet) {
             this.calculateTempoExpressions();
+            // optionally replace the first-system tempo markings with a BPM-driven dynamic label
+            this.calculateDynamicTempoLabel();
         }
         this.calculateRehearsalMarks();
 
@@ -2142,6 +2144,12 @@ export abstract class MusicSheetCalculator {
 
     protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
         throw new Error(this.abstractNotImplementedErrorMessage);
+    }
+
+    /** Renders a BPM-driven tempo label at the first system when EngravingRules.DrawDynamicTempoLabel is set.
+     *  Implemented in VexFlowMusicSheetCalculator; no-op in the abstract base. */
+    protected calculateDynamicTempoLabel(): void {
+        return;
     }
 
     protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {

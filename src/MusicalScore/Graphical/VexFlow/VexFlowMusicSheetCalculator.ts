@@ -47,6 +47,7 @@ import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
 import { InstantaneousTempoExpression, MetronomeNoteGroup, TempoType } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
+import { tempoLabelFromBpm } from "../../../Common/Tempo/TempoLabelFromBpm";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
@@ -950,6 +951,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
+    if (this.rules.DrawDynamicTempoLabel) {
+      // First-system tempo is replaced by the BPM-driven dynamic label (see calculateDynamicTempoLabel).
+      return;
+    }
     const measureNumber: number = metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber;
     const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
     const minMeasureToDrawIndex: number = this.rules.MinMeasureToDrawIndex;
@@ -1047,6 +1052,40 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       skyline[0] = Math.min(skyline[0], -4.5 + yShift);
     }
     // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
+  }
+
+  /** When DrawDynamicTempoLabel is set, render a BPM-driven tempo word (e.g. "Andante") at the first
+   *  system, replacing the score's own first-system tempo markings. The word is updated in-place at
+   *  runtime via OpenSheetMusicDisplay.setDynamicTempoLabel() without a full re-render. */
+  protected calculateDynamicTempoLabel(): void {
+    if (!this.rules.DrawDynamicTempoLabel) {
+      return;
+    }
+    const minMeasureToDrawIndex: number = this.rules.MinMeasureToDrawIndex;
+    const firstMeasures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex];
+    if (!firstMeasures || firstMeasures.length === 0) {
+      return;
+    }
+    const vfMeasure: VexFlowMeasure = firstMeasures[0] as VexFlowMeasure;
+    if (!vfMeasure || vfMeasure.hasMetronomeMark) {
+      return;
+    }
+    const vfStave: VF.Stave = vfMeasure.getVFStave();
+    if (!vfStave) {
+      return;
+    }
+    const label: string = tempoLabelFromBpm(this.rules.DynamicTempoLabelBpm) ?? "";
+    const yShift: number = this.rules.MetronomeMarkYShift * unitInPixels;
+    (vfStave as any).setTempo({ name: label, dynamic: true }, yShift);
+    const xShift: number = this.rules.MetronomeMarkXShift * unitInPixels;
+    (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(xShift);
+    vfMeasure.hasMetronomeMark = true;
+    // Reserve vertical space above the staff (same as createMetronomeMark) so the label is included
+    // in the system Y-layout and not clipped above the page.
+    const skyline: number[] = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex]?.[0]?.ParentStaffLine?.SkyLine;
+    if (skyline) {
+      skyline[0] = Math.min(skyline[0], -4.5 + this.rules.MetronomeMarkYShift);
+    }
   }
 
   private hasExistingSwingLabel(parentMusicSheet: any): boolean {

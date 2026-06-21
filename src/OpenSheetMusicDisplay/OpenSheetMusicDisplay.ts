@@ -34,6 +34,7 @@ import { GraphicalLabel } from "../MusicalScore/Graphical/GraphicalLabel";
 import { MultiTempoExpression } from "../MusicalScore/VoiceData/Expressions/MultiTempoExpression";
 import { MidiExporter, MidiExportOptions } from "../MusicalScore/Export/MidiExporter";
 import { PointF2D } from "../Common/DataObjects/PointF2D";
+import { tempoLabelFromBpm } from "../Common/Tempo/TempoLabelFromBpm";
 import { GraphicalStaffEntry } from "../MusicalScore/Graphical/GraphicalStaffEntry";
 import { MusicSystem } from "../MusicalScore/Graphical/MusicSystem";
 import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
@@ -756,6 +757,12 @@ export class OpenSheetMusicDisplay {
         if (options.drawSwingOnly !== undefined) {
             this.rules.DrawSwingOnly = options.drawSwingOnly;
         }
+        if (options.drawDynamicTempoLabel !== undefined) {
+            this.rules.DrawDynamicTempoLabel = options.drawDynamicTempoLabel;
+        }
+        if (options.dynamicTempoLabelBpm !== undefined) {
+            this.rules.DynamicTempoLabelBpm = options.dynamicTempoLabelBpm;
+        }
         if (options.drawPartNames !== undefined) {
             this.drawingParameters.DrawPartNames = options.drawPartNames; // indirectly writes to EngravingRules
 
@@ -1249,6 +1256,43 @@ export class OpenSheetMusicDisplay {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * Updates the BPM-driven dynamic tempo label (e.g. "Andante") in-place in the SVG, without
+     * re-rendering the sheet. Only has an effect when the score was rendered with the
+     * drawDynamicTempoLabel option. The BPM is stored so the label is reproduced on the next render
+     * (e.g. after a resize/relayout).
+     * @param bpm The current quarter-note BPM.
+     */
+    public setDynamicTempoLabel(bpm: number): void {
+        this.rules.DynamicTempoLabelBpm = bpm;
+        if (!this.rules.DrawDynamicTempoLabel) {
+            return;
+        }
+        const label: string = tempoLabelFromBpm(bpm) ?? "";
+        this.updateDynamicTempoLabelInSVG(label);
+    }
+
+    private updateDynamicTempoLabelInSVG(label: string): void {
+        if (!this.drawer || !this.drawer.Backends) {
+            return;
+        }
+
+        const backends: VexFlowBackend[] = this.drawer.Backends;
+        for (const backend of backends) {
+            const renderElement: HTMLElement = backend.getRenderElement?.();
+            if (!renderElement) {
+                continue;
+            }
+            const dynamicTempoGroups: NodeListOf<Element> = renderElement.querySelectorAll("g.vf-dynamic-tempo");
+            for (const group of dynamicTempoGroups) {
+                const textNodes: NodeListOf<Element> = group.querySelectorAll("text");
+                for (const textNode of textNodes) {
+                    textNode.textContent = label;
                 }
             }
         }
