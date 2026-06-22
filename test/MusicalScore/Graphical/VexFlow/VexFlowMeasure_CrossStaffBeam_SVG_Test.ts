@@ -481,14 +481,26 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         notes: NoteInfo[];
         beamPolyTopY: number;
         beamPolyBotY: number;
+        /** Top-left corner of the first beam polygon (beam start X/Y). */
+        startX: number;
+        startY: number;
+        /** Top-right corner of the first beam polygon (beam end X/Y). */
+        endX: number;
+        endY: number;
     }
 
     interface SlurDebugInfo {
         slurId: string;
         startX: number;
         startY: number;
+        cp1X: number;
+        cp1Y: number;
+        cp2X: number;
+        cp2Y: number;
         endX: number;
         endY: number;
+        /** Max perpendicular distance from the start-end line to the control points (px). */
+        bowPx: number;
     }
 
     function parseScoreSVG(svg: SVGElement): {
@@ -496,7 +508,8 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         beams: BeamDebugInfo[];
         slurs: SlurDebugInfo[];
     } {
-        // Parse all stave notes with their IDs
+        // Parse all stave notes with their IDs.
+        // Notes appear once per system — we store every instance keyed by ID.
         const notes: NoteInfo[] = [];
         const noteEls: NodeListOf<Element> = svg.querySelectorAll("[class*='vf-stavenote']");
         for (let i: number = 0; i < noteEls.length; i++) {
@@ -520,7 +533,7 @@ describe("Cross-Staff Beam SVG Rendering", () => {
                 }
             }
 
-            // Stem geometry
+            // Stem geometry (from stavenote; beam-group stems are parsed later)
             const stemEl: Element | null = el.querySelector("[class*='vf-stem'] path");
             let stemBase: number = 0, stemTip: number = 0, stemDir: string = "none";
             if (stemEl) {
@@ -529,13 +542,8 @@ describe("Cross-Staff Beam SVG Rendering", () => {
                 if (m) {
                     const y1: number = parseFloat(m[2]);
                     const y2: number = parseFloat(m[4]);
-                    if (y2 < y1) {
-                        stemDir = "up";
-                        stemTip = y2; stemBase = y1;
-                    } else {
-                        stemDir = "down";
-                        stemTip = y2; stemBase = y1;
-                    }
+                    if (y2 < y1) { stemDir = "up"; stemTip = y2; stemBase = y1; }
+                    else { stemDir = "down"; stemTip = y2; stemBase = y1; }
                 }
             }
 
@@ -555,29 +563,7 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         const beamEls: NodeListOf<Element> = svg.querySelectorAll("[class*='vf-beam']");
         for (let i: number = 0; i < beamEls.length; i++) {
             const bg: Element = beamEls[i] as Element;
-            const stemPaths: NodeListOf<Element> = bg.querySelectorAll("[class*='vf-stem'] path");
-            const beamNoteXs: number[] = [];
-            for (let j: number = 0; j < stemPaths.length; j++) {
-                const d: string = stemPaths[j].getAttribute("d") || "";
-                const m: RegExpMatchArray | null = d.match(/M([\d.]+)\s+([\d.]+)/);
-                if (m) { beamNoteXs.push(parseFloat(m[1])); }
-            }
-
-            // Match beam notes to parsed notes by X+Y proximity
-            const matchedNotes: NoteInfo[] = [];
-            for (const nx of beamNoteXs) {
-                let best: NoteInfo | undefined;
-                let bestDist: number = 15;
-                for (const n of notes) {
-                    const dist: number = Math.abs(n.x - nx);
-                    if (dist < bestDist) { bestDist = dist; best = n; }
-                }
-                if (best) { matchedNotes.push(best); }
-            }
-
-            if (matchedNotes.length === 0) { continue; }
-
-            // Beam polygon Y
+            // Beam polygon Y — compute first so we can Y-filter note matches
             let polyTop: number = Infinity;
             let polyBot: number = -Infinity;
             const polyPaths: NodeListOf<Element> = bg.querySelectorAll(":scope > path");
@@ -596,11 +582,53 @@ describe("Cross-Staff Beam SVG Rendering", () => {
                 }
             }
 
+            // Match beam stem X positions to parsed notes, with Y-proximity
+            // to prevent matching notes from other systems at the same X.
+            const stemPaths: NodeListOf<Element> = bg.querySelectorAll("[class*='vf-stem'] path");
+            const beamNoteXs: number[] = [];
+            for (let j: number = 0; j < stemPaths.length; j++) {
+                const d: string = stemPaths[j].getAttribute("d") || "";
+                const m: RegExpMatchArray | null = d.match(/M([\d.]+)\s+([\d.]+)/);
+                if (m) { beamNoteXs.push(parseFloat(m[1])); }
+            }
+
+            const matchedNotes: NoteInfo[] = [];
+            for (const nx of beamNoteXs) {
+                let best: NoteInfo | undefined;
+                let bestDist: number = 15;
+                for (const n of notes) {
+                    const dx: number = Math.abs(n.x - nx);
+                    const inY: boolean = n.noteheadY >= polyTop - 50 && n.noteheadY <= polyBot + 50;
+                    if (!inY) { continue; }
+                    if (dx < bestDist) { bestDist = dx; best = n; }
+                }
+                if (best) { matchedNotes.push(best); }
+            }
+
+            if (matchedNotes.length === 0) { continue; }
+
+            // Extract beam start/end X/Y from the first polygon path:
+            // Path format: M x1 y1 L x1 y2 L x2 y3 L x2 y4 Z
+            // (x1, y1) = top-left of beam, (x2, y4) = top-right of beam
+            let sx: number = 0, sy: number = 0, ex: number = 0, ey: number = 0;
+            if (polyPaths.length > 0) {
+                const pd: string = polyPaths[0].getAttribute("d") || "";
+                const pts: RegExpMatchArray | null = pd.match(
+                    /M([\d.]+)\s+([\d.]+)L\1\s+([\d.]+)L([\d.]+)\s+([\d.]+)L\4\s+([\d.]+)/
+                );
+                if (pts) {
+                    sx = parseFloat(pts[1]); sy = parseFloat(pts[2]);
+                    ex = parseFloat(pts[4]); ey = parseFloat(pts[6]);
+                }
+            }
+
             beams.push({
                 beamId: bg.getAttribute("id") || `beam_${i}`,
                 notes: matchedNotes,
                 beamPolyTopY: polyTop,
                 beamPolyBotY: polyBot,
+                startX: sx, startY: sy,
+                endX: ex, endY: ey,
             });
         }
 
@@ -614,14 +642,37 @@ describe("Cross-Staff Beam SVG Rendering", () => {
             if (!pathEl) { continue; }
             const d: string = pathEl.getAttribute("d") || "";
             const startM: RegExpMatchArray | null = d.match(/M([\d.]+)\s+([\d.]+)/);
-            const bezierEnd: RegExpMatchArray | null = d.match(/C\s*[\d.]+\s+[\d.]+\s*,\s*[\d.]+\s+[\d.]+\s*,\s*([\d.]+)\s+([\d.]+)/);
-            if (startM && bezierEnd) {
+            // C cp1x cp1y, cp2x cp2y, ex ey
+            const cParts: RegExpMatchArray | null = d.match(
+                /C\s*([\d.]+)\s+([\d.]+)\s*,\s*([\d.]+)\s+([\d.]+)\s*,\s*([\d.]+)\s+([\d.]+)/
+            );
+            if (startM && cParts) {
+                const sx: number = parseFloat(startM[1]);
+                const sy: number = parseFloat(startM[2]);
+                const cp1x: number = parseFloat(cParts[1]);
+                const cp1y: number = parseFloat(cParts[2]);
+                const cp2x: number = parseFloat(cParts[3]);
+                const cp2y: number = parseFloat(cParts[4]);
+                const ex: number = parseFloat(cParts[5]);
+                const ey: number = parseFloat(cParts[6]);
+
+                // Bow: max perpendicular distance from start→end line to control points
+                const dx: number = ex - sx;
+                const dy: number = ey - sy;
+                const len: number = Math.sqrt(dx * dx + dy * dy) || 1;
+                function perpDist(px: number, py: number): number {
+                    // cross product of (p-s) with (e-s) / |e-s|
+                    return Math.abs((px - sx) * dy - (py - sy) * dx) / len;
+                }
+                const bowPx: number = Math.max(perpDist(cp1x, cp1y), perpDist(cp2x, cp2y));
+
                 slurs.push({
                     slurId: id,
-                    startX: parseFloat(startM[1]),
-                    startY: parseFloat(startM[2]),
-                    endX: parseFloat(bezierEnd[1]),
-                    endY: parseFloat(bezierEnd[2]),
+                    startX: sx, startY: sy,
+                    cp1X: cp1x, cp1Y: cp1y,
+                    cp2X: cp2x, cp2Y: cp2y,
+                    endX: ex, endY: ey,
+                    bowPx,
                 });
             }
         }
@@ -644,12 +695,18 @@ describe("Cross-Staff Beam SVG Rendering", () => {
 
         const xMin: number = Math.min(...mNotes.map((n) => n.x));
         const xMax: number = Math.max(...mNotes.map((n) => n.x));
+        // Y bounds of this measure's notes (with stem extents)
+        const allNoteYs: number[] = mNotes.flatMap((n) =>
+            n.stemDir !== "none" ? [n.noteheadY, n.stemTip] : [n.noteheadY]
+        );
+        const yMin: number = Math.min(...allNoteYs) - 40;
+        const yMax: number = Math.max(...allNoteYs) + 40;
 
         // Determine staves present in this measure
         const staves: Set<number> = new Set(mNotes.map((n) => n.stave));
 
         log.push(`=== Measure ${measureNum} ===`);
-        log.push(`Staves: [${[...staves].sort().join(",")}]  X range: ${xMin.toFixed(0)}-${xMax.toFixed(0)}`);
+        log.push(`Staves: [${[...staves].sort().join(",")}]  X: ${xMin.toFixed(0)}-${xMax.toFixed(0)}  Y: ${yMin.toFixed(0)}-${yMax.toFixed(0)}`);
 
         // Notes grouped by stave
         for (const st of [...staves].sort()) {
@@ -661,17 +718,19 @@ describe("Cross-Staff Beam SVG Rendering", () => {
             }
         }
 
-        // Beams overlapping this measure
+        // Beams overlapping this measure (X + Y bounds)
         const mBeams: BeamDebugInfo[] = beams.filter(
-            (b) => b.notes.some((n) => n.measure === measureNum)
+            (b) => b.notes.some((n) => n.measure === measureNum) &&
+                b.beamPolyTopY >= yMin && b.beamPolyBotY <= yMax
         );
         if (mBeams.length > 0) {
             log.push(`Beams (${mBeams.length}):`);
             for (const b of mBeams) {
                 const bnStaves: Set<number> = new Set(b.notes.map((n) => n.stave));
                 const isXStaff: boolean = bnStaves.size >= 2;
-                log.push(`  ${b.beamId}: polyTop=${b.beamPolyTopY.toFixed(1)} ` +
-                    `polyBot=${b.beamPolyBotY.toFixed(1)} ` +
+                log.push(`  ${b.beamId}: start=(${b.startX.toFixed(0)},${b.startY.toFixed(1)}) ` +
+                    `end=(${b.endX.toFixed(0)},${b.endY.toFixed(1)}) ` +
+                    `polyTop=${b.beamPolyTopY.toFixed(1)} polyBot=${b.beamPolyBotY.toFixed(1)} ` +
                     `staves=[${[...bnStaves].sort().join(",")}] cross-staff=${isXStaff} ` +
                     `notes=[${b.notes.map((n) => `${n.id}@${n.stemDir}`).join(",")}]`);
             }
@@ -679,9 +738,10 @@ describe("Cross-Staff Beam SVG Rendering", () => {
             log.push("Beams: none");
         }
 
-        // Slurs overlapping this measure (by X range)
+        // Slurs overlapping this measure (X + Y bounds)
         const mSlurs: SlurDebugInfo[] = slurs.filter(
-            (s) => s.startX >= xMin - 30 && s.startX <= xMax + 30
+            (s) => s.startX >= xMin - 30 && s.startX <= xMax + 30 &&
+                s.startY >= yMin - 50 && s.startY <= yMax + 50
         );
         if (mSlurs.length > 0) {
             log.push(`Slurs (${mSlurs.length}):`);
@@ -747,6 +807,24 @@ describe("Cross-Staff Beam SVG Rendering", () => {
                         `slurToBeam=${(s.startY - beamTop).toFixed(1)}px`);
                 } else {
                     log.push("    beam: none at start note");
+                }
+
+                // Bezier path analysis
+                log.push(`    bezier: cp1=(${s.cp1X.toFixed(1)},${s.cp1Y.toFixed(1)}) ` +
+                    `cp2=(${s.cp2X.toFixed(1)},${s.cp2Y.toFixed(1)})`);
+                const rise: number = s.endY - s.startY;
+                const span: number = s.endX - s.startX;
+                log.push(`    path: span=${span.toFixed(0)}px rise=${rise.toFixed(1)}px ` +
+                    `bow=${s.bowPx.toFixed(1)}px`);
+
+                // Cross-staff slurs must have visible bow
+                if (isXStaff) {
+                    const minBow: number = 15;
+                    if (s.bowPx < minBow) {
+                        log.push("    FAIL: cross-staff slur bow=" +
+                            s.bowPx.toFixed(1) + "px < " + minBow + "px minimum " +
+                            "- slur is nearly invisible");
+                    }
                 }
             }
         } else {
