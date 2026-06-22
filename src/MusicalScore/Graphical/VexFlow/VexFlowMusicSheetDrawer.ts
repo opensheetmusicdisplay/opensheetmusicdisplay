@@ -194,8 +194,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // During layout (calculateCurve), cross-staff beam positions aren't known yet;
         // they are only set at draw time by positionCrossStaffBeams(). The pre-computed
         // bezier Y may sit at notehead level while the beam extends far above/below it.
-        this.adjustSlurForBeam(graphicalSlur, p1, true);
-        this.adjustSlurForBeam(graphicalSlur, p4, false);
+        // Adjust both the endpoint and its control point together so the curve doesn't dip.
+        this.adjustSlurForBeam(graphicalSlur, p1, p2, true);
+        this.adjustSlurForBeam(graphicalSlur, p4, p3, false);
 
         // put screen transformed points into array
         curvePointsInPixels.push(this.applyScreenTransformation(p1));
@@ -233,13 +234,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     /**
      * If the slur start/end note belongs to a cross-staff beam, lift the slur's anchor point
-     * so it clears the beam rather than sitting at the notehead level (which may be far below
-     * the beam for extended cross-staff stems).
+     * and its control point so the curve clears the beam rather than dipping into it.
      *
-     * `point` is the bezier endpoint in absolute SVG pixels (will be mutated).
+     * `anchor` and `control` are the bezier endpoint and its adjacent control point
+     * in absolute SVG pixels (both will be mutated by the same delta).
      * `isStart` selects whether to look at the slur's StartNote or EndNote.
      */
-    private adjustSlurForBeam(graphicalSlur: GraphicalSlur, point: PointF2D, isStart: boolean): void {
+    private adjustSlurForBeam(
+        graphicalSlur: GraphicalSlur, anchor: PointF2D, control: PointF2D, isStart: boolean
+    ): void {
         const osmdNote: Note = isStart ? graphicalSlur.slur.StartNote : graphicalSlur.slur.EndNote;
         if (!osmdNote) { return; }
         const gNote: VexFlowGraphicalNote = this.rules.GNote(osmdNote) as VexFlowGraphicalNote;
@@ -255,22 +258,26 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         const noteX: number = vfNote.getStemX();
         const slope: number = beam.slope ?? 0;
         const beamY: number = beam.renderOptions.flatBeamOffset + slope * (noteX - firstX);
-        const beamThickness: number = beam.getBeamCount() * beam.renderOptions.beamWidth * 1.5;
 
-        // For multi-beam: the primary beam is at flatBeamOffset, additional beams stack outwards.
-        // "Above" slurs must sit above the outermost (top) beam edge.
-        // "Below" slurs must sit below the outermost (bottom) beam edge.
+        // Cross-staff beam: the VexFlow beam polygon extends from beamY in the stem direction.
+        // UP stem (+1): beam goes DOWN  from beamY to beamY + beamCount*beamWidth.  Top edge = beamY.
+        // DOWN stem (-1): beam goes UP from beamY to beamY - beamCount*beamWidth.  Bottom edge = beamY.
+        // Only adjust when the slur placement is on the beam side of the notehead:
+        //   UP stem + "Above" → beam is above notehead, slur must clear top edge (beamY).
+        //   DOWN stem + "Below" → beam is below notehead, slur must clear bottom edge (beamY).
+        const gap: number = 4;
+        let targetY: number | undefined;
         if (graphicalSlur.placement === PlacementEnum.Above) {
-            const beamTop: number = beamY - beamThickness * 0.5;
-            if (point.y > beamTop - 2) {
-                point.y = beamTop - 2;
-            }
-        } else {
-            const beamBottom: number = beamY + beamThickness * 0.5;
-            if (point.y < beamBottom + 2) {
-                point.y = beamBottom + 2;
-            }
+            targetY = beamY - gap; // above the beam anchor (top edge for UP-stem beams)
+            if (anchor.y <= targetY) { return; }
+        } else if (graphicalSlur.placement === PlacementEnum.Below) {
+            targetY = beamY + gap; // below the beam anchor (bottom edge for DOWN-stem beams)
+            if (anchor.y >= targetY) { return; }
         }
+        if (targetY === undefined) { return; }
+        const delta: number = targetY - anchor.y;
+        anchor.y += delta;
+        control.y += delta;
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {
