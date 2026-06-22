@@ -34,6 +34,7 @@ import { VexFlowGlissando } from "./VexFlowGlissando";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { SvgVexFlowBackend } from "./SvgVexFlowBackend";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
+import { Note } from "../../VoiceData/Note";
 import { TremoloBetweenNotes } from "../../VoiceData/Note";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 
@@ -189,6 +190,13 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         const p3: PointF2D = new PointF2D(graphicalSlur.bezierEndControlPt.x + abs.x, graphicalSlur.bezierEndControlPt.y + abs.y);
         const p4: PointF2D = new PointF2D(graphicalSlur.bezierEndPt.x + abs.x, graphicalSlur.bezierEndPt.y + abs.y);
 
+        // Adjust slur start/end Y to clear cross-staff beams.
+        // During layout (calculateCurve), cross-staff beam positions aren't known yet;
+        // they are only set at draw time by positionCrossStaffBeams(). The pre-computed
+        // bezier Y may sit at notehead level while the beam extends far above/below it.
+        this.adjustSlurForBeam(graphicalSlur, p1, true);
+        this.adjustSlurForBeam(graphicalSlur, p4, false);
+
         // put screen transformed points into array
         curvePointsInPixels.push(this.applyScreenTransformation(p1));
         curvePointsInPixels.push(this.applyScreenTransformation(p2));
@@ -221,6 +229,48 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         curvePointsInPixels.push(this.applyScreenTransformation(p4));
         const startNote: VexFlowGraphicalNote = this.rules.GNote(graphicalSlur.slur.StartNote) as VexFlowGraphicalNote;
         graphicalSlur.SVGElement = this.backend.renderCurve(curvePointsInPixels, true, startNote);
+    }
+
+    /**
+     * If the slur start/end note belongs to a cross-staff beam, lift the slur's anchor point
+     * so it clears the beam rather than sitting at the notehead level (which may be far below
+     * the beam for extended cross-staff stems).
+     *
+     * `point` is the bezier endpoint in absolute SVG pixels (will be mutated).
+     * `isStart` selects whether to look at the slur's StartNote or EndNote.
+     */
+    private adjustSlurForBeam(graphicalSlur: GraphicalSlur, point: PointF2D, isStart: boolean): void {
+        const osmdNote: Note = isStart ? graphicalSlur.slur.StartNote : graphicalSlur.slur.EndNote;
+        if (!osmdNote) { return; }
+        const gNote: VexFlowGraphicalNote = this.rules.GNote(osmdNote) as VexFlowGraphicalNote;
+        if (!gNote?.vfnote?.[0]) { return; }
+        const vfNote: any = gNote.vfnote[0];
+        const beam: any = vfNote.beam;
+        if (!beam?.renderOptions?.flatBeams || !beam.renderOptions.flatBeamOffset) { return; }
+
+        // Beam is positioned between staves. Compute its Y at this note's stem X.
+        const firstNote: any = beam.getNotes()[0];
+        if (!firstNote) { return; }
+        const firstX: number = firstNote.getStemX();
+        const noteX: number = vfNote.getStemX();
+        const slope: number = beam.slope ?? 0;
+        const beamY: number = beam.renderOptions.flatBeamOffset + slope * (noteX - firstX);
+        const beamThickness: number = beam.getBeamCount() * beam.renderOptions.beamWidth * 1.5;
+
+        // For multi-beam: the primary beam is at flatBeamOffset, additional beams stack outwards.
+        // "Above" slurs must sit above the outermost (top) beam edge.
+        // "Below" slurs must sit below the outermost (bottom) beam edge.
+        if (graphicalSlur.placement === PlacementEnum.Above) {
+            const beamTop: number = beamY - beamThickness * 0.5;
+            if (point.y > beamTop - 2) {
+                point.y = beamTop - 2;
+            }
+        } else {
+            const beamBottom: number = beamY + beamThickness * 0.5;
+            if (point.y < beamBottom + 2) {
+                point.y = beamBottom + 2;
+            }
+        }
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {
