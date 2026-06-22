@@ -291,25 +291,11 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         const beam: any = vfNote.beam;
         if (!beam) { return undefined; }
 
-        // If the beam already has a draw-time flatBeamOffset, use it directly.
-        if (beam.renderOptions?.flatBeams && beam.renderOptions.flatBeamOffset) {
-            const firstNote: any = beam.getNotes()[0];
-            if (firstNote) {
-                const fx: number = firstNote.getStemX();
-                const nx: number = vfNote.getStemX();
-                const slope: number = beam.slope ?? 0;
-                return { beamY: beam.renderOptions.flatBeamOffset + slope * (nx - fx) };
-            }
-        }
-
-        // Draw-time flatBeamOffset not yet set (beam owner's staffline hasn't drawn).
-        // Compute beam Y from layout AbsolutePositions — same formula as positionCrossStaffBeams().
+        // Determine the two measures whose staves the beam spans.
         const thisMeasure: VexFlowMeasure =
             gNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure as VexFlowMeasure;
         if (!thisMeasure) { return undefined; }
 
-        // Look up the sibling measure. The beam is in the OWNER's crossStaffBeamSiblings,
-        // which may be a different measure in the same column.
         let ownerMeasure: VexFlowMeasure | undefined;
         let siblingMeasure: VexFlowMeasure | undefined;
         const col: any[] = thisMeasure.ParentMusicSystem?.GraphicalMeasures;
@@ -330,19 +316,25 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
         if (!siblingMeasure) { return undefined; }
 
-        // Compute beam Y from the two measures' AbsolutePositions.
+        // Compute beam Y in OSMD units (same coordinate system as bezier points).
+        // positionCrossStaffBeams uses getYForLine which operates in screen pixels.
+        // Here we use AbsolutePosition values which are OSMD units.
         const absPos: PointF2D = ownerMeasure!.PositionAndShape.AbsolutePosition;
         const sibPos: PointF2D = siblingMeasure.PositionAndShape.AbsolutePosition;
-        const localY: number = absPos.y * unitInPixels;
-        const siblingY: number = sibPos.y * unitInPixels;
+        const localY: number = absPos.y;
+        const siblingY: number = sibPos.y;
         const localIsBelow: boolean = localY > siblingY;
         const upperY: number = localIsBelow ? siblingY : localY;
         const lowerY: number = localIsBelow ? localY : siblingY;
 
-        // Stave line spacing — get from either VF stave.
+        // getYForLine(4) = stave.y + (4 + headroom) * spacing
+        // stave.y = absPos.y * unitInPixels → in units: absPos.y
+        // (4 + headroom) * spacing / unitInPixels ≈ 4 * (spacing / unitInPixels) + headroom offset
+        // The headroom offsets cancel out in (lowerTop - upperBottom), so we ignore them.
         const vfStave: any = thisMeasure.getVFStave();
         const spacing: number = vfStave?.getSpacingBetweenLines?.() ?? 10;
-        const upperBottom: number = upperY + 4 * spacing;
+        const spacingUnits: number = spacing / unitInPixels; // spacing in OSMD units
+        const upperBottom: number = upperY + 4 * spacingUnits;
         const lowerTop: number = lowerY;
         return { beamY: upperBottom + (lowerTop - upperBottom) * 0.35 };
     }

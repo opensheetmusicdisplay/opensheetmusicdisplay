@@ -8,6 +8,8 @@ import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphica
 import {TestUtils} from "../../../Util/TestUtils";
 import {VexFlowMeasure} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import * as VF from "vexflow";
+import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
+import { unitInPixels } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 
 function loadScore(path: string): { gms: GraphicalMusicSheet, calc: VexFlowMusicSheetCalculator } {
     const score: Document = TestUtils.getScore(path);
@@ -583,6 +585,112 @@ describe("Cross-staff beam stem geometry", () => {
                 expect(slope).to.be.lessThan(0,
                     "beam[" + i + "] slope=" + slope.toFixed(4) + " should be negative");
             }
+        });
+    });
+
+    describe("Dichterliebe01 m4 cross-staff slur beam reference trace", () => {
+        let gms: GraphicalMusicSheet;
+        let rules: any;
+        before(() => {
+            const result: { gms: GraphicalMusicSheet, calc: VexFlowMusicSheetCalculator } = loadScore("Dichterliebe01.xml");
+            gms = result.gms;
+            rules = (result.calc as any).rules;
+        });
+
+        it("m4 bass cross-staff beam vfNotes should have beam reference after fixCrossStaffBeams", () => {
+            const bassMeasure: VexFlowMeasure = gms.MeasureList[4][2] as VexFlowMeasure;
+            console.log("bassMeasure.MeasureNumber:", bassMeasure.MeasureNumber,
+                "ParentStaff.idInMusicSheet:", bassMeasure.ParentStaff?.idInMusicSheet);
+            const sibMap: Map<VF.Beam, VexFlowMeasure> = (bassMeasure as any).crossStaffBeamSiblings;
+
+            // Let's also find which measure row actually has cross-staff beams
+            for (let i: number = 0; i < gms.MeasureList.length; i++) {
+                const row: any[] = gms.MeasureList[i];
+                for (let j: number = 0; j < row.length; j++) {
+                    const m: any = row[j];
+                    if (m?.crossStaffBeamSiblings?.size > 0) {
+                        console.log("  MeasureList[" + i + "][" + j + "] measure=" +
+                            m.MeasureNumber + " stave=" + m.ParentStaff?.idInMusicSheet +
+                            " beams=" + m.crossStaffBeamSiblings.size);
+                    }
+                }
+            }
+
+            expect(sibMap).to.not.be.undefined;
+            expect(sibMap.size).to.be.greaterThan(0, "m4 bass should have cross-staff beams");
+
+            // Pick the first cross-staff beam
+            const firstEntry: [VF.Beam, VexFlowMeasure] = sibMap.entries().next().value;
+            const beam: VF.Beam = firstEntry[0];
+            const sibling: VexFlowMeasure = firstEntry[1];
+            const notes: VF.StemmableNote[] = beam.getNotes() as VF.StemmableNote[];
+
+            console.log("Beam notes:", notes.length);
+            for (const n of notes) {
+                const beamRef: any = (n as any).beam;
+                console.log("  note beam ref:", beamRef === beam ? "SAME" : "DIFFERENT",
+                    "stemDir:", (n as any).stemDirection);
+            }
+
+            // Set coordinates and run positionCrossStaffBeams
+            const absPos: PointF2D = bassMeasure.PositionAndShape.AbsolutePosition;
+            const sibPos: PointF2D = sibling.PositionAndShape.AbsolutePosition;
+            bassMeasure.setAbsoluteCoordinates(absPos.x * unitInPixels, absPos.y * unitInPixels);
+            sibling.setAbsoluteCoordinates(sibPos.x * unitInPixels, sibPos.y * unitInPixels);
+            (bassMeasure as any).positionCrossStaffBeams();
+
+            console.log("After positionCrossStaffBeams:");
+            console.log("  beam.renderOptions.flatBeams:", (beam as any).renderOptions.flatBeams);
+            console.log("  beam.renderOptions.flatBeamOffset:", (beam as any).renderOptions.flatBeamOffset);
+
+            // Check each note's beam reference still matches
+            for (const n of notes) {
+                const beamRef: any = (n as any).beam;
+                console.log("  note beam ref after:", beamRef === beam ? "SAME" : "DIFFERENT",
+                    "has flatBeamOffset:", !!beamRef?.renderOptions?.flatBeamOffset);
+            }
+
+            expect((beam as any).renderOptions.flatBeams).to.equal(true);
+            expect((beam as any).renderOptions.flatBeamOffset).to.be.a("number");
+
+            // NOW: check that the slur's start note GNote.vfnote[0] has the beam.
+            // We find it by matching VF notes in the beam to their OSMD notes,
+            // then finding the slur that starts on that OSMD note.
+            let slurGNote: any;
+            for (const vfN of notes) {
+                // VF notes don't directly reference OSMD notes. Walk staff entries instead.
+                for (const se of bassMeasure.staffEntries) {
+                    for (const gve of se.graphicalVoiceEntries) {
+                        if ((gve as any).vfStaveNote === vfN) {
+                            // Found the VF note's voice entry — check if any note in it starts a slur
+                            for (const osmdNote of gve.parentVoiceEntry.Notes) {
+                                // Find slurs starting on this OSMD note
+                                for (const gSlur of (bassMeasure.ParentStaffLine as any)?.GraphicalSlurs ?? []) {
+                                    if (gSlur.slur?.StartNote === osmdNote) {
+                                        slurGNote = rules.GNote(osmdNote);
+                                        break;
+                                    }
+                                }
+                                if (slurGNote) { break; }
+                            }
+                        }
+                        if (slurGNote) { break; }
+                    }
+                    if (slurGNote) { break; }
+                }
+                if (slurGNote) { break; }
+            }
+
+            console.log("Slur startNote GNote found:", !!slurGNote);
+            console.log("  vfnote[0]:", !!slurGNote?.vfnote?.[0]);
+            const slurBeam: any = slurGNote?.vfnote?.[0]?.beam;
+            console.log("  beam exists:", !!slurBeam);
+            console.log("  beam === crossStaffBeam:", slurBeam === beam);
+            console.log("  beam.renderOptions?.flatBeams:", slurBeam?.renderOptions?.flatBeams);
+            console.log("  beam.renderOptions?.flatBeamOffset:", slurBeam?.renderOptions?.flatBeamOffset);
+            expect(slurBeam).to.not.be.undefined;
+            expect(slurBeam).to.equal(beam,
+                "Slur's GNote vfNote must reference the same beam");
         });
     });
 });

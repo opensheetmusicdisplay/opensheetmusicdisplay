@@ -1470,7 +1470,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const osmdTuplet: Tuplet = builder[0];
                 const localEntries: VexFlowVoiceEntry[] = builder[1];
                 if (localEntries.length >= osmdTuplet.Notes.length) { continue; }
-                if (localEntries.length * 2 <= osmdTuplet.Notes.length) { continue; }
+                // Allow 50% majority (same fix as fixCrossStaffBeams).
 
                 const vfTuplet: VF.Tuplet = this.osmdTupletToVfTuplet.get(osmdTuplet);
                 if (!vfTuplet) { continue; }
@@ -1585,7 +1585,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const localEntries: VexFlowVoiceEntry[] = builder[1];
                 if (osmdBeam.BeamNumber !== 1) { continue; }
                 if (localEntries.length >= osmdBeam.Notes.length) { continue; }
-                if (localEntries.length * 2 <= osmdBeam.Notes.length) { continue; }
+                // Allow 50% majority (e.g. 2 of 4 notes in Dichterliebe arpeggio pattern).
+                // Previously skipped: localEntries.length * 2 <= osmdBeam.Notes.length
 
                 const vfbeams: VF.Beam[] = this.vfbeams[voiceID];
                 if (!vfbeams) { continue; }
