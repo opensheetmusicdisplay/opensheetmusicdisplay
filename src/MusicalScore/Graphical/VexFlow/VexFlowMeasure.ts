@@ -634,6 +634,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     private positionCrossStaffBeams(): void {
         for (const [beam, siblingMeasure] of this.crossStaffBeamSiblings) {
+            // Draw order is per-staffline: when this measure owns the beam but the sibling staff is
+            // drawn later, the sibling stave is still at a stale X this render pass. The owner and
+            // sibling share the same measure column, so if the sibling stave's X drifted from this
+            // stave's X, re-sync it (X only — Y is read live for the beam offset). Skip when already
+            // aligned, to avoid re-formatting an already-positioned stave (which shifts its notes).
+            if (Math.abs(siblingMeasure.stave.getX() - this.stave.getX()) > 1) {
+                siblingMeasure.stave.setX(this.stave.getX());
+            }
+
             const localY: number = this.stave.getYForLine(0);
             const siblingY: number = siblingMeasure.stave.getYForLine(0);
             const localIsBelow: boolean = localY > siblingY;
@@ -646,22 +655,73 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const beamAny: any = beam;
             beamAny.renderOptions.flatBeams = true;
             beamAny.renderOptions.flatBeamOffset = beamY;
-            beamAny.slope = 0;
             beamAny.yShift = 0;
 
-            for (const note of beam.getNotes()) {
+            // Re-anchor each note to its real stave so stem yBounds (notehead Y) are recomputed.
+            // setStave (vs. raw stave assignment) re-derives noteHead Y and stem bounds for the
+            // current stave, otherwise the stem base stays at the previous stave's coordinates.
+            const notes: VF.StemmableNote[] = beam.getNotes() as VF.StemmableNote[];
+            for (const note of notes) {
                 const noteAny: any = note;
                 const noteIsLocal: boolean = (localIsBelow && noteAny.stemDirection > 0) ||
                                              (!localIsBelow && noteAny.stemDirection < 0);
-                noteAny.stave = noteIsLocal ? this.stave : siblingMeasure.stave;
+                (note as StaveNote).setStave(noteIsLocal ? this.stave : siblingMeasure.stave);
                 const stem: any = noteAny.stem;
                 if (stem) {
                     stem.setExtension(note.getStemExtension());
                 }
             }
+
+            beamAny.slope = this.crossStaffBeamSlope(notes, upperBottom, lowerTop, beamY);
             beamAny.applyStemExtensions();
             beamAny.postFormatted = true;
         }
+    }
+
+    /**
+     * Slope for a cross-staff beam anchored at beamY (first note). The beam follows the outer
+     * notehead spread (damped) so stems stay balanced instead of forcing flat (long) stems, while
+     * clamped to keep the whole beam between the two staves.
+     */
+    private crossStaffBeamSlope(notes: VF.StemmableNote[], upperBottom: number, lowerTop: number, beamY: number): number {
+        const first: any = notes[0];
+        const last: any = notes[notes.length - 1];
+        const firstX: number = first.getStemX();
+        const lastX: number = last.getStemX();
+        const span: number = lastX - firstX;
+        if (Math.abs(span) < 1) { return 0; }
+
+        // baseY = outermost notehead Y (independent of stem extension), follows the arpeggio.
+        const firstBaseY: number = first.getStemExtents().baseY;
+        const lastBaseY: number = last.getStemExtents().baseY;
+        const damp: number = 0.5;
+        let slope: number = (lastBaseY - firstBaseY) / span * damp;
+
+        // The beam line beamY(x) = beamY + slope*(x-firstX) must stay on each note's stem side:
+        // UP-stem notes need the beam above their notehead (beamY < noteheadY-margin), DOWN-stem
+        // notes need it below (beamY > noteheadY+margin). Each note narrows the allowed slope range.
+        const margin: number = 8;
+        const inset: number = 4; // keep the beam strictly inside the inter-staff gap, not on a staff line
+        let minSlope: number = Math.min((upperBottom + inset - beamY) / span, (lowerTop - inset - beamY) / span);
+        let maxSlope: number = Math.max((upperBottom + inset - beamY) / span, (lowerTop - inset - beamY) / span);
+        for (const note of notes) {
+            const noteAny: any = note;
+            const dx: number = noteAny.getStemX() - firstX;
+            if (Math.abs(dx) < 1) { continue; }
+            const headY: number = noteAny.getStemExtents().baseY;
+            // limit = slope value at which beamY(x) hits the notehead-side boundary
+            const limit: number = noteAny.stemDirection > 0
+                ? (headY - margin - beamY) / dx   // UP: beamY <= headY-margin
+                : (headY + margin - beamY) / dx;  // DOWN: beamY >= headY+margin
+            if (noteAny.stemDirection > 0) {
+                if (dx > 0) { maxSlope = Math.min(maxSlope, limit); } else { minSlope = Math.max(minSlope, limit); }
+            } else {
+                if (dx > 0) { minSlope = Math.max(minSlope, limit); } else { maxSlope = Math.min(maxSlope, limit); }
+            }
+        }
+        if (minSlope > maxSlope) { return 0; }
+        slope = Math.max(minSlope, Math.min(maxSlope, slope));
+        return slope;
     }
 
     /**

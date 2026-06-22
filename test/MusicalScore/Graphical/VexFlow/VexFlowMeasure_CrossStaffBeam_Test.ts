@@ -171,6 +171,112 @@ describe("VexFlow Measure - Cross-Staff Beams", () => {
             }
             expect(found4NoteBeam).to.be.true;
         });
+
+        it("cross-staff beams should have non-zero slope after positioning", () => {
+            let slopedCount: number = 0;
+            let totalCrossStaff: number = 0;
+            for (const measureRow of gms.MeasureList) {
+                if (measureRow.length < 3) { continue; }
+                const trebleMeasure: VexFlowMeasure = measureRow[1] as VexFlowMeasure;
+                const bassMeasure: VexFlowMeasure = measureRow[2] as VexFlowMeasure;
+                const siblingMap: Map<VF.Beam, VexFlowMeasure> = (bassMeasure as any).crossStaffBeamSiblings;
+                if (!siblingMap || siblingMap.size === 0) { continue; }
+
+                trebleMeasure.setAbsoluteCoordinates(0, 100);
+                bassMeasure.setAbsoluteCoordinates(0, 250);
+                (bassMeasure as any).positionCrossStaffBeams();
+
+                for (const [beam] of siblingMap) {
+                    totalCrossStaff++;
+                    const slope: number = (beam as any).slope;
+                    if (Math.abs(slope) > 0.01) {
+                        slopedCount++;
+                    }
+                }
+            }
+            expect(totalCrossStaff).to.be.greaterThan(20,
+                "should have many cross-staff beams");
+            expect(slopedCount).to.equal(totalCrossStaff,
+                `all ${totalCrossStaff} cross-staff beams should have non-zero slope, but only ${slopedCount} do`);
+        });
+
+        it("cross-staff beams should have negative slope (bass→treble arpeggio goes upward)", () => {
+            let wrongSign: number = 0;
+            let totalCrossStaff: number = 0;
+            for (const measureRow of gms.MeasureList) {
+                if (measureRow.length < 3) { continue; }
+                const trebleMeasure: VexFlowMeasure = measureRow[1] as VexFlowMeasure;
+                const bassMeasure: VexFlowMeasure = measureRow[2] as VexFlowMeasure;
+                const siblingMap: Map<VF.Beam, VexFlowMeasure> = (bassMeasure as any).crossStaffBeamSiblings;
+                if (!siblingMap || siblingMap.size === 0) { continue; }
+
+                trebleMeasure.setAbsoluteCoordinates(0, 100);
+                bassMeasure.setAbsoluteCoordinates(0, 250);
+                (bassMeasure as any).positionCrossStaffBeams();
+
+                for (const [beam] of siblingMap) {
+                    totalCrossStaff++;
+                    const slope: number = (beam as any).slope;
+                    if (slope > 0) {
+                        wrongSign++;
+                    }
+                }
+            }
+            expect(wrongSign).to.equal(0,
+                `${wrongSign}/${totalCrossStaff} cross-staff beams have wrong slope sign (positive instead of negative)`);
+        });
+
+        it("stem length should not exceed notehead-to-beam distance", () => {
+            let violations: number = 0;
+            let totalNotes: number = 0;
+            const details: string[] = [];
+            const tolerance: number = 20;
+            for (const measureRow of gms.MeasureList) {
+                if (measureRow.length < 3) { continue; }
+                const trebleMeasure: VexFlowMeasure = measureRow[1] as VexFlowMeasure;
+                const bassMeasure: VexFlowMeasure = measureRow[2] as VexFlowMeasure;
+                const siblingMap: Map<VF.Beam, VexFlowMeasure> = (bassMeasure as any).crossStaffBeamSiblings;
+                if (!siblingMap || siblingMap.size === 0) { continue; }
+
+                trebleMeasure.setAbsoluteCoordinates(0, 100);
+                bassMeasure.setAbsoluteCoordinates(0, 250);
+                (bassMeasure as any).positionCrossStaffBeams();
+
+                for (const [beam] of siblingMap) {
+                    const beamAny: any = beam;
+                    const offset: number = beamAny.renderOptions.flatBeamOffset;
+                    const slope: number = beamAny.slope;
+                    const notes: VF.Note[] = beam.getNotes();
+                    const firstX: number = (notes[0] as any).getStemX();
+
+                    for (const note of notes) {
+                        totalNotes++;
+                        const noteAny: any = note;
+                        const noteX: number = noteAny.getStemX();
+                        const beamY: number = offset + slope * (noteX - firstX);
+                        const kps: any[] = note.getKeyProps();
+                        const noteheadY: number = noteAny.stave.getYForNote(kps[0].line);
+                        const noteToBeam: number = Math.abs(noteheadY - beamY);
+                        const extents: { topY: number, baseY: number } = noteAny.getStemExtents();
+                        const stemLen: number = Math.abs(extents.topY - extents.baseY);
+
+                        if (stemLen > noteToBeam + tolerance) {
+                            violations++;
+                            details.push(
+                                "stemLen=" + stemLen.toFixed(0) +
+                                " noteToBeam=" + noteToBeam.toFixed(0) +
+                                " excess=" + (stemLen - noteToBeam).toFixed(0) +
+                                " line=" + kps[0].line.toFixed(1) +
+                                " dir=" + noteAny.stemDirection
+                            );
+                        }
+                    }
+                }
+            }
+            expect(violations).to.equal(0,
+                violations + "/" + totalNotes + " stems exceed notehead-to-beam distance+" +
+                tolerance + "px:\n" + details.join("\n"));
+        });
     });
 
     describe("positionCrossStaffBeams draw-time positioning", () => {
@@ -231,7 +337,251 @@ describe("VexFlow Measure - Cross-Staff Beams", () => {
             const beams: VF.Beam[] = (bassMeasure as any).autoTupletVfBeams;
             for (const beam of beams) {
                 expect((beam as any).renderOptions.flatBeams).to.equal(true,
-                    "cross-staff beams should be flat");
+                    "cross-staff beams should use flatBeams for offset anchoring");
+            }
+        });
+
+        it("beam slope should be non-zero (diagonal cross-staff beam)", () => {
+            trebleMeasure.setAbsoluteCoordinates(0, 100);
+            bassMeasure.setAbsoluteCoordinates(0, 250);
+            (bassMeasure as any).positionCrossStaffBeams();
+
+            const beams: VF.Beam[] = (bassMeasure as any).autoTupletVfBeams;
+            const trebleBottom: number = trebleMeasure.getVFStave().getYForLine(4);
+            const bassTop: number = bassMeasure.getVFStave().getYForLine(0);
+
+            for (const beam of beams) {
+                const slope: number = (beam as any).slope;
+                expect(Math.abs(slope)).to.be.greaterThan(0.05,
+                    "cross-staff beam slope should be non-zero (diagonal)");
+
+                const notes: VF.Note[] = beam.getNotes();
+                const firstX: number = (notes[0] as any).getStemX();
+                const lastX: number = (notes[notes.length - 1] as any).getStemX();
+                const offset: number = (beam as any).renderOptions.flatBeamOffset;
+                const beamAtLast: number = offset + slope * (lastX - firstX);
+                expect(beamAtLast).to.be.greaterThan(trebleBottom,
+                    "beam at last note should be below treble stave");
+                expect(beamAtLast).to.be.lessThan(bassTop,
+                    "beam at last note should be above bass stave");
+            }
+        });
+    });
+});
+
+describe("Cross-staff beam stem geometry", () => {
+
+    function checkBeamStemGeometry(
+        ownerMeasure: VexFlowMeasure,
+        siblingMeasure: VexFlowMeasure,
+        label: string,
+    ): string[] {
+        const errors: string[] = [];
+        const siblingMap: Map<VF.Beam, VexFlowMeasure> = (ownerMeasure as any).crossStaffBeamSiblings;
+        if (!siblingMap || siblingMap.size === 0) { return ["no crossStaffBeamSiblings on " + label]; }
+        const ownerStave: VF.Stave = ownerMeasure.getVFStave();
+        const sibStave: VF.Stave = siblingMeasure.getVFStave();
+        const ownerY0: number = ownerStave.getYForLine(0);
+        const sibY0: number = sibStave.getYForLine(0);
+        const ownerIsBelow: boolean = ownerY0 > sibY0;
+        const upperStave: VF.Stave = ownerIsBelow ? sibStave : ownerStave;
+        const lowerStave: VF.Stave = ownerIsBelow ? ownerStave : sibStave;
+        const upperBottom: number = upperStave.getYForLine(4);
+        const lowerTop: number = lowerStave.getYForLine(0);
+
+        let beamIdx: number = 0;
+        for (const [beam] of siblingMap) {
+            const beamAny: any = beam;
+            const offset: number = beamAny.renderOptions.flatBeamOffset;
+            const slope: number = beamAny.slope;
+            const notes: VF.Note[] = beam.getNotes();
+            const firstX: number = (notes[0] as any).getStemX();
+            const bid: string = label + " beam[" + beamIdx + "]";
+
+            // Beam offset between staves
+            if (offset < upperBottom - 5 || offset > lowerTop + 5) {
+                errors.push(bid + " offset=" + offset.toFixed(0) +
+                    " not between staves (" + upperBottom.toFixed(0) + "-" + lowerTop.toFixed(0) + ")");
+            }
+
+            for (let ni: number = 0; ni < notes.length; ni++) {
+                const note: VF.Note = notes[ni];
+                const noteAny: any = note;
+                const nid: string = bid + " note[" + ni + "]";
+                const kps: any[] = note.getKeyProps();
+                if (!kps || kps.length === 0) { continue; }
+                const noteStave: VF.Stave = noteAny.stave;
+                const stemDir: number = noteAny.stemDirection;
+                const outerKp: any = stemDir === VF.Stem.UP ? kps[0] : kps[kps.length - 1];
+                const noteheadY: number = noteStave.getYForNote(outerKp.line);
+                const noteX: number = noteAny.getStemX();
+                const beamY: number = offset + slope * (noteX - firstX);
+                const stem: any = noteAny.stem;
+
+                // 1. Stem direction: bass-side notes UP, treble-side notes DOWN
+                if (noteStave === lowerStave && stemDir !== VF.Stem.UP) {
+                    errors.push(nid + " on lower stave: stemDir=" + stemDir + " expected UP(1)");
+                }
+                if (noteStave === upperStave && stemDir !== VF.Stem.DOWN) {
+                    errors.push(nid + " on upper stave: stemDir=" + stemDir + " expected DOWN(-1)");
+                }
+
+                // 2. Stem base at notehead
+                if (stem) {
+                    const baseY: number = stemDir === VF.Stem.UP ? stem.yBottom : stem.yTop;
+                    const baseDist: number = Math.abs(baseY - noteheadY);
+                    if (baseDist > 5) {
+                        errors.push(nid + " stem base=" + baseY.toFixed(0) +
+                            " vs notehead=" + noteheadY.toFixed(0) + " (off by " + baseDist.toFixed(0) + ")");
+                    }
+                }
+
+                // 3. Stem tip touches beam
+                if (stem) {
+                    const extents: { topY: number, baseY: number } = noteAny.getStemExtents();
+                    const stemTip: number = extents.topY;
+                    const tipDist: number = Math.abs(stemTip - beamY);
+                    if (tipDist > 25) {
+                        errors.push(nid + " stem tip=" + stemTip.toFixed(0) +
+                            " vs beamY=" + beamY.toFixed(0) + " (off by " + tipDist.toFixed(0) + ")");
+                    }
+                }
+
+                // 4. Stem length ≤ notehead-to-beam distance + tolerance
+                if (stem) {
+                    const extents: { topY: number, baseY: number } = noteAny.getStemExtents();
+                    const stemLen: number = Math.abs(extents.topY - extents.baseY);
+                    const noteToBeam: number = Math.abs(noteheadY - beamY);
+                    if (stemLen > noteToBeam + 20) {
+                        errors.push(nid + " stemLen=" + stemLen.toFixed(0) +
+                            " exceeds noteToBeam=" + noteToBeam.toFixed(0) + "+20");
+                    }
+                }
+
+                // 5. Stem direction consistent with notehead-to-beam direction
+                if (stem) {
+                    const goesUp: boolean = noteheadY > beamY;
+                    if (goesUp && stemDir !== VF.Stem.UP) {
+                        errors.push(nid + " notehead below beam but stemDir=" + stemDir + " (should be UP)");
+                    }
+                    if (!goesUp && stemDir !== VF.Stem.DOWN) {
+                        errors.push(nid + " notehead above beam but stemDir=" + stemDir + " (should be DOWN)");
+                    }
+                }
+            }
+            beamIdx++;
+        }
+        return errors;
+    }
+
+    function positionAndCheck(
+        ownerMeasure: VexFlowMeasure,
+        siblingMeasure: VexFlowMeasure,
+        trebleY: number,
+        bassY: number,
+        label: string,
+    ): string[] {
+        const ownerY0: number = ownerMeasure.getVFStave().getYForLine(0);
+        const sibY0: number = siblingMeasure.getVFStave().getYForLine(0);
+        const ownerIsBelow: boolean = ownerY0 > sibY0 || ownerY0 === sibY0;
+        if (ownerIsBelow) {
+            siblingMeasure.setAbsoluteCoordinates(0, trebleY);
+            ownerMeasure.setAbsoluteCoordinates(0, bassY);
+        } else {
+            ownerMeasure.setAbsoluteCoordinates(0, trebleY);
+            siblingMeasure.setAbsoluteCoordinates(0, bassY);
+        }
+        (ownerMeasure as any).positionCrossStaffBeams();
+        return checkBeamStemGeometry(ownerMeasure, siblingMeasure, label);
+    }
+
+    describe("Dichterliebe01", () => {
+        let gms: GraphicalMusicSheet;
+        before(() => {
+            const result: { gms: GraphicalMusicSheet } = loadScore("Dichterliebe01.xml");
+            gms = result.gms;
+        });
+
+        for (const mIdx of [8, 9]) {
+            it("m" + (mIdx + 1) + " bass: stem direction, length, beam connection", () => {
+                const treble: VexFlowMeasure = gms.MeasureList[mIdx][1] as VexFlowMeasure;
+                const bass: VexFlowMeasure = gms.MeasureList[mIdx][2] as VexFlowMeasure;
+                const errs: string[] = positionAndCheck(bass, treble, 100, 250, "Dicht m" + (mIdx + 1));
+                expect(errs).to.deep.equal([], errs.join("\n"));
+            });
+        }
+
+        it("m4-m10 bass: all slopes negative (ascending arpeggio)", () => {
+            let wrongSign: number = 0;
+            let total: number = 0;
+            for (let m: number = 3; m <= 9; m++) {
+                const treble: VexFlowMeasure = gms.MeasureList[m][1] as VexFlowMeasure;
+                const bass: VexFlowMeasure = gms.MeasureList[m][2] as VexFlowMeasure;
+                treble.setAbsoluteCoordinates(0, 100);
+                bass.setAbsoluteCoordinates(0, 250);
+                (bass as any).positionCrossStaffBeams();
+                const siblingMap: Map<VF.Beam, VexFlowMeasure> = (bass as any).crossStaffBeamSiblings;
+                if (!siblingMap) { continue; }
+                for (const [beam] of siblingMap) {
+                    total++;
+                    if ((beam as any).slope > 0) { wrongSign++; }
+                }
+            }
+            expect(wrongSign).to.equal(0,
+                wrongSign + "/" + total + " beams have positive slope (expected negative)");
+        });
+    });
+
+    describe("Debussy Mandoline", () => {
+        let gms: GraphicalMusicSheet;
+        before(() => {
+            const result: { gms: GraphicalMusicSheet } = loadScore("Debussy_Mandoline.xml");
+            gms = result.gms;
+        });
+
+        it("m4 bass: stem direction, length, beam connection", () => {
+            const treble: VexFlowMeasure = gms.MeasureList[3][1] as VexFlowMeasure;
+            const bass: VexFlowMeasure = gms.MeasureList[3][2] as VexFlowMeasure;
+            const errs: string[] = positionAndCheck(bass, treble, 100, 250, "Mand m4 bass");
+            expect(errs).to.deep.equal([], errs.join("\n"));
+        });
+
+        it("m4 treble: stem direction, length, beam connection", () => {
+            const treble: VexFlowMeasure = gms.MeasureList[3][1] as VexFlowMeasure;
+            const bass: VexFlowMeasure = gms.MeasureList[3][2] as VexFlowMeasure;
+            bass.setAbsoluteCoordinates(0, 250);
+            treble.setAbsoluteCoordinates(0, 100);
+            (treble as any).positionCrossStaffBeams();
+            const errs: string[] = checkBeamStemGeometry(treble, bass, "Mand m4 treble");
+            expect(errs).to.deep.equal([], errs.join("\n"));
+        });
+    });
+
+    describe("Tuplet crossstaff alignment", () => {
+        let gms: GraphicalMusicSheet;
+        before(() => {
+            const result: { gms: GraphicalMusicSheet } = loadScore("test_tuplet_crossstaff_alignment.musicxml");
+            gms = result.gms;
+        });
+
+        it("m1 bass: stem direction, length, beam connection", () => {
+            const treble: VexFlowMeasure = gms.MeasureList[0][0] as VexFlowMeasure;
+            const bass: VexFlowMeasure = gms.MeasureList[0][1] as VexFlowMeasure;
+            const errs: string[] = positionAndCheck(bass, treble, 100, 250, "Tuplet m1");
+            expect(errs).to.deep.equal([], errs.join("\n"));
+        });
+
+        it("m1: beam slope should be negative (ascending tuplet)", () => {
+            const treble: VexFlowMeasure = gms.MeasureList[0][0] as VexFlowMeasure;
+            const bass: VexFlowMeasure = gms.MeasureList[0][1] as VexFlowMeasure;
+            treble.setAbsoluteCoordinates(0, 100);
+            bass.setAbsoluteCoordinates(0, 250);
+            (bass as any).positionCrossStaffBeams();
+            const beams: VF.Beam[] = (bass as any).autoTupletVfBeams;
+            for (let i: number = 0; i < beams.length; i++) {
+                const slope: number = (beams[i] as any).slope;
+                expect(slope).to.be.lessThan(0,
+                    "beam[" + i + "] slope=" + slope.toFixed(4) + " should be negative");
             }
         });
     });
