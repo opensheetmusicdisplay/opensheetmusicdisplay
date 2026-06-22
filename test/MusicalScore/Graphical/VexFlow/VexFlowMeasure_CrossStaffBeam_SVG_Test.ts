@@ -746,20 +746,24 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         if (mSlurs.length > 0) {
             log.push(`Slurs (${mSlurs.length}):`);
             for (const s of mSlurs) {
-                // Find start/end notes
+                // Match by slur ID: vf-note-M-S-V-I-slur → note ID is first 5 parts
+                const slurNoteId: string = s.slurId.replace(/-slur$/, "");
                 let startN: NoteInfo | undefined;
                 let endN: NoteInfo | undefined;
-                let bestStart: number = 30;
-                let bestEnd: number = 30;
+                // Start note: exact ID match from slur ID
                 for (const n of mNotes) {
-                    const sd: number = Math.abs(n.x - s.startX);
-                    const ed: number = Math.abs(n.x - s.endX);
-                    if (sd < bestStart) { bestStart = sd; startN = n; }
-                    if (ed < bestEnd) { bestEnd = ed; endN = n; }
+                    if (n.id === slurNoteId) { startN = n; break; }
                 }
-                // For end note, prefer a different stave if startN is already matched
+                if (!startN) {
+                    // Fallback: X proximity
+                    let bestStart: number = 30;
+                    for (const n of mNotes) {
+                        const sd: number = Math.abs(n.x - s.startX);
+                        if (sd < bestStart) { bestStart = sd; startN = n; }
+                    }
+                }
                 const startStave: number = startN?.stave ?? -1;
-                // Find end note on a different stave (cross-staff slur)
+                // End note: prefer different stave, X + Y proximity
                 let crossEndN: NoteInfo | undefined;
                 for (const n of mNotes) {
                     if (n.stave !== startStave && Math.abs(n.x - s.endX) < 30) {
@@ -768,21 +772,43 @@ describe("Cross-Staff Beam SVG Rendering", () => {
                         }
                     }
                 }
+                // Also try exact end note match: the slur's EndNote can be found by searching all notes
+                if (!crossEndN) {
+                    for (const n of mNotes) {
+                        if (Math.abs(n.x - s.endX) < 30) {
+                            if (!endN || Math.abs(n.x - s.endX) < Math.abs(endN.x - s.endX)) {
+                                endN = n;
+                            }
+                        }
+                    }
+                }
                 const endStave: number = crossEndN?.stave ?? endN?.stave ?? -1;
                 const isXStaff: boolean = startStave >= 0 && endStave >= 0 && startStave !== endStave;
 
-                // Find beam at start note
+                // Find beam containing the start note by note ID
                 let beamTop: number = -1;
                 let beamBot: number = -1;
-                for (const b of mBeams) {
-                    for (const bn of b.notes) {
-                        if (startN && bn.id === startN.id) {
-                            beamTop = b.beamPolyTopY;
-                            beamBot = b.beamPolyBotY;
-                            break;
+                let beamStartX: number = -1;
+                let beamStartY: number = -1;
+                let beamEndX: number = -1;
+                let beamEndY: number = -1;
+                let beamHasStartNote: boolean = false;
+                if (startN) {
+                    for (const b of mBeams) {
+                        for (const bn of b.notes) {
+                            if (bn.id === startN.id) {
+                                beamTop = b.beamPolyTopY;
+                                beamBot = b.beamPolyBotY;
+                                beamStartX = b.startX;
+                                beamStartY = b.startY;
+                                beamEndX = b.endX;
+                                beamEndY = b.endY;
+                                beamHasStartNote = true;
+                                break;
+                            }
                         }
+                        if (beamHasStartNote) { break; }
                     }
-                    if (beamTop >= 0) { break; }
                 }
 
                 log.push(`  ${s.slurId}:`);
@@ -802,9 +828,15 @@ describe("Cross-Staff Beam SVG Rendering", () => {
                         `stem=${en.stemDir}(${en.stemTip.toFixed(1)}→${en.stemBase.toFixed(1)}) ` +
                         `gap=${(s.endY - en.noteheadY).toFixed(1)}px`);
                 }
-                if (beamTop >= 0) {
-                    log.push(`    beam: top=${beamTop.toFixed(1)} bot=${beamBot.toFixed(1)} ` +
-                        `slurToBeam=${(s.startY - beamTop).toFixed(1)}px`);
+                if (beamHasStartNote) {
+                    // Interpolate beam Y at the slur's start X
+                    const bdx: number = beamEndX - beamStartX || 1;
+                    const t: number = (s.startX - beamStartX) / bdx;
+                    const beamYatSlur: number = beamStartY + (beamEndY - beamStartY) * t;
+                    log.push(`    beam at start note: top=${beamTop.toFixed(1)} bot=${beamBot.toFixed(1)} ` +
+                        `beamY@slurX=${beamYatSlur.toFixed(1)} ` +
+                        `slurToBeam=${(s.startY - beamYatSlur).toFixed(1)}px ` +
+                        "(slur should be above beam top)");
                 } else {
                     log.push("    beam: none at start note");
                 }
