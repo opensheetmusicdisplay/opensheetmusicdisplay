@@ -227,6 +227,70 @@ describe("VexFlow Measure - Debussy Mandoline Cross-Staff Beams", () => {
                 }
             }
         });
+
+        it("beam Y should be between staves even when sibling stave not yet drawn (Y=0)", () => {
+            for (let m: number = 1; m <= 4; m++) {
+                const trebleMeasure: VexFlowMeasure = gms.MeasureList[m][1] as VexFlowMeasure;
+                const bassMeasure: VexFlowMeasure = gms.MeasureList[m][2] as VexFlowMeasure;
+
+                // Simulate treble drawing first:
+                // treble stave is positioned, bass stave is still at default (y=0) from constructor
+                const tPos: { x: number, y: number } = trebleMeasure.PositionAndShape.AbsolutePosition;
+                trebleMeasure.setAbsoluteCoordinates(tPos.x * unitInPixels, tPos.y * unitInPixels);
+                bassMeasure.getVFStave().setX(0).setY(0);
+                (trebleMeasure as any).positionCrossStaffBeams();
+
+                // After fix: bass stave should be synced from AbsolutePosition,
+                // so beam Y should be between the staves
+                const trebleBottom: number = trebleMeasure.getVFStave().getYForLine(4);
+                const bassTop: number = bassMeasure.getVFStave().getYForLine(0);
+
+                const siblingMap: Map<VF.Beam, VexFlowMeasure> = (trebleMeasure as any).crossStaffBeamSiblings;
+                for (const [beam] of siblingMap) {
+                    const offset: number = (beam as any).renderOptions.flatBeamOffset;
+                    expect(offset).to.be.greaterThan(trebleBottom - 5,
+                        `m${m + 1} treble-owned beam offset=${offset.toFixed(1)} ` +
+                        `should be below treble bottom=${trebleBottom.toFixed(1)}`);
+                    expect(offset).to.be.lessThan(bassTop + 5,
+                        `m${m + 1} treble-owned beam offset=${offset.toFixed(1)} ` +
+                        `should be above bass top=${bassTop.toFixed(1)}`);
+                }
+            }
+        });
+
+        it("Group 1 and Group 2 beam offsets should match when drawn in draw-order", () => {
+            for (let m: number = 1; m <= 4; m++) {
+                const trebleMeasure: VexFlowMeasure = gms.MeasureList[m][1] as VexFlowMeasure;
+                const bassMeasure: VexFlowMeasure = gms.MeasureList[m][2] as VexFlowMeasure;
+
+                const tPos: { x: number, y: number } = trebleMeasure.PositionAndShape.AbsolutePosition;
+                const bPos: { x: number, y: number } = bassMeasure.PositionAndShape.AbsolutePosition;
+
+                // Step 1: treble draws first — bass stave at default (0,0)
+                trebleMeasure.setAbsoluteCoordinates(tPos.x * unitInPixels, tPos.y * unitInPixels);
+                bassMeasure.getVFStave().setX(0).setY(0);
+                (trebleMeasure as any).positionCrossStaffBeams();
+                const trebleBeamYs: number[] = [];
+                for (const [beam] of (trebleMeasure as any).crossStaffBeamSiblings) {
+                    trebleBeamYs.push((beam as any).renderOptions.flatBeamOffset);
+                }
+
+                // Step 2: bass draws later — now both staves are properly positioned
+                bassMeasure.setAbsoluteCoordinates(bPos.x * unitInPixels, bPos.y * unitInPixels);
+                (bassMeasure as any).positionCrossStaffBeams();
+                const bassBeamYs: number[] = [];
+                for (const [beam] of (bassMeasure as any).crossStaffBeamSiblings) {
+                    bassBeamYs.push((beam as any).renderOptions.flatBeamOffset);
+                }
+
+                // Group 1 (bass) and Group 2 (treble) beams should be at similar heights
+                if (trebleBeamYs.length > 0 && bassBeamYs.length > 0) {
+                    const diff: number = Math.abs(trebleBeamYs[0] - bassBeamYs[0]);
+                    expect(diff).to.be.lessThan(30,
+                        `m${m + 1} draw-order: group1 vs group2 beam Y diff=${diff.toFixed(1)}`);
+                }
+            }
+        });
     });
 
     describe("beam note references integrity", () => {

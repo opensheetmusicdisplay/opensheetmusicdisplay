@@ -21,6 +21,7 @@ import NoteSubGroup = VF.NoteSubGroup;
 const RESOLUTION: number = 16384;
 import log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
+import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {Tuplet} from "../../VoiceData/Tuplet";
 import {RepetitionInstructionEnum, RepetitionInstruction, AlignmentType} from "../../VoiceData/Instructions/RepetitionInstruction";
 import {SystemLinePosition} from "../SystemLinePosition";
@@ -635,12 +636,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
     private positionCrossStaffBeams(): void {
         for (const [beam, siblingMeasure] of this.crossStaffBeamSiblings) {
             // Draw order is per-staffline: when this measure owns the beam but the sibling staff is
-            // drawn later, the sibling stave is still at a stale X this render pass. The owner and
-            // sibling share the same measure column, so if the sibling stave's X drifted from this
-            // stave's X, re-sync it (X only — Y is read live for the beam offset). Skip when already
-            // aligned, to avoid re-formatting an already-positioned stave (which shifts its notes).
-            if (Math.abs(siblingMeasure.stave.getX() - this.stave.getX()) > 1) {
-                siblingMeasure.stave.setX(this.stave.getX());
+            // drawn later, the sibling stave is still at a stale X/Y this render pass. Staves start
+            // at (x=0, y=0) from the constructor (Element.y, NOT getY() which adds headroom offset).
+            // setAbsoluteCoordinates() syncs them from layout positions only when the measure is
+            // actively drawn. If sibling stave's raw y is still at its default 0, sync both X and Y
+            // from the sibling's own AbsolutePosition (the canonical layout source).
+            // X is also synced when it drifted (same column, different draw-time assignment).
+            const siblingStave: VF.Stave = siblingMeasure.stave;
+            if ((siblingStave as any).y === 0 || Math.abs(siblingStave.getX() - this.stave.getX()) > 1) {
+                const absPos: PointF2D = siblingMeasure.PositionAndShape.AbsolutePosition;
+                siblingStave.setX(absPos.x * unitInPixels);
+                siblingStave.setY(absPos.y * unitInPixels);
             }
 
             const localY: number = this.stave.getYForLine(0);
