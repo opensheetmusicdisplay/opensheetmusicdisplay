@@ -465,6 +465,331 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         return maxGap >= staveGapThreshold;
     }
 
+    interface NoteInfo {
+        id: string;
+        measure: number;
+        stave: number;
+        x: number;
+        noteheadY: number;
+        stemBase: number;
+        stemTip: number;
+        stemDir: string;
+    }
+
+    interface BeamDebugInfo {
+        beamId: string;
+        notes: NoteInfo[];
+        beamPolyTopY: number;
+        beamPolyBotY: number;
+    }
+
+    interface SlurDebugInfo {
+        slurId: string;
+        startX: number;
+        startY: number;
+        endX: number;
+        endY: number;
+    }
+
+    function parseScoreSVG(svg: SVGElement): {
+        notes: NoteInfo[];
+        beams: BeamDebugInfo[];
+        slurs: SlurDebugInfo[];
+    } {
+        // Parse all stave notes with their IDs
+        const notes: NoteInfo[] = [];
+        const noteEls: NodeListOf<Element> = svg.querySelectorAll("[class*='vf-stavenote']");
+        for (let i: number = 0; i < noteEls.length; i++) {
+            const el: Element = noteEls[i] as Element;
+            const id: string = el.getAttribute("id") || "";
+            const idParts: string[] = id.split("-");
+            if (idParts.length < 6 || idParts[0] !== "vf" || idParts[1] !== "note") {
+                continue;
+            }
+            const measure: number = parseInt(idParts[2], 10);
+            const stave: number = parseInt(idParts[3], 10);
+
+            // Notehead Y
+            const nhEl: Element | null = el.querySelector("[class*='vf-notehead']");
+            let noteheadY: number = 0;
+            if (nhEl) {
+                const textEl: Element | null = nhEl.querySelector("text");
+                if (textEl) {
+                    const yAttr: string | null = textEl.getAttribute("y");
+                    if (yAttr) { noteheadY = parseFloat(yAttr); }
+                }
+            }
+
+            // Stem geometry
+            const stemEl: Element | null = el.querySelector("[class*='vf-stem'] path");
+            let stemBase: number = 0, stemTip: number = 0, stemDir: string = "none";
+            if (stemEl) {
+                const d: string = stemEl.getAttribute("d") || "";
+                const m: RegExpMatchArray | null = d.match(/M([\d.]+)\s+([\d.]+)L([\d.]+)\s+([\d.]+)/);
+                if (m) {
+                    const y1: number = parseFloat(m[2]);
+                    const y2: number = parseFloat(m[4]);
+                    if (y2 < y1) {
+                        stemDir = "up";
+                        stemTip = y2; stemBase = y1;
+                    } else {
+                        stemDir = "down";
+                        stemTip = y2; stemBase = y1;
+                    }
+                }
+            }
+
+            // X position
+            let x: number = 0;
+            const allTexts: NodeListOf<Element> = el.querySelectorAll("text");
+            if (allTexts.length > 0) {
+                const xAttr: string | null = allTexts[0].getAttribute("x");
+                if (xAttr) { x = parseFloat(xAttr); }
+            }
+
+            notes.push({ id, measure, stave, x, noteheadY, stemBase, stemTip, stemDir });
+        }
+
+        // Parse beams
+        const beams: BeamDebugInfo[] = [];
+        const beamEls: NodeListOf<Element> = svg.querySelectorAll("[class*='vf-beam']");
+        for (let i: number = 0; i < beamEls.length; i++) {
+            const bg: Element = beamEls[i] as Element;
+            const stemPaths: NodeListOf<Element> = bg.querySelectorAll("[class*='vf-stem'] path");
+            const beamNoteXs: number[] = [];
+            for (let j: number = 0; j < stemPaths.length; j++) {
+                const d: string = stemPaths[j].getAttribute("d") || "";
+                const m: RegExpMatchArray | null = d.match(/M([\d.]+)\s+([\d.]+)/);
+                if (m) { beamNoteXs.push(parseFloat(m[1])); }
+            }
+
+            // Match beam notes to parsed notes by X+Y proximity
+            const matchedNotes: NoteInfo[] = [];
+            for (const nx of beamNoteXs) {
+                let best: NoteInfo | undefined;
+                let bestDist: number = 15;
+                for (const n of notes) {
+                    const dist: number = Math.abs(n.x - nx);
+                    if (dist < bestDist) { bestDist = dist; best = n; }
+                }
+                if (best) { matchedNotes.push(best); }
+            }
+
+            if (matchedNotes.length === 0) { continue; }
+
+            // Beam polygon Y
+            let polyTop: number = Infinity;
+            let polyBot: number = -Infinity;
+            const polyPaths: NodeListOf<Element> = bg.querySelectorAll(":scope > path");
+            for (let j: number = 0; j < polyPaths.length; j++) {
+                const d: string = polyPaths[j].getAttribute("d") || "";
+                const coords: RegExpMatchArray | null = d.match(/[ML]([\d.]+)\s+([\d.]+)/g);
+                if (coords) {
+                    for (const c of coords) {
+                        const nums: RegExpMatchArray | null = c.match(/([\d.]+)\s+([\d.]+)/);
+                        if (nums) {
+                            const yv: number = parseFloat(nums[2]);
+                            polyTop = Math.min(polyTop, yv);
+                            polyBot = Math.max(polyBot, yv);
+                        }
+                    }
+                }
+            }
+
+            beams.push({
+                beamId: bg.getAttribute("id") || `beam_${i}`,
+                notes: matchedNotes,
+                beamPolyTopY: polyTop,
+                beamPolyBotY: polyBot,
+            });
+        }
+
+        // Parse slurs (vf-curve)
+        const slurs: SlurDebugInfo[] = [];
+        const slurEls: NodeListOf<Element> = svg.querySelectorAll("[class*='vf-curve']");
+        for (let i: number = 0; i < slurEls.length; i++) {
+            const se: Element = slurEls[i] as Element;
+            const id: string = se.getAttribute("id") || "";
+            const pathEl: Element | null = se.querySelector("path");
+            if (!pathEl) { continue; }
+            const d: string = pathEl.getAttribute("d") || "";
+            const startM: RegExpMatchArray | null = d.match(/M([\d.]+)\s+([\d.]+)/);
+            const bezierEnd: RegExpMatchArray | null = d.match(/C\s*[\d.]+\s+[\d.]+\s*,\s*[\d.]+\s+[\d.]+\s*,\s*([\d.]+)\s+([\d.]+)/);
+            if (startM && bezierEnd) {
+                slurs.push({
+                    slurId: id,
+                    startX: parseFloat(startM[1]),
+                    startY: parseFloat(startM[2]),
+                    endX: parseFloat(bezierEnd[1]),
+                    endY: parseFloat(bezierEnd[2]),
+                });
+            }
+        }
+
+        return { notes, beams, slurs };
+    }
+
+    function debugMeasure(
+        measureNum: number,
+        notes: NoteInfo[],
+        beams: BeamDebugInfo[],
+        slurs: SlurDebugInfo[]
+    ): string[] {
+        const log: string[] = [];
+        const mNotes: NoteInfo[] = notes.filter((n) => n.measure === measureNum);
+        if (mNotes.length === 0) {
+            log.push(`No notes found for measure ${measureNum}`);
+            return log;
+        }
+
+        const xMin: number = Math.min(...mNotes.map((n) => n.x));
+        const xMax: number = Math.max(...mNotes.map((n) => n.x));
+
+        // Determine staves present in this measure
+        const staves: Set<number> = new Set(mNotes.map((n) => n.stave));
+
+        log.push(`=== Measure ${measureNum} ===`);
+        log.push(`Staves: [${[...staves].sort().join(",")}]  X range: ${xMin.toFixed(0)}-${xMax.toFixed(0)}`);
+
+        // Notes grouped by stave
+        for (const st of [...staves].sort()) {
+            const sn: NoteInfo[] = mNotes.filter((n) => n.stave === st);
+            log.push(`  Stave ${st}:`);
+            for (const n of sn) {
+                log.push(`    ${n.id} x=${n.x.toFixed(0)} nhY=${n.noteheadY.toFixed(1)} ` +
+                    `stem=${n.stemDir}(${n.stemTip.toFixed(1)}→${n.stemBase.toFixed(1)})`);
+            }
+        }
+
+        // Beams overlapping this measure
+        const mBeams: BeamDebugInfo[] = beams.filter(
+            (b) => b.notes.some((n) => n.measure === measureNum)
+        );
+        if (mBeams.length > 0) {
+            log.push(`Beams (${mBeams.length}):`);
+            for (const b of mBeams) {
+                const bnStaves: Set<number> = new Set(b.notes.map((n) => n.stave));
+                const isXStaff: boolean = bnStaves.size >= 2;
+                log.push(`  ${b.beamId}: polyTop=${b.beamPolyTopY.toFixed(1)} ` +
+                    `polyBot=${b.beamPolyBotY.toFixed(1)} ` +
+                    `staves=[${[...bnStaves].sort().join(",")}] cross-staff=${isXStaff} ` +
+                    `notes=[${b.notes.map((n) => `${n.id}@${n.stemDir}`).join(",")}]`);
+            }
+        } else {
+            log.push("Beams: none");
+        }
+
+        // Slurs overlapping this measure (by X range)
+        const mSlurs: SlurDebugInfo[] = slurs.filter(
+            (s) => s.startX >= xMin - 30 && s.startX <= xMax + 30
+        );
+        if (mSlurs.length > 0) {
+            log.push(`Slurs (${mSlurs.length}):`);
+            for (const s of mSlurs) {
+                // Find start/end notes
+                let startN: NoteInfo | undefined;
+                let endN: NoteInfo | undefined;
+                let bestStart: number = 30;
+                let bestEnd: number = 30;
+                for (const n of mNotes) {
+                    const sd: number = Math.abs(n.x - s.startX);
+                    const ed: number = Math.abs(n.x - s.endX);
+                    if (sd < bestStart) { bestStart = sd; startN = n; }
+                    if (ed < bestEnd) { bestEnd = ed; endN = n; }
+                }
+                // For end note, prefer a different stave if startN is already matched
+                const startStave: number = startN?.stave ?? -1;
+                // Find end note on a different stave (cross-staff slur)
+                let crossEndN: NoteInfo | undefined;
+                for (const n of mNotes) {
+                    if (n.stave !== startStave && Math.abs(n.x - s.endX) < 30) {
+                        if (!crossEndN || Math.abs(n.x - s.endX) < Math.abs(crossEndN.x - s.endX)) {
+                            crossEndN = n;
+                        }
+                    }
+                }
+                const endStave: number = crossEndN?.stave ?? endN?.stave ?? -1;
+                const isXStaff: boolean = startStave >= 0 && endStave >= 0 && startStave !== endStave;
+
+                // Find beam at start note
+                let beamTop: number = -1;
+                let beamBot: number = -1;
+                for (const b of mBeams) {
+                    for (const bn of b.notes) {
+                        if (startN && bn.id === startN.id) {
+                            beamTop = b.beamPolyTopY;
+                            beamBot = b.beamPolyBotY;
+                            break;
+                        }
+                    }
+                    if (beamTop >= 0) { break; }
+                }
+
+                log.push(`  ${s.slurId}:`);
+                log.push(`    start=(${s.startX.toFixed(0)},${s.startY.toFixed(1)}) ` +
+                    `stave=${startStave}`);
+                log.push(`    end  =(${s.endX.toFixed(0)},${s.endY.toFixed(1)}) ` +
+                    `stave=${endStave}`);
+                log.push(`    cross-staff=${isXStaff}`);
+                if (startN) {
+                    log.push(`    start note: nhY=${startN.noteheadY.toFixed(1)} ` +
+                        `stem=${startN.stemDir}(${startN.stemTip.toFixed(1)}→${startN.stemBase.toFixed(1)}) ` +
+                        `gap=${(s.startY - startN.noteheadY).toFixed(1)}px`);
+                }
+                if (crossEndN || endN) {
+                    const en: NoteInfo = crossEndN || endN!;
+                    log.push(`    end note:   nhY=${en.noteheadY.toFixed(1)} ` +
+                        `stem=${en.stemDir}(${en.stemTip.toFixed(1)}→${en.stemBase.toFixed(1)}) ` +
+                        `gap=${(s.endY - en.noteheadY).toFixed(1)}px`);
+                }
+                if (beamTop >= 0) {
+                    log.push(`    beam: top=${beamTop.toFixed(1)} bot=${beamBot.toFixed(1)} ` +
+                        `slurToBeam=${(s.startY - beamTop).toFixed(1)}px`);
+                } else {
+                    log.push("    beam: none at start note");
+                }
+            }
+        } else {
+            log.push("Slurs: none");
+        }
+
+        return log;
+    }
+
+    /**
+     * DEBUG HARNESS — DO NOT REMOVE.
+     * Produces console output on purpose. It is the canonical way to inspect
+     * cross-staff beam, slur, and notehead positioning data from a rendered SVG.
+     * Change `MEASURE` to any measure number to get a full dump of notes, beams
+     * overlapping that measure, and slurs whose start X falls within it.
+     */
+    describe("Dichterliebe01 measure debug", () => {
+        let allNotes: NoteInfo[];
+        let allBeams: BeamDebugInfo[];
+        let allSlurs: SlurDebugInfo[];
+
+        before(function (): Promise<void> {
+            this.timeout(20000);
+            return renderToSVG("Dichterliebe01.xml").then(
+                (svg: SVGElement) => {
+                    const data: { notes: NoteInfo[], beams: BeamDebugInfo[], slurs: SlurDebugInfo[] } = parseScoreSVG(svg);
+                    allNotes = data.notes;
+                    allBeams = data.beams;
+                    allSlurs = data.slurs;
+                }
+            );
+        });
+
+        // Change this to debug any measure
+        const MEASURE: number = 4;
+
+        it(`should debug measure ${MEASURE}`, () => {
+            const log: string[] = debugMeasure(MEASURE, allNotes, allBeams, allSlurs);
+            console.log(log.join("\n"));
+            expect(log.length).to.be.greaterThan(0);
+        });
+    });
+
     describe("Dichterliebe01 slur-beam clearance SVG", () => {
         let crossBeams: CrossStaffBeamInfo[];
         let slurs: { startX: number, startY: number, endX: number, endY: number }[];

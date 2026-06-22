@@ -1,1 +1,10 @@
 npm run lint
+
+# Cross-staff debug harness must never be removed — it is the canonical
+# inspection tool for beam/slur/notehead positioning data from SVG output.
+DEBUG_TEST="test/MusicalScore/Graphical/VexFlow/VexFlowMeasure_CrossStaffBeam_SVG_Test.ts"
+if [ ! -f "$DEBUG_TEST" ]; then
+  echo "ERROR: $DEBUG_TEST is missing. This file must never be removed."
+  echo "  It contains parseScoreSVG() and debugMeasure() for cross-staff inspection."
+  exit 1
+fi
