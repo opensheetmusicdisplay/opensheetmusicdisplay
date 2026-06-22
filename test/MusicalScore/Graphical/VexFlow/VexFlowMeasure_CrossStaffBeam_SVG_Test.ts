@@ -446,4 +446,116 @@ describe("Cross-Staff Beam SVG Rendering", () => {
             }
         });
     });
+
+    /**
+     * Returns true if the beam appears to span two distinct staves (cross-staff),
+     * rather than just having a wide melodic range on a single staff.
+     * Cross-staff beams have notehead Ys in two clusters with a gap between them.
+     */
+    function isCrossStaffBeam(cb: CrossStaffBeamInfo, staveGapThreshold: number): boolean {
+        if (cb.noteheads.length < 2) { return false; }
+        const ys: number[] = cb.noteheads.map((nh) => nh.centerY).sort((a, b) => a - b);
+        // Find the largest gap between consecutive sorted Y values
+        let maxGap: number = 0;
+        for (let i: number = 1; i < ys.length; i++) {
+            const g: number = ys[i] - ys[i - 1];
+            if (g > maxGap) { maxGap = g; }
+        }
+        // True cross-staff: gap between staves is larger than within-stave spread
+        return maxGap >= staveGapThreshold;
+    }
+
+    describe("Dichterliebe01 slur-beam clearance SVG", () => {
+        let crossBeams: CrossStaffBeamInfo[];
+        let slurs: { startX: number, startY: number, endX: number, endY: number }[];
+
+        before(function (): Promise<void> {
+            this.timeout(20000);
+            return renderToSVG("Dichterliebe01.xml").then(
+                (svg: SVGElement) => {
+                    crossBeams = findCrossStaffBeams(svg, 50);
+                    const slurEls: NodeListOf<Element> =
+                        svg.querySelectorAll("[class*='vf-curve']");
+                    slurs = [];
+                    for (let i: number = 0; i < slurEls.length; i++) {
+                        const pathEl: Element | null =
+                            slurEls[i].querySelector("path");
+                        if (!pathEl) { continue; }
+                        const d: string = pathEl.getAttribute("d") || "";
+                        // Start point from first M coordinate pair
+                        const startM: RegExpMatchArray | null =
+                            d.match(/M([\d.]+)\s+([\d.]+)/);
+                        if (!startM) { continue; }
+                        const sx: number = parseFloat(startM[1]);
+                        const sy: number = parseFloat(startM[2]);
+                        // End point: last coordinate pair before Z
+                        const endM: RegExpMatchArray | null =
+                            d.match(/([\d.]+)\s+([\d.]+)Z/);
+                        if (endM) {
+                            slurs.push({
+                                startX: sx, startY: sy,
+                                endX: parseFloat(endM[1]),
+                                endY: parseFloat(endM[2]),
+                            });
+                        }
+                    }
+                }
+            );
+        });
+
+        it("should find cross-staff beams", () => {
+            expect(crossBeams.length).to.be.greaterThan(0,
+                "no cross-staff beams detected");
+        });
+
+        it("slurs above UP-stem cross-staff beams must clear beam top", () => {
+            let violations: number = 0;
+            const details: string[] = [];
+            for (const cb of crossBeams) {
+                // Only check actual cross-staff beams (notes on two different staves)
+                if (!isCrossStaffBeam(cb, 80)) { continue; }
+                const upCount: number =
+                    cb.stems.filter((s) => s.direction === "up").length;
+                if (upCount <= cb.stems.length / 2) { continue; }
+
+                // Beam top Y from beam polygon edges
+                let beamTopY: number = Infinity;
+                for (const bl of cb.beamLines) {
+                    beamTopY = Math.min(beamTopY, bl.startY, bl.endY);
+                }
+                if (!isFinite(beamTopY)) {
+                    for (const s of cb.stems) {
+                        beamTopY = Math.min(beamTopY, s.tipY);
+                    }
+                }
+
+                // Match slurs to notes in the beam by X position.
+                // A slur linked to a beamed note will start at that note's X (± small offset).
+                for (let ni: number = 0; ni < cb.stems.length; ni++) {
+                    const noteX: number = cb.stems[ni].x;
+                    // Find the nearest slur start within 25px of this note's X
+                    for (const slur of slurs) {
+                        if (Math.abs(slur.startX - noteX) > 25) { continue; }
+                        // Slur must be on the correct staff — its Y should be within
+                        // reasonable range of the beam (not on an unrelated staff).
+                        if (Math.abs(slur.startY - beamTopY) > 300) { continue; }
+                        const gap: number = slur.startY - beamTopY;
+                        if (gap > -2) {
+                            violations++;
+                            details.push(
+                                "stem[" + ni + "] x=" + noteX.toFixed(0) +
+                                " slur=(" + slur.startX.toFixed(0) + "," +
+                                slur.startY.toFixed(0) + ") beam_top=" +
+                                beamTopY.toFixed(0) + " gap=" + gap.toFixed(1)
+                            );
+                        }
+                        break; // one slur per note
+                    }
+                }
+            }
+            expect(violations).to.equal(0,
+                violations + " slurs not above UP-stem beam top:\n" +
+                details.join("\n"));
+        });
+    });
 });

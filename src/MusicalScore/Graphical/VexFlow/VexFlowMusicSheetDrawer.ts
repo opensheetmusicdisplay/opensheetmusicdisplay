@@ -239,6 +239,11 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * `anchor` and `control` are the bezier endpoint and its adjacent control point
      * in absolute SVG pixels (both will be mutated by the same delta).
      * `isStart` selects whether to look at the slur's StartNote or EndNote.
+     *
+     * Because slurs are drawn per-staffline (all slurs after all measures on one staffline),
+     * a beam owned by a later-drawn staffline may not have its draw-time flatBeamOffset set yet.
+     * We therefore compute the beam Y from the layout-time AbsolutePosition of the two staves
+     * involved — the same formula that positionCrossStaffBeams() will later use.
      */
     private adjustSlurForBeam(
         graphicalSlur: GraphicalSlur, anchor: PointF2D, control: PointF2D, isStart: boolean
@@ -248,36 +253,98 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         const gNote: VexFlowGraphicalNote = this.rules.GNote(osmdNote) as VexFlowGraphicalNote;
         if (!gNote?.vfnote?.[0]) { return; }
         const vfNote: any = gNote.vfnote[0];
-        const beam: any = vfNote.beam;
-        if (!beam?.renderOptions?.flatBeams || !beam.renderOptions.flatBeamOffset) { return; }
 
-        // Beam is positioned between staves. Compute its Y at this note's stem X.
-        const firstNote: any = beam.getNotes()[0];
-        if (!firstNote) { return; }
-        const firstX: number = firstNote.getStemX();
-        const noteX: number = vfNote.getStemX();
-        const slope: number = beam.slope ?? 0;
-        const beamY: number = beam.renderOptions.flatBeamOffset + slope * (noteX - firstX);
+        // Determine whether this note is in a cross-staff beam, and if so, which
+        // two staves the beam spans. The beam's draw-time flatBeamOffset may not be
+        // set yet (different staffline draw order), so we compute it from layout positions.
+        const beamInfo: { beamY: number } | undefined = this.getCrossStaffBeamInfo(gNote, vfNote);
+        if (!beamInfo) { return; }
 
-        // Cross-staff beam: the VexFlow beam polygon extends from beamY in the stem direction.
-        // UP stem (+1): beam goes DOWN  from beamY to beamY + beamCount*beamWidth.  Top edge = beamY.
-        // DOWN stem (-1): beam goes UP from beamY to beamY - beamCount*beamWidth.  Bottom edge = beamY.
-        // Only adjust when the slur placement is on the beam side of the notehead:
-        //   UP stem + "Above" → beam is above notehead, slur must clear top edge (beamY).
-        //   DOWN stem + "Below" → beam is below notehead, slur must clear bottom edge (beamY).
+        const beamY: number = beamInfo.beamY;
+        const noteStemDir: number = vfNote.getStemDirection();
+
+        // The beam sits between the two staves. The note's stem points toward the beam.
+        // For UP stem: beam is above notehead → slur must be above beam top (beamY).
+        // For DOWN stem: beam is below notehead → slur must be below beam bottom (beamY).
+        // Only adjust if the anchor is on the wrong side of the beam.
         const gap: number = 4;
         let targetY: number | undefined;
-        if (graphicalSlur.placement === PlacementEnum.Above) {
-            targetY = beamY - gap; // above the beam anchor (top edge for UP-stem beams)
-            if (anchor.y <= targetY) { return; }
-        } else if (graphicalSlur.placement === PlacementEnum.Below) {
-            targetY = beamY + gap; // below the beam anchor (bottom edge for DOWN-stem beams)
-            if (anchor.y >= targetY) { return; }
+        if (noteStemDir === VF.Stem.UP && anchor.y > beamY - gap) {
+            targetY = beamY - gap;
+        } else if (noteStemDir === VF.Stem.DOWN && anchor.y < beamY + gap) {
+            targetY = beamY + gap;
         }
         if (targetY === undefined) { return; }
+
         const delta: number = targetY - anchor.y;
         anchor.y += delta;
         control.y += delta;
+    }
+
+    /**
+     * Returns { beamY } for the cross-staff beam that `vfNote` belongs to,
+     * or undefined if the note is not in a cross-staff beam. Uses draw-time
+     * flatBeamOffset when available; otherwise computes from layout positions
+     * (needed when the slur's staffline draws before the beam owner's staffline).
+     */
+    private getCrossStaffBeamInfo(gNote: VexFlowGraphicalNote, vfNote: any): { beamY: number } | undefined {
+        const beam: any = vfNote.beam;
+        if (!beam) { return undefined; }
+
+        // If the beam already has a draw-time flatBeamOffset, use it directly.
+        if (beam.renderOptions?.flatBeams && beam.renderOptions.flatBeamOffset) {
+            const firstNote: any = beam.getNotes()[0];
+            if (firstNote) {
+                const fx: number = firstNote.getStemX();
+                const nx: number = vfNote.getStemX();
+                const slope: number = beam.slope ?? 0;
+                return { beamY: beam.renderOptions.flatBeamOffset + slope * (nx - fx) };
+            }
+        }
+
+        // Draw-time flatBeamOffset not yet set (beam owner's staffline hasn't drawn).
+        // Compute beam Y from layout AbsolutePositions — same formula as positionCrossStaffBeams().
+        const thisMeasure: VexFlowMeasure =
+            gNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure as VexFlowMeasure;
+        if (!thisMeasure) { return undefined; }
+
+        // Look up the sibling measure. The beam is in the OWNER's crossStaffBeamSiblings,
+        // which may be a different measure in the same column.
+        let ownerMeasure: VexFlowMeasure | undefined;
+        let siblingMeasure: VexFlowMeasure | undefined;
+        const col: any[] = thisMeasure.ParentMusicSystem?.GraphicalMeasures;
+        if (col) {
+            let colIdx: number = -1;
+            for (let ci: number = 0; ci < col.length; ci++) {
+                if (col[ci].indexOf(thisMeasure as any) >= 0) { colIdx = ci; break; }
+            }
+            if (colIdx >= 0) {
+                for (const m of col[colIdx]) {
+                    const vm: VexFlowMeasure = m as VexFlowMeasure;
+                    for (const [b, sib] of (vm as any).crossStaffBeamSiblings ?? []) {
+                        if (b === beam) { ownerMeasure = vm; siblingMeasure = sib; break; }
+                    }
+                    if (siblingMeasure) { break; }
+                }
+            }
+        }
+        if (!siblingMeasure) { return undefined; }
+
+        // Compute beam Y from the two measures' AbsolutePositions.
+        const absPos: PointF2D = ownerMeasure!.PositionAndShape.AbsolutePosition;
+        const sibPos: PointF2D = siblingMeasure.PositionAndShape.AbsolutePosition;
+        const localY: number = absPos.y * unitInPixels;
+        const siblingY: number = sibPos.y * unitInPixels;
+        const localIsBelow: boolean = localY > siblingY;
+        const upperY: number = localIsBelow ? siblingY : localY;
+        const lowerY: number = localIsBelow ? localY : siblingY;
+
+        // Stave line spacing — get from either VF stave.
+        const vfStave: any = thisMeasure.getVFStave();
+        const spacing: number = vfStave?.getSpacingBetweenLines?.() ?? 10;
+        const upperBottom: number = upperY + 4 * spacing;
+        const lowerTop: number = lowerY;
+        return { beamY: upperBottom + (lowerTop - upperBottom) * 0.35 };
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {
