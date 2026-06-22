@@ -16,7 +16,6 @@ import { Fraction } from "../../Common/DataObjects/Fraction";
 import { StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
 import * as VF from "vexflow";
-import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 
 /** Return staff-relative Y of notehead center from VF5 geometry.
  *  VF5 getYForNote(line) = stave.y + headroom*spacing + 5*spacing - line*spacing
@@ -460,17 +459,24 @@ export class GraphicalSlur extends GraphicalCurve {
         }
         const systemBox: BoundingBox = startStaffLine.ParentMusicSystem.PositionAndShape;
 
-        // notehead positions of both notes, relative to the common MusicSystem
-        const startPos: PointF2D = this.positionRelativeToBox(slurStartNote.PositionAndShape, systemBox);
-        const endPos: PointF2D = this.positionRelativeToBox(slurEndNote.PositionAndShape, systemBox);
-
-        // Express everything relative to the start note's staffline, since drawSlur() adds that staffline's
-        // absolute position to the bezier points.
+        // X: use the container-based positions from positionRelativeToBox (these are correct for X).
+        // Y: use VF5 notehead geometry (getVF5NoteheadStaffY), because PositionAndShape on notes
+        //     carries only a small centering offset, not the actual staff position.
+        const startXPos: PointF2D = this.positionRelativeToBox(slurStartNote.PositionAndShape, systemBox);
+        const endXPos: PointF2D = this.positionRelativeToBox(slurEndNote.PositionAndShape, systemBox);
         const staffLineOffset: PointF2D = startStaffLine.PositionAndShape.RelativePosition;
-        const startX: number = startPos.x - staffLineOffset.x;
-        const endX: number = endPos.x - staffLineOffset.x;
-        const startNoteY: number = startPos.y - staffLineOffset.y;
-        const endNoteY: number = endPos.y - staffLineOffset.y;
+        const startX: number = startXPos.x - staffLineOffset.x;
+        const endX: number = endXPos.x - staffLineOffset.x;
+
+        // Notehead Ys relative to their own staff lines (OSMD units, 0 = top staff line)
+        const startNoteStaffY: number = getVF5NoteheadStaffY(slurStartNote);
+        const endNoteStaffY: number = getVF5NoteheadStaffY(slurEndNote);
+
+        // Express end note Y relative to the START staff line by adding the staff-line Y delta
+        const endToStartStaffDeltaY: number =
+            endStaffLine.PositionAndShape.RelativePosition.y - staffLineOffset.y;
+        const startNoteY: number = startNoteStaffY;
+        const endNoteY: number = endNoteStaffY + endToStartStaffDeltaY;
 
         // The staff higher up on the page has the smaller y value.
         const endStaffAbove: boolean =
@@ -478,22 +484,9 @@ export class GraphicalSlur extends GraphicalCurve {
 
         this.placement = PlacementEnum.Above;
 
-        // If the start/end notes are in cross-staff beams, the slur anchor must
-        // sit at the beam edge (above the beam for UP-stem notes) rather than
-        // at the notehead + small offset, because cross-staff stems extend far
-        // beyond the notehead to reach the beam between staves.
-        let startBeamY: number | undefined;
-        let endBeamY: number | undefined;
-        if (slurStartNote instanceof VexFlowGraphicalNote) {
-            startBeamY = this.getBeamYSafe(slurStartNote as VexFlowGraphicalNote, rules);
-        }
-        if (slurEndNote instanceof VexFlowGraphicalNote) {
-            endBeamY = this.getBeamYSafe(slurEndNote as VexFlowGraphicalNote, rules);
-        }
-
         const yGap: number = rules.SlurNoteHeadYOffset;
-        const startY: number = startBeamY ?? (startNoteY - yGap);
-        const endY: number = endBeamY ?? (endNoteY - yGap);
+        const startY: number = startNoteY - yGap;
+        const endY: number = endNoteY - yGap;
 
         // The curve bows out (vertically) from the line connecting the two notes.
         const dx: number = endX - startX;
@@ -513,68 +506,6 @@ export class GraphicalSlur extends GraphicalCurve {
         this.bezierEndControlPt = new PointF2D(startX + dx * 0.75, startY + dy * 0.75 + bowSign * bow);
         this.bezierEndPt = new PointF2D(endX, endY);
         return true;
-    }
-
-    /**
-     * If `gNote` is in a cross-staff beam, returns the Y that a slur anchor
-     * should sit at to clear the beam (beam top minus a small gap for UP-stem
-     * bass notes, or beam bottom plus gap for DOWN-stem treble notes).
-     * Returns undefined if the note is not in a cross-staff beam.
-     */
-    private getBeamYSafe(gNote: VexFlowGraphicalNote, rules: EngravingRules): number | undefined {
-        const vfNote: any = gNote.vfnote?.[0];
-        if (!vfNote) { return undefined; }
-        const beam: any = vfNote.beam;
-        if (!beam) { return undefined; }
-
-        // Determine the beam Y at this note's stem X.
-        // Prefer draw-time flatBeamOffset; fall back to AbsolutePosition computation.
-        let beamY: number;
-        if (beam.renderOptions?.flatBeams && beam.renderOptions.flatBeamOffset != null) {
-            const firstNote: any = beam.getNotes()[0];
-            const fx: number = firstNote?.getStemX?.() ?? 0;
-            const nx: number = vfNote.getStemX?.() ?? 0;
-            beamY = beam.renderOptions.flatBeamOffset + (beam.slope ?? 0) * (nx - fx);
-        } else {
-            // Compute from layout positions — fallback when beam owner hasn't drawn yet.
-            // Walk up from the gNote's measure to find the two measures.
-            const measure: any = gNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
-            if (!measure) { return undefined; }
-            const col: any[] = measure.ParentMusicSystem?.GraphicalMeasures;
-            if (!col) { return undefined; }
-            let colIdx: number = -1;
-            for (let ci: number = 0; ci < col.length; ci++) {
-                if (col[ci].indexOf(measure) >= 0) { colIdx = ci; break; }
-            }
-            if (colIdx < 0) { return undefined; }
-            let ownerMeasure: any;
-            let siblingMeasure: any;
-            for (const m of col[colIdx]) {
-                for (const [b, sib] of (m as any).crossStaffBeamSiblings ?? []) {
-                    if (b === beam) { ownerMeasure = m; siblingMeasure = sib; break; }
-                }
-                if (siblingMeasure) { break; }
-            }
-            if (!siblingMeasure) { return undefined; }
-            const absPos: PointF2D = ownerMeasure.PositionAndShape.AbsolutePosition;
-            const sibPos: PointF2D = siblingMeasure.PositionAndShape.AbsolutePosition;
-            const localY: number = absPos.y * unitInPixels;
-            const siblingY: number = sibPos.y * unitInPixels;
-            const localIsBelow: boolean = localY > siblingY;
-            const upperY: number = localIsBelow ? siblingY : localY;
-            const lowerY: number = localIsBelow ? localY : siblingY;
-            const vfStave: any = (measure as any).getVFStave?.();
-            const spacing: number = vfStave?.getSpacingBetweenLines?.() ?? 10;
-            beamY = (upperY + 4 * spacing) + ((lowerY) - (upperY + 4 * spacing)) * 0.35;
-        }
-
-        const stemDir: number = vfNote.getStemDirection?.() ?? 0;
-        // UP stem: beam above notehead → slur must be above beam top (beamY - gap)
-        // DOWN stem: beam below notehead → slur must be below beam bottom (beamY + gap)
-        const gap: number = 4;
-        if (stemDir === 1) { return beamY - gap; }       // VF.Stem.UP
-        if (stemDir === -1) { return beamY + gap; }      // VF.Stem.DOWN
-        return undefined;
     }
 
     /**
