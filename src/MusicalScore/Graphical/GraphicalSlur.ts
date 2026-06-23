@@ -16,6 +16,7 @@ import { Fraction } from "../../Common/DataObjects/Fraction";
 import { StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
 import * as VF from "vexflow";
+import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 
 /** Return staff-relative Y of notehead center from VF5 geometry.
  *  VF5 getYForNote(line) = stave.y + headroom*spacing + 5*spacing - line*spacing
@@ -468,15 +469,11 @@ export class GraphicalSlur extends GraphicalCurve {
         const startX: number = startXPos.x - staffLineOffset.x;
         const endX: number = endXPos.x - staffLineOffset.x;
 
-        // Notehead Ys relative to their own staff lines (OSMD units, 0 = top staff line)
-        const startNoteStaffY: number = getVF5NoteheadStaffY(slurStartNote);
-        const endNoteStaffY: number = getVF5NoteheadStaffY(slurEndNote);
-
-        // Express end note Y relative to the START staff line by adding the staff-line Y delta
-        const endToStartStaffDeltaY: number =
-            endStaffLine.PositionAndShape.RelativePosition.y - staffLineOffset.y;
-        const startNoteY: number = startNoteStaffY;
-        const endNoteY: number = endNoteStaffY + endToStartStaffDeltaY;
+        // Compute notehead Y from VF5's actual rendered geometry (stave.getYForNote).
+        // VexFlow knows exactly where each notehead sits; OSMD model positions are unreliable.
+        const startStaffAbsY: number = startStaffLine.PositionAndShape.AbsolutePosition.y;
+        const startNoteY: number = this.vfNoteYRelative(slurStartNote, startStaffAbsY);
+        const endNoteY: number = this.vfNoteYRelative(slurEndNote, startStaffAbsY);
 
         // The staff higher up on the page has the smaller y value.
         const endStaffAbove: boolean =
@@ -485,8 +482,15 @@ export class GraphicalSlur extends GraphicalCurve {
         this.placement = PlacementEnum.Above;
 
         const yGap: number = rules.SlurNoteHeadYOffset;
-        const startY: number = startNoteY - yGap;
-        const endY: number = endNoteY - yGap;
+
+        // If start/end notes are in cross-staff beams, compute the beam Y in
+        // staff-relative OSMD units so the slur anchor sits at the beam edge
+        // rather than at the notehead (which may be far from the beam).
+        const startBeamY: number | undefined = this.crossStaffBeamY(slurStartNote, startStaffAbsY);
+        const endBeamY: number | undefined = this.crossStaffBeamY(slurEndNote, startStaffAbsY);
+
+        const startY: number = startBeamY ?? (startNoteY - yGap);
+        const endY: number = endBeamY ?? (endNoteY - yGap);
 
         // The curve bows out (vertically) from the line connecting the two notes.
         const dx: number = endX - startX;
@@ -506,6 +510,95 @@ export class GraphicalSlur extends GraphicalCurve {
         this.bezierEndControlPt = new PointF2D(startX + dx * 0.75, startY + dy * 0.75 + bowSign * bow);
         this.bezierEndPt = new PointF2D(endX, endY);
         return true;
+    }
+
+    /**
+     * Returns the notehead Y of `note` relative to the start staff line.
+     * Uses VexFlow's stave.getYForNote() for the actual rendered position,
+     * converted to OSMD units. Falls back to OSMD model positions.
+     */
+    private vfNoteYRelative(note: GraphicalNote, startStaffAbsY: number): number {
+        const gNote: any = note as VexFlowGraphicalNote;
+        const vfNote: any = gNote.vfnote?.[0];
+        if (vfNote) {
+            const stave: any = vfNote.checkStave?.() || vfNote.stave;
+            const keyProps: any[] = vfNote.getKeyProps?.() || [];
+            if (stave && keyProps.length > 0) {
+                // getYForNote returns absolute screen Y (includes stave origin set
+                // by setAbsoluteCoordinates). Convert directly to OSMD units and
+                // subtract the start staff's absolute position.
+                const noteAbsPixels: number = stave.getYForNote(keyProps[0].line);
+                const noteAbsUnits: number = noteAbsPixels / unitInPixels;
+                return noteAbsUnits - startStaffAbsY;
+            }
+        }
+        // Fallback: OSMD model positions
+        const absY: number = note.PositionAndShape?.AbsolutePosition?.y ?? 0;
+        return absY - startStaffAbsY;
+    }
+
+    /**
+     * If `note` belongs to a cross-staff beam, returns the beam Y in OSMD units
+     * relative to the start staff line (same coordinate system as startNoteY/endNoteY).
+     * The beam Y is the anchor point from positionCrossStaffBeams() — 35% from
+     * the upper stave's bottom line toward the lower stave's top line.
+     * Returns undefined if the note is not in a cross-staff beam.
+     */
+    private crossStaffBeamY(note: GraphicalNote, startStaffLineY: number): number | undefined {
+        const gNote: any = note;
+        const vfNote: any = gNote.vfnote?.[0];
+        if (!vfNote) { return undefined; }
+        const beam: any = vfNote.beam;
+        if (!beam) { return undefined; }
+
+        // Only adjust when the beam is on the same side of the notehead as the slur.
+        // For "Above" placement: UP-stem notes (beam above notehead) need to clear beam.
+        // DOWN-stem notes (beam below notehead) — no conflict.
+        const stemDir: number = vfNote.getStemDirection?.() ?? 0;
+        if (this.placement === PlacementEnum.Above && stemDir !== 1) { return undefined; }
+        if (this.placement === PlacementEnum.Below && stemDir !== -1) { return undefined; }
+
+        const measure: any = gNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
+        if (!measure) { return undefined; }
+
+        // Find the sibling measure — the beam is in the OWNER's crossStaffBeamSiblings
+        let ownerMeasure: any;
+        let siblingMeasure: any;
+        const col: any[] = measure.ParentMusicSystem?.GraphicalMeasures;
+        if (col) {
+            let colIdx: number = -1;
+            for (let ci: number = 0; ci < col.length; ci++) {
+                if (col[ci].indexOf(measure) >= 0) { colIdx = ci; break; }
+            }
+            if (colIdx >= 0) {
+                for (const m of col[colIdx]) {
+                    for (const [b, sib] of (m as any).crossStaffBeamSiblings ?? []) {
+                        if (b === beam) { ownerMeasure = m; siblingMeasure = sib; break; }
+                    }
+                    if (siblingMeasure) { break; }
+                }
+            }
+        }
+        if (!siblingMeasure) { return undefined; }
+
+        // Compute beam Y from AbsolutePositions — same formula as positionCrossStaffBeams.
+        const absPos: PointF2D = ownerMeasure.PositionAndShape.AbsolutePosition;
+        const sibPos: PointF2D = siblingMeasure.PositionAndShape.AbsolutePosition;
+        const localBelow: boolean = absPos.y > sibPos.y;
+        const upperY: number = localBelow ? sibPos.y : absPos.y;
+        const lowerY: number = localBelow ? absPos.y : sibPos.y;
+
+        // Stave line spacing in OSMD units. Default VexFlow stave spacing is STAVE_LINE_DISTANCE
+        // (10px). Divided by unitInPixels (10) gives 1.0 OSMD units.
+        const spacingUnits: number = 1; // 10px / 10 unitInPixels = 1.0
+        // getYForLine(4) ≈ upperY + 4*spacingUnits (headroom cancels in the delta)
+        // getYForLine(0) ≈ lowerY + 0*spacingUnits
+        const upperBottom: number = upperY + 4 * spacingUnits;
+        const lowerTop: number = lowerY;
+        // beamY in absolute OSMD units
+        const beamYAbs: number = upperBottom + (lowerTop - upperBottom) * 0.35;
+        // Convert to start-staff-relative
+        return beamYAbs - startStaffLineY;
     }
 
     /**
