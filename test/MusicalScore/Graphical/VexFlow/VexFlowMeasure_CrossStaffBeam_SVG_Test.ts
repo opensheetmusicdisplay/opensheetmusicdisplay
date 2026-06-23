@@ -891,7 +891,7 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         });
 
         // Change this to debug any measure
-        const MEASURE: number = 5;
+        const MEASURE: number = 1;
 
         it(`should debug measure ${MEASURE}`, () => {
             const log: string[] = debugMeasure(MEASURE, allNotes, allBeams, allSlurs);

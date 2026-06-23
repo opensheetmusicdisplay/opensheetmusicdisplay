@@ -486,8 +486,8 @@ export class GraphicalSlur extends GraphicalCurve {
         // If start/end notes are in cross-staff beams, compute the beam Y in
         // staff-relative OSMD units so the slur anchor sits at the beam edge
         // rather than at the notehead (which may be far from the beam).
-        const startBeamY: number | undefined = this.crossStaffBeamY(slurStartNote, startStaffAbsY);
-        const endBeamY: number | undefined = this.crossStaffBeamY(slurEndNote, startStaffAbsY);
+        const startBeamY: number | undefined = this.beamYForNote(slurStartNote, startStaffAbsY);
+        const endBeamY: number | undefined = this.beamYForNote(slurEndNote, startStaffAbsY);
 
         const startY: number = startBeamY ?? (startNoteY - yGap);
         const endY: number = endBeamY ?? (endNoteY - yGap);
@@ -544,7 +544,7 @@ export class GraphicalSlur extends GraphicalCurve {
      * the upper stave's bottom line toward the lower stave's top line.
      * Returns undefined if the note is not in a cross-staff beam.
      */
-    private crossStaffBeamY(note: GraphicalNote, startStaffLineY: number): number | undefined {
+    private beamYForNote(note: GraphicalNote, startStaffLineY: number): number | undefined {
         const gNote: any = note;
         const vfNote: any = gNote.vfnote?.[0];
         if (!vfNote) { return undefined; }
@@ -579,26 +579,24 @@ export class GraphicalSlur extends GraphicalCurve {
                 }
             }
         }
-        if (!siblingMeasure) { return undefined; }
+        if (siblingMeasure) {
+            // Cross-staff beam — compute from layout AbsolutePositions.
+            const absPos: PointF2D = ownerMeasure!.PositionAndShape.AbsolutePosition;
+            const sibPos: PointF2D = siblingMeasure.PositionAndShape.AbsolutePosition;
+            const localBelow: boolean = absPos.y > sibPos.y;
+            const upperY: number = localBelow ? sibPos.y : absPos.y;
+            const lowerY: number = localBelow ? absPos.y : sibPos.y;
+            const spacingUnits: number = 1;
+            const upperBottom: number = upperY + 4 * spacingUnits;
+            const lowerTop: number = lowerY;
+            const beamYAbs: number = upperBottom + (lowerTop - upperBottom) * 0.35;
+            return beamYAbs - startStaffLineY;
+        }
 
-        // Compute beam Y from AbsolutePositions — same formula as positionCrossStaffBeams.
-        const absPos: PointF2D = ownerMeasure.PositionAndShape.AbsolutePosition;
-        const sibPos: PointF2D = siblingMeasure.PositionAndShape.AbsolutePosition;
-        const localBelow: boolean = absPos.y > sibPos.y;
-        const upperY: number = localBelow ? sibPos.y : absPos.y;
-        const lowerY: number = localBelow ? absPos.y : sibPos.y;
-
-        // Stave line spacing in OSMD units. Default VexFlow stave spacing is STAVE_LINE_DISTANCE
-        // (10px). Divided by unitInPixels (10) gives 1.0 OSMD units.
-        const spacingUnits: number = 1; // 10px / 10 unitInPixels = 1.0
-        // getYForLine(4) ≈ upperY + 4*spacingUnits (headroom cancels in the delta)
-        // getYForLine(0) ≈ lowerY + 0*spacingUnits
-        const upperBottom: number = upperY + 4 * spacingUnits;
-        const lowerTop: number = lowerY;
-        // beamY in absolute OSMD units
-        const beamYAbs: number = upperBottom + (lowerTop - upperBottom) * 0.35;
-        // Convert to start-staff-relative
-        return beamYAbs - startStaffLineY;
+        // Regular single-staff beam — use stem extents.
+        // After VexFlow beam formatting, the stem tip reaches the beam.
+        const stemTipPx: number = vfNote.getStemExtents?.()?.topY ?? 0;
+        return stemTipPx / unitInPixels - startStaffLineY;
     }
 
     /**

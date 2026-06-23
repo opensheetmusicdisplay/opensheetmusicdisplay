@@ -692,5 +692,31 @@ describe("Cross-staff beam stem geometry", () => {
             expect(slurBeam).to.equal(beam,
                 "Slur's GNote vfNote must reference the same beam");
         });
+
+        it("m1 bass should have the cross-staff beam detected", () => {
+            const m1Bass: VexFlowMeasure = gms.MeasureList[0]?.[2] as VexFlowMeasure;
+            console.log("m1 bass MeasureNumber:", m1Bass?.MeasureNumber);
+            console.log("m1 bass crossStaffBeamSiblings size:",
+                (m1Bass as any).crossStaffBeamSiblings?.size ?? 0);
+
+            // Dump beams structure to see why fixCrossStaffBeams skips it
+            const beamsObj: any = (m1Bass as any).beams;
+            console.log("m1 bass beams keys:", Object.keys(beamsObj ?? {}));
+            for (const vid of Object.keys(beamsObj ?? {})) {
+                const beamBuilders: any[] = beamsObj[vid];
+                console.log("  voice " + vid + ": " + beamBuilders.length + " beam builders");
+                for (const bb of beamBuilders) {
+                    const osmdBeam: any = bb[0];
+                    const entries: any[] = bb[1];
+                    console.log("    osmdBeam.Notes=" + osmdBeam.Notes.length +
+                        " localEntries=" + entries.length +
+                        " BeamNumber=" + osmdBeam.BeamNumber);
+                }
+            }
+
+            // Also check tuplets
+            const tupletsObj: any = (m1Bass as any).tuplets;
+            console.log("m1 bass tuplets keys:", Object.keys(tupletsObj ?? {}));
+        });
     });
 });
