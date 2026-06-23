@@ -505,25 +505,6 @@ export class GraphicalSlur extends GraphicalCurve {
         }
         const bowSign: number = -1;
 
-        // Ensure control points clear the skyline (staff entries, noteheads, stems)
-        // between start and end X. The skyline stores staff-relative Y values where
-        // negative = above the staff top. The control points must sit above the
-        // highest (most negative) skyline point in the range.
-        const skyCalculator: SkyBottomLineCalculator | undefined =
-            startStaffLine.SkyBottomLineCalculator;
-        if (skyCalculator) {
-            const skyMin: number = skyCalculator.getSkyLineMinInRange(startX, endX);
-            if (isFinite(skyMin) && skyMin < 0) {
-                // skyMin is the highest point (most negative). Control point 1
-                // should be above it: startY + dy*0.25 - bow < skyMin - margin.
-                const cp1Y: number = startY + dy * 0.25 - bow;
-                const margin: number = rules.SlurNoteHeadYOffset;
-                if (cp1Y > skyMin - margin) {
-                    bow = Math.max(bow, startY + dy * 0.25 - skyMin + margin);
-                }
-            }
-        }
-
         this.bezierStartPt = new PointF2D(startX, startY);
         this.bezierStartControlPt = new PointF2D(startX + dx * 0.25, startY + dy * 0.25 + bowSign * bow);
         this.bezierEndControlPt = new PointF2D(startX + dx * 0.75, startY + dy * 0.75 + bowSign * bow);

@@ -738,10 +738,17 @@ describe("Cross-Staff Beam SVG Rendering", () => {
             log.push("Beams: none");
         }
 
-        // Slurs overlapping this measure (X + Y bounds)
+        // Slurs overlapping this measure: X range overlap AND Y range overlap.
+        // Include slurs that start outside but pass through (cross-measure).
         const mSlurs: SlurDebugInfo[] = slurs.filter(
-            (s) => s.startX >= xMin - 30 && s.startX <= xMax + 30 &&
-                s.startY >= yMin - 50 && s.startY <= yMax + 50
+            (s) => {
+                const sXMin: number = Math.min(s.startX, s.endX);
+                const sXMax: number = Math.max(s.startX, s.endX);
+                const sYMin: number = Math.min(s.startY, s.endY, s.cp1Y, s.cp2Y);
+                const sYMax: number = Math.max(s.startY, s.endY, s.cp1Y, s.cp2Y);
+                return sXMax >= xMin - 30 && sXMin <= xMax + 30 &&
+                       sYMin <= yMax + 50 && sYMax >= yMin - 50;
+            }
         );
         if (mSlurs.length > 0) {
             log.push(`Slurs (${mSlurs.length}):`);
@@ -891,7 +898,30 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         });
 
         // Change this to debug any measure
-        const MEASURE: number = 4;
+        const MEASURE: number = 12;
+
+        it("should find slurs overlapping m12 or m13 by X range", () => {
+            // m12 X≈957-1117 (system N), m13 X≈137-292 (system N+1)
+            const m12Slurs: any[] = allSlurs.filter((s: any) =>
+                s.startX >= 900 && s.startX <= 1150
+            );
+            const m13Slurs: any[] = allSlurs.filter((s: any) =>
+                s.startX >= 100 && s.startX <= 350
+            );
+            console.log("M12-slurs (" + m12Slurs.length + "):");
+            for (const s of m12Slurs) {
+                console.log("  " + s.slurId + " (" + s.startX.toFixed(0) + "," + s.startY.toFixed(0) +
+                    ")->(" + s.endX.toFixed(0) + "," + s.endY.toFixed(0) +
+                    ") cp1Y=" + s.cp1Y.toFixed(0) + " bow=" + s.bowPx.toFixed(1));
+            }
+            console.log("M13-slurs (" + m13Slurs.length + "):");
+            for (const s of m13Slurs) {
+                console.log("  " + s.slurId + " (" + s.startX.toFixed(0) + "," + s.startY.toFixed(0) +
+                    ")->(" + s.endX.toFixed(0) + "," + s.endY.toFixed(0) +
+                    ") cp1Y=" + s.cp1Y.toFixed(0) + " bow=" + s.bowPx.toFixed(1));
+            }
+            expect(allSlurs.length).to.be.greaterThan(0);
+        });
 
         it(`should debug measure ${MEASURE}`, () => {
             const log: string[] = debugMeasure(MEASURE, allNotes, allBeams, allSlurs);
