@@ -891,15 +891,13 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         });
 
         // Change this to debug any measure
-        const MEASURES: number[] = [4, 12, 13];
+        const MEASURE: number = 4;
 
-        for (const m of MEASURES) {
-            it(`should debug measure ${m}`, () => {
-                const log: string[] = debugMeasure(m, allNotes, allBeams, allSlurs);
-                console.log(log.join("\n"));
-                expect(log.length).to.be.greaterThan(0);
-            });
-        }
+        it(`should debug measure ${MEASURE}`, () => {
+            const log: string[] = debugMeasure(MEASURE, allNotes, allBeams, allSlurs);
+            console.log(log.join("\n"));
+            expect(log.length).to.be.greaterThan(0);
+        });
     });
 
     describe("Dichterliebe01 slur-beam clearance SVG", () => {
