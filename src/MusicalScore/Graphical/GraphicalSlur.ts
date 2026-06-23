@@ -7,6 +7,7 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
+import { MusicSystem } from "./MusicSystem";
 import { BoundingBox } from "./BoundingBox";
 import { Matrix2D } from "../../Common/DataObjects/Matrix2D";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
@@ -251,6 +252,48 @@ export class GraphicalSlur extends GraphicalCurve {
             endControlPoint = transposeMatrix.vectorMultiplication(endControlPoint);
             endControlPoint.x += startX;
             endControlPoint.y = -endControlPoint.y + startY;
+
+            // Check staff lines ABOVE the start staff line for collisions.
+            // For "Above" placement, the slur arches upward from its staff line.
+            // Notes on higher staves (smaller index in StaffLines) that sit
+            // between the slur's endpoints can protrude into the arc.
+            // The primary skyline check only covers the start staff line itself.
+            const startSL: StaffLine =
+                startStaffEntry.parentMeasure.ParentStaffLine;
+            const musicSystem: MusicSystem | undefined =
+                startSL.ParentMusicSystem;
+            if (musicSystem) {
+                const allSLs: StaffLine[] = musicSystem.StaffLines;
+                const startIdx: number = allSLs.indexOf(startSL);
+                // Check staves from the top down to (but not including) startSL
+                for (let si: number = 0; si < startIdx; si++) {
+                    const upperSL: StaffLine = allSLs[si];
+                    const sc: SkyBottomLineCalculator | undefined =
+                        upperSL.SkyBottomLineCalculator;
+                    if (!sc) { continue; }
+                    const xOffset: number =
+                        upperSL.PositionAndShape.RelativePosition.x -
+                        startSL.PositionAndShape.RelativePosition.x;
+                    const skyMin: number = sc.getSkyLineMinInRange(
+                        startX - xOffset, endX - xOffset);
+                    if (!isFinite(skyMin) || skyMin >= 0) { continue; }
+                    // skyMin is relative to upperSL top (negative = above).
+                    // Convert to startSL frame:
+                    const yOffset: number =
+                        upperSL.PositionAndShape.RelativePosition.y -
+                        startSL.PositionAndShape.RelativePosition.y;
+                    const skyMinInStartFrame: number = skyMin + yOffset;
+                    const margin: number = rules.SlurNoteHeadYOffset;
+                    const cp1Above: number = Math.min(
+                        startControlPoint.y, endControlPoint.y);
+                    if (cp1Above > skyMinInStartFrame - margin) {
+                        const lift: number =
+                            cp1Above - skyMinInStartFrame + margin;
+                        startControlPoint.y -= lift;
+                        endControlPoint.y -= lift;
+                    }
+                }
+            }
 
             // set private members
             this.bezierStartPt = new PointF2D(startX, startY - startYOffset);
@@ -506,20 +549,30 @@ export class GraphicalSlur extends GraphicalCurve {
         const bowSign: number = -1;
 
         // Ensure control points clear the skyline (staff entries, noteheads, stems)
-        // between start and end X. The skyline stores staff-relative Y values where
-        // negative = above the staff top. The control points must sit above the
-        // highest (most negative) skyline point in the range.
+        // between start and end X. Check both the start and end staff lines since
+        // cross-staff slurs pass through the gap between staves and may collide with
+        // notes on either side.
         const skyCalculator: SkyBottomLineCalculator | undefined =
             startStaffLine.SkyBottomLineCalculator;
-        if (skyCalculator) {
-            const skyMin: number = skyCalculator.getSkyLineMinInRange(startX, endX);
-            if (isFinite(skyMin) && skyMin < 0) {
-                // skyMin is the highest point (most negative). Control point 1
-                // should be above it: startY + dy*0.25 - bow < skyMin - margin.
-                const cp1Y: number = startY + dy * 0.25 - bow;
-                const margin: number = rules.SlurNoteHeadYOffset;
-                if (cp1Y > skyMin - margin) {
-                    bow = Math.max(bow, startY + dy * 0.25 - skyMin + margin);
+        if (skyCalculator && dx > 0) {
+            for (const sl of [startStaffLine, endStaffLine]) {
+                const sc: SkyBottomLineCalculator | undefined =
+                    sl.SkyBottomLineCalculator;
+                if (!sc) { continue; }
+                const skyMin: number = sc.getSkyLineMinInRange(startX, endX);
+                if (isFinite(skyMin) && skyMin < 0) {
+                    // Control point 1: startY + dy*0.25 - bow
+                    // Must be above skyMin: cp1Y < skyMin - margin
+                    const cp1Y: number = startY + dy * 0.25 - bow;
+                    const margin: number = rules.SlurNoteHeadYOffset;
+                    if (cp1Y > skyMin - margin) {
+                        bow = Math.max(bow, startY + dy * 0.25 - skyMin + margin);
+                    }
+                    // Control point 2: startY + dy*0.75 - bow
+                    const cp2Y: number = startY + dy * 0.75 - bow;
+                    if (cp2Y > skyMin - margin) {
+                        bow = Math.max(bow, startY + dy * 0.75 - skyMin + margin);
+                    }
                 }
             }
         }
