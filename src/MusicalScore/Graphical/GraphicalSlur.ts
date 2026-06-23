@@ -604,17 +604,41 @@ export class GraphicalSlur extends GraphicalCurve {
             }
         }
         if (siblingMeasure) {
-            // Cross-staff beam — use VF staves directly (same formula as positionCrossStaffBeams).
+            // Cross-staff beam — find outermost noteheads in the voice
+            // on each stave and compute beam Y from those, matching how
+            // positionCrossStaffBeams uses the stave lines.
+            const beamNotes: any[] = beam.getNotes();
             const ownerStave: any = ownerMeasure!.getVFStave();
             const sibStave: any = siblingMeasure.getVFStave();
-            const ownerY: number = ownerStave.getYForLine(0);
-            const sibY: number = sibStave.getYForLine(0);
-            const localBelow: boolean = ownerY > sibY;
-            const upperStave: any = localBelow ? sibStave : ownerStave;
-            const lowerStave: any = localBelow ? ownerStave : sibStave;
-            const upperBottom: number = upperStave.getYForLine(4);
-            const lowerTop: number = lowerStave.getYForLine(0);
-            const beamYPx: number = upperBottom + (lowerTop - upperBottom) * 0.35;
+            let upperExtremeY: number = Infinity;
+            let lowerExtremeY: number = -Infinity;
+            for (const bn of beamNotes) {
+                const ns: any = bn.checkStave?.() || bn.stave;
+                if (!ns) { continue; }
+                const kps: any[] = bn.getKeyProps?.() || [];
+                if (kps.length === 0) { continue; }
+                const noteY: number = ns.getYForNote(kps[0].line);
+                if (ns === sibStave) {
+                    upperExtremeY = Math.min(upperExtremeY, noteY);
+                } else if (ns === ownerStave) {
+                    lowerExtremeY = Math.max(lowerExtremeY, noteY);
+                }
+            }
+            let beamYPx: number;
+            if (isFinite(upperExtremeY) && isFinite(lowerExtremeY)) {
+                beamYPx = upperExtremeY +
+                    (lowerExtremeY - upperExtremeY) * 0.35;
+            } else {
+                // Fallback: use stave lines
+                const ownerY: number = ownerStave.getYForLine(0);
+                const sibY: number = sibStave.getYForLine(0);
+                const localBelow: boolean = ownerY > sibY;
+                const upperStave: any = localBelow ? sibStave : ownerStave;
+                const lowerStave: any = localBelow ? ownerStave : sibStave;
+                const upperBottom: number = upperStave.getYForLine(4);
+                const lowerTop: number = lowerStave.getYForLine(0);
+                beamYPx = upperBottom + (lowerTop - upperBottom) * 0.35;
+            }
             return beamYPx / unitInPixels - startStaffLineY;
         }
 
