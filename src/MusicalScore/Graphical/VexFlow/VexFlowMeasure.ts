@@ -1583,10 +1583,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             for (const builder of this.beams[voiceID]) {
                 const osmdBeam: Beam = builder[0];
                 const localEntries: VexFlowVoiceEntry[] = builder[1];
-                if (osmdBeam.BeamNumber !== 1) { continue; }
                 if (localEntries.length >= osmdBeam.Notes.length) { continue; }
-                // Allow 50% majority (e.g. 2 of 4 notes in Dichterliebe arpeggio pattern).
-                // Previously skipped: localEntries.length * 2 <= osmdBeam.Notes.length
+                // Allow 50% majority — removed BeamNumber and *2 <= checks.
 
                 const vfbeams: VF.Beam[] = this.vfbeams[voiceID];
                 if (!vfbeams) { continue; }

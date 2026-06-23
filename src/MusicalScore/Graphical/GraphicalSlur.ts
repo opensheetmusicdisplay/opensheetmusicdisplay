@@ -505,6 +505,30 @@ export class GraphicalSlur extends GraphicalCurve {
         }
         const bowSign: number = -1;
 
+        // Ensure control points clear the skyline of both staff lines.
+        // SkyLine values are staff-relative (0 = staff top, negative = above).
+        // Convert to start-staff frame via AbsolutePosition.y difference.
+        const endStaffAbsY: number = endStaffLine.PositionAndShape.AbsolutePosition.y;
+        for (const sl of [startStaffLine, endStaffLine]) {
+            const sc: SkyBottomLineCalculator | undefined =
+                sl.SkyBottomLineCalculator;
+            if (!sc) { continue; }
+            const slAbsY: number =
+                sl === startStaffLine ? startStaffAbsY : endStaffAbsY;
+            const skyVal: number = sc.getSkyLineMinInRange(startX, endX);
+            if (!isFinite(skyVal) || skyVal >= 0) { continue; }
+            const skyInStartFrame: number = skyVal + (slAbsY - startStaffAbsY);
+            const margin: number = rules.SlurNoteHeadYOffset;
+            const cp1Y: number = startY + dy * 0.25 - bow;
+            const cp2Y: number = startY + dy * 0.75 - bow;
+            if (cp1Y > skyInStartFrame - margin) {
+                bow = Math.max(bow, startY + dy * 0.25 - skyInStartFrame + margin);
+            }
+            if (cp2Y > skyInStartFrame - margin) {
+                bow = Math.max(bow, startY + dy * 0.75 - skyInStartFrame + margin);
+            }
+        }
+
         this.bezierStartPt = new PointF2D(startX, startY);
         this.bezierStartControlPt = new PointF2D(startX + dx * 0.25, startY + dy * 0.25 + bowSign * bow);
         this.bezierEndControlPt = new PointF2D(startX + dx * 0.75, startY + dy * 0.75 + bowSign * bow);
@@ -580,21 +604,21 @@ export class GraphicalSlur extends GraphicalCurve {
             }
         }
         if (siblingMeasure) {
-            // Cross-staff beam — compute from layout AbsolutePositions.
-            const absPos: PointF2D = ownerMeasure!.PositionAndShape.AbsolutePosition;
-            const sibPos: PointF2D = siblingMeasure.PositionAndShape.AbsolutePosition;
-            const localBelow: boolean = absPos.y > sibPos.y;
-            const upperY: number = localBelow ? sibPos.y : absPos.y;
-            const lowerY: number = localBelow ? absPos.y : sibPos.y;
-            const spacingUnits: number = 1;
-            const upperBottom: number = upperY + 4 * spacingUnits;
-            const lowerTop: number = lowerY;
-            const beamYAbs: number = upperBottom + (lowerTop - upperBottom) * 0.35;
-            return beamYAbs - startStaffLineY;
+            // Cross-staff beam — use VF staves directly (same formula as positionCrossStaffBeams).
+            const ownerStave: any = ownerMeasure!.getVFStave();
+            const sibStave: any = siblingMeasure.getVFStave();
+            const ownerY: number = ownerStave.getYForLine(0);
+            const sibY: number = sibStave.getYForLine(0);
+            const localBelow: boolean = ownerY > sibY;
+            const upperStave: any = localBelow ? sibStave : ownerStave;
+            const lowerStave: any = localBelow ? ownerStave : sibStave;
+            const upperBottom: number = upperStave.getYForLine(4);
+            const lowerTop: number = lowerStave.getYForLine(0);
+            const beamYPx: number = upperBottom + (lowerTop - upperBottom) * 0.35;
+            return beamYPx / unitInPixels - startStaffLineY;
         }
 
         // Regular single-staff beam — use stem extents.
-        // After VexFlow beam formatting, the stem tip reaches the beam.
         const stemTipPx: number = vfNote.getStemExtents?.()?.topY ?? 0;
         return stemTipPx / unitInPixels - startStaffLineY;
     }
