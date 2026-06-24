@@ -1648,6 +1648,30 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 for (const note of newNotes) {
                     (note as StaveNote).setBeam(existingBeam);
                 }
+                // Remove the sibling measure's partial beam for this voice.
+                // The sibling's vfbeams may contain a beam that only has
+                // the cross-staff (minority) notes — remove it so only the
+                // owner's full beam (with all notes) gets drawn.
+                const removeSiblingBeam: (beams: VF.Beam[] | undefined) => void =
+                    (beams: VF.Beam[] | undefined): void => {
+                    if (!beams) { return; }
+                    const toRemove: VF.Beam[] = [];
+                    for (const sb of beams) {
+                        for (const vfNote of noteToVf.values()) {
+                            const beamNotes: any[] = sb.getNotes();
+                            if (beamNotes.indexOf(vfNote) >= 0) {
+                                toRemove.push(sb);
+                                break;
+                            }
+                        }
+                    }
+                    for (const sb of toRemove) {
+                        const idx: number = beams.indexOf(sb);
+                        if (idx >= 0) { beams.splice(idx, 1); }
+                    }
+                };
+                removeSiblingBeam(siblingMeasure.vfbeams[voiceID]);
+                removeSiblingBeam(siblingMeasure.autoVfBeams);
             }
         }
     }
