@@ -758,8 +758,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 ctx.save();
                 this.vfVoices[voiceID].draw(ctx, this.stave);
                 ctx.restore();
-                // this.vfVoices[voiceID].tickables.forEach(t => t.getBoundingBox().draw(ctx));
-                // this.vfVoices[voiceID].tickables.forEach(t => t.getBoundingBox().draw(ctx));
             }
         }
         // Position cross-staff beams using current (draw-time) stave coordinates
@@ -1245,6 +1243,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for (const staffEntry of this.staffEntries) {
             for (const gve of staffEntry.graphicalVoiceEntries) {
                 const vfStaveNote: StaveNote = <StaveNote> (gve as VexFlowVoiceEntry).vfStaveNote;
+                // Skip ghost notes — they are placeholder ticks for cross-staff
+                // voice alignment, not real beamed notes.
+                if ((vfStaveNote as any).getCategory?.() === "ghostnotes") { continue; }
                 const gNote: GraphicalNote = gve.notes[0]; // TODO check for all notes within the graphical voice entry
                 const linkedNote: LinkedNote = {
                     vfStaveNote: vfStaveNote,

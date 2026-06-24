@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { expect } from "chai";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../../Util/TestUtils";
@@ -1138,6 +1139,146 @@ describe("Cross-Staff Beam SVG Rendering", () => {
             expect(violations).to.equal(0,
                 violations + " slurs not above UP-stem beam top:\n" +
                 details.join("\n"));
+        });
+    });
+
+    describe("test_slur_across_staves_right_to_left_hand slur endpoint", () => {
+        let slur: SlurBezier | undefined;
+        let trebleNH: { x: number, y: number } | undefined;
+        let bassNH: { x: number, y: number } | undefined;
+        const stemDirs: string[] = [];
+
+        before(function (): Promise<void> {
+            this.timeout(20000);
+            return renderToSVG("test_slur_across_staves_right_to_left_hand.musicxml")
+                .then((s: SVGElement) => {
+                    // Parse slur
+                    const slurEls: NodeListOf<Element> =
+                        s.querySelectorAll("[class*='vf-curve']");
+                    for (let i: number = 0; i < slurEls.length; i++) {
+                        const pathEl: Element | null =
+                            slurEls[i].querySelector("path");
+                        if (pathEl) {
+                            slur = parseSlurBezier(pathEl);
+                            break;
+                        }
+                    }
+                    // Find slur start/end X to locate noteheads.
+                    // Slur start should be near a treble notehead (staff 1),
+                    // slur end near a bass notehead (staff 2).
+                    // Use vf-measure structure: find measure groups and
+                    // determine staff from group position.
+                    const staffGroups: Element[] =
+                        Array.from(s.querySelectorAll("[class*='staffline']"));
+                    // For each staffline, find noteheads and stave Y.
+                    const allNH: { x: number, y: number, staff: number }[] = [];
+                    for (let si: number = 0; si < staffGroups.length; si++) {
+                        const sg: Element = staffGroups[si];
+                        // Staff index from stave Y: lower Y = higher staff
+                        const staves: NodeListOf<Element> =
+                            sg.querySelectorAll("[class*='vf-stave']");
+                        for (let st: number = 0; st < staves.length; st++) {
+                            const staveEl: SVGGraphicsElement =
+                                staves[st] as SVGGraphicsElement;
+                            try {
+                                staveEl.getBBox();
+                            } catch (_) { continue; }
+                            const nhEls: NodeListOf<Element> =
+                                staveEl.querySelectorAll("[class*='vf-notehead']");
+                            for (let ni: number = 0; ni < nhEls.length; ni++) {
+                                try {
+                                    const box: SVGRect =
+                                        (nhEls[ni] as SVGGraphicsElement).getBBox();
+                                    if (box.width > 0 && box.height > 0) {
+                                        allNH.push({
+                                            x: box.x + box.width / 2,
+                                            y: box.y + box.height / 2,
+                                            staff: si * 10 + st,
+                                        });
+                                    }
+                                } catch (_) { /* skip */ }
+                            }
+                        }
+                    }
+                    // Collect stem directions
+                    const stems: NodeListOf<Element> =
+                        s.querySelectorAll("[class*='vf-stem']");
+                    for (let i: number = 0; i < stems.length; i++) {
+                        const pathEl: Element | null =
+                            stems[i].querySelector("path");
+                        if (pathEl) {
+                            const d: string = pathEl.getAttribute("d") || "";
+                            const coords: RegExpMatchArray | null =
+                                d.match(/M([\d.]+)\s+([\d.]+)L([\d.]+)\s+([\d.]+)/);
+                            if (coords) {
+                                const y1: number = parseFloat(coords[2]);
+                                const y2: number = parseFloat(coords[4]);
+                                stemDirs.push(y2 < y1 ? "up" : "down");
+                            }
+                        }
+                    }
+                    // Match noteheads to slur endpoints
+                    if (slur && allNH.length >= 2) {
+                        // Sort noteheads by Y to determine treble vs bass staff
+                        const sorted: typeof allNH =
+                            [...allNH].sort((a, b) => a.y - b.y);
+                        // Treble group: smaller Y (higher on page)
+                        const trebleY: number = sorted[0].y;
+                        const bassY: number = sorted[sorted.length - 1].y;
+                        const mid: number = (trebleY + bassY) / 2;
+                        const trebleCands: typeof allNH =
+                            allNH.filter((n) => n.y < mid);
+                        const bassCands: typeof allNH =
+                            allNH.filter((n) => n.y > mid);
+                        // Closest to slur start X within treble
+                        let bestTr: typeof trebleCands[0] | undefined;
+                        let trDist: number = Infinity;
+                        for (const n of trebleCands) {
+                            const d: number = Math.abs(n.x - slur.startX);
+                            if (d < trDist) { trDist = d; bestTr = n; }
+                        }
+                        trebleNH = bestTr;
+                        // Closest to slur end X within bass
+                        let bestBs: typeof bassCands[0] | undefined;
+                        let bsDist: number = Infinity;
+                        for (const n of bassCands) {
+                            const d: number = Math.abs(n.x - slur.endX);
+                            if (d < bsDist) { bsDist = d; bestBs = n; }
+                        }
+                        bassNH = bestBs;
+                    }
+                });
+        });
+
+        it("both notes should have DOWN stems", () => {
+            // For cross-staff slurs with Above placement, stems point DOWN
+            // (away from the slur). The score has 4 stems — at least 2
+            // should be DOWN.
+            const downCount: number =
+                stemDirs.filter((d) => d === "down").length;
+            expect(downCount).to.be.greaterThan(1,
+                "expected at least 2 DOWN stems, got " +
+                stemDirs.length + " stems: " + stemDirs.join(","));
+        });
+
+        it("slur start Y should be within 15px of treble notehead", () => {
+            expect(trebleNH).to.not.be.undefined,
+                "must find treble notehead near slur start";
+            const gap: number = Math.abs(slur!.startY - trebleNH!.y);
+            expect(gap).to.be.lessThan(15,
+                "slur start Y=" + slur!.startY.toFixed(1) +
+                " should be near treble notehead Y=" + trebleNH!.y.toFixed(1) +
+                " (gap=" + gap.toFixed(1) + "px)");
+        });
+
+        it("slur end Y should be within 15px of bass notehead", () => {
+            expect(bassNH).to.not.be.undefined,
+                "must find bass notehead near slur end";
+            const gap: number = Math.abs(slur!.endY - bassNH!.y);
+            expect(gap).to.be.lessThan(15,
+                "slur end Y=" + slur!.endY.toFixed(1) +
+                " should be near bass notehead Y=" + bassNH!.y.toFixed(1) +
+                " (gap=" + gap.toFixed(1) + "px)");
         });
     });
 });

@@ -532,11 +532,15 @@ export class GraphicalSlur extends GraphicalCurve {
         const startX: number = startXPos.x - staffLineOffset.x;
         const endX: number = endXPos.x - staffLineOffset.x;
 
-        // Compute notehead Y from VF5's actual rendered geometry (stave.getYForNote).
-        // VexFlow knows exactly where each notehead sits; OSMD model positions are unreliable.
+        // Compute notehead Y from VF5's actual rendered geometry.
         const startStaffAbsY: number = startStaffLine.PositionAndShape.AbsolutePosition.y;
+        const endStaffAbsY: number = endStaffLine.PositionAndShape.AbsolutePosition.y;
         const startNoteY: number = this.vfNoteYRelative(slurStartNote, startStaffAbsY);
-        const endNoteY: number = this.vfNoteYRelative(slurEndNote, startStaffAbsY);
+        // For end note: use its own staff line Y (endStaffAbsY) as the
+        // forced stave position. Non-beamed cross-staff notes may still
+        // have the wrong VF stave (voice's owner stave, not target stave).
+        const endNoteY: number = this.vfNoteYRelative(slurEndNote, startStaffAbsY,
+            endStaffAbsY);
 
         // The staff higher up on the page has the smaller y value.
         const endStaffAbove: boolean =
@@ -615,24 +619,34 @@ export class GraphicalSlur extends GraphicalCurve {
      * Uses VexFlow's stave.getYForNote() for the actual rendered position,
      * converted to OSMD units. Falls back to OSMD model positions.
      */
-    private vfNoteYRelative(note: GraphicalNote, startStaffAbsY: number): number {
+    private vfNoteYRelative(note: GraphicalNote, staffAbsY: number,
+                             forceStaffAbsY?: number): number {
         const gNote: any = note as VexFlowGraphicalNote;
         const vfNote: any = gNote.vfnote?.[0];
         if (vfNote) {
             const stave: any = vfNote.checkStave?.() || vfNote.stave;
             const keyProps: any[] = vfNote.getKeyProps?.() || [];
-            if (stave && keyProps.length > 0) {
-                // getYForNote returns absolute screen Y (includes stave origin set
-                // by setAbsoluteCoordinates). Convert directly to OSMD units and
-                // subtract the start staff's absolute position.
-                const noteAbsPixels: number = stave.getYForNote(keyProps[0].line);
+            if (keyProps.length > 0) {
+                let noteAbsPixels: number;
+                if (forceStaffAbsY !== undefined) {
+                    // Use explicit staff Y (e.g. for cross-staff notes whose
+                    // VF stave wasn't reassigned by positionCrossStaffBeams).
+                    // Formula: getYForNote(line) = stave.y + 50 - line*10
+                    // with OSMD defaults (spaceAboveStaffLn=0, spacing=10).
+                    noteAbsPixels = forceStaffAbsY * unitInPixels
+                        + 50 - keyProps[0].line * unitInPixels;
+                } else if (stave) {
+                    noteAbsPixels = stave.getYForNote(keyProps[0].line);
+                } else {
+                    const fallbackY: number = note.PositionAndShape?.AbsolutePosition?.y ?? 0;
+                    return fallbackY - staffAbsY;
+                }
                 const noteAbsUnits: number = noteAbsPixels / unitInPixels;
-                return noteAbsUnits - startStaffAbsY;
+                return noteAbsUnits - staffAbsY;
             }
         }
-        // Fallback: OSMD model positions
         const absY: number = note.PositionAndShape?.AbsolutePosition?.y ?? 0;
-        return absY - startStaffAbsY;
+        return absY - staffAbsY;
     }
 
     /**
