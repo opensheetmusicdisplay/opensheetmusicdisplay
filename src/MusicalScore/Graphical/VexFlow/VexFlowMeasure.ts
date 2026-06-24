@@ -654,9 +654,37 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const localIsBelow: boolean = localY > siblingY;
             const upperStave: VF.Stave = localIsBelow ? siblingMeasure.stave : this.stave;
             const lowerStave: VF.Stave = localIsBelow ? this.stave : siblingMeasure.stave;
-            const upperBottom: number = upperStave.getYForLine(4);
-            const lowerTop: number = lowerStave.getYForLine(0);
-            const beamY: number = upperBottom + (lowerTop - upperBottom) * 0.35;
+            // Position beam to balance stem lengths: find the outermost
+            // notehead on each staff (closest to the gap) and place the
+            // beam at their midpoint. This keeps stems on both sides
+            // from becoming too short or too long.
+            const beamNotes: VF.Note[] = beam.getNotes();
+            let upperExtremeY: number = -Infinity; // highest Y (lowest on page) = closest to gap
+            let lowerExtremeY: number = Infinity;  // lowest Y (highest on page) = closest to gap
+            for (const bn of beamNotes) {
+                const ns: any = (bn as any).checkStave?.() || (bn as any).stave;
+                if (!ns) { continue; }
+                const nsY0: number = ns.getYForLine(0);
+                const isUpper: boolean = nsY0 < upperStave.getYForLine(0) + 20;
+                const kps: any[] = bn.getKeyProps?.() || [];
+                for (const kp of kps) {
+                    const noteY: number = ns.getYForNote(kp.line);
+                    if (isUpper) {
+                        upperExtremeY = Math.max(upperExtremeY, noteY);
+                    } else {
+                        lowerExtremeY = Math.min(lowerExtremeY, noteY);
+                    }
+                }
+            }
+            const upBot: number = upperStave.getYForLine(4);
+            const lowTop: number = lowerStave.getYForLine(0);
+            let beamY: number;
+            if (isFinite(upperExtremeY) && isFinite(lowerExtremeY)) {
+                beamY = upperExtremeY + (lowerExtremeY - upperExtremeY) * 0.5;
+                beamY = Math.max(upBot + 5, Math.min(lowTop - 5, beamY));
+            } else {
+                beamY = upBot + (lowTop - upBot) * 0.35;
+            }
 
             const beamAny: any = beam;
             beamAny.renderOptions.flatBeams = true;
@@ -678,7 +706,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
             }
 
-            beamAny.slope = this.crossStaffBeamSlope(notes, upperBottom, lowerTop, beamY);
+            beamAny.slope = this.crossStaffBeamSlope(beamNotes as VF.StemmableNote[], upBot, lowTop, beamY);
             beamAny.applyStemExtensions();
             beamAny.postFormatted = true;
         }
