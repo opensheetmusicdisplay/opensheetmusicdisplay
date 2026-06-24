@@ -252,6 +252,69 @@ export class GraphicalSlur extends GraphicalCurve {
             endControlPoint.x += startX;
             endControlPoint.y = -endControlPoint.y + startY;
 
+            // For cross-staff beams: ensure control points clear the highest
+            // notehead in the beam's voice. The skyline above only covers the
+            // start staff line. The slur itself may start and end on the same
+            // staff but the voice's beam can still cross staves.
+            if (slurStartNote && slurStartNote instanceof VexFlowGraphicalNote) {
+                const startVN: any = (slurStartNote as VexFlowGraphicalNote).vfnote?.[0];
+                const beamForNotes: any = startVN?.beam;
+                if (beamForNotes && this.isBeamCrossStaff(beamForNotes, slurStartNote)) {
+                    const beamNotes: any[] = beamForNotes.getNotes();
+                    let voiceUpperY: number = Infinity;
+                    let voiceLowerY: number = -Infinity;
+                    for (const bn of beamNotes) {
+                        const ns: any = bn.checkStave?.() || bn.stave;
+                        if (!ns) { continue; }
+                        const kps: any[] = bn.getKeyProps?.() || [];
+                        for (const kp of kps) {
+                            const noteYPx: number = ns.getYForNote(kp.line);
+                            voiceUpperY = Math.min(voiceUpperY, noteYPx);
+                            voiceLowerY = Math.max(voiceLowerY, noteYPx);
+                        }
+                    }
+                    // Convert to staff-relative units (same frame as control points)
+                    const staveYPx: number =
+                        startStaffEntry.parentMeasure.ParentStaffLine
+                            ?.PositionAndShape?.AbsolutePosition?.y ?? 0;
+                    const voiceUpperRel: number =
+                        voiceUpperY / unitInPixels - staveYPx;
+                    const voiceLowerRel: number =
+                        voiceLowerY / unitInPixels - staveYPx;
+                    const margin: number = rules.SlurCrossStaffMinBow;
+                    const maxMargin: number = rules.SlurCrossStaffMaxBow;
+                    if (this.placement === PlacementEnum.Above) {
+                        // Floor: cp must clear highest notehead in the voice
+                        // Ceiling: cp shouldn't balloon to infinity
+                        const floorY: number = voiceUpperRel - margin;
+                        const ceilingY: number = voiceUpperRel - maxMargin;
+                        if (startControlPoint.y > floorY) {
+                            startControlPoint.y = floorY;
+                        } else if (startControlPoint.y < ceilingY) {
+                            startControlPoint.y = ceilingY;
+                        }
+                        if (endControlPoint.y > floorY) {
+                            endControlPoint.y = floorY;
+                        } else if (endControlPoint.y < ceilingY) {
+                            endControlPoint.y = ceilingY;
+                        }
+                    } else if (this.placement === PlacementEnum.Below) {
+                        const floorY: number = voiceLowerRel + margin;
+                        const ceilingY: number = voiceLowerRel + maxMargin;
+                        if (startControlPoint.y < floorY) {
+                            startControlPoint.y = floorY;
+                        } else if (startControlPoint.y > ceilingY) {
+                            startControlPoint.y = ceilingY;
+                        }
+                        if (endControlPoint.y < floorY) {
+                            endControlPoint.y = floorY;
+                        } else if (endControlPoint.y > ceilingY) {
+                            endControlPoint.y = ceilingY;
+                        }
+                    }
+                }
+            }
+
             // set private members
             this.bezierStartPt = new PointF2D(startX, startY - startYOffset);
             this.bezierStartControlPt = new PointF2D(startControlPoint.x, startControlPoint.y - startYOffset);
@@ -505,27 +568,38 @@ export class GraphicalSlur extends GraphicalCurve {
         }
         const bowSign: number = -1;
 
-        // Ensure control points clear the skyline of both staff lines.
-        // SkyLine values are staff-relative (0 = staff top, negative = above).
-        // Convert to start-staff frame via AbsolutePosition.y difference.
-        const endStaffAbsY: number = endStaffLine.PositionAndShape.AbsolutePosition.y;
-        for (const sl of [startStaffLine, endStaffLine]) {
-            const sc: SkyBottomLineCalculator | undefined =
-                sl.SkyBottomLineCalculator;
-            if (!sc) { continue; }
-            const slAbsY: number =
-                sl === startStaffLine ? startStaffAbsY : endStaffAbsY;
-            const skyVal: number = sc.getSkyLineMinInRange(startX, endX);
-            if (!isFinite(skyVal) || skyVal >= 0) { continue; }
-            const skyInStartFrame: number = skyVal + (slAbsY - startStaffAbsY);
-            const margin: number = rules.SlurNoteHeadYOffset;
-            const cp1Y: number = startY + dy * 0.25 - bow;
-            const cp2Y: number = startY + dy * 0.75 - bow;
-            if (cp1Y > skyInStartFrame - margin) {
-                bow = Math.max(bow, startY + dy * 0.25 - skyInStartFrame + margin);
+        // Clamp bow to clear highest notehead in cross-staff beam.
+        const gNote: any = slurStartNote as VexFlowGraphicalNote;
+        const vfN: any = gNote.vfnote?.[0];
+        const beamForNotes: any = vfN?.beam;
+        if (beamForNotes && vfN) {
+            const beamNotes: any[] = beamForNotes.getNotes();
+            let voiceUpperY: number = Infinity;
+            // Also check if the beam spans staves (has notes on an upper stave).
+            let minStaveY0: number = Infinity;
+            let maxStaveY0: number = -Infinity;
+            for (const bn of beamNotes) {
+                const ns: any = bn.checkStave?.() || bn.stave;
+                if (!ns) { continue; }
+                const stY0: number = ns.getYForLine(0);
+                minStaveY0 = Math.min(minStaveY0, stY0);
+                maxStaveY0 = Math.max(maxStaveY0, stY0);
+                for (const kp of bn.getKeyProps?.() || []) {
+                    const noteYPx: number = ns.getYForNote(kp.line);
+                    const noteY: number = noteYPx / unitInPixels - startStaffAbsY;
+                    voiceUpperY = Math.min(voiceUpperY, noteY);
+                }
             }
-            if (cp2Y > skyInStartFrame - margin) {
-                bow = Math.max(bow, startY + dy * 0.75 - skyInStartFrame + margin);
+            // Only apply if the beam has notes on an UPPER stave
+            // (different stave Y0 → cross-staff beam with notes
+            // that the start-staff skyline can't see).
+            if (isFinite(voiceUpperY) &&
+                isFinite(minStaveY0) && isFinite(maxStaveY0) &&
+                Math.abs(maxStaveY0 - minStaveY0) > 50) {
+                const margin: number = rules.SlurNoteHeadYOffset + 3.5; // ~40px
+                const cp2MinBow: number = startY + dy * 0.75 - voiceUpperY + margin;
+                const cp1MinBow: number = startY + dy * 0.25 - voiceUpperY + margin;
+                bow = Math.max(bow, cp1MinBow, cp2MinBow);
             }
         }
 
@@ -568,12 +642,13 @@ export class GraphicalSlur extends GraphicalCurve {
      * the upper stave's bottom line toward the lower stave's top line.
      * Returns undefined if the note is not in a cross-staff beam.
      */
-    private beamYForNote(note: GraphicalNote, startStaffLineY: number): number | undefined {
+    private beamYForNote(note: GraphicalNote, startStaffLineY: number, relativeToOwnStave: boolean = false): number | undefined {
         const gNote: any = note;
         const vfNote: any = gNote.vfnote?.[0];
         if (!vfNote) { return undefined; }
         const beam: any = vfNote.beam;
         if (!beam) { return undefined; }
+        const stave: any = vfNote.checkStave?.() || vfNote.stave;
 
         // Only adjust when the beam is on the same side of the notehead as the slur.
         // For "Above" placement: UP-stem notes (beam above notehead) need to clear beam.
@@ -612,15 +687,21 @@ export class GraphicalSlur extends GraphicalCurve {
             const sibStave: any = siblingMeasure.getVFStave();
             let upperExtremeY: number = Infinity;
             let lowerExtremeY: number = -Infinity;
+            const ownerStaveY: number = ownerStave.getYForLine(0);
+            const sibStaveY: number = sibStave.getYForLine(0);
             for (const bn of beamNotes) {
                 const ns: any = bn.checkStave?.() || bn.stave;
                 if (!ns) { continue; }
                 const kps: any[] = bn.getKeyProps?.() || [];
                 if (kps.length === 0) { continue; }
                 const noteY: number = ns.getYForNote(kps[0].line);
-                if (ns === sibStave) {
+                // Compare by stave Y position, not object identity
+                // (setStave may reassign notes to differently-referenced staves)
+                const noteStaveY: number = ns.getYForLine(0);
+                const noteIsUpper: boolean = noteStaveY < ownerStaveY + (sibStaveY - ownerStaveY) * 0.5;
+                if (noteIsUpper) {
                     upperExtremeY = Math.min(upperExtremeY, noteY);
-                } else if (ns === ownerStave) {
+                } else {
                     lowerExtremeY = Math.max(lowerExtremeY, noteY);
                 }
             }
@@ -639,12 +720,103 @@ export class GraphicalSlur extends GraphicalCurve {
                 const lowerTop: number = lowerStave.getYForLine(0);
                 beamYPx = upperBottom + (lowerTop - upperBottom) * 0.35;
             }
+            if (relativeToOwnStave && stave) {
+                return (beamYPx - stave.getYForLine(0)) / unitInPixels;
+            }
             return beamYPx / unitInPixels - startStaffLineY;
         }
 
-        // Regular single-staff beam — use stem extents.
+        // Regular single-staff beam — use stem-tip Y (beam top for beamed notes).
+        // The stem-direction check at the top of this method already ensures
+        // the beam is on the correct side of the notehead for this slur's placement.
         const stemTipPx: number = vfNote.getStemExtents?.()?.topY ?? 0;
-        return stemTipPx / unitInPixels - startStaffLineY;
+        if (relativeToOwnStave && stave && stemTipPx > 0) {
+            return (stemTipPx - stave.getYForLine(0)) / unitInPixels;
+        }
+        if (stemTipPx > 0) {
+            return stemTipPx / unitInPixels - startStaffLineY;
+        }
+        return undefined;
+    }
+
+    /**
+     * Returns true if the beam is in any measure's crossStaffBeamSiblings
+     * (authoritative — populated during fixCrossStaffBeams/fixCrossStaffTuplets).
+     */
+    private isBeamCrossStaff(beam: any, note?: GraphicalNote): boolean {
+        // Search the note's measure column for crossStaffBeamSiblings
+        const gNote: any = note as VexFlowGraphicalNote;
+        const measure: any = gNote?.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
+        if (!measure) { return false; }
+        const col: any[] = measure.ParentMusicSystem?.GraphicalMeasures;
+        if (!col) { return false; }
+        let colIdx: number = -1;
+        for (let ci: number = 0; ci < col.length; ci++) {
+            if (col[ci].indexOf(measure) >= 0) { colIdx = ci; break; }
+        }
+        if (colIdx < 0) { return false; }
+        for (const m of col[colIdx]) {
+            const siblings: any = (m as any).crossStaffBeamSiblings;
+            if (!siblings) { continue; }
+            for (const [b] of siblings) {
+                if (b === beam) { return true; }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * At draw time: if this slur's start note is in a cross-staff beam,
+     * adjust bezier control points so the curve clears the highest notehead
+     * in that beam. Called from drawSlurs for non-isCrossed slurs whose
+     * voice crosses staves (curve was computed at layout time before VF
+     * beams existed, so it didn't account for treble noteheads).
+     */
+    public clampToVoiceSkyline(rules: EngravingRules): void {
+        if (!this.bezierStartPt || !this.bezierStartControlPt ||
+            !this.bezierEndControlPt || !this.bezierEndPt) { return; }
+        // Get the start note's VF note and its beam
+        const gNote: any = this.staffEntries?.[0]
+            ?.findGraphicalNoteFromNote?.(this.slur.StartNote);
+        const vfN: any = gNote?.vfnote?.[0];
+        const beam: any = vfN?.beam;
+        if (!beam || !this.isBeamCrossStaff(beam, gNote)) { return; }
+
+        // Find highest notehead Y in the beam (staff-relative)
+        const staffLine: any = this.staffEntries?.[0]
+            ?.parentMeasure?.ParentStaffLine;
+        if (!staffLine) { return; }
+        const startStaffAbsY: number =
+            staffLine.PositionAndShape?.AbsolutePosition?.y ?? 0;
+        let voiceUpperY: number = Infinity;
+        for (const bn of beam.getNotes()) {
+            const ns: any = bn.checkStave?.() || bn.stave;
+            if (!ns) { continue; }
+            for (const kp of bn.getKeyProps?.() || []) {
+                const noteYPx: number = ns.getYForNote(kp.line);
+                const noteY: number = noteYPx / unitInPixels - startStaffAbsY;
+                voiceUpperY = Math.min(voiceUpperY, noteY);
+            }
+        }
+        if (!isFinite(voiceUpperY)) { return; }
+
+        const margin: number = rules.SlurNoteHeadYOffset;
+        // cp1Y = startY + dy*0.25 - bow must be ≤ voiceUpperY - margin
+        // For the pre-computed bezier, we can derive the effective bow
+        // from the existing control point and adjust it.
+        const startY: number = this.bezierStartPt.y;
+        const dy: number = this.bezierEndPt.y - startY;
+        const cp1Y: number = this.bezierStartControlPt.y;
+        // cp1Y = startY + dy*0.25 - bow  →  bow = startY + dy*0.25 - cp1Y
+        let bow: number = startY + dy * 0.25 - cp1Y;
+        // Minimum bow to clear voiceUpperY
+        const minBow: number = startY + dy * 0.25 - voiceUpperY + margin;
+        if (minBow > bow) {
+            bow = minBow;
+            // Recompute control points
+            this.bezierStartControlPt.y = startY + dy * 0.25 - bow;
+            this.bezierEndControlPt.y = startY + dy * 0.75 - bow;
+        }
     }
 
     /**
@@ -712,23 +884,31 @@ export class GraphicalSlur extends GraphicalCurve {
                 }
             }
 
+            const startStaffAbsY: number = staffLine.PositionAndShape.AbsolutePosition.y;
+            const startBeamY: number | undefined =
+                this.beamYForNote(slurStartNote, startStaffAbsY, true);
+
             if (this.placement === PlacementEnum.Above) {
-                if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Down) {
+                if (startBeamY !== undefined) {
+                    startY = startBeamY;
+                } else if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Down) {
                     startY = extremeNoteStaffY - 0.5; // notehead top (stem away from slur)
                 } else {
                     startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
                 }
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    startY = Math.min(endY, slurStartVE.parentStaffEntry.getSkylineMin());
+                    startY = Math.min(startY, slurStartVE.parentStaffEntry.getSkylineMin());
                 }
             } else {
-                if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
+                if (startBeamY !== undefined) {
+                    startY = startBeamY;
+                } else if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
                     startY = extremeNoteStaffY + 0.5; // notehead bottom (stem away from slur)
                 } else {
                     startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
                 }
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    startY = Math.max(endY, slurStartVE.parentStaffEntry.getBottomlineMax());
+                    startY = Math.max(startY, slurStartVE.parentStaffEntry.getBottomlineMax());
                 }
             }
 
@@ -797,8 +977,14 @@ export class GraphicalSlur extends GraphicalCurve {
                 }
             }
 
+            const endStaffAbsY: number = staffLine.PositionAndShape.AbsolutePosition.y;
+            const endBeamY: number | undefined =
+                this.beamYForNote(slurEndNote, endStaffAbsY);
+
             if (this.placement === PlacementEnum.Above) {
-                if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down) {
+                if (endBeamY !== undefined) {
+                    endY = endBeamY;
+                } else if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down) {
                     endY = endExtremeNoteStaffY - 0.5; // notehead top (stem away from slur)
                 } else {
                     endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
@@ -810,7 +996,9 @@ export class GraphicalSlur extends GraphicalCurve {
                     endY -= this.rules.SlurEndArticulationYOffset;
                 }
             } else {
-                if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
+                if (endBeamY !== undefined) {
+                    endY = endBeamY;
+                } else if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
                     endY = endExtremeNoteStaffY + 0.5; // notehead bottom (stem away from slur)
                 } else {
                     endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;

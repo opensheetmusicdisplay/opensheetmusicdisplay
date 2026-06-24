@@ -447,6 +447,123 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         });
     });
 
+    /** Evaluate cubic bezier Y at parameter t (0..1). */
+    function evalBezierY(t: number, startY: number, cp1Y: number, cp2Y: number, endY: number): number {
+        const mt: number = 1 - t;
+        return mt * mt * mt * startY + 3 * mt * mt * t * cp1Y +
+               3 * mt * t * t * cp2Y + t * t * t * endY;
+    }
+
+    interface SlurBezier {
+        id: string;
+        startX: number;
+        startY: number;
+        cp1X: number;
+        cp1Y: number;
+        cp2X: number;
+        cp2Y: number;
+        endX: number;
+        endY: number;
+    }
+
+    function parseSlurBezier(pathEl: Element): SlurBezier | undefined {
+        const d: string = pathEl.getAttribute("d") || "";
+        // Upper curve: M sx sy C c1x c1y, c2x c2y, ex ey
+        const m: RegExpMatchArray | null =
+            d.match(/M([\d.]+)\s+([\d.]+)C([\d.]+)\s+([\d.]+),([\d.]+)\s+([\d.]+),([\d.]+)\s+([\d.]+)/);
+        if (!m) { return undefined; }
+        return {
+            id: (pathEl.parentElement?.getAttribute("id") || ""),
+            startX: parseFloat(m[1]), startY: parseFloat(m[2]),
+            cp1X: parseFloat(m[3]), cp1Y: parseFloat(m[4]),
+            cp2X: parseFloat(m[5]), cp2Y: parseFloat(m[6]),
+            endX: parseFloat(m[7]), endY: parseFloat(m[8]),
+        };
+    }
+
+    describe("Dichterliebe01 voice-skyline slur clearance", () => {
+        let svg: SVGElement;
+        let slurs: SlurBezier[];
+        let crossBeams: CrossStaffBeamInfo[];
+
+        before(function (): Promise<void> {
+            this.timeout(20000);
+            return renderToSVG("Dichterliebe01.xml").then((s: SVGElement) => {
+                svg = s;
+                crossBeams = findCrossStaffBeams(svg, 50);
+                // Parse all slurs from the SVG
+                const slurEls: NodeListOf<Element> =
+                    svg.querySelectorAll("[class*='vf-curve']");
+                slurs = [];
+                for (let i: number = 0; i < slurEls.length; i++) {
+                    const pathEl: Element | null =
+                        slurEls[i].querySelector("path");
+                    if (pathEl) {
+                        const sb: SlurBezier | undefined =
+                            parseSlurBezier(pathEl);
+                        if (sb) { slurs.push(sb); }
+                    }
+                }
+            });
+        });
+
+        it("cross-staff beam noteheads must be cleared by any overlapping slur", () => {
+            const margin: number = 3;
+            const violations: string[] = [];
+            // Collect all cross-staff-beam noteheads with their X,Y
+            const beamNoteheads: { x: number, y: number, beamX: number }[] = [];
+            for (const cb of crossBeams) {
+                if (!isCrossStaffBeam(cb, 80)) { continue; }
+                const bx: number = cb.stems[0]?.x ?? 0;
+                for (const nh of cb.noteheads) {
+                    beamNoteheads.push({ x: nh.x, y: nh.centerY, beamX: bx });
+                }
+            }
+            if (beamNoteheads.length === 0) { return; }
+
+            for (const nh of beamNoteheads) {
+                // Find any slur whose X range covers this notehead
+                let covered: boolean = false;
+                for (const slur of slurs) {
+                    if (nh.x < slur.startX - 10 || nh.x > slur.endX + 10) {
+                        continue;
+                    }
+                    // Also check: slur and notehead must be on similar Y scale
+                    // (same staff area) — skip vocal staff slurs for bass notes
+                    const slurMidY: number = (Math.min(slur.startY, slur.cp1Y,
+                        slur.cp2Y, slur.endY) + Math.max(slur.startY, slur.cp1Y,
+                        slur.cp2Y, slur.endY)) / 2;
+                    if (Math.abs(slurMidY - nh.y) > 200) { continue; }
+
+                    covered = true;
+                    const t: number = Math.max(0, Math.min(1,
+                        (nh.x - slur.startX) / (slur.endX - slur.startX || 1)));
+                    const curveY: number = evalBezierY(
+                        t, slur.startY, slur.cp1Y, slur.cp2Y, slur.endY);
+                    if (curveY > nh.y - margin) {
+                        violations.push(
+                            "beam@" + nh.beamX.toFixed(0) +
+                            " nh@(x=" + nh.x.toFixed(0) + ",y=" + nh.y.toFixed(0) + ")" +
+                            " slur=\"" + slur.id + "\"" +
+                            " curveY=" + curveY.toFixed(1) +
+                            " vs target=" + (nh.y - margin).toFixed(1) +
+                            " (off by " + (curveY - nh.y + margin).toFixed(1) + ")");
+                    }
+                    break; // first matching slur is the closest one
+                }
+                if (!covered) {
+                    violations.push("beam@" + nh.beamX.toFixed(0) +
+                        " nh@(x=" + nh.x.toFixed(0) + ",y=" + nh.y.toFixed(0) + ")" +
+                        " has no overlapping slur");
+                }
+            }
+
+            expect(violations).to.deep.equal([],
+                violations.length + " noteheads not cleared:\n" +
+                violations.join("\n"));
+        });
+    });
+
     /**
      * Returns true if the beam appears to span two distinct staves (cross-staff),
      * rather than just having a wide melodic range on a single staff.
