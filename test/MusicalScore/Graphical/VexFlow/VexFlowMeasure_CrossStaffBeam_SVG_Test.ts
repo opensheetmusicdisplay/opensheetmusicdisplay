@@ -1281,4 +1281,104 @@ describe("Cross-Staff Beam SVG Rendering", () => {
                 " (gap=" + gap.toFixed(1) + "px)");
         });
     });
+
+    describe("cross-staff beam stem lengths", () => {
+        /** Parse and validate stem lengths for a cross-staff score. */
+        function checkStemLengths(
+            scorePath: string,
+            minSpan: number,
+        ): Promise<string[]> {
+            return renderToSVG(scorePath).then((svg: SVGElement) => {
+                const errors: string[] = [];
+                const crossBeams: CrossStaffBeamInfo[] =
+                    findCrossStaffBeams(svg, minSpan);
+                if (crossBeams.length === 0) {
+                    errors.push("no cross-staff beams found");
+                    return errors;
+                }
+                // Measure staff distance: find min/max Y of staff line
+                // paths within each vf-stave group.
+                const staveEls: NodeListOf<Element> =
+                    svg.querySelectorAll("[class~='vf-stave']");
+                const staveTops: number[] = [];
+                const staveBottoms: number[] = [];
+                for (let s: number = 0; s < staveEls.length; s++) {
+                    let minY: number = Infinity;
+                    let maxY: number = -Infinity;
+                    const paths: HTMLCollection =
+                        staveEls[s].getElementsByTagName("path");
+                    for (let p: number = 0; p < paths.length; p++) {
+                        const d: string = paths[p].getAttribute("d") || "";
+                        // Staff lines: M x y L x2 y  (same y, horizontal)
+                        const m: RegExpMatchArray | null =
+                            d.match(/M[\d.]+ ([\d.]+)L[\d.]+ ([\d.]+)/);
+                        if (!m) { continue; }
+                        if (Math.abs(parseFloat(m[1]) - parseFloat(m[2])) > 0.5) {
+                            continue; // not a horizontal staff line
+                        }
+                        const y: number = parseFloat(m[1]);
+                        if (y > 0 && y < 3000) {
+                            minY = Math.min(minY, y);
+                            maxY = Math.max(maxY, y);
+                        }
+                    }
+                    if (isFinite(minY) && isFinite(maxY)) {
+                        staveTops.push(minY);
+                        staveBottoms.push(maxY);
+                    }
+                }
+                const staveGap: number = staveTops.length >= 2
+                    ? staveTops[1] - staveBottoms[0]
+                    : 100;
+                // For each cross-staff beam, check stem lengths
+                for (const cb of crossBeams) {
+                    if (cb.stems.length < 2) { continue; }
+                    const stemLens: number[] = cb.stems.map(
+                        (s) => Math.abs(s.tipY - s.baseY));
+                    const minLen: number = Math.min(...stemLens);
+                    const maxLen: number = Math.max(...stemLens);
+                    const avgLen: number = stemLens.reduce((a, b) => a + b, 0)
+                        / stemLens.length;
+                    // A normal stem is roughly 2.5-4 staff spaces (25-40px).
+                    // But cross-staff stems can be longer. Check that the
+                    // SHORTEST stem isn't unreasonably short.
+                    if (minLen < 15) {
+                        errors.push(
+                            "stem too short: min=" + minLen.toFixed(1) +
+                            "px avg=" + avgLen.toFixed(1) +
+                            " staveGap=" + staveGap.toFixed(0) +
+                            "px");
+                    }
+                    if (maxLen > staveGap * 1.5) {
+                        errors.push(
+                            "stem too long: max=" + maxLen.toFixed(1) +
+                            "px avg=" + avgLen.toFixed(1) +
+                            " staveGap=" + staveGap.toFixed(0) +
+                            "px");
+                    }
+                }
+                return errors;
+            });
+        }
+
+        it("tuplet cross-staff beams have normalized stem lengths", function (): Promise<void> {
+            this.timeout(20000);
+            return checkStemLengths(
+                "test_tuplet_crossstaff_alignment.musicxml",
+                MIN_CROSS_STAFF_SPAN_SMALL,
+            ).then((errors: string[]) => {
+                expect(errors).to.deep.equal([], errors.join("\n"));
+            });
+        });
+
+        it("16ths ghost cross-staff beams have normalized stem lengths", function (): Promise<void> {
+            this.timeout(20000);
+            return checkStemLengths(
+                "test_cross_stave_16ths_ghost_notes_simple.musicxml",
+                25, // lower threshold: fragmented cross-staff beams
+            ).then((errors: string[]) => {
+                expect(errors).to.deep.equal([], errors.join("\n"));
+            });
+        });
+    });
 });

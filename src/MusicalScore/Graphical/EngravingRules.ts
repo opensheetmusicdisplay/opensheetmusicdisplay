@@ -653,8 +653,8 @@ export class EngravingRules {
         this.TitleTopDistance = 5.0;
         this.TitleBottomDistance = 1.0;
         this.StaffDistance = 7.0;
-        this.BetweenStaffDistance = 5.0;
-        this.MinimumStaffLineDistance = 4.0;
+        this.BetweenStaffDistance = 8.0;
+        this.MinimumStaffLineDistance = 7.0;
         this.MinSkyBottomDistBetweenStaves = 1.0; // default. compacttight mode sets it to 1.0 (as well).
         this.SnapStafflinesToCrispPixels = true;
 

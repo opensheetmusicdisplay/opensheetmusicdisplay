@@ -654,13 +654,22 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const localIsBelow: boolean = localY > siblingY;
             const upperStave: VF.Stave = localIsBelow ? siblingMeasure.stave : this.stave;
             const lowerStave: VF.Stave = localIsBelow ? this.stave : siblingMeasure.stave;
-            // Position beam to balance stem lengths: find the outermost
-            // notehead on each staff (closest to the gap) and place the
-            // beam at their midpoint. This keeps stems on both sides
-            // from becoming too short or too long.
+            // Reassign staves first so notehead Y values are computed on the
+            // correct stave. setStave() recomputes stem yBounds from noteheads.
             const beamNotes: VF.Note[] = beam.getNotes();
-            let upperExtremeY: number = -Infinity; // highest Y (lowest on page) = closest to gap
-            let lowerExtremeY: number = Infinity;  // lowest Y (highest on page) = closest to gap
+            for (const bn of beamNotes) {
+                const bnAny: any = bn;
+                const bnIsLocal: boolean = (localIsBelow && bnAny.stemDirection > 0) ||
+                                           (!localIsBelow && bnAny.stemDirection < 0);
+                (bn as StaveNote).setStave(bnIsLocal ? this.stave : siblingMeasure.stave);
+                const stem: any = bnAny.stem;
+                if (stem) {
+                    stem.setExtension((bn as any).getStemExtension?.() ?? 0);
+                }
+            }
+            // Find outermost noteheads on each staff for beam positioning.
+            let upperExtremeY: number = -Infinity;
+            let lowerExtremeY: number = Infinity;
             for (const bn of beamNotes) {
                 const ns: any = (bn as any).checkStave?.() || (bn as any).stave;
                 if (!ns) { continue; }
@@ -678,9 +687,27 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
             const upBot: number = upperStave.getYForLine(4);
             const lowTop: number = lowerStave.getYForLine(0);
+            // Adaptive min stem: at most 25px, but never more than half the
+            // usable gap between staves (both sides get balanced share).
+            const usableGap: number = (lowTop - 5) - (upBot + 5);
+            const minStemLen: number = Math.min(25, usableGap / 2);
             let beamY: number;
             if (isFinite(upperExtremeY) && isFinite(lowerExtremeY)) {
-                beamY = upperExtremeY + (lowerExtremeY - upperExtremeY) * 0.5;
+                const midpoint: number = upperExtremeY +
+                    (lowerExtremeY - upperExtremeY) * 0.5;
+                const noteGap: number = lowerExtremeY - upperExtremeY;
+                if (noteGap >= minStemLen * 2) {
+                    // Enough room: center with min stem on both sides
+                    beamY = midpoint;
+                    if (beamY - upperExtremeY < minStemLen) {
+                        beamY = upperExtremeY + minStemLen;
+                    } else if (lowerExtremeY - beamY < minStemLen) {
+                        beamY = lowerExtremeY - minStemLen;
+                    }
+                } else {
+                    // Gap too small for min stems — split equally
+                    beamY = midpoint;
+                }
                 beamY = Math.max(upBot + 5, Math.min(lowTop - 5, beamY));
             } else {
                 beamY = upBot + (lowTop - upBot) * 0.35;
@@ -691,22 +718,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             beamAny.renderOptions.flatBeamOffset = beamY;
             beamAny.yShift = 0;
 
-            // Re-anchor each note to its real stave so stem yBounds (notehead Y) are recomputed.
-            // setStave (vs. raw stave assignment) re-derives noteHead Y and stem bounds for the
-            // current stave, otherwise the stem base stays at the previous stave's coordinates.
-            const notes: VF.StemmableNote[] = beam.getNotes() as VF.StemmableNote[];
-            for (const note of notes) {
-                const noteAny: any = note;
-                const noteIsLocal: boolean = (localIsBelow && noteAny.stemDirection > 0) ||
-                                             (!localIsBelow && noteAny.stemDirection < 0);
-                (note as StaveNote).setStave(noteIsLocal ? this.stave : siblingMeasure.stave);
-                const stem: any = noteAny.stem;
-                if (stem) {
-                    stem.setExtension(note.getStemExtension());
-                }
-            }
-
-            beamAny.slope = this.crossStaffBeamSlope(beamNotes as VF.StemmableNote[], upBot, lowTop, beamY);
+            beamAny.slope = this.crossStaffBeamSlope(
+                beamNotes as VF.StemmableNote[], upBot, lowTop, beamY, minStemLen);
             beamAny.applyStemExtensions();
             beamAny.postFormatted = true;
         }
@@ -717,7 +730,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * notehead spread (damped) so stems stay balanced instead of forcing flat (long) stems, while
      * clamped to keep the whole beam between the two staves.
      */
-    private crossStaffBeamSlope(notes: VF.StemmableNote[], upperBottom: number, lowerTop: number, beamY: number): number {
+    private crossStaffBeamSlope(notes: VF.StemmableNote[], upperBottom: number, lowerTop: number, beamY: number, minStemLen: number = 0): number {
         const first: any = notes[0];
         const last: any = notes[notes.length - 1];
         const firstX: number = first.getStemX();
@@ -725,17 +738,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const span: number = lastX - firstX;
         if (Math.abs(span) < 1) { return 0; }
 
-        // baseY = outermost notehead Y (independent of stem extension), follows the arpeggio.
+        const damp: number = 0.5;
         const firstBaseY: number = first.getStemExtents().baseY;
         const lastBaseY: number = last.getStemExtents().baseY;
-        const damp: number = 0.5;
         let slope: number = (lastBaseY - firstBaseY) / span * damp;
 
-        // The beam line beamY(x) = beamY + slope*(x-firstX) must stay on each note's stem side:
-        // UP-stem notes need the beam above their notehead (beamY < noteheadY-margin), DOWN-stem
-        // notes need it below (beamY > noteheadY+margin). Each note narrows the allowed slope range.
-        const margin: number = 8;
-        const inset: number = 4; // keep the beam strictly inside the inter-staff gap, not on a staff line
+        const inset: number = 4;
         let minSlope: number = Math.min((upperBottom + inset - beamY) / span, (lowerTop - inset - beamY) / span);
         let maxSlope: number = Math.max((upperBottom + inset - beamY) / span, (lowerTop - inset - beamY) / span);
         for (const note of notes) {
@@ -743,7 +751,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const dx: number = noteAny.getStemX() - firstX;
             if (Math.abs(dx) < 1) { continue; }
             const headY: number = noteAny.getStemExtents().baseY;
-            // limit = slope value at which beamY(x) hits the notehead-side boundary
+            const margin: number = 8 + minStemLen;
             const limit: number = noteAny.stemDirection > 0
                 ? (headY - margin - beamY) / dx   // UP: beamY <= headY-margin
                 : (headY + margin - beamY) / dx;  // DOWN: beamY >= headY+margin
