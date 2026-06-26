@@ -325,17 +325,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // make comparable measures differ by 3x+. The base width tracks actual
       // glyph content proportionally; OSMD adds its own spacing via
       // VoiceSpacingMultiplier / VoiceSpacingAddend / staffEntryFactor.
-      const fullMinTotalWidth: number = formatter.preCalculateMinTotalWidth(allVoices);
+      formatter.preCalculateMinTotalWidth(allVoices);
       minStaffEntriesWidth = formatter.getMinTotalWidth() / unitInPixels
         * this.rules.VoiceSpacingMultiplierVexflow
         + this.rules.VoiceSpacingAddendVexflow
         + maxStaffEntries * staffEntryFactor;
 
-      // Grace notes are VF modifiers (GraceNoteGroup), not tickables.
-      // Their horizontal space is included in preCalculateMinTotalWidth via the
-      // modifierContext, but getMinTotalWidth() strips the padding terms.
-      // For measures with grace notes, use the full padding-inclusive width
-      // so tick contexts are spaced far enough apart for grace notes to fit.
+      // Grace notes are VF modifiers (GraceNoteGroup). Their width is already
+      // included in getMinTotalWidth() via the modifier context's leftShift →
+      // modLeftPx → totalLeftPx → tick context width. No need for the VF5
+      // padding terms (padmax) from fullMinTotalWidth, which inflates the
+      // estimate for high-variance measures (e.g., mixed grace + 32nd notes).
       let graceCount: number = 0;
       for (const measure of measures) {
         for (const staffEntry of measure.staffEntries) {
@@ -347,11 +347,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
       if (graceCount > 0) {
-        minStaffEntriesWidth = fullMinTotalWidth / unitInPixels
-          * this.rules.VoiceSpacingMultiplierVexflow
-          + this.rules.VoiceSpacingAddendVexflow
-          + maxStaffEntries * staffEntryFactor
-          + graceCount * this.rules.GraceNoteExtraSpacing;
+        // Flat safety margin per measure with grace notes.
+        // minTotalWidth already includes grace group modifier widths, so we only
+        // need a small fixed addend for edge cases (e.g., tight preceding notes).
+        minStaffEntriesWidth = minStaffEntriesWidth
+          + this.rules.GraceNoteExtraSpacing;
       }
 
       // Propagate stave from voices to tickables (Voice.setStave only
