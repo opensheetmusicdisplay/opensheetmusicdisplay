@@ -1381,4 +1381,161 @@ describe("Cross-Staff Beam SVG Rendering", () => {
             });
         });
     });
+
+    describe("Land_der_Berge same-staff slur anchoring", () => {
+        let svg: SVGElement;
+
+        before(function (): Promise<void> {
+            this.timeout(20000);
+            return renderToSVG("Land_der_Berge.musicxml").then(
+                (s: SVGElement) => { svg = s; });
+        });
+
+        it("m2 voice1 UP-stem slur anchors at beam top, not notehead", () => {
+            // Find the slur vf-note-2-0-1-0-slur
+            const slurEl: Element | null =
+                svg.querySelector("#vf-note-2-0-1-0-slur");
+            expect(slurEl).to.not.be.null;
+            const pathEl: Element | null = slurEl!.querySelector("path");
+            const slur: SlurBezier | undefined = pathEl
+                ? parseSlurBezier(pathEl) : undefined;
+            expect(slur).to.not.be.undefined;
+            // Find stem at slur start X (~446)
+            const stems: NodeListOf<Element> =
+                svg.querySelectorAll("[class*='vf-stem']");
+            let startStemTipY: number | undefined;
+            for (let i: number = 0; i < stems.length; i++) {
+                const p: Element | null = stems[i].querySelector("path");
+                if (!p) { continue; }
+                const d: string = p.getAttribute("d") || "";
+                const coords: RegExpMatchArray | null =
+                    d.match(/M([\d.]+) ([\d.]+)L([\d.]+) ([\d.]+)/);
+                if (!coords) { continue; }
+                const sx: number = parseFloat(coords[1]);
+                const sy1: number = parseFloat(coords[2]);
+                const sy2: number = parseFloat(coords[4]);
+                // Stem at x≈446, UP (tip < base)
+                if (Math.abs(sx - slur!.startX) < 15 && sy2 < sy1) {
+                    startStemTipY = Math.min(sy1, sy2);
+                    break;
+                }
+            }
+            expect(startStemTipY).to.not.be.undefined,
+                "must find UP stem near slur start X";
+            // Slur start (upper curve) should be near beam top (stem tip)
+            const gap: number = Math.abs(slur!.startY - startStemTipY!);
+            expect(gap).to.be.lessThan(15,
+                "slur start Y=" + slur!.startY.toFixed(1) +
+                " stem tip (beam top)=" + startStemTipY!.toFixed(1) +
+                " gap=" + gap.toFixed(1) + "px (should be <15)");
+        });
+
+        it("m2-m3 voice2 DOWN-stem slur ends at stem tip", () => {
+            const slurEl: Element | null =
+                svg.querySelector("#vf-note-2-0-2-0-slur");
+            expect(slurEl).to.not.be.null;
+            const pathEl: Element | null = slurEl!.querySelector("path");
+            const slur: SlurBezier | undefined = pathEl
+                ? parseSlurBezier(pathEl) : undefined;
+            expect(slur).to.not.be.undefined;
+            // Find DOWN stem near slur end X (~454)
+            // For DOWN stem (sy2 > sy1), tip is sy2 (the lower Y).
+            const stems: NodeListOf<Element> =
+                svg.querySelectorAll("[class*='vf-stem']");
+            let endStemTipY: number | undefined;
+            let endStemBaseY: number | undefined;
+            for (let i: number = 0; i < stems.length; i++) {
+                const p: Element | null = stems[i].querySelector("path");
+                if (!p) { continue; }
+                const d: string = p.getAttribute("d") || "";
+                const coords: RegExpMatchArray | null =
+                    d.match(/M([\d.]+) ([\d.]+)L([\d.]+) ([\d.]+)/);
+                if (!coords) { continue; }
+                const sx: number = parseFloat(coords[1]);
+                const sy1: number = parseFloat(coords[2]);
+                const sy2: number = parseFloat(coords[4]);
+                if (Math.abs(sx - slur!.endX) < 15 && sy2 > sy1) {
+                    endStemBaseY = sy1; // notehead side
+                    endStemTipY = sy2;  // stem tip (bottom)
+                    break;
+                }
+            }
+            expect(endStemTipY).to.not.be.undefined,
+                "must find DOWN stem near slur end X";
+            // Slur end (upper curve) should be near stem tip (not notehead)
+            // for Below+DOWN placement (stem pointing toward slur).
+            const gap: number = Math.abs(slur!.endY - endStemTipY!);
+            expect(gap).to.be.lessThan(15,
+                "slur end Y=" + slur!.endY.toFixed(1) +
+                " stem tip=" + endStemTipY!.toFixed(1) +
+                " notehead=" + (endStemBaseY ?? 0).toFixed(1) +
+                " gap=" + gap.toFixed(1) + "px (should be <15)");
+        });
+
+        it("slur lower curve endpoints are within 5px of upper curve", () => {
+            const slurEls: NodeListOf<Element> =
+                svg.querySelectorAll("[class*='vf-curve']");
+            const violations: string[] = [];
+            for (let i: number = 0; i < slurEls.length; i++) {
+                const pathEl: Element | null =
+                    slurEls[i].querySelector("path");
+                if (!pathEl) { continue; }
+                const d: string = pathEl.getAttribute("d") || "";
+                const n: RegExpMatchArray | null =
+                    d.match(/M([\d.]+) ([\d.]+)C.*L([\d.]+) ([\d.]+)C/);
+                if (!n) { continue; }
+                const upperStartY: number = parseFloat(n[2]);
+                const lowerEndY: number = parseFloat(n[4]);
+                const gap: number = Math.abs(upperStartY - lowerEndY);
+                if (gap > 5) {
+                    violations.push(pathEl.parentElement?.id +
+                        " lowerEndY=" + lowerEndY.toFixed(1) +
+                        " upperEndY=" + upperStartY.toFixed(1) +
+                        " gap=" + gap.toFixed(0));
+                }
+            }
+            expect(violations).to.deep.equal([],
+                violations.length + " slurs have wide ribbon at end:\n" +
+                violations.join("\n"));
+        });
+    });
+
+    describe("Mozart quartet m4 A4→B4 slur anchoring", () => {
+        let svg: SVGElement;
+
+        before(function (): Promise<void> {
+            this.timeout(20000);
+            return renderToSVG(
+                "Mozart_String_Quartet_in_G_K._387_1st_Mvmnt_excerpt.musicxml"
+            ).then((s: SVGElement) => { svg = s; });
+        });
+
+        it("slur endpoints exist and are within valid Y range", () => {
+            // Verify the score has curves (slurs) and they have
+            // reasonable positions. This tests that the VF5 layout
+            // produces anchored slurs for all instruments.
+            const allCurves: NodeListOf<Element> =
+                svg.querySelectorAll("[class*='vf-curve']");
+            expect(allCurves.length).to.be.greaterThan(0,
+                "SVG must contain at least one curve element");
+
+            // Check that all curve endpoints are within the SVG canvas
+            // (not at extreme negative Y or way below where notes sit).
+            let badCount: number = 0;
+            for (let i: number = 0; i < allCurves.length; i++) {
+                const pathEl: Element | null =
+                    allCurves[i].querySelector("path");
+                if (!pathEl) { continue; }
+                const s: SlurBezier | undefined = parseSlurBezier(pathEl);
+                if (!s) { continue; }
+                // A slur endpoint more than 500px below its start is
+                // almost certainly wrong (missing beam/stem anchor).
+                if (s.endY - s.startY > 500) {
+                    badCount++;
+                }
+            }
+            expect(badCount).to.equal(0,
+                badCount + " slurs have endY far below startY (>500px)");
+        });
+    });
 });

@@ -663,6 +663,7 @@ export class GraphicalSlur extends GraphicalCurve {
         const beam: any = vfNote.beam;
         if (!beam) { return undefined; }
         const stave: any = vfNote.checkStave?.() || vfNote.stave;
+        if (!stave) { return undefined; }
 
         // Only adjust when the beam is on the same side of the notehead as the slur.
         // For "Above" placement: UP-stem notes (beam above notehead) need to clear beam.
@@ -919,7 +920,15 @@ export class GraphicalSlur extends GraphicalCurve {
                 } else if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
                     startY = extremeNoteStaffY + 0.5; // notehead bottom (stem away from slur)
                 } else {
-                    startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
+                    // Below + DOWN: stem tip points TOWARD the slur →
+                    // anchor at the stem tip (VF topY for this VF5 fork).
+                    const svfN: any = (slurStartNote as VexFlowGraphicalNote)?.vfnote?.[0];
+                    const sStave: any = svfN?.checkStave?.() || svfN?.stave;
+                    if (svfN && sStave) {
+                        startY = ((svfN.getStemExtents()?.topY ?? 0) - sStave.getYForLine(0)) / unitInPixels;
+                    } else {
+                        startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
+                    }
                 }
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     startY = Math.max(startY, slurStartVE.parentStaffEntry.getBottomlineMax());
@@ -992,13 +1001,21 @@ export class GraphicalSlur extends GraphicalCurve {
             }
 
             const endStaffAbsY: number = staffLine.PositionAndShape.AbsolutePosition.y;
+            // Use VF-stave-relative Y (relativeToOwnStave=true) to match the start
+            // note's beamYForNote convention. The start note already uses this.
+            // Absolute pixel/10 (relativeToOwnStave=false) is incompatible with
+            // drawSlur's abs.y which is in a different coordinate frame.
             const endBeamY: number | undefined =
-                this.beamYForNote(slurEndNote, endStaffAbsY);
+                this.beamYForNote(slurEndNote, endStaffAbsY, true);
+            // Fallback: use VF stem direction when OSMD model doesn't have it set
+            const endVFStemDirForY: number =
+                (slurEndNote as VexFlowGraphicalNote)?.vfnote?.[0]?.getStemDirection?.() ?? 0;
 
             if (this.placement === PlacementEnum.Above) {
                 if (endBeamY !== undefined) {
                     endY = endBeamY;
-                } else if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down) {
+                } else if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down
+                    || endVFStemDirForY < 0) {
                     endY = endExtremeNoteStaffY - 0.5; // notehead top (stem away from slur)
                 } else {
                     endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
@@ -1012,8 +1029,20 @@ export class GraphicalSlur extends GraphicalCurve {
             } else {
                 if (endBeamY !== undefined) {
                     endY = endBeamY;
-                } else if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
+                } else if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Up
+                    || endVFStemDirForY > 0) {
                     endY = endExtremeNoteStaffY + 0.5; // notehead bottom (stem away from slur)
+                } else if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down
+                    || endVFStemDirForY < 0) {
+                    // Below + DOWN: stem tip points TOWARD the slur →
+                    // anchor at the stem tip (VF topY for this VF5 fork).
+                    const evfN: any = (slurEndNote as VexFlowGraphicalNote)?.vfnote?.[0];
+                    const eStave: any = evfN?.checkStave?.() || evfN?.stave;
+                    if (evfN && eStave) {
+                        endY = ((evfN.getStemExtents()?.topY ?? 0) - eStave.getYForLine(0)) / unitInPixels;
+                    } else {
+                        endY = endExtremeNoteStaffY + 0.5;
+                    }
                 } else {
                     endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
                 }
