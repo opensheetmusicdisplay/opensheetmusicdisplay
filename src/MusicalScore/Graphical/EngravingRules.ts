@@ -529,6 +529,8 @@ export class EngravingRules {
      * like Satie's Gnossiennes. Default false, i.e. these samples are rendered without a time signature, as intended.
      * For normal samples that do have a time signature, this rule has no effect (use RenderTimeSignatures to control those). */
     public RenderTimeSignaturesForSamplesWithoutTimeSignature: boolean;
+    /** Right-side padding (px) after the time signature glyph before the first note. */
+    public TimeSignatureRightPadding: number;
     public RenderFirstTempoExpression: boolean;
     public RenderPedals: boolean;
     public RenderWavyLines: boolean;
@@ -1029,6 +1031,7 @@ export class EngravingRules {
         this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
         this.RenderTimeSignaturesForSamplesWithoutTimeSignature = false;
+        this.TimeSignatureRightPadding = 25;
         this.RenderFirstTempoExpression = true;
         this.RenderPedals = true;
         this.RenderWavyLines = true;
