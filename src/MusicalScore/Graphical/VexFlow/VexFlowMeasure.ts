@@ -312,7 +312,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
             //   For tab-only scores, this is more compact though.
         }
         const timeSig: VF.TimeSignature = VexFlowConverter.TimeSignature(rhythm);
-        timeSig.setPadding(this.rules.TimeSignatureRightPadding);
         this.stave.addModifier(
             timeSig,
             VF.StaveModifier.Position.BEGIN
