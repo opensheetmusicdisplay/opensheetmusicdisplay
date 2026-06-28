@@ -289,16 +289,15 @@ export class TabNote extends StemmableNote {
 
     // we subtract 1 from `line` because getYForLine expects a 0-based index,
     // while the position.str is a 1-based index.
-    // VexFlowPatch: diapason courses (str > num_lines) are stacked just below the
-    // bottom staff line rather than spreading far below it. The slashed letters
-    // (7th..10th) step down one row each; the numbered diapasons (11th+) all sit
-    // at the same bottom level rather than drifting further off the staff.
-    const diapasonStep = 0.6; // line-spacings between stacked diapasons below the staff
-    const maxDiapasonRows = 4; // 7th..10th step down; 11th+ stay on the 4th row
+    // VexFlowPatch: all French lute diapason courses (str > num_lines, i.e. the
+    // 7th course and below) are drawn on a single row just below the bottom staff
+    // line. They are distinguished by their glyph (a, /a, //a, ///a, 4, 5, 6...),
+    // not by vertical position, and no two sound at once, so they don't need
+    // separate rows.
+    const diapasonRow = 1; // one row's worth of spacing below the bottom staff line
     const ys = this.positions.map(({ str: line }) => {
       if (this.render_options.tabUseLetters && line > numLines) {
-        const row = Math.min(line - numLines, maxDiapasonRows);
-        return stave.getYForLine(numLines - 1) + row * diapasonStep * stave.getSpacingBetweenLines();
+        return stave.getYForLine(numLines - 1) + diapasonRow * stave.getSpacingBetweenLines();
       }
       return stave.getYForLine(line - 1);
     });
