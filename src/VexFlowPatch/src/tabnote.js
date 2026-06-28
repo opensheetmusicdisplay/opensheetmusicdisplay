@@ -237,6 +237,36 @@ export class TabNote extends StemmableNote {
     super.setStave(stave);
     this.context = stave.context;
 
+    // VexFlowPatch: French lute tablature bass courses (diapasons) below the staff.
+    // Standard baroque French convention for the open bass courses:
+    //   7th = a, 8th = /a, 9th = //a, 10th = ///a   (letter with 0..3 slashes)
+    //   11th = 4, 12th = 5, 13th = 6, 14th = 7      (plain numbers; >3 slashes is
+    //                                                illegible, so numbers are used)
+    // diapasonIndex d = str - num_lines  (7th course -> d = 1 on a 6-line staff).
+    const numLines = stave.getNumLines();
+    if (this.render_options.tabUseLetters) {
+      for (let p = 0; p < this.positions.length; ++p) {
+        const str = this.positions[p].str;
+        const glyph = this.glyphs[p];
+        if (str > numLines && glyph) {
+          // Remember the base letter/fret once; setStave may run multiple times on
+          // re-layout, so always rebuild from the base instead of re-prepending.
+          if (glyph.baseTabText === undefined) {
+            glyph.baseTabText = '' + glyph.text;
+          }
+          const diapasonIndex = str - numLines;
+          if (diapasonIndex <= 4) {
+            // 7th..10th course: letter with (d-1) leading slashes.
+            const slashes = diapasonIndex - 1;
+            glyph.text = (slashes > 0 ? '/'.repeat(slashes) : '') + glyph.baseTabText;
+          } else {
+            // 11th course and below: a plain number (4, 5, 6, ...).
+            glyph.text = '' + (diapasonIndex - 1);
+          }
+        }
+      }
+    }
+
     // Calculate the fret number width based on font used
     let i;
     if (this.context) {
@@ -258,8 +288,20 @@ export class TabNote extends StemmableNote {
     }
 
     // we subtract 1 from `line` because getYForLine expects a 0-based index,
-    // while the position.str is a 1-based index
-    const ys = this.positions.map(({ str: line }) => stave.getYForLine(line - 1));
+    // while the position.str is a 1-based index.
+    // VexFlowPatch: diapason courses (str > num_lines) are stacked just below the
+    // bottom staff line rather than spreading far below it. The slashed letters
+    // (7th..10th) step down one row each; the numbered diapasons (11th+) all sit
+    // at the same bottom level rather than drifting further off the staff.
+    const diapasonStep = 0.6; // line-spacings between stacked diapasons below the staff
+    const maxDiapasonRows = 4; // 7th..10th step down; 11th+ stay on the 4th row
+    const ys = this.positions.map(({ str: line }) => {
+      if (this.render_options.tabUseLetters && line > numLines) {
+        const row = Math.min(line - numLines, maxDiapasonRows);
+        return stave.getYForLine(numLines - 1) + row * diapasonStep * stave.getSpacingBetweenLines();
+      }
+      return stave.getYForLine(line - 1);
+    });
 
     this.setYs(ys);
 
