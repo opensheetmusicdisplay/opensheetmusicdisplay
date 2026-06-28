@@ -17,6 +17,9 @@ export class Staff {
     public Visible: boolean;
     public following: boolean;
     public isTab: boolean = false;
+    /** For tablature staves: render frets as letters (French lute tab) instead of numbers.
+     * Set from MusicXML staff-details/@show-frets="letters". */
+    public tabUseLetters: boolean = false;
 
     private parentInstrument: Instrument;
     private voices: Voice[] = [];

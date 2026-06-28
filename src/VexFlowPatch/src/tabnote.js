@@ -211,6 +211,10 @@ export class TabNote extends StemmableNote {
     this.width = 0;
     for (let i = 0; i < this.positions.length; ++i) {
       let fret = this.positions[i].fret;
+      // VexFlowPatch: French lute tablature renders frets as letters (a=0, b=1, ...).
+      if (this.render_options.tabUseLetters) {
+        fret = Flow.fretToFrenchTabLetter(fret);
+      }
       if (this.ghost) fret = '(' + fret + ')';
       const glyphScale = this.render_options.fretScale ?? this.render_options.scale;
       const glyph = Flow.tabToGlyph(fret, glyphScale, this.render_options.TabUseXNoteheadAlternativeGlyph);
