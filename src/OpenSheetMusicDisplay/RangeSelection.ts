@@ -38,12 +38,14 @@ export interface InteractiveRangeSelectionOptions {
     fillColor?: string;
     outsideMaskColor?: string;
     lineWidthPx?: number;
-    outsideMaskOpacity?: number;
     applyPaddingPx?: number;
     snapToNotes?: boolean;
     loopButtonLabel?: string;
     clearButtonLabel?: string;
     grayOutNonSelectedNotes?: boolean;
+    /** When set to `mask`, outside areas are dimmed via overlay rectangles instead of per-note opacity
+     *  mutation. Much cheaper on long scores and scroll requires no gray-out refresh. */
+    grayOutStrategy?: "opacity" | "mask";
     /** Keep stave connectors visible at system boundaries (first/last measure) during range gray-out. */
     keepBoundaryConnectorsVisible?: boolean;
     nonSelectedNotesOpacity?: number;

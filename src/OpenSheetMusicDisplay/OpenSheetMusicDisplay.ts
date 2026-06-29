@@ -55,6 +55,14 @@ import { TemposCalculator } from "../MusicalScore/ScoreIO/MusicSymbolModules/Tem
  * It can display MusicXML sheet music files in an HTML element container.<br>
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
+interface OutsideMaskSegment {
+    leftPx: number;
+    topPx: number;
+    widthPx: number;
+    heightPx: number;
+    color: string;
+}
+
 export class OpenSheetMusicDisplay {
     protected version: string = "1.9.9-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
@@ -127,11 +135,22 @@ export class OpenSheetMusicDisplay {
     public OnXMLRead: (xml: string) => string;
     public rangeSelection: ResolvedRangeSelectionConfig = createResolvedRangeSelectionConfig();
     private rangeInteractionOverlay: HTMLDivElement;
+    private outsideMaskLayer: HTMLDivElement;
+    private rangeChromeLayer: HTMLDivElement;
+    private readonly outsideMaskPool: HTMLDivElement[] = [];
+    private readonly dragHandleLines: [HTMLDivElement, HTMLDivElement] = [undefined, undefined];
+    private maskDragChromePrepared: boolean = false;
     private rangeInteractionBoundElements: HTMLElement[] = [];
     private isRangeDragging: boolean = false;
     private hasActiveRangeSelectionOpacity: boolean = false;
     private rangeOpacityUpdateTimeoutId: number = 0;
     private lastRangeOpacityUpdateTimestampMs: number = 0;
+    /** Cache key (selection + visible systems + opacity) of the last applied gray-out, so scroll-driven
+     *  viewport updates can skip the expensive opacity recompute when nothing relevant changed. */
+    private lastRangeOpacityKey: string = "";
+    /** Whether the last gray-out pass also grayed decorations (clefs/tuplets/expressions), tracked so a
+     *  note-only scroll pass doesn't skip a later decoration pass for the same viewport. */
+    private lastRangeOpacityDecorationsApplied: boolean = false;
     private pendingRangePointerMoveAnchor: RangeSelectionAnchor;
     private rangePointerMoveAnimationFrameId: number = 0;
     private rangeTouchAutoScrollAnimationFrameId: number = 0;
@@ -386,6 +405,10 @@ export class OpenSheetMusicDisplay {
         this.reapplyStaffOpacityOverrides();
         this.syncInteractiveRangeSelection();
         this.needsCommittedRangeAnchorRefresh = true;
+        // The SVG was rebuilt, so the previously applied gray-out attributes are gone. Invalidate the
+        // opacity cache key so the upcoming renderRangeSelection() actually re-applies it.
+        this.lastRangeOpacityKey = "";
+        this.lastRangeOpacityDecorationsApplied = false;
         this.renderRangeSelection();
         this.zoomUpdated = false;
         this.rules.RenderCount++;
@@ -591,6 +614,7 @@ export class OpenSheetMusicDisplay {
         this.pendingTouchRangeStartAnchor = undefined;
         this.activeDragBound = "both";
         this.isRangeDragging = false;
+        this.maskDragChromePrepared = false;
         this.emitRangeHandleDragging(false);
         this.resetTouchGestureState();
         this.renderRangeSelection();
@@ -1820,7 +1844,12 @@ export class OpenSheetMusicDisplay {
 
         this.ensureRangeSelectionOverlay();
         this.updateRangeSelectionOverlayStyles();
-        this.attachRangeSelectionListeners();
+        // hideSelectionRange means display-only (playback, preset segment): keep gray-out/mask but block drag/tap.
+        if (this.shouldHideSelectionRangeVisuals()) {
+            this.detachRangePointerListeners();
+        } else {
+            this.attachRangeSelectionListeners();
+        }
         this.attachRangeViewportListeners();
         this.renderRangeSelection();
     }
@@ -1847,9 +1876,7 @@ export class OpenSheetMusicDisplay {
         }
     }
 
-    private detachRangeSelectionListeners(): void {
-        this.cancelPendingRangeOpacityUpdate();
-        this.detachRangeViewportListeners();
+    private detachRangePointerListeners(): void {
         this.resetTouchGestureState();
         this.pendingTouchRangeStartAnchor = undefined;
         this.emitRangeHandleDragging(false);
@@ -1857,14 +1884,6 @@ export class OpenSheetMusicDisplay {
         if (this.rangePointerMoveAnimationFrameId !== 0) {
             window.cancelAnimationFrame(this.rangePointerMoveAnimationFrameId);
             this.rangePointerMoveAnimationFrameId = 0;
-        }
-        if (this.rangeViewportUpdateAnimationFrameId !== 0) {
-            window.cancelAnimationFrame(this.rangeViewportUpdateAnimationFrameId);
-            this.rangeViewportUpdateAnimationFrameId = 0;
-        }
-        if (this.rangeViewportSettleUpdateTimeoutId !== 0) {
-            window.clearTimeout(this.rangeViewportSettleUpdateTimeoutId);
-            this.rangeViewportSettleUpdateTimeoutId = 0;
         }
         this.pendingRangePointerMoveAnchor = undefined;
         for (const element of this.rangeInteractionBoundElements) {
@@ -1876,6 +1895,20 @@ export class OpenSheetMusicDisplay {
         this.rangeInteractionBoundElements = [];
         window.removeEventListener("pointerup", this.rangePointerUpListener);
         window.removeEventListener("pointercancel", this.rangePointerCancelListener);
+    }
+
+    private detachRangeSelectionListeners(): void {
+        this.cancelPendingRangeOpacityUpdate();
+        this.detachRangeViewportListeners();
+        this.detachRangePointerListeners();
+        if (this.rangeViewportUpdateAnimationFrameId !== 0) {
+            window.cancelAnimationFrame(this.rangeViewportUpdateAnimationFrameId);
+            this.rangeViewportUpdateAnimationFrameId = 0;
+        }
+        if (this.rangeViewportSettleUpdateTimeoutId !== 0) {
+            window.clearTimeout(this.rangeViewportSettleUpdateTimeoutId);
+            this.rangeViewportSettleUpdateTimeoutId = 0;
+        }
     }
 
     private attachRangeViewportListeners(): void {
@@ -1913,7 +1946,19 @@ export class OpenSheetMusicDisplay {
             if (!this.rangeSelection.enabled || !this.rangeInteractionOverlay) {
                 return;
             }
-            if (this.dragStartAnchor || this.dragCurrentAnchor || this.pendingTouchRangeStartAnchor || this.hoverAnchor) {
+            if (this.isRangeDragging) {
+                // Active drag renders via the pointer-move path; nothing to do for scroll here.
+                return;
+            }
+            if (this.dragStartAnchor && this.dragCurrentAnchor) {
+                if (!this.shouldUseMaskGrayOut()) {
+                    // Committed range with per-note opacity: extend gray-out to newly visible systems.
+                    // Mask-based gray-out is container-relative and needs no scroll refresh.
+                    this.updateRangeSelectionViewport(false);
+                }
+                return;
+            }
+            if (this.pendingTouchRangeStartAnchor || this.hoverAnchor) {
                 this.renderRangeSelection();
             }
         });
@@ -1931,7 +1976,12 @@ export class OpenSheetMusicDisplay {
             if (this.isRangeDragging || !this.dragStartAnchor || !this.dragCurrentAnchor) {
                 return;
             }
-            this.renderRangeSelection();
+            if (this.shouldUseMaskGrayOut()) {
+                return;
+            }
+            // Scrolling settled: apply a full-fidelity gray-out (including decorations) for the
+            // final viewport, again without rebuilding the overlay or action buttons.
+            this.updateRangeSelectionViewport(true);
         }, 120);
     }
 
@@ -1967,6 +2017,58 @@ export class OpenSheetMusicDisplay {
         this.rangeInteractionOverlay.style.pointerEvents = "none";
         this.rangeInteractionOverlay.style.zIndex = this.getSelectionOverlayZIndex().toString();
         this.container.appendChild(this.rangeInteractionOverlay);
+        this.outsideMaskLayer = undefined;
+        this.rangeChromeLayer = undefined;
+        this.outsideMaskPool.length = 0;
+        this.dragHandleLines[0] = undefined;
+        this.dragHandleLines[1] = undefined;
+    }
+
+    private ensureOutsideMaskLayer(): HTMLDivElement {
+        this.ensureRangeSelectionOverlay();
+        if (!this.outsideMaskLayer || !this.outsideMaskLayer.isConnected) {
+            this.outsideMaskLayer = document.createElement("div");
+            this.outsideMaskLayer.className = "osmd-range-outside-mask-layer";
+            this.outsideMaskLayer.style.position = "absolute";
+            this.outsideMaskLayer.style.left = "0";
+            this.outsideMaskLayer.style.top = "0";
+            this.outsideMaskLayer.style.right = "0";
+            this.outsideMaskLayer.style.bottom = "0";
+            this.outsideMaskLayer.style.pointerEvents = "none";
+            if (this.rangeChromeLayer?.isConnected) {
+                this.rangeInteractionOverlay.insertBefore(this.outsideMaskLayer, this.rangeChromeLayer);
+            } else {
+                this.rangeInteractionOverlay.appendChild(this.outsideMaskLayer);
+            }
+        }
+        return this.outsideMaskLayer;
+    }
+
+    private ensureRangeChromeLayer(): HTMLDivElement {
+        this.ensureRangeSelectionOverlay();
+        if (!this.rangeChromeLayer || !this.rangeChromeLayer.isConnected) {
+            this.rangeChromeLayer = document.createElement("div");
+            this.rangeChromeLayer.className = "osmd-range-chrome-layer";
+            this.rangeChromeLayer.style.position = "absolute";
+            this.rangeChromeLayer.style.left = "0";
+            this.rangeChromeLayer.style.top = "0";
+            this.rangeChromeLayer.style.right = "0";
+            this.rangeChromeLayer.style.bottom = "0";
+            this.rangeChromeLayer.style.pointerEvents = "none";
+            this.rangeInteractionOverlay.appendChild(this.rangeChromeLayer);
+            this.dragHandleLines[0] = undefined;
+            this.dragHandleLines[1] = undefined;
+        }
+        return this.rangeChromeLayer;
+    }
+
+    private clearRangeChromeLayer(): void {
+        if (!this.rangeChromeLayer) {
+            return;
+        }
+        this.rangeChromeLayer.innerHTML = "";
+        this.dragHandleLines[0] = undefined;
+        this.dragHandleLines[1] = undefined;
     }
 
     private updateRangeSelectionOverlayStyles(): void {
@@ -1982,10 +2084,16 @@ export class OpenSheetMusicDisplay {
         }
         this.rangeInteractionOverlay.remove();
         this.rangeInteractionOverlay = undefined;
+        this.outsideMaskLayer = undefined;
+        this.rangeChromeLayer = undefined;
+        this.outsideMaskPool.length = 0;
+        this.dragHandleLines[0] = undefined;
+        this.dragHandleLines[1] = undefined;
+        this.maskDragChromePrepared = false;
     }
 
     private onRangePointerMove(event: PointerEvent): void {
-        if (!this.rangeSelection.enabled) {
+        if (!this.rangeSelection.enabled || this.shouldHideSelectionRangeVisuals()) {
             return;
         }
         if (this.isTouchPointerEvent(event)) {
@@ -2040,7 +2148,7 @@ export class OpenSheetMusicDisplay {
     }
 
     private onRangePointerDown(event: PointerEvent): void {
-        if (!this.rangeSelection.enabled) {
+        if (!this.rangeSelection.enabled || this.shouldHideSelectionRangeVisuals()) {
             return;
         }
         if (this.isTouchPointerEvent(event)) {
@@ -2238,6 +2346,7 @@ export class OpenSheetMusicDisplay {
             ?? this.dragCurrentAnchor
             ?? this.dragStartAnchor;
         this.isRangeDragging = false;
+        this.maskDragChromePrepared = false;
         this.dragCurrentAnchor = anchor;
         const committedSelection: RangeSelectionPayload = this.createSelectionPayload("committed", this.dragStartAnchor, this.dragCurrentAnchor, false);
         // If the raw picked range contains no notes (e.g. empty-space click), keep it empty.
@@ -2617,6 +2726,29 @@ export class OpenSheetMusicDisplay {
         const scale: number = this.zoom * 10.0;
         return {
             leftPx: system.GetLeftBorderAbsoluteXPosition() * scale,
+            rightPx: system.GetRightBorderAbsoluteXPosition() * scale
+        };
+    }
+
+    /**
+     * Full visual width for outside-range masks. Unlike {@link getSystemHorizontalBoundsInPixels},
+     * the left edge is the staff-line origin (before clefs / key / time signatures) so gray-out
+     * covers the whole system, not just the area to the right of begin instructions.
+     */
+    private getSystemMaskHorizontalBoundsInPixels(system: MusicSystem): { leftPx: number, rightPx: number } {
+        const scale: number = this.zoom * 10.0;
+        let leftBorderX: number = Number.POSITIVE_INFINITY;
+        for (const staffLine of system.StaffLines ?? []) {
+            const staffStartX: number = staffLine?.PositionAndShape?.AbsolutePosition?.x;
+            if (Number.isFinite(staffStartX)) {
+                leftBorderX = Math.min(leftBorderX, staffStartX);
+            }
+        }
+        if (!Number.isFinite(leftBorderX)) {
+            leftBorderX = system.GetLeftBorderAbsoluteXPosition();
+        }
+        return {
+            leftPx: leftBorderX * scale,
             rightPx: system.GetRightBorderAbsoluteXPosition() * scale
         };
     }
@@ -3289,10 +3421,55 @@ export class OpenSheetMusicDisplay {
             this.refreshCommittedRangeAnchorsFromTimestamps();
             this.needsCommittedRangeAnchorRefresh = false;
         }
-        this.rangeInteractionOverlay.innerHTML = "";
-        this.updateRangeSelectionOpacity();
         const hideSelectionVisuals: boolean = this.shouldHideSelectionRangeVisuals();
+        const useMaskGrayOut: boolean = this.shouldUseMaskGrayOut();
+
+        // Mask drag: update pooled rectangles + handle positions in place (no innerHTML wipe per frame).
+        if (useMaskGrayOut && this.isRangeDragging && this.dragStartAnchor && this.dragCurrentAnchor) {
+            if (this.hasActiveRangeSelectionOpacity) {
+                this.resetRangeSelectionNoteOpacity();
+            }
+            const maskSelection: RangeSelectionPayload = this.createSelectionPayload(
+                "dragging",
+                this.dragStartAnchor,
+                this.dragCurrentAnchor,
+                true
+            );
+            this.applyOutsideMaskSegments(this.buildOutsideMaskSegments(maskSelection));
+            if (!hideSelectionVisuals) {
+                if (!this.maskDragChromePrepared) {
+                    this.clearRangeChromeLayer();
+                    this.maskDragChromePrepared = true;
+                }
+                const lineWidthPx: number = this.getSelectionLineWidthPx();
+                const lineColor: string = this.getSelectionLineColor();
+                this.updateDragHandleLine(0, this.dragStartAnchor, lineColor, lineWidthPx);
+                this.updateDragHandleLine(1, this.dragCurrentAnchor, lineColor, lineWidthPx);
+            }
+            return;
+        }
+
+        this.maskDragChromePrepared = false;
+        this.clearRangeChromeLayer();
+        if (useMaskGrayOut) {
+            if (this.hasActiveRangeSelectionOpacity) {
+                this.resetRangeSelectionNoteOpacity();
+            }
+        } else {
+            this.updateRangeSelectionOpacity();
+            this.applyOutsideMaskSegments([]);
+        }
+
         if (this.dragStartAnchor && this.dragCurrentAnchor) {
+            if (useMaskGrayOut) {
+                const maskSelection: RangeSelectionPayload = this.createSelectionPayload(
+                    this.isRangeDragging ? "dragging" : "committed",
+                    this.dragStartAnchor,
+                    this.dragCurrentAnchor,
+                    this.isRangeDragging
+                );
+                this.applyOutsideMaskSegments(this.buildOutsideMaskSegments(maskSelection));
+            }
             if (!hideSelectionVisuals && (this.isRangeDragging || this.shouldShowCommittedRangeFill())) {
                 this.renderSelectionRangeOverlay(this.dragStartAnchor, this.dragCurrentAnchor);
             }
@@ -3314,6 +3491,47 @@ export class OpenSheetMusicDisplay {
         if (!hideSelectionVisuals && this.shouldShowHoverLine() && !this.isRangeDragging && this.hoverAnchor) {
             this.renderVerticalLine(this.hoverAnchor, this.getSelectionLineColor(), 2);
         }
+        if (useMaskGrayOut && !(this.dragStartAnchor && this.dragCurrentAnchor)) {
+            this.applyOutsideMaskSegments([]);
+        }
+    }
+
+    private updateDragHandleLine(
+        slot: 0 | 1,
+        anchor: RangeSelectionAnchor,
+        color: string,
+        widthPx: number,
+        visualOffsetPx: number = 0
+    ): void {
+        if (!anchor) {
+            return;
+        }
+        let line: HTMLDivElement = this.dragHandleLines[slot];
+        if (!line) {
+            line = document.createElement("div");
+            line.style.position = "absolute";
+            line.style.borderRadius = "999px";
+            this.ensureRangeChromeLayer().appendChild(line);
+            this.dragHandleLines[slot] = line;
+        }
+        const overlayHeight: number = this.rangeInteractionOverlay?.clientHeight ?? 0;
+        let topPx: number = anchor.yPx;
+        let heightPx: number = anchor.heightPx;
+        const lineOutsideOverlay: boolean = overlayHeight > 0 && (topPx + heightPx < 0 || topPx > overlayHeight);
+        const invalidLineGeometry: boolean = !Number.isFinite(topPx) || !Number.isFinite(heightPx) || heightPx <= 1 || lineOutsideOverlay;
+        if (invalidLineGeometry && overlayHeight > 0) {
+            topPx = 0;
+            heightPx = overlayHeight;
+        } else if (overlayHeight > 0) {
+            topPx = Math.max(0, Math.min(topPx, overlayHeight - 1));
+            heightPx = Math.max(1, Math.min(heightPx, overlayHeight - topPx));
+        }
+        line.style.left = `${anchor.xPx + visualOffsetPx - widthPx / 2}px`;
+        line.style.top = `${topPx}px`;
+        line.style.width = `${widthPx}px`;
+        line.style.height = `${heightPx}px`;
+        line.style.backgroundColor = color;
+        line.style.display = "block";
     }
 
     private refreshCommittedRangeAnchorsFromTimestamps(): void {
@@ -3409,7 +3627,7 @@ export class OpenSheetMusicDisplay {
         line.style.height = `${heightPx}px`;
         line.style.borderRadius = "999px";
         line.style.backgroundColor = color;
-        this.rangeInteractionOverlay.appendChild(line);
+        this.ensureRangeChromeLayer().appendChild(line);
     }
 
     private renderRectangle(leftPx: number, topPx: number, widthPx: number, heightPx: number, color: string): void {
@@ -3423,7 +3641,7 @@ export class OpenSheetMusicDisplay {
         rect.style.width = `${widthPx}px`;
         rect.style.height = `${heightPx}px`;
         rect.style.backgroundColor = color;
-        this.rangeInteractionOverlay.appendChild(rect);
+        this.ensureRangeChromeLayer().appendChild(rect);
     }
 
     private renderRangeActionButtons(selection: RangeSelectionPayload): void {
@@ -3481,7 +3699,7 @@ export class OpenSheetMusicDisplay {
 
         buttonsContainer.style.left = `${leftPx}px`;
         buttonsContainer.style.top = `${topPx}px`;
-        this.rangeInteractionOverlay.appendChild(buttonsContainer);
+        this.ensureRangeChromeLayer().appendChild(buttonsContainer);
     }
 
     private getSelectionLineColor(): string {
@@ -3599,6 +3817,144 @@ export class OpenSheetMusicDisplay {
         return this.rangeSelection.options.grayOutNonSelectedNotes !== false;
     }
 
+    /** When true, dim non-selected areas via cheap overlay rectangles instead of per-note opacity. */
+    private shouldUseMaskGrayOut(): boolean {
+        if (!this.shouldGrayOutNonSelectedNotes()) {
+            return false;
+        }
+        return this.rangeSelection.options.grayOutStrategy === "mask";
+    }
+
+    private getOutsideMaskColor(): string {
+        const configuredColor: string = this.rangeSelection.options.outsideMaskColor;
+        if (configuredColor) {
+            return configuredColor;
+        }
+        // Transparent dark veil — dims notation behind it without a white wash (closer to per-note opacity).
+        const noteOpacity: number = this.getNonSelectedNotesOpacity();
+        const dimAlpha: number = Math.min(0.18, Math.max(0.08, (1 - noteOpacity) * 0.14));
+        return `rgba(0, 0, 0, ${dimAlpha})`;
+    }
+
+    /** Pixels kept fully unmasked past each range handle (outer edge + slop). */
+    private getMaskBarClearancePx(edge: "start" | "end"): number {
+        const lineWidthPx: number = this.getSelectionLineWidthPx();
+        const halfHandlePx: number = lineWidthPx / 2;
+        if (edge === "end") {
+            return halfHandlePx + 6;
+        }
+        return halfHandlePx + lineWidthPx / 2 + 8;
+    }
+
+    private getMaskClearBoundaryPx(anchor: RangeSelectionAnchor, edge: "start" | "end"): number {
+        const visualPx: number = anchor.xPx;
+        const selectionPx: number = this.getSelectionBoundaryXPx(anchor);
+        const handleOuterPx: number = edge === "end"
+            ? Math.max(visualPx, selectionPx ?? visualPx)
+            : Math.min(visualPx, selectionPx ?? visualPx);
+        const clearancePx: number = this.getMaskBarClearancePx(edge);
+        if (edge === "end") {
+            // Right handle — keep as-is.
+            return handleOuterPx + clearancePx - 8;
+        }
+        // Nudge clear boundary right so the left mask meets the start handle without a bright strip.
+        return handleOuterPx - clearancePx + 16;
+    }
+
+    private buildOutsideMaskSegments(selection: RangeSelectionPayload): OutsideMaskSegment[] {
+        if (!this.graphic || !selection) {
+            return [];
+        }
+        const segments: OutsideMaskSegment[] = [];
+        const maskColor: string = this.getOutsideMaskColor();
+        const firstSystemIndex: number = selection.normalizedStart.systemIndex;
+        const lastSystemIndex: number = selection.normalizedEnd.systemIndex;
+        for (const page of this.graphic.MusicPages) {
+            for (const system of page.MusicSystems) {
+                const systemIndex: number = this.getSystemIndex(system);
+                const horizontal: { leftPx: number, rightPx: number } = this.getSystemMaskHorizontalBoundsInPixels(system);
+                const vertical: { yPx: number, heightPx: number } = this.getSystemVerticalBoundsInPixels(system);
+                const systemWidthPx: number = Math.max(1, horizontal.rightPx - horizontal.leftPx);
+                if (systemIndex < firstSystemIndex || systemIndex > lastSystemIndex) {
+                    segments.push({
+                        leftPx: horizontal.leftPx,
+                        topPx: vertical.yPx,
+                        widthPx: systemWidthPx,
+                        heightPx: vertical.heightPx,
+                        color: maskColor
+                    });
+                    continue;
+                }
+                let clearLeftPx: number = horizontal.leftPx;
+                let clearRightPx: number = horizontal.rightPx;
+                if (systemIndex === firstSystemIndex) {
+                    clearLeftPx = this.getMaskClearBoundaryPx(selection.normalizedStart, "start");
+                }
+                if (systemIndex === lastSystemIndex) {
+                    clearRightPx = this.getMaskClearBoundaryPx(selection.normalizedEnd, "end");
+                }
+                if (clearRightPx < clearLeftPx) {
+                    const temp: number = clearLeftPx;
+                    clearLeftPx = clearRightPx;
+                    clearRightPx = temp;
+                }
+                const maskLeftEdgePx: number = horizontal.leftPx;
+                const leftMaskWidthPx: number = clearLeftPx - maskLeftEdgePx;
+                if (leftMaskWidthPx > 0.5) {
+                    segments.push({
+                        leftPx: maskLeftEdgePx,
+                        topPx: vertical.yPx,
+                        widthPx: leftMaskWidthPx,
+                        heightPx: vertical.heightPx,
+                        color: maskColor
+                    });
+                }
+                const rightMaskWidthPx: number = horizontal.rightPx - clearRightPx;
+                if (rightMaskWidthPx > 0.5) {
+                    segments.push({
+                        leftPx: clearRightPx,
+                        topPx: vertical.yPx,
+                        widthPx: rightMaskWidthPx,
+                        heightPx: vertical.heightPx,
+                        color: maskColor
+                    });
+                }
+            }
+        }
+        return segments;
+    }
+
+    /** Reuses pooled mask divs and only updates geometry — avoids create/destroy churn during handle drag. */
+    private applyOutsideMaskSegments(segments: OutsideMaskSegment[]): void {
+        if (!this.rangeInteractionOverlay) {
+            return;
+        }
+        const layer: HTMLDivElement = this.ensureOutsideMaskLayer();
+        for (let index: number = 0; index < segments.length; index++) {
+            const segment: OutsideMaskSegment = segments[index];
+            let rect: HTMLDivElement = this.outsideMaskPool[index];
+            if (!rect) {
+                rect = document.createElement("div");
+                rect.className = "osmd-range-outside-mask";
+                rect.style.position = "absolute";
+                rect.style.pointerEvents = "none";
+                // Multiply darkens ink/staff lines in place instead of painting a flat white slab on top.
+                rect.style.mixBlendMode = "multiply";
+                layer.appendChild(rect);
+                this.outsideMaskPool[index] = rect;
+            }
+            rect.style.display = "block";
+            rect.style.left = `${segment.leftPx}px`;
+            rect.style.top = `${segment.topPx}px`;
+            rect.style.width = `${segment.widthPx}px`;
+            rect.style.height = `${segment.heightPx}px`;
+            rect.style.backgroundColor = segment.color;
+        }
+        for (let index: number = segments.length; index < this.outsideMaskPool.length; index++) {
+            this.outsideMaskPool[index].style.display = "none";
+        }
+    }
+
     private getNonSelectedNotesOpacity(): number {
         return this.rangeSelection.options.nonSelectedNotesOpacity ?? 0.28;
     }
@@ -3606,12 +3962,56 @@ export class OpenSheetMusicDisplay {
     private getGrayOutUpdateIntervalMs(): number {
         const configuredIntervalMs: number = this.rangeSelection.options.grayOutUpdateIntervalMs ?? 25;
         const baseIntervalMs: number = Math.max(0, configuredIntervalMs);
-        if (!this.isRangeDragging) {
-            return baseIntervalMs;
+        if (this.isRangeDragging) {
+            // Keep drag interaction smooth by lowering opacity update frequency while dragging.
+            // A full-fidelity update is still applied when drag settles/commits.
+            return Math.max(80, baseIntervalMs);
         }
-        // Keep drag interaction smooth by lowering opacity update frequency while dragging.
-        // A full-fidelity update is still applied when drag settles/commits.
-        return Math.max(80, baseIntervalMs);
+        // Committed/settled state: scroll-driven refreshes are throttled by the configured interval so
+        // that scrolling a long score stays responsive on low-end devices. A full-fidelity pass still
+        // runs once scrolling settles (see scheduleRangeViewportSettleUpdate).
+        return baseIntervalMs;
+    }
+
+    /** Lightweight scroll/resize refresh for a committed range. Extends the gray-out to systems that
+     *  scrolled into view without wiping the overlay or rebuilding action buttons. Throttled by
+     *  getGrayOutUpdateIntervalMs(); decorations are deferred until scrolling settles (force=true). */
+    private updateRangeSelectionViewport(force: boolean): void {
+        if (this.isRangeDragging || !this.dragStartAnchor || !this.dragCurrentAnchor) {
+            return;
+        }
+        if (!this.shouldGrayOutNonSelectedNotes()) {
+            this.cancelPendingRangeOpacityUpdate();
+            this.resetRangeSelectionNoteOpacity();
+            return;
+        }
+        if (force) {
+            this.cancelPendingRangeOpacityUpdate();
+            this.applyNoteOpacityForCurrentSelection(true);
+            this.lastRangeOpacityUpdateTimestampMs = Date.now();
+            return;
+        }
+        const intervalMs: number = this.getGrayOutUpdateIntervalMs();
+        const nowMs: number = Date.now();
+        const elapsedMs: number = nowMs - this.lastRangeOpacityUpdateTimestampMs;
+        if (intervalMs <= 0 || elapsedMs >= intervalMs) {
+            this.cancelPendingRangeOpacityUpdate();
+            this.applyNoteOpacityForCurrentSelection(false);
+            this.lastRangeOpacityUpdateTimestampMs = nowMs;
+            return;
+        }
+        if (this.rangeOpacityUpdateTimeoutId !== 0) {
+            return;
+        }
+        const remainingMs: number = Math.max(0, intervalMs - elapsedMs);
+        this.rangeOpacityUpdateTimeoutId = window.setTimeout((): void => {
+            this.rangeOpacityUpdateTimeoutId = 0;
+            if (!this.rangeSelection.enabled || this.isRangeDragging || !this.dragStartAnchor || !this.dragCurrentAnchor) {
+                return;
+            }
+            this.applyNoteOpacityForCurrentSelection(false);
+            this.lastRangeOpacityUpdateTimestampMs = Date.now();
+        }, remainingMs);
     }
 
     private shouldShowCommittedRangeFill(): boolean {
@@ -3687,13 +4087,29 @@ export class OpenSheetMusicDisplay {
         const viewport: { topPx: number, bottomPx: number } = this.getRangeSelectionViewportYPx();
         const visibleSystems: { indexes: Set<number>, indexBySystem: Map<MusicSystem, number> } =
             this.getRangeSelectionVisibleSystemIndexes(viewport);
+        // Skip the (expensive) recompute when nothing relevant changed since the last applied gray-out.
+        // This makes scroll cheap: while scrolling within the same set of visible systems the key is
+        // unchanged, so we bail out before iterating notes or querying decoration elements. The
+        // decoration flag is tracked separately so a note-only scroll pass never downgrades a viewport
+        // that already had its decorations grayed.
+        const nonSelectedOpacity: number = this.getNonSelectedNotesOpacity();
+        const visibleSystemsKey: string = Array.from(visibleSystems.indexes).sort((a: number, b: number): number => a - b).join(",");
+        const opacityKey: string =
+            `${selection.normalizedStart.timestampReal}_${selection.normalizedEnd.timestampReal}`
+            + `|${visibleSystemsKey}|${nonSelectedOpacity}`;
+        if (
+            this.hasActiveRangeSelectionOpacity
+            && opacityKey === this.lastRangeOpacityKey
+            && (!includeDecorations || this.lastRangeOpacityDecorationsApplied)
+        ) {
+            return;
+        }
         // Always compute full (un-truncated) segments. Viewport culling is applied at the per-element
         // level below; segments must remain complete so that selectionEndBoundary used in
         // applyStructuralElementOpacityForSelection still reflects the true end of the selection
         // (otherwise end-of-line clefs/braces past the visible viewport would be incorrectly grayed).
         const segments: Array<{ systemIndex: number, leftPx: number, rightPx: number }> =
             this.getSelectionSegments(selection);
-        const nonSelectedOpacity: number = this.getNonSelectedNotesOpacity();
         const opacityByTarget: Map<string, { graphicalNote: GraphicalNote, shouldHighlight: boolean }> =
             new Map<string, { graphicalNote: GraphicalNote, shouldHighlight: boolean }>();
         const noteheadOpacityByTarget: Map<string, { graphicalNote: GraphicalNote, shouldHighlight: boolean }> =
@@ -3761,9 +4177,13 @@ export class OpenSheetMusicDisplay {
             this.applyTupletOpacityForSelection(segments, nonSelectedOpacity, viewport);
         }
         this.hasActiveRangeSelectionOpacity = true;
+        this.lastRangeOpacityKey = opacityKey;
+        this.lastRangeOpacityDecorationsApplied = includeDecorations;
     }
 
     private resetRangeSelectionNoteOpacity(): void {
+        this.lastRangeOpacityKey = "";
+        this.lastRangeOpacityDecorationsApplied = false;
         if (!this.hasActiveRangeSelectionOpacity) {
             return;
         }
