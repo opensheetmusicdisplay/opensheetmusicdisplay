@@ -1,5 +1,5 @@
 import { expect } from "chai";
-/* eslint-disable @typescript-eslint/no-unused-expressions */
+
 import * as VF from "vexflow";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { SvgVexFlowBackend } from "../../../../src/MusicalScore/Graphical/VexFlow/SvgVexFlowBackend";

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
+
 import { expect } from "chai";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../../Util/TestUtils";

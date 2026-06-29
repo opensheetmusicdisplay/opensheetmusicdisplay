@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
+
 import { expect } from "chai";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
