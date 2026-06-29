@@ -314,14 +314,13 @@ export class VexFlowConverter {
                     const vfClefResult: {type: string, annotation: string} = VexFlowConverter.Clef(restKeyClef2);
                     vfClefType = vfClefResult.type;
 
-                    // Check for whole measure rest: center on D5 (or B4 for 1-line staves).
+                    // Check for whole measure rest: use R key so calculateKeyProps
+                    // sets line = center+1 (top staff line, all clefs). The d/5
+                    // hack was VF4 workaround; D5 maps to line 10 in bass (ledger lines).
                     const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
                         baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
                     if (isWholeMeasureRest) {
-                        keys = ["d/5"];
-                        if (gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1) {
-                            keys = ["b/4"];
-                        }
+                        keys = ["R/4"];
                         duration = "w";
                         numDots = 0;
                         alignCenter = true;
