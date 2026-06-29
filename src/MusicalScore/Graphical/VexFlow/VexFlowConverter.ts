@@ -295,6 +295,8 @@ export class VexFlowConverter {
                 isRest = true;
                 if (note.sourceNote.Pitch) {
                     // Rest has explicit display-step/display-octave — respect it.
+                    // Whole rest at D6 → VF line 7.5, sufficient clearance from
+                    // neighboring note rests so SRV stays off.
                     const restVfPitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
                     keys = [restVfPitch[0]];
                     const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
@@ -314,9 +316,6 @@ export class VexFlowConverter {
                     const vfClefResult: {type: string, annotation: string} = VexFlowConverter.Clef(restKeyClef2);
                     vfClefType = vfClefResult.type;
 
-                    // Check for whole measure rest: use R key so calculateKeyProps
-                    // sets line = center+1 (top staff line, all clefs). The d/5
-                    // hack was VF4 workaround; D5 maps to line 10 in bass (ledger lines).
                     const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
                         baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
                     if (isWholeMeasureRest) {
@@ -328,35 +327,12 @@ export class VexFlowConverter {
                         break;
                     }
 
-                    // pause rest encircled by two beamed notes: place rest just below previous note
-                    const pauseVoiceEntry: VoiceEntry = note.parentVoiceEntry?.parentVoiceEntry;
-                    if (pauseVoiceEntry) {
-                        const neighborGSEs: GraphicalStaffEntry[] = note.parentVoiceEntry?.parentStaffEntry.parentMeasure.staffEntries;
-                        let previousVoiceEntry: VoiceEntry, followingVoiceEntry: VoiceEntry;
-                        let pauseVEIndex: number = -1;
-                        for (let i: number = 0; i < neighborGSEs.length; i++) {
-                            if (neighborGSEs[i]?.graphicalVoiceEntries[0]?.parentVoiceEntry === pauseVoiceEntry) {
-                                pauseVEIndex = i;
-                                break;
-                            }
-                        }
-                        if (pauseVEIndex >= 1 && (neighborGSEs.length - 1) >= (pauseVEIndex + 1)) {
-                            previousVoiceEntry = neighborGSEs[pauseVEIndex - 1]?.graphicalVoiceEntries[0]?.parentVoiceEntry;
-                            followingVoiceEntry = neighborGSEs[pauseVEIndex + 1]?.graphicalVoiceEntries[0]?.parentVoiceEntry;
-                            if (previousVoiceEntry && followingVoiceEntry) {
-                                const previousNote: Note = previousVoiceEntry.Notes[0];
-                                const followingNote: Note = followingVoiceEntry.Notes[0];
-                                if (previousNote.NoteBeam?.Notes.includes(followingNote)) {
-                                    const previousNotePitch: Pitch = previousVoiceEntry.Notes.last().Pitch;
-                                    const clef: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
-                                    const vfpitch: [string, string, ClefInstruction] = VexFlowConverter.pitch(
-                                        VexFlowConverter.restToNotePitch(previousNotePitch.getTransposedPitch(-2), clef.ClefType),
-                                        false, clef);
-                                    keys = [vfpitch[0]];
-                                }
-                            }
-                        }
-                    }
+                    // pause rest encircled by two beamed notes: keep R/4 key so VF's
+                    // calculateKeyProps sets the correct clef-aware center position.
+                    // In VF4 this used a pitch-based key (previous note -2 semitones) for
+                    // collision avoidance, but VF5's shiftRestVertical handles that natively.
+                    // The restToNotePitch path was broken for bass/F clef (added +2 octaves)
+                    // causing rests to be placed absurdly far above the staff.
                 }
                 break;
             }
@@ -521,10 +497,6 @@ export class VexFlowConverter {
                     (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics * padding;
                 }
             }
-        }
-        const lineShift: number = gve.notes[0].lineShift;
-        if (lineShift !== 0) {
-            vfnote.setKeyLine(0, vfnote.getKeyLine(0) + lineShift);
         }
         // check for slash noteheads (among other noteheads)
         if (notes.length > 1) {

@@ -90,7 +90,7 @@ function collectRests(gms: GraphicalMusicSheet): RestInfo[] {
               justifyWidth,
               osmdRelY: note.parentVoiceEntry.PositionAndShape.RelativePosition.y,
               osmdBorderBottom: note.parentVoiceEntry.PositionAndShape.BorderBottom,
-              lineShift: note.lineShift ?? 0,
+              lineShift: 0,
               keyLine: kl,
               keys: sn.getKeys?.() ?? [],
               isHidden,
@@ -964,7 +964,7 @@ describe("VexFlow Measure - Rest Positioning", () => {
                 duration: sn.getDuration?.() ?? "?",
                 measure: measure.MeasureNumber,
                 staffId: n.sourceNote.ParentStaff?.Id ?? 0,
-                lineShift: n.lineShift ?? 0,
+                lineShift: 0,
                 keyLine: sn.getKeyLine?.(0) ?? -999,
               });
             }
@@ -1037,7 +1037,7 @@ describe("Cornelius Christbaum rest positioning", () => {
               if (n.sourceNote.isRest()) {
                 rests.push({
                   voiceId: vid, y: ys[0] ?? 0,
-                  dur: sn.getDuration?.() ?? "?", lineShift: n.lineShift ?? 0,
+                  dur: sn.getDuration?.() ?? "?", lineShift: 0,
                 });
               } else {
                 const p: any = n.sourceNote.Pitch;
