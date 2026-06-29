@@ -284,6 +284,7 @@ export class VexFlowConverter {
         let alignCenter: boolean = false;
         let xShift: number = 0;
         let isRest: boolean = false;
+        let displayStepPitchKey: string | null = null;
 
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
@@ -293,47 +294,37 @@ export class VexFlowConverter {
             // if it is a rest:
             if (note.sourceNote.isRest()) {
                 isRest = true;
+                // Use R/4 key for all rests regardless of display-step/display-octave.
+                // Pitch-based keys cause VF5 to select wrong rest duration glyphs
+                // (whole → half, half → whole). R/4 forces correct glyph via
+                // calculateKeyProps. Display-step positioning is applied after
+                // construction via setKeyLine().
+                keys = ["R/4"];
+                // Save display-step pitch key for post-construction positioning
                 if (note.sourceNote.Pitch) {
-                    // Rest has explicit display-step/display-octave — respect it.
-                    // Whole rest at D6 → VF line 7.5, sufficient clearance from
-                    // neighboring note rests so SRV stays off.
                     const restVfPitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
-                    keys = [restVfPitch[0]];
-                    const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
-                        baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
-                    if (isWholeMeasureRest) {
-                        duration = "w";
-                        numDots = 0;
-                        alignCenter = true;
-                        xShift = rules.WholeRestXShiftVexflow * unitInPixels;
-                        break;
-                    }
-                } else {
-                    // Use 'R' key + actual clef so VF's calculateKeyProps
-                    // computes the correct clef-aware default line.
-                    keys = ["R/4"];
-                    const restKeyClef2: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
-                    const vfClefResult: {type: string, annotation: string} = VexFlowConverter.Clef(restKeyClef2);
-                    vfClefType = vfClefResult.type;
-
-                    const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
-                        baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
-                    if (isWholeMeasureRest) {
-                        keys = ["R/4"];
-                        duration = "w";
-                        numDots = 0;
-                        alignCenter = true;
-                        xShift = rules.WholeRestXShiftVexflow * unitInPixels;
-                        break;
-                    }
-
-                    // pause rest encircled by two beamed notes: keep R/4 key so VF's
-                    // calculateKeyProps sets the correct clef-aware center position.
-                    // In VF4 this used a pitch-based key (previous note -2 semitones) for
-                    // collision avoidance, but VF5's shiftRestVertical handles that natively.
-                    // The restToNotePitch path was broken for bass/F clef (added +2 octaves)
-                    // causing rests to be placed absurdly far above the staff.
+                    displayStepPitchKey = restVfPitch[0];
                 }
+                const restKeyClef: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
+                const vfClefResult: {type: string, annotation: string} = VexFlowConverter.Clef(restKeyClef);
+                vfClefType = vfClefResult.type;
+
+                const isWholeMeasureRest: boolean = note.sourceNote.IsWholeMeasureRest ||
+                    baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
+                if (isWholeMeasureRest) {
+                    duration = "w";
+                    numDots = 0;
+                    alignCenter = true;
+                    xShift = rules.WholeRestXShiftVexflow * unitInPixels;
+                    break;
+                }
+
+                // pause rest encircled by two beamed notes: keep R/4 key so VF's
+                // calculateKeyProps sets the correct clef-aware center position.
+                // In VF4 this used a pitch-based key (previous note -2 semitones) for
+                // collision avoidance, but VF5's shiftRestVertical handles that natively.
+                // The restToNotePitch path was broken for bass/F clef (added +2 octaves)
+                // causing rests to be placed absurdly far above the staff.
                 break;
             }
 
@@ -515,6 +506,14 @@ export class VexFlowConverter {
                     }
                 }
             }
+        }
+
+        // Apply display-step positioning for rests with explicit pitch.
+        // Round line to nearest 0.0 so rest aligns to staff line (whole rest hangs
+        // from it, half rest sits on it), avoiding floating between lines (7.5 → 8).
+        if (displayStepPitchKey && !gve.parentVoiceEntry.IsGrace && !firstNote.IsCueNote) {
+            const targetLine: number = Math.floor(VexFlowConverter.lineForPitchKey(displayStepPitchKey, vfClefType));
+            vfnote.setKeyLine(0, targetLine);
         }
 
         // Annotate GraphicalNote with which line of the staff it appears on
@@ -1266,5 +1265,21 @@ export class VexFlowConverter {
     public static style(styleId: OutlineAndFillStyleEnum): string {
         const ret: string = OUTLINE_AND_FILL_STYLE_DICT.getValue(styleId);
         return ret;
+    }
+
+    /** Compute VF5 staff line for a pitch key (e.g. "dn/6" → 7.5 treble).
+     *  Uses same formula as VF5's Tables.keyProperties. */
+    private static lineForPitchKey(pitchKey: string, clefVfType: string): number {
+        const NOTE_INDEX: Record<string, number> = { c: 0, d: 1, e: 2, f: 3, g: 4, a: 5, b: 6 };
+        const CLEF_LINE_SHIFT: Record<string, number> = { treble: 0, bass: 6, alto: 3, tenor: 4 };
+        const m: RegExpMatchArray | null = pitchKey.match(/^([a-g])/i);
+        if (!m) { return 3; }
+        const note: string = m[1].toLowerCase();
+        const octM: RegExpMatchArray | null = pitchKey.match(/\/(\d+)/);
+        if (!octM) { return 3; }
+        const octave: number = parseInt(octM[1], 10);
+        const idx: number = NOTE_INDEX[note] ?? 0;
+        const shift: number = CLEF_LINE_SHIFT[clefVfType] ?? 0;
+        return ((octave * 7) - 28 + idx) / 2 + shift;
     }
 }

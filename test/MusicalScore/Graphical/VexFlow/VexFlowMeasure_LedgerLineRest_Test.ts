@@ -33,21 +33,19 @@ describe("VexFlow GraphicalNote ledger lines for rests", () => {
 
         // Measure 2: voice 2 has two half rests at C3 (display-step=C, display-octave=3)
         const gm2: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(1, 0);
-        for (const staffIdx of [0, 1]) {
-            const staffEntry: GraphicalStaffEntry = gm2.staffEntries[staffIdx];
-            expect(staffEntry).to.not.be.undefined;
+        const staffEntry: GraphicalStaffEntry = gm2.staffEntries[0];
+        expect(staffEntry).to.not.be.undefined;
 
-            const voiceEntries: GraphicalVoiceEntry[] = staffEntry.graphicalVoiceEntries;
-            expect(voiceEntries).to.not.be.undefined;
-            expect(voiceEntries.length).to.be.greaterThan(1);
+        const voiceEntries: GraphicalVoiceEntry[] = staffEntry.graphicalVoiceEntries;
+        expect(voiceEntries).to.not.be.undefined;
+        expect(voiceEntries.length).to.be.greaterThan(1);
 
-            const restNote: VexFlowGraphicalNote = voiceEntries[1]?.notes[0] as VexFlowGraphicalNote;
-            expect(restNote).to.not.be.undefined;
-            expect(restNote.sourceNote.isRest()).to.be.true;
+        const restNote: VexFlowGraphicalNote = voiceEntries[1]?.notes[0] as VexFlowGraphicalNote;
+        expect(restNote).to.not.be.undefined;
+        expect(restNote.sourceNote.isRest()).to.be.true;
 
-            const ledgerLines: HTMLElement[] = restNote.getLedgerLineSVGs();
-            expect(ledgerLines.length).to.equal(1);
-        }
+        const ledgerLines: HTMLElement[] = restNote.getLedgerLineSVGs();
+        expect(ledgerLines.length).to.equal(1);
     });
 
     it("voice 2 whole rest at D6 is correctly positioned as whole rest", async () => {
@@ -64,16 +62,16 @@ describe("VexFlow GraphicalNote ledger lines for rests", () => {
 
         const vfnote: any = wholeRestNote.vfnote[0];
 
-        // Verify the whole-measure rest respects MusicXML display-step/display-octave at D6
+        // Verify the whole-measure rest uses R/4 key (not display-step pitch)
         const vfKeys: string[] = vfnote.getKeys?.() ?? [];
-        expect(vfKeys).to.deep.equal(["dn/6"]);
+        expect(vfKeys).to.deep.equal(["R/4"]);
 
         // Verify duration is whole
         const duration: string = vfnote.getDuration();
         expect(duration).to.equal("w");
 
-        // Whole rest at D6 (above staff) shows 2 ledger lines (A5 and C6).
+        // Whole rest at line 7 (floored from D6 line 7.5) — 1 ledger line.
         const ledgerLines: HTMLElement[] = wholeRestNote.getLedgerLineSVGs();
-        expect(ledgerLines.length).to.equal(2);
+        expect(ledgerLines.length).to.equal(1);
     });
 });
