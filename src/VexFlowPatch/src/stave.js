@@ -255,10 +255,11 @@ export class Stave extends Element {
   }
 
   // Section functions
-  setSection(section, y, xOffset = 0, fontSize = 12) {
+  setSection(section, y, xOffset = 0, fontSize = 12, minBottomY = undefined) {
     const staveSection = new StaveSection(section, this.x + xOffset, y);
     // staveSection.shift_x = xOffset; // has no effect
     staveSection.font.size = fontSize;
+    staveSection.minBottomY = minBottomY; // VexFlowPatch: shift the section up so its box bottom stays above getYForLine(0)+minBottomY (px, relative to top stave line). avoids overlap with chord symbols
     this.modifiers.push(staveSection);
     return this;
   }

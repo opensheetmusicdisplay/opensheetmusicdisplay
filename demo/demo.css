@@ -326,25 +326,63 @@ select {
     width: 100%;
     z-index: 2;
     margin-top: 0;
+    /* center the title over the score area (right of the controls sidebar), not the whole window.
+       left:0 pins the fixed bar to the viewport (without it, its static position is already shifted by
+       #topBar's padding, double-shifting the title). padding-left is removed when collapsed (below). */
+    left: 0;
+    box-sizing: border-box;
+    padding-left: var(--desktop-divControls-width);
+    transition: padding-left 0.4s ease;
+  }
+
+  /* reserve the sidebar's width for the top bar (sample selector, version) as well, so those center
+     over the score area like the title and the score itself. Removed when the sidebar is collapsed. */
+  #topBar{
+    padding-left: var(--desktop-divControls-width);
+    transition: padding-left 0.4s ease;
+  }
+  body.controls-collapsed #header,
+  body.controls-collapsed #topBar{
+    padding-left: 0;
   }
 
   #divControls{
     background-color: var(--theme-color-very-light);
-    height: 100%;
     width: var(--desktop-divControls-width) !important;
     margin-right: auto;
     font-size: var(--desktop-font-size);
-    padding-bottom: 5%;
     border-top: var(--controls-border-color) solid var(--thick-border-size);
     border-right: var(--controls-border-color) solid var(--thick-border-size);
     display:block;
     padding-bottom: 10%;
-    top:79px;
-    opacity: 0.5;
+    left: 0;
+    top: 79px;
+    /* max-height (not height) so the panel sizes to its content: the vertical scrollbar only appears
+       when the controls are taller than the viewport, not always. (A fixed height combined with the
+       inner #advancedSettings min-height:98% forced a permanent overflow.) */
+    max-height: calc(100vh - 79px);
+    overflow-y: auto;
+    /* explicit overflow-x: hidden -- otherwise overflow-y:auto promotes the default overflow-x:visible to
+       'auto', which shows an (ugly) horizontal scrollbar on the slightest overflow (e.g. wide OS scrollbar). */
+    overflow-x: hidden;
+    /* solid sidebar that reserves space (see #osmdCanvasDiv margin-left), not a translucent overlay.
+       was: opacity 0.5 with an opacity 0.95 :hover (looked like a glitch, and hover doesn't work on touch). */
+    transition: transform 0.4s ease;
   }
 
-  #divControls:hover {
-    opacity: 0.95;
+  /* reserve space for the solid sidebar so it doesn't cover the score (desktop only) */
+  #osmdCanvasDiv{
+    margin-left: var(--desktop-divControls-width);
+  }
+
+  /* minimized: slide the sidebar (and its toggle button) off to the left. index.js then frees the
+     reserved width and re-renders once, when the slide finishes (collapse) / right away (expand). */
+  body.controls-collapsed #divControls{
+    transform: translateX(-100%);
+  }
+  body.controls-collapsed #slideControlsButton{
+    transform: translateX(calc(-1 * var(--desktop-divControls-width) + 1px));
+    background-image: url('resources/arrow-right-s-line.svg');
   }
 
   #slideControlsButton{
@@ -355,9 +393,10 @@ select {
     margin-left: calc(var(--desktop-divControls-width) - 1px);
     position: fixed;
     order:1;
-    z-index: 1;
+    z-index: 2;
     border: var(--controls-border-color) solid 1px;
     top:79px;
+    transition: transform 0.4s ease;
   }
 
   #versionDiv{
@@ -377,7 +416,8 @@ select {
     border-radius: 5px;
     border-width: var(--thick-border-size);
     margin-bottom: 0;
-
+    /* centered (margin:auto from the base rule) inside #topBar, which reserves the sidebar width on the
+       left -- so the box centers over the score area and can no longer be cut off by the sidebar. */
   }
   #selectSampleTitle{
     height:100%;
@@ -407,8 +447,9 @@ select {
   }
   #advancedSettings{
     background-color: var(--theme-color-light);
-    margin-left: 20px;
-    margin-right: 20px;
+    /* was 20px each: too much inset, and it left less room for the controls (could cause a horizontal scrollbar) */
+    margin-left: 8px;
+    margin-right: 8px;
     border-width: var(--thick-border-size);
     height:fit-content;
     margin-top: 10px;
@@ -428,8 +469,9 @@ select {
   #zoomControls{
     display: flex;
     position:relative;
-    margin-left: 20px;
-    margin-right: 20px;
+    /* keep aligned with #advancedSettings (was 20px) */
+    margin-left: 8px;
+    margin-right: 8px;
     order:-1;
     width: 100%;
     margin-top: 7.5px;
@@ -545,19 +587,5 @@ table {
     width: 100%;
 }
 
-@keyframes slide-left{
-  from{
-    margin-left: 0%;
-  }
-  to{
-    margin-left: calc(var(--desktop-divControls-width) * -1 + 6px);
-  }
-}
-@keyframes slide-right {
-  from{
-    margin-left: calc(var(--desktop-divControls-width) * -1 + 6px);
-  }
-  to{
-    margin-left: 0%;
-  }
-}
+/* (the old slide-left / slide-right keyframes were replaced by a CSS transform transition on
+   #divControls + #slideControlsButton, toggled via the body.controls-collapsed class; see index.js) */

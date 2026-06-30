@@ -1125,9 +1125,69 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // const section: VF.StaveSection = new VF.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
       // (vfStave as any).modifiers.push(section);
       const fontSize: number = this.rules.RehearsalMarkFontSize;
-      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
+
+      // Lift the rehearsal mark above whatever rises above the staff under it (high notes, an Above chord
+      //   symbol, ...) so it doesn't overlap them, and reserve skyline space for the lifted mark (otherwise
+      //   it can collide with the system above). The mark is a fixed-offset VexFlow StaveSection that isn't
+      //   part of the skyline, so without this it can sit right on top of tall notes -- which happens in
+      //   normal rendering (e.g. high drum-stave notes) and in lazy/incremental rendering (the mark's measure can be
+      //   drawn at a slightly different x, over taller notes, than a normal render). Only the Above chord
+      //   symbol was previously considered here; now the notes under the mark are too.
+      let minBottomY: number; // undefined -> no clamping in StaveSection.draw (VexFlowPatch)
+      const staffLine: StaffLine = gMeasure.ParentStaffLine;
+      if (staffLine) {
+        // x-footprint of the rehearsal mark box at the measure start (absolute units, as the skyline is
+        //   indexed). xOffset/fontSize are in px; the label width is a conservative estimate.
+        let start: number = gMeasure.PositionAndShape.AbsolutePosition.x;
+        let end: number = start + (xOffset + rehearsalExpression.label.length * fontSize * 0.6 + fontSize) / unitInPixels;
+        // also clear an Above chord symbol in the measure: it is placed (calculateChordSymbols, earlier)
+        //   against the skyline and can sit right where the mark goes, possibly beyond the mark's footprint.
+        const chord: GraphicalChordSymbolContainer = this.rules.RehearsalMarkAboveChordSymbol
+          ? this.getFirstChordSymbolAbove(gMeasure) : undefined;
+        if (chord) {
+          const containerPsh: BoundingBox = chord.PositionAndShape;
+          const xInUnits: number = containerPsh.Parent.AbsolutePosition.x + containerPsh.RelativePosition.x;
+          start = Math.min(start, containerPsh.BorderMarginLeft + xInUnits);
+          end = Math.max(end, containerPsh.BorderMarginRight + xInUnits);
+        }
+        // highest element above the staff line under the mark (negative = above it), read from the skyline
+        //   (final by now: updated by calculateSkyBottomLines + calculateChordSymbols, both earlier).
+        const topRelative: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(start, end);
+        if (topRelative < 0) { // only lift if something actually rises above the staff here
+          const marginInUnits: number = 0.5; // small gap between mark bottom and what's below it
+          // StaveSection.draw (VexFlowPatch) shifts the mark up so its box bottom doesn't exceed
+          //   stave.getYForLine(0) + minBottomY (px), keeping the mark above that element:
+          minBottomY = (topRelative - marginInUnits) * unitInPixels;
+          // reserve skyline over the range so updateStaffLineBorders/calculateSystemYLayout make room for the lifted mark
+          const markHeightInUnits: number = fontSize / unitInPixels * 1.6 + marginInUnits; // conservative StaveSection box height
+          staffLine.SkyBottomLineCalculator.updateSkyLineInRange(start, end, topRelative - markHeightInUnits);
+        }
+      }
+
+      // fontSize and minBottomY are extra arguments from VexFlowPatch (stave.js / stavesection.js)
+      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize, minBottomY);
       return; // only draw one rehearsal mark at top (visible) instrument
     }
+  }
+
+  /** Returns the leftmost (smallest x) Above-placed chord symbol container in the measure, or undefined if there is none.
+   *  The rehearsal mark sits at the measure start, so this is the chord it can collide with (see calculateRehearsalMark). */
+  private getFirstChordSymbolAbove(gMeasure: GraphicalMeasure): GraphicalChordSymbolContainer {
+    let first: GraphicalChordSymbolContainer = undefined;
+    let firstX: number = Number.MAX_VALUE;
+    for (const staffEntry of gMeasure.staffEntries) {
+      for (const chordContainer of staffEntry.graphicalChordContainers ?? []) {
+        if (chordContainer.GetChordSymbolContainer.Placement !== PlacementEnum.Above) {
+          continue;
+        }
+        const x: number = chordContainer.PositionAndShape.AbsolutePosition.x; // x layout is final here, unlike y
+        if (x < firstX) {
+          firstX = x;
+          first = chordContainer;
+        }
+      }
+    }
+    return first;
   }
 
   /**
@@ -1946,7 +2006,57 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected calculateSkyBottomLines(): void {
-    const staffLines: StaffLine[] = CollectionUtil.flat(this.musicSystems.map(musicSystem => musicSystem.StaffLines));
+    const allStaffLines: StaffLine[] = CollectionUtil.flat(this.musicSystems.map(musicSystem => musicSystem.StaffLines));
+
+    // Lazy rendering: reuse the sky/bottom lines of stable interior systems computed in an
+    // earlier growing-prefix batch, and only (re)compute the rest. The skyline pass is the dominant layout
+    // cost; on a big score this turns the per-batch O(prefix) re-measure into O(new systems). The FIRST
+    // system and the LAST system of the prefix are never cached/reused: empirically their lines change as
+    // the prefix grows (first system) or as the last, unstretched system later becomes stretched/interior.
+    // Only the geometric skyline path's side effects are replayable for reuse (see
+    // SkyBottomLineCalculator.applyGeometricSkylineSideEffectsOnly); the raster path computes everything.
+    const lazyCache: boolean = this.rules.LazyConsistentGraphic && this.rules.UseGeometricSkyBottomLineCalculation;
+    const staffLinesToCompute: StaffLine[] = lazyCache ? [] : allStaffLines;
+    const toCache: { key: string, staffLine: StaffLine }[] = [];
+    if (lazyCache) {
+      const lastSystemIndex: number = this.musicSystems.length - 1;
+      for (let si: number = 0; si < this.musicSystems.length; si++) {
+        const cacheable: boolean = si !== 0 && si !== lastSystemIndex;
+        const systemStaffLines: StaffLine[] = this.musicSystems[si].StaffLines;
+        for (let li: number = 0; li < systemStaffLines.length; li++) {
+          const staffLine: StaffLine = systemStaffLines[li];
+          const key: string = this.skyBottomLineCacheKey(staffLine, li);
+          const cached: { sky: number[], bottom: number[] } = key ? this.skyBottomLineCache.get(key) : undefined;
+          if (cached) {
+            // Replay the skyline calc's per-measure side effects (the VexFlow formatter is not idempotent,
+            // so skipping them would shift later passes by ~1px), then reuse the verified byte-identical
+            // cached lines instead of re-measuring extents (the expensive part).
+            staffLine.SkyBottomLineCalculator.applyGeometricSkylineSideEffectsOnly();
+            staffLine.SkyBottomLineCalculator.setLinesDirectly(cached.sky.slice(), cached.bottom.slice());
+          } else {
+            staffLinesToCompute.push(staffLine);
+            if (cacheable && key) {
+              toCache.push({ key, staffLine });
+            }
+          }
+        }
+      }
+    }
+
+    this.computeSkyBottomLinesFor(staffLinesToCompute);
+
+    for (const entry of toCache) {
+      this.skyBottomLineCache.set(entry.key, { sky: entry.staffLine.SkyLine.slice(), bottom: entry.staffLine.BottomLine.slice() });
+    }
+  }
+
+  /** Compute (not reuse) the sky/bottom lines for the given staff lines: geometric, or the batched /
+   *  per-staff-line path. This is the original calculateSkyBottomLines body, extracted so the lazy reuse
+   *  path can feed it just the staff lines that actually need computing. */
+  private computeSkyBottomLinesFor(staffLines: StaffLine[]): void {
+    if (staffLines.length === 0) {
+      return;
+    }
     if (this.rules.UseGeometricSkyBottomLineCalculation) {
       // geometric calculation doesn't need batching: no canvas allocation or pixel readback (getImageData) is involved
       for (const staffLine of staffLines) {
@@ -1954,7 +2064,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       return;
     }
-    //const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
     let numMeasures: number = 0; // number of graphical measures that are rendered
     for (const staffline of staffLines) {
       for (const measure of staffline.Measures) {

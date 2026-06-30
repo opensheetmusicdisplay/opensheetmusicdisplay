@@ -26,7 +26,7 @@ export abstract class VexFlowBackend {
   public width: number; // read-only
   public height: number; // read-only
 
-  public abstract initialize(container: HTMLElement, zoom: number): void;
+  public abstract initialize(container: HTMLElement, zoom: number, id?: string): void;
 
   public getInnerElement(): HTMLElement {
     return this.inner;

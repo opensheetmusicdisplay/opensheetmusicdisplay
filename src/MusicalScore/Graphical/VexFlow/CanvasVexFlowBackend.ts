@@ -34,16 +34,19 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         //     document.getElementById("osmdCanvasVexFlowBackendCanvas" + this.graphicalMusicPage.PageNumber)?.style.height, 10);
     }
 
-    public initialize(container: HTMLElement, zoom: number): void {
+    public initialize(container: HTMLElement, zoom: number, id: string = undefined): void {
         this.zoom = zoom;
         this.canvas = document.createElement("canvas");
         if (!this.graphicalMusicPage) {
             this.graphicalMusicPage = new GraphicalMusicPage(undefined);
             this.graphicalMusicPage.PageNumber = 1;
         }
-        this.canvas.id = "osmdCanvasVexFlowBackendCanvas" + this.graphicalMusicPage.PageNumber; // needed to extract image buffer from js
+        if (!id) {
+            id = this.graphicalMusicPage.PageNumber.toString();
+        }
+        this.canvas.id = "osmdCanvasVexFlowBackendCanvas" + id; // needed to extract image buffer from js
         this.inner = document.createElement("div");
-        this.inner.id = "osmdCanvasPage" + this.graphicalMusicPage.PageNumber;
+        this.inner.id = "osmdCanvasPage" + id;
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";
         this.inner.appendChild(this.canvas);
@@ -97,6 +100,33 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
             this.zoom = 1; // remove
             this.ctx.fillRect(0, 0, (this.canvas as any).width / this.zoom, (this.canvas as any).height / this.zoom);
             this.ctx.restore();
+        }
+    }
+
+    /** Resizing a canvas clears its bitmap. Lazy/incremental rendering grows the canvas as it appends
+     *  batches, so snapshot the current pixels and redraw them after resizing. For a normal render the
+     *  canvas is still empty here, so this is effectively a no-op. */
+    public resize(width: number, height: number): void {
+        const canvas: any = this.canvas;
+        let snapshot: any;
+        if (canvas && canvas.width > 0 && canvas.height > 0) {
+            snapshot = document.createElement("canvas");
+            snapshot.width = canvas.width;
+            snapshot.height = canvas.height;
+            snapshot.getContext("2d").drawImage(canvas, 0, 0);
+        }
+        super.resize(width, height);
+        if (snapshot) {
+            const ctx2d: any = canvas.getContext("2d");
+            ctx2d.save();
+            ctx2d.setTransform(1, 0, 0, 1, 0, 0); // work in raw device pixels
+            if (this.rules.PageBackgroundColor) {
+                // the grown (transparent) area below the preserved content needs the page background
+                ctx2d.fillStyle = this.rules.PageBackgroundColor;
+                ctx2d.fillRect(0, snapshot.height, canvas.width, canvas.height - snapshot.height);
+            }
+            ctx2d.drawImage(snapshot, 0, 0); // restore the previously rendered batches at the top
+            ctx2d.restore();
         }
     }
 

@@ -94,6 +94,11 @@ export abstract class MusicSheetCalculator {
     protected graphicalMusicSheet: GraphicalMusicSheet;
     protected rules: EngravingRules;
     protected musicSystems: MusicSystem[];
+    /** Lazy rendering: cache of computed sky/bottom lines, keyed per staff line by its system's
+     *  measure range + staff index. A growing-prefix batch re-runs the (expensive) skyline pass over the
+     *  whole prefix; this lets stable interior systems reuse the lines computed in an earlier batch instead
+     *  of re-measuring them. Only used when EngravingRules.LazyConsistentGraphic; cleared per lazy session. */
+    protected skyBottomLineCache: Map<string, { sky: number[], bottom: number[] }> = new Map();
 
     private abstractNotImplementedErrorMessage: string = "abstract, not implemented";
 
@@ -301,6 +306,24 @@ export abstract class MusicSheetCalculator {
         // transform Relative to Absolute Positions
         //This is called for each measure in calculate music systems (calculateLines -> calculateSkyBottomLines)
         GraphicalMusicSheet.transformRelativeToAbsolutePosition(this.graphicalMusicSheet);
+    }
+
+    /** Drop the lazy sky/bottom-line reuse cache (call when starting a fresh lazy session). */
+    public clearSkyBottomLineCache(): void {
+        this.skyBottomLineCache.clear();
+    }
+
+    /** Stable per-staff-line key for the lazy sky/bottom-line cache: the system's measure range pins the
+     *  system (systems partition the measures), the staff index picks the line within it. Returns undefined
+     *  for a staff line with no usable measures (so it is never cached/reused). */
+    protected skyBottomLineCacheKey(staffLine: StaffLine, staffIndexInSystem: number): string {
+        const measures: GraphicalMeasure[] = staffLine.Measures;
+        const first: GraphicalMeasure = measures[0];
+        const last: GraphicalMeasure = measures[measures.length - 1];
+        if (!first || !last) {
+            return undefined;
+        }
+        return first.MeasureNumber + ":" + last.MeasureNumber + ":" + staffIndexInSystem;
     }
 
     public calculateXLayout(graphicalMusicSheet: GraphicalMusicSheet, maxInstrNameLabelLength: number): void {
@@ -2498,6 +2521,13 @@ export abstract class MusicSheetCalculator {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
 
+        // For RenderSingleHorizontalStaffline we temporarily shrink pageWidth to the content width below, so the
+        // page labels center over the actual content rather than over the ~32767 (SheetMaximumWidth) layout
+        // width. Capture the layout width up front and restore it at the end of this method: pageWidth is the
+        // MusicSystemBuilder's line-break threshold, so leaving it shrunk would make the NEXT calculate() wrongly
+        // break the single horizontal staffline into multiple systems -- i.e. reCalculate() must stay idempotent.
+        const layoutPageWidth: number = this.graphicalMusicSheet.ParentMusicSheet.pageWidth;
+
         // fix width of SVG, sheet and horizontal scroll bar being too long (~32767 = SheetMaximumWidth) for single line scores
         if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
@@ -2647,6 +2677,11 @@ export abstract class MusicSheetCalculator {
             // limit SVG and scroll bar width so it's not ~32767 (SheetMaximumWidth):
             this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width;
             // page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width; // doesn't seem to affect anything
+
+            // Restore the layout (line-break) width so a subsequent reCalculate() lays the single staffline out
+            // the same way (idempotent). The label positions computed above keep their content-centered values;
+            // nothing after calculate() reads pageWidth (the backend sizes from page.Size.width).
+            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = layoutPageWidth;
         }
     }
 
@@ -3268,26 +3303,38 @@ export abstract class MusicSheetCalculator {
                             //     }
                             // }
                         }
-                        if (fingerings.length > 0) {
+                        if (fingerings.length > 1) {
                             // const isBulkFingering: boolean = fingerings.last().sourceNote === fingerings[0].sourceNote;
                             //   // bulk fingering = more than one fingering per note given in MusicXML. (some programs export like this sometimes)
                             // console.log("isBulkFingering: " + isBulkFingering);
-                            if (placement === PlacementEnum.Below) {
-                                fingerings.reverse();
-                            }
-                            let topNote: Note;
-                            for (const gve of gse.graphicalVoiceEntries) {
-                                for (const note of gve.notes) {
-                                    if (!topNote || note.sourceNote.Pitch?.getHalfTone() > topNote.Pitch?.getHalfTone()) {
-                                        topNote = note.sourceNote;
+                            const distinctPitchedNotes: boolean = fingerings.every(
+                                (fingering: TechnicalInstruction, index: number) => fingering.sourceNote?.Pitch !== undefined &&
+                                    fingerings.findIndex((other: TechnicalInstruction) => other.sourceNote === fingering.sourceNote) === index);
+                            if (distinctPitchedNotes) {
+                                // stack fingerings in the pitch order of their notes, mirroring the chord (lowest note's fingering at the bottom).
+                                //   sorting handles notes collected from multiple voices, which are not necessarily in pitch order.
+                                fingerings.sort((a: TechnicalInstruction, b: TechnicalInstruction) =>
+                                    a.sourceNote.Pitch.getHalfTone() - b.sourceNote.Pitch.getHalfTone());
+                                if (placement === PlacementEnum.Below) {
+                                    fingerings.reverse();
+                                }
+                            } else {
+                                // fallback for bulk fingerings (multiple per note) or unpitched notes: keep XML order, with heuristics
+                                if (placement === PlacementEnum.Below) {
+                                    fingerings.reverse();
+                                }
+                                let topNote: Note;
+                                for (const gve of gse.graphicalVoiceEntries) {
+                                    for (const note of gve.notes) {
+                                        if (!topNote || note.sourceNote.Pitch?.getHalfTone() > topNote.Pitch?.getHalfTone()) {
+                                            topNote = note.sourceNote;
+                                        }
                                     }
                                 }
-                            }
-                            if (fingerings[0].sourceNote === topNote && placement === PlacementEnum.Above) {
-                                // || fingerings[0].sourceNote === topNote && placement === PlacementEnum.Below && isBulkFingering // doesn't seem necessary
-                                // TODO more elegant solution: order fingerings in the order of each individual note.
-                                //   this is already a rare situation though, would be even more rare for this to matter, and more complex.
-                                fingerings.reverse();
+                                if (fingerings[0].sourceNote === topNote && placement === PlacementEnum.Above) {
+                                    // || fingerings[0].sourceNote === topNote && placement === PlacementEnum.Below && isBulkFingering // doesn't seem necessary
+                                    fingerings.reverse();
+                                }
                             }
                         }
                         for (let i: number = 0; i < fingerings.length; i++) {
@@ -3688,6 +3735,8 @@ export abstract class MusicSheetCalculator {
             }
             // second Underscore in the endStaffLine until endStaffEntry (if endStaffEntry isn't the first StaffEntry of the StaffLine))
             if (endStaffEntry.parentMeasure.ParentStaffLine && endStaffEntry.parentMeasure.staffEntries &&
+                // the end staffline's first measure can be missing when it isn't laid out (e.g. a lazy/incremental render batch)
+                endStaffLine.Measures[0]?.staffEntries[0] &&
                 !(endStaffEntry === endStaffEntry.parentMeasure.staffEntries[0] &&
                 endStaffEntry.parentMeasure === endStaffEntry.parentMeasure.ParentStaffLine.Measures[0])) {
                 const secondStartX: number = endStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;

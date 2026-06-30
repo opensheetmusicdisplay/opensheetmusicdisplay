@@ -177,6 +177,10 @@ export class EngravingRules {
     /** y offset added to avoid collisions of rehearsal marks (e.g. "A" or "Verse") with multiple measure rest numbers. */
     public RehearsalMarkYOffsetAddedForRehearsalMarks: number;
     public RehearsalMarkFontSize: number;
+    /** Lift a rehearsal mark above a chord symbol in the same measure so the two don't overlap, and reserve
+     *  skyline space for it. The mark is a fixed-offset VexFlow StaveSection that isn't part of the skyline,
+     *  while chord symbols are placed (earlier) against the skyline and can end up right where the mark goes. */
+    public RehearsalMarkAboveChordSymbol: boolean;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
     public MeasureNumberLabelXOffset: number;
@@ -512,6 +516,10 @@ export class EngravingRules {
     public RenderCopyright: boolean;
     public RenderPartNames: boolean;
     public RenderPartAbbreviations: boolean;
+    /** Internal cache-gate for lazy (renderAppend) rendering: when true, the lazy reuse caches (skyline)
+     *  are active. Set by OpenSheetMusicDisplay.renderAppend() and forced false by a normal render(), so
+     *  the caches never affect a non-lazy render. Not a user toggle. */
+    public LazyConsistentGraphic: boolean;
     /** Whether two render system labels on page 2+. This doesn't affect the default endless PageFormat. */
     public RenderSystemLabelsAfterFirstPage: boolean;
     public RenderFingerings: boolean;
@@ -793,6 +801,7 @@ export class EngravingRules {
         this.RehearsalMarkYOffsetAddedForRehearsalMarks = -12;
         this.RehearsalMarkYOffset = 0; // user defined
         this.RehearsalMarkFontSize = 10; // vexflow default: 12, too big with chord symbols
+        this.RehearsalMarkAboveChordSymbol = true;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.MeasureNumberLabelHeight = 1.5 * EngravingRules.unit;
@@ -1019,6 +1028,7 @@ export class EngravingRules {
         this.RenderCopyright = false;
         this.RenderPartNames = true;
         this.RenderPartAbbreviations = true;
+        this.LazyConsistentGraphic = false;
         this.RenderSystemLabelsAfterFirstPage = true;
         this.RenderFingerings = true;
         this.RenderMeasureNumbers = true;

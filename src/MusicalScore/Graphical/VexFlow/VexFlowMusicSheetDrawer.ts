@@ -19,6 +19,8 @@ import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { StaffLine } from "../StaffLine";
 import { GraphicalSlur } from "../GraphicalSlur";
+import { GraphicalNote } from "../GraphicalNote";
+import { GraphicalMeasure } from "../GraphicalMeasure";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalInstantaneousTempoExpression } from "../GraphicalInstantaneousTempoExpression";
 import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneousDynamicExpression";
@@ -141,6 +143,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
         for (const graphicalSlur of vfstaffLine.GraphicalSlurs) {
+            // lazy horizontal: gate by the slur's actual note x-positions (forward-stable), not its bezier
+            // points. Cross-staff slurs recompute their bezier here (at draw time) and can be degenerate in a
+            // partial layout, so a bezier-based gate would let them slip into several batches at once.
+            if (!this.lazyDrawsSlur(graphicalSlur)) {
+                continue;
+            }
             if (graphicalSlur.slur.isCrossed()) {
                 if (!this.rules.RenderSlursAcrossStaves) {
                     continue; // cross-staff slurs disabled (supplementary to RenderSlurs)
@@ -154,6 +162,33 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             }
             this.drawSlur(graphicalSlur, absolutePos);
         }
+    }
+
+    /** Lazy horizontal rendering: whether a slur belongs in this batch's draw x-window, based on the absolute
+     *  x of its start/end notes (forward-stable as the prefix grows). Returns true when not lazy-horizontal, or
+     *  when the notes can't be located (don't suppress). See drawSlurs() for why we avoid the bezier points. */
+    private lazyDrawsSlur(graphicalSlur: GraphicalSlur): boolean {
+        if (this.LazyDrawFromXUnits === Number.NEGATIVE_INFINITY && this.LazyDrawToXUnits === Number.POSITIVE_INFINITY) {
+            return true;
+        }
+        let rightX: number = Number.NEGATIVE_INFINITY;
+        const startGNote: GraphicalNote = this.rules.GNote(graphicalSlur.slur.StartNote);
+        const endGNote: GraphicalNote = this.rules.GNote(graphicalSlur.slur.EndNote);
+        if (startGNote) {
+            rightX = Math.max(rightX, startGNote.PositionAndShape.AbsolutePosition.x);
+        }
+        if (endGNote) {
+            rightX = Math.max(rightX, endGNote.PositionAndShape.AbsolutePosition.x);
+        }
+        // Fallback (e.g. a slur continuing from another staffline where GNote is unavailable): the slur's
+        // graphical staff entries are always present and forward-stable, and bound its x-extent.
+        for (const staffEntry of graphicalSlur.staffEntries) {
+            rightX = Math.max(rightX, staffEntry.PositionAndShape.AbsolutePosition.x + staffEntry.PositionAndShape.BorderRight);
+        }
+        if (rightX === Number.NEGATIVE_INFINITY) {
+            return true; // couldn't locate the slur at all; don't suppress it
+        }
+        return this.lazyDrawsAtX(rightX);
     }
 
     private drawGlissandi(vfStaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
@@ -183,6 +218,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     private drawSlur(graphicalSlur: GraphicalSlur, abs: PointF2D): void {
+        // lazy horizontal: the x-window gate is applied in drawSlurs() by note position (see lazyDrawsSlur)
         const curvePointsInPixels: PointF2D[] = [];
         // 1) create inner or original curve:
         const p1: PointF2D = new PointF2D(graphicalSlur.bezierStartPt.x + abs.x, graphicalSlur.bezierStartPt.y + abs.y);
@@ -225,6 +261,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {
+        if (!this.lazyDrawsObject(measure.PositionAndShape)) {
+            return; // lazy horizontal: this measure is outside the batch's draw x-window
+        }
         measure.setAbsoluteCoordinates(
             measure.PositionAndShape.AbsolutePosition.x * unitInPixels,
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
@@ -671,6 +710,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
+        if (!this.lazyDrawsLeftEdgeOnce()) {
+            return; // lazy horizontal: the brace is a once-only left-edge element, drawn with the first batch
+        }
         const ctx: Vex.IRenderContext = this.backend.getContext();
         ctx.openGroup("brace");
         // Draw InstrumentBrackets at beginning of line
@@ -680,6 +722,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawGroupBracket(bracket: GraphicalObject, system: MusicSystem): void {
+        if (!this.lazyDrawsLeftEdgeOnce()) {
+            return; // lazy horizontal: the group bracket is a once-only left-edge element (first batch only)
+        }
         const ctx: Vex.IRenderContext = this.backend.getContext();
         ctx.openGroup("bracket");
         // Draw InstrumentBrackets at beginning of line
@@ -688,9 +733,26 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         ctx.closeGroup();
     }
 
+    /** Lazy horizontal rendering: whether a spanning element (octave shift, pedal, vibrato, hairpin) belongs
+     *  in this batch's draw x-window. It is drawn in the batch where its END MEASURE's right edge first enters
+     *  the frontier -- i.e. once its whole span is laid out and stable (same rule as the measure itself).
+     *  Returns true when not lazy-horizontal, or when the end measure is unknown (don't suppress). */
+    private lazyDrawsSpanToMeasure(endMeasure: GraphicalMeasure): boolean {
+        if (this.LazyDrawFromXUnits === Number.NEGATIVE_INFINITY && this.LazyDrawToXUnits === Number.POSITIVE_INFINITY) {
+            return true;
+        }
+        if (!endMeasure) {
+            return true; // can't determine the span's end; don't suppress it
+        }
+        return this.lazyDrawsObject(endMeasure.PositionAndShape);
+    }
+
     protected drawOctaveShifts(staffLine: StaffLine): void {
         for (const graphicalOctaveShift of staffLine.OctaveShifts) {
             if (graphicalOctaveShift) {
+                if (!this.lazyDrawsSpanToMeasure(graphicalOctaveShift.endMeasure)) {
+                    continue; // lazy horizontal: span not yet fully in the frontier
+                }
                 const vexFlowOctaveShift: VexFlowOctaveShift = graphicalOctaveShift as VexFlowOctaveShift;
                 const ctx: Vex.IRenderContext = this.backend.getContext();
                 const textBracket: VF.TextBracket = vexFlowOctaveShift.getTextBracket();
@@ -711,6 +773,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalPedal of staffLine.Pedals) {
             if (graphicalPedal) {
                 const vexFlowPedal: VexFlowPedal = graphicalPedal as VexFlowPedal;
+                if (!this.lazyDrawsSpanToMeasure(vexFlowPedal.endMeasure)) {
+                    continue; // lazy horizontal: span not yet fully in the frontier
+                }
                 const ctx: Vex.IRenderContext = this.backend.getContext();
                 const pedalMarking: Vex.Flow.PedalMarking = vexFlowPedal.getPedalMarking();
                 (pedalMarking as any).render_options.color = this.rules.DefaultColorMusic;
@@ -724,6 +789,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalWavyLine of staffLine.WavyLines) {
             if (graphicalWavyLine) {
                 const vexFlowVibratoBracket: VexFlowVibratoBracket = graphicalWavyLine as VexFlowVibratoBracket;
+                const wavyEndMeasure: GraphicalMeasure = vexFlowVibratoBracket.endVfVoiceEntry?.parentStaffEntry?.parentMeasure;
+                if (!this.lazyDrawsSpanToMeasure(wavyEndMeasure)) {
+                    continue; // lazy horizontal: span not yet fully in the frontier
+                }
                 const ctx: Vex.IRenderContext = this.backend.getContext();
                 const vfVibratoBracket: Vex.Flow.VibratoBracket = vexFlowVibratoBracket.getVibratoBracket();
                 (vfVibratoBracket as any).setContext(ctx);
@@ -775,8 +844,11 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected drawContinuousDynamic(graphicalExpression: VexFlowContinuousDynamicExpression): void {
         if (graphicalExpression.IsVerbal) {
             const label: GraphicalLabel = graphicalExpression.Label;
-            label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
+            label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes); // x-window gated inside drawLabel
         } else {
+            if (!this.lazyDrawsSpanToMeasure(graphicalExpression.EndMeasure)) {
+                return; // lazy horizontal: hairpin not yet fully in the frontier
+            }
             for (const line of graphicalExpression.Lines) {
                 const start: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.Start.x,
                                                      graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.Start.y);

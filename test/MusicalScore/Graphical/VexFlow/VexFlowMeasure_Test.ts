@@ -18,6 +18,7 @@ import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/Graphic
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
+import { GraphicalLabel } from "../../../../src/MusicalScore/Graphical/GraphicalLabel";
 import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
@@ -255,6 +256,42 @@ describe("VexFlow Measure", () => {
          osmdRuleOn.EngravingRules.RenderMeasureNumbersForImplicitMeasures = true;
          osmdRuleOn.render();
          expect(measureNumberLabels(osmdRuleOn), "rule enabled: implicit measure number is rendered").to.include("0");
+         done();
+      }).catch(done);
+   });
+
+   // Non-regression test for the stacking order of fingerings collected from multiple voices.
+   // Before fix: fingerings were stacked in voice order, so the second voice's fingering ended up
+   // at the outer end of the stack even when its note was the lowest of the beat (e.g. Beethoven
+   // Pathetique 2nd mvt m24: a two-note chord in voice 1 over the beat's lowest note in voice 2).
+   // Fix: fingerings are sorted by their note's pitch so the stack mirrors the chord.
+   it("Stacks fingerings from multiple voices in the pitch order of their notes", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_fingering_two_voices_pitch_order.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+
+         function fingeringTextsTopToBottom(staffIndex: number, entryIndex: number): string[] {
+            const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, staffIndex);
+            const labels: GraphicalLabel[] = gm.staffEntries[entryIndex].FingeringEntries;
+            return labels
+               .slice()
+               .sort((a: GraphicalLabel, b: GraphicalLabel) => a.PositionAndShape.RelativePosition.y - b.PositionAndShape.RelativePosition.y)
+               .map((label: GraphicalLabel) => label.Label.text);
+         }
+
+         // treble staff (Above placement): lowest note's fingering closest to the staff, i.e. at the bottom of the stack
+         expect(fingeringTextsTopToBottom(0, 0), "treble staff, beat 1").to.deep.equal(["5", "3", "1"]);
+         expect(fingeringTextsTopToBottom(0, 1), "treble staff, beat 3").to.deep.equal(["4", "2", "1"]);
+         // bass staff (Below placement): highest note's fingering closest to the staff, i.e. at the top of the stack
+         expect(fingeringTextsTopToBottom(1, 0), "bass staff, beat 1").to.deep.equal(["1", "3", "5"]);
+         expect(fingeringTextsTopToBottom(1, 1), "bass staff, beat 3").to.deep.equal(["2", "4", "5"]);
          done();
       }).catch(done);
    });
