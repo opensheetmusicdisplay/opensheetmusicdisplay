@@ -556,7 +556,27 @@ export class OpenSheetMusicDisplay {
                 return;
             }
             loading = true;
+            // Appending the next batch below the viewport must not move it. Each batch resizes the backend,
+            // and on a reconciliation batch createOrRefreshRenderBackend() momentarily removes the rendered
+            // SVG/Canvas from the container (collapsing the page height) before the new, taller content is
+            // sized in. While the height is collapsed, some mobile/touch browsers clamp the scroll offset to
+            // the top; desktop browsers keep it. So capture the offset before the batch and restore it after
+            // -- the in-core equivalent of renderAndScrollBack() for an incremental append. Unlike
+            // renderAndScrollBack() (which restores by PERCENT, suited to a same-height re-render), here the
+            // page grows, so we restore the ABSOLUTE offset: the appended systems are below the viewport and
+            // must not shift it. The !== guards make it a no-op when nothing moved (e.g. on desktop).
+            const scrollEl: HTMLElement = (target === window
+                ? (document.scrollingElement || document.documentElement)
+                : target) as HTMLElement;
+            const savedTop: number = scrollEl.scrollTop;
+            const savedLeft: number = scrollEl.scrollLeft;
             const result: IRenderNextResult = this.renderNext(batchOptions);
+            if (scrollEl.scrollTop !== savedTop) {
+                scrollEl.scrollTop = savedTop;
+            }
+            if (scrollEl.scrollLeft !== savedLeft) {
+                scrollEl.scrollLeft = savedLeft;
+            }
             loading = false;
             if (result.done) {
                 this.disableIncrementalRenderingOnScroll();
