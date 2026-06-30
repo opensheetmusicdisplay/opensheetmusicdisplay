@@ -295,12 +295,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           note.center_x_shift = 0;
           if (note.osmdInitialStemExtensionOverride === undefined) {
             note.osmdInitialStemExtensionOverride = note.stemExtensionOverride ?? null; // first render: snapshot
-            // Whole rests at their default position (center+1 = top staff line)
-            // should never be shifted by SRV — it causes false-positive cascade.
-            // Non-whole rests still get one SRV pass via the collision fix.
-            if (note.isRest?.() && (note.duration === "w" || note.duration === "1")) {
-              note.shiftRestVerticalDisabled = true;
-            }
           } else {
             note.stemExtensionOverride = note.osmdInitialStemExtensionOverride;
             if (note.isRest?.()) {
