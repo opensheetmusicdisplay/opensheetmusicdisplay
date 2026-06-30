@@ -3303,26 +3303,38 @@ export abstract class MusicSheetCalculator {
                             //     }
                             // }
                         }
-                        if (fingerings.length > 0) {
+                        if (fingerings.length > 1) {
                             // const isBulkFingering: boolean = fingerings.last().sourceNote === fingerings[0].sourceNote;
                             //   // bulk fingering = more than one fingering per note given in MusicXML. (some programs export like this sometimes)
                             // console.log("isBulkFingering: " + isBulkFingering);
-                            if (placement === PlacementEnum.Below) {
-                                fingerings.reverse();
-                            }
-                            let topNote: Note;
-                            for (const gve of gse.graphicalVoiceEntries) {
-                                for (const note of gve.notes) {
-                                    if (!topNote || note.sourceNote.Pitch?.getHalfTone() > topNote.Pitch?.getHalfTone()) {
-                                        topNote = note.sourceNote;
+                            const distinctPitchedNotes: boolean = fingerings.every(
+                                (fingering: TechnicalInstruction, index: number) => fingering.sourceNote?.Pitch !== undefined &&
+                                    fingerings.findIndex((other: TechnicalInstruction) => other.sourceNote === fingering.sourceNote) === index);
+                            if (distinctPitchedNotes) {
+                                // stack fingerings in the pitch order of their notes, mirroring the chord (lowest note's fingering at the bottom).
+                                //   sorting handles notes collected from multiple voices, which are not necessarily in pitch order.
+                                fingerings.sort((a: TechnicalInstruction, b: TechnicalInstruction) =>
+                                    a.sourceNote.Pitch.getHalfTone() - b.sourceNote.Pitch.getHalfTone());
+                                if (placement === PlacementEnum.Below) {
+                                    fingerings.reverse();
+                                }
+                            } else {
+                                // fallback for bulk fingerings (multiple per note) or unpitched notes: keep XML order, with heuristics
+                                if (placement === PlacementEnum.Below) {
+                                    fingerings.reverse();
+                                }
+                                let topNote: Note;
+                                for (const gve of gse.graphicalVoiceEntries) {
+                                    for (const note of gve.notes) {
+                                        if (!topNote || note.sourceNote.Pitch?.getHalfTone() > topNote.Pitch?.getHalfTone()) {
+                                            topNote = note.sourceNote;
+                                        }
                                     }
                                 }
-                            }
-                            if (fingerings[0].sourceNote === topNote && placement === PlacementEnum.Above) {
-                                // || fingerings[0].sourceNote === topNote && placement === PlacementEnum.Below && isBulkFingering // doesn't seem necessary
-                                // TODO more elegant solution: order fingerings in the order of each individual note.
-                                //   this is already a rare situation though, would be even more rare for this to matter, and more complex.
-                                fingerings.reverse();
+                                if (fingerings[0].sourceNote === topNote && placement === PlacementEnum.Above) {
+                                    // || fingerings[0].sourceNote === topNote && placement === PlacementEnum.Below && isBulkFingering // doesn't seem necessary
+                                    fingerings.reverse();
+                                }
                             }
                         }
                         for (let i: number = 0; i < fingerings.length; i++) {
