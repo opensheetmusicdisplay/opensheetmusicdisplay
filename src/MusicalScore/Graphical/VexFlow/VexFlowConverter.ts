@@ -163,14 +163,10 @@ export class VexFlowConverter {
         }
         if (isRest && octaveOffsetGiven === undefined) {
             octaveOffset = 0;
-            if (clef.ClefType === ClefEnum.F) {
-                octaveOffset = 2;
-            }
-            if (clef.ClefType === ClefEnum.C) {
-                octaveOffset = 2;
-            }
-            // TODO the pitch for rests will be the start position, for eights rests it will be the bottom point
-            // maybe we want to center on the display position instead of having the bottom there?
+            // NOTE: octaveOffset for bass/tenor clef rests was previously +2, but
+            // that's wrong when the rest has a display-step/octave from MusicXML —
+            // the pitch is already correct. For the R/4 fallback path (no display-step)
+            // pitch() is never called, so the offset was dead code that only hurt.
         }
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
