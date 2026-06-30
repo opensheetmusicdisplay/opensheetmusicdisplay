@@ -1769,27 +1769,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         graceNotes.push(vfStaveNote as unknown as VF.GraceNote);
                     }
                     const graceNoteGroup: VF.GraceNoteGroup = new VF.GraceNoteGroup(graceNotes, graceSlur);
-                    let xMargin: number = this.rules.GraceNoteGroupXMargin;
-                    if (graceNotes.length > 1) {
-                        xMargin /= 3;
-                    }
-                    let spacing: number = xMargin * 10;
-                    // Fingerings on grace notes add width beyond what VF5's
-                    // preFormat() measures. Compensate so the last grace note
-                    // does not overflow the target note.
-                    if (this.rules.RenderFingerings) {
-                        let fingeringCount: number = 0;
-                        for (const gveGrace2 of graceGVoiceEntriesBefore) {
-                            for (const note of gveGrace2.notes) {
-                                if (note.sourceNote.Fingering) {
-                                    fingeringCount++;
-                                }
-                            }
-                        }
-                        if (fingeringCount > 0) {
-                            spacing -= fingeringCount * 4.7;
-                        }
-                    }
+                    // GraceNoteGroup.format() already measures each grace note's
+                    // modifier widths (fingerings left, string numbers right) via
+                    // its inner formatter. The spacing below is the gap kept between
+                    // the grace block's right edge and the target note; it must clear
+                    // the last grace note's stem/flag, so it is independent of the
+                    // grace count (do not divide by the number of grace notes).
+                    const spacing: number = this.rules.GraceNoteGroupXMargin * 10;
                     (graceNoteGroup as any).spacing = spacing;
                     ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(graceNoteGroup, 0);
                     graceGVoiceEntriesBefore = [];

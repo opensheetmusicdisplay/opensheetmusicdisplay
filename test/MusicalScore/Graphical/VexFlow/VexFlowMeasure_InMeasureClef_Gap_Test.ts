@@ -272,8 +272,8 @@ describe("In-Measure Clef Gap Analysis", () => {
 
             const { treble, bass } = splitByVerticalBand(glyphs);
 
-            const _tResult: { gaps: GapInfo[], segments: NoteSegment[] } = analyzeStaff("TREBLE STAFF", treble);
-            const _bResult: { gaps: GapInfo[], segments: NoteSegment[] } = analyzeStaff("BASS STAFF", bass);
+            void analyzeStaff("TREBLE STAFF", treble);
+            void analyzeStaff("BASS STAFF", bass);
 
             // Collect all tight gaps involving clefs < 2px across both staves
             // (merely informational — 1-2px gaps at clef/rest boundaries are

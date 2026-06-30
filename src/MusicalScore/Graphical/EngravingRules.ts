@@ -733,7 +733,7 @@ export class EngravingRules {
         // GraceNote Variables
         this.GraceNoteScalingFactor = 0.6;
         this.GraceNoteXOffset = 0.2;
-        this.GraceNoteGroupXMargin = 0.15;
+        this.GraceNoteGroupXMargin = 1.0;
         this.GraceNoteExtraSpacing = 2.0;  // OSMD units per measure (not per grace note), one-time safety margin
         // (minTotalWidth already includes grace group width via modifier context)
         //  see test_end_clef_measure. only potential 'tight' case: test_graceslash_simple
