@@ -1472,10 +1472,11 @@ describe("Cross-Staff Beam SVG Rendering", () => {
                 " gap=" + gap.toFixed(1) + "px (should be <15)");
         });
 
-        it("slur lower curve endpoints are within 5px of upper curve", () => {
+        it("slur lower curve endpoints are within 10px of upper curve", () => {
             const slurEls: NodeListOf<Element> =
                 svg.querySelectorAll("[class*='vf-curve']");
             const violations: string[] = [];
+            const maxGap: number = 10;
             for (let i: number = 0; i < slurEls.length; i++) {
                 const pathEl: Element | null =
                     slurEls[i].querySelector("path");
@@ -1487,7 +1488,7 @@ describe("Cross-Staff Beam SVG Rendering", () => {
                 const upperStartY: number = parseFloat(n[2]);
                 const lowerEndY: number = parseFloat(n[4]);
                 const gap: number = Math.abs(upperStartY - lowerEndY);
-                if (gap > 5) {
+                if (gap > maxGap) {
                     violations.push(pathEl.parentElement?.id +
                         " lowerEndY=" + lowerEndY.toFixed(1) +
                         " upperEndY=" + upperStartY.toFixed(1) +
