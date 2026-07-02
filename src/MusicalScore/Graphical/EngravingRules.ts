@@ -335,6 +335,18 @@ export class EngravingRules {
     public SlurHeightFlattenLongSlursFactorByAngle: number;
     public SlurHeightFlattenLongSlursCutoffAngle: number;
     public SlurHeightFlattenLongSlursCutoffWidth: number;
+    /** Whether to cap a slur's arc height so it doesn't bow much higher than the notes/objects it spans
+     *  (long, steep slurs otherwise overshoot massively, see issue #1466). Default true. */
+    public SlurFlattenToObstacle: boolean;
+    /** How far (in units) above the highest object it spans a slur's apex may reach when capped by
+     *  SlurFlattenToObstacle. Larger = taller slurs / more clearance. */
+    public SlurFlattenToObstacleMargin: number;
+    /** A graceful minimum arc height so slurs over flat passages aren't flattened too much: the apex cap never
+     *  goes below this factor * sqrt(width) (itself capped at SlurFlattenMaxMinArcHeight). Uses sqrt(width) rather
+     *  than width so wide slurs stay proportionally flat instead of ballooning. */
+    public SlurFlattenMinArcWidthFactor: number;
+    /** Upper bound (in units) for the width-based minimum arc height (see SlurFlattenMinArcWidthFactor). */
+    public SlurFlattenMaxMinArcHeight: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
     public SlurMaximumYControlPointDistance: number;
     /** How much a cross-staff slur (e.g. left hand to right hand) bows out, as a factor of the distance
@@ -849,6 +861,10 @@ export class EngravingRules {
         this.SlurHeightFlattenLongSlursFactorByAngle = 0.36; // when one of these factors is high, increasing the other has a very strong effect.
         this.SlurHeightFlattenLongSlursCutoffAngle = 47;
         this.SlurHeightFlattenLongSlursCutoffWidth = 16; // 15 ~ slur between measure's first notes in 4/4. 14 -> problem with test_slurs_highNotes
+        this.SlurFlattenToObstacle = true;
+        this.SlurFlattenToObstacleMargin = 2;
+        this.SlurFlattenMinArcWidthFactor = 0.38; // coefficient on sqrt(width); ~2.7 at width 50, ~3.8 at width 100
+        this.SlurFlattenMaxMinArcHeight = 4;
         this.SlursStartingAtSameStaffEntryYOffset = 0.8;
         //Maximum y difference between control points. Forces slurs to have less 'weight' either way in the x direction
         this.SlurMaximumYControlPointDistance = undefined;

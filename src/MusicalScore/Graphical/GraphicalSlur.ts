@@ -1070,6 +1070,31 @@ export class GraphicalSlur extends GraphicalCurve {
         const endControlPoint: PointF2D = new PointF2D();
         endControlPoint.x = endX - (endX * factorEnd * Math.cos(endAngle * GraphicalSlur.degreesToRadiansFactor));
         endControlPoint.y = -(endX * factorEnd * Math.sin(endAngle * GraphicalSlur.degreesToRadiansFactor));
+        // Flatten long/steep slurs so they don't arc far higher than the notes/objects they actually span
+        // (issue #1466). The cubic bezier's apex (its highest point above the start-end line) is determined by the
+        // control point heights; cap it to a small margin above the highest spanned object, keeping the start/end
+        // angles (so the slur still leaves the notes at the same steep angle, but flattens quickly after).
+        if (this.rules.SlurFlattenToObstacle) {
+            const requiredHeight: number = Math.max(0, this.getPointListMaxY(points)); // highest object above the start-end line
+            // graceful minimum arc so slurs over flat passages aren't flattened into near-straight lines.
+            // Grows with sqrt(width) (not linearly) so that WIDE slurs stay proportionally flat instead of
+            // ballooning: a linear floor let e.g. a system-spanning slur over flat notes arc ~8 units high.
+            const minArc: number = Math.min(this.rules.SlurFlattenMaxMinArcHeight, this.rules.SlurFlattenMinArcWidthFactor * Math.sqrt(endX));
+            const targetApex: number = Math.max(requiredHeight + this.rules.SlurFlattenToObstacleMargin, minArc);
+            let apex: number = 0;
+            // the bezier's y at parameter t only depends on the control points' y (start/end points are on the x-axis here)
+            for (let t: number = 0.1; t <= 0.9; t += 0.1) {
+                const mt: number = 1 - t;
+                apex = Math.max(apex, 3 * mt * mt * t * startControlPoint.y + 3 * mt * t * t * endControlPoint.y);
+            }
+            if (apex > targetApex && apex > 0.0001) {
+                const scale: number = targetApex / apex; // apex scales linearly with the control point heights
+                startControlPoint.x *= scale;
+                startControlPoint.y *= scale;
+                endControlPoint.x = endX - (endX - endControlPoint.x) * scale;
+                endControlPoint.y *= scale;
+            }
+        }
         //Soften the slur in a "brute-force" way
         let controlPointYDiff: number = startControlPoint.y - endControlPoint.y;
         while (this.rules.SlurMaximumYControlPointDistance &&

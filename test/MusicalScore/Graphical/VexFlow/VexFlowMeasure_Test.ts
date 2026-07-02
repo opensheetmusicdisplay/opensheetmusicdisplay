@@ -22,6 +22,7 @@ import { GraphicalLabel } from "../../../../src/MusicalScore/Graphical/Graphical
 import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
+import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
 
 describe("VexFlow Measure", () => {
 
@@ -331,6 +332,126 @@ describe("VexFlow Measure", () => {
          // the inner number comes from <tuplet-actual><tuplet-number>3, not the time-modification actual-notes (9)
          expect(inner.TupletLabelNumber, "inner tuplet number from tuplet-actual").to.equal(3);
          done();
+      }).catch(done);
+   });
+
+   // Non-regression test for EngravingRules.SlurFlattenToObstacle (issue #1466). Long/steep slurs otherwise arc far
+   // above the notes they span; the apex is capped to a small margin above the highest spanned object. This checks
+   // that the highest slur arc is meaningfully lower with the flattening on than off.
+   it("Flattens a bloated slur's arc height when SlurFlattenToObstacle is enabled", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_grace_note_fingerings_and_strings_Ysaye_excerpt.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const xml: string = new XMLSerializer().serializeToString(score);
+
+      function maxSlurArcHeight(osmd: OpenSheetMusicDisplay): number {
+         let maxArc: number = 0;
+         for (const page of osmd.GraphicSheet.MusicPages) {
+            for (const system of page.MusicSystems) {
+               for (const staffLine of system.StaffLines) {
+                  for (const gSlur of staffLine.GraphicalSlurs) {
+                     const s: PointF2D = gSlur.bezierStartPt; const c1: PointF2D = gSlur.bezierStartControlPt;
+                     const c2: PointF2D = gSlur.bezierEndControlPt; const e: PointF2D = gSlur.bezierEndPt;
+                     if (!s || !e || !c1 || !c2 || e.x === s.x) {
+                        continue;
+                     }
+                     // sample the bezier and track its largest distance from the straight start-end chord (the arc height)
+                     for (let t: number = 0.1; t <= 0.9; t += 0.1) {
+                        const mt: number = 1 - t;
+                        const x: number = mt*mt*mt*s.x + 3*mt*mt*t*c1.x + 3*mt*t*t*c2.x + t*t*t*e.x;
+                        const y: number = mt*mt*mt*s.y + 3*mt*mt*t*c1.y + 3*mt*t*t*c2.y + t*t*t*e.y;
+                        const chordY: number = s.y + (x - s.x) / (e.x - s.x) * (e.y - s.y);
+                        maxArc = Math.max(maxArc, Math.abs(y - chordY));
+                     }
+                  }
+               }
+            }
+         }
+         return maxArc;
+      }
+
+      const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmdOff.load(xml).then(() => {
+         osmdOff.EngravingRules.SlurFlattenToObstacle = false;
+         osmdOff.render();
+         const arcWithout: number = maxSlurArcHeight(osmdOff);
+
+         return osmdOn.load(xml).then(() => {
+            osmdOn.render(); // SlurFlattenToObstacle is true by default
+            const arcWith: number = maxSlurArcHeight(osmdOn);
+            expect(arcWith, `flattened arc (${arcWith.toFixed(1)}) should be well below unflattened (${arcWithout.toFixed(1)})`)
+               .to.be.lessThan(arcWithout * 0.9);
+            done();
+         });
+      }).catch(done);
+   });
+
+   // Non-regression test for the WIDTH-DRIVEN case of SlurFlattenToObstacle (issue #1466): a wide slur over a
+   // (near-)flat passage must not balloon. The minimum-arc floor grows with sqrt(width) rather than linearly, so
+   // wide slurs stay proportionally flat. Chopin Étude Op. 10 No. 4 has several system-spanning slurs that would
+   // otherwise arc very high; this checks the widest slur on the sheet is flattened substantially.
+   it("Keeps a wide slur over a flat passage from ballooning (SlurFlattenToObstacle, width-driven)", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_dynamics_attribute_Chopin_Etudes_op_10_4_Duepree02.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const xml: string = new XMLSerializer().serializeToString(score);
+
+      // arc height (max distance from the straight start-end chord) of the WIDEST slur on the sheet
+      function widestSlurArcHeight(osmd: OpenSheetMusicDisplay): number {
+         let widestWidth: number = 0;
+         let arcOfWidest: number = 0;
+         for (const page of osmd.GraphicSheet.MusicPages) {
+            for (const system of page.MusicSystems) {
+               for (const staffLine of system.StaffLines) {
+                  for (const gSlur of staffLine.GraphicalSlurs) {
+                     const s: PointF2D = gSlur.bezierStartPt; const c1: PointF2D = gSlur.bezierStartControlPt;
+                     const c2: PointF2D = gSlur.bezierEndControlPt; const e: PointF2D = gSlur.bezierEndPt;
+                     if (!s || !e || !c1 || !c2 || e.x === s.x) {
+                        continue;
+                     }
+                     const width: number = Math.abs(e.x - s.x);
+                     if (width <= widestWidth) {
+                        continue;
+                     }
+                     let arc: number = 0;
+                     for (let t: number = 0.1; t <= 0.9; t += 0.1) {
+                        const mt: number = 1 - t;
+                        const x: number = mt*mt*mt*s.x + 3*mt*mt*t*c1.x + 3*mt*t*t*c2.x + t*t*t*e.x;
+                        const y: number = mt*mt*mt*s.y + 3*mt*mt*t*c1.y + 3*mt*t*t*c2.y + t*t*t*e.y;
+                        const chordY: number = s.y + (x - s.x) / (e.x - s.x) * (e.y - s.y);
+                        arc = Math.max(arc, Math.abs(y - chordY));
+                     }
+                     widestWidth = width;
+                     arcOfWidest = arc;
+                  }
+               }
+            }
+         }
+         return arcOfWidest;
+      }
+
+      const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmdOff.load(xml).then(() => {
+         osmdOff.EngravingRules.SlurFlattenToObstacle = false;
+         osmdOff.render();
+         const arcWithout: number = widestSlurArcHeight(osmdOff);
+
+         return osmdOn.load(xml).then(() => {
+            osmdOn.render(); // SlurFlattenToObstacle is true by default
+            const arcWith: number = widestSlurArcHeight(osmdOn);
+            // the widest slur spans a (near-)flat passage, so flattening should cut its arc well below half
+            expect(arcWith, `widest slur's flattened arc (${arcWith.toFixed(1)}) should be far below unflattened (${arcWithout.toFixed(1)})`)
+               .to.be.lessThan(arcWithout * 0.65);
+            done();
+         });
       }).catch(done);
    });
 
