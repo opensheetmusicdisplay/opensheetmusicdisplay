@@ -1076,8 +1076,10 @@ export class GraphicalSlur extends GraphicalCurve {
         // angles (so the slur still leaves the notes at the same steep angle, but flattens quickly after).
         if (this.rules.SlurFlattenToObstacle) {
             const requiredHeight: number = Math.max(0, this.getPointListMaxY(points)); // highest object above the start-end line
-            // graceful minimum arc so slurs over flat passages aren't flattened into near-straight lines:
-            const minArc: number = Math.min(this.rules.SlurFlattenMaxMinArcHeight, endX * this.rules.SlurFlattenMinArcWidthFactor);
+            // graceful minimum arc so slurs over flat passages aren't flattened into near-straight lines.
+            // Grows with sqrt(width) (not linearly) so that WIDE slurs stay proportionally flat instead of
+            // ballooning: a linear floor let e.g. a system-spanning slur over flat notes arc ~8 units high.
+            const minArc: number = Math.min(this.rules.SlurFlattenMaxMinArcHeight, this.rules.SlurFlattenMinArcWidthFactor * Math.sqrt(endX));
             const targetApex: number = Math.max(requiredHeight + this.rules.SlurFlattenToObstacleMargin, minArc);
             let apex: number = 0;
             // the bezier's y at parameter t only depends on the control points' y (start/end points are on the x-axis here)
