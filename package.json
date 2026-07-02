@@ -100,7 +100,7 @@
     "karma-mocha": "^2.0.1",
     "karma-mocha-reporter": "^2.2.5",
     "karma-webpack": "^5.0.1",
-    "karma-xml2js-preprocessor": "^0.1.0",
+    "karma-xml2js-preprocessor": "^0.2.0",
     "mocha": "^11.7.5",
     "ncp": "^2.0.0",
     "svg2pdf.js": "^2.7.0",
