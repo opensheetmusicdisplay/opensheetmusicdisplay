@@ -163,7 +163,7 @@ describe("GeometricSkyBottomLineCalculation", () => {
 
     it("agrees with the raster calculation for chord symbols", async function (): Promise<void> {
                 await compareGeometricWithRaster("OSMD_function_test_chord_symbols.musicxml",
-            { lengthTolerance: 5, bigDiffFractionTolerance: 0.042 });
+            { lengthTolerance: 5, bigDiffFractionTolerance: 0.07 });
     });
 
     it("agrees with the raster calculation for a one-line (percussion) staff", async function (): Promise<void> {

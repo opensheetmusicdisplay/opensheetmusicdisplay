@@ -658,7 +658,10 @@ export class GraphicalSlur extends GraphicalCurve {
      */
     private beamYForNote(note: GraphicalNote, startStaffLineY: number, relativeToOwnStave: boolean = false): number | undefined {
         const gNote: any = note;
-        const vfNote: any = gNote.vfnote?.[0];
+        // Find the VF5 note that is actually beamed — vfnote[] may contain
+        // multiple notes (e.g. quarter + 16th on same pitch) and the beam
+        // is on a different element than vfnote[0].
+        const vfNote: any = (gNote.vfnote ?? []).find((n: any) => n?.beam);
         if (!vfNote) { return undefined; }
         const beam: any = vfNote.beam;
         if (!beam) { return undefined; }
@@ -694,47 +697,27 @@ export class GraphicalSlur extends GraphicalCurve {
             }
         }
         if (siblingMeasure) {
-            // Cross-staff beam — find outermost noteheads in the voice
-            // on each stave and compute beam Y from those, matching how
-            // positionCrossStaffBeams uses the stave lines.
-            const beamNotes: any[] = beam.getNotes();
+            // Read the beam position directly from positionCrossStaffBeams
+            // (flatBeamOffset = midpoint, clamped to stave bounds).
+            // This is the authoritative value — no need to recompute here.
+            const flatY: number | undefined = (beam as any).renderOptions?.flatBeamOffset;
+            if (flatY !== undefined) {
+                if (relativeToOwnStave && stave) {
+                    return (flatY - stave.getYForLine(0)) / unitInPixels;
+                }
+                return flatY / unitInPixels - startStaffLineY;
+            }
+            // Fallback: not yet positioned, use stave-midpoint estimate
             const ownerStave: any = ownerMeasure!.getVFStave();
             const sibStave: any = siblingMeasure.getVFStave();
-            let upperExtremeY: number = Infinity;
-            let lowerExtremeY: number = -Infinity;
-            const ownerStaveY: number = ownerStave.getYForLine(0);
-            const sibStaveY: number = sibStave.getYForLine(0);
-            for (const bn of beamNotes) {
-                const ns: any = bn.checkStave?.() || bn.stave;
-                if (!ns) { continue; }
-                const kps: any[] = bn.getKeyProps?.() || [];
-                if (kps.length === 0) { continue; }
-                const noteY: number = ns.getYForNote(kps[0].line);
-                // Compare by stave Y position, not object identity
-                // (setStave may reassign notes to differently-referenced staves)
-                const noteStaveY: number = ns.getYForLine(0);
-                const noteIsUpper: boolean = noteStaveY < ownerStaveY + (sibStaveY - ownerStaveY) * 0.5;
-                if (noteIsUpper) {
-                    upperExtremeY = Math.min(upperExtremeY, noteY);
-                } else {
-                    lowerExtremeY = Math.max(lowerExtremeY, noteY);
-                }
-            }
-            let beamYPx: number;
-            if (isFinite(upperExtremeY) && isFinite(lowerExtremeY)) {
-                beamYPx = upperExtremeY +
-                    (lowerExtremeY - upperExtremeY) * 0.35;
-            } else {
-                // Fallback: use stave lines
-                const ownerY: number = ownerStave.getYForLine(0);
-                const sibY: number = sibStave.getYForLine(0);
-                const localBelow: boolean = ownerY > sibY;
-                const upperStave: any = localBelow ? sibStave : ownerStave;
-                const lowerStave: any = localBelow ? ownerStave : sibStave;
-                const upperBottom: number = upperStave.getYForLine(4);
-                const lowerTop: number = lowerStave.getYForLine(0);
-                beamYPx = upperBottom + (lowerTop - upperBottom) * 0.35;
-            }
+            const ownerY0: number = ownerStave.getYForLine(0);
+            const sibY0: number = sibStave.getYForLine(0);
+            const localBelow: boolean = ownerY0 > sibY0;
+            const upperStave: any = localBelow ? sibStave : ownerStave;
+            const lowerStave: any = localBelow ? ownerStave : sibStave;
+            const upBot: number = upperStave.getYForLine(4);
+            const lowTop: number = lowerStave.getYForLine(0);
+            const beamYPx: number = upBot + (lowTop - upBot) * 0.5;
             if (relativeToOwnStave && stave) {
                 return (beamYPx - stave.getYForLine(0)) / unitInPixels;
             }

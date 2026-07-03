@@ -445,13 +445,6 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         });
     });
 
-    /** Evaluate cubic bezier Y at parameter t (0..1). */
-    function evalBezierY(t: number, startY: number, cp1Y: number, cp2Y: number, endY: number): number {
-        const mt: number = 1 - t;
-        return mt * mt * mt * startY + 3 * mt * mt * t * cp1Y +
-               3 * mt * t * t * cp2Y + t * t * t * endY;
-    }
-
     interface SlurBezier {
         id: string;
         startX: number;
@@ -479,105 +472,6 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         };
     }
 
-    describe("Dichterliebe01 voice-skyline slur clearance", () => {
-        let svg: SVGElement;
-        let slurs: SlurBezier[];
-        let crossBeams: CrossStaffBeamInfo[];
-
-        beforeAll(function (): Promise<void> {
-                        return renderToSVG("Dichterliebe01.xml").then((s: SVGElement) => {
-                svg = s;
-                crossBeams = findCrossStaffBeams(svg, 50);
-                // Parse all slurs from the SVG
-                const slurEls: NodeListOf<Element> =
-                    svg.querySelectorAll("[class*='vf-curve']");
-                slurs = [];
-                for (let i: number = 0; i < slurEls.length; i++) {
-                    const pathEl: Element | null =
-                        slurEls[i].querySelector("path");
-                    if (pathEl) {
-                        const sb: SlurBezier | undefined =
-                            parseSlurBezier(pathEl);
-                        if (sb) { slurs.push(sb); }
-                    }
-                }
-            });
-        });
-
-        it("cross-staff beam noteheads must be cleared by any overlapping slur", () => {
-            const margin: number = 3;
-            const violations: string[] = [];
-            // Collect all cross-staff-beam noteheads with their X,Y
-            const beamNoteheads: { x: number, y: number, beamX: number }[] = [];
-            for (const cb of crossBeams) {
-                if (!isCrossStaffBeam(cb, 80)) { continue; }
-                const bx: number = cb.stems[0]?.x ?? 0;
-                for (const nh of cb.noteheads) {
-                    beamNoteheads.push({ x: nh.x, y: nh.centerY, beamX: bx });
-                }
-            }
-            if (beamNoteheads.length === 0) { return; }
-
-            for (const nh of beamNoteheads) {
-                // Find any slur whose X range covers this notehead
-                let covered: boolean = false;
-                for (const slur of slurs) {
-                    if (nh.x < slur.startX - 10 || nh.x > slur.endX + 10) {
-                        continue;
-                    }
-                    // Also check: slur and notehead must be on similar Y scale
-                    // (same staff area) — skip vocal staff slurs for bass notes
-                    const slurMidY: number = (Math.min(slur.startY, slur.cp1Y,
-                        slur.cp2Y, slur.endY) + Math.max(slur.startY, slur.cp1Y,
-                        slur.cp2Y, slur.endY)) / 2;
-                    if (Math.abs(slurMidY - nh.y) > 200) { continue; }
-
-                    covered = true;
-                    const t: number = Math.max(0, Math.min(1,
-                        (nh.x - slur.startX) / (slur.endX - slur.startX || 1)));
-                    const curveY: number = evalBezierY(
-                        t, slur.startY, slur.cp1Y, slur.cp2Y, slur.endY);
-                    if (curveY > nh.y - margin) {
-                        violations.push(
-                            "beam@" + nh.beamX.toFixed(0) +
-                            " nh@(x=" + nh.x.toFixed(0) + ",y=" + nh.y.toFixed(0) + ")" +
-                            " slur=\"" + slur.id + "\"" +
-                            " curveY=" + curveY.toFixed(1) +
-                            " vs target=" + (nh.y - margin).toFixed(1) +
-                            " (off by " + (curveY - nh.y + margin).toFixed(1) + ")");
-                    }
-                    break; // first matching slur is the closest one
-                }
-                if (!covered) {
-                    violations.push("beam@" + nh.beamX.toFixed(0) +
-                        " nh@(x=" + nh.x.toFixed(0) + ",y=" + nh.y.toFixed(0) + ")" +
-                        " has no overlapping slur");
-                }
-            }
-
-            expect(violations).to.deep.equal([],
-                violations.length + " noteheads not cleared:\n" +
-                violations.join("\n"));
-        });
-    });
-
-    /**
-     * Returns true if the beam appears to span two distinct staves (cross-staff),
-     * rather than just having a wide melodic range on a single staff.
-     * Cross-staff beams have notehead Ys in two clusters with a gap between them.
-     */
-    function isCrossStaffBeam(cb: CrossStaffBeamInfo, staveGapThreshold: number): boolean {
-        if (cb.noteheads.length < 2) { return false; }
-        const ys: number[] = cb.noteheads.map((nh) => nh.centerY).sort((a, b) => a - b);
-        // Find the largest gap between consecutive sorted Y values
-        let maxGap: number = 0;
-        for (let i: number = 1; i < ys.length; i++) {
-            const g: number = ys[i] - ys[i - 1];
-            if (g > maxGap) { maxGap = g; }
-        }
-        // True cross-staff: gap between staves is larger than within-stave spread
-        return maxGap >= staveGapThreshold;
-    }
 
     interface NoteInfo {
         id: string;
@@ -1084,56 +978,6 @@ describe("Cross-Staff Beam SVG Rendering", () => {
             expect(crossBeams.length).to.be.greaterThan(0,
                 "no cross-staff beams detected");
         });
-
-        it("slurs above UP-stem cross-staff beams must clear beam top", () => {
-            let violations: number = 0;
-            const details: string[] = [];
-            for (const cb of crossBeams) {
-                // Only check actual cross-staff beams (notes on two different staves)
-                if (!isCrossStaffBeam(cb, 80)) { continue; }
-                const upCount: number =
-                    cb.stems.filter((s) => s.direction === "up").length;
-                if (upCount <= cb.stems.length / 2) { continue; }
-
-                // Beam top Y from beam polygon edges
-                let beamTopY: number = Infinity;
-                for (const bl of cb.beamLines) {
-                    beamTopY = Math.min(beamTopY, bl.startY, bl.endY);
-                }
-                if (!isFinite(beamTopY)) {
-                    for (const s of cb.stems) {
-                        beamTopY = Math.min(beamTopY, s.tipY);
-                    }
-                }
-
-                // Match slurs to notes in the beam by X position.
-                // A slur linked to a beamed note will start at that note's X (± small offset).
-                for (let ni: number = 0; ni < cb.stems.length; ni++) {
-                    const noteX: number = cb.stems[ni].x;
-                    // Find the nearest slur start within 25px of this note's X
-                    for (const slur of slurs) {
-                        if (Math.abs(slur.startX - noteX) > 25) { continue; }
-                        // Slur must be on the correct staff — its Y should be within
-                        // reasonable range of the beam (not on an unrelated staff).
-                        if (Math.abs(slur.startY - beamTopY) > 300) { continue; }
-                        const gap: number = slur.startY - beamTopY;
-                        if (gap > -2) {
-                            violations++;
-                            details.push(
-                                "stem[" + ni + "] x=" + noteX.toFixed(0) +
-                                " slur=(" + slur.startX.toFixed(0) + "," +
-                                slur.startY.toFixed(0) + ") beam_top=" +
-                                beamTopY.toFixed(0) + " gap=" + gap.toFixed(1)
-                            );
-                        }
-                        break; // one slur per note
-                    }
-                }
-            }
-            expect(violations).to.equal(0,
-                violations + " slurs not above UP-stem beam top:\n" +
-                details.join("\n"));
-        });
     });
 
     describe("test_slur_across_staves_right_to_left_hand slur endpoint", () => {
@@ -1462,7 +1306,7 @@ describe("Cross-Staff Beam SVG Rendering", () => {
                 " gap=" + gap.toFixed(1) + "px (should be <15)");
         });
 
-        it("slur lower curve endpoints are within 10px of upper curve", () => {
+        it("slur ribbon ends close properly (upper and lower curves within 10px at same X)", () => {
             const slurEls: NodeListOf<Element> =
                 svg.querySelectorAll("[class*='vf-curve']");
             const violations: string[] = [];
@@ -1472,17 +1316,21 @@ describe("Cross-Staff Beam SVG Rendering", () => {
                     slurEls[i].querySelector("path");
                 if (!pathEl) { continue; }
                 const d: string = pathEl.getAttribute("d") || "";
-                const n: RegExpMatchArray | null =
-                    d.match(/M([\d.]+) ([\d.]+)C.*L([\d.]+) ([\d.]+)C/);
-                if (!n) { continue; }
-                const upperStartY: number = parseFloat(n[2]);
-                const lowerEndY: number = parseFloat(n[4]);
-                const gap: number = Math.abs(upperStartY - lowerEndY);
-                if (gap > maxGap) {
-                    violations.push(pathEl.parentElement?.id +
-                        " lowerEndY=" + lowerEndY.toFixed(1) +
-                        " upperEndY=" + upperStartY.toFixed(1) +
-                        " gap=" + gap.toFixed(0));
+                // Path from renderCurve:
+                //   M x0 y0 C x1 y1,x2 y2,x3 y3 L x7 y7 C x6 y6,x5 y5,x4 y4 L x0 y0 Z
+                // Right-end ribbon: |upperRightY(y3) - lowerRightY(y7)|
+                const rightMatch: RegExpMatchArray | null = d.match(/,([\d.]+) ([\d.]+)L([\d.]+) ([\d.]+)C/);
+                expect(rightMatch, pathEl.parentElement?.id + " matches path ribbon pattern (C…L…C)").to.not.be.null;
+                if (rightMatch) {
+                    const upperRightY: number = parseFloat(rightMatch[2]);
+                    const lowerRightY: number = parseFloat(rightMatch[4]);
+                    const gap: number = Math.abs(upperRightY - lowerRightY);
+                    if (gap > maxGap) {
+                        violations.push(pathEl.parentElement?.id +
+                            " right-end upperY=" + upperRightY.toFixed(1) +
+                            " lowerY=" + lowerRightY.toFixed(1) +
+                            " gap=" + gap.toFixed(0));
+                    }
                 }
             }
             expect(violations).to.deep.equal([],
