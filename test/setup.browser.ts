@@ -7,6 +7,7 @@ const XML_FILES: string[] = [
   "OSMD_function_test_GraceNotes.xml",
   "Debussy_Mandoline.xml",
   "Dichterliebe01.xml",
+  "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
 ];
 
 const MUSICXML_FILES: string[] = [
