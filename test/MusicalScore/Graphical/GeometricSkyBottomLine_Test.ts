@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { SkyBottomLineCalculator } from "../../../src/MusicalScore/Graphical/SkyBottomLineCalculator";
 import { TestUtils } from "../../Util/TestUtils";
@@ -15,7 +15,7 @@ describe("GeometricSkyBottomLineCalculation", () => {
     const originalUpdateLines: any = (SkyBottomLineCalculator.prototype as any).updateLines;
     let savedOverflowY: string;
 
-    before((): void => {
+    beforeAll((): void => {
         (SkyBottomLineCalculator.prototype as any).updateLines = function (results: any): void {
             originalUpdateLines.call(this, results);
             if (capture) {
@@ -36,7 +36,7 @@ describe("GeometricSkyBottomLineCalculation", () => {
         document.documentElement.style.overflowY = "scroll";
     });
 
-    after((): void => {
+    afterAll((): void => {
         (SkyBottomLineCalculator.prototype as any).updateLines = originalUpdateLines;
         document.documentElement.style.overflowY = savedOverflowY;
     });
@@ -157,31 +157,26 @@ describe("GeometricSkyBottomLineCalculation", () => {
     }
 
     it("agrees with the raster calculation for OSMD_function_test_all", async function (): Promise<void> {
-        this.timeout(30000);
-        await compareGeometricWithRaster("OSMD_function_test_all.xml",
+                await compareGeometricWithRaster("OSMD_function_test_all.xml",
             { lengthTolerance: 5, meanAbsTolerance: 0.20, bigDiffFractionTolerance: 0.11 });
     });
 
     it("agrees with the raster calculation for chord symbols", async function (): Promise<void> {
-        this.timeout(30000);
-        await compareGeometricWithRaster("OSMD_function_test_chord_symbols.musicxml",
+                await compareGeometricWithRaster("OSMD_function_test_chord_symbols.musicxml",
             { lengthTolerance: 5, bigDiffFractionTolerance: 0.042 });
     });
 
     it("agrees with the raster calculation for a one-line (percussion) staff", async function (): Promise<void> {
-        this.timeout(30000);
-        await compareGeometricWithRaster("OSMD_function_test_drumset.musicxml");
+                await compareGeometricWithRaster("OSMD_function_test_drumset.musicxml");
     });
 
     it("agrees with the raster calculation for tablature with effects", async function (): Promise<void> {
-        this.timeout(30000);
-        await compareGeometricWithRaster("OSMD_Function_Test_Tablature_Alleffects.musicxml",
+                await compareGeometricWithRaster("OSMD_Function_Test_Tablature_Alleffects.musicxml",
             { bigDiffFractionTolerance: 0.012, meanAbsTolerance: 0.18, lengthTolerance: 5 });
     });
 
     it("agrees with the raster calculation on the first render with extra graphical measures", async function (): Promise<void> {
-        this.timeout(30000);
-        await compareGeometricWithRaster("test_octaveshift_extragraphicalmeasure.musicxml",
+                await compareGeometricWithRaster("test_octaveshift_extragraphicalmeasure.musicxml",
             { newSystemAttribute: true, bigDiffFractionTolerance: 0.10, lengthTolerance: 5 });
     });
 });

@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {MusicSheet} from "../../../../src/MusicalScore/MusicSheet";
@@ -9,14 +9,13 @@ describe("Clef Converter MusicXML to VexFlow", () => {
     let reader: MusicSheetReader;
     let parser: DOMParser;
 
-    before((): void => {
+    beforeAll((): void => {
       reader = new MusicSheetReader();
       parser = new DOMParser();
     });
 
-    it("reads treble key", (done: Mocha.Done) => {
+    it("reads treble key", () => {
       getMusicSheetWithClef("G").getStaffFromIndex(0);
-      done();
     });
 
     /**

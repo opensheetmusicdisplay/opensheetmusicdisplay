@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import {MusicSheetReader} from "../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import {MusicSheet} from "../../../src/MusicalScore/MusicSheet";
@@ -17,7 +17,7 @@ describe("Music Sheet Calculator", () => {
     let score: IXmlElement;
     let sheet: MusicSheet;
 
-    it("calculates music sheet", (done: Mocha.Done) => {
+    it("calculates music sheet", () => {
         // this.timeout = 10000;
         MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(new EngravingRules());
         // Load the XML file
@@ -29,6 +29,5 @@ describe("Music Sheet Calculator", () => {
 
         const graphicalSheet: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calculator);
         graphicalSheet.reCalculate();
-        done();
     });
 });

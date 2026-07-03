@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
@@ -59,7 +59,7 @@ function collectRehearsalMarks(gms: GraphicalMusicSheet): RehearsalMarkInfo[] {
 
 describe("VexFlow Measure - Direction Text vs Rehearsal Mark Overlap", () => {
 
-  it("should place rehearsal mark above direction text (test_words_direction_lost)", (done: Mocha.Done) => {
+  it("should place rehearsal mark above direction text (test_words_direction_lost)", () => {
     const gms: GraphicalMusicSheet = buildGMS("test_words_direction_lost_when_first_instrument_invisible_1621.musicxml");
     const marks: RehearsalMarkInfo[] = collectRehearsalMarks(gms);
 
@@ -67,7 +67,7 @@ describe("VexFlow Measure - Direction Text vs Rehearsal Mark Overlap", () => {
 
     const markA: RehearsalMarkInfo | undefined = marks.find(m => m.label === "A");
     expect(markA).to.not.be.undefined;
-    if (!markA) { done(); return; }
+    if (!markA) { return; }
 
     expect(markA.measureNumber).to.equal(1, "rehearsal mark 'A' should be on measure 1");
 
@@ -86,7 +86,7 @@ describe("VexFlow Measure - Direction Text vs Rehearsal Mark Overlap", () => {
       if (staffLine) { break; }
     }
     expect(staffLine).to.not.be.undefined;
-    if (!staffLine) { done(); return; }
+    if (!staffLine) { return; }
 
     const sbc: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
     const skyLen: number = sbc.SkyLine.length;
@@ -122,8 +122,6 @@ describe("VexFlow Measure - Direction Text vs Rehearsal Mark Overlap", () => {
         `staffTopVF=${staffTopVF.toFixed(1)} textHeight=${textHeight} descent=${descent} ` +
         `xShift=${markA.xShift} yShift=${markA.yShift}`);
     }
-
-    done();
   });
 
 });

@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
@@ -30,7 +30,7 @@ describe("VexFlow Measure - Cross-Staff Beams", () => {
         let beams: VF.Beam[];
         let siblingMap: Map<VF.Beam, VexFlowMeasure>;
 
-        before(() => {
+        beforeAll(() => {
             const { gms } = loadScore("test_tuplet_crossstaff_alignment.musicxml");
             expect(gms.MeasureList.length).to.be.greaterThan(0);
             expect(gms.MeasureList[0].length).to.equal(2, "should have 2 staves");
@@ -121,7 +121,7 @@ describe("VexFlow Measure - Cross-Staff Beams", () => {
     describe("Dichterliebe01 cross-staff beams", () => {
         let gms: GraphicalMusicSheet;
 
-        before(() => {
+        beforeAll(() => {
             const result: { gms: GraphicalMusicSheet } = loadScore("Dichterliebe01.xml");
             gms = result.gms;
         });
@@ -285,7 +285,7 @@ describe("VexFlow Measure - Cross-Staff Beams", () => {
         let bassMeasure: VexFlowMeasure;
         let trebleMeasure: VexFlowMeasure;
 
-        before(() => {
+        beforeAll(() => {
             const { gms } = loadScore("test_tuplet_crossstaff_alignment.musicxml");
             trebleMeasure = gms.MeasureList[0][0] as VexFlowMeasure;
             bassMeasure = gms.MeasureList[0][1] as VexFlowMeasure;
@@ -499,7 +499,7 @@ describe("Cross-staff beam stem geometry", () => {
 
     describe("Dichterliebe01", () => {
         let gms: GraphicalMusicSheet;
-        before(() => {
+        beforeAll(() => {
             const result: { gms: GraphicalMusicSheet } = loadScore("Dichterliebe01.xml");
             gms = result.gms;
         });
@@ -536,7 +536,7 @@ describe("Cross-staff beam stem geometry", () => {
 
     describe("Debussy Mandoline", () => {
         let gms: GraphicalMusicSheet;
-        before(() => {
+        beforeAll(() => {
             const result: { gms: GraphicalMusicSheet } = loadScore("Debussy_Mandoline.xml");
             gms = result.gms;
         });
@@ -561,7 +561,7 @@ describe("Cross-staff beam stem geometry", () => {
 
     describe("Tuplet crossstaff alignment", () => {
         let gms: GraphicalMusicSheet;
-        before(() => {
+        beforeAll(() => {
             const result: { gms: GraphicalMusicSheet } = loadScore("test_tuplet_crossstaff_alignment.musicxml");
             gms = result.gms;
         });
@@ -591,7 +591,7 @@ describe("Cross-staff beam stem geometry", () => {
     describe("Dichterliebe01 m4 cross-staff slur beam reference trace", () => {
         let gms: GraphicalMusicSheet;
         let rules: any;
-        before(() => {
+        beforeAll(() => {
             const result: { gms: GraphicalMusicSheet, calc: VexFlowMusicSheetCalculator } = loadScore("Dichterliebe01.xml");
             gms = result.gms;
             rules = (result.calc as any).rules;

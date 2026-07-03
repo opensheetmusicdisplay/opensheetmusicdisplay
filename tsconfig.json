@@ -11,10 +11,10 @@
     "strictPropertyInitialization": false,
     "ignoreDeprecations": "6.0",
     "typeRoots": ["./node_modules/@types"],
-    "types": ["mocha", "chai", "node"],
+    "types": ["vitest/globals", "node"],
     "baseUrl": ".",
     "paths": {
-      "vexflow": ["./external/vexflow/build/types/entry/vexflow.d.ts"]
+      "vexflow": ["./external/vexflow/entry/vexflow.ts"]
     }
   },
   "include": ["./test/", "./src"],

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
@@ -110,7 +110,7 @@ function collectArticulations(gms: GraphicalMusicSheet): ArtInfo[] {
 
 describe("VexFlow Measure - Articulation Positioning", () => {
 
-  it("Should center staccato at notehead center regardless of stem", (done: Mocha.Done) => {
+  it("Should center staccato at notehead center regardless of stem", () => {
     const gms: GraphicalMusicSheet = buildGMS("test_articulation_staccato_placement_above_explicitly.musicxml");
     const arts: ArtInfo[] = collectArticulations(gms);
     expect(arts.length).to.equal(1, "should have exactly one articulation");
@@ -129,11 +129,9 @@ describe("VexFlow Measure - Articulation Positioning", () => {
     // Render x should match notehead center (absX + glyphWidth/2)
     expect(a.computedArtX).to.equal(a.noteCenterX,
       `staccato x ${a.computedArtX} should match notehead center ${a.noteCenterX}`);
-
-    done();
   });
 
-  it("Should center staccato at notehead center when BELOW + stem UP", (done: Mocha.Done) => {
+  it("Should center staccato at notehead center when BELOW + stem UP", () => {
     const gms: GraphicalMusicSheet = buildGMS("test_articulation_staccato_placement_below.musicxml");
     const arts: ArtInfo[] = collectArticulations(gms);
     expect(arts.length).to.equal(1, "should have exactly one articulation");
@@ -151,11 +149,9 @@ describe("VexFlow Measure - Articulation Positioning", () => {
 
     expect(a.computedArtX).to.equal(a.noteCenterX,
       `staccato x ${a.computedArtX} should match notehead center ${a.noteCenterX}`);
-
-    done();
   });
 
-  it("Should center staccato at notehead center when ABOVE + stem DOWN", (done: Mocha.Done) => {
+  it("Should center staccato at notehead center when ABOVE + stem DOWN", () => {
     const gms: GraphicalMusicSheet = buildGMS("test_slur_overlap_articulation_staccato.musicxml");
     const arts: ArtInfo[] = collectArticulations(gms);
     expect(arts.length).to.equal(2, "should have exactly two staccato articulations");
@@ -174,15 +170,13 @@ describe("VexFlow Measure - Articulation Positioning", () => {
       expect(a.computedArtX).to.equal(a.noteCenterX,
         `m${a.measure} ${a.noteKey}: artX ${a.computedArtX} should match notehead center ${a.noteCenterX}`);
     }
-
-    done();
   });
 
-  it("Should center staccato over stem when BELOW + stem DOWN", (done: Mocha.Done) => {
-    done();
+  it.skip("Should center staccato over stem when BELOW + stem DOWN", () => {
+    // TODO: implement — empty test placeholder
   });
 
-  it("Haydn Concertante: should have 12 articulation modifiers in measure 209", (done: Mocha.Done) => {
+  it("Haydn Concertante: should have 12 articulation modifiers in measure 209", () => {
     const gms: GraphicalMusicSheet = buildGMS("JosephHaydn_ConcertanteCello.xml");
     const arts: ArtInfo[] = collectArticulations(gms);
 
@@ -201,11 +195,9 @@ describe("VexFlow Measure - Articulation Positioning", () => {
       expect(a.computedArtX).to.equal(a.noteCenterX,
         `m209 ${a.noteKey}: artX ${a.computedArtX} should match notehead center ${a.noteCenterX}`);
     }
-
-    done();
   });
 
-  it("Haydn Concertante: should have 8 articulation modifiers in measure 213", (done: Mocha.Done) => {
+  it("Haydn Concertante: should have 8 articulation modifiers in measure 213", () => {
     const gms: GraphicalMusicSheet = buildGMS("JosephHaydn_ConcertanteCello.xml");
     const arts: ArtInfo[] = collectArticulations(gms);
 
@@ -224,11 +216,9 @@ describe("VexFlow Measure - Articulation Positioning", () => {
       expect(a.computedArtX).to.equal(a.noteCenterX,
         `m213 ${a.noteKey}: artX ${a.computedArtX} should match notehead center ${a.noteCenterX}`);
     }
-
-    done();
   });
 
-  it("Should center accent at notehead center like staccato", (done: Mocha.Done) => {
+  it("Should center accent at notehead center like staccato", () => {
     const gms: GraphicalMusicSheet = buildGMS("test_slur_overlap_articulation_accent.musicxml");
     const arts: ArtInfo[] = collectArticulations(gms);
 
@@ -250,13 +240,11 @@ describe("VexFlow Measure - Articulation Positioning", () => {
       expect(renderCenterX).to.equal(a.noteCenterX,
         `m${a.measure} ${a.noteKey}: rendered accent center ${renderCenterX.toFixed(1)} should match notehead center ${a.noteCenterX.toFixed(1)}`);
     }
-
-    done();
   });
 
 });
 
-it("DEBUG: Scan Haydn articulation xShift for absurd positions", (done: Mocha.Done) => {
+it("DEBUG: Scan Haydn articulation xShift for absurd positions", () => {
   const gms: GraphicalMusicSheet = buildGMS("JosephHaydn_ConcertanteCello.xml");
   const arts: ArtInfo[] = collectArticulations(gms);
 
@@ -401,11 +389,9 @@ it("DEBUG: Scan Haydn articulation xShift for absurd positions", (done: Mocha.Do
       }
     }
   }
-
-  done();
 });
 
-it.skip("DEBUG: m201 extract full dump", (done: Mocha.Done) => {
+it.skip("DEBUG: m201 extract full dump", () => {
   const gms: GraphicalMusicSheet = buildGMS("Haydn_m201-203_extract.musicxml");
   const msg: string[] = [];
   for (const vml of gms.MeasureList) {
@@ -486,6 +472,5 @@ it.skip("DEBUG: m201 extract full dump", (done: Mocha.Done) => {
     }
   }
   expect(false, msg.join(" | ")).to.be.true;
-  done();
 });
 

@@ -16,7 +16,7 @@ import { ClefEnum, ClefInstruction } from "../../VoiceData/Instructions/ClefInst
 const RESOLUTION: number = 16384;
 
 export class VexFlowTabMeasure extends VexFlowMeasure {
-    public multiRestElement: any; // VexFlow: Element
+    declare public multiRestElement: any; // VexFlow: Element
 
     constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
         super(staff, sourceMeasure, staffLine);

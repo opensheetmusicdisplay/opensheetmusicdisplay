@@ -34,7 +34,7 @@ describe("GeneratePNGImages", () => {
     // TODO This is just example code for now.
     // generate PNG. TODO fs doesn't work with Karma. This is the big problem that needs to be worked around with ts/Karma.
     function generatePNG(sampleFilename: string): void {
-        it(sampleFilename, (done: Mocha.Done) => {
+        it(sampleFilename, () => {
             // Load the xml file content
             const score: Document = TestUtils.getScore(sampleFilename);
             const div: HTMLElement = document.createElement("div");
@@ -57,8 +57,6 @@ describe("GeneratePNGImages", () => {
             //let arraybuffer = Uint8Array.from(imageBuffer, 'base64').buffer;
 
             //fs.writeFileSync(fileName, imageBuffer, { encoding: "base64" });
-
-            done();
             });
     }
 });

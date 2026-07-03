@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {MusicSheet} from "../../../../src/MusicalScore/MusicSheet";
@@ -23,7 +23,7 @@ function loadScore(path: string): { gms: GraphicalMusicSheet, calc: VexFlowMusic
 describe("VexFlow Measure - Debussy Mandoline Cross-Staff Beams", () => {
     let gms: GraphicalMusicSheet;
 
-    before(() => {
+    beforeAll(() => {
         const result: { gms: GraphicalMusicSheet } = loadScore("Debussy_Mandoline.xml");
         gms = result.gms;
     });

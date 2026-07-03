@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../../Util/TestUtils";
 
@@ -173,9 +173,8 @@ describe("Cross-Staff Beam SVG Rendering", () => {
     describe("Dichterliebe01 cross-staff beam SVG", () => {
         let crossBeams: CrossStaffBeamInfo[];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG("Dichterliebe01.xml").then(
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG("Dichterliebe01.xml").then(
                 (svg: SVGElement) => {
                     crossBeams = findCrossStaffBeams(
                         svg, MIN_CROSS_STAFF_SPAN
@@ -291,9 +290,8 @@ describe("Cross-Staff Beam SVG Rendering", () => {
     describe("test_tuplet_crossstaff SVG", () => {
         let crossBeams: CrossStaffBeamInfo[];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG(
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG(
                 "test_tuplet_crossstaff_alignment.musicxml"
             ).then((svg: SVGElement) => {
                 crossBeams = findCrossStaffBeams(
@@ -371,9 +369,8 @@ describe("Cross-Staff Beam SVG Rendering", () => {
     describe("Debussy Mandoline cross-staff SVG", () => {
         let crossBeams: CrossStaffBeamInfo[];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG("Debussy_Mandoline.xml").then(
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG("Debussy_Mandoline.xml").then(
                 (svg: SVGElement) => {
                     crossBeams = findCrossStaffBeams(
                         svg, MIN_CROSS_STAFF_SPAN
@@ -487,9 +484,8 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         let slurs: SlurBezier[];
         let crossBeams: CrossStaffBeamInfo[];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG("Dichterliebe01.xml").then((s: SVGElement) => {
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG("Dichterliebe01.xml").then((s: SVGElement) => {
                 svg = s;
                 crossBeams = findCrossStaffBeams(svg, 50);
                 // Parse all slurs from the SVG
@@ -1003,9 +999,8 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         let allBeams: BeamDebugInfo[];
         let allSlurs: SlurDebugInfo[];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG("Dichterliebe01.xml").then(
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG("Dichterliebe01.xml").then(
                 (svg: SVGElement) => {
                     const data: { notes: NoteInfo[], beams: BeamDebugInfo[], slurs: SlurDebugInfo[] } = parseScoreSVG(svg);
                     allNotes = data.notes;
@@ -1052,9 +1047,8 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         let crossBeams: CrossStaffBeamInfo[];
         let slurs: { startX: number, startY: number, endX: number, endY: number }[];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG("Dichterliebe01.xml").then(
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG("Dichterliebe01.xml").then(
                 (svg: SVGElement) => {
                     crossBeams = findCrossStaffBeams(svg, 50);
                     const slurEls: NodeListOf<Element> =
@@ -1148,9 +1142,8 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         let bassNH: { x: number, y: number } | undefined;
         const stemDirs: string[] = [];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG("test_slur_across_staves_right_to_left_hand.musicxml")
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG("test_slur_across_staves_right_to_left_hand.musicxml")
                 .then((s: SVGElement) => {
                     // Parse slur
                     const slurEls: NodeListOf<Element> =
@@ -1362,8 +1355,7 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         }
 
         it("tuplet cross-staff beams have normalized stem lengths", function (): Promise<void> {
-            this.timeout(20000);
-            return checkStemLengths(
+                        return checkStemLengths(
                 "test_tuplet_crossstaff_alignment.musicxml",
                 MIN_CROSS_STAFF_SPAN_SMALL,
             ).then((errors: string[]) => {
@@ -1372,8 +1364,7 @@ describe("Cross-Staff Beam SVG Rendering", () => {
         });
 
         it("16ths ghost cross-staff beams have normalized stem lengths", function (): Promise<void> {
-            this.timeout(20000);
-            return checkStemLengths(
+                        return checkStemLengths(
                 "test_cross_stave_16ths_ghost_notes_simple.musicxml",
                 25, // lower threshold: fragmented cross-staff beams
             ).then((errors: string[]) => {
@@ -1385,9 +1376,8 @@ describe("Cross-Staff Beam SVG Rendering", () => {
     describe("Land_der_Berge same-staff slur anchoring", () => {
         let svg: SVGElement;
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG("Land_der_Berge.musicxml").then(
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG("Land_der_Berge.musicxml").then(
                 (s: SVGElement) => { svg = s; });
         });
 
@@ -1504,9 +1494,8 @@ describe("Cross-Staff Beam SVG Rendering", () => {
     describe("Mozart quartet m4 A4→B4 slur anchoring", () => {
         let svg: SVGElement;
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG(
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG(
                 "Mozart_String_Quartet_in_G_K._387_1st_Mvmnt_excerpt.musicxml"
             ).then((s: SVGElement) => { svg = s; });
         });

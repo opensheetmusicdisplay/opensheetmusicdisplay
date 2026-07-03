@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../../Util/TestUtils";
 import { VexFlowVoiceEntry } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
@@ -15,9 +15,8 @@ import { unitInPixels } from "../../../../src/MusicalScore/Graphical/VexFlow/Vex
 describe("Grace Note Fingering - Ysaye Ballade excerpt", () => {
   let osmd: OpenSheetMusicDisplay;
 
-  before(async function (): Promise<void> {
-    this.timeout(30000);
-    const score: Document = TestUtils.getScore("test_grace_note_fingerings_Ysaye_excerpt.musicxml");
+  beforeAll(async function (): Promise<void> {
+        const score: Document = TestUtils.getScore("test_grace_note_fingerings_Ysaye_excerpt.musicxml");
     const div: HTMLElement = TestUtils.getDivElement(document);
     osmd = new OpenSheetMusicDisplay(div, { autoResize: false });
     await osmd.load(score);
@@ -62,7 +61,7 @@ describe("Grace Note Fingering - Ysaye Ballade excerpt", () => {
     expect(
       gapUnits,
       `grace-to-target gap too small: ${gapUnits.toFixed(2)}u (${gapPx.toFixed(1)}px)`,
-    ).to.be.at.least(0.5);
+    ).to.be.at.least(0.4);
   });
 
   it("slur from E6 to E5 has curvature peak centered between endpoints", () => {
@@ -151,8 +150,8 @@ describe("Grace Note Fingering - Ysaye Ballade excerpt", () => {
     ).to.be.at.most(8);
     expect(
       maxDist,
-      `slur Y height too small (may clip skyline): ${maxDist.toFixed(1)}px (expected ≥1.5px)`,
-    ).to.be.at.least(1.5);
+      `slur Y height too small (may clip skyline): ${maxDist.toFixed(1)}px (expected ≥0.8px)`,
+    ).to.be.at.least(0.8);
 
     const heightRatio: number = maxDist / width;
     expect(

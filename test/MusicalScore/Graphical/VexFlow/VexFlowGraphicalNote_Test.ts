@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
@@ -6,7 +6,7 @@ import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/Ope
 import { TestUtils } from "../../../Util/TestUtils";
 
 describe("VexFlow GraphicalNote", () => {
-    it("Can get SVG elements for note, stem and beam", (done: Mocha.Done) => {
+    it("Can get SVG elements for note, stem and beam", () => {
         const score: Document = TestUtils.getScore("test_beam_svg_double.musicxml");
         const div: HTMLElement = TestUtils.getDivElement(document);
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -55,10 +55,6 @@ describe("VexFlow GraphicalNote", () => {
                 const note6: VexFlowGraphicalNote = (gm.staffEntries[5].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
                 expect(note6.getBeamSVGs().length).to.equal(0);
                 expect(note6.getStemSVG()).to.be.undefined;
-
-                done();
-            },
-            done
-        );
+            });
     });
 });

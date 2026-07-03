@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
@@ -32,7 +32,7 @@ function buildGMS(path: string, overrides?: { pageWidth?: number, voiceSpacingMu
 
 describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
 
-  it("measure 10 notes should not extend past measure bounds", (done: Mocha.Done) => {
+  it("measure 10 notes should not extend past measure bounds", () => {
     // BrookeWestSample: measure 10 has half rest + quarter rest + 2 beamed eighths (F#4, A#4)
     // Bug: the two eighth notes at end of bar 10 shifted into bar 11, misaligned with lyrics
     // Root cause: stale xShift on tickables from centerWholeBarRests() polluted formatter spacing.
@@ -64,11 +64,9 @@ describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
         `note ${note.getKeys().join(",")} in measure 10 ` +
         `(end=${noteEndX.toFixed(1)}) should be within stave (end=${stave10NoteEndX.toFixed(1)})`);
     }
-
-    done();
   });
 
-  it("measure 11 notes should start within measure 11 bounds", (done: Mocha.Done) => {
+  it("measure 11 notes should start within measure 11 bounds", () => {
     // Verify that the first notes of measure 11 aren't being eaten by
     // overflow from measure 10's late notes.
     const gms: GraphicalMusicSheet = buildGMS("BrookeWestSample.musicxml");
@@ -107,11 +105,9 @@ describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
           `(noteEnd=${noteEndX.toFixed(1)} vs staveEnd=${stave11NoteEndX.toFixed(1)})`);
       }
     }
-
-    done();
   });
 
-  it("measure 10 eighth notes should have lyrics attached", (done: Mocha.Done) => {
+  it("measure 10 eighth notes should have lyrics attached", () => {
     const gms: GraphicalMusicSheet = buildGMS("BrookeWestSample.musicxml");
     const measure10: VexFlowMeasure = gms.findGraphicalMeasureByMeasureNumber(10, 0) as VexFlowMeasure;
 
@@ -139,11 +135,9 @@ describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
       expect(lyricTexts[1]).to.include("re",
         `second lyric should be "re", got "${lyricTexts[1]}"`);
     }
-
-    done();
   });
 
-  it("measure 10 and 11 should be in the same system", (done: Mocha.Done) => {
+  it("measure 10 and 11 should be in the same system", () => {
     // Bug: measures 10 and 11 end up in different systems when the system break
     // should happen at measure 10 (per MusicXML new-system="yes").
     // Without NewSystemAtXMLNewSystemAttribute, these get split across sys1/sys2.
@@ -159,11 +153,9 @@ describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
     expect(sameStaffLine,
       `m10 (sys=${sl10?.ParentMusicSystem?.id}) and m11 (sys=${sl11?.ParentMusicSystem?.id}) ` +
       "should share the same StaffLine — system break misplaced").to.be.true;
-
-    done();
   });
 
-  it("measure 10-11: systems should be correctly split at measure 10", (done: Mocha.Done) => {
+  it("measure 10-11: systems should be correctly split at measure 10", () => {
     // System layout: system breaks at m5, m10, m15.
     // Measures 10-14 should be one system. Verify that m10 is the first measure
     // in its system (stave X = 0 or left margin) and m11 follows it.
@@ -201,8 +193,6 @@ describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
         }
       }
     }
-
-    done();
   });
 
 });

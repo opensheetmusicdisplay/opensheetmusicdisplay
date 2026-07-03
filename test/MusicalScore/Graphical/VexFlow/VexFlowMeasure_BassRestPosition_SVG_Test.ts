@@ -1,5 +1,5 @@
 /* eslint-disable curly */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../../Util/TestUtils";
 
@@ -108,9 +108,8 @@ describe("Bass Staff Rest Positioning", () => {
         let staves: StaffLineInfo[];
         let rests: RestGlyphInfo[];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG("test_rest_in_measure_keys_bass_rest.musicxml")
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG("test_rest_in_measure_keys_bass_rest.musicxml")
                 .then((svg: SVGElement) => {
                     staves = parseStaffLines(svg);
                     rests = findAllRests(svg);

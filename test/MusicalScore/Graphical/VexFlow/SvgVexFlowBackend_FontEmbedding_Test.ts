@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 
 import * as VF from "vexflow";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";

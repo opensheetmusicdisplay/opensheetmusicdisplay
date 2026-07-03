@@ -18,26 +18,19 @@ module.exports = {
         // Add '.ts' and '.tsx' as a resolvable extension.
         extensions: ['.ts', '.tsx', '.js'],
         alias: {
-            vexflow: path.resolve(__dirname, 'external/vexflow/build/esm/entry/vexflow.js'),
+            vexflow: path.resolve(__dirname, 'external/vexflow/entry/vexflow.ts'),
             'structured-clone-es.js': path.resolve(__dirname, 'node_modules/structured-clone-es/dist/index.mjs')
         }
     },
     module: {
         rules: [
-            // treat vexflow ESM build as auto module (handles missing .js extensions in imports)
-            {
-                test: /\.js$/,
-                include: [path.resolve(__dirname, 'external/vexflow/build/esm')],
-                type: 'javascript/auto',
-                resolve: {
-                    fullySpecified: false,
-                },
-            },
             // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
             {
                 test: /\.ts$/,
                 loader: 'ts-loader',
-                // loader: 'awesome-typescript-loader',
+                options: {
+                    configFile: 'tsconfig.build.json',
+                },
                 exclude: /(node_modules|bower_components)/
             },
             {

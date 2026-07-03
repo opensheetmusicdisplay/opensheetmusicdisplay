@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";

@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
@@ -16,7 +16,7 @@ const RESOLUTION: number = 16384;
 
 describe("VexFlow Measure - Tuplet Voice Alignment", () => {
 
-   it("Should normalize tick denominators for tuplet notes", (done: Mocha.Done) => {
+   it("Should normalize tick denominators for tuplet notes", () => {
       const path: string = "test_tuplet_multivoice_alignment.musicxml";
       const score: Document = TestUtils.getScore(path);
       expect(score).to.not.be.undefined;
@@ -44,11 +44,9 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
             }
          }
       }
-
-      done();
    });
 
-   it("Should calculate correct tick values for tuplet notes based on graphical length", (done: Mocha.Done) => {
+   it("Should calculate correct tick values for tuplet notes based on graphical length", () => {
       const path: string = "test_tuplet_multivoice_alignment.musicxml";
       const score: Document = TestUtils.getScore(path);
       const partwise: Element = TestUtils.getPartWiseElement(score);
@@ -77,11 +75,9 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
          expect(tickValue).to.equal(firstNoteTicks,
             "All tuplet eighths in voice 1 should have the same tick value");
       }
-
-      done();
    });
 
-   it("Should align notes at same timestamp in different voices", (done: Mocha.Done) => {
+   it("Should align notes at same timestamp in different voices", () => {
       const path: string = "test_tuplet_multivoice_alignment.musicxml";
       const score: Document = TestUtils.getScore(path);
       const partwise: Element = TestUtils.getPartWiseElement(score);
@@ -122,11 +118,9 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
 
       expect(voice2QuarterNotePos).to.equal(voice1SecondNotePos,
          "Notes at the same timestamp in different voices should have the same cumulative tick position");
-
-      done();
    });
 
-   it("Should handle tuplets with different normal-type values correctly", (done: Mocha.Done) => {
+   it("Should handle tuplets with different normal-type values correctly", () => {
       const path: string = "test_tuplet_multivoice_alignment.musicxml";
       const score: Document = TestUtils.getScore(path);
       const partwise: Element = TestUtils.getPartWiseElement(score);
@@ -158,8 +152,6 @@ describe("VexFlow Measure - Tuplet Voice Alignment", () => {
             }
          }
       }
-
-      done();
    });
 
 });
@@ -181,7 +173,7 @@ describe("VexFlow Measure - Cross-Staff Tuplet Alignment", () => {
       return gms;
    }
 
-   it("Should fill a cross-staff tuplet gap with a ghost note of the exact tuplet length", (done: Mocha.Done) => {
+   it("Should fill a cross-staff tuplet gap with a ghost note of the exact tuplet length", () => {
       const gms: GraphicalMusicSheet = calculateCrossStaffSheet();
       // The lower staff is the second graphical measure of the first vertical measure.
       const bassMeasure: VexFlowMeasure = gms.MeasureList[0][1] as VexFlowMeasure;
@@ -203,11 +195,9 @@ describe("VexFlow Measure - Cross-Staff Tuplet Alignment", () => {
       const totalTicks: number = tickables.reduce((sum: number, t: VF.Note) => sum + t.getTicks().value(), 0);
       expect(totalTicks).to.be.closeTo(VF.VexFlow.RESOLUTION / 2, 0.001,
          "tuplet voice ticks should sum to the measure duration");
-
-      done();
    });
 
-   it("Should align the beat-2 tuplet note with the simultaneous note in the other voice", (done: Mocha.Done) => {
+   it("Should align the beat-2 tuplet note with the simultaneous note in the other voice", () => {
       const gms: GraphicalMusicSheet = calculateCrossStaffSheet();
       const bassMeasure: VexFlowMeasure = gms.MeasureList[0][1] as VexFlowMeasure;
       const tupletVoice: VF.Voice = bassMeasure.vfVoices[2];
@@ -238,8 +228,6 @@ describe("VexFlow Measure - Cross-Staff Tuplet Alignment", () => {
          .to.not.be.undefined;
       expect(tupletBeat2).to.be.closeTo(eighthBeat2, 0.001,
          "notes at the same timestamp in different voices should share the same cumulative tick position");
-
-      done();
    });
 
 });

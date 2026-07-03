@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
@@ -24,7 +24,7 @@ import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
 
 describe("VexFlow Measure", () => {
 
-   it("Can create GraphicalMusicSheet", (done: Mocha.Done) => {
+   it("Can create GraphicalMusicSheet", () => {
       const path: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
       const score: Document = TestUtils.getScore(path);
       expect(score).to.not.be.undefined;
@@ -36,10 +36,9 @@ describe("VexFlow Measure", () => {
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
       // console.log(gms);
       expect(gms).to.not.be.undefined; // at least necessary for linter so that variable is not unused
-      done();
    });
 
-   it("Can have a single empty Measure", (done: Mocha.Done) => {
+   it("Can have a single empty Measure", () => {
       const sheet: MusicSheet = new MusicSheet();
       sheet.Rules = new EngravingRules();
       sheet.Staves.push(new Staff(new Instrument(0, "", sheet, null), 0));
@@ -51,14 +50,13 @@ describe("VexFlow Measure", () => {
       expect(gms.MeasureList.length).to.equal(1);
       expect(gms.MeasureList[0].length).to.equal(1);
       expect(gms.MeasureList[0][0].staffEntries.length).to.equal(0);
-      done();
    });
 
    // Non-regression test for grace note fingering positioning
    // Before fix: baseFingeringXOffset was calculated across all notes in the staff entry,
    // causing grace notes to have incorrect offsets based on collision with other grace notes
    // at different horizontal positions. The fix calculates offsets per voice entry for grace notes.
-   it("Grace notes should have baseFingeringXOffset calculated per voice entry", (done: Mocha.Done) => {
+   it("Grace notes should have baseFingeringXOffset calculated per voice entry", () => {
       const score: Document = TestUtils.getScore("test_grace_note_fingerings_position.musicxml");
       const div: HTMLElement = TestUtils.getDivElement(document);
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -86,11 +84,7 @@ describe("VexFlow Measure", () => {
                      "Single grace notes should have baseFingeringXOffset=0");
                }
             }
-
-            done();
-         },
-         done
-      );
+         });
    });
 
    // Non-regression test for octave shift stop placed after grace notes.
@@ -99,10 +93,10 @@ describe("VexFlow Measure", () => {
    // previousFraction still points to the position of the last real note before the grace notes,
    // causing the octave shift to end too early and miss the grace notes entirely.
    // Fix: use currentFraction instead (like addPedalMarking already does).
-   it("Octave shift should apply to grace notes before the stop direction", (done: Mocha.Done) => {
+   it("Octave shift should apply to grace notes before the stop direction", () => {
       const score: Document = TestUtils.getScore("test_octaveshift_stop_after_grace_notes.musicxml");
       if (!score) {
-         done(new Error("Score file not found"));
+         expect.fail("Score file not found");
          return;
       }
       const div: HTMLElement = TestUtils.getDivElement(document);
@@ -110,51 +104,41 @@ describe("VexFlow Measure", () => {
 
       osmd.load(score).then(
          (_: {}) => {
-            try {
-               osmd.render();
+            osmd.render();
 
-               const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+            const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
 
-               // Collect octave shift values for all grace notes in the measure
-               const graceOctaveShifts: OctaveEnum[] = [];
-               for (const staffEntry of gm.staffEntries) {
-                  for (const gve of staffEntry.graphicalVoiceEntries) {
-                     if (gve.parentVoiceEntry?.IsGrace) {
-                        const note: VexFlowGraphicalNote = gve.notes[0] as VexFlowGraphicalNote;
-                        graceOctaveShifts.push(note.octaveShift);
-                     }
+            // Collect octave shift values for all grace notes in the measure
+            const graceOctaveShifts: OctaveEnum[] = [];
+            for (const staffEntry of gm.staffEntries) {
+               for (const gve of staffEntry.graphicalVoiceEntries) {
+                  if (gve.parentVoiceEntry?.IsGrace) {
+                     const note: VexFlowGraphicalNote = gve.notes[0] as VexFlowGraphicalNote;
+                     graceOctaveShifts.push(note.octaveShift);
                   }
                }
-
-               // 6 grace notes total: 4 under 8va, then 2 after the stop
-               expect(graceOctaveShifts.length).to.equal(6, "Should have 6 grace notes");
-
-               // First 4 grace notes should have octave shift applied (VA8 = 8va)
-               for (let i: number = 0; i < 4; i++) {
-                  expect(graceOctaveShifts[i]).to.not.equal(OctaveEnum.NONE,
-                     `Grace note ${i} should be under 8va`);
-               }
-
-               done();
-            } catch (e) {
-               done(e);
             }
-         },
-         done
-      );
+
+            // 6 grace notes total: 4 under 8va, then 2 after the stop
+            expect(graceOctaveShifts.length).to.equal(6, "Should have 6 grace notes");
+
+            // First 4 grace notes should have octave shift applied (VA8 = 8va)
+            for (let i: number = 0; i < 4; i++) {
+               expect(graceOctaveShifts[i]).to.not.equal(OctaveEnum.NONE,
+                  `Grace note ${i} should be under 8va`);
+            }
+         });
    });
 
    // Non-regression test for EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature.
    // Pieces without a time signature in the source (e.g. Satie's Gnossiennes) should not render a
    // (synthesized default 4/4) time signature by default, but should when the rule is enabled.
-   it("Does not render a time signature for samples without one, unless the rule is enabled", (done: Mocha.Done) => {
+   it("Does not render a time signature for samples without one, unless the rule is enabled", () => {
       const score: Document = TestUtils.getScore("test_time_signature_missing_deliberately_gnossienne.musicxml");
       if (!score) {
-         done(new Error("Score file not found"));
+         expect.fail("Score file not found");
          return;
       }
-      const xml: string = new XMLSerializer().serializeToString(score);
-
       function firstMeasureHasTimeSignature(osmd: OpenSheetMusicDisplay): boolean {
          const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
          const stave: any = (gm as any).stave; // VexFlowMeasure.stave is protected, only need it here in the test
@@ -164,27 +148,26 @@ describe("VexFlow Measure", () => {
       const osmdDefault: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const osmdRuleOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
 
-      osmdDefault.load(xml).then(() => {
+      osmdDefault.load(score).then(() => {
          osmdDefault.render();
          expect(firstMeasureHasTimeSignature(osmdDefault), "default: no time signature for a piece without one").to.equal(false);
 
-         return osmdRuleOn.load(xml);
+         return osmdRuleOn.load(score);
       }).then(() => {
          osmdRuleOn.EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature = true;
          osmdRuleOn.render();
          expect(firstMeasureHasTimeSignature(osmdRuleOn), "rule enabled: time signature is rendered").to.equal(true);
-         done();
-      }).catch(done);
+      });
    });
 
    // Non-regression test for a beamed note whose notehead is hidden because it's shared with a unison note in
    // another voice (print-object="no"). Its stem must still join the beam (not become an orphan flagged note with
    // a transparent stem, which made the beam look like it was hanging in the air).
    // E.g. Beethoven Moonlight Sonata 1st mvt. m.37: an eighth note shares a notehead with a dotted quarter.
-   it("Renders the stem of a beamed note sharing a hidden unison notehead, joined to the beam", (done: Mocha.Done) => {
+   it("Renders the stem of a beamed note sharing a hidden unison notehead, joined to the beam", () => {
       const score: Document = TestUtils.getScore("test_unison_notehead_moonlight_sonata_measure37.musicxml");
       if (!score) {
-         done(new Error("Score file not found"));
+         expect.fail("Score file not found");
          return;
       }
       const div: HTMLElement = TestUtils.getDivElement(document);
@@ -214,21 +197,18 @@ describe("VexFlow Measure", () => {
          if (stemStyle?.fillStyle) {
             expect(stemStyle.fillStyle, "unison note stem must not be transparent").to.not.equal("#00000000");
          }
-         done();
-      }).catch(done);
+      });
    });
 
    // Non-regression test for EngravingRules.RenderMeasureNumbersForImplicitMeasures.
    // Measures marked implicit="yes" in the MusicXML (e.g. measures without a meter like in Satie's Gnossiennes)
    // don't show a measure number by default, as per the MusicXML standard, but do when the rule is enabled.
-   it("Does not render a measure number for implicit measures, unless the rule is enabled", (done: Mocha.Done) => {
+   it("Does not render a measure number for implicit measures, unless the rule is enabled", () => {
       const score: Document = TestUtils.getScore("test_time_signature_missing_deliberately_gnossienne.musicxml");
       if (!score) {
-         done(new Error("Score file not found"));
+         expect.fail("Score file not found");
          return;
       }
-      const xml: string = new XMLSerializer().serializeToString(score);
-
       function measureNumberLabels(osmd: OpenSheetMusicDisplay): string[] {
          const labels: string[] = [];
          for (const page of osmd.GraphicSheet.MusicPages) {
@@ -244,27 +224,26 @@ describe("VexFlow Measure", () => {
       const osmdDefault: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const osmdRuleOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
 
-      osmdDefault.load(xml).then(() => {
+      osmdDefault.load(score).then(() => {
          osmdDefault.render();
          // the single measure is implicit="yes", so its number ("0") is not rendered
          expect(measureNumberLabels(osmdDefault), "default: no measure number for an implicit measure").to.not.include("0");
 
-         return osmdRuleOn.load(xml);
+         return osmdRuleOn.load(score);
       }).then(() => {
          osmdRuleOn.EngravingRules.RenderMeasureNumbersForImplicitMeasures = true;
          osmdRuleOn.render();
          expect(measureNumberLabels(osmdRuleOn), "rule enabled: implicit measure number is rendered").to.include("0");
-         done();
-      }).catch(done);
+      });
    });
 
    // Non-regression test for nested tuplets (issue #1583). The measure has an outer 3:2 tuplet spanning all 5 notes
    // and an inner 9:4 tuplet over the last 3 (beamed) eighth notes that displays "3" (its <tuplet-actual> number).
    // Before the fix the outer tuplet only covered its first two notes and the inner showed "9".
-   it("Parses nested tuplets: outer tuplet spans all notes, inner uses its tuplet-actual number", (done: Mocha.Done) => {
+   it("Parses nested tuplets: outer tuplet spans all notes, inner uses its tuplet-actual number", () => {
       const score: Document = TestUtils.getScore("test_tuplet_nested_issue_1583.musicxml");
       if (!score) {
-         done(new Error("Score file not found"));
+         expect.fail("Score file not found");
          return;
       }
       const div: HTMLElement = TestUtils.getDivElement(document);
@@ -293,8 +272,7 @@ describe("VexFlow Measure", () => {
          expect(outer.TupletLabelNumber, "outer tuplet number").to.equal(3);
          // the inner number comes from <tuplet-actual><tuplet-number>3, not the time-modification actual-notes (9)
          expect(inner.TupletLabelNumber, "inner tuplet number from tuplet-actual").to.equal(3);
-         done();
-      }).catch(done);
+      });
    });
 
 });

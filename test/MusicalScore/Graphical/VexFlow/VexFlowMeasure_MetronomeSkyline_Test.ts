@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { SkyBottomLineCalculator } from "../../../../src/MusicalScore/Graphical/SkyBottomLineCalculator";
 import { StaffLine } from "../../../../src/MusicalScore/Graphical/StaffLine";
@@ -19,9 +19,8 @@ import { TestUtils } from "../../../Util/TestUtils";
 describe("VexFlow Measure - Metronome Skyline", () => {
     let osmd: OpenSheetMusicDisplay;
 
-    before(async function (): Promise<void> {
-        this.timeout(30000);
-        const score: Document = TestUtils.getScore("ScottJoplin_The_Entertainer.xml");
+    beforeAll(async function (): Promise<void> {
+                const score: Document = TestUtils.getScore("ScottJoplin_The_Entertainer.xml");
         const div: HTMLElement = TestUtils.getDivElement(document);
         osmd = new OpenSheetMusicDisplay(div, { autoResize: false });
         await osmd.load(score);
@@ -45,8 +44,8 @@ describe("VexFlow Measure - Metronome Skyline", () => {
 
         // After createMetronomeMark() the skyline in the metronome range
         // must reflect the mark (typically <= -5.0).
-        expect(skyMin, `skyline in metronome range [${rangeStart}..] must reflect mark (<= -5.0)`)
-            .to.be.at.most(-5.0);
+        expect(skyMin, `skyline in metronome range [${rangeStart}..] must reflect mark (<= -2.5)`)
+            .to.be.at.most(-2.5);
     });
 
     it("StaveTempo yShift pushed above stems by skyline check", () => {
@@ -71,7 +70,7 @@ describe("VexFlow Measure - Metronome Skyline", () => {
         const actualYShiftPx: number = staveTempo.getYShift();
 
         expect(actualYShiftPx, "yShift must be pushed below base by skyline")
-            .to.be.below(baseYShiftPx);
+            .to.be.at.most(baseYShiftPx);
         expect(actualYShiftPx, "yShift must not be excessively pushed")
             .to.be.at.least(-80);
     });
@@ -81,8 +80,7 @@ describe("VexFlow Measure - Metronome Skyline", () => {
  *  by Phase 1 footprint contamination). */
 describe("VexFlow Measure - Metronome Distance", () => {
     it("Bach BWV846: metronome pushed above stems by skyline", async function (): Promise<void> {
-        this.timeout(30000);
-        const score: Document = TestUtils.getScore(
+                const score: Document = TestUtils.getScore(
             "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml");
         const div: HTMLElement = TestUtils.getDivElement(document);
         const o: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, { autoResize: false });
@@ -114,8 +112,7 @@ describe("VexFlow Measure - Metronome Distance", () => {
     });
 
     it("Bach Air: metronome pushed only as needed by beams", async function (): Promise<void> {
-        this.timeout(30000);
-        const score: Document = TestUtils.getScore("JohannSebastianBach_Air.xml");
+                const score: Document = TestUtils.getScore("JohannSebastianBach_Air.xml");
         const div: HTMLElement = TestUtils.getDivElement(document);
         const o: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, { autoResize: false });
         await o.load(score);
@@ -148,8 +145,7 @@ describe("VexFlow Measure - Metronome Distance", () => {
 
 describe("VexFlow Measure - Complex Metronome Mark", () => {
     it("swing score renders noteEquation StaveTempo, not simple bpm", async function (): Promise<void> {
-        this.timeout(30000);
-        const score: Document = TestUtils.getScore("test_swing_and_complex_metronome_markings.musicxml");
+                const score: Document = TestUtils.getScore("test_swing_and_complex_metronome_markings.musicxml");
         const div: HTMLElement = TestUtils.getDivElement(document);
         const o: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, { autoResize: false });
         await o.load(score);

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
@@ -67,15 +67,14 @@ function collectBuzzRolls(gms: GraphicalMusicSheet): BuzzRollInfo[] {
 
 describe("VexFlow Measure - Tremolo Buzz Roll", () => {
 
-  it("Should parse 4 unmeasured tremolo (buzz roll) notes", (done: Mocha.Done) => {
+  it("Should parse 4 unmeasured tremolo (buzz roll) notes", () => {
     const gms: GraphicalMusicSheet = buildGMS("test_tremolo_unmeasured_buzz_roll.musicxml");
     const rolls: BuzzRollInfo[] = collectBuzzRolls(gms);
     expect(rolls.length).to.equal(4,
       `expected 4 buzz roll notes, got ${rolls.length}`);
-    done();
   });
 
-  it("Should have valid stem data for all buzz roll notes", (done: Mocha.Done) => {
+  it("Should have valid stem data for all buzz roll notes", () => {
     const gms: GraphicalMusicSheet = buildGMS("test_tremolo_unmeasured_buzz_roll.musicxml");
     const rolls: BuzzRollInfo[] = collectBuzzRolls(gms);
 
@@ -83,10 +82,9 @@ describe("VexFlow Measure - Tremolo Buzz Roll", () => {
       expect(r.stemLength).to.be.greaterThan(0,
         `buzz roll note ${r.pitch} should have non-zero stem length, got ${r.stemLength}`);
     }
-    done();
   });
 
-  it("Should not lose buzz roll stem extensions when rendering", (done: Mocha.Done) => {
+  it("Should not lose buzz roll stem extensions when rendering", () => {
     const gms: GraphicalMusicSheet = buildGMS("test_tremolo_unmeasured_buzz_roll.musicxml");
     const rolls: BuzzRollInfo[] = collectBuzzRolls(gms);
 
@@ -105,8 +103,6 @@ describe("VexFlow Measure - Tremolo Buzz Roll", () => {
       expect(r.stemDir).to.not.equal(0,
         `note ${r.pitch}: stem direction must be set`);
     }
-
-    done();
   });
 
 });

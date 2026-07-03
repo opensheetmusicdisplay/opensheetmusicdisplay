@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects/Pitch";
 
 describe("Pitch Unit Tests:", () => {
@@ -9,12 +9,11 @@ describe("Pitch Unit Tests:", () => {
         const higherTransposedFundamentalAndOctave: {halftone: number, overflow: number } =
           Pitch.CalculateTransposedHalfTone(pitch, 26);
 
-        it("should be 1 octave higher and same fundamental", (done: Mocha.Done) => {
+        it("should be 1 octave higher and same fundamental", () => {
             expect(transposedFundamentalAndOctave.overflow).to.equal(1);
             expect(transposedFundamentalAndOctave.halftone).to.equal(pitch.FundamentalNote);
             expect(higherTransposedFundamentalAndOctave.overflow).to.equal(2);
             expect(higherTransposedFundamentalAndOctave.halftone).to.equal(pitch.FundamentalNote + 2);
-            done();
         });
     });
 
@@ -27,14 +26,13 @@ describe("Pitch Unit Tests:", () => {
         const frequency2: number = Pitch.calcFrequency(Pitch.calcFractionalKey(pitch2.Frequency));
         const frequency3: number = Pitch.calcFrequency(Pitch.calcFractionalKey(pitch3.Frequency));
 
-        it("should be 440Hz", (done: Mocha.Done) => {
+        it("should be 440Hz", () => {
             expect(pitch1.Frequency).to.equal(440);
             expect(pitch2.Frequency).to.equal(440);
             expect(pitch3.Frequency).to.equal(440);
             expect(frequency1).to.equal(440);
             expect(frequency2).to.equal(440);
             expect(frequency3).to.equal(440);
-            done();
         });
     });
 
@@ -52,13 +50,12 @@ describe("Pitch Unit Tests:", () => {
         const key4: number = Pitch.calcFractionalKey(pitch4.Frequency);
         const key5: number = Pitch.calcFractionalKey(pitch5.Frequency);
 
-        it("pitch key should equal midi key", (done: Mocha.Done) => {
+        it("pitch key should equal midi key", () => {
             expect(Math.round(key1)).to.equal(109);
             expect(Math.round(key2)).to.equal(59);
             expect(Math.round(key3)).to.equal(87);
             expect(Math.round(key4)).to.equal(30);
             expect(Math.round(key5)).to.equal(57);
-            done();
         });
     });
 
@@ -81,10 +78,9 @@ describe("Pitch Unit Tests:", () => {
 
                 it( "calcedPitch equals original, " +
                     `note: ${pitch.FundamentalNote}, octave: ${pitch.Octave}, accidental; ${pitch.Accidental}`,
-                    (done: Mocha.Done) => {
+                    () => {
                         // compare the frequencies here -> only AccidentalEnum None and Sharp will lead to same note, octave and accidental
                         expect(pitch.Frequency).to.equal(calcedPitch.Frequency);
-                        done();
                     });
             }
         }
@@ -110,9 +106,8 @@ describe("Pitch Unit Tests:", () => {
 
                 it( "calcedPitch equals original, " +
                     `note: ${pitch.FundamentalNote}, octave: ${pitch.Octave}, accidental; ${pitch.Accidental}`,
-                    (done: Mocha.Done) => {
+                    () => {
                         expect(pitch.getHalfTone()).to.equal(calcedPitch.getHalfTone());
-                        done();
                     });
             }
         }

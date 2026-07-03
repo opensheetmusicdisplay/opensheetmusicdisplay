@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
@@ -59,7 +59,7 @@ function collectRehearsalMarks(gms: GraphicalMusicSheet): RehearsalMarkInfo[] {
 
 describe("VexFlow Measure - Rehearsal Mark Positioning", () => {
 
-  it("Should have rehearsal mark 'F' in Haydn cello concerto", (done: Mocha.Done) => {
+  it("Should have rehearsal mark 'F' in Haydn cello concerto", () => {
     const gms: GraphicalMusicSheet = buildGMS("JosephHaydn_ConcertanteCello.xml");
     const marks: RehearsalMarkInfo[] = collectRehearsalMarks(gms);
 
@@ -67,7 +67,7 @@ describe("VexFlow Measure - Rehearsal Mark Positioning", () => {
 
     const markF: RehearsalMarkInfo | undefined = marks.find(m => m.label === "F");
     expect(markF).to.not.be.undefined;
-    if (!markF) { done(); return; }
+    if (!markF) { return; }
 
     expect(markF.measureNumber).to.equal(201, "rehearsal mark 'F' should be on measure 201");
     // StaveSection metrics define padding=2 (see Metrics.ts)
@@ -75,11 +75,9 @@ describe("VexFlow Measure - Rehearsal Mark Positioning", () => {
     // EngravingRules.RehearsalMarkXOffsetDefault = 10
     expect(markF.xShift).to.equal(10,
       `xShift should be RehearsalMarkXOffsetDefault (10), got ${markF.xShift}`);
-
-    done();
   });
 
-  it("rehearsal mark text should be vertically contained within its bounding box (tab -> classical clef)", (done: Mocha.Done) => {
+  it("rehearsal mark text should be vertically contained within its bounding box (tab -> classical clef)", () => {
     const gms: GraphicalMusicSheet = buildGMS("test_tab_dont_switch_to_classical_from_clefinstruction.musicxml");
     const marks: RehearsalMarkInfo[] = collectRehearsalMarks(gms);
 
@@ -87,7 +85,7 @@ describe("VexFlow Measure - Rehearsal Mark Positioning", () => {
 
     const dropMark: RehearsalMarkInfo | undefined = marks.find(m => m.label === "Drop");
     expect(dropMark).to.not.be.undefined;
-    if (!dropMark) { done(); return; }
+    if (!dropMark) { return; }
 
     const section: VF.StaveSection = dropMark.section;
     const stave: VF.Stave = dropMark.stave;
@@ -128,8 +126,6 @@ describe("VexFlow Measure - Rehearsal Mark Positioning", () => {
       `Text bottom y=${textBottom.toFixed(1)} (baseline=${fillTextY.toFixed(1)} + descent=${descent.toFixed(1)}) ` +
       `must be inside rect bottom y=${rectBottom.toFixed(1)}. ` +
       `rect=[${rectTop.toFixed(1)}, ${rectBottom.toFixed(1)}] height=${height.toFixed(1)}`);
-
-    done();
   });
 
 });

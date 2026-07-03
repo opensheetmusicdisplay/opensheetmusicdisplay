@@ -9,12 +9,12 @@ export class TestUtils {
 
     public static getScore(name: string): Document {
         const path: string = "test/data/" + name;
-        return ((window as any).__xml__)[path];
+        return ((globalThis as any).__xml__)[path];
     }
 
     public static getMXL(scoreName: string): string {
         const path: string = "test/data/" + scoreName;
-        return ((window as any).__raw__)[path];
+        return ((globalThis as any).__raw__)[path];
     }
 
     public static getDivElement(document: Document): HTMLElement {

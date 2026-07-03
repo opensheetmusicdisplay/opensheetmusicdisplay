@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { GraphicalMusicSheet } from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
 
@@ -124,7 +124,7 @@ function checkAlignment(gms: GraphicalMusicSheet): { misalignedCount: number, ch
 }
 
 describe("VexFlow Measure - Voice Alignment Across Staves", () => {
-  it("Should align notes across staves in full score", (done: Mocha.Done) => {
+  it("Should align notes across staves in full score", () => {
     const path: string = "OSMD_Function_Test_Voice_Alignment.musicxml";
     const score: any = TestUtils.getScore(path);
     expect(score).to.not.be.undefined;
@@ -143,10 +143,9 @@ describe("VexFlow Measure - Voice Alignment Across Staves", () => {
     const { misalignedCount, checkedCount }: { misalignedCount: number, checkedCount: number } = checkAlignment(gms);
     expect(misalignedCount).to.be.at.most(1,
       `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned base X positions (>2px)`);
-    done();
   });
 
-  it("Should align voices in reduced grand staff score", (done: Mocha.Done) => {
+  it("Should align voices in reduced grand staff score", () => {
     const path: string = "OSMD_Function_Test_Voice_Alignment_reduced.musicxml";
     const score: any = TestUtils.getScore(path);
     expect(score).to.not.be.undefined;
@@ -163,10 +162,9 @@ describe("VexFlow Measure - Voice Alignment Across Staves", () => {
     const { misalignedCount, checkedCount }: { misalignedCount: number, checkedCount: number } = checkAlignment(gms);
     expect(misalignedCount).to.equal(0,
       `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned base X positions (>2px)`);
-    done();
   });
 
-  it("Should keep reference staff (treble/green) xShift unchanged while aligning colored score", (done: Mocha.Done) => {
+  it("Should keep reference staff (treble/green) xShift unchanged while aligning colored score", () => {
     const path: string = "OSMD_Function_Test_Voice_Alignment_colored.musicxml";
     const score: any = TestUtils.getScore(path);
     expect(score).to.not.be.undefined;
@@ -183,7 +181,5 @@ describe("VexFlow Measure - Voice Alignment Across Staves", () => {
     const { misalignedCount, checkedCount }: { misalignedCount: number, checkedCount: number } = checkAlignment(gms);
     expect(misalignedCount).to.be.at.most(1,
       `${misalignedCount} out of ${checkedCount} cross-staff note groups have misaligned base X positions (>2px)`);
-
-    done();
   });
 });

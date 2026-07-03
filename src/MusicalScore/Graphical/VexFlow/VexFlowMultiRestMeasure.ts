@@ -19,7 +19,7 @@ import { BoundingBox } from "../BoundingBox";
  *  Even though most of those functions aren't needed, apparently you can't remove the layoutStaffEntry function.
  */
 export class VexFlowMultiRestMeasure extends VexFlowMeasure {
-    public multiRestElement: any; // VexFlow: Element
+    declare public multiRestElement: any; // VexFlow: Element
     public multiRestElementSVG: SVGGElement;
 
     constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {

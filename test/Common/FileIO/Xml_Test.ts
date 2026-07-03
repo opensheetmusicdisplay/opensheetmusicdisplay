@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 import {TestUtils} from "../../Util/TestUtils";
 import {OpenSheetMusicDisplay} from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
@@ -38,7 +38,7 @@ describe("XML interface", () => {
         "ScottJoplin_The_Entertainer.xml",
         "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
         "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
-        "VariousChordTests.musicxml",
+        "OSMD_function_test_chord_tests_various.musicxml",
     ];
     for (const score of xmlTestset) {
         testFile(score);
@@ -46,18 +46,17 @@ describe("XML interface", () => {
 
     // Generates a test for a mxl file name
     function testFile(scoreName: string): void {
-        it(scoreName, (done: Mocha.Done) => {
+        it(scoreName, async () => {
             // Load the xml file content
             const score: Document = TestUtils.getScore(scoreName);
             const div: HTMLElement = document.createElement("div");
             const openSheetMusicDisplay: OpenSheetMusicDisplay =
                 TestUtils.createOpenSheetMusicDisplay(div);
-            openSheetMusicDisplay.load(score);
-            done();
+            await openSheetMusicDisplay.load(score);
         });
     }
 
-    it("test IXmlElement", (done: Mocha.Done) => {
+    it("test IXmlElement", () => {
         // Test name attribute
         expect(documentElement.name).to.equal("score-partwise");
         // Test element method
@@ -67,10 +66,9 @@ describe("XML interface", () => {
             .element("identification")
             .element("encoding")
             .element("software").value).to.equal("Example Software name");
-        done();
     });
 
-    it("test IXmlAttribute", (done: Mocha.Done) => {
+    it("test IXmlAttribute", () => {
         // Test attributes method
         expect(
             documentElement.element("credit").attributes()[0].name
@@ -82,6 +80,5 @@ describe("XML interface", () => {
         expect(creditWords.attributes().length).to.equal(2);
         // Test value attribute
         expect(creditWords.attribute("justify").value).to.equal("center");
-        done();
     });
 });

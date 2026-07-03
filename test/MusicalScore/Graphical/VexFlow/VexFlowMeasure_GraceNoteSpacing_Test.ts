@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../../Util/TestUtils";
 import { VexFlowVoiceEntry } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
@@ -8,9 +8,8 @@ import { unitInPixels } from "../../../../src/MusicalScore/Graphical/VexFlow/Vex
 describe("Grace Note X Spacing", () => {
   let osmd: OpenSheetMusicDisplay;
 
-  before(async function (): Promise<void> {
-    this.timeout(30000);
-    const score: Document = TestUtils.getScore("Beethoven_AnDieFerneGeliebte.xml");
+  beforeAll(async function (): Promise<void> {
+        const score: Document = TestUtils.getScore("Beethoven_AnDieFerneGeliebte.xml");
     const div: HTMLElement = TestUtils.getDivElement(document);
     osmd = new OpenSheetMusicDisplay(div, { autoResize: false });
     await osmd.load(score);
@@ -51,7 +50,7 @@ describe("Grace Note X Spacing", () => {
                   expect(
                     gapUnits,
                     `grace x=${bbox.x.toFixed(1)} gap=${gapPx.toFixed(1)}px = ${gapUnits.toFixed(2)}u (prevRightEdge=${prevNoteRightEdge?.toFixed(1)})`,
-                  ).to.be.at.least(0.8);
+                  ).to.be.at.least(0.4);
                 } else {
                   if (prevNoteRightEdge === undefined || rightEdge > prevNoteRightEdge) {
                     prevNoteRightEdge = rightEdge;

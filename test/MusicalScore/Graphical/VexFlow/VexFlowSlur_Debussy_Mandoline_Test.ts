@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { expect } from "chai";
+import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../../Util/TestUtils";
 import { GraphicalSlur } from "../../../../src/MusicalScore/Graphical/GraphicalSlur";
@@ -14,9 +14,8 @@ describe("Debussy Mandoline m11 slur positioning", () => {
   let osmd: OpenSheetMusicDisplay;
   const m11Slurs: GraphicalSlur[] = [];
 
-  before(async function (): Promise<void> {
-    this.timeout(30000);
-    const score: Document = TestUtils.getScore("Debussy_Mandoline.xml");
+  beforeAll(async function (): Promise<void> {
+        const score: Document = TestUtils.getScore("Debussy_Mandoline.xml");
     const div: HTMLElement = TestUtils.getDivElement(document);
     osmd = new OpenSheetMusicDisplay(div, { autoResize: false });
     await osmd.load(score);

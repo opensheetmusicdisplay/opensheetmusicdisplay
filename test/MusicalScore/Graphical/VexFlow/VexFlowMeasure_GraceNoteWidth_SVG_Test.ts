@@ -1,5 +1,5 @@
 
-import { expect } from "chai";
+import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../../Util/TestUtils";
 
@@ -86,9 +86,8 @@ describe("Grace Note Measure Width", () => {
     describe("OSMD_function_test_GraceNotes.xml", () => {
         let measures: MeasureWidthInfo[];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG("OSMD_function_test_GraceNotes.xml").then(
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG("OSMD_function_test_GraceNotes.xml").then(
                 (svg: SVGElement) => {
                     measures = getMeasureWidths(svg);
                 }
@@ -157,9 +156,8 @@ describe("Grace Note Measure Width", () => {
     describe("OSMD_function_test_invisible_notes.musicxml", () => {
         let measures: MeasureWidthInfo[];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG(
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG(
                 "OSMD_function_test_invisible_notes.musicxml"
             ).then((svg: SVGElement) => {
                 measures = getMeasureWidths(svg);
@@ -199,9 +197,8 @@ describe("Grace Note Measure Width", () => {
     describe("test_grace_slash.musicxml", () => {
         let measures: MeasureWidthInfo[];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG("test_grace_slash.musicxml").then(
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG("test_grace_slash.musicxml").then(
                 (svg: SVGElement) => {
                     measures = getMeasureWidths(svg);
                 }
@@ -231,9 +228,8 @@ describe("Grace Note Measure Width", () => {
     describe("test_grace_note_fingerings_Ysaye_excerpt.musicxml", () => {
         let measures: MeasureWidthInfo[];
 
-        before(function (): Promise<void> {
-            this.timeout(20000);
-            return renderToSVG(
+        beforeAll(function (): Promise<void> {
+                        return renderToSVG(
                 "test_grace_note_fingerings_Ysaye_excerpt.musicxml"
             ).then((svg: SVGElement) => {
                 measures = getMeasureWidths(svg);
