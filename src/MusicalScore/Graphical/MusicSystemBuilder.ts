@@ -1178,7 +1178,8 @@ export class MusicSystemBuilder {
                 //         beginInstructionsWidth *= 1; // TODO the first measure in a system is always slightly too big. why? try e.g. 0.6
                 //     }
                 // }
-                measure.setWidth(beginInstructionsWidth + measure.minimumStaffEntriesWidth * measureFactors[measureIndex] + measure.endInstructionsWidth);
+                const mw: number = beginInstructionsWidth + measure.minimumStaffEntriesWidth * measureFactors[measureIndex] + measure.endInstructionsWidth;
+                measure.setWidth(mw);
                 if (measureIndex < this.currentSystemParams.systemMeasures.length) {
                     const startLine: SystemLinesEnum = this.currentSystemParams.systemMeasures[measureIndex].beginLine;
                     const lineWidth: number = measure.getLineWidth(SystemLinesEnum.BoldThinDots);

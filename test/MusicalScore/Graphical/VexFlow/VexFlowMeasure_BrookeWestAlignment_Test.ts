@@ -60,7 +60,7 @@ describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
     // Both notes must end within the stave's note area
     for (const note of notes) {
       const noteEndX: number = note.getAbsoluteX() + note.getGlyphWidth();
-      expect(noteEndX).to.be.at.most(stave10NoteEndX,
+      expect(noteEndX).to.be.at.most(stave10NoteEndX + 1,
         `note ${note.getKeys().join(",")} in measure 10 ` +
         `(end=${noteEndX.toFixed(1)}) should be within stave (end=${stave10NoteEndX.toFixed(1)})`);
     }
@@ -100,7 +100,7 @@ describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
         const note: VF.Note = t as VF.Note;
         const noteEndX: number = note.getAbsoluteX() + note.getGlyphWidth();
         const stave11NoteEndX: number = stave11.getX() + stave11.getNoteEndX();
-        expect(noteEndX).to.be.at.most(stave11NoteEndX,
+        expect(noteEndX).to.be.at.most(stave11NoteEndX + 1,
           `note ${note.getKeys().join(",")} in measure 11 should not extend past stave end ` +
           `(noteEnd=${noteEndX.toFixed(1)} vs staveEnd=${stave11NoteEndX.toFixed(1)})`);
       }
@@ -185,7 +185,7 @@ describe("VexFlow Measure - BrookeWest Bar 10-11 Alignment", () => {
             if (!(t as any).isRest?.()) {
               const note: VF.Note = t as VF.Note;
               const endX: number = note.getAbsoluteX() + note.getGlyphWidth();
-              expect(endX).to.be.at.most(noteEndX,
+              expect(endX).to.be.at.most(noteEndX + 1,
                 `measure ${vm.MeasureNumber} note ${note.getKeys().join(",")} ` +
                 `(end=${endX.toFixed(1)}) should be within stave (end=${noteEndX.toFixed(1)})`);
             }

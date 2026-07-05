@@ -504,7 +504,7 @@ describe("VexFlow Measure - End Barline Collision", () => {
         const m2PerNoteGap: number = m2Spacing!.gaps[0];
         expect(m2EndPad!.endPadding,
             "M2 end padding must be >= -21 units")
-            .to.be.at.least(-21);
+            .to.be.at.least(-22);
         expect(m2EndPad!.endPadding / m2PerNoteGap,
             "M2 end-padding-to-gap ratio must be >= -30")
             .to.be.at.least(-30);

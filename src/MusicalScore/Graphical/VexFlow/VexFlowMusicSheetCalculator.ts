@@ -411,14 +411,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (stavesForMeasureColumn.length > 1) {
           VF.Stave.formatBegModifiers(stavesForMeasureColumn);
         }
-        if (alignRests) {
-          formatter.formatToStave(allVoices, p.getVFStave(), {
-            alignRests: true,
-            context: undefined
-          });
-        } else {
-          formatter.formatToStave(allVoices, p.getVFStave());
-        }
+        // Use the passed-in width w instead of reading from the stave.
+        // Stave is freshly created by resetLayout() with zero width, so
+        // stave.getNoteEndX() - stave.getNoteStartX() returns a negative
+        // value, making all note spacing collapse.
+        const fOpts: VF.FormatParams = { stave: p.getVFStave(), context: undefined };
+        if (alignRests) { fOpts.alignRests = true; }
+        formatter.format(allVoices, w, fOpts);
         // Zero xShift after formatting. VF5 applies collision-avoidance
         // xShift per-context, which can misalign same-tick notes across
         // staves. Zero unless a tickable's notehead would overlap another
@@ -470,6 +469,31 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               if (typeof t.setXShift === "function" && t.getXShift() !== 0) {
                 t.setXShift(0);
               }
+            }
+          }
+        }
+        // Per-bar overflow compression: if the last context's extent (including
+        // notehead, stem, and beam/flag overhang) exceeds the justified width,
+        // proportionally compress all contexts within this measure.
+        // Only runs when w > 0 (formatter used the width; evaluate() skipped).
+        if (w > 0) {
+          const ctxList: number[] = tctxs.list;
+          const ctxMap: any = tctxs.map;
+          const firstTick: number = ctxList[0];
+          const lastTick: number = ctxList[ctxList.length - 1];
+          const firstCtx: any = ctxMap[firstTick];
+          const lastCtx: any = ctxMap[lastTick];
+          if (firstCtx && lastCtx) {
+            const lm: any = lastCtx.getMetrics();
+            const lastContentEnd: number = lastCtx.getX() + lm.notePx + lm.totalRightPx + lm.glyphPx;
+            if (lastContentEnd > w) {
+              const targetSpan: number = w - firstCtx.getX();
+              const currentSpan: number = lastContentEnd - firstCtx.getX();
+              const scale: number = targetSpan / currentSpan;
+              ctxList.forEach((tick: number) => {
+                const c: any = ctxMap[tick];
+                c.setX(firstCtx.getX() + (c.getX() - firstCtx.getX()) * scale);
+              });
             }
           }
         }
@@ -549,30 +573,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         (<VexFlowStaffEntry>staffEntry).calculateXPosition();
       }
     }
-    //Can't quite figure out why, but this is the calculation that needs redone to have consistent rendering.
-    //The first render of a sheet vs. subsequent renders are calculated differently by vexflow without this re-joining of the voices
+
+
+    // Re-join voices (setTickContext resets preFormatted, so extraWidth above comes first).
     for (const measure of measures) {
-      if (!measure) {
-        continue;
-      }
+      if (!measure) {continue;}
       const mvoices: { [voiceID: number]: VF.Voice } = (measure as VexFlowMeasure).vfVoices;
       const voices: VF.Voice[] = [];
       for (const voiceID in mvoices) {
-        if (mvoices.hasOwnProperty(voiceID)) {
-          voices.push(mvoices[voiceID]);
-        }
+        if (mvoices.hasOwnProperty(voiceID)) { voices.push(mvoices[voiceID]); }
       }
-
-      if (voices.length === 0) {
-        log.debug("Found a measure with no voices. Continuing anyway.", mvoices);
-        // no need to log this, measures with no voices/notes are fine. see OSMDOptions.fillEmptyMeasuresWithWholeRest
-        continue;
-      }
-      // all voices that belong to one stave are collectively added to create a common context in VexFlow.
+      if (voices.length === 0) {continue;}
       formatter.joinVoices(voices);
     }
 
-    // calculateMeasureWidthFromLyrics() will be called from MusicSheetCalculator after this
     return minStaffEntriesWidth;
   }
 
