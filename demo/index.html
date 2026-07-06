@@ -31,57 +31,57 @@
     <div class="ui fixed" id="divControls" style="visibility: hidden; display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
         <div class="column" id="zoomControls">
             <div class="ui buttons" id="zoomControlsButtons">
-                <div class="ui button" id="zoom-in-btn">
+                <button type="button" class="ui button" id="zoom-in-btn" aria-label="Zoom in">
                     <i class="search plus icon" style="margin: 0px"></i>
-                </div>
-                <div class="ui button" id="zoom-out-btn">
+                </button>
+                <button type="button" class="ui button" id="zoom-out-btn" aria-label="Zoom out">
                     <i class="search minus icon" style="margin: 0px"></i>
-                </div>
+                </button>
                 <div class="ui" id="zoom-str-portrait">???</div>
             </div>
         </div>
         <div class="ui" id="advancedSettings" style="display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
-            <button type="button" class="show-on-portrait" id="advanced-settings-btn" ><img src="resources/list-settings-fill.png"></button>
+            <button type="button" class="show-on-portrait" id="advanced-settings-btn" aria-label="Advanced settings"><img src="resources/list-settings-fill.png" alt=""></button>
 
             <div class="column advanced-setting" id="cursorControls">
                 <h3 class="ui header hide-on-portrait">Cursor controls:</h3>
                 <button type="button show-on-portrait" class ="portraitCollapsible">Cursor controls</button>
                 <div class="collapsibleContent">
                     <div class="ui vertical buttons">
-                        <div class="ui animated fade button" id="show-cursor-btn">
+                        <button type="button" class="ui animated fade button" id="show-cursor-btn">
                             <div class="visible content">Show</div>
                             <div class="hidden content">
                                 <i class="eye icon"></i>
                             </div>
-                        </div>
-                        <div class="ui animated fade button" id="hide-cursor-btn">
+                        </button>
+                        <button type="button" class="ui animated fade button" id="hide-cursor-btn">
                             <div class="visible content">Hide</div>
                             <div class="hidden content">
                                 <i class="eye slash icon"></i>
                             </div>
-                        </div>
+                        </button>
                     </div>
                     <div class="ui vertical buttons">
-                        <div class="ui animated fade button" id="previous-cursor-btn">
+                        <button type="button" class="ui animated fade button" id="previous-cursor-btn">
                             <div class="visible content">Previous</div>
                             <div class="hidden content">
                                 <i class="arrow left icon"></i>
                             </div>
-                        </div>
-                        <div class="ui animated fade button" id="next-cursor-btn">
+                        </button>
+                        <button type="button" class="ui animated fade button" id="next-cursor-btn">
                             <div class="visible content">Next</div>
                             <div class="hidden content">
                                 <i class="arrow right icon"></i>
                             </div>
-                        </div>
+                        </button>
                     </div>
                     <div class="ui vertical buttons">
-                        <div class="ui animated fade button" id="reset-cursor-btn">
+                        <button type="button" class="ui animated fade button" id="reset-cursor-btn">
                             <div class="visible content">Reset</div>
                             <div class="hidden content">
                                 <i class="undo icon"></i>
                             </div>
-                        </div>
+                        </button>
                     </div>
                     <div class="item" style="margin-top: 5px;">
                         <div class="ui toggle checkbox">
@@ -139,11 +139,10 @@
                 <button type="button" class ="portraitCollapsible show-on-portrait">Debug controls</button>
                 <div>
                     <div class="ui vertical buttons collapsibleContent">
-                        <div class="ui button" id="debug-re-render-btn">Re-render</div>
-
+                        <button type="button" class="ui button" id="debug-re-render-btn">Re-render</button>
                     </div>
                     <div class="ui vertical buttons">
-                        <div class="ui button" id="debug-clear-btn">Clear</div>
+                        <button type="button" class="ui button" id="debug-clear-btn">Clear</button>
                     </div>
                 </div>
             </div>
@@ -161,8 +160,8 @@
                     <option value="Letter P">Letter Portrait</option>
                     <option value="Letter L">Letter Landscape</option>
                 </select>
-                <div class="ui button" id="print-pdf-btn">Create PDF</div>
-                <div class="ui button" id="dark-mode-btn">Dark mode</div>
+                <button type="button" class="ui button" id="print-pdf-btn">Create PDF</button>
+                <button type="button" class="ui button" id="dark-mode-btn">Dark mode</button>
             </div>
             <div class="column advanced-setting">
                 <h3 class="ui header hide-on-portrait">Transpose by Semitone(s):</h3>
@@ -174,7 +173,7 @@
             </div>
         </div>
     </div>
-    <button class="hide-on-portrait fixed" id="slideControlsButton"></button>
+    <button type="button" class="hide-on-portrait fixed" id="slideControlsButton" aria-label="Toggle controls"></button>
 </div>
 
 
@@ -185,17 +184,17 @@
     <div class="ui three column grid container" style="padding: 10px; margin-right: auto; margin-left: auto" id="optionalControlsColumnContainer">
         <div class="column" id="zoomControlsButtons-optional-column" style="min-width: 30%; opacity: 0.0">
             <div class="ui buttons" id="zoomControlsButtons-optional">
-                <div class="ui button" id="zoom-in-btn-optional">
+                <button type="button" class="ui button" id="zoom-in-btn-optional" aria-label="Zoom in">
                     <i class="search plus icon"></i>
-                </div>
-                <div class="ui button" id="zoom-out-btn-optional">
+                </button>
+                <button type="button" class="ui button" id="zoom-out-btn-optional" aria-label="Zoom out">
                     <i class="search minus icon"></i>
-                </div>
+                </button>
             </div>
             <h4 id="zoom-str-optional">???</h4>
         </div>
         <div class="column" id="print-pdf-btn-optional-column" style="opacity: 0.0; max-width: 25%;">
-            <div class="ui button" id="print-pdf-btn-optional">Create PDF</div>
+            <button type="button" class="ui button" id="print-pdf-btn-optional">Create PDF</button>
         </div>
         <div class="column" id="selectPageSize-optional-column" style="opacity: 0.0; min-width: 35%">
             <div class="ui two column grid container">
