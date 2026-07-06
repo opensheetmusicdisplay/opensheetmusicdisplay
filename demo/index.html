@@ -16,7 +16,7 @@
 <div id="topBar" style="display: flex; flex-direction: column;">
     <div class="column" id="selectSampleContainer">
         <h3 class="ui header" id="selectSampleTitle">Select a sample:</h3>
-        <select class="ui selection dropdown" id="selectSample" style="visibility: hidden"></select>
+        <select class="ui selection dropdown" id="selectSample" style="visibility: hidden" aria-label="Select a sample"></select>
     </div>
     <h1 class="ui centered header fixed" id="header" style="opacity: 0.0">
         <img src="./favicon.ico?" class="ui image">
@@ -102,7 +102,7 @@
             <div class="column advanced-setting" id="selectBoundingDiv">
                 <h3 class="ui header hide-on-portrait">Show bounding box for:</h3>
                 <button type="button" class ="portraitCollapsible show-on-portrait">Show bounding box for</button>
-                <select class="ui selection dropdown collapsibleContent" id="selectBounding" style="visibility: hidden;">
+                <select class="ui selection dropdown collapsibleContent" id="selectBounding" style="visibility: hidden;" aria-label="Show bounding box for">
                     <option value="none">None</option>
                     <option value="all">All</option>
                     <option value="VexFlowMeasure">Measures</option>
@@ -149,7 +149,7 @@
             <div class="column advanced-setting" id="last-adv-setting">
                 <h3 class="ui header hide-on-portrait">Page size:</h3>
                 <button type="button" class ="portraitCollapsible show-on-portrait">Page size</button>
-                <select class="ui selection dropdown collapsibleContent" id="selectPageSize"  style="visibility: hidden;">
+                <select class="ui selection dropdown collapsibleContent" id="selectPageSize"  style="visibility: hidden;" aria-label="Page size">
                     <option value="endless">endless</option>
                     <option value="A3 P">A3 Portrait</option>
                     <option value="A3 L">A3 Landscape</option>
@@ -167,7 +167,7 @@
                 <h3 class="ui header hide-on-portrait">Transpose by Semitone(s):</h3>
                 <button type="button" class ="portraitCollapsible show-on-portrait">Transpose by Semitone(s)</button>
                 <div class="ui action input collapsibleContent" id="transposeInput">
-                    <input type="number" id="transpose" value="0"/>
+                    <input type="number" id="transpose" value="0" aria-label="Semitones to transpose"/>
                     <button class="ui button" id="transpose-btn">Transpose</button>
                 </div>
             </div>
@@ -202,7 +202,7 @@
             <h3>Format:</h3>
             </div>
             <div class="column">
-            <select class="ui selection dropdown" id="selectPageSize-optional">
+            <select class="ui selection dropdown" id="selectPageSize-optional" aria-label="Page size">
                 <option value="endless">endless</option>
                 <option value="A3 P">A3 Portrait</option>
                 <option value="A3 L">A3 Landscape</option>
