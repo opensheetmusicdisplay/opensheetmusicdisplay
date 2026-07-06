@@ -277,7 +277,16 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         // detect mobile portrait mode (small screen -> reduce zoom etc)
         const portrait = window.matchMedia("(orientation: portrait)").matches;
         // console.log(`is portrait mode: ${portrait}`);
-        if (window.outerWidth < 768) {
+        // Detect small screens via the layout viewport, NOT window.outerWidth. outerWidth reads 0 for the
+        //   first few tens of milliseconds after a page (re)loads, then settles to the real window width.
+        //   If init() runs inside that gap -- e.g. a fast webpack-dev-server hot reload where the JS bundles
+        //   are unchanged and served from cache, so the "load" event fires almost immediately -- outerWidth
+        //   would be 0 < 768 and wrongly force mobile mode (60% zoom, advanced settings hidden) on desktop.
+        //   matchMedia mirrors the CSS breakpoint (demo.css @media (min-width: 768px), and the min-width
+        //   check further below) and is correct from the first frame, so the sidebar no longer randomly
+        //   collapses after a hot reload.
+        const smallScreen = !window.matchMedia("(min-width: 768px)").matches;
+        if (smallScreen) {
             zoom = 0.60; // ~60% is good for iPhone SE (browser simulated device dimensions)
 
             // collapsible behavior
