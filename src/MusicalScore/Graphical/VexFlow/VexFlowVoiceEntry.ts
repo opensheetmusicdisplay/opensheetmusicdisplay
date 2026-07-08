@@ -194,7 +194,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         if (stemTransparent) {
             stemColor = transparentColor;
         }
-        const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
+        const stemStyle: object = { fillStyle: stemColor, strokeStyle: stemColor };
 
         if (vfStaveNote && vfStaveNote.setStemStyle) {
             if (!stemTransparent && setVoiceEntryStemColor) {

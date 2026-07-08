@@ -87,7 +87,6 @@ export default defineConfig(
                     caughtErrorsIgnorePattern: "^_|^e$|^err$|^exc$",
                 },
             ],
-            "@typescript-eslint/no-wrapper-object-types": "off",
             "@typescript-eslint/prefer-namespace-keyword": "error",
             "@stylistic/quotes": [
                 "error",

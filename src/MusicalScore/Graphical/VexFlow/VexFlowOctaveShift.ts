@@ -106,7 +106,7 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
      */
     public getTextBracket(): VF.TextBracket {
         let stop: VF.Note = this.endNote;
-        let stopObject: Object;
+        let stopObject: object;
         const self: VexFlowOctaveShift = this;
         if (this.graphicalEndAtMeasureEnd) {
             // draw until end of measure (measure end barline):
@@ -117,7 +117,7 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
                 getAbsoluteX(): number {
                     return (self.endMeasure.PositionAndShape.AbsolutePosition.x + self.endMeasure.PositionAndShape.Size.width) * 10;
                 },
-                getGlyph(): Object {
+                getGlyph(): object {
                     return {
                         getWidth(): number {
                             return 0;

@@ -1335,7 +1335,7 @@ export abstract class MusicSheetCalculator {
         let consecutiveTupletCount: number = 0;
         let currentTuplet: Tuplet = undefined;
         let skipTuplet: Tuplet = undefined; // if set, ignore (further) handling of this tuplet
-        const disabledPerVoice: Object = {};
+        const disabledPerVoice: object = {};
         for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
             for (const voice of instrument.Voices) {
                 consecutiveTupletCount = 0; // reset for next voice
