@@ -26,7 +26,7 @@ export abstract class VexFlowBackend {
   public width: number; // read-only
   public height: number; // read-only
 
-  public abstract initialize(container: HTMLElement, zoom: number): void;
+  public abstract initialize(container: HTMLElement, zoom: number, id?: string): void;
 
   public getInnerElement(): HTMLElement {
     return this.inner;
@@ -109,7 +109,7 @@ public abstract getContext(): Vex.IRenderContext;
 
   public abstract renderCurve(points: PointF2D[], isSlur?: boolean, startNote?: VexFlowGraphicalNote): Node;
 
-  public abstract renderPath(points: PointF2D[], fill: boolean, id?: string): Node;
+  public abstract renderPath(points: PointF2D[], fill: boolean, id?: string, color?: string): Node;
 
   public abstract getVexflowBackendType(): VF.Renderer.Backends;
 

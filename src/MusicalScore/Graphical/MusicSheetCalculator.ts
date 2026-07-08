@@ -94,6 +94,11 @@ export abstract class MusicSheetCalculator {
     protected graphicalMusicSheet: GraphicalMusicSheet;
     protected rules: EngravingRules;
     protected musicSystems: MusicSystem[];
+    /** Lazy rendering: cache of computed sky/bottom lines, keyed per staff line by its system's
+     *  measure range + staff index. A growing-prefix batch re-runs the (expensive) skyline pass over the
+     *  whole prefix; this lets stable interior systems reuse the lines computed in an earlier batch instead
+     *  of re-measuring them. Only used when EngravingRules.LazyConsistentGraphic; cleared per lazy session. */
+    protected skyBottomLineCache: Map<string, { sky: number[], bottom: number[] }> = new Map();
 
     private abstractNotImplementedErrorMessage: string = "abstract, not implemented";
 
@@ -335,6 +340,24 @@ export abstract class MusicSheetCalculator {
         GraphicalMusicSheet.transformRelativeToAbsolutePosition(this.graphicalMusicSheet);
     }
 
+    /** Drop the lazy sky/bottom-line reuse cache (call when starting a fresh lazy session). */
+    public clearSkyBottomLineCache(): void {
+        this.skyBottomLineCache.clear();
+    }
+
+    /** Stable per-staff-line key for the lazy sky/bottom-line cache: the system's measure range pins the
+     *  system (systems partition the measures), the staff index picks the line within it. Returns undefined
+     *  for a staff line with no usable measures (so it is never cached/reused). */
+    protected skyBottomLineCacheKey(staffLine: StaffLine, staffIndexInSystem: number): string {
+        const measures: GraphicalMeasure[] = staffLine.Measures;
+        const first: GraphicalMeasure = measures[0];
+        const last: GraphicalMeasure = measures[measures.length - 1];
+        if (!first || !last) {
+            return undefined;
+        }
+        return first.MeasureNumber + ":" + last.MeasureNumber + ":" + staffIndexInSystem;
+    }
+
     public calculateXLayout(graphicalMusicSheet: GraphicalMusicSheet, maxInstrNameLabelLength: number): void {
         // for each inner List in big Measure List calculate new Positions for the StaffEntries
         // and adjust Measures sizes
@@ -521,10 +544,17 @@ export abstract class MusicSheetCalculator {
 
             const isFirstMeasureAndNotPrintedOne: boolean = this.rules.UseXMLMeasureNumbers &&
                 measure.MeasureNumber === 1 && measure.parentSourceMeasure.getPrintedMeasureNumber() !== 1;
-            if ((measure.MeasureNumber === previousMeasureNumber ||
-                measure.MeasureNumber >= previousMeasureNumber + this.rules.MeasureNumberLabelOffset) &&
-                !measure.parentSourceMeasure.ImplicitMeasure ||
-                isFirstMeasureAndNotPrintedOne) {
+            // Implicit measures (a pickup measure, or implicit="yes" in the MusicXML - e.g. measures without a meter
+            // like in Satie's Gnossiennes) don't show a measure number by default, as per the MusicXML standard.
+            // (parentSourceMeasure is undefined for extra instruction-only measures, e.g. mid-system clef changes.)
+            const sourceMeasure: SourceMeasure = measure.parentSourceMeasure;
+            const measureIsImplicit: boolean = sourceMeasure !== undefined &&
+                (sourceMeasure.ImplicitMeasure || sourceMeasure.ImplicitMeasureFromXml);
+            const renderNumberForImplicit: boolean = !measureIsImplicit || this.rules.RenderMeasureNumbersForImplicitMeasures;
+            if (((measure.MeasureNumber === previousMeasureNumber ||
+                measure.MeasureNumber >= previousMeasureNumber + this.rules.MeasureNumberLabelOffset) ||
+                isFirstMeasureAndNotPrintedOne) &&
+                renderNumberForImplicit) {
                 if (measure.MeasureNumber !== 1 ||
                     (measure.MeasureNumber === 1 && measure !== staffLine.Measures[0]) ||
                     isFirstMeasureAndNotPrintedOne
@@ -873,6 +903,22 @@ export abstract class MusicSheetCalculator {
             staffEntriesWithGraphicalTie.GraphicalTies.length = 0;
         }
         this.staffEntriesWithGraphicalTies.length = 0;
+        // Reset the tuplet number visibility decisions of calculateTupletNumbers() to the default:
+        // it runs after calculateSkyBottomLines(), so without the reset, a re-render's skyline
+        // would include the previous render's decisions, where the first render's skyline saw the
+        // default (true) - making re-renders differ from the first render.
+        // (Also makes sure all numbers come back when TupletNumberLimitConsecutiveRepetitions is
+        // disabled between renders, as calculateTupletNumbers() then doesn't re-activate them.)
+        for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
+            for (const voice of instrument.Voices) {
+                for (const ve of voice.VoiceEntries) {
+                    const tuplet: Tuplet = ve.Notes[0]?.NoteTuplet;
+                    if (tuplet && !tuplet.RenderTupletNumber) {
+                        tuplet.RenderTupletNumber = true;
+                    }
+                }
+            }
+        }
         return;
     }
 
@@ -1069,7 +1115,16 @@ export abstract class MusicSheetCalculator {
                 }
                 musicSystem.calculateBorders(this.rules);
             }
-            const distance: number = graphicalMusicPage.MusicSystems[0].PositionAndShape.BorderTop;
+            let distance: number = graphicalMusicPage.MusicSystems[0].PositionAndShape.BorderTop;
+            // This shifts all systems of the page (by the skyline-derived BorderTop), i.e. also the
+            // sub-pixel positions the stafflines were snapped/rounded to for consistent staff line
+            // anti-aliasing (see MusicSystemBuilder.snapSystemYToCrispStaffLines):
+            // round to whole pixels to keep them, or to the half-pixel grid if not snapping.
+            if (this.rules.SnapStafflinesToCrispPixels) {
+                distance = Math.round(distance * 10) / 10;
+            } else {
+                distance = Math.round(distance * 20) / 20;
+            }
             for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
                 const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                 // let newPosition: PointF2D = new PointF2D(musicSystem.PositionAndShape.RelativePosition.x,
@@ -2262,13 +2317,20 @@ export abstract class MusicSheetCalculator {
             graphicalStaffEntry.addGraphicalNoteToListAtCorrectYPosition(gve, graphicalNote);
             graphicalNote.PositionAndShape.calculateBoundingBox();
             if (!this.leadSheet) {
-                if (note.NoteBeam !== undefined && note.PrintObject) {
+                // Include the note in its beam if it's visible, or if its notehead is hidden but shared with a
+                // visible unison note in another voice (print-object="no") - then its stem still has to join the
+                // beam (emanating from the shared notehead) instead of becoming an orphan flagged note.
+                // E.g. Beethoven Moonlight Sonata 1st mvt. m.37 (test_unison_notehead_moonlight_sonata_measure37).
+                if (note.NoteBeam !== undefined && (note.PrintObject || note.sharesNoteheadWithVisibleUnisonNote())) {
                     if (!(note instanceof TabNote) || this.rules.TabBeamsRendered) {
                         this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
                     }
                 }
-                if (note.NoteTuplet !== undefined && note.PrintObject) {
-                    this.handleTuplet(graphicalNote, note.NoteTuplet, openTuplets);
+                if (note.NoteTuplets.length > 0 && note.PrintObject) {
+                    // a note can be part of more than one tuplet (nested tuplets); add it to each of them
+                    for (const noteTuplet of note.NoteTuplets) {
+                        this.handleTuplet(graphicalNote, noteTuplet, openTuplets);
+                    }
                 }
             }
 
@@ -2286,8 +2348,8 @@ export abstract class MusicSheetCalculator {
                 graphicalTabNote.PositionAndShape.calculateBoundingBox();
 
                 if (!this.leadSheet) {
-                    if (note.NoteTuplet) {
-                        this.handleTuplet(graphicalTabNote, note.NoteTuplet, openTuplets);
+                    for (const noteTuplet of note.NoteTuplets) {
+                        this.handleTuplet(graphicalTabNote, noteTuplet, openTuplets);
                     }
                 }
             }
@@ -2541,6 +2603,13 @@ export abstract class MusicSheetCalculator {
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
 
+        // For RenderSingleHorizontalStaffline we temporarily shrink pageWidth to the content width below, so the
+        // page labels center over the actual content rather than over the ~32767 (SheetMaximumWidth) layout
+        // width. Capture the layout width up front and restore it at the end of this method: pageWidth is the
+        // MusicSystemBuilder's line-break threshold, so leaving it shrunk would make the NEXT calculate() wrongly
+        // break the single horizontal staffline into multiple systems -- i.e. reCalculate() must stay idempotent.
+        const layoutPageWidth: number = this.graphicalMusicSheet.ParentMusicSheet.pageWidth;
+
         // fix width of SVG, sheet and horizontal scroll bar being too long (~32767 = SheetMaximumWidth) for single line scores
         if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
@@ -2690,6 +2759,11 @@ export abstract class MusicSheetCalculator {
             // limit SVG and scroll bar width so it's not ~32767 (SheetMaximumWidth):
             this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width;
             // page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width; // doesn't seem to affect anything
+
+            // Restore the layout (line-break) width so a subsequent reCalculate() lays the single staffline out
+            // the same way (idempotent). The label positions computed above keep their content-centered values;
+            // nothing after calculate() reads pageWidth (the backend sizes from page.Size.width).
+            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = layoutPageWidth;
         }
     }
 
@@ -3738,6 +3812,8 @@ export abstract class MusicSheetCalculator {
             }
             // second Underscore in the endStaffLine until endStaffEntry (if endStaffEntry isn't the first StaffEntry of the StaffLine))
             if (endStaffEntry.parentMeasure.ParentStaffLine && endStaffEntry.parentMeasure.staffEntries &&
+                // the end staffline's first measure can be missing when it isn't laid out (e.g. a lazy/incremental render batch)
+                endStaffLine.Measures[0]?.staffEntries[0] &&
                 !(endStaffEntry === endStaffEntry.parentMeasure.staffEntries[0] &&
                 endStaffEntry.parentMeasure === endStaffEntry.parentMeasure.ParentStaffLine.Measures[0])) {
                 const secondStartX: number = endStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;

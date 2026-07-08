@@ -19,6 +19,8 @@ import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/Grap
 import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
+import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
 
 describe("VexFlow Measure", () => {
 
@@ -140,6 +142,159 @@ describe("VexFlow Measure", () => {
          },
          done
       );
+   });
+
+   // Non-regression test for EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature.
+   // Pieces without a time signature in the source (e.g. Satie's Gnossiennes) should not render a
+   // (synthesized default 4/4) time signature by default, but should when the rule is enabled.
+   it("Does not render a time signature for samples without one, unless the rule is enabled", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_time_signature_missing_deliberately_gnossienne.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const xml: string = new XMLSerializer().serializeToString(score);
+
+      function firstMeasureHasTimeSignature(osmd: OpenSheetMusicDisplay): boolean {
+         const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+         const stave: any = (gm as any).stave; // VexFlowMeasure.stave is protected, only need it here in the test
+         return stave.getModifiers().some((m: { getCategory(): string }) => m.getCategory() === "timesignatures");
+      }
+
+      const osmdDefault: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      const osmdRuleOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmdDefault.load(xml).then(() => {
+         osmdDefault.render();
+         expect(firstMeasureHasTimeSignature(osmdDefault), "default: no time signature for a piece without one").to.equal(false);
+
+         return osmdRuleOn.load(xml);
+      }).then(() => {
+         osmdRuleOn.EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature = true;
+         osmdRuleOn.render();
+         expect(firstMeasureHasTimeSignature(osmdRuleOn), "rule enabled: time signature is rendered").to.equal(true);
+         done();
+      }).catch(done);
+   });
+
+   // Non-regression test for a beamed note whose notehead is hidden because it's shared with a unison note in
+   // another voice (print-object="no"). Its stem must still join the beam (not become an orphan flagged note with
+   // a transparent stem, which made the beam look like it was hanging in the air).
+   // E.g. Beethoven Moonlight Sonata 1st mvt. m.37: an eighth note shares a notehead with a dotted quarter.
+   it("Renders the stem of a beamed note sharing a hidden unison notehead, joined to the beam", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_unison_notehead_moonlight_sonata_measure37.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         // find the single invisible (print-object="no") note - the eighth note that shares the unison notehead
+         let invisibleVfNote: any;
+         for (let staffIdx: number = 0; staffIdx < 2; staffIdx++) {
+            const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, staffIdx);
+            for (const se of gm.staffEntries) {
+               for (const gve of se.graphicalVoiceEntries) {
+                  for (const note of gve.notes) {
+                     if (!note.sourceNote.isRest() && !note.sourceNote.PrintObject) {
+                        invisibleVfNote = (gve as VexFlowVoiceEntry).vfStaveNote;
+                     }
+                  }
+               }
+            }
+         }
+         expect(invisibleVfNote, "should find the invisible unison note").to.not.be.undefined;
+         // it must be part of the beam (not an orphan flagged eighth note) ...
+         expect(invisibleVfNote.beam, "invisible unison note should be beamed").to.be.ok;
+         // ... and its stem must be visible (not transparent), so the beam doesn't hang in the air
+         const stemStyle: { fillStyle?: string } = invisibleVfNote.getStem()?.getStyle();
+         if (stemStyle?.fillStyle) {
+            expect(stemStyle.fillStyle, "unison note stem must not be transparent").to.not.equal("#00000000");
+         }
+         done();
+      }).catch(done);
+   });
+
+   // Non-regression test for EngravingRules.RenderMeasureNumbersForImplicitMeasures.
+   // Measures marked implicit="yes" in the MusicXML (e.g. measures without a meter like in Satie's Gnossiennes)
+   // don't show a measure number by default, as per the MusicXML standard, but do when the rule is enabled.
+   it("Does not render a measure number for implicit measures, unless the rule is enabled", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_time_signature_missing_deliberately_gnossienne.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const xml: string = new XMLSerializer().serializeToString(score);
+
+      function measureNumberLabels(osmd: OpenSheetMusicDisplay): string[] {
+         const labels: string[] = [];
+         for (const page of osmd.GraphicSheet.MusicPages) {
+            for (const system of page.MusicSystems) {
+               for (const label of system.MeasureNumberLabels) {
+                  labels.push(label.Label.text);
+               }
+            }
+         }
+         return labels;
+      }
+
+      const osmdDefault: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      const osmdRuleOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmdDefault.load(xml).then(() => {
+         osmdDefault.render();
+         // the single measure is implicit="yes", so its number ("0") is not rendered
+         expect(measureNumberLabels(osmdDefault), "default: no measure number for an implicit measure").to.not.include("0");
+
+         return osmdRuleOn.load(xml);
+      }).then(() => {
+         osmdRuleOn.EngravingRules.RenderMeasureNumbersForImplicitMeasures = true;
+         osmdRuleOn.render();
+         expect(measureNumberLabels(osmdRuleOn), "rule enabled: implicit measure number is rendered").to.include("0");
+         done();
+      }).catch(done);
+   });
+
+   // Non-regression test for nested tuplets (issue #1583). The measure has an outer 3:2 tuplet spanning all 5 notes
+   // and an inner 9:4 tuplet over the last 3 (beamed) eighth notes that displays "3" (its <tuplet-actual> number).
+   // Before the fix the outer tuplet only covered its first two notes and the inner showed "9".
+   it("Parses nested tuplets: outer tuplet spans all notes, inner uses its tuplet-actual number", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_tuplet_nested_issue_1583.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         // collect the distinct tuplets the notes belong to
+         const tuplets: Set<Tuplet> = new Set<Tuplet>();
+         for (const voiceEntry of osmd.Sheet.Instruments[0].Voices[0].VoiceEntries) {
+            for (const note of voiceEntry.Notes) {
+               for (const tuplet of note.NoteTuplets) {
+                  tuplets.add(tuplet);
+               }
+            }
+         }
+         const noteCount: (t: Tuplet) => number = (t: Tuplet) => t.Notes.reduce((sum: number, sub: Note[]) => sum + sub.length, 0);
+         const tupletList: Tuplet[] = Array.from(tuplets);
+         expect(tupletList.length, "there should be two (nested) tuplets").to.equal(2);
+
+         const outer: Tuplet = tupletList.find((t: Tuplet) => noteCount(t) === 5);
+         const inner: Tuplet = tupletList.find((t: Tuplet) => noteCount(t) === 3);
+         // the outer tuplet has to include all 5 notes so its bracket spans the whole group
+         expect(outer, "outer tuplet should span all 5 notes").to.not.be.undefined;
+         expect(inner, "inner tuplet should span 3 notes").to.not.be.undefined;
+         expect(outer.TupletLabelNumber, "outer tuplet number").to.equal(3);
+         // the inner number comes from <tuplet-actual><tuplet-number>3, not the time-modification actual-notes (9)
+         expect(inner.TupletLabelNumber, "inner tuplet number from tuplet-actual").to.equal(3);
+         done();
+      }).catch(done);
    });
 
 });

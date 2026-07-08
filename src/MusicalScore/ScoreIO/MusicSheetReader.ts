@@ -302,7 +302,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             }
         }
         if (rhythmInstructions.length === 0 && this.currentMeasure === this.musicSheet.SourceMeasures[0]) {
+            // No time signature was given in the source (e.g. MusicXML), e.g. Satie's Gnossiennes.
+            // We still need an (active) rhythm/time signature internally for durations etc., so we synthesize a default 4/4,
+            // but mark it so it is not rendered by default (see EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature).
             const rhythmInstruction: RhythmInstruction = new RhythmInstruction(new Fraction(4, 4, 0, false), RhythmSymbolEnum.NONE);
+            rhythmInstruction.SynthesizedFromNoTimeSignature = true;
             for (let i: number = 0; i < this.completeNumberOfStaves; i++) {
                 if (!this.currentMeasure.FirstInstructionsStaffEntries[i]) {
                     this.currentMeasure.FirstInstructionsStaffEntries[i] = new SourceStaffEntry(undefined, undefined);

@@ -14,6 +14,7 @@ import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum, AccidentalEnum } from "../../Common/DataObjects/Pitch";
 import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
+import { GeometricSkyBottomLineCaches } from "./GeometricSkyBottomLineContext";
 import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
 
@@ -181,6 +182,10 @@ export class EngravingRules {
     /** y offset added to avoid collisions of rehearsal marks (e.g. "A" or "Verse") with multiple measure rest numbers. */
     public RehearsalMarkYOffsetAddedForRehearsalMarks: number;
     public RehearsalMarkFontSize: number;
+    /** Lift a rehearsal mark above a chord symbol in the same measure so the two don't overlap, and reserve
+     *  skyline space for it. The mark is a fixed-offset VexFlow StaveSection that isn't part of the skyline,
+     *  while chord symbols are placed (earlier) against the skyline and can end up right where the mark goes. */
+    public RehearsalMarkAboveChordSymbol: boolean;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
     public MeasureNumberLabelXOffset: number;
@@ -337,6 +342,11 @@ export class EngravingRules {
     public SlurHeightFlattenLongSlursCutoffWidth: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
     public SlurMaximumYControlPointDistance: number;
+    /** How much a cross-staff slur (e.g. left hand to right hand) bows out, as a factor of the distance
+     * between its two notes. See [[SlurCrossStaffMinBow]] and [[SlurCrossStaffMaxBow]] for the limits. */
+    public SlurCrossStaffBowFactor: number;
+    public SlurCrossStaffMinBow: number;
+    public SlurCrossStaffMaxBow: number;
     public GlissandoNoteOffset: number;
     public GlissandoStafflineStartMinimumWidth: number;
     public GlissandoStafflineStartYDistanceToNote: number;
@@ -355,6 +365,22 @@ export class EngravingRules {
     public TremoloStrokeScale: number;
     public TremoloYSpacingScale: number;
     public TremoloBuzzRollThickness: number;
+    /** Vertical thickness of one stroke ("tremolo beam") of a tremolo between two notes, in units (1 unit = staff space). */
+    public TremoloBetweenNotesStrokeThickness: number;
+    /** Vertical gap between the strokes of a tremolo between two notes, in units. */
+    public TremoloBetweenNotesStrokeGap: number;
+    /** Minimum horizontal padding between the strokes of a tremolo between two notes and the stems (or noteheads for stemless notes), in units. */
+    public TremoloBetweenNotesXPadding: number;
+    /** Maximum length of the strokes of a tremolo between two notes,
+     * as a fraction of the space between the stems (or noteheads for stemless notes).
+     * (Gould - Behind Bars: the strokes span about two thirds of the space between the notes) */
+    public TremoloBetweenNotesMaxLengthFactor: number;
+    /** Maximum vertical rise/fall (slant) of the strokes of a tremolo between two notes, in units. */
+    public TremoloBetweenNotesMaxSlant: number;
+    /** Vertical padding between the strokes of a tremolo between two notes and the notehead (edge), in units.
+     * Stems are lengthened where necessary to make room for the strokes (e.g. for 4+ strokes),
+     * as recommended by Gould (Behind Bars). */
+    public TremoloBetweenNotesYPadding: number;
     public StaffLineWidth: number;
     public StaffLineColor: string;
     public LedgerLineWidth: number;
@@ -390,6 +416,15 @@ export class EngravingRules {
     public GraceLineWidth: number;
     public MinimumStaffLineDistance: number;
     public MinSkyBottomDistBetweenStaves: number;
+    /** Whether to snap the y positions of stafflines and music systems to positions where the
+     *  (1px) staff lines render as crisp single pixel rows, instead of being spread (anti-aliased)
+     *  over two half-covered, gray-ish pixel rows. Default true.
+     *  This makes the staff line weight consistent across all systems (and across releases:
+     *  otherwise sub-pixel layout changes shift the anti-aliasing per system, which shows up as
+     *  bolder/lighter staff lines, e.g. in visual regression tests).
+     *  Exact at zoom 1 (and its integer multiples), within a page.
+     */
+    public SnapStafflinesToCrispPixels: boolean;
     public MinimumCrossedBeamDifferenceMargin: number;
 
     /** Maximum width of sheet / HTMLElement containing the score. Canvas is limited to 32767 in current browsers, though SVG isn't.
@@ -441,6 +476,10 @@ export class EngravingRules {
     public ArpeggiosGoAcrossVoices: boolean;
     public RenderArpeggios: boolean;
     public RenderSlurs: boolean;
+    /** Whether to render slurs that go across staves (e.g. left hand to right hand for piano). Supplementary to
+     * [[RenderSlurs]]: with RenderSlurs = true and RenderSlursAcrossStaves = false, all slurs are rendered except
+     * the ones across staves. */
+    public RenderSlursAcrossStaves: boolean;
     public RenderGlissandi: boolean;
     public ColoringMode: ColoringMode;
     public ColoringEnabled: boolean;
@@ -483,11 +522,19 @@ export class EngravingRules {
     public RenderPartAbbreviations: boolean;
     /** When true, first music system uses PartAbbreviation for the staff label (if set), not the full name. */
     public RenderPartAbbreviationsOnFirstSystem: boolean;
+    /** Internal cache-gate for lazy (renderAppend) rendering: when true, the lazy reuse caches (skyline)
+     *  are active. Set by OpenSheetMusicDisplay.renderAppend() and forced false by a normal render(), so
+     *  the caches never affect a non-lazy render. Not a user toggle. */
+    public LazyConsistentGraphic: boolean;
     /** Whether two render system labels on page 2+. This doesn't affect the default endless PageFormat. */
     public RenderSystemLabelsAfterFirstPage: boolean;
     public RenderFingerings: boolean;
     public RenderMeasureNumbers: boolean;
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
+    /** Whether to render measure numbers for measures marked implicit (e.g. implicit="yes" in the MusicXML, like
+     * pickup measures or measures without a meter as in Satie's Gnossiennes). Default false: implicit measures
+     * don't show a measure number, as per the MusicXML standard. */
+    public RenderMeasureNumbersForImplicitMeasures: boolean;
     public UseXMLMeasureNumbers: boolean;
     public RenderLyrics: boolean;
     public RenderChordSymbols: boolean;
@@ -497,6 +544,10 @@ export class EngravingRules {
     public RenderClefsAtBeginningOfStaffline: boolean;
     public RenderKeySignatures: boolean;
     public RenderTimeSignatures: boolean;
+    /** Whether to render a (default) time signature for samples that don't have a time signature in the source (e.g. MusicXML),
+     * like Satie's Gnossiennes. Default false, i.e. these samples are rendered without a time signature, as intended.
+     * For normal samples that do have a time signature, this rule has no effect (use RenderTimeSignatures to control those). */
+    public RenderTimeSignaturesForSamplesWithoutTimeSignature: boolean;
     public RenderFirstTempoExpression: boolean;
     public RenderPedals: boolean;
     public RenderWavyLines: boolean;
@@ -560,7 +611,17 @@ export class EngravingRules {
      */
     public RenderCount: number = 0;
 
-    /** The skyline and bottom-line batch calculation algorithm to use.
+    /** Whether to calculate the skyline and bottom-line geometrically, from the extents of the VexFlow draw calls,
+     *  instead of drawing each measure on a hidden canvas and reading back its pixels (getImageData), which is much slower (see #937).
+     *  Default true. If set to false, the previous pixel-based calculation is used,
+     *  see PreferredSkyBottomLineBatchCalculatorBackend etc.
+     */
+    public UseGeometricSkyBottomLineCalculation: boolean;
+    /** Caches for the geometric skyline calculation (text measurements, flattened glyph outlines).
+     *  Owned here (per OSMD instance, like NoteToGraphicalNoteMap) instead of statically,
+     *  so that multiple OSMD instances stay independent. */
+    public GeometricSkyBottomLineCaches: GeometricSkyBottomLineCaches;
+    /** The skyline and bottom-line batch calculation algorithm to use, if UseGeometricSkyBottomLineCalculation is false.
      *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
      */
     public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
@@ -617,6 +678,7 @@ export class EngravingRules {
         this.BetweenStaffDistance = 5.0;
         this.MinimumStaffLineDistance = 4.0;
         this.MinSkyBottomDistBetweenStaves = 1.0; // default. compacttight mode sets it to 1.0 (as well).
+        this.SnapStafflinesToCrispPixels = true;
 
         // System Sizing and Label Variables
         this.StaffHeight = 4.0;
@@ -749,6 +811,7 @@ export class EngravingRules {
         this.RehearsalMarkYOffsetAddedForRehearsalMarks = -12;
         this.RehearsalMarkYOffset = 0; // user defined
         this.RehearsalMarkFontSize = 10; // vexflow default: 12, too big with chord symbols
+        this.RehearsalMarkAboveChordSymbol = true;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.MeasureNumberLabelHeight = 1.5 * EngravingRules.unit;
@@ -810,6 +873,10 @@ export class EngravingRules {
         this.SlursStartingAtSameStaffEntryYOffset = 0.8;
         //Maximum y difference between control points. Forces slurs to have less 'weight' either way in the x direction
         this.SlurMaximumYControlPointDistance = undefined;
+        // Cross-staff slurs (e.g. left hand to right hand): how far the curve bows out from the line between the notes.
+        this.SlurCrossStaffBowFactor = 0.12;
+        this.SlurCrossStaffMinBow = 0.8;
+        this.SlurCrossStaffMaxBow = 2.5;
 
         // Glissandi
         this.GlissandoNoteOffset = 0.5;
@@ -876,6 +943,12 @@ export class EngravingRules {
         this.TremoloStrokeScale = 1;
         this.TremoloYSpacingScale = 1;
         this.TremoloBuzzRollThickness = 0.25;
+        this.TremoloBetweenNotesStrokeThickness = 0.4; // like beam thickness
+        this.TremoloBetweenNotesStrokeGap = 0.4;
+        this.TremoloBetweenNotesXPadding = 0.55;
+        this.TremoloBetweenNotesMaxLengthFactor = 0.667; // Gould (Behind Bars) recommends the tremolo strokes to take up 2/3 of the space between notes
+        this.TremoloBetweenNotesMaxSlant = 1.0;
+        this.TremoloBetweenNotesYPadding = 0.45;
         this.StemWidth = 0.15; // originally 0.13. vexflow default 0.15. should probably be adjusted when increasing vexFlowDefaultNotationFontScale,
         this.StaffLineWidth = 0.10; // originally 0.12, but this will be pixels in Vexflow (*10).
         this.StaffLineColor = undefined; // if undefined, vexflow default (grey). not a width, but affects visual line clarity.
@@ -940,6 +1013,7 @@ export class EngravingRules {
         this.ArpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
         this.RenderArpeggios = true;
         this.RenderSlurs = true;
+        this.RenderSlursAcrossStaves = true;
         this.RenderGlissandi = true;
         this.ColoringMode = ColoringMode.XML;
         this.ColoringEnabled = true;
@@ -965,10 +1039,12 @@ export class EngravingRules {
         this.RenderPartNames = true;
         this.RenderPartAbbreviations = true;
         this.RenderPartAbbreviationsOnFirstSystem = false;
+        this.LazyConsistentGraphic = false;
         this.RenderSystemLabelsAfterFirstPage = true;
         this.RenderFingerings = true;
         this.RenderMeasureNumbers = true;
         this.RenderMeasureNumbersOnlyAtSystemStart = false;
+        this.RenderMeasureNumbersForImplicitMeasures = false;
         this.UseXMLMeasureNumbers = true;
         this.RenderLyrics = true;
         this.RenderChordSymbols = true;
@@ -978,6 +1054,7 @@ export class EngravingRules {
         this.RenderClefsAtBeginningOfStaffline = true;
         this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
+        this.RenderTimeSignaturesForSamplesWithoutTimeSignature = false;
         this.RenderFirstTempoExpression = true;
         this.RenderPedals = true;
         this.RenderWavyLines = true;
@@ -1016,6 +1093,8 @@ export class EngravingRules {
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
         this.NoteToGraphicalNoteMapObjectCount = 0;
 
+        this.UseGeometricSkyBottomLineCalculation = true;
+        this.GeometricSkyBottomLineCaches = new GeometricSkyBottomLineCaches();
         this.SkyBottomLineBatchMinMeasures = 5;
         this.SkyBottomLineWebGLMinMeasures = 80;
         this.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;

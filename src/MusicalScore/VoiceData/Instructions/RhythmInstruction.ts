@@ -17,6 +17,10 @@ export class RhythmInstruction extends AbstractNotationInstruction {
     private denominator: number;
     private rhythm: Fraction;
     private symbolEnum: RhythmSymbolEnum;
+    /** Whether this time signature was not given in the source (e.g. MusicXML), but synthesized by default,
+     * e.g. a default 4/4 for a sample without a time signature like Satie's Gnossiennes.
+     * Such a time signature is not rendered by default (see EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature). */
+    public SynthesizedFromNoTimeSignature: boolean = false;
 
     public get Rhythm(): Fraction {
         return this.rhythm;
@@ -35,7 +39,9 @@ export class RhythmInstruction extends AbstractNotationInstruction {
     }
 
     public clone(): RhythmInstruction {
-        return new RhythmInstruction(this.rhythm.clone(), this.symbolEnum);
+        const clone: RhythmInstruction = new RhythmInstruction(this.rhythm.clone(), this.symbolEnum);
+        clone.SynthesizedFromNoTimeSignature = this.SynthesizedFromNoTimeSignature;
+        return clone;
     }
 
     public OperatorEquals(rhythm2: RhythmInstruction): boolean {

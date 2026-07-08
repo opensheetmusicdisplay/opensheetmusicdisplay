@@ -102,6 +102,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected clearRecreatedObjects(): void {
     super.clearRecreatedObjects();
     MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
+    // Reset the measure-to-measure carry state of the lyrics/chord symbol elongation calculation:
+    // it is rebuilt during each render's width calculation, but without the reset, the trailing
+    // overflow of the last lyric measure leaked into the *next* render's first measures
+    // (when no later measure with staff entries overwrote it), making re-renders elongate
+    // slightly differently than the first render.
+    this.previousLyricOverflowsByStaff.clear();
+    this.previousChordOverflowsByStaff.clear();
+    this.dashSpace = undefined;
     for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
       for (const graphicalMeasure of graphicalMeasures) {
         (<VexFlowMeasure>graphicalMeasure)?.clean();
@@ -205,6 +213,52 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         log.debug("Found a measure with no voices. Continuing anyway.", mvoices);
         // no need to log this, measures with no voices/notes are fine. see OSMDOptions.fillEmptyMeasuresWithWholeRest
         continue;
+      }
+      // Reset formatting state left over from a previous render on the (reused) VexFlow notes back
+      // to its initial values, so that all calculations read the same state on every render - it is
+      // recalculated during each render anyway, but partly later than some readers:
+      // - center_x_shift (only set for center-aligned tickables, i.e. whole measure rests):
+      //   read by the early VexFlowStaffEntry.calculateXPosition() call below (Note.getAbsoluteX()).
+      //   Without the reset, a re-render reads the previous render's centered whole rest position
+      //   there, where the first render read the unshifted one - making e.g. the lyrics/chord symbol
+      //   elongation of the following measures (and thus the whole layout) differ from the first render.
+      // - the beam-applied stem extension (same reset as the VexFlowPatch beam.js postFormat fix
+      //   for #1636, which only runs when the beam is drawn): Articulation.draw() positions
+      //   articulations at the stem tip *before* the beams (re-)extend the stems, so without the
+      //   reset, articulations on beamed notes sit higher on re-renders than on the first render.
+      // - TabNote widths: TabNote.setStave() re-measures the fret text width once a stave has a
+      //   rendering context, i.e. during the draws at the end of a render. updateWidth() restores
+      //   the construction-time width (from VexFlow's glyph table), which is what the first
+      //   render's width calculation saw.
+      // - stemExtensionOverride: StaveNote.format()'s voice-collision handling shortens stems via
+      //   setStemLength() during a render. Restore the value it had before the first render
+      //   (usually none - but e.g. the tremolo-between-notes stem lengthening of VexFlowConverter
+      //   sets it at creation, which must survive), snapshotted on the first render.
+      // - rest positions: StaveNote.format()'s shiftRestVertical() moves colliding rests
+      //   *relative* to their current line (possibly several times during the first render's
+      //   format passes), and the moved line persists on the VexFlow note - so a re-render
+      //   would move them even further. Freeze the rests at their converged first-render
+      //   positions instead (same pattern as the existing shiftRestVerticalDisabled
+      //   workaround for ledger-lined rests; centerRest() is absolute, i.e. harmless).
+      for (const voice of voices) {
+        for (const tickable of voice.getTickables()) {
+          const note: any = tickable as any;
+          note.center_x_shift = 0;
+          if (note.osmdInitialStemExtensionOverride === undefined) {
+            note.osmdInitialStemExtensionOverride = note.stemExtensionOverride ?? null; // first render: snapshot
+          } else {
+            note.stemExtensionOverride = note.osmdInitialStemExtensionOverride;
+            if (note.isRest?.()) {
+              note.shiftRestVerticalDisabled = true; // re-render: freeze rest at its current position
+            }
+          }
+          if (note.stem && note.getStemExtension) {
+            note.stem.setExtension(note.getStemExtension());
+          }
+          if (note.updateWidth && note.glyphs) { // TabNote
+            note.updateWidth();
+          }
+        }
       }
       // all voices that belong to one stave are collectively added to create a common context in VexFlow.
       formatter.joinVoices(voices);
@@ -1171,9 +1225,68 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // const section: VF.StaveSection = new VF.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
       // (vfStave as any).modifiers.push(section);
       const fontSize: number = this.rules.RehearsalMarkFontSize;
-      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
+
+      // Lift the rehearsal mark above whatever rises above the staff under it (high notes, an Above chord
+      //   symbol, ...) so it doesn't overlap them, and reserve skyline space for the lifted mark (otherwise
+      //   it can collide with the system above). The mark is a fixed-offset VexFlow StaveSection that isn't
+      //   part of the skyline, so without this it can sit right on top of tall notes (e.g. the high cymbal
+      //   notes of a drum stave). Only the Above chord symbol was previously considered here; now the notes
+      //   under the mark are too.
+      let minBottomY: number; // undefined -> no clamping in StaveSection.draw (VexFlowPatch)
+      const staffLine: StaffLine = gMeasure.ParentStaffLine;
+      if (staffLine) {
+        // x-footprint of the rehearsal mark box at the measure start (absolute units, as the skyline is
+        //   indexed). xOffset/fontSize are in px; the label width is a conservative estimate.
+        let start: number = gMeasure.PositionAndShape.AbsolutePosition.x;
+        let end: number = start + (xOffset + rehearsalExpression.label.length * fontSize * 0.6 + fontSize) / unitInPixels;
+        // also clear an Above chord symbol in the measure: it is placed (calculateChordSymbols, earlier)
+        //   against the skyline and can sit right where the mark goes, possibly beyond the mark's footprint.
+        const chord: GraphicalChordSymbolContainer = this.rules.RehearsalMarkAboveChordSymbol
+          ? this.getFirstChordSymbolAbove(gMeasure) : undefined;
+        if (chord) {
+          const containerPsh: BoundingBox = chord.PositionAndShape;
+          const xInUnits: number = containerPsh.Parent.AbsolutePosition.x + containerPsh.RelativePosition.x;
+          start = Math.min(start, containerPsh.BorderMarginLeft + xInUnits);
+          end = Math.max(end, containerPsh.BorderMarginRight + xInUnits);
+        }
+        // highest element above the staff line under the mark (negative = above it), read from the skyline
+        //   (final by now: updated by calculateSkyBottomLines + calculateChordSymbols, both earlier).
+        const topRelative: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(start, end);
+        if (topRelative < 0) { // only lift if something actually rises above the staff here
+          const marginInUnits: number = 0.5; // small gap between mark bottom and what's below it
+          // StaveSection.draw (VexFlowPatch) shifts the mark up so its box bottom doesn't exceed
+          //   stave.getYForLine(0) + minBottomY (px), keeping the mark above that element:
+          minBottomY = (topRelative - marginInUnits) * unitInPixels;
+          // reserve skyline over the range so updateStaffLineBorders/calculateSystemYLayout make room for the lifted mark
+          const markHeightInUnits: number = fontSize / unitInPixels * 1.6 + marginInUnits; // conservative StaveSection box height
+          staffLine.SkyBottomLineCalculator.updateSkyLineInRange(start, end, topRelative - markHeightInUnits);
+        }
+      }
+
+      // fontSize and minBottomY are extra arguments from VexFlowPatch (stave.js / stavesection.js)
+      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize, minBottomY);
       return; // only draw one rehearsal mark at top (visible) instrument
     }
+  }
+
+  /** Returns the leftmost (smallest x) Above-placed chord symbol container in the measure, or undefined if there is none.
+   *  The rehearsal mark sits at the measure start, so this is the chord it can collide with (see calculateRehearsalMark). */
+  private getFirstChordSymbolAbove(gMeasure: GraphicalMeasure): GraphicalChordSymbolContainer {
+    let first: GraphicalChordSymbolContainer = undefined;
+    let firstX: number = Number.MAX_VALUE;
+    for (const staffEntry of gMeasure.staffEntries) {
+      for (const chordContainer of staffEntry.graphicalChordContainers ?? []) {
+        if (chordContainer.GetChordSymbolContainer.Placement !== PlacementEnum.Above) {
+          continue;
+        }
+        const x: number = chordContainer.PositionAndShape.AbsolutePosition.x; // x layout is final here, unlike y
+        if (x < firstX) {
+          firstX = x;
+          first = chordContainer;
+        }
+      }
+    }
+    return first;
   }
 
   /**
@@ -1944,7 +2057,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const fontSize: number = (textBracket as any).font.size / 10;
 
     if ((<any>textBracket).position === VF.TextBracket.Positions.TOP) {
-      const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
+      // Math.ceil with a small tolerance: the geometric skyline calculation gives exact values where
+      // the pixel-based one snapped to pixels (often exact integers, e.g. a note top exactly 1 unit
+      // above the staff), and without the tolerance, a skyline minimum a fraction of a pixel inside
+      // an integer boundary would lose a whole unit of headroom to the ceil (e.g. ceil(-0.97) = 0,
+      // putting the octave bracket into the note, see test_octaveshift_extragraphicalmeasure).
+      // The tolerance is smaller than the pixel-based values' granularity (0.1), so their results are unchanged.
+      const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX) - 0.05);
       if (headroom === Infinity) { // will cause Vexflow error
         return;
       }
@@ -1986,8 +2105,64 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected calculateSkyBottomLines(): void {
-    const staffLines: StaffLine[] = CollectionUtil.flat(this.musicSystems.map(musicSystem => musicSystem.StaffLines));
-    //const numMeasures: number = staffLines.map(staffLine => staffLine.Measures.length).reduce((a, b) => a + b, 0);
+    const allStaffLines: StaffLine[] = CollectionUtil.flat(this.musicSystems.map(musicSystem => musicSystem.StaffLines));
+
+    // Lazy rendering: reuse the sky/bottom lines of stable interior systems computed in an
+    // earlier growing-prefix batch, and only (re)compute the rest. The skyline pass is the dominant layout
+    // cost; on a big score this turns the per-batch O(prefix) re-measure into O(new systems). The FIRST
+    // system and the LAST system of the prefix are never cached/reused: empirically their lines change as
+    // the prefix grows (first system) or as the last, unstretched system later becomes stretched/interior.
+    // Only the geometric skyline path's side effects are replayable for reuse (see
+    // SkyBottomLineCalculator.applyGeometricSkylineSideEffectsOnly); the raster path computes everything.
+    const lazyCache: boolean = this.rules.LazyConsistentGraphic && this.rules.UseGeometricSkyBottomLineCalculation;
+    const staffLinesToCompute: StaffLine[] = lazyCache ? [] : allStaffLines;
+    const toCache: { key: string, staffLine: StaffLine }[] = [];
+    if (lazyCache) {
+      const lastSystemIndex: number = this.musicSystems.length - 1;
+      for (let si: number = 0; si < this.musicSystems.length; si++) {
+        const cacheable: boolean = si !== 0 && si !== lastSystemIndex;
+        const systemStaffLines: StaffLine[] = this.musicSystems[si].StaffLines;
+        for (let li: number = 0; li < systemStaffLines.length; li++) {
+          const staffLine: StaffLine = systemStaffLines[li];
+          const key: string = this.skyBottomLineCacheKey(staffLine, li);
+          const cached: { sky: number[], bottom: number[] } = key ? this.skyBottomLineCache.get(key) : undefined;
+          if (cached) {
+            // Replay the skyline calc's per-measure side effects (the VexFlow formatter is not idempotent,
+            // so skipping them would shift later passes by ~1px), then reuse the verified byte-identical
+            // cached lines instead of re-measuring extents (the expensive part).
+            staffLine.SkyBottomLineCalculator.applyGeometricSkylineSideEffectsOnly();
+            staffLine.SkyBottomLineCalculator.setLinesDirectly(cached.sky.slice(), cached.bottom.slice());
+          } else {
+            staffLinesToCompute.push(staffLine);
+            if (cacheable && key) {
+              toCache.push({ key, staffLine });
+            }
+          }
+        }
+      }
+    }
+
+    this.computeSkyBottomLinesFor(staffLinesToCompute);
+
+    for (const entry of toCache) {
+      this.skyBottomLineCache.set(entry.key, { sky: entry.staffLine.SkyLine.slice(), bottom: entry.staffLine.BottomLine.slice() });
+    }
+  }
+
+  /** Compute (not reuse) the sky/bottom lines for the given staff lines: geometric, or the batched /
+   *  per-staff-line path. This is the original calculateSkyBottomLines body, extracted so the lazy reuse
+   *  path can feed it just the staff lines that actually need computing. */
+  private computeSkyBottomLinesFor(staffLines: StaffLine[]): void {
+    if (staffLines.length === 0) {
+      return;
+    }
+    if (this.rules.UseGeometricSkyBottomLineCalculation) {
+      // geometric calculation doesn't need batching: no canvas allocation or pixel readback (getImageData) is involved
+      for (const staffLine of staffLines) {
+        staffLine.SkyBottomLineCalculator.calculateLines();
+      }
+      return;
+    }
     let numMeasures: number = 0; // number of graphical measures that are rendered
     for (const staffline of staffLines) {
       for (const measure of staffline.Measures) {
@@ -2238,8 +2413,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
                       // Add a Graphical Slur to the staffline, if the recent note is the Startnote of a slur
                       const gSlur: GraphicalSlur = new GraphicalSlur(slur, this.rules);
-                      openGraphicalSlurs.push(gSlur);
                       staffLine.addSlurToStaffline(gSlur);
+                      if (slur.isCrossed()) {
+                        // A cross-staff slur (e.g. left hand to right hand) ends on a different staff, so it
+                        // would never be closed by the per-staff open/close mechanism below - which would leave
+                        // it open and spawn phantom continuation slurs on every following staffline. Keep it out
+                        // of openGraphicalSlurs; its curve is calculated separately at draw time (spanning both
+                        // stafflines). It still needs a staffEntry for GraphicalSlur.Compare's sorting.
+                        gSlur.staffEntries = [graphicalStaffEntry];
+                      } else {
+                        openGraphicalSlurs.push(gSlur);
+                      }
 
                       /* VexFlow Version - for later use
                       const vfSlur: VexFlowSlur = new VexFlowSlur(slur);

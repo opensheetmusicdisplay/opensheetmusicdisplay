@@ -51,6 +51,27 @@ export abstract class MusicSheetDrawer {
     public skyLineVisible: boolean = false;
     public bottomLineVisible: boolean = false;
 
+    /** Lazy rendering: when >= 0, drawPage() draws only the systems of (the first) page whose
+     *  index is within [LazyDrawSystemsFromIndex, LazyDrawSystemsToIndexExcl), leaving the
+     *  already-drawn systems above untouched in the shared backend. -1 (default) draws every system.
+     *  Set by OpenSheetMusicDisplay.renderAppend() before each appended batch; reset to -1 after. */
+    public LazyDrawSystemsFromIndex: number = -1;
+    public LazyDrawSystemsToIndexExcl: number = Number.POSITIVE_INFINITY;
+    /** Lazy horizontal rendering (RenderSingleHorizontalStaffline): draw only graphical objects whose right
+     *  edge x (in OSMD units) lies in (LazyDrawFromXUnits, LazyDrawToXUnits] -- the measures and spanning
+     *  elements that first entered the drawn frontier this batch. ±Infinity (default) draws everything.
+     *  Set by OpenSheetMusicDisplay.renderAppendGrowingHorizontal() per batch; reset after. */
+    public LazyDrawFromXUnits: number = Number.NEGATIVE_INFINITY;
+    public LazyDrawToXUnits: number = Number.POSITIVE_INFINITY;
+    /** Lazy horizontal rendering: when true, drawPage() skips the page-level labels (title/credits). They are
+     *  drawn once, on the final batch, when the page has reached its full width and they sit at their final
+     *  (re-centered) positions -- drawing them earlier would place them under a still-growing page. */
+    public LazySkipPageLabels: boolean = false;
+    /** Lazy horizontal rendering: when true, drawLabel() ignores the x-window gate. Scoped (set/restored) to
+     *  the page-label loop in drawPage(), since those labels span the full page width and must all be drawn
+     *  even though their left edges lie behind the final batch's frontier. */
+    public LazyForcePageLabels: boolean = false;
+
     protected rules: EngravingRules;
     protected graphicalMusicSheet: GraphicalMusicSheet;
     protected textMeasurer: ITextMeasurer;
@@ -144,7 +165,30 @@ export abstract class MusicSheetDrawer {
         throw new Error("not implemented");
     }
 
+    /** Lazy horizontal rendering: whether an object with this bounding box falls in the current draw
+     *  x-window (its right edge first entered the drawn frontier this batch). True when not lazy-horizontal. */
+    protected lazyDrawsAtX(rightXUnits: number): boolean {
+        if (this.LazyDrawFromXUnits === Number.NEGATIVE_INFINITY && this.LazyDrawToXUnits === Number.POSITIVE_INFINITY) {
+            return true;
+        }
+        return rightXUnits > this.LazyDrawFromXUnits && rightXUnits <= this.LazyDrawToXUnits;
+    }
+    protected lazyDrawsObject(psh: BoundingBox): boolean {
+        return this.lazyDrawsAtX(psh.AbsolutePosition.x + psh.BorderRight);
+    }
+    /** Lazy horizontal rendering: whether to draw the once-only left-edge system elements (instrument braces
+     *  and group brackets). True for non-lazy and for the first lazy-horizontal batch, which owns the left edge
+     *  (LazyDrawFromXUnits is -Infinity); false for continuation batches, so a single-system score's brace
+     *  isn't redrawn on top of itself every batch. (Vertical lazy keeps the x-window at ±Infinity and draws
+     *  each system's brace once via the per-system gate, so this stays true there.) */
+    protected lazyDrawsLeftEdgeOnce(): boolean {
+        return this.LazyDrawFromXUnits === Number.NEGATIVE_INFINITY;
+    }
+
     public drawLabel(graphicalLabel: GraphicalLabel, layer: number): Node {
+        if (!this.LazyForcePageLabels && !this.lazyDrawsObject(graphicalLabel.PositionAndShape)) {
+            return undefined;
+        }
         if (!this.isVisible(graphicalLabel.PositionAndShape)) {
             return undefined;
         }
@@ -381,6 +425,10 @@ export abstract class MusicSheetDrawer {
     protected drawStaffLine(staffLine: StaffLine): void {
         for (const measure of staffLine.Measures) {
             this.drawMeasure(measure);
+            if (measure.parentSourceMeasure) {
+                measure.parentSourceMeasure.WasRendered = true; // simplification
+                // parentSourceMeasure can be undefined for implicit measure (e.g. time signature change at end of staffline)
+            }
         }
 
         if (this.rules.RenderLyrics) {
@@ -512,15 +560,30 @@ export abstract class MusicSheetDrawer {
             return;
         }
 
-        for (const system of page.MusicSystems) {
+        const lazySelective: boolean = this.LazyDrawSystemsFromIndex >= 0;
+        for (let sysIdx: number = 0; sysIdx < page.MusicSystems.length; sysIdx++) {
+            // Lazy: skip systems already drawn in a previous batch (below FromIndex) and the
+            // deferred last system of this batch (at/above ToIndexExcl), so each system is drawn once,
+            // in its final stable position. See OpenSheetMusicDisplay.renderAppend().
+            if (lazySelective && (sysIdx < this.LazyDrawSystemsFromIndex || sysIdx >= this.LazyDrawSystemsToIndexExcl)) {
+                continue;
+            }
+            const system: MusicSystem = page.MusicSystems[sysIdx];
             if (this.isVisible(system.PositionAndShape)) {
                 this.drawMusicSystem(system);
             }
         }
-        if (page === page.Parent.MusicPages[0]) {
+        // The title/credits block belongs to the first system's batch only; a lazy continuation batch
+        // (FromIndex > 0) must not redraw it on top of the already-drawn block.
+        if (page === page.Parent.MusicPages[0] && !(lazySelective && this.LazyDrawSystemsFromIndex > 0) && !this.LazySkipPageLabels) {
+            // Page labels span the full page width and are drawn once, in full. Under lazy-horizontal this is
+            // the final batch; open the x-window so labels left of its frontier aren't dropped. No-op otherwise.
+            const savedForcePageLabels: boolean = this.LazyForcePageLabels;
+            this.LazyForcePageLabels = true;
             for (const label of page.Labels) {
                 label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
             }
+            this.LazyForcePageLabels = savedForcePageLabels;
         }
         // Draw bounding boxes for debug purposes. This has to be at the end because only
         // then all the calculations and recalculations are done

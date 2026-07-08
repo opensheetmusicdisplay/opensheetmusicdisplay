@@ -17,7 +17,7 @@ import log from "loglevel";
 import {MusicSheet} from "../MusicSheet";
 import {NoteHeadShape} from "../VoiceData/Notehead";
 import {PlaybackSettings} from "../../Common/DataObjects/PlaybackSettings";
-import {Note} from "../VoiceData";
+import {Note} from "../VoiceData/Note";
 
 export class MusicPartManagerIterator {
     constructor(musicSheet: MusicSheet, startTimestamp?: Fraction, endTimestamp?: Fraction) {

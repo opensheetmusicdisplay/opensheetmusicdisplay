@@ -181,6 +181,15 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 stemTransparent = false;
                 break;
             }
+            // The note's own notehead is hidden, but it's shared with a visible unison note in another voice
+            // (print-object="no") and its stem is beamed. The stem emanates from the shared notehead and has to
+            // reach the beam, so keep it visible - otherwise the beam appears to hang in the air over a missing
+            // stem. E.g. Beethoven Moonlight Sonata 1st mvt. m.37: an eighth note shares a notehead with a dotted
+            // quarter in another voice, but its stem still joins the beam (test_unison_notehead_moonlight_sonata_measure37).
+            if (note.NoteBeam && note.sharesNoteheadWithVisibleUnisonNote()) {
+                stemTransparent = false;
+                break;
+            }
         }
         if (stemTransparent) {
             stemColor = transparentColor;

@@ -10,6 +10,7 @@ export * from "./DrawingEnums";
 export * from "./DrawingMode";
 export * from "./DrawingParameters";
 export * from "./EngravingRules";
+export * from "./GeometricSkyBottomLineContext";
 export * from "./GraphicalChordSymbolContainer";
 export * from "./GraphicalComment";
 export * from "./GraphicalContinuousDynamicExpression";
