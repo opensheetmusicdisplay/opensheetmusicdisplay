@@ -568,15 +568,54 @@ export class GraphicalSlur extends GraphicalCurve {
         // Use the SlurCrossStaffBowFactor to compute a base bow, then adjust
         // for skyline obstacles (end staff noteheads/beams) and cross-staff
         // beam notehead clearance.
-        const bow: number = Math.max(rules.SlurCrossStaffMinBow,
+        let bow: number = Math.max(rules.SlurCrossStaffMinBow,
                                    Math.min(rules.SlurCrossStaffMaxBow, distance * rules.SlurCrossStaffBowFactor));
         const bowSign: number = -1;
 
-        // ── Debug obstacle visualization ────────────────────────────────────
-        // Populate debug circles (skyline + rests). Bow is geometric only.
+        // ── end-staff skyline pDist bow adjustment ─────────────────────────
+        // chord endpoints sit AT the noteheads. Modifiers above noteheads ARE
+        // captured by the end-staff skyline. bow = max(geometric, pDist/0.75).
+        // 0.75 = cubic bezier apex-to-bow ratio (geometric constant).
+        // Only end staff — start-staff skyline includes unrelated elements far
+        // from chord that inflated bow to 100+ px in earlier approach.
         this.debugSkyPoints = [];
         this.debugSkyCategories = [];
-        const scanSky: (sl: StaffLine, toFrame: boolean) => void
+        const BA: number = 0.75;
+        let maxPdist: number = 0;
+        if (endStaffLine) {
+            const eCalc: SkyBottomLineCalculator = endStaffLine.SkyBottomLineCalculator;
+            if (eCalc) {
+                const eLine: number[] = endStaffLine.SkyLine;
+                const eSU: number = eCalc.SamplingUnit;
+                const eRX: number = endStaffLine.PositionAndShape.RelativePosition.x;
+                const eAY: number = endStaffLine.PositionAndShape.AbsolutePosition.y;
+                const eXO: number = eRX - startStaffLine.PositionAndShape.RelativePosition.x;
+                const eYO: number = eAY - startStaffAbsY;
+                const eSI: number = startX + (startStaffLine.PositionAndShape.RelativePosition.x - eRX);
+                const eEI: number = endX + (startStaffLine.PositionAndShape.RelativePosition.x - eRX);
+                let si: number = eCalc.getRightIndexForPointX(eSI, eLine.length);
+                let ei: number = eCalc.getLeftIndexForPointX(eEI, eLine.length);
+                if (si < 0) { si = 0; }
+                if (ei >= eLine.length) { ei = eLine.length - 1; }
+                for (let i: number = si; i < ei; i++) {
+                    const v: number = eLine[i];
+                    if (v !== 0) {
+                        const ox: number = (0.5 + i) / eSU + eXO;
+                        const oy: number = v + eYO;
+                        this.debugSkyPoints.push(new PointF2D(ox, oy));
+                        this.debugSkyCategories.push("skyline");
+                        const pD: number = ((ox - startX) * dy - (oy - startY) * dx) / (distance || 1);
+                        if (pD > 0 && pD > maxPdist) { maxPdist = pD; }
+                    }
+                }
+            }
+        }
+        if (maxPdist > 0) {
+            const reqBow: number = (maxPdist + 0.3) / BA;
+            if (reqBow > bow) { bow = reqBow; }
+        }
+        // beam notehead markers + skylines + rest (debug only)
+        const scanSky_: (sl: StaffLine, toFrame: boolean) => void
             = (staffLine: StaffLine, toFrame: boolean): void => {
             const calc: SkyBottomLineCalculator = staffLine?.SkyBottomLineCalculator;
             if (!calc) { return; }
@@ -601,10 +640,10 @@ export class GraphicalSlur extends GraphicalCurve {
                 }
             }
         };
-        if (endStaffLine) { scanSky(endStaffLine, true); }
-        if (startStaffLine) { scanSky(startStaffLine, false); }
-
-        const addRest: (gvEntry: GraphicalVoiceEntry) => void
+        if (endStaffLine) { scanSky_(endStaffLine, true); }
+        if (startStaffLine) { scanSky_(startStaffLine, false); }
+        // Direct rest detection (debug only)
+        const addRest_: (gvEntry: GraphicalVoiceEntry) => void
             = (gvEntry: GraphicalVoiceEntry): void => {
             for (const n of gvEntry.notes ?? []) {
                 if (!n.sourceNote?.isRest?.() || !n.PositionAndShape) { continue; }
@@ -620,16 +659,15 @@ export class GraphicalSlur extends GraphicalCurve {
         };
         for (const se of this.staffEntries) {
             const sl_: StaffLine = se?.parentMeasure?.ParentStaffLine;
-            if (sl_) { for (const gve of se.graphicalVoiceEntries ?? []) { addRest(gve); } }
+            if (sl_) { for (const gve of se.graphicalVoiceEntries ?? []) { addRest_(gve); } }
         }
         if (endStaffLine) {
             for (const m_ of endStaffLine.Measures ?? []) {
                 for (const se of (m_ as any).staffEntries ?? []) {
-                    for (const gve of (se as any).graphicalVoiceEntries ?? []) { if (gve) { addRest(gve); } }
+                    for (const gve of (se as any).graphicalVoiceEntries ?? []) { if (gve) { addRest_(gve); } }
                 }
             }
         }
-
         this.bezierStartPt = new PointF2D(startX, startY);
         this.bezierStartControlPt = new PointF2D(startX + dx * 0.25, startY + dy * 0.25 + bowSign * bow);
         this.bezierEndControlPt = new PointF2D(startX + dx * 0.75, startY + dy * 0.75 + bowSign * bow);
