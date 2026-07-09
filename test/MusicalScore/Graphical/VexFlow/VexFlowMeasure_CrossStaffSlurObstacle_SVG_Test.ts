@@ -9,6 +9,8 @@ import { TestUtils } from "../../../Util/TestUtils";
 
 interface BezierChord {
     sx: number; sy: number;
+    cp1x: number; cp1y: number;
+    cp2x: number; cp2y: number;
     ex: number; ey: number;
 }
 
@@ -80,9 +82,13 @@ function parseSlurObstacles(svg: SVGElement): SlurObstacleGroup[] {
         if (!startM || !cParts) { continue; }
         const sx: number = parseFloat(startM[1]);
         const sy: number = parseFloat(startM[2]);
+        const cp1x: number = parseFloat(cParts[1]);
+        const cp1y: number = parseFloat(cParts[2]);
+        const cp2x: number = parseFloat(cParts[3]);
+        const cp2y: number = parseFloat(cParts[4]);
         const ex: number = parseFloat(cParts[5]);
         const ey: number = parseFloat(cParts[6]);
-        const bezier: BezierChord = { sx, sy, ex, ey };
+        const bezier: BezierChord = { sx, sy, cp1x, cp1y, cp2x, cp2y, ex, ey };
 
         const circles: NodeListOf<Element> = g.querySelectorAll("circle");
         const obstacles: ObstacleInfo[] = [];
@@ -586,5 +592,32 @@ describe("Cross-staff slur obstacle SVG", () => {
                 `M23 ${g.slurId}: ${f.length} obstacles not cleared:\n` +
                 f.slice(0, 15).join("\n"));
         }
+    });
+
+    // ── CP height sanity: cross-staff slurs must not balloon ─────────────
+
+    it("cross-staff CP height within reasonable bounds (M2,M4,M5,M7,M9)", () => {
+        const targets: number[] = [2, 4, 5, 7, 9];
+        const maxBowPx: number = 200; // max upward bow in SVG pixels
+        const failures: string[] = [];
+        for (const m of targets) {
+            const slurs: SlurObstacleGroup[] = allGroups.filter(
+                (g: SlurObstacleGroup) =>
+                    g.measure === m && g.obstacles.length > 0,
+            );
+            for (const g of slurs) {
+                const { sy, cp1y, ey } = g.bezier;
+                const chordTop: number = Math.min(sy, ey);
+                if (cp1y < chordTop - maxBowPx) {
+                    failures.push(
+                        `${g.slurId} M${g.measure} ` +
+                        `startY=${sy.toFixed(0)} cp1y=${cp1y.toFixed(0)} ` +
+                        `endY=${ey.toFixed(0)} (exceeds ${maxBowPx}px above chord)`);
+                }
+            }
+        }
+        expect(failures).to.deep.equal([],
+            `${failures.length} slurs exceed max CP bow:\n` +
+            failures.join("\n"));
     });
 });
