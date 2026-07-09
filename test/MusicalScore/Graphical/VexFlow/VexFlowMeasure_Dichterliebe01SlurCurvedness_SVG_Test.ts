@@ -1,5 +1,6 @@
 import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import { VexFlowMusicSheetDrawer } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import { TestUtils } from "../../../Util/TestUtils";
 
 // ── Data types ───────────────────────────────────────────────────────────────
@@ -86,7 +87,9 @@ function renderToSVG(scorePath: string): Promise<SVGElement> {
     );
     const scoreDoc: Document = TestUtils.getScore(scorePath);
     return osmd.load(scoreDoc).then(() => {
+        VexFlowMusicSheetDrawer.DEBUG_SHOW_SKYLINE = true;
         osmd.render();
+        VexFlowMusicSheetDrawer.DEBUG_SHOW_SKYLINE = false;
         const svg: SVGElement | null = container.querySelector("svg");
         if (!svg) { throw new Error("No SVG element after render"); }
         return svg;
@@ -432,6 +435,14 @@ describe("Dichterliebe01 slur curvedness SVG", () => {
         const cs: EnrichedSlur[] = slurs.filter((s) => s.crossStaff);
         expect(cs.length).to.be.greaterThan(0,
             `expected cross-staff slurs, got ${cs.length}`);
+    });
+
+    it("cross-staff slurs bowPx < 60px", () => {
+        const cs: EnrichedSlur[] = slurs.filter((s) => s.crossStaff);
+        const over60: EnrichedSlur[] = cs.filter((s) => s.bowPx >= 60);
+        expect(over60).to.deep.equal([],
+            `${over60.length} cross-staff slurs >= 60px:\n` +
+            over60.map((s) => `  ${s.id} bow=${s.bowPx.toFixed(1)}px`).join("\n"));
     });
 
     it("finds cross-measure slurs", () => {

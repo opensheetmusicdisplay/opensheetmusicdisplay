@@ -47,6 +47,7 @@ function sleep (ms) {
 
 let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 12);
 const dumpPositions = process.argv.includes("--dump-positions");
+const showSkyline = process.argv.includes("--show-skyline");
 imageFormat = imageFormat?.toLowerCase();
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
@@ -54,6 +55,9 @@ if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageF
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)');
     console.log("example: node test/Util/generateImages_browserless.mjs ../../build ./test/data/ ./export png");
+    console.log("  --svg            also generate SVG alongside PNG");
+    console.log("  --dump-positions dump positions JSON alongside images");
+    console.log("  --show-skyline   draw skyline/bottomline overlay (red/blue line)");
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
 }
@@ -266,6 +270,10 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         return;
     }
     debug("xml loaded", DEBUG);
+    if (showSkyline) {
+        osmdInstance.DrawSkyLine = true;
+        osmdInstance.drawBottomLine = true;
+    }
     try {
         osmdInstance.render();
         const isTestTransposingAccidentals = sampleFilename.includes("test_transposing_accidentals_1383");

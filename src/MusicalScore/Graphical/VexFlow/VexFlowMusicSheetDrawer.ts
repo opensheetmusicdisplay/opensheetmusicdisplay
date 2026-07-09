@@ -117,6 +117,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         return unitDistance * unitInPixels;
     }
 
+    /** Set to true before render to draw skyline points as red SVG circles. */
+    public static DEBUG_SHOW_SKYLINE: boolean = false;
+
     protected drawStaffLine(staffLine: StaffLine): void {
         const ctx: VF.RenderContext = this.backend.getContext();
         const stafflineNode: Node = ctx.openGroup();
@@ -135,7 +138,32 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (this.rules.RenderGlissandi) {
             this.drawGlissandi(staffLine as VexFlowStaffLine, absolutePos);
         }
+        if (VexFlowMusicSheetDrawer.DEBUG_SHOW_SKYLINE) {
+            this.drawSkylineDebug(ctx, staffLine);
+        }
         ctx.closeGroup();
+    }
+
+    private drawSkylineDebug(ctx: VF.RenderContext, staffLine: StaffLine): void {
+        const skyLine: number[] = staffLine.SkyLine;
+        if (!skyLine || skyLine.length === 0) { return; }
+        const absPos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
+        const sUnit: number = staffLine.Measures[0]?.ParentMusicSystem?.rules?.SamplingUnit ?? 3;
+        ctx.save();
+        ctx.setStrokeStyle("red");
+        ctx.setFillStyle("red");
+        ctx.setLineWidth(1);
+        for (let i: number = 0; i < skyLine.length; i++) {
+            const sv: number = skyLine[i];
+            if (sv !== 0) {
+                const px: number = (absPos.x + (0.5 + i) / sUnit) * unitInPixels;
+                const py: number = (absPos.y + sv) * unitInPixels;
+                ctx.beginPath();
+                ctx.arc(px, py, 2, 0, Math.PI * 2, false);
+                ctx.fill();
+            }
+        }
+        ctx.restore();
     }
 
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
@@ -153,6 +181,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 // before VF beams existed, so the bezier doesn't clear
                 // treble noteheads in the cross-staff beam).
                 graphicalSlur.clampToVoiceSkyline(this.rules);
+                // Also handle visually cross-staff slurs where VF staves differ
+                // but the source model doesn't mark them as cross-staff.
+                graphicalSlur.adjustForVisualCrossStaff(this.rules);
             }
             this.drawSlur(graphicalSlur, absolutePos);
         }
@@ -224,6 +255,26 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         curvePointsInPixels.push(this.applyScreenTransformation(p4));
         const startNote: VexFlowGraphicalNote = this.rules.GNote(graphicalSlur.slur.StartNote) as VexFlowGraphicalNote;
         graphicalSlur.SVGElement = this.backend.renderCurve(curvePointsInPixels, true, startNote);
+
+        // Debug: draw obstacle points as children of the slur SVG element.
+        if ((this.skyLineVisible || VexFlowMusicSheetDrawer.DEBUG_SHOW_SKYLINE) && graphicalSlur.debugSkyPoints.length > 0 && graphicalSlur.SVGElement) {
+            const ns: string = "http://www.w3.org/2000/svg";
+            const slurId: string = (graphicalSlur.SVGElement as any)?.getAttribute?.("id") ?? "slur";
+            for (let di: number = 0; di < graphicalSlur.debugSkyPoints.length; di++) {
+                const dp: PointF2D = graphicalSlur.debugSkyPoints[di];
+                const cx: number = (dp.x + abs.x) * unitInPixels;
+                const cy: number = (dp.y + abs.y) * unitInPixels;
+                const c: any = document.createElementNS(ns, "circle");
+                c.setAttribute("id", `${slurId}-obs-${di}`);
+                c.setAttribute("cx", cx.toFixed(3));
+                c.setAttribute("cy", cy.toFixed(3));
+                c.setAttribute("r", "4");
+                c.setAttribute("fill", "#FF8C00");
+                c.setAttribute("opacity", "0.7");
+                c.setAttribute("data-category", graphicalSlur.debugSkyCategories[di] ?? "unknown");
+                graphicalSlur.SVGElement.appendChild(c);
+            }
+        }
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {

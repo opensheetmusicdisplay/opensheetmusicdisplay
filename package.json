@@ -37,6 +37,7 @@
     "generate:current:webgl": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --osmdtesting 0 --webgl",
     "generate:current:debug": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --debugosmdtesting",
     "generate:current:singletest": "node test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 ^Beethoven --osmdtestingsingle",
+    "generate:current:skyline": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --osmdtesting --svg --show-skyline",
     "generate:blessed": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/blessed png 0 0 allSmall --osmdtesting",
     "test:visual": "bash ./test/Util/visual_regression.sh ./visual_regression",
     "test:visual:build": "npm-run-all build:webpack generate:current test:visual",
