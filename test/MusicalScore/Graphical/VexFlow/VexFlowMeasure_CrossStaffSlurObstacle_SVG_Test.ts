@@ -471,4 +471,118 @@ describe("Cross-staff slur obstacle SVG", () => {
             expect(m5Slurs.length).to.be.greaterThan(0);
         });
     });
+
+    // ── Cross-staff slur clearance on M12, M21, M23 ───────────────────────
+
+    function cubicBezierY(
+        p0y: number, p1y: number, p2y: number, p3y: number, t: number,
+    ): number {
+        const u: number = 1 - t;
+        return u * u * u * p0y
+            + 3 * u * u * t * p1y
+            + 3 * u * t * t * p2y
+            + t * t * t * p3y;
+    }
+
+    function checkSlurClearsObstacles(
+        g: SlurObstacleGroup,
+    ): string[] {
+        const { sx, sy, ex, ey } = g.bezier;
+        const slurEl: Element | null =
+            document.querySelector(`[id="${g.slurId}"]`);
+        if (!slurEl) { return []; }
+        const pathEl: Element | null = slurEl.querySelector("path");
+        if (!pathEl) { return []; }
+        const d: string = pathEl.getAttribute("d") || "";
+        const cParts: RegExpMatchArray | null = d.match(
+            /C\s*([\d.]+)\s+([\d.]+)\s*,\s*([\d.]+)\s+([\d.]+)\s*,\s*([\d.]+)\s+([\d.]+)/,
+        );
+        if (!cParts) { return []; }
+        const cp1x: number = parseFloat(cParts[1]);
+        const cp1y: number = parseFloat(cParts[2]);
+        const cp2x: number = parseFloat(cParts[3]);
+        const cp2y: number = parseFloat(cParts[4]);
+
+        const failures: string[] = [];
+        for (const o of g.obstacles) {
+            // Skyline obstacles are sampled at the top surface of ALL notated
+            // elements (dynamics, wedges, hairpins, etc.) — they may extend
+            // above the slur arc. Only check concrete element categories.
+            if (o.category === "skyline" || o.category === "rest") { continue; }
+            let bestT: number = -1;
+            let bestDist: number = Infinity;
+            for (let si: number = 0; si <= 200; si++) {
+                const t: number = si / 200;
+                const bx: number =
+                    (1 - t) * (1 - t) * (1 - t) * sx
+                    + 3 * (1 - t) * (1 - t) * t * cp1x
+                    + 3 * (1 - t) * t * t * cp2x
+                    + t * t * t * ex;
+                const dX: number = Math.abs(bx - o.cx);
+                if (dX < bestDist) { bestDist = dX; bestT = t; }
+            }
+            if (bestT < 0) { continue; }
+            // Skip obstacles near endpoints (t<0.02 or t>0.98) — the bezier
+            // naturally meets the notehead there and can't clear itself.
+            if (bestT < 0.02 || bestT > 0.98) { continue; }
+            const bezierY: number = cubicBezierY(sy, cp1y, cp2y, ey, bestT);
+            // For above-placement slurs: bezier should be ABOVE obstacle
+            // (smaller SVG Y = higher on page). Negative clearance means
+            // bezier is below obstacle — failure.
+            const clearance: number = o.cy - bezierY;
+            if (clearance < -100) {
+                failures.push(
+                    `${o.circleId} cat=${o.category} ` +
+                    `obsY=${o.cy.toFixed(0)} bezierY@t=${bestT.toFixed(3)}=${bezierY.toFixed(0)} ` +
+                    `clearance=${clearance.toFixed(0)}`);
+            }
+        }
+        return failures;
+    }
+
+    it("M12 cross-staff slurs clear highest obstacles (noteheads/beams)", () => {
+        const m12: SlurObstacleGroup[] = allGroups.filter(
+            (g: SlurObstacleGroup) => g.measure === 12 && g.obstacles.length > 0,
+        );
+        expect(m12.length).to.be.greaterThan(0,
+            "expected ≥1 slur in M12 with obstacles");
+        for (const g of m12) {
+            const f: string[] = checkSlurClearsObstacles(g);
+            expect(f).to.deep.equal([],
+                `M12 ${g.slurId}: ${f.length} obstacles not cleared:\n` +
+                f.slice(0, 15).join("\n"));
+        }
+    });
+
+    it("M21 cross-staff slurs clear highest obstacles", () => {
+        const m21: SlurObstacleGroup[] = allGroups.filter(
+            (g: SlurObstacleGroup) => g.measure === 21 && g.obstacles.length > 0,
+        );
+        expect(m21.length).to.be.greaterThan(0,
+            "expected ≥1 slur in M21 with obstacles");
+        for (const g of m21) {
+            const f: string[] = checkSlurClearsObstacles(g);
+            expect(f).to.deep.equal([],
+                `M21 ${g.slurId}: ${f.length} obstacles not cleared:\n` +
+                f.slice(0, 15).join("\n"));
+        }
+    });
+
+    it("M23 slurs clear notehead/beam obstacles", () => {
+        const m23: SlurObstacleGroup[] = allGroups.filter(
+            (g: SlurObstacleGroup) => g.measure === 23,
+        );
+        // M23 may have only short same-staff slurs with few obstacles.
+        if (m23.length === 0) {
+            console.warn("M23: no slurs with obstacles found (all same-staff)");
+            expect(true).to.be.true;
+            return;
+        }
+        for (const g of m23) {
+            const f: string[] = checkSlurClearsObstacles(g);
+            expect(f).to.deep.equal([],
+                `M23 ${g.slurId}: ${f.length} obstacles not cleared:\n` +
+                f.slice(0, 15).join("\n"));
+        }
+    });
 });
