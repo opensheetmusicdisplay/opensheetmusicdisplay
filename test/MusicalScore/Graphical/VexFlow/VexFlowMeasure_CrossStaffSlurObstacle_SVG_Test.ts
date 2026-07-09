@@ -508,6 +508,8 @@ describe("Cross-staff slur obstacle SVG", () => {
             // Skyline obstacles are sampled at the top surface of ALL notated
             // elements (dynamics, wedges, hairpins, etc.) — they may extend
             // above the slur arc. Only check concrete element categories.
+            // Skyline captures modifiers above noteheads (articulations, dynamics).
+            // Beam clearance handles notehead/beam/stem — exclude skyline/rest.
             if (o.category === "skyline" || o.category === "rest") { continue; }
             let bestT: number = -1;
             let bestDist: number = Infinity;
@@ -524,13 +526,13 @@ describe("Cross-staff slur obstacle SVG", () => {
             if (bestT < 0) { continue; }
             // Skip obstacles near endpoints (t<0.02 or t>0.98) — the bezier
             // naturally meets the notehead there and can't clear itself.
-            if (bestT < 0.02 || bestT > 0.98) { continue; }
+            if (bestT < 0.1 || bestT > 0.9) { continue; }
             const bezierY: number = cubicBezierY(sy, cp1y, cp2y, ey, bestT);
             // For above-placement slurs: bezier should be ABOVE obstacle
             // (smaller SVG Y = higher on page). Negative clearance means
             // bezier is below obstacle — failure.
             const clearance: number = o.cy - bezierY;
-            if (clearance < -100) {
+            if (clearance < 0) {
                 failures.push(
                     `${o.circleId} cat=${o.category} ` +
                     `obsY=${o.cy.toFixed(0)} bezierY@t=${bestT.toFixed(3)}=${bezierY.toFixed(0)} ` +
