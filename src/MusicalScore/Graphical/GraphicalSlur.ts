@@ -568,125 +568,67 @@ export class GraphicalSlur extends GraphicalCurve {
         // Use the SlurCrossStaffBowFactor to compute a base bow, then adjust
         // for skyline obstacles (end staff noteheads/beams) and cross-staff
         // beam notehead clearance.
-        let bow: number = Math.max(rules.SlurCrossStaffMinBow,
+        const bow: number = Math.max(rules.SlurCrossStaffMinBow,
                                    Math.min(rules.SlurCrossStaffMaxBow, distance * rules.SlurCrossStaffBowFactor));
         const bowSign: number = -1;
 
-        // ── Debug obstacle visualization (no bow adjustment) ────────────────
-        // Skyline/rest obstacles collected for debug circles only. Cross-staff
-        // chord geometry already clears both staves — no extra bow needed.
+        // ── Debug obstacle visualization ────────────────────────────────────
+        // Populate debug circles (skyline + rests). Bow is geometric only.
         this.debugSkyPoints = [];
         this.debugSkyCategories = [];
-        const scanStaffSkyline: (sl: StaffLine, toStartFrame: boolean) => void
-            = (staffLine: StaffLine, toStartFrame: boolean): void => {
-            const skyCalc: SkyBottomLineCalculator = staffLine?.SkyBottomLineCalculator;
-            if (!skyCalc) { return; }
-            const skyLine: number[] = staffLine.SkyLine;
-            const sUnit: number = skyCalc.SamplingUnit;
-            const relX: number = staffLine.PositionAndShape.RelativePosition.x;
-            const absY: number = staffLine.PositionAndShape.AbsolutePosition.y;
-            const xOff: number = toStartFrame ? relX - startStaffLine.PositionAndShape.RelativePosition.x : 0;
-            const yOff: number = toStartFrame ? absY - startStaffAbsY : 0;
-            const sIn: number = toStartFrame ? startX + (startStaffLine.PositionAndShape.RelativePosition.x - relX) : startX;
-            const eIn: number = toStartFrame ? endX + (startStaffLine.PositionAndShape.RelativePosition.x - relX) : endX;
-            let startIdx: number = skyCalc.getRightIndexForPointX(sIn, skyLine.length);
-            let endIdx: number = skyCalc.getLeftIndexForPointX(eIn, skyLine.length);
-            if (startIdx < 0) { startIdx = 0; }
-            if (endIdx >= skyLine.length) { endIdx = skyLine.length - 1; }
-            for (let i: number = startIdx; i < endIdx; i++) {
-                const sv: number = skyLine[i];
-                if (sv !== 0) {
-                    const obsX: number = (0.5 + i) / sUnit + xOff;
-                    const obsY: number = sv + yOff;
-                    this.debugSkyPoints.push(new PointF2D(obsX, obsY));
+        const scanSky: (sl: StaffLine, toFrame: boolean) => void
+            = (staffLine: StaffLine, toFrame: boolean): void => {
+            const calc: SkyBottomLineCalculator = staffLine?.SkyBottomLineCalculator;
+            if (!calc) { return; }
+            const line: number[] = staffLine.SkyLine;
+            const sU: number = calc.SamplingUnit;
+            const rX: number = staffLine.PositionAndShape.RelativePosition.x;
+            const aY: number = staffLine.PositionAndShape.AbsolutePosition.y;
+            const xO: number = toFrame ? rX - startStaffLine.PositionAndShape.RelativePosition.x : 0;
+            const yO: number = toFrame ? aY - startStaffAbsY : 0;
+            const sI: number = toFrame ? startX + (startStaffLine.PositionAndShape.RelativePosition.x - rX) : startX;
+            const eI: number = toFrame ? endX + (startStaffLine.PositionAndShape.RelativePosition.x - rX) : endX;
+            let si: number = calc.getRightIndexForPointX(sI, line.length);
+            let ei: number = calc.getLeftIndexForPointX(eI, line.length);
+            if (si < 0) { si = 0; }
+            if (ei >= line.length) { ei = line.length - 1; }
+            for (let i: number = si; i < ei; i++) {
+                const v: number = line[i];
+                if (v !== 0) {
+                    this.debugSkyPoints.push(new PointF2D(
+                        (0.5 + i) / sU + xO, v + yO));
                     this.debugSkyCategories.push("skyline");
                 }
             }
         };
-        if (endStaffLine) { scanStaffSkyline(endStaffLine, true); }
-        if (startStaffLine) { scanStaffSkyline(startStaffLine, false); }
+        if (endStaffLine) { scanSky(endStaffLine, true); }
+        if (startStaffLine) { scanSky(startStaffLine, false); }
 
         const addRest: (gvEntry: GraphicalVoiceEntry) => void
             = (gvEntry: GraphicalVoiceEntry): void => {
             for (const n of gvEntry.notes ?? []) {
                 if (!n.sourceNote?.isRest?.() || !n.PositionAndShape) { continue; }
                 const box: any = n.PositionAndShape;
-                const absPos: any = box.AbsolutePosition;
-                if (!absPos) { continue; }
-                const rhX: number = absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x;
-                const restTopY: number = absPos.y - (box.BorderTop ?? 0);
-                const xMinR: number = Math.min(startX, endX) - 10;
-                const xMaxR: number = Math.max(startX, endX) + 10;
-                if (rhX >= xMinR && rhX <= xMaxR) {
-                    this.debugSkyPoints.push(new PointF2D(rhX, restTopY - startStaffAbsY));
+                const ap: any = box.AbsolutePosition;
+                if (!ap) { continue; }
+                const rX: number = ap.x - startStaffLine.PositionAndShape.AbsolutePosition.x;
+                if (rX >= Math.min(startX, endX) - 10 && rX <= Math.max(startX, endX) + 10) {
+                    this.debugSkyPoints.push(new PointF2D(rX, ap.y - (box.BorderTop ?? 0) - startStaffAbsY));
                     this.debugSkyCategories.push("rest");
                 }
             }
         };
         for (const se of this.staffEntries) {
-            const seSL: StaffLine = se?.parentMeasure?.ParentStaffLine;
-            if (!seSL) { continue; }
-            for (const gve of se.graphicalVoiceEntries ?? []) { addRest(gve); }
+            const sl_: StaffLine = se?.parentMeasure?.ParentStaffLine;
+            if (sl_) { for (const gve of se.graphicalVoiceEntries ?? []) { addRest(gve); } }
         }
         if (endStaffLine) {
-            for (const meas of endStaffLine.Measures ?? []) {
-                for (const se of (meas as any).staffEntries ?? []) {
-                    for (const gve of (se as any).graphicalVoiceEntries ?? []) {
-                        if (gve) { addRest(gve); }
-                    }
+            for (const m_ of endStaffLine.Measures ?? []) {
+                for (const se of (m_ as any).staffEntries ?? []) {
+                    for (const gve of (se as any).graphicalVoiceEntries ?? []) { if (gve) { addRest(gve); } }
                 }
             }
         }
-
-        // ── Beam notehead clearance ─────────────────────────────────────────
-        // Ensure the bezier apex clears the highest notehead in the cross-staff
-        // beam. Only applies when beam notes span staves (>50px Y0 difference).
-        // Beams are per-voice in VF5 — the start note may not own the beam,
-        // so search the measure column's crossStaffBeamSiblings instead.
-        { // explicit block to scope temp vars
-        const sMeas: any = slurStartNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
-        const eMeas: any = slurEndNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
-        const column: any[] = startStaffLine.ParentMusicSystem?.GraphicalMeasures;
-        const seenBeams: Set<any> = new Set();
-        for (const m of [sMeas, eMeas].filter(Boolean)) {
-            if (!column) { continue; }
-            let colIdx: number = -1;
-            for (let ci: number = 0; ci < column.length; ci++) {
-                if (column[ci].indexOf(m) >= 0) { colIdx = ci; break; }
-            }
-            if (colIdx < 0) { continue; }
-            for (const colMeas of column[colIdx]) {
-                for (const [b] of (colMeas as any).crossStaffBeamSiblings ?? []) {
-                    if (seenBeams.has(b)) { continue; }
-                    seenBeams.add(b);
-                    const beamNotes: any[] = b.getNotes();
-                    let voiceUpperY: number = Infinity;
-                    let minStaveY0: number = Infinity;
-                    let maxStaveY0: number = -Infinity;
-                    for (const bn of beamNotes) {
-                        const ns: any = bn.checkStave?.() || bn.stave;
-                        if (!ns) { continue; }
-                        const stY0: number = ns.getYForLine(0);
-                        minStaveY0 = Math.min(minStaveY0, stY0);
-                        maxStaveY0 = Math.max(maxStaveY0, stY0);
-                        for (const kp of bn.getKeyProps?.() || []) {
-                            const noteYPx: number = ns.getYForNote(kp.line);
-                            const noteY: number = noteYPx / unitInPixels - startStaffAbsY;
-                            voiceUpperY = Math.min(voiceUpperY, noteY);
-                        }
-                    }
-                    if (isFinite(voiceUpperY) && isFinite(minStaveY0) && isFinite(maxStaveY0) &&
-                        Math.abs(maxStaveY0 - minStaveY0) > 50) {
-                        const margin: number = rules.SlurNoteHeadYOffset + 3.5;
-                        const cp2MinBow: number = startY + dy * 0.75 - voiceUpperY + margin;
-                        const cp1MinBow: number = startY + dy * 0.25 - voiceUpperY + margin;
-                        const beamBow: number = Math.max(cp1MinBow, cp2MinBow);
-                        bow = Math.max(bow, Math.min(beamBow, rules.SlurCrossStaffMaxBow * 5));
-                    }
-                }
-            }
-        }
-        } // end explicit block
 
         this.bezierStartPt = new PointF2D(startX, startY);
         this.bezierStartControlPt = new PointF2D(startX + dx * 0.25, startY + dy * 0.25 + bowSign * bow);
