@@ -641,34 +641,52 @@ export class GraphicalSlur extends GraphicalCurve {
         // ── Beam notehead clearance ─────────────────────────────────────────
         // Ensure the bezier apex clears the highest notehead in the cross-staff
         // beam. Only applies when beam notes span staves (>50px Y0 difference).
-        const gNote_: any = slurStartNote as VexFlowGraphicalNote;
-        const vfN_: any = gNote_.vfnote?.[0];
-        const beamForNotes_: any = vfN_?.beam;
-        if (beamForNotes_ && vfN_ && this.isBeamCrossStaff(beamForNotes_, slurStartNote)) {
-            const beamNotes: any[] = beamForNotes_.getNotes();
-            let voiceUpperY: number = Infinity;
-            let minStaveY0: number = Infinity;
-            let maxStaveY0: number = -Infinity;
-            for (const bn of beamNotes) {
-                const ns: any = bn.checkStave?.() || bn.stave;
-                if (!ns) { continue; }
-                const stY0: number = ns.getYForLine(0);
-                minStaveY0 = Math.min(minStaveY0, stY0);
-                maxStaveY0 = Math.max(maxStaveY0, stY0);
-                for (const kp of bn.getKeyProps?.() || []) {
-                    const noteYPx: number = ns.getYForNote(kp.line);
-                    const noteY: number = noteYPx / unitInPixels - startStaffAbsY;
-                    voiceUpperY = Math.min(voiceUpperY, noteY);
+        // Beams are per-voice in VF5 — the start note may not own the beam,
+        // so search the measure column's crossStaffBeamSiblings instead.
+        { // explicit block to scope temp vars
+        const sMeas: any = slurStartNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
+        const eMeas: any = slurEndNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
+        const column: any[] = startStaffLine.ParentMusicSystem?.GraphicalMeasures;
+        const seenBeams: Set<any> = new Set();
+        for (const m of [sMeas, eMeas].filter(Boolean)) {
+            if (!column) { continue; }
+            let colIdx: number = -1;
+            for (let ci: number = 0; ci < column.length; ci++) {
+                if (column[ci].indexOf(m) >= 0) { colIdx = ci; break; }
+            }
+            if (colIdx < 0) { continue; }
+            for (const colMeas of column[colIdx]) {
+                for (const [b] of (colMeas as any).crossStaffBeamSiblings ?? []) {
+                    if (seenBeams.has(b)) { continue; }
+                    seenBeams.add(b);
+                    const beamNotes: any[] = b.getNotes();
+                    let voiceUpperY: number = Infinity;
+                    let minStaveY0: number = Infinity;
+                    let maxStaveY0: number = -Infinity;
+                    for (const bn of beamNotes) {
+                        const ns: any = bn.checkStave?.() || bn.stave;
+                        if (!ns) { continue; }
+                        const stY0: number = ns.getYForLine(0);
+                        minStaveY0 = Math.min(minStaveY0, stY0);
+                        maxStaveY0 = Math.max(maxStaveY0, stY0);
+                        for (const kp of bn.getKeyProps?.() || []) {
+                            const noteYPx: number = ns.getYForNote(kp.line);
+                            const noteY: number = noteYPx / unitInPixels - startStaffAbsY;
+                            voiceUpperY = Math.min(voiceUpperY, noteY);
+                        }
+                    }
+                    if (isFinite(voiceUpperY) && isFinite(minStaveY0) && isFinite(maxStaveY0) &&
+                        Math.abs(maxStaveY0 - minStaveY0) > 50) {
+                        const margin: number = rules.SlurNoteHeadYOffset + 3.5;
+                        const cp2MinBow: number = startY + dy * 0.75 - voiceUpperY + margin;
+                        const cp1MinBow: number = startY + dy * 0.25 - voiceUpperY + margin;
+                        const beamBow: number = Math.max(cp1MinBow, cp2MinBow);
+                        bow = Math.max(bow, Math.min(beamBow, rules.SlurCrossStaffMaxBow * 5));
+                    }
                 }
             }
-            if (isFinite(voiceUpperY) && isFinite(minStaveY0) && isFinite(maxStaveY0) &&
-                Math.abs(maxStaveY0 - minStaveY0) > 50) {
-                const margin: number = rules.SlurNoteHeadYOffset + 3.5;
-                const cp2MinBow: number = startY + dy * 0.75 - voiceUpperY + margin;
-                const cp1MinBow: number = startY + dy * 0.25 - voiceUpperY + margin;
-                bow = Math.max(bow, cp1MinBow, cp2MinBow);
-            }
         }
+        } // end explicit block
 
         this.bezierStartPt = new PointF2D(startX, startY);
         this.bezierStartControlPt = new PointF2D(startX + dx * 0.25, startY + dy * 0.25 + bowSign * bow);
