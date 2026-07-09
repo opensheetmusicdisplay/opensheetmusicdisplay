@@ -519,8 +519,7 @@ describe("Cross-staff slur obstacle SVG", () => {
             // Skyline obstacles are sampled at the top surface of ALL notated
             // elements (dynamics, wedges, hairpins, etc.) — they may extend
             // above the slur arc. Only check concrete element categories.
-            // Skyline captures modifiers above noteheads (articulations, dynamics).
-            // Beam clearance handles notehead/beam/stem — exclude skyline/rest.
+            // Skyline (modifiers) excluded — geometric bow handles noteheads.
             if (o.category === "skyline" || o.category === "rest") { continue; }
             let bestT: number = -1;
             let bestDist: number = Infinity;
@@ -601,41 +600,37 @@ describe("Cross-staff slur obstacle SVG", () => {
 
     // ── CP height sanity: cross-staff slurs must not balloon ─────────────
 
-    it("cross-staff CP bow similar to M2/M14 reference", () => {
-        // Learn reference bow from M2 and M14 (known-correct cross-staff slurs).
-        // Then assert M4,M5,M7,M9 don't exceed reference by more than 100px.
-        const maxBowPx: number = 200; // absolute ceiling
+    it("cross-staff CP upward bow ≤ max of M2/M14 reference", () => {
+        // M2 and M14 provide reference upward bow for cross-staff slurs.
+        // Assert M4,M5,M7,M9 don't exceed max reference.
         const refMeasures: number[] = [2, 14];
         const checkMeasures: number[] = [4, 5, 7, 9];
         const refBows: number[] = [];
-        const failures: string[] = [];
-
         for (const g of allGroups) {
             if (g.obstacles.length === 0) { continue; }
             const { sy, cp1y, ey } = g.bezier;
-            const chordTop: number = Math.min(sy, ey);
-            // Only consider slurs with some upward bow (cp1y < chordTop)
-            if (cp1y >= chordTop - 10) { continue; }
-            const bowPx: number = chordTop - cp1y;
-            if (refMeasures.includes(g.measure)) {
+            const bowPx: number = Math.min(sy, ey) - cp1y;
+            if (refMeasures.includes(g.measure) && bowPx > 0) {
                 refBows.push(bowPx);
             }
-            if (checkMeasures.includes(g.measure)) {
-                if (bowPx > maxBowPx) {
-                    failures.push(
-                        `${g.slurId} M${g.measure} ` +
-                        `startY=${sy.toFixed(0)} cp1y=${cp1y.toFixed(0)} ` +
-                        `endY=${ey.toFixed(0)} bow=${bowPx.toFixed(0)}px ` +
-                        `(exceeds ${maxBowPx}px ceiling)`);
-                }
+        }
+        const maxRef: number = Math.max(...refBows);
+        const failures: string[] = [];
+        for (const g of allGroups) {
+            if (g.obstacles.length === 0 || !checkMeasures.includes(g.measure)) { continue; }
+            const { sy, cp1y, ey } = g.bezier;
+            const bowPx: number = Math.min(sy, ey) - cp1y;
+            if (bowPx > maxRef + 15) {
+                failures.push(
+                    `${g.slurId} M${g.measure} ` +
+                    `startY=${sy.toFixed(0)} cp1y=${cp1y.toFixed(0)} ` +
+                    `endY=${ey.toFixed(0)} bow=${bowPx.toFixed(0)}px ` +
+                    `(maxRef=${maxRef.toFixed(0)}px)`);
             }
         }
-        console.warn("\n── Reference bow from M2/M14 ──");
-        for (const b of refBows) {
-            console.warn(`  bow = ${b.toFixed(0)}px`);
-        }
+        for (const b of refBows) { console.warn("  ref bow = " + b.toFixed(0) + "px"); }
         expect(failures).to.deep.equal([],
-            `${failures.length} slurs exceed max CP bow:\n` +
+            `${failures.length} slurs exceed reference bow:\n` +
             failures.join("\n"));
     });
 });
