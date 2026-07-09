@@ -566,10 +566,14 @@ export class GraphicalSlur extends GraphicalCurve {
 
         // ── Baseline geometric bow ──────────────────────────────────────────
         // Use the SlurCrossStaffBowFactor to compute a base bow, then adjust
-        // for skyline obstacles (end staff noteheads/beams) and cross-staff
-        // beam notehead clearance.
-        const bow: number = Math.max(rules.SlurCrossStaffMinBow,
+        // CP must be above chord top for steep upward chords.
+        // CP1 = startY + dy*0.25 - bow < endY → bow > -0.75*dy.
+        let bow: number = Math.max(rules.SlurCrossStaffMinBow,
                                    Math.min(rules.SlurCrossStaffMaxBow, distance * rules.SlurCrossStaffBowFactor));
+        if (dy < 0) {
+            const minCPBow: number = -0.75 * dy;
+            if (minCPBow > bow) { bow = minCPBow; }
+        }
         const bowSign: number = -1;
 
         // ── Debug obstacle visualization ────────────────────────────────────

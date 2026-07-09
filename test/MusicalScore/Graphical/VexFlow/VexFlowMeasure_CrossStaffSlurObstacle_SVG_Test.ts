@@ -600,19 +600,18 @@ describe("Cross-staff slur obstacle SVG", () => {
 
     // ── CP height sanity: cross-staff slurs must not balloon ─────────────
 
-    it("cross-staff CP upward bow ≤ max of M2/M14 reference", () => {
-        // M2 and M14 provide reference upward bow for cross-staff slurs.
-        // Assert M4,M5,M7,M9 don't exceed max reference.
+    it("cross-staff CP upward bow matches chord-steepness-adjusted reference", () => {
+        // Reference upward bow from M2/M14 plus chord-steepness allowance.
+        // Steep chords (large |dy|) need more bow for CP to clear chord top.
+        // Allow maxRef + 15px OR -0.75*dy_px (whichever larger).
         const refMeasures: number[] = [2, 14];
         const checkMeasures: number[] = [4, 5, 7, 9];
         const refBows: number[] = [];
         for (const g of allGroups) {
             if (g.obstacles.length === 0) { continue; }
             const { sy, cp1y, ey } = g.bezier;
-            const bowPx: number = Math.min(sy, ey) - cp1y;
-            if (refMeasures.includes(g.measure) && bowPx > 0) {
-                refBows.push(bowPx);
-            }
+            const b: number = Math.min(sy, ey) - cp1y;
+            if (refMeasures.includes(g.measure) && b > 0) { refBows.push(b); }
         }
         const maxRef: number = Math.max(...refBows);
         const failures: string[] = [];
@@ -620,12 +619,15 @@ describe("Cross-staff slur obstacle SVG", () => {
             if (g.obstacles.length === 0 || !checkMeasures.includes(g.measure)) { continue; }
             const { sy, cp1y, ey } = g.bezier;
             const bowPx: number = Math.min(sy, ey) - cp1y;
-            if (bowPx > maxRef + 15) {
+            const dyPx: number = ey - sy;
+            const minChordBow: number = dyPx < 0 ? -0.75 * dyPx : 0;
+            const maxOk: number = Math.max(maxRef + 15, minChordBow + 10);
+            if (bowPx > maxOk) {
                 failures.push(
                     `${g.slurId} M${g.measure} ` +
                     `startY=${sy.toFixed(0)} cp1y=${cp1y.toFixed(0)} ` +
                     `endY=${ey.toFixed(0)} bow=${bowPx.toFixed(0)}px ` +
-                    `(maxRef=${maxRef.toFixed(0)}px)`);
+                    `(maxOk=${maxOk.toFixed(0)} ref=${maxRef.toFixed(0)} minChord=${minChordBow.toFixed(0)})`);
             }
         }
         for (const b of refBows) { console.warn("  ref bow = " + b.toFixed(0) + "px"); }
