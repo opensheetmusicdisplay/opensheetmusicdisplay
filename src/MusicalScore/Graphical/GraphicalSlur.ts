@@ -29,7 +29,6 @@ function getVF5NoteheadStaffY(note: GraphicalNote): number {
     }
     return note.PositionAndShape?.RelativePosition?.y ?? 0;
 }
-
 /** Return staffLine-relative X from VF5's actual rendered position (in OSMD units).
  *  Falls back to OSMD model positions when VF stave is unavailable. */
 function getVF5SlurX(note: GraphicalNote): number {
@@ -564,16 +563,9 @@ export class GraphicalSlur extends GraphicalCurve {
         const dy: number = endY - startY;
         const distance: number = Math.sqrt(dx * dx + dy * dy);
 
-        // ── Baseline geometric bow ──────────────────────────────────────────
-        // Use the SlurCrossStaffBowFactor to compute a base bow, then adjust
-        // CP must be above chord top for steep upward chords.
-        // CP1 = startY + dy*0.25 - bow < endY → bow > -0.75*dy.
-        let bow: number = Math.max(rules.SlurCrossStaffMinBow,
-                                   Math.min(rules.SlurCrossStaffMaxBow, distance * rules.SlurCrossStaffBowFactor));
-        if (dy < 0) {
-            const minCPBow: number = -0.75 * dy;
-            if (minCPBow > bow) { bow = minCPBow; }
-        }
+        const bow: number = Math.max(rules.SlurCrossStaffMinBow,
+                                     Math.min(rules.SlurCrossStaffMaxBow,
+                                         distance * rules.SlurCrossStaffBowFactor));
         const bowSign: number = -1;
 
         // ── Debug obstacle visualization ────────────────────────────────────
@@ -634,9 +626,97 @@ export class GraphicalSlur extends GraphicalCurve {
             }
         }
 
+        const concreteObstaclePoints: PointF2D[] = [];
+        const attachedVoices: Set<any> = new Set<any>([
+            slurStartNote.parentVoiceEntry?.parentVoiceEntry?.ParentVoice,
+            slurEndNote.parentVoiceEntry?.parentVoiceEntry?.ParentVoice,
+        ]);
+        const addConcreteObstacles: (staffLine: StaffLine) => void = (staffLine: StaffLine): void => {
+            for (const measure of staffLine.Measures ?? []) {
+                for (const staffEntry of (measure as any).staffEntries ?? []) {
+                    for (const voiceEntry of staffEntry.graphicalVoiceEntries ?? []) {
+                        if (!attachedVoices.has(voiceEntry.parentVoiceEntry?.ParentVoice)) { continue; }
+                        for (const note of voiceEntry.notes ?? []) {
+                            const box: any = note.PositionAndShape;
+                            const absPos: any = box?.AbsolutePosition;
+                            if (!absPos) { continue; }
+                            const noteX: number = absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x;
+                            if (noteX < Math.min(startX, endX) || noteX > Math.max(startX, endX)) { continue; }
+                            const noteY: number = absPos.y - (box.BorderTop ?? 0) - startStaffAbsY;
+                            concreteObstaclePoints.push(new PointF2D(noteX, noteY));
+                            this.debugSkyPoints.push(new PointF2D(noteX, noteY));
+                            this.debugSkyCategories.push("notehead");
+
+                            const vfNote: any = (note as any).vfnote?.[0];
+                            const stemExtents: any = vfNote?.getStemExtents?.();
+                            const stave: any = vfNote?.checkStave?.() || vfNote?.stave;
+                            if (!stemExtents || !stave
+                                || !Number.isFinite(stemExtents.topY)
+                                || !Number.isFinite(stemExtents.bottomY)) { continue; }
+                            const stemX: number = (vfNote.getAbsoluteX?.() ?? 0) / unitInPixels
+                                - startStaffLine.PositionAndShape.AbsolutePosition.x;
+                            this.debugSkyPoints.push(new PointF2D(
+                                stemX, stemExtents.topY / unitInPixels - startStaffAbsY,
+                            ));
+                            concreteObstaclePoints.push(new PointF2D(
+                                stemX, stemExtents.topY / unitInPixels - startStaffAbsY,
+                            ));
+                            this.debugSkyCategories.push("stem");
+                            this.debugSkyPoints.push(new PointF2D(
+                                stemX, stemExtents.bottomY / unitInPixels - startStaffAbsY,
+                            ));
+                            concreteObstaclePoints.push(new PointF2D(
+                                stemX, stemExtents.bottomY / unitInPixels - startStaffAbsY,
+                            ));
+                            this.debugSkyCategories.push("stem");
+                        }
+                    }
+                }
+            }
+        };
+        addConcreteObstacles(startStaffLine);
+        if (endStaffLine !== startStaffLine) { addConcreteObstacles(endStaffLine); }
+        if (this.debugSkyPoints.length === 0) {
+            const addMeasureNotes: (measure: any) => void = (measure: any): void => {
+                for (const staffEntry of measure?.staffEntries ?? []) {
+                    for (const voiceEntry of staffEntry.graphicalVoiceEntries ?? []) {
+                        for (const note of voiceEntry.notes ?? []) {
+                            const box: any = note.PositionAndShape;
+                            const absPos: any = box?.AbsolutePosition;
+                            if (!absPos) { continue; }
+                            this.debugSkyPoints.push(new PointF2D(
+                                absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x,
+                                absPos.y - (box.BorderTop ?? 0) - startStaffAbsY,
+                            ));
+                            concreteObstaclePoints.push(new PointF2D(
+                                absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x,
+                                absPos.y - (box.BorderTop ?? 0) - startStaffAbsY,
+                            ));
+                            this.debugSkyCategories.push("notehead");
+                        }
+                    }
+                }
+            };
+            addMeasureNotes(slurStartNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure);
+            addMeasureNotes(slurEndNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure);
+        }
+
+        let clearanceBow: number = bow;
+        for (const obstacle of concreteObstaclePoints) {
+            const t: number = (obstacle.x - startX) / dx;
+            if (t <= 0 || t >= 1) { continue; }
+            const chordY: number = startY + dy * t;
+            if (Math.abs(obstacle.y - chordY) > Math.abs(dy)) { continue; }
+            const weight: number = 3 * t * (1 - t);
+            const requiredBow: number = this.placement === PlacementEnum.Above
+                ? (chordY - obstacle.y + rules.SlurNoteHeadYOffset) / weight
+                : (obstacle.y - chordY + rules.SlurNoteHeadYOffset) / weight;
+            if (requiredBow > clearanceBow) { clearanceBow = requiredBow; }
+        }
+        clearanceBow = Math.min(clearanceBow, startStaffLine.StaffHeight);
         this.bezierStartPt = new PointF2D(startX, startY);
-        this.bezierStartControlPt = new PointF2D(startX + dx * 0.25, startY + dy * 0.25 + bowSign * bow);
-        this.bezierEndControlPt = new PointF2D(startX + dx * 0.75, startY + dy * 0.75 + bowSign * bow);
+        this.bezierStartControlPt = new PointF2D(startX + dx * 0.3, startY + dy * 0.3 + bowSign * clearanceBow);
+        this.bezierEndControlPt = new PointF2D(startX + dx * 0.7, startY + dy * 0.7 + bowSign * clearanceBow);
         this.bezierEndPt = new PointF2D(endX, endY);
         return true;
     }
@@ -884,18 +964,18 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         const margin: number = rules.SlurNoteHeadYOffset;
-        // cp1Y = startY + dy*0.25 - bow must be ≤ voiceUpperY - margin
+        // cp1Y = startY + dy*0.3 - bow must be ≤ voiceUpperY - margin
         const cp1Y: number = this.bezierStartControlPt.y;
-        // cp1Y = startY + dy*0.25 - bow  →  bow = startY + dy*0.25 - cp1Y
-        let bow: number = startY + dy * 0.25 - cp1Y;
+        // cp1Y = startY + dy*0.3 - bow  →  bow = startY + dy*0.3 - cp1Y
+        let bow: number = startY + dy * 0.3 - cp1Y;
         // Minimum bow to clear voiceUpperY
-        const minBow: number = startY + dy * 0.25 - voiceUpperY + margin;
+        const minBow: number = startY + dy * 0.3 - voiceUpperY + margin;
         if (minBow > bow) {
             bow = minBow;
         }
         // Recompute control points
-        this.bezierStartControlPt.y = startY + dy * 0.25 - bow;
-        this.bezierEndControlPt.y = startY + dy * 0.75 - bow;
+        this.bezierStartControlPt.y = startY + dy * 0.3 - bow;
+        this.bezierEndControlPt.y = startY + dy * 0.7 - bow;
     }
 
     /**
@@ -977,7 +1057,7 @@ export class GraphicalSlur extends GraphicalCurve {
             = (absPos, bl, br, bt, bb, category): void => {
             const bx: number = absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x;
             if (bx < measureXMin || bx > measureXMax) { return; }
-            const ay: number = absPos.y / unitInPixels;
+            const ay: number = absPos.y;
             if (bl > 0 || br > 0 || bt > 0 || bb > 0) {
                 addObs(bx - bl, ay - bt - startStaffAbsY, category);
                 addObs(bx + br, ay - bt - startStaffAbsY, category);
@@ -1081,8 +1161,62 @@ export class GraphicalSlur extends GraphicalCurve {
         };
         const sMeas: any = startNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
         const eMeas: any = endNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
-        if (sMeas) { scanMeasure(sMeas); }
-        if (endStaffLine && eMeas) { scanMeasure(eMeas); }
+        const scannedMeasures: Set<any> = new Set<any>();
+        const scanLineMeasures: (line: StaffLine | undefined) => void = (line: StaffLine | undefined): void => {
+            for (const measure of line?.Measures ?? []) {
+                const measurePosition: PointF2D = sysBox
+                    ? this.positionRelativeToBox(measure.PositionAndShape, sysBox)
+                    : new PointF2D(measure.PositionAndShape.RelativePosition.x, 0);
+                const measureStartX: number = measurePosition.x
+                    - startStaffLine.PositionAndShape.RelativePosition.x;
+                const measureEndX: number = measureStartX + measure.PositionAndShape.Size.width;
+                if (measureEndX < measureXMin || measureStartX > measureXMax) { continue; }
+                if (!scannedMeasures.has(measure)) {
+                    scannedMeasures.add(measure);
+                    scanMeasure(measure);
+                }
+            }
+        };
+        scanLineMeasures(startStaffLine);
+        scanLineMeasures(endStaffLine);
+        if (sMeas && !scannedMeasures.has(sMeas)) { scanMeasure(sMeas); }
+        if (eMeas && !scannedMeasures.has(eMeas)) { scanMeasure(eMeas); }
+
+        const addVisualNoteheads: (line: StaffLine | undefined) => void = (line: StaffLine | undefined): void => {
+            for (const measure of line?.Measures ?? []) {
+                for (const staffEntry of (measure as any).staffEntries ?? []) {
+                    for (const voiceEntry of staffEntry.graphicalVoiceEntries ?? []) {
+                        for (const note of voiceEntry.notes ?? []) {
+                            const box: any = note.PositionAndShape;
+                            const absPos: any = box?.AbsolutePosition;
+                            if (!absPos) { continue; }
+                            addObs(
+                                absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x,
+                                absPos.y - (box.BorderTop ?? 0) - startStaffAbsY,
+                                "notehead",
+                            );
+                        }
+                    }
+                }
+            }
+        };
+        addVisualNoteheads(startStaffLine);
+        addVisualNoteheads(endStaffLine);
+
+        const dy: number = this.bezierEndPt.y - this.bezierStartPt.y;
+        const baseBow: number = this.placement === PlacementEnum.Above
+            ? Math.max(
+                this.bezierStartPt.y + dy * 0.3 - this.bezierStartControlPt.y,
+                this.bezierStartPt.y + dy * 0.7 - this.bezierEndControlPt.y,
+            )
+            : Math.max(
+                this.bezierStartControlPt.y - (this.bezierStartPt.y + dy * 0.3),
+                this.bezierEndControlPt.y - (this.bezierStartPt.y + dy * 0.7),
+            );
+        const bow: number = Math.max(rules.SlurCrossStaffMinBow, baseBow);
+        const bowSign: number = this.placement === PlacementEnum.Above ? -1 : 1;
+        this.bezierStartControlPt.y = this.bezierStartPt.y + dy * 0.3 + bowSign * bow;
+        this.bezierEndControlPt.y = this.bezierStartPt.y + dy * 0.7 + bowSign * bow;
     }
 
     /**
