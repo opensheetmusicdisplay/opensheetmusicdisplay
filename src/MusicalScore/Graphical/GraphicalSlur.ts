@@ -647,6 +647,31 @@ export class GraphicalSlur extends GraphicalCurve {
                             this.debugSkyPoints.push(new PointF2D(noteX, noteY));
                             this.debugSkyCategories.push("notehead");
 
+                            // ── (c) Modifiers (accidentals, articulations) ──
+                            {
+                                const vfNoteM: any = (note as any).vfnote?.[0];
+                                if (vfNoteM) {
+                                    const vfBBox: any = vfNoteM.getBoundingBox?.();
+                                    if (vfBBox && Number.isFinite(vfBBox.y)) {
+                                        const modX: number = (vfBBox.x ?? 0) / unitInPixels
+                                            - startStaffLine.PositionAndShape.AbsolutePosition.x;
+                                        const modY: number = vfBBox.y / unitInPixels - startStaffAbsY;
+                                        if (modX >= Math.min(startX, endX) && modX <= Math.max(startX, endX)) {
+                                            this.debugSkyPoints.push(new PointF2D(modX, modY));
+                                            this.debugSkyCategories.push("modifier");
+                                            if (Number.isFinite(vfBBox.w)) {
+                                                const modX2: number = (vfBBox.x + vfBBox.w) / unitInPixels
+                                                    - startStaffLine.PositionAndShape.AbsolutePosition.x;
+                                                if (modX2 >= Math.min(startX, endX) && modX2 <= Math.max(startX, endX)) {
+                                                    this.debugSkyPoints.push(new PointF2D(modX2, modY));
+                                                    this.debugSkyCategories.push("modifier");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             const vfNote: any = (note as any).vfnote?.[0];
                             const stemExtents: any = vfNote?.getStemExtents?.();
                             const stave: any = vfNote?.checkStave?.() || vfNote?.stave;
@@ -701,7 +726,23 @@ export class GraphicalSlur extends GraphicalCurve {
             addMeasureNotes(slurEndNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure);
         }
 
+        // Separate skyline/rest points for a dedicated bow computation.
+        const skylinePoints: PointF2D[] = [];
+        for (let pi: number = 0; pi < this.debugSkyPoints.length; pi++) {
+            const cat: string = this.debugSkyCategories[pi] ?? "";
+            if (cat !== "skyline" && cat !== "rest" && cat !== "modifier") { continue; }
+            const pt: PointF2D = this.debugSkyPoints[pi];
+            const t: number = (pt.x - startX) / dx;
+            if (t <= 0.15 || t >= 0.85) { continue; }
+            const chordY: number = startY + dy * t;
+            if (Math.abs(pt.y - chordY) > Math.abs(dy)) { continue; }
+            skylinePoints.push(pt);
+        }
+
         let clearanceBow: number = bow;
+        // Concrete obstacles (noteheads, stems): capped at StaffHeight to prevent
+        // ballooning on short slurs (M2, M4, etc.) where near-chord obstacles
+        // are already handled by the base bow geometry.
         for (const obstacle of concreteObstaclePoints) {
             const t: number = (obstacle.x - startX) / dx;
             if (t <= 0 || t >= 1) { continue; }
@@ -714,6 +755,20 @@ export class GraphicalSlur extends GraphicalCurve {
             if (requiredBow > clearanceBow) { clearanceBow = requiredBow; }
         }
         clearanceBow = Math.min(clearanceBow, startStaffLine.StaffHeight);
+        // Skyline obstacles (modifiers): use a proportional cap (distance-based)
+        // so long slurs (M10, M12, M21) can clear modifier heights.
+        let skyBow: number = clearanceBow;
+        for (const obstacle of skylinePoints) {
+            const t: number = (obstacle.x - startX) / dx;
+            const chordY: number = startY + dy * t;
+            const weight: number = 3 * t * (1 - t);
+            const requiredBow: number = this.placement === PlacementEnum.Above
+                ? (chordY - obstacle.y + rules.SlurNoteHeadYOffset) / weight
+                : (obstacle.y - chordY + rules.SlurNoteHeadYOffset) / weight;
+            if (requiredBow > skyBow) { skyBow = requiredBow; }
+        }
+        skyBow = Math.min(skyBow, Math.max(distance * 0.28, startStaffLine.StaffHeight * 2));
+        clearanceBow = Math.max(clearanceBow, skyBow);
         this.bezierStartPt = new PointF2D(startX, startY);
         this.bezierStartControlPt = new PointF2D(startX + dx * 0.3, startY + dy * 0.3 + bowSign * clearanceBow);
         this.bezierEndControlPt = new PointF2D(startX + dx * 0.7, startY + dy * 0.7 + bowSign * clearanceBow);
