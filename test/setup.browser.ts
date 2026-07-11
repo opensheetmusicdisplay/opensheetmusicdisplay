@@ -24,6 +24,7 @@ const MUSICXML_FILES: string[] = [
   "test_tuplet_crossstaff_alignment.musicxml",
   "Land_der_Berge.musicxml",
   "Mozart_String_Quartet_in_G_K._387_1st_Mvmnt_excerpt.musicxml",
+  "test_slurs_highNotes.musicxml",
 ];
 
 async function loadFiles(files: string[], _ext: string): Promise<void> {

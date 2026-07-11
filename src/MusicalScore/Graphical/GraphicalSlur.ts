@@ -1863,13 +1863,22 @@ export class GraphicalSlur extends GraphicalCurve {
         let widthFlattenFactor: number = 1;
         const cutoffAngle: number = this.rules.SlurHeightFlattenLongSlursCutoffAngle;
         const cutoffWidth: number = this.rules.SlurHeightFlattenLongSlursCutoffWidth;
-        // console.log("width: " + endX);
-        if (startAngle > cutoffAngle && endX > cutoffWidth) {
+        // Don't flatten when real obstacles exist (heightWidthRatio > 0.08).
+        // Steep angles from actual high notes must be preserved to clear them.
+        // The flattening is only aesthetic for smooth empty-staff slurs.
+        const obstacleRatio: number = points.length > 0 ? heightWidthRatio : 0;
+        const hasRealObstacles: boolean = obstacleRatio > 0.08;
+        // When real obstacles exist, slightly boost arc height so the cubic
+        // bezier (which peaks between the CPs) clears intermediate high notes.
+        if (hasRealObstacles) {
+            heightFactor *= 1.03;
+        }
+        if (!hasRealObstacles && startAngle > cutoffAngle && endX > cutoffWidth) {
             // Steep and wide: full formula with angle-dependent multiplier.
             widthFlattenFactor += endX / 70 * this.rules.SlurHeightFlattenLongSlursFactorByWidth;
             widthFlattenFactor *= 1 + (startAngle / 30 * this.rules.SlurHeightFlattenLongSlursFactorByAngle);
             heightFactor /= widthFlattenFactor;
-        } else if (endX > cutoffWidth * 2) {
+        } else if (!hasRealObstacles && endX > cutoffWidth * 2) {
             // Wide but not steep: stronger pure-width flattening.
             widthFlattenFactor += endX / 18 * this.rules.SlurHeightFlattenLongSlursFactorByWidth;
             heightFactor /= widthFlattenFactor;
@@ -1891,8 +1900,9 @@ export class GraphicalSlur extends GraphicalCurve {
         // use this HeightWidthRatio to get a "normalized" Factor (based on tested parameters)
         // this Factor denotes the Length of the TangentLine of the Curve (a proportion of the X-distance from StartPoint to EndPoint)
         // finally from this Length and the calculated Angles we get the coordinates of the Control Points
-        const factorStart: number = Math.min(0.5, Math.max(0.1, 1.7 * startAngle / 80 * heightFactor * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
-        const factorEnd: number = Math.min(0.5, Math.max(0.1, 1.7 * (-endAngle) / 80 * heightFactor * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
+        const maxFactor: number = hasRealObstacles ? 0.55 : 0.5;
+        const factorStart: number = Math.min(maxFactor, Math.max(0.1, 1.7 * startAngle / 80 * heightFactor * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
+        const factorEnd: number = Math.min(maxFactor, Math.max(0.1, 1.7 * (-endAngle) / 80 * heightFactor * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
 
         const startControlPoint: PointF2D = new PointF2D();
         startControlPoint.x = endX * factorStart * Math.cos(startAngle * GraphicalSlur.degreesToRadiansFactor);
