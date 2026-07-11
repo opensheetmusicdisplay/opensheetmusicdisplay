@@ -49,20 +49,19 @@ let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filt
 const dumpPositions = process.argv.includes("--dump-positions");
 const showSkyline = process.argv.includes("--show-skyline");
 imageFormat = imageFormat?.toLowerCase();
-if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
+const formats = imageFormat ? imageFormat.split(",").filter(Boolean).map(f => f === "svg-inline" ? "inline-svg" : f) : [];
+if (!osmdBuildDir || !sampleDir || !imageDir || formats.length === 0 || !formats.every(f => f === "png" || f === "svg" || f === "inline-svg")) {
     console.log("usage: " +
-        "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime] [--batch|--webgl] [--dump-positions] [--svg]");
+        "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory png|svg|inline-svg[,fmt...] [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime] [--batch|--webgl] [--dump-positions]");
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)');
     console.log("example: node test/Util/generateImages_browserless.mjs ../../build ./test/data/ ./export png");
-    console.log("  --svg            also generate SVG alongside PNG");
     console.log("  --dump-positions dump positions JSON alongside images");
     console.log("  --show-skyline   draw skyline/bottomline overlay (red/blue line)");
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
 }
-const alsoSvg = process.argv.includes("--svg");
-const formatsToRender = alsoSvg && imageFormat !== "svg" ? [imageFormat, "svg"] : [imageFormat];
+const formatsToRender = formats;
 const useWhiteTabNumberBackground = true;
 let pageFormat;
 if (!mode) { mode = ""; }
@@ -188,6 +187,7 @@ async function init () {
     for (const fmt of formatsToRender) {
         imageFormat = fmt;
         const backend = fmt === "png" ? "canvas" : "svg";
+        const isCurSvg = fmt === "svg" || fmt === "inline-svg";
         const osmdInstance = new OSMD.OpenSheetMusicDisplay(div, {
             autoResize: false,
             backend: backend,
@@ -199,8 +199,8 @@ async function init () {
         if (useWhiteTabNumberBackground && backend === "png") {
             osmdInstance.EngravingRules.pageBackgroundColor = "#FFFFFF";
         }
-        if (backend === "svg") {
-            osmdInstance.EngravingRules.SVGFontEmbedding = "inline";
+        if (isCurSvg) {
+            osmdInstance.EngravingRules.SVGFontEmbedding = fmt === "inline-svg" ? "none" : "import";
         }
         if (DEBUG) {
             osmdInstance.setLogLevel("debug");
@@ -313,25 +313,29 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
                 break;
             }
             dataUrls.push(canvasImage.toDataURL());
-        } else if (imageFormat === "svg") {
+        } else if (imageFormat === "svg" || imageFormat === "inline-svg") {
             const svgPageId = "osmdSvgPage" + pageNumber;
             if (!document.getElementById(svgPageId)) { break; }
             const backend = osmdInstance.drawer.Backends[pageNumber - 1];
-            // Import variant (CDN font URLs)
-            osmdInstance.EngravingRules.SVGFontEmbedding = "import";
-            markupStrings.push({ markup: backend.getExportedSVGString(), suffix: "", pageNumber: pageNumber });
-            // Inline variant (base64 font data URIs) — suppress built-in injectFontCSS
-            osmdInstance.EngravingRules.SVGFontEmbedding = "none";
-            let inlineSvg = backend.getExportedSVGString();
-            inlineSvg = injectFontDataUris(inlineSvg);
-            markupStrings.push({ markup: inlineSvg, suffix: "_font-inline", pageNumber: pageNumber });
+            if (imageFormat === "svg") {
+                // Import variant (CDN font URLs)
+                osmdInstance.EngravingRules.SVGFontEmbedding = "import";
+                markupStrings.push({ markup: backend.getExportedSVGString(), suffix: "", pageNumber: pageNumber });
+            } else {
+                // Inline variant (base64 font data URIs)
+                osmdInstance.EngravingRules.SVGFontEmbedding = "none";
+                let inlineSvg = backend.getExportedSVGString();
+                inlineSvg = injectFontDataUris(inlineSvg);
+                markupStrings.push({ markup: inlineSvg, suffix: "_font-inline", pageNumber: pageNumber });
+            }
         }
     }
 
     for (let pageIndex = 0; pageIndex < Math.max(dataUrls.length, markupStrings.length); pageIndex++) {
         const pageNumberingString = `${pageIndex + 1}`;
         const fileNameAddition = options.fileNameAddition ?? "";
-        const pageFilename = `${imageDir}/${sampleFilename}_${fileNameAddition}${pageNumberingString}.${imageFormat}`;
+        const ext = imageFormat === "inline-svg" ? "svg" : imageFormat;
+        const pageFilename = `${imageDir}/${sampleFilename}_${fileNameAddition}${pageNumberingString}.${ext}`;
 
         if (imageFormat === "png") {
             const dataUrl = dataUrls[pageIndex];
@@ -343,14 +347,14 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             const imageBuffer = Buffer.from(imageData, "base64");
             debug("got image data, saving to: " + pageFilename, DEBUG);
             FS.writeFileSync(pageFilename, imageBuffer, { encoding: "base64" });
-        } else if (imageFormat === "svg") {
+        } else if (imageFormat === "svg" || imageFormat === "inline-svg") {
             const entry = markupStrings[pageIndex];
             if (!entry || !entry.markup) {
                 debug(`error: could not get markup for page ${pageIndex + 1} of sample: ${sampleFilename}`);
                 continue;
             }
             const svgPageNum = entry.pageNumber ?? (pageIndex + 1);
-            const svgFilename = `${imageDir}/${sampleFilename}_${fileNameAddition}${svgPageNum}${entry.suffix}.${imageFormat}`;
+            const svgFilename = `${imageDir}/${sampleFilename}_${fileNameAddition}${svgPageNum}${entry.suffix}.svg`;
             debug("got svg markup data, saving to: " + svgFilename, DEBUG);
             FS.writeFileSync(svgFilename, entry.markup, { encoding: "utf-8" });
         }
