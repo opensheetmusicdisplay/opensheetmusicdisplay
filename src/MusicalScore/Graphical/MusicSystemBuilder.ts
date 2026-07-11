@@ -1296,7 +1296,12 @@ export class MusicSystemBuilder {
                     const endIdx: number = Math.min(lowerSkyLine.length - 1, j + 6);
                     let skylineValue: number = 0;
                     for (let lowerIdx: number = startIdx; lowerIdx <= endIdx; lowerIdx++) {
-                        skylineValue = Math.min(skylineValue, lowerSkyLine[lowerIdx]);
+                        // Cap skyline: elements extending >StaffHeight above a staff
+                        // are cross-staff (beams/slurs spanning grand staff) and
+                        // must not inflate within-system spacing. Within-staff content
+                        // (ledger lines, accidentals, stems) fits in StaffHeight.
+                        const cappedSky: number = Math.max(lowerSkyLine[lowerIdx], -this.rules.StaffHeight);
+                        skylineValue = Math.min(skylineValue, cappedSky);
                     }
 
                     const distance: number = bottomLineValue - skylineValue;
@@ -1511,7 +1516,8 @@ export class MusicSystemBuilder {
             const endIdx: number = Math.min(lowerSkyLineArray.length - 1, lowerCenterIdx + 6);
             let skylineValue: number = 0;
             for (let lowerIdx: number = startIdx; lowerIdx <= endIdx; lowerIdx++) {
-                skylineValue = Math.min(skylineValue, lowerSkyLineArray[lowerIdx]);
+                const cappedSky: number = Math.max(lowerSkyLineArray[lowerIdx], -this.rules.StaffHeight);
+                skylineValue = Math.min(skylineValue, cappedSky);
             }
 
             const distance: number = bottomLineValue - skylineValue;

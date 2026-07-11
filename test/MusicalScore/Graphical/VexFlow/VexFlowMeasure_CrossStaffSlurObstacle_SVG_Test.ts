@@ -867,11 +867,10 @@ describe("Debussy Mandoline stave and slur layout", () => {
         return renderDebussy().then((s: SVGElement) => { svg = s; });
     });
 
-    it("diagnostic: stave gap within first system", () => {
+    it("stave gap within first system not ballooned by cross-staff skyline", () => {
         // Measures the vertical distance between noteheads in the first system.
-        // This includes melody staff + piano grand staff. The gap between
-        // melody and piano staves may be enlarged by skyline from piano
-        // chords (pre-existing layout issue). No strict assertion — diagnostic.
+        // Cross-staff skyline elements (beams/slurs spanning grand staff) must
+        // not inflate the gap between melody and piano staves.
         expect(svg).to.not.be.null;
         const nhEls = svg.querySelectorAll("[class*='vf-notehead'] text");
         const ys: number[] = [];
@@ -880,7 +879,7 @@ describe("Debussy Mandoline stave and slur layout", () => {
             if (y > 0) { ys.push(y); }
         });
         const firstSystem: number[] = ys.filter((y: number) => y < 500);
-        if (firstSystem.length < 10) { expect(true).to.be.true; return; }
+        if (firstSystem.length < 10) { expect(firstSystem.length).to.be.at.least(10); return; }
         const minY: number = Math.min(...firstSystem);
         const maxY: number = Math.max(...firstSystem);
         const gap: number = maxY - minY;
@@ -889,10 +888,14 @@ describe("Debussy Mandoline stave and slur layout", () => {
         const clusters: string[] = [];
         let lastY: number = -100;
         for (const yv of [...new Set(firstSystem.map(y => Math.round(y / 10) * 10))].sort((a, b) => a - b)) {
-            if (lastY > 0 && yv - lastY > 40) { clusters.push(`gap ${lastY}→${y} = ${y - lastY}px`); }
+            if (lastY > 0 && yv - lastY > 40) { clusters.push(`gap ${lastY}→${yv} = ${yv - lastY}px`); }
             lastY = yv;
         }
         for (const c of clusters) { console.warn(`  ${c}`); }
+        // First system spans 3 staves with ~12-13 units each → ≤350px is reasonable.
+        // Previous ballooning gave ~380-400px.
+        expect(gap).to.be.lessThan(360,
+            `stave gap ${gap}px exceeds 360px — skyline from cross-staff elements inflating spacing`);
     });
 
     it("cross-staff slur CPs not ballooned within single system", () => {
