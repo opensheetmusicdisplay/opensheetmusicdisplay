@@ -19,6 +19,7 @@ module.exports = {
         extensions: ['.ts', '.tsx', '.js'],
         alias: {
             vexflow: path.resolve(__dirname, 'external/vexflow/entry/vexflow.ts'),
+            '../external/vexflow/build/esm/src/fonts/bravura.js': path.resolve(__dirname, 'external/vexflow/src/fonts/bravura.ts'),
             'structured-clone-es.js': path.resolve(__dirname, 'node_modules/structured-clone-es/dist/index.mjs')
         }
     },

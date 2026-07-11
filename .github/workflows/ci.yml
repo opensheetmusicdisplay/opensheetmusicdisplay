@@ -37,6 +37,6 @@ jobs:
       #   run: npm run build # included in npm install
 
       - name: Test
-        run: npm test
+        run: npx vitest run --maxWorkers=2
         env:
           CI: true

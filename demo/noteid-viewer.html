@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Note ID Overlay</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #f8f9fa; color: #333; }
+#toolbar {
+  position: sticky; top: 0; z-index: 100; background: #fff;
+  border-bottom: 1px solid #dee2e6; padding: 8px 16px;
+  display: flex; gap: 12px; align-items: center;
+}
+#toolbar button {
+  padding: 4px 12px; background: #fff; border: 1px solid #ced4da;
+  border-radius: 4px; font-size: 13px; cursor: pointer; color: #495057;
+}
+#toolbar button:hover { background: #e9ecef; }
+#toolbar input { font-size: 13px; }
+#status { font-size: 12px; color: #868e96; }
+#info {
+  font-size: 12px; color: #868e96; padding: 4px 16px;
+  border-bottom: 1px solid #f1f3f5;
+}
+#viewer { position: relative; overflow: auto; background: #fff; }
+#viewer svg { display: block; margin: 0; }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <strong>Note ID</strong>
+  <input type="file" id="fileInput" accept=".svg">
+  <button id="loadDemoBtn">Load Demo</button>
+  <button id="toggleAnimBtn">Pause</button>
+  <span id="status"></span>
+</div>
+<div id="info"></div>
+<div id="viewer"></div>
+
+<script>
+const viewer = document.getElementById('viewer');
+const info = document.getElementById('info');
+const status = document.getElementById('status');
+const fileInput = document.getElementById('fileInput');
+const loadDemoBtn = document.getElementById('loadDemoBtn');
+const toggleAnimBtn = document.getElementById('toggleAnimBtn');
+
+let animating = true;
+let frame = null;
+let overlays = [];
+
+function isDivisibleBy7(id) {
+  const n = parseInt(id.replace(/[^0-9]/g, ''), 10);
+  return !isNaN(n) && n % 7 === 0;
+}
+
+function clearOverlays() {
+  overlays.forEach(o => { if (o.el.parentNode) o.el.parentNode.removeChild(o.el); });
+  overlays = [];
+  if (frame) { cancelAnimationFrame(frame); frame = null; }
+}
+
+function placeSmileys(svgEl) {
+  clearOverlays();
+
+  const noteEls = svgEl.querySelectorAll('[data-note-id]');
+  if (!noteEls.length) { status.textContent = 'No data-note-id found'; return; }
+
+  const seen = new Set();
+  const ns = 'http://www.w3.org/2000/svg';
+
+  noteEls.forEach(el => {
+    const id = el.getAttribute('data-note-id');
+    if (seen.has(id)) return;
+    if (!isDivisibleBy7(id)) return;
+    seen.add(id);
+
+    const textEl = el.querySelector('text');
+    if (!textEl) return;
+    const cx = parseFloat(textEl.getAttribute('x')) + 6;
+    const cy = parseFloat(textEl.getAttribute('y')) - 6;
+
+    const g = document.createElementNS(ns, 'g');
+    g.setAttribute('transform', `translate(${cx}, ${cy})`);
+    g.style.cursor = 'pointer';
+
+    const circle = document.createElementNS(ns, 'circle');
+    circle.setAttribute('r', '6');
+    circle.setAttribute('fill', '#fab005');
+    circle.setAttribute('stroke', '#495057');
+    circle.setAttribute('stroke-width', '1');
+    g.appendChild(circle);
+
+    const txt = document.createElementNS(ns, 'text');
+    txt.setAttribute('text-anchor', 'middle');
+    txt.setAttribute('font-size', '8pt');
+    txt.setAttribute('y', '3');
+    txt.setAttribute('fill', '#495057');
+    txt.textContent = '😊';
+    g.appendChild(txt);
+
+    g.addEventListener('click', () => alert('Note ID: ' + id));
+    svgEl.appendChild(g);
+    overlays.push({ el: g, id, cx, cy, phase: (overlays.length * 0.7) % (Math.PI * 2), speed: 0.5 + (overlays.length % 3) * 0.3, bounce: 2 + (overlays.length % 4) * 1.5 });
+  });
+
+  info.textContent = seen.size + ' notes (every 7th)';
+  status.textContent = 'Click a smiley for note ID';
+  startDance();
+}
+
+function startDance() {
+  if (!animating) return;
+  let t = 0;
+  function tick() {
+    if (!animating) return;
+    t += 0.02;
+    for (const o of overlays)
+      o.el.setAttribute('transform', `translate(${o.cx}, ${o.cy + Math.sin(t * o.speed + o.phase) * o.bounce})`);
+    frame = requestAnimationFrame(tick);
+  }
+  frame = requestAnimationFrame(tick);
+}
+
+toggleAnimBtn.addEventListener('click', () => {
+  animating = !animating;
+  toggleAnimBtn.textContent = animating ? 'Pause' : 'Resume';
+  if (animating) startDance();
+  else if (frame) { cancelAnimationFrame(frame); frame = null; }
+});
+
+function loadSVG(text) {
+  const svgEl = new DOMParser().parseFromString(text, 'image/svg+xml').querySelector('svg');
+  if (!svgEl) { status.textContent = 'Invalid SVG'; return; }
+  const old = viewer.querySelector('svg');
+  if (old) old.remove();
+  viewer.appendChild(svgEl);
+  Promise.race([
+    document.fonts.ready,
+    new Promise(r => setTimeout(r, 800)),
+  ]).then(() => requestAnimationFrame(() => requestAnimationFrame(() => placeSmileys(svgEl))));
+}
+
+fileInput.addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => loadSVG(ev.target.result);
+  r.readAsText(f);
+});
+
+loadDemoBtn.addEventListener('click', () => {
+  const candidates = ['Beethoven_AnDieFerneGeliebte.xml_1_font-inline.svg', 'Beethoven_AnDieFerneGeliebte.xml_1.svg'];
+  (function tryLoad(i) {
+    if (i >= candidates.length) { status.textContent = 'Run: just osmd gen-single ^Beethoven'; return; }
+    fetch(candidates[i]).then(r => { if (!r.ok) throw Error(); return r.text(); }).then(loadSVG).catch(() => tryLoad(i + 1));
+  })(0);
+});
+
+status.textContent = 'Open an SVG or click Load Demo';
+</script>
+</body>
+</html>
