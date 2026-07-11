@@ -11,6 +11,7 @@ import {EngravingRules} from "../EngravingRules";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
+import { StaveModifierPosition } from "vexflow";
 
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(id: number, rules: EngravingRules) {
@@ -74,7 +75,7 @@ export class VexFlowMusicSystem extends MusicSystem {
             let connectorXShift: number = 0;
             if (lineType === SystemLinesEnum.BoldThinDots && linePosition === SystemLinePosition.MeasureBegin
                 && topMeasure.beginInstructionsWidth > 0) {
-                connectorXShift = vfTopMeasure.getVFStave().getModifierXShift(0);
+                connectorXShift = vfTopMeasure.getVFStave().getModifierXShift(StaveModifierPosition.BEGIN);
             }
 
             // create here the correct lines according to the given lineType.
