@@ -726,7 +726,12 @@ export class GraphicalSlur extends GraphicalCurve {
             addMeasureNotes(slurEndNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure);
         }
 
-        // Separate skyline/rest points for a dedicated bow computation.
+        // Separate skyline/rest/modifier points for a dedicated bow computation.
+        // The "skyline" category (from scanSky) captures ALL drawn elements and is
+        // prone to cross-staff noise (beams/slurs spanning grand staff). Filter it
+        // to within StaffHeight of the chord — beyond that is unrealistic for any
+        // within-staff element. Modifiers (accidentals, articulations) and rests
+        // are precise obstacles and use the full |dy| bound.
         const skylinePoints: PointF2D[] = [];
         for (let pi: number = 0; pi < this.debugSkyPoints.length; pi++) {
             const cat: string = this.debugSkyCategories[pi] ?? "";
@@ -736,6 +741,8 @@ export class GraphicalSlur extends GraphicalCurve {
             if (t <= 0.15 || t >= 0.85) { continue; }
             const chordY: number = startY + dy * t;
             if (Math.abs(pt.y - chordY) > Math.abs(dy)) { continue; }
+            // General skyline includes cross-staff drawing noise; clamp to StaffHeight.
+            if (cat === "skyline" && Math.abs(pt.y - chordY) > startStaffLine.StaffHeight) { continue; }
             skylinePoints.push(pt);
         }
 
