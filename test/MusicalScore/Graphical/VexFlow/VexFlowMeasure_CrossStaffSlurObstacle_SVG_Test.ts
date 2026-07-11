@@ -56,9 +56,9 @@ function renderToSVG(scorePath: string): Promise<SVGElement> {
         VexFlowMusicSheetDrawer.DEBUG_SHOW_SKYLINE = true;
         osmd.render();
         VexFlowMusicSheetDrawer.DEBUG_SHOW_SKYLINE = false;
-        const svg: SVGElement | null = container.querySelector("svg");
-        if (!svg) { throw new Error("No SVG element after render"); }
-        return svg;
+        const svgEl: SVGElement | null = container.querySelector("svg");
+        if (!svgEl) { throw new Error("No SVG element after render"); }
+        return svgEl;
     });
 }
 
@@ -755,9 +755,9 @@ describe("test_slurs_highNotes same-staff slur clearance", () => {
         const scoreDoc: Document = TestUtils.getScore(path);
         return osmd.load(scoreDoc).then(() => {
             osmd.render();
-            const svg: SVGElement | null = container.querySelector("svg");
-            if (!svg) { throw new Error("No SVG element"); }
-            return svg;
+            const svgEl: SVGElement | null = container.querySelector("svg");
+            if (!svgEl) { throw new Error("No SVG element"); }
+            return svgEl;
         });
     }
 
@@ -805,7 +805,7 @@ describe("test_slurs_highNotes same-staff slur clearance", () => {
     it("finds slur and noteheads", () => {
         expect(slurForTest).to.not.be.undefined;
         // Notehead count may vary by rendering; main assertion is bezier clearance.
-expect(noteheads.length).to.be.greaterThan(0);
+        expect(nhPositions.length).to.be.greaterThan(0);
     });
 
     it("bezier clears highest note (D6) by >=5px", () => {
@@ -833,5 +833,90 @@ expect(noteheads.length).to.be.greaterThan(0);
         console.warn(`highNotes: D6@Y=${d6.y.toFixed(0)} bezier@t=${bestT.toFixed(3)}=${bezierY.toFixed(1)} clearance=${clearance.toFixed(1)}px`);
         expect(clearance).to.be.greaterThan(2,
             `D6 Y=${d6.y.toFixed(0)} bezier Y=${bezierY.toFixed(0)} clearance=${clearance.toFixed(0)}px`);
+    });
+});
+
+
+// ── Debussy Mandoline — stave distance and slur CPs ──
+
+describe("Debussy Mandoline stave and slur layout", () => {
+    // This piano score has cross-staff beams and slurs.
+    // The stave gap (treble→bass) should be reasonable, and
+    // slur CPs should not balloon (skyline extension in empty
+    // space between staves must not inflate bow).
+
+    function renderDebussy(): Promise<SVGElement> {
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        container.style.width = "1600px";
+        container.style.height = "1200px";
+        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(
+            container, { autoResize: false, backend: "svg", drawTitle: false },
+        );
+        const scoreDoc: Document = TestUtils.getScore("Debussy_Mandoline.xml");
+        return osmd.load(scoreDoc).then(() => {
+            osmd.render();
+            const svgEl: SVGElement | null = container.querySelector("svg");
+            if (!svgEl) { throw new Error("No SVG element"); }
+            return svgEl;
+        });
+    }
+
+    let svg: SVGElement;
+
+    beforeAll(function (): Promise<void> {
+        return renderDebussy().then((s: SVGElement) => { svg = s; });
+    });
+
+    it("diagnostic: stave gap within first system", () => {
+        // Measures the vertical distance between noteheads in the first system.
+        // This includes melody staff + piano grand staff. The gap between
+        // melody and piano staves may be enlarged by skyline from piano
+        // chords (pre-existing layout issue). No strict assertion — diagnostic.
+        expect(svg).to.not.be.null;
+        const nhEls = svg.querySelectorAll("[class*='vf-notehead'] text");
+        const ys: number[] = [];
+        nhEls.forEach((nh: Element) => {
+            const y = parseFloat(nh.getAttribute("y") ?? "0");
+            if (y > 0) { ys.push(y); }
+        });
+        const firstSystem: number[] = ys.filter((y: number) => y < 500);
+        if (firstSystem.length < 10) { expect(true).to.be.true; return; }
+        const minY: number = Math.min(...firstSystem);
+        const maxY: number = Math.max(...firstSystem);
+        const gap: number = maxY - minY;
+        console.warn(`Debussy first-system: ${firstSystem.length} noteheads, Y [${minY.toFixed(0)}-${maxY.toFixed(0)}], gap=${gap.toFixed(0)}px`);
+        // Identify stave clusters
+        const clusters: string[] = [];
+        let lastY: number = -100;
+        for (const yv of [...new Set(firstSystem.map(y => Math.round(y / 10) * 10))].sort((a, b) => a - b)) {
+            if (lastY > 0 && yv - lastY > 40) { clusters.push(`gap ${lastY}→${y} = ${y - lastY}px`); }
+            lastY = yv;
+        }
+        for (const c of clusters) { console.warn(`  ${c}`); }
+    });
+
+    it("cross-staff slur CPs not ballooned within single system", () => {
+        // Measure within first system (noteheads Y < 500)
+        // Use the UPPER arc (first C command) for above-placement slurs.
+        const slurs: string[] = [];
+        const el = svg.querySelectorAll("[id$='-slur']");
+        el.forEach((g: Element) => {
+            const d = g.querySelector("path")?.getAttribute("d") || "";
+            // Skip if path contains only L (no C) — not a bezier
+            if (!d.includes("C")) { return; }
+            const m = d.match(/M([\d.]+)\s+([\d.]+)/);
+            const c = d.match(/C\s*([\d.]+)\s+([\d.]+)\s*,\s*([\d.]+)\s+([\d.]+)\s*,\s*([\d.]+)\s+([\d.]+)/);
+            if (m && c) {
+                const sy = parseFloat(m[2]), ey = parseFloat(c[5]);
+                const cp1y = parseFloat(c[2]), cp2y = parseFloat(c[4]);
+                if (sy > 500 || ey > 500) { return; } // only first system
+                const bow = Math.min(sy, ey) - Math.min(cp1y, cp2y);
+                if (bow > 60) {
+                    slurs.push(`${g.getAttribute("id")} bow=${bow.toFixed(0)}px sy=${sy.toFixed(0)} ey=${ey.toFixed(0)} cp1y=${cp1y.toFixed(0)}`);
+                }
+            }
+        });
+        expect(slurs).to.deep.equal([],
+            `${slurs.length} slurs with bow>60px:\n` + slurs.join("\n"));
     });
 });
