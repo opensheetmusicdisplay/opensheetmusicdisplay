@@ -23,6 +23,7 @@ import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/C
 import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
 import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
+import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
 
 describe("VexFlow Measure", () => {
 
@@ -54,6 +55,25 @@ describe("VexFlow Measure", () => {
       expect(gms.MeasureList[0].length).to.equal(1);
       expect(gms.MeasureList[0][0].staffEntries.length).to.equal(0);
       done();
+   });
+
+   it("Renders a tie between enharmonic spellings", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_tie_enharmonic_spelling_1694.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const graphicalTies: GraphicalTie[] = osmd.GraphicSheet.MeasureList
+            .flatMap((measureList: GraphicalMeasure[]): GraphicalMeasure[] => measureList)
+            .flatMap((measure: GraphicalMeasure): GraphicalStaffEntry[] => measure.staffEntries)
+            .flatMap((staffEntry: GraphicalStaffEntry): GraphicalTie[] => staffEntry.GraphicalTies);
+
+         expect(graphicalTies.length).to.equal(1);
+         const tieStartNote: VexFlowGraphicalNote = graphicalTies[0].StartNote as VexFlowGraphicalNote;
+         expect(tieStartNote.getTieSVGs().length, "tie curve is present in the rendered SVG").to.be.greaterThan(0);
+         done();
+      }).catch(done);
    });
 
    // Non-regression test for grace note fingering positioning

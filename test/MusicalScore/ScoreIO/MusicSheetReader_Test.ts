@@ -220,4 +220,31 @@ describe("Music Sheet Reader", () => {
             done();
         });
     });
+
+    describe("Enharmonic ties", () => {
+        const enharmonicTiePath: string = "test/data/test_tie_enharmonic_spelling_1694.musicxml";
+        let enharmonicTieSheet: MusicSheet;
+        let tiedNotes: Note[];
+
+        before((): void => {
+            const doc: Document = getSheet(enharmonicTiePath);
+            expect(doc).to.not.be.undefined;
+            const enharmonicTieScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            enharmonicTieSheet = reader.createMusicSheet(enharmonicTieScore, enharmonicTiePath);
+            tiedNotes = enharmonicTieSheet.Instruments[0].Voices[0].VoiceEntries
+                .flatMap((voiceEntry: VoiceEntry): Note[] => voiceEntry.Notes)
+                .filter((note: Note): boolean => !note.isRest());
+        });
+
+        it("links tie notes with enharmonic spellings", (done: Mocha.Done) => {
+            expect(tiedNotes.length).to.equal(2);
+            expect(tiedNotes[0].Pitch.getHalfTone()).to.equal(tiedNotes[1].Pitch.getHalfTone());
+            expect(tiedNotes[0].Pitch.FundamentalNote).to.not.equal(tiedNotes[1].Pitch.FundamentalNote);
+            expect(tiedNotes[0].NoteTie).to.not.be.undefined;
+            expect(tiedNotes[1].NoteTie).to.equal(tiedNotes[0].NoteTie);
+            expect(tiedNotes[0].NoteTie.Notes).to.deep.equal(tiedNotes);
+            expect(Object.keys(enharmonicTieSheet.Staves[0].openTieDict)).to.be.empty;
+            done();
+        });
+    });
 });
