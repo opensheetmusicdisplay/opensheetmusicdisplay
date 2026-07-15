@@ -1147,16 +1147,35 @@ export class VoiceGenerator {
           }
 
         }
-      } else if (tieNodeList.length === 2) { // stop+start
-        const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
-        if (tieNumber >= 0) {
-          const tie: Tie = this.openTieDict[tieNumber];
-          tie.AddNote(this.currentNote);
+      } else if (tieNodeList.length === 2) { // stop+start OR two starts (export quirk)
+        const type0: string = tieNodeList[0].attribute("type").value;
+        const type1: string = tieNodeList[1].attribute("type").value;
+        if (type0 === "start" && type1 === "start") {
+          // Two <tied type="start"/> on one note: direction info + bare tie start.
+          // Notation software export quirk. Treat as a single tie start.
+          const newTieNumber: number = this.getNextAvailableNumberForTie();
+          const tie: Tie = new Tie(this.currentNote, tieType);
+          this.openTieDict[newTieNumber] = tie;
+          tie.TieNumber = newTieNumber;
           for (const tieNode of tieNodeList) {
-            const type: string = tieNode.attribute("type").value;
-            if (type === "start") {
-              const placement: PlacementEnum = this.getTieDirection(tieNode);
-              tie.NoteIndexToTieDirection[tie.Notes.length - 1] = placement;
+            const dir: PlacementEnum = this.getTieDirection(tieNode);
+            if (dir !== PlacementEnum.NotYetDefined) {
+              tie.TieDirection = dir;
+              break;
+            }
+          }
+        } else {
+          // stop+start: same note ends one tie and starts another
+          const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
+          if (tieNumber >= 0) {
+            const tie: Tie = this.openTieDict[tieNumber];
+            tie.AddNote(this.currentNote);
+            for (const tieNode of tieNodeList) {
+              const type: string = tieNode.attribute("type").value;
+              if (type === "start") {
+                const placement: PlacementEnum = this.getTieDirection(tieNode);
+                tie.NoteIndexToTieDirection[tie.Notes.length - 1] = placement;
+              }
             }
           }
         }
