@@ -1290,7 +1290,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         startStaffEntry = startMeasure.staffEntries[0];
       }
       let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
-      if (!endStaffEntry) {
+      if (!endStaffEntry && endTimeStamp) {
+        // endTimeStamp can be undefined for an unterminated octave-shift (start without stop,
+        //   e.g. from OMR-generated MusicXML), see #1439 / #1376 for similar cases.
         // No exact match (e.g. pending stop with computed inclusive end).
         // Find the latest staff entry at or before the end timestamp.
         for (let i: number = endMeasure.staffEntries.length - 1; i >= 0; i--) {
