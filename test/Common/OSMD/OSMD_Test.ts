@@ -12,8 +12,10 @@ import { Staff } from "../../../src/MusicalScore/VoiceData/Staff";
 import { Voice } from "../../../src/MusicalScore/VoiceData/Voice";
 import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
+import { GraphicalLabel } from "../../../src/MusicalScore/Graphical/GraphicalLabel";
 import { Fraction } from "../../../src/Common/DataObjects/Fraction";
 import { AccidentalEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
+import { SourceStaffEntry } from "../../../src/MusicalScore/VoiceData/SourceStaffEntry";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -150,6 +152,55 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             },
             done
         );
+    });
+
+    it("updates one staff entry's fingerings without replacing the rendered sheet", async () => {
+        const score: Document = TestUtils.getScore("test_fingering_Simple_Chords_Treble_Bass.musicxml");
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        await osmd.load(score);
+        osmd.render();
+
+        let sourceStaffEntry: SourceStaffEntry;
+        for (const measure of osmd.Sheet.SourceMeasures) {
+            for (const verticalContainer of measure.VerticalSourceStaffEntryContainers) {
+                sourceStaffEntry = verticalContainer.StaffEntries.find(
+                    (entry: SourceStaffEntry) => osmd.getFingeringValues(entry).length > 0
+                );
+                if (sourceStaffEntry) {
+                    break;
+                }
+            }
+            if (sourceStaffEntry) {
+                break;
+            }
+        }
+
+        expect(sourceStaffEntry).to.not.equal(undefined);
+        const nativeValues: string[] = osmd.getFingeringValues(sourceStaffEntry);
+        const sheetSvg: SVGElement = div.querySelector("svg");
+        const graphicalStaffEntry: GraphicalStaffEntry = osmd.GraphicSheet.GetGraphicalFromSourceStaffEntry(sourceStaffEntry);
+        const nativeAnchorY: number = graphicalStaffEntry.FingeringEntries[0].PositionAndShape.RelativePosition.y;
+
+        // Removing native MusicXML fingerings must not let their stale skyline contribution push a later
+        // replacement away from the note.
+        osmd.setFingeringValues(sourceStaffEntry, []);
+        expect(osmd.getFingeringValues(sourceStaffEntry)).to.deep.equal([]);
+        expect(osmd.getNativeFingeringValues(sourceStaffEntry)).to.deep.equal(nativeValues);
+        expect(graphicalStaffEntry.FingeringEntries.length).to.equal(0);
+        expect(div.querySelector("svg")).to.equal(sheetSvg);
+
+        expect(osmd.setFingeringValues(sourceStaffEntry, ["1", "3", "5"])).to.equal(true);
+        expect(osmd.getFingeringValues(sourceStaffEntry)).to.deep.equal(["1", "3", "5"]);
+        expect(osmd.getNativeFingeringValues(sourceStaffEntry)).to.deep.equal(nativeValues);
+        const updatedLabels: GraphicalLabel[] = graphicalStaffEntry.FingeringEntries;
+        expect(updatedLabels.map((label: GraphicalLabel) => label.SVGNode?.textContent)).to.deep.equal(["1", "3", "5"]);
+        expect(updatedLabels[0].PositionAndShape.RelativePosition.y).to.equal(nativeAnchorY);
+        expect(div.querySelector("svg")).to.equal(sheetSvg);
+
+        osmd.setFingeringValues(sourceStaffEntry, undefined);
+        expect(osmd.getFingeringValues(sourceStaffEntry)).to.deep.equal(nativeValues);
+        expect(div.querySelector("svg")).to.equal(sheetSvg);
     });
 
     it.skip("Timeout from server", (done: Mocha.Done) => {

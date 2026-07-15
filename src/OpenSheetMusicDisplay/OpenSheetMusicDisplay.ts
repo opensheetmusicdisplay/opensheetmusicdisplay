@@ -17,9 +17,9 @@ import { DrawingParametersEnum } from "../Common/Enums/DrawingParametersEnum";
 import { ColoringModes } from "../Common/Enums/ColoringModes";
 import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions, CursorType } from "./OSMDOptions";
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
-import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
+import { AbstractExpression, PlacementEnum } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { Dictionary } from "typescript-collections";
-import { AutoColorSet } from "../MusicalScore/Graphical/DrawingEnums";
+import { AutoColorSet, GraphicalLayers } from "../MusicalScore/Graphical/DrawingEnums";
 import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage";
 import { MusicSystem } from "../MusicalScore/Graphical/MusicSystem";
 import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
@@ -50,6 +50,15 @@ import {
     RangeSelectionPayload
 } from "./RangeSelection";
 import { TemposCalculator } from "../MusicalScore/ScoreIO/MusicSymbolModules/TemposCalculator";
+import { SourceStaffEntry } from "../MusicalScore/VoiceData/SourceStaffEntry";
+import { TechnicalInstruction, TechnicalInstructionType } from "../MusicalScore/VoiceData/Instructions/TechnicalInstruction";
+import { Label } from "../MusicalScore/Label";
+import { TextAlignmentEnum } from "../Common/Enums/TextAlignment";
+import { VoiceEntry } from "../MusicalScore/VoiceData/VoiceEntry";
+import { Note } from "../MusicalScore/VoiceData/Note";
+import { BoundingBox } from "../MusicalScore/Graphical/BoundingBox";
+import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
+import { SkyBottomLineCalculator } from "../MusicalScore/Graphical/SkyBottomLineCalculator";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -69,6 +78,15 @@ export class OpenSheetMusicDisplay {
     // at release, bump version and change to -release, afterwards to -dev again
     private lastMinMeasureToDrawIndex: number = 0;
     private lastMaxMeasureToDrawIndex: number = Number.MAX_SAFE_INTEGER;
+    /** Native MusicXML fingerings temporarily replaced by setFingeringValues(). */
+    private readonly nativeFingeringBackups: WeakMap<SourceStaffEntry, TechnicalInstruction[]> = new WeakMap();
+    /** Staff entries with an active override. An empty override intentionally hides native fingerings. */
+    private readonly fingeringOverrides: WeakSet<SourceStaffEntry> = new WeakSet();
+    /**
+     * Closest-to-note label position, retained while an override is empty. The staff skyline still
+     * contains the removed native label, so querying it again would incorrectly push a replacement outward.
+     */
+    private readonly fingeringAnchors: WeakMap<SourceStaffEntry, number> = new WeakMap();
 
     /**
      * Creates and attaches an OpenSheetMusicDisplay object to an HTML element container.<br>
@@ -2214,6 +2232,223 @@ export class OpenSheetMusicDisplay {
     public get EngravingRules(): EngravingRules { // custom getter, useful for engraving parameter setting in Demo
         return this.rules;
     }
+
+    /**
+     * Returns the effective fingering values for a source staff entry. This includes native MusicXML
+     * fingerings until they are replaced with setFingeringValues().
+     */
+    public getFingeringValues(sourceStaffEntry: SourceStaffEntry): string[] {
+        if (!sourceStaffEntry) {
+            return [];
+        }
+        const values: string[] = [];
+        for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
+            for (const instruction of voiceEntry.TechnicalInstructions) {
+                if (instruction.type === TechnicalInstructionType.Fingering && instruction.value) {
+                    values.push(instruction.value);
+                }
+            }
+        }
+        return values;
+    }
+
+    /** Returns the original MusicXML fingering values even while an in-memory override is active. */
+    public getNativeFingeringValues(sourceStaffEntry: SourceStaffEntry): string[] {
+        if (!sourceStaffEntry) {
+            return [];
+        }
+        const instructions: TechnicalInstruction[] = this.fingeringOverrides.has(sourceStaffEntry) ?
+            this.nativeFingeringBackups.get(sourceStaffEntry) ?? [] : this.getFingeringInstructions(sourceStaffEntry);
+        return instructions.map((instruction: TechnicalInstruction) => instruction.value).filter((value: string) => !!value);
+    }
+
+    /**
+     * Replaces all fingerings at one staff entry and redraws only its fingering labels.
+     *
+     * Passing an array (including an empty array) creates an in-memory override. Passing undefined
+     * removes the override and restores the original MusicXML fingerings. No layout or full-sheet
+     * render is performed, so note SVG nodes, event handlers, and scroll position remain untouched.
+     * Live visual updates are supported by the SVG backend; Canvas reflects the source change on its
+     * next render.
+     */
+    public setFingeringValues(sourceStaffEntry: SourceStaffEntry, values: string[] = undefined): boolean {
+        if (!sourceStaffEntry) {
+            return false;
+        }
+
+        if (values === undefined) {
+            if (!this.fingeringOverrides.has(sourceStaffEntry)) {
+                return true;
+            }
+            this.removeFingeringInstructions(sourceStaffEntry);
+            for (const instruction of this.nativeFingeringBackups.get(sourceStaffEntry) ?? []) {
+                const voiceEntry: VoiceEntry = instruction.sourceNote?.ParentVoiceEntry ?? sourceStaffEntry.VoiceEntries[0];
+                if (voiceEntry && voiceEntry.TechnicalInstructions.indexOf(instruction) < 0) {
+                    voiceEntry.TechnicalInstructions.push(instruction);
+                }
+                if (instruction.sourceNote) {
+                    instruction.sourceNote.Fingering = instruction;
+                }
+            }
+            this.fingeringOverrides.delete(sourceStaffEntry);
+            this.nativeFingeringBackups.delete(sourceStaffEntry);
+        } else {
+            const normalizedValues: string[] = values
+                .filter((value: string) => /^[1-5]$/.test(value))
+                .filter((value: string, index: number, all: string[]) => all.indexOf(value) === index);
+            const currentValues: string[] = this.getFingeringValues(sourceStaffEntry);
+            if (this.fingeringOverrides.has(sourceStaffEntry) &&
+                currentValues.length === normalizedValues.length &&
+                currentValues.every((value: string, index: number) => value === normalizedValues[index])) {
+                return true;
+            }
+
+            const sourceNote: Note = sourceStaffEntry.VoiceEntries
+                .filter(voiceEntry => !voiceEntry.IsGrace)
+                .reduce((notes, voiceEntry) => notes.concat(voiceEntry.Notes), [])
+                .find(note => !!note.Pitch);
+            if (!sourceNote && normalizedValues.length > 0) {
+                return false;
+            }
+
+            if (!this.fingeringOverrides.has(sourceStaffEntry)) {
+                this.nativeFingeringBackups.set(sourceStaffEntry, this.getFingeringInstructions(sourceStaffEntry));
+            }
+            this.removeFingeringInstructions(sourceStaffEntry);
+            for (const value of normalizedValues) {
+                const instruction: TechnicalInstruction = new TechnicalInstruction();
+                instruction.type = TechnicalInstructionType.Fingering;
+                instruction.value = value;
+                instruction.sourceNote = sourceNote;
+                sourceNote.ParentVoiceEntry.TechnicalInstructions.push(instruction);
+                sourceNote.Fingering = instruction;
+            }
+            this.fingeringOverrides.add(sourceStaffEntry);
+        }
+
+        const graphicalStaffEntry: GraphicalStaffEntry = this.graphic?.GetGraphicalFromSourceStaffEntry(sourceStaffEntry);
+        if (graphicalStaffEntry && this.backendType === BackendType.SVG) {
+            this.redrawFingeringLabels(graphicalStaffEntry, this.getFingeringInstructions(sourceStaffEntry));
+        }
+        return true;
+    }
+
+    private getFingeringInstructions(sourceStaffEntry: SourceStaffEntry): TechnicalInstruction[] {
+        const result: TechnicalInstruction[] = [];
+        for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
+            for (const instruction of voiceEntry.TechnicalInstructions) {
+                if (instruction.type === TechnicalInstructionType.Fingering) {
+                    result.push(instruction);
+                }
+            }
+        }
+        return result;
+    }
+
+    private removeFingeringInstructions(sourceStaffEntry: SourceStaffEntry): void {
+        for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
+            for (let index: number = voiceEntry.TechnicalInstructions.length - 1; index >= 0; index--) {
+                const instruction: TechnicalInstruction = voiceEntry.TechnicalInstructions[index];
+                if (instruction.type !== TechnicalInstructionType.Fingering) {
+                    continue;
+                }
+                voiceEntry.TechnicalInstructions.splice(index, 1);
+                if (instruction.sourceNote?.Fingering === instruction) {
+                    instruction.sourceNote.Fingering = undefined;
+                }
+            }
+        }
+    }
+
+    private redrawFingeringLabels(graphicalStaffEntry: GraphicalStaffEntry,
+                                  instructions: TechnicalInstruction[]): void {
+        const oldLabels: GraphicalLabel[] = graphicalStaffEntry.FingeringEntries ?? [];
+        const sourceStaffEntry: SourceStaffEntry = graphicalStaffEntry.sourceStaffEntry;
+        const renderedAnchorY: number = oldLabels[0]?.PositionAndShape.RelativePosition.y;
+        if (renderedAnchorY !== undefined) {
+            this.fingeringAnchors.set(sourceStaffEntry, renderedAnchorY);
+        }
+        const anchorY: number = renderedAnchorY ?? this.fingeringAnchors.get(sourceStaffEntry);
+        for (const oldLabel of oldLabels) {
+            if (oldLabel.SVGNode?.parentNode) {
+                oldLabel.SVGNode.parentNode.removeChild(oldLabel.SVGNode);
+            }
+            const parent: BoundingBox = oldLabel.PositionAndShape.Parent;
+            const childIndex: number = parent?.ChildElements.indexOf(oldLabel.PositionAndShape) ?? -1;
+            if (childIndex >= 0) {
+                parent.ChildElements.splice(childIndex, 1);
+            }
+        }
+        graphicalStaffEntry.FingeringEntries = [];
+        if (instructions.length === 0 || !this.drawer) {
+            return;
+        }
+
+        const measure: GraphicalMeasure = graphicalStaffEntry.parentMeasure;
+        let placement: PlacementEnum = this.rules.FingeringPosition;
+        if (placement === PlacementEnum.NotYetDefined || placement === PlacementEnum.AboveOrBelow) {
+            placement = measure.isUpperStaffOfInstrument() ? PlacementEnum.Above : PlacementEnum.Below;
+        }
+        if (placement === PlacementEnum.Left || placement === PlacementEnum.Right) {
+            return;
+        }
+
+        const staffLine: StaffLine = measure.ParentStaffLine;
+        const staffEntryX: number = graphicalStaffEntry.PositionAndShape.RelativePosition.x +
+            measure.PositionAndShape.RelativePosition.x;
+        const orderedInstructions: TechnicalInstruction[] = instructions.slice();
+        if (placement === PlacementEnum.Below) {
+            orderedInstructions.reverse();
+        }
+
+        let previousBoundary: number = undefined;
+        for (let index: number = 0; index < orderedInstructions.length; index++) {
+            const instruction: TechnicalInstruction = orderedInstructions[index];
+            const alignment: TextAlignmentEnum = placement === PlacementEnum.Above ?
+                TextAlignmentEnum.CenterBottom : TextAlignmentEnum.CenterTop;
+            const label: Label = new Label(instruction.value, alignment);
+            if (instruction.fontFamily) {
+                label.fontFamily = instruction.fontFamily;
+            }
+            const graphicalLabel: GraphicalLabel = new GraphicalLabel(
+                label, this.rules.FingeringTextSize, alignment, this.rules, staffLine.PositionAndShape);
+            graphicalLabel.PositionAndShape.RelativePosition.x = staffEntryX;
+            graphicalLabel.setLabelPositionAndShapeBorders();
+
+            if (index === 0 && anchorY !== undefined) {
+                graphicalLabel.PositionAndShape.RelativePosition.y = anchorY;
+            } else if (index > 0) {
+                graphicalLabel.PositionAndShape.RelativePosition.y = previousBoundary +
+                    (placement === PlacementEnum.Above ? -this.rules.FingeringPaddingY : this.rules.FingeringPaddingY);
+            } else {
+                const labelLeft: number = staffEntryX + graphicalLabel.PositionAndShape.BorderMarginLeft;
+                const labelRight: number = staffEntryX + graphicalLabel.PositionAndShape.BorderMarginRight;
+                const entryLeft: number = staffEntryX + graphicalStaffEntry.PositionAndShape.BorderLeft;
+                const entryRight: number = staffEntryX + graphicalStaffEntry.PositionAndShape.BorderRight;
+                const marginLeft: number = Math.min(labelLeft, entryLeft);
+                const marginRight: number = Math.max(labelRight, entryRight);
+                const skyline: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+                const furthest: number = placement === PlacementEnum.Above ?
+                    skyline.getSkyLineMinInRange(marginLeft, marginRight) :
+                    skyline.getBottomLineMaxInRange(marginLeft, marginRight);
+                const offset: number = this.rules.FingeringOffsetY + (placement === PlacementEnum.Above ? 0.1 : 0);
+                graphicalLabel.PositionAndShape.RelativePosition.y = furthest +
+                    (placement === PlacementEnum.Above ? -offset : offset);
+            }
+
+            graphicalLabel.PositionAndShape.calculateBoundingBox();
+            graphicalLabel.PositionAndShape.setAbsolutePositionFromParent();
+            previousBoundary = graphicalLabel.PositionAndShape.RelativePosition.y +
+                (placement === PlacementEnum.Above ? graphicalLabel.PositionAndShape.BorderTop :
+                    graphicalLabel.PositionAndShape.BorderBottom);
+            graphicalLabel.SVGNode = this.drawer.drawLabel(graphicalLabel, GraphicalLayers.Notes);
+            graphicalStaffEntry.FingeringEntries.push(graphicalLabel);
+            if (index === 0 && !this.fingeringAnchors.has(sourceStaffEntry)) {
+                this.fingeringAnchors.set(sourceStaffEntry, graphicalLabel.PositionAndShape.RelativePosition.y);
+            }
+        }
+    }
+
     /** Returns the version of OSMD this object is built from (the version you are using). */
     public get Version(): string {
         return this.version;
