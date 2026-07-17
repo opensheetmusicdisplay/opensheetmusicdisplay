@@ -67,8 +67,18 @@ export class AccidentalCalculator {
 
         const tie: Tie = graphicalNote.sourceNote.NoteTie;
         if (tie && graphicalNote.sourceNote !== tie.StartNote) {
-            return; // don't add accidentals on continued tie note
-            // note that continued tie notes may incorrectly use the same pitch object, with the same accidentalXml value.
+            // A continued tie note normally repeats the start note's pitch, so its accidental is
+            // suppressed (it's the same sounding-and-spelled note held on). But an enharmonic tie
+            // (e.g. F#–Gb, see #1694) connects two different spellings of one sounding pitch: the
+            // continued note carries its own accidental and must still render it. Only suppress
+            // when the spelling actually matches.
+            const startPitch: Pitch = tie.StartNote.Pitch;
+            const sameSpelling: boolean = startPitch !== undefined
+                && startPitch.FundamentalNote === pitch.FundamentalNote
+                && startPitch.Accidental === pitch.Accidental;
+            if (sameSpelling) {
+                return; // don't add accidentals on a continued tie note of the same spelling
+            }
         }
 
         const isInCurrentAlterationsToKeyList: boolean = this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) >= 0;

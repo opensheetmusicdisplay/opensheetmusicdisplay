@@ -24,6 +24,7 @@ import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
 import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
 import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
+import { AccidentalEnum } from "../../../../src/Common/DataObjects/Pitch";
 
 describe("VexFlow Measure", () => {
 
@@ -72,6 +73,11 @@ describe("VexFlow Measure", () => {
          expect(graphicalTies.length).to.equal(1);
          const tieStartNote: VexFlowGraphicalNote = graphicalTies[0].StartNote as VexFlowGraphicalNote;
          expect(tieStartNote.getTieSVGs().length, "tie curve is present in the rendered SVG").to.be.greaterThan(0);
+         // The tie is enharmonic (F#–Gb), so unlike a same-spelling tie the continued note keeps its
+         // own accidental: the second note must still draw its flat, not read as a plain G (#1694).
+         const tieEndNote: VexFlowGraphicalNote = graphicalTies[0].EndNote as VexFlowGraphicalNote;
+         expect(tieEndNote.DrawnAccidental, "continued enharmonic tie note keeps its accidental")
+            .to.equal(AccidentalEnum.FLAT);
          done();
       }).catch(done);
    });
