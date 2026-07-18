@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <work>
+    <work-title>Voice alignment: type+dots vs duration mismatch</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Test</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!-- Measure 1 (bug case): voice 1 has an INVISIBLE rest whose type+dot
+         (half + dot = 3 quarters) disagrees with its duration (5 eighths =
+         2.5 quarters). Without the fix, the vexflow tick counting of voice 1
+         drifts by half a beat and the following eighth (F4) is drawn in its
+         own column instead of aligned with the simultaneous G4 of voice 2. -->
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>6</beats><beat-type>8</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note print-object="no">
+        <rest/>
+        <duration>5</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <dot/>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+      </note>
+      <backup><duration>6</duration></backup>
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>3</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+        <stem>up</stem>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <voice>2</voice>
+        <type>eighth</type>
+        <stem>up</stem>
+      </note>
+    </measure>
+    <!-- Measure 2 (control): same music, but the invisible rest is encoded
+         as two rests whose types match their durations. Renders correctly
+         with or without the fix — both measures must look identical. -->
+    <measure number="2">
+      <note print-object="no">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+      <note print-object="no">
+        <rest/>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+      </note>
+      <backup><duration>6</duration></backup>
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>3</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+        <stem>up</stem>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <voice>2</voice>
+        <type>eighth</type>
+        <stem>up</stem>
+      </note>
+    </measure>
+  </part>
+</score-partwise>
