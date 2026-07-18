@@ -1424,15 +1424,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // different voices use different normal-type values in their tuplets, the calculated
                 // ticks can differ even for notes at the same timestamp. We use graphicalNoteLength
                 // (which represents the actual musical duration) to calculate correct tick values.
+                // The same correction is applied when the XML <type> (+<dot>s) disagrees with the
+                // actual <duration> (e.g. an invisible rest with type half + dot, but a duration of
+                // only 2.5 quarters): otherwise the vexflow tick counting of the voice goes out of
+                // sync and all following notes of the voice are misaligned with the other voices.
                 if (voiceEntry.notes.length > 0 && voiceEntry.notes[0].sourceNote) {
                     const sourceNote: Note = voiceEntry.notes[0].sourceNote;
-                    if (sourceNote.NoteTuplet) {
-                        const graphicalLength: Fraction = voiceEntry.notes[0].graphicalNoteLength;
+                    const graphicalLength: Fraction = voiceEntry.notes[0].graphicalNoteLength;
+                    const vfTicks: VF.Fraction = vexFlowVoiceEntry.vfStaveNote.getTicks();
+                    // whole measure rests keep their vexflow "w" ticks: nothing follows them
+                    //   in the voice, and correcting them would change spacing unnecessarily.
+                    const isWholeMeasureRest: boolean = sourceNote.IsWholeMeasureRest ||
+                        graphicalLength.RealValue === this.parentSourceMeasure.ActiveTimeSignature.RealValue;
+                    const ticksMismatch: boolean =
+                        Math.abs(vfTicks.value() - graphicalLength.RealValue * VF.RESOLUTION) > 0.001;
+                    if (sourceNote.NoteTuplet ||
+                        (ticksMismatch && !isWholeMeasureRest && !voiceEntry.parentVoiceEntry?.IsGrace)) {
                         // Calculate ticks using VexFlow Fraction to preserve precision.
                         // graphicalLength.RealValue is the note length as a fraction of a whole note.
                         // VF.RESOLUTION (e.g., 16384) is the number of ticks for a whole note.
                         // We use Fraction arithmetic to avoid floating-point precision issues.
-                        const vfTicks: VF.Fraction = vexFlowVoiceEntry.vfStaveNote.getTicks();
                         vfTicks.numerator = graphicalLength.Numerator * VF.RESOLUTION;
                         vfTicks.denominator = graphicalLength.Denominator;
                         // Simplify the fraction to reduce large numbers
