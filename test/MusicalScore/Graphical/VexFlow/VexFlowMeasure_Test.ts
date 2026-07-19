@@ -82,6 +82,31 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // Regression guard for #1695: the enharmonic-accidental fix must not make a same-letter tie
+   // re-draw its accidental. In this sample (Bb key) a B-natural at the end of m.9 is tied to a
+   // B in m.10; the continued note is the same written note held on, so no natural should be
+   // drawn on it (it was not drawn before the fix). More generally, no continued tie note here
+   // should introduce a natural.
+   it("Does not draw a natural on the continued note of a same-letter tie", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const graphicalTies: GraphicalTie[] = osmd.GraphicSheet.MeasureList
+            .flatMap((measureList: GraphicalMeasure[]): GraphicalMeasure[] => measureList)
+            .flatMap((measure: GraphicalMeasure): GraphicalStaffEntry[] => measure.staffEntries)
+            .flatMap((staffEntry: GraphicalStaffEntry): GraphicalTie[] => staffEntry.GraphicalTies);
+
+         expect(graphicalTies.length, "sample contains tied notes").to.be.greaterThan(0);
+         const continuedNaturals: GraphicalTie[] = graphicalTies.filter(
+            (t: GraphicalTie) => t.EndNote && (t.EndNote as VexFlowGraphicalNote).DrawnAccidental === AccidentalEnum.NATURAL);
+         expect(continuedNaturals.length, "no continued tie note re-draws a natural").to.equal(0);
+         done();
+      }).catch(done);
+   });
+
    // Non-regression test for grace note fingering positioning
    // Before fix: baseFingeringXOffset was calculated across all notes in the staff entry,
    // causing grace notes to have incorrect offsets based on collision with other grace notes
