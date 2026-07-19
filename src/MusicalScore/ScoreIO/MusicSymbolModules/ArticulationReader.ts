@@ -240,6 +240,8 @@ export class ArticulationReader {
     if (this.rules.FingeringPositionFromXML) {
       technicalInstruction.placement = this.getPlacement(placement);
     }
+    const substitutionAttr: Attr = stringOrFingeringNode.attribute("substitution");
+    technicalInstruction.substitution = substitutionAttr?.value === "yes";
     return technicalInstruction;
   }
 

@@ -689,6 +689,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             for (const fingeringEntry of staffEntry.FingeringEntries) {
                 fingeringEntry.SVGNode = this.drawLabel(fingeringEntry, GraphicalLayers.Notes);
             }
+            this.drawFingeringSubstitutionSlur(staffEntry.FingeringEntries);
         }
         // Draw ChordSymbols
         if (staffEntry.graphicalChordContainers !== undefined && staffEntry.graphicalChordContainers.length > 0) {
@@ -702,6 +703,58 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes);
             }
         }
+    }
+
+    /**
+     * Draw a small slur connecting a substitution fingering to its adjacent sibling.
+     * The curve appears on the left side of the stacked fingerings.
+     */
+    private drawFingeringSubstitutionSlur(fingeringEntries: GraphicalLabel[]): void {
+        if (fingeringEntries.length < 2) {
+            return;
+        }
+        let subIdx: number = -1;
+        for (let i: number = 0; i < fingeringEntries.length; i++) {
+            if (fingeringEntries[i].isSubstitution) {
+                subIdx = i;
+                break;
+            }
+        }
+        if (subIdx <= 0) {
+            return;
+        }
+        // subIdx > 0: non-substitution label is at subIdx - 1 (left),
+        // substitution label at subIdx (right) — horizontal layout.
+        const leftLabel: GraphicalLabel = fingeringEntries[subIdx - 1];
+        const rightLabel: GraphicalLabel = fingeringEntries[subIdx];
+        const leftPos: PointF2D = leftLabel.PositionAndShape.AbsolutePosition;
+        const rightPos: PointF2D = rightLabel.PositionAndShape.AbsolutePosition;
+
+        // CenterBottom: absPos.x is the horizontal center of the text.
+        const height: number = leftLabel.PositionAndShape.Size.height;
+        // Curve attached at center of each number, arching above text.
+        const topOfText: number = leftPos.y - height;
+        const attachY: number = topOfText - 0.1;
+        const archY: number = topOfText - 0.6;
+        const gapX: number = (rightPos.x - leftPos.x) * 0.35;
+
+        // Graduated thickness: small at endpoints, larger at controls (like slur render).
+        const endThick: number = 0.02;
+        const ctrlThick: number = 0.08;
+        const p0: PointF2D = new PointF2D(leftPos.x, attachY);
+        const p1: PointF2D = new PointF2D(leftPos.x + gapX, archY);
+        const p2: PointF2D = new PointF2D(rightPos.x - gapX, archY);
+        const p3: PointF2D = new PointF2D(rightPos.x, attachY);
+        // Outer curve offset upward (negative y) for Above placement.
+        const pts: PointF2D[] = [
+            p0, p1, p2, p3,
+            new PointF2D(p3.x, p3.y - endThick),
+            new PointF2D(p2.x, p2.y - ctrlThick),
+            new PointF2D(p1.x, p1.y - ctrlThick),
+            new PointF2D(p0.x, p0.y - endThick),
+        ];
+        const pixelPts: PointF2D[] = pts.map((p: PointF2D) => this.applyScreenTransformation(p));
+        this.backend.renderCurve(pixelPts);
     }
 
     /**

@@ -20,6 +20,8 @@ export class GraphicalLabel extends Clickable {
     /** Read-only informational variable only set once by lyrics centering algorithm. */
     public CenteringXShift: number = 0;
     public ColorXML: string;
+    /** Whether this label represents a substitution fingering. */
+    public isSubstitution: boolean = false;
 
     /**
      * Creates a new GraphicalLabel from a Label

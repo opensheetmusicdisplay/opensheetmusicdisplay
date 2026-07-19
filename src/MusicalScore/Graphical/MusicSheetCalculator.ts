@@ -3410,7 +3410,10 @@ export abstract class MusicSheetCalculator {
                                 // || fingerings[0].sourceNote === topNote && placement === PlacementEnum.Below && isBulkFingering // doesn't seem necessary
                                 // TODO more elegant solution: order fingerings in the order of each individual note.
                                 //   this is already a rare situation though, would be even more rare for this to matter, and more complex.
-                                fingerings.reverse();
+                                // Don't reverse substitution pairs — non-subst stays left, subst on right for horizontal layout.
+                                if (!(fingerings.length >= 2 && fingerings.some(f => f.substitution))) {
+                                    fingerings.reverse();
+                                }
                             }
                         }
                         for (let i: number = 0; i < fingerings.length; i++) {
@@ -3423,6 +3426,7 @@ export abstract class MusicSheetCalculator {
                             if (fingering.fontFamily) {
                                 label.fontFamily = fingering.fontFamily;
                             }
+                            gLabel.isSubstitution = fingering.substitution;
                             const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
                             const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
                             let skybottomFurthest: number = undefined;
@@ -3432,7 +3436,10 @@ export abstract class MusicSheetCalculator {
                                 skybottomFurthest = skybottomcalculator.getBottomLineMaxInRange(marginLeft, marginRight);
                             }
                             let yShift: number = 0;
-                            if (i === 0) {
+                            if (fingering.substitution && gse.FingeringEntries.length > 0) {
+                                // Substitution: same vertical level as first label, horizontal offset
+                                yShift = 0;
+                            } else if (i === 0) {
                                 yShift += this.rules.FingeringOffsetY;
                                 if (placement === PlacementEnum.Above) {
                                     yShift += 0.1; // above fingerings are a bit closer to the notes than below ones for some reason
@@ -3443,8 +3450,15 @@ export abstract class MusicSheetCalculator {
                             if (placement === PlacementEnum.Above) {
                                 yShift *= -1;
                             }
-                            gLabel.PositionAndShape.RelativePosition.y += skybottomFurthest + yShift;
-                            gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX;
+                            if (fingering.substitution && gse.FingeringEntries.length > 0) {
+                                const prevLabel: GraphicalLabel = gse.FingeringEntries[gse.FingeringEntries.length - 1];
+                                const xOffset: number = prevLabel.PositionAndShape.Size.width + 0.2;
+                                gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX + xOffset;
+                                gLabel.PositionAndShape.RelativePosition.y = gse.FingeringEntries[0].PositionAndShape.RelativePosition.y;
+                            } else {
+                                gLabel.PositionAndShape.RelativePosition.y += skybottomFurthest + yShift;
+                                gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX;
+                            }
                             gLabel.setLabelPositionAndShapeBorders();
                             gLabel.PositionAndShape.calculateBoundingBox();
                             gse.FingeringEntries.push(gLabel);
