@@ -3454,7 +3454,7 @@ export abstract class MusicSheetCalculator {
                                 const prevLabel: GraphicalLabel = gse.FingeringEntries[gse.FingeringEntries.length - 1];
                                 const xOffset: number = prevLabel.PositionAndShape.Size.width + 0.2;
                                 gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX + xOffset;
-                                gLabel.PositionAndShape.RelativePosition.y = gse.FingeringEntries[0].PositionAndShape.RelativePosition.y;
+                                gLabel.PositionAndShape.RelativePosition.y = prevLabel.PositionAndShape.RelativePosition.y;
                             } else {
                                 gLabel.PositionAndShape.RelativePosition.y += skybottomFurthest + yShift;
                                 gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX;
