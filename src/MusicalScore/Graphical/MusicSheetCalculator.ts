@@ -790,6 +790,12 @@ export abstract class MusicSheetCalculator {
         measureIndex: number, staffIndex: number): void;
 
     /**
+     * Calculate brackets (hand indication) from a MultiExpression.
+     */
+    protected abstract calculateSingleBracket(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
+        measureIndex: number, staffIndex: number): void;
+
+    /**
      * Calculate all the textual [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
      * @param repetitionInstruction
      * @param measureIndex
@@ -1038,6 +1044,8 @@ export abstract class MusicSheetCalculator {
             if (this.rules.RenderWavyLines) {
                 this.calculateWavyLines();
             }
+            // calculate bracket hand indications
+            this.calculateBrackets();
             // calculate RepetitionInstructions (Dal Segno, Coda, etc)
             this.calculateWordRepetitionInstructions();
             this.harmonizeVoltaHeights();
@@ -3392,29 +3400,20 @@ export abstract class MusicSheetCalculator {
                             // }
                         }
                         if (fingerings.length > 0) {
-                            // const isBulkFingering: boolean = fingerings.last().sourceNote === fingerings[0].sourceNote;
-                            //   // bulk fingering = more than one fingering per note given in MusicXML. (some programs export like this sometimes)
-                            // console.log("isBulkFingering: " + isBulkFingering);
-                            if (placement === PlacementEnum.Below) {
-                                fingerings.reverse();
-                            }
-                            let topNote: Note;
-                            for (const gve of gse.graphicalVoiceEntries) {
-                                for (const note of gve.notes) {
-                                    if (!topNote || note.sourceNote.Pitch?.getHalfTone() > topNote.Pitch?.getHalfTone()) {
-                                        topNote = note.sourceNote;
-                                    }
+                            // Sort fingerings by pitch: for Above lowest pitch first (nearest staff),
+                            // for Below highest pitch first (nearest staff). Substitution pairs on same note stay adjacent.
+                            fingerings.sort((a: TechnicalInstruction, b: TechnicalInstruction) => {
+                                const pitchA: number = a.sourceNote?.Pitch?.getHalfTone() ?? 0;
+                                const pitchB: number = b.sourceNote?.Pitch?.getHalfTone() ?? 0;
+                                if (pitchA !== pitchB) {
+                                    return placement === PlacementEnum.Above ? pitchA - pitchB : pitchB - pitchA;
                                 }
-                            }
-                            if (fingerings[0].sourceNote === topNote && placement === PlacementEnum.Above) {
-                                // || fingerings[0].sourceNote === topNote && placement === PlacementEnum.Below && isBulkFingering // doesn't seem necessary
-                                // TODO more elegant solution: order fingerings in the order of each individual note.
-                                //   this is already a rare situation though, would be even more rare for this to matter, and more complex.
-                                // Don't reverse substitution pairs — non-subst stays left, subst on right for horizontal layout.
-                                if (!(fingerings.length >= 2 && fingerings.some(f => f.substitution))) {
-                                    fingerings.reverse();
+                                // Same note: substitution after its pair
+                                if (a.substitution !== b.substitution) {
+                                    return a.substitution ? 1 : -1;
                                 }
-                            }
+                                return 0;
+                            });
                         }
                         for (let i: number = 0; i < fingerings.length; i++) {
                             const fingering: TechnicalInstruction = fingerings[i];
@@ -3965,6 +3964,24 @@ export abstract class MusicSheetCalculator {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
                         if ((sourceMeasure.StaffLinkedExpressions[j][k].WavyLineStart)) {
                             this.calculateSingleWavyLine(sourceMeasure, sourceMeasure.StaffLinkedExpressions[j][k], i, j);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private calculateBrackets(): void {
+        for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
+            const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+            for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
+                if (!this.graphicalMusicSheet.MeasureList[i] || !this.graphicalMusicSheet.MeasureList[i][j]) {
+                    continue;
+                }
+                if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.isVisible()) {
+                    for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
+                        if ((sourceMeasure.StaffLinkedExpressions[j][k].BracketHandStart)) {
+                            this.calculateSingleBracket(sourceMeasure, sourceMeasure.StaffLinkedExpressions[j][k], i, j);
                         }
                     }
                 }

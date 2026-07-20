@@ -35,6 +35,8 @@ import { LyricsEntry } from "../../VoiceData/Lyrics/LyricsEntry";
 import { GraphicalLyricWord } from "../GraphicalLyricWord";
 import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
 import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
+import { BracketHand } from "../../VoiceData/Expressions/ContinuousExpressions/BracketHand";
+import { GraphicalBracketHand } from "../GraphicalBracketHand";
 import { VexFlowInstantaneousDynamicExpression } from "./VexFlowInstantaneousDynamicExpression";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 /* VexFlow Version - for later use
@@ -1822,6 +1824,39 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     } else {
       log.warn("End measure or staffLines for wavy line are undefined! This should not happen!");
     }
+  }
+
+  protected calculateSingleBracket(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+    const bracketHand: BracketHand = multiExpression.BracketHandStart;
+    if (!bracketHand) {
+      return;
+    }
+    const startTimeStamp: Fraction = bracketHand.ParentStartMultiExpression.Timestamp;
+    const minMeasureToDrawIndex: number = this.rules.MinMeasureToDrawIndex;
+    const maxMeasureToDrawIndex: number = this.rules.MaxMeasureToDrawIndex;
+    let startMeasure: GraphicalMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(
+      bracketHand.ParentStartMultiExpression.SourceMeasureParent, staffIndex);
+    if (!startMeasure) {
+      startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex];
+    }
+    if (!startMeasure || startMeasure.parentSourceMeasure.measureListIndex < minMeasureToDrawIndex ||
+        startMeasure.parentSourceMeasure.measureListIndex > maxMeasureToDrawIndex) {
+      return;
+    }
+    const startStaffLine: StaffLine = startMeasure.ParentStaffLine;
+    if (!startStaffLine) {
+      return;
+    }
+    const graphicalBracket: GraphicalBracketHand = new GraphicalBracketHand(bracketHand, startStaffLine.PositionAndShape);
+    let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+    if (!startStaffEntry) {
+      startStaffEntry = startMeasure.staffEntries[0];
+    }
+    if (!startStaffEntry) {
+      return;
+    }
+    graphicalBracket.startStaffEntry = startStaffEntry;
+    startStaffLine.BracketHands.push(graphicalBracket);
   }
 
   private calculateWavyLineSkyBottomLine(startVfVoiceEntry: VexFlowVoiceEntry, endVfVoiceEntry: VexFlowVoiceEntry,

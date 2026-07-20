@@ -34,6 +34,7 @@ import { VexFlowGlissando } from "./VexFlowGlissando";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { SvgVexFlowBackend } from "./SvgVexFlowBackend";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
+import { BracketHand } from "../../VoiceData/Expressions/ContinuousExpressions/BracketHand";
 import { TremoloBetweenNotes } from "../../VoiceData/Note";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 
@@ -838,6 +839,50 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 (vfVibratoBracket as any).setContext(ctx);
                 vfVibratoBracket.draw();
             }
+        }
+    }
+
+    protected drawBrackets(staffLine: StaffLine): void {
+        for (const graphicalBracket of staffLine.BracketHands) {
+            if (!graphicalBracket) {
+                continue;
+            }
+            const bracketHand: BracketHand = graphicalBracket.bracketHand;
+            const staffEntry: GraphicalStaffEntry = graphicalBracket.startStaffEntry;
+            if (!staffEntry) {
+                continue;
+            }
+            // note.AbsolutePosition.y returns bbox bottom (≈5px below visual text baseline).
+            // For the bracket to span the full notation, find the topmost and bottommost notes.
+            const NOTEHEAD_BBOX_TOP_OFFSET: number = 2.0; // VF units from bbox bottom to visual top
+            let topNoteBBoxBottom: number = Infinity;   // smallest y (= highest on screen)
+            let bottomNoteBBoxBottom: number = -Infinity; // largest y (= lowest on screen)
+            let leftmostNoteX: number = Infinity;
+            for (const gve of staffEntry.graphicalVoiceEntries) {
+                for (const note of gve.notes) {
+                    const notePos: PointF2D = note.PositionAndShape.AbsolutePosition;
+                    if (notePos.y < topNoteBBoxBottom) { topNoteBBoxBottom = notePos.y; }
+                    if (notePos.y > bottomNoteBBoxBottom) { bottomNoteBBoxBottom = notePos.y; }
+                    if (notePos.x < leftmostNoteX) { leftmostNoteX = notePos.x; }
+                }
+            }
+            if (topNoteBBoxBottom === Infinity || bottomNoteBBoxBottom === -Infinity || leftmostNoteX === Infinity) {
+                continue;
+            }
+            const isAbove: boolean = bracketHand.Placement === PlacementEnum.Above;
+            // Bracket vertical spans full notation: from above top notehead to below bottom notehead
+            const verticalTop: number = topNoteBBoxBottom - NOTEHEAD_BBOX_TOP_OFFSET;
+            const verticalBottom: number = bottomNoteBBoxBottom;
+            const x: number = leftmostNoteX - 1.5;
+            const bracketWidth: number = 0.8;
+            const verticalStart: PointF2D = new PointF2D(x, verticalTop);
+            const verticalEnd: PointF2D = new PointF2D(x, verticalBottom);
+            this.drawLine(verticalStart, verticalEnd, "#000000", 1);
+            // Horizontal jog: for Left hand at TOP (starts above), for Right hand at BOTTOM (starts below)
+            const jogY: number = isAbove ? verticalBottom : verticalTop;
+            const horizStart: PointF2D = new PointF2D(x, jogY);
+            const horizEnd: PointF2D = new PointF2D(x + bracketWidth, jogY);
+            this.drawLine(horizStart, horizEnd, "#000000", 1);
         }
     }
 

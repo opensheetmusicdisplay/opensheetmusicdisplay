@@ -394,6 +394,8 @@ export abstract class MusicSheetDrawer {
 
         this.drawWavyLines(staffLine);
 
+        this.drawBrackets(staffLine);
+
         this.drawExpressions(staffLine);
 
         if (this.skyLineVisible) {
@@ -459,6 +461,10 @@ export abstract class MusicSheetDrawer {
     protected abstract drawPedals(staffLine: StaffLine): void;
 
     protected abstract drawWavyLines(staffLine: StaffLine): void;
+
+    protected drawBrackets(staffLine: StaffLine): void {
+        return;
+    }
 
     protected drawStaffLines(staffLine: StaffLine): void {
         if (staffLine.StaffLines) {

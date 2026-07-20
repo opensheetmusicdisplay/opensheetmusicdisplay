@@ -499,6 +499,12 @@ export class InstrumentReader {
               expressionReader.addPedalMarking(xmlNode, this.currentMeasure, currentFraction.clone());
               // pedal end in OSMD and Vexflow means end BEFORE timestamp, so currentFraction instead of previousFraction needs to be used.
              }
+             if (directionTypeNodes.some(dt => dt.element("bracket"))) {
+              expressionReader.readExpressionParameters(
+                xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, true
+              );
+              expressionReader.addBracketHand(xmlNode, this.currentMeasure, currentFraction.clone());
+             }
              expressionReader.readExpressionParameters(
                xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, false
              );

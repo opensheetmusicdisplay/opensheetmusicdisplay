@@ -20,6 +20,7 @@ import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
 import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
+import { BracketHand } from "../../VoiceData/Expressions/ContinuousExpressions/BracketHand";
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;
@@ -495,6 +496,29 @@ export class ExpressionReader {
                 const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/WavyLineError", "Error while reading wavy-line.");
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 log.debug("ExpressionReader.addWavyLine", errorMsg, ex);
+            }
+        }
+    }
+    public addBracketHand(directionNode: IXmlElement, currentMeasure: SourceMeasure, endTimestamp: Fraction): void {
+        const directionTypeNodes: IXmlElement[] = directionNode.elements("direction-type");
+        const placement: PlacementEnum = this.readPlacement(directionNode);
+        for (const directionTypeNode of directionTypeNodes) {
+            const bracketNode: IXmlElement = directionTypeNode.element("bracket");
+            if (!bracketNode) { continue; }
+            if (bracketNode.hasAttributes) {
+                try {
+                    const type: string = bracketNode.attribute("type")?.value;
+                    const lineEnd: string = bracketNode.attribute("line-end")?.value;
+                    const lineType: string = bracketNode.attribute("line-type")?.value;
+                    if (type === "start") {
+                        this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+                        const bracketHand: BracketHand = new BracketHand(placement, lineEnd, lineType);
+                        this.getMultiExpression.BracketHandStart = bracketHand;
+                        bracketHand.ParentStartMultiExpression = this.getMultiExpression;
+                    }
+                } catch (ex) {
+                    log.debug("ExpressionReader.addBracketHand", ex);
+                }
             }
         }
     }
