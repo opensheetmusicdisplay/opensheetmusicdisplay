@@ -727,22 +727,33 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // substitution label at subIdx (right) — horizontal layout.
         const leftLabel: GraphicalLabel = fingeringEntries[subIdx - 1];
         const rightLabel: GraphicalLabel = fingeringEntries[subIdx];
-        const leftPos: PointF2D = leftLabel.PositionAndShape.AbsolutePosition;
-        const rightPos: PointF2D = rightLabel.PositionAndShape.AbsolutePosition;
+        const leftAbs: PointF2D = leftLabel.PositionAndShape.AbsolutePosition;
+        const rightAbs: PointF2D = rightLabel.PositionAndShape.AbsolutePosition;
 
-        // Attach curve just inside the cap area, arch above.
-        const attachY: number = leftPos.y - 1.4;
-        const archY: number = leftPos.y - 1.7;
-        const gapX: number = (rightPos.x - leftPos.x) * 0.35;
+        // Use the label's SVG text element y (baseline) for curve positioning.
+        // label.SVGNode is set by drawLabel call before this runs.
+        let baselineY: number = leftAbs.y * unitInPixels;
+        if (leftLabel.SVGNode) {
+            const textEl: SVGElement | null = (leftLabel.SVGNode as SVGElement).querySelector("text");
+            if (textEl) {
+                baselineY = parseFloat(textEl.getAttribute("y") ?? String(baselineY));
+            }
+        }
+        // Curve attaches ~9px above baseline, arch ~15px above baseline (Above).
+        // For Below (CenterTop), drawLabel doesn't shift baseline, so same offsets work.
+        const attachPx: number = baselineY - 9;
+        const archPx: number = baselineY - 17;
+        const attachY: number = attachPx / unitInPixels;
+        const archY: number = archPx / unitInPixels;
+        const gapX: number = (rightAbs.x - leftAbs.x) * 0.35;
 
-        // Graduated thickness: small at endpoints, larger at controls.
         const endThick: number = 0.015;
         const ctrlThick: number = 0.06;
-        const p0: PointF2D = new PointF2D(leftPos.x, attachY);
-        const p1: PointF2D = new PointF2D(leftPos.x + gapX, archY);
-        const p2: PointF2D = new PointF2D(rightPos.x - gapX, archY);
-        const p3: PointF2D = new PointF2D(rightPos.x, attachY);
-        // Outer curve offset upward (negative y) for Above placement.
+        const p0: PointF2D = new PointF2D(leftAbs.x, attachY);
+        const p1: PointF2D = new PointF2D(leftAbs.x + gapX, archY);
+        const p2: PointF2D = new PointF2D(rightAbs.x - gapX, archY);
+        const p3: PointF2D = new PointF2D(rightAbs.x, attachY);
+
         const pts: PointF2D[] = [
             p0, p1, p2, p3,
             new PointF2D(p3.x, p3.y - endThick),

@@ -68,5 +68,69 @@
         </notations>
       </note>
     </measure>
+    <measure number='3'>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+        <voice>1</voice>
+        <notations>
+          <technical>
+            <fingering placement="below">6</fingering>
+            <fingering placement="below" substitution="yes">7</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <chord/>
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+        <voice>1</voice>
+        <notations>
+          <technical>
+            <fingering placement="below">8</fingering>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <measure number='4'>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+        <voice>1</voice>
+        <notations>
+          <technical>
+            <fingering>9</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <chord/>
+        <pitch>
+          <step>F</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+        <voice>1</voice>
+        <notations>
+          <technical>
+            <fingering>10</fingering>
+            <fingering substitution="yes">11</fingering>
+          </technical>
+        </notations>
+      </note>
+    </measure>
   </part>
 </score-partwise>

@@ -3418,8 +3418,13 @@ export abstract class MusicSheetCalculator {
                         }
                         for (let i: number = 0; i < fingerings.length; i++) {
                             const fingering: TechnicalInstruction = fingerings[i];
+                            // Per-fingering placement overrides measure-level placement.
+                            const fingerPlacement: PlacementEnum =
+                                fingering.placement !== undefined && fingering.placement !== PlacementEnum.NotYetDefined
+                                    ? fingering.placement : placement;
+                            const isAbove: boolean = fingerPlacement === PlacementEnum.Above;
                             const alignment: TextAlignmentEnum =
-                                placement === PlacementEnum.Above ? TextAlignmentEnum.CenterBottom : TextAlignmentEnum.CenterTop;
+                                isAbove ? TextAlignmentEnum.CenterBottom : TextAlignmentEnum.CenterTop;
                             const label: Label = new Label(fingering.value, alignment);
                             const gLabel: GraphicalLabel = new GraphicalLabel(
                                 label, this.rules.FingeringTextSize, label.textAlignment, this.rules, line.PositionAndShape);
@@ -3430,7 +3435,7 @@ export abstract class MusicSheetCalculator {
                             const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
                             const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
                             let skybottomFurthest: number = undefined;
-                            if (placement === PlacementEnum.Above) {
+                            if (isAbove) {
                                 skybottomFurthest = skybottomcalculator.getSkyLineMinInRange(marginLeft, marginRight);
                             } else {
                                 skybottomFurthest = skybottomcalculator.getBottomLineMaxInRange(marginLeft, marginRight);
@@ -3441,13 +3446,13 @@ export abstract class MusicSheetCalculator {
                                 yShift = 0;
                             } else if (i === 0) {
                                 yShift += this.rules.FingeringOffsetY;
-                                if (placement === PlacementEnum.Above) {
+                                if (isAbove) {
                                     yShift += 0.1; // above fingerings are a bit closer to the notes than below ones for some reason
                                 }
                             } else {
                                 yShift += this.rules.FingeringPaddingY;
                             }
-                            if (placement === PlacementEnum.Above) {
+                            if (isAbove) {
                                 yShift *= -1;
                             }
                             if (fingering.substitution && gse.FingeringEntries.length > 0) {
@@ -3465,10 +3470,10 @@ export abstract class MusicSheetCalculator {
                             const start: number = gLabel.PositionAndShape.RelativePosition.x + gLabel.PositionAndShape.BorderLeft;
                             //start -= line.PositionAndShape.RelativePosition.x;
                             const end: number = start - gLabel.PositionAndShape.BorderLeft + gLabel.PositionAndShape.BorderRight;
-                            if (placement === PlacementEnum.Above) {
+                            if (isAbove) {
                                 skybottomcalculator.updateSkyLineInRange(
                                     start, end, gLabel.PositionAndShape.RelativePosition.y + gLabel.PositionAndShape.BorderTop); // BorderMarginTop too much
-                            } else if (placement === PlacementEnum.Below) {
+                            } else {
                                 skybottomcalculator.updateBottomLineInRange(
                                     start, end, gLabel.PositionAndShape.RelativePosition.y + gLabel.PositionAndShape.BorderBottom);
                             }
