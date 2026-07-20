@@ -741,8 +741,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
         // Curve attaches ~9px above baseline, arch ~15px above baseline (Above).
         // For Below (CenterTop), drawLabel doesn't shift baseline, so same offsets work.
-        const attachPx: number = baselineY - 9;
-        const archPx: number = baselineY - 17;
+        const attachPx: number = baselineY - 11;
+        const archPx: number = baselineY - 14;
         const attachY: number = attachPx / unitInPixels;
         const archY: number = archPx / unitInPixels;
         const gapX: number = (rightAbs.x - leftAbs.x) * 0.35;
