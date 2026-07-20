@@ -84,4 +84,48 @@ describe("Fingering Substitution", () => {
 
         expect(div.querySelectorAll("g.vf-curve").length).to.be.at.least(1);
     });
+
+    it("chord in bar 2: lower note substitution pairs at its own y, separate from upper note", async () => {
+        // Main fixture: bar1 = single note substitution (1→2), bar2 = chord E4(3→4) + G4(5).
+        // Substitution (4) must pair y-level with its predecessor (3, same note),
+        // NOT with the unrelated upper-note entry (5).
+        const { osmd, div } = await renderScore("fingering-substitution.musicxml");
+
+        let bar2Entries: GraphicalLabel[] = [];
+        for (const page of osmd.GraphicSheet.MusicPages) {
+            for (const system of page.MusicSystems) {
+                for (const staffLine of system.StaffLines) {
+                    for (const measure of staffLine.Measures) {
+                        if (measure.MeasureNumber !== 2) {
+                            continue;
+                        }
+                        for (const staffEntry of measure.staffEntries) {
+                            bar2Entries = staffEntry.FingeringEntries as GraphicalLabel[];
+                        }
+                    }
+                }
+            }
+        }
+        expect(bar2Entries.length).to.be.at.least(3);
+
+        let subIdx: number = -1;
+        for (let i: number = 0; i < bar2Entries.length; i++) {
+            if (bar2Entries[i].isSubstitution) {
+                subIdx = i;
+            }
+        }
+        expect(subIdx).to.be.greaterThan(0, "substitution in bar 2 should exist and not be first entry");
+
+        const subst: GraphicalLabel = bar2Entries[subIdx];
+        const pair: GraphicalLabel = bar2Entries[subIdx - 1];
+        const upper: GraphicalLabel = subIdx === bar2Entries.length - 1 ? bar2Entries[subIdx - 2] : bar2Entries[subIdx + 1];
+
+        // Substitution (4) and its pair (3, same note E4) share y-level.
+        expect(Math.abs(pair.PositionAndShape.RelativePosition.y - subst.PositionAndShape.RelativePosition.y)).to.be.lessThan(0.05);
+
+        // Upper note entry (5, G4) must be at a different y-level.
+        expect(Math.abs(subst.PositionAndShape.RelativePosition.y - upper.PositionAndShape.RelativePosition.y)).to.be.greaterThan(0.1);
+
+        expect(div.querySelectorAll("g.vf-curve").length).to.be.at.least(1);
+    });
 });

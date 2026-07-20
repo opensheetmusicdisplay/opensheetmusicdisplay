@@ -27,10 +27,43 @@
         </pitch>
         <duration>4</duration>
         <type>whole</type>
+        <voice>1</voice>
         <notations>
           <technical>
             <fingering>1</fingering>
             <fingering substitution="yes">2</fingering>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <measure number='2'>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+        <voice>1</voice>
+        <notations>
+          <technical>
+            <fingering>3</fingering>
+            <fingering substitution="yes">4</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <chord/>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+        <voice>1</voice>
+        <notations>
+          <technical>
+            <fingering>5</fingering>
           </technical>
         </notations>
       </note>

@@ -730,17 +730,14 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         const leftPos: PointF2D = leftLabel.PositionAndShape.AbsolutePosition;
         const rightPos: PointF2D = rightLabel.PositionAndShape.AbsolutePosition;
 
-        // CenterBottom: absPos.x is the horizontal center of the text.
-        const height: number = leftLabel.PositionAndShape.Size.height;
-        // Curve attached at center of each number, arching above text.
-        const topOfText: number = leftPos.y - height;
-        const attachY: number = topOfText - 0.1;
-        const archY: number = topOfText - 0.6;
+        // Attach curve just inside the cap area, arch above.
+        const attachY: number = leftPos.y - 1.4;
+        const archY: number = leftPos.y - 1.7;
         const gapX: number = (rightPos.x - leftPos.x) * 0.35;
 
-        // Graduated thickness: small at endpoints, larger at controls (like slur render).
-        const endThick: number = 0.02;
-        const ctrlThick: number = 0.08;
+        // Graduated thickness: small at endpoints, larger at controls.
+        const endThick: number = 0.015;
+        const ctrlThick: number = 0.06;
         const p0: PointF2D = new PointF2D(leftPos.x, attachY);
         const p1: PointF2D = new PointF2D(leftPos.x + gapX, archY);
         const p2: PointF2D = new PointF2D(rightPos.x - gapX, archY);
