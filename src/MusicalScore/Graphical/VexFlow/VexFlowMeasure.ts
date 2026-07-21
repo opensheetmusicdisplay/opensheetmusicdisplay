@@ -2237,6 +2237,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      */
     public addMetronomeMarksToStave(): number {
         if (this.hasMetronomeMark) { return 0; }
+        if (!this.rules.MetronomeMarksDrawn) { return 0; }
         const sourceMeasure: SourceMeasure | undefined = this.parentSourceMeasure;
         if (!sourceMeasure) { return 0; }
         let totalMetronomeWidth: number = 0;
