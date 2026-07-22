@@ -138,9 +138,20 @@ export class RepetitionInstructionReader {
     const wordsNode: IXmlElement = directionTypeNode.element("words");
     const measureIndex: number = this.currentMeasureIndex;
     if (wordsNode) {
-      const dsRegEx: string = "d\\s?\\.s\\."; // Input for new RegExp(). TS eliminates the first \
       // must Trim string and ToLower before compare
       const innerText: string = wordsNode.value.trim().toLowerCase();
+      // regex strings: inputs for new RegExp(). The string escaping eliminates the first backslash of each \\.
+      const dsRegEx: string = "d\\s?\\.\\s?s\\."; // "d.s.", also with spaces, e.g. "d. s."
+      const dcRegEx: string = "d\\s?\\.\\s?c\\."; // "d.c.", also with spaces
+      // only detect a repetition instruction if the words are just the instruction and nothing else.
+      //   Otherwise, text that merely mentions an instruction, e.g. "voice tacet on D.S.", would not be rendered,
+      //   and an incorrect repetition (jump) would be created (see #1687).
+      const wholeInstructionRegEx: string =
+        "(" + dsRegEx + "|dal\\s?segno|" + dcRegEx + "|da\\s?capo)( al\\s?(fine|coda))?" +
+        "|to\\s?coda|a (la )?coda|fine|coda|segno";
+      if (!StringUtil.StringIsWord(innerText, wholeInstructionRegEx, true)) {
+        return false; // the words are a general text, not (just) a repetition instruction -> render as text (e.g. UnknownExpression)
+      }
       if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx + " al fine", true)) {
         // @correctness i don't think we should manipulate the measure index by relative position [ssch]
         //   it's clearly assigned a measure in the xml
@@ -153,7 +164,6 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      const dcRegEx: string = "d\\.\\s?c\\.";
       if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda", true)) {
         // if (relativeMeasurePosition < 0.5) {
         //   measureIndex--;
@@ -167,14 +177,6 @@ export class RepetitionInstructionReader {
         //   measureIndex--;
         // }
         const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapoAlFine);
-        this.addInstruction(this.repetitionInstructions, newInstruction);
-        return true;
-      }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda", true)) {
-        // if (relativeMeasurePosition < 0.5) {
-        //   measureIndex--;
-        // }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapoAlCoda);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
