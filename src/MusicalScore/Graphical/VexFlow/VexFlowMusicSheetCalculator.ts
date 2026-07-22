@@ -417,6 +417,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // Stave is freshly created by resetLayout() with zero width, so
         // stave.getNoteEndX() - stave.getNoteStartX() returns a negative
         // value, making all note spacing collapse.
+        // Capture per-tickable stave BEFORE format(). VF5's preFormat() sets
+        // ALL voices to fOpts.stave via voice.setStave(), so after format()
+        // getStave() returns the same stave for every tickable, making the
+        // cross-staff check in the xShift zeroing loop always false.
+        const tickableStave: Map<any, any> = new Map();
+        for (const voice of allVoices) {
+          for (const tickable of voice.getTickables()) {
+            const s: any = (tickable as any).getStave?.();
+            if (s) { tickableStave.set(tickable, s); }
+          }
+        }
         const fOpts: VF.FormatParams = { stave: p.getVFStave(), context: undefined };
         if (alignRests) { fOpts.alignRests = true; }
         formatter.format(allVoices, w, fOpts);
@@ -435,8 +446,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               for (let j: number = i + 1; j < tickables.length; j++) {
                 const a: any = tickables[i] as any;
                 const b: any = tickables[j] as any;
-                const sa: any = a.getStave?.();
-                const sb: any = b.getStave?.();
+                // Use captured pre-format stave — after format() all voices
+                // share the same stave (set by voice.setStave in preFormat).
+                const sa: any = tickableStave.get(a) ?? a.getStave?.();
+                const sb: any = tickableStave.get(b) ?? b.getStave?.();
                 if (sa !== sb) { continue; }
                 const ka: string[] = a.getKeys?.() ?? [];
                 const kb: string[] = b.getKeys?.() ?? [];
