@@ -1236,6 +1236,25 @@ export abstract class MusicSheetCalculator {
                                     minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end); // same as above, less code executed
                                 }
                             }
+                            // even with y-aligned chord symbols (ChordSymbolYAlignment), don't overlap chord symbols
+                            //   already placed in this range, e.g. the previous chord symbol in a too narrow measure (#1688).
+                            //   (the aligned offsets don't include chord symbols placed after their calculation,
+                            //   so a colliding chord symbol needs to be put above (below for placement below) the aligned position)
+                            let chordMaximumOffset: number = maximumOffset;
+                            let chordMinimumOffset: number = minimumOffset;
+                            if (this.rules.ChordSymbolYAlignment) {
+                                // check the collision only for the label without its margins (BorderLeft instead of BorderMarginLeft),
+                                //   so that chord symbols whose (visible) labels don't collide stay on the aligned position
+                                const collisionStart: number = gps.BorderLeft + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
+                                const collisionEnd: number = gps.BorderRight + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
+                                if (placement === PlacementEnum.Below) {
+                                    chordMaximumOffset = Math.max(chordMaximumOffset,
+                                                                  skybottomcalculator.getBottomLineMaxInRange(collisionStart, collisionEnd));
+                                } else {
+                                    chordMinimumOffset = Math.min(chordMinimumOffset,
+                                                                  skybottomcalculator.getSkyLineMinInRange(collisionStart, collisionEnd));
+                                }
+                            }
                             let yShift: number = 0;
                             if (i === 0) {
                                 yShift += this.rules.ChordSymbolYOffset;
@@ -1248,17 +1267,17 @@ export abstract class MusicSheetCalculator {
                             }
                             const gLabel: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
                             if (placement === PlacementEnum.Below) {
-                                gLabel.PositionAndShape.RelativePosition.y = maximumOffset + yShift;
+                                gLabel.PositionAndShape.RelativePosition.y = chordMaximumOffset + yShift;
                                 gLabel.setLabelPositionAndShapeBorders();
                                 gLabel.PositionAndShape.calculateBoundingBox();
                                 skybottomcalculator.updateBottomLineInRange(start, end,
-                                    maximumOffset + gLabel.PositionAndShape.BorderMarginBottom +
+                                    chordMaximumOffset + gLabel.PositionAndShape.BorderMarginBottom +
                                     this.rules.ChordSymbolBottomMargin); // TODO somehow off without margin for I numeral
                             } else {
-                                gLabel.PositionAndShape.RelativePosition.y = minimumOffset + yShift;
+                                gLabel.PositionAndShape.RelativePosition.y = chordMinimumOffset + yShift;
                                 gLabel.setLabelPositionAndShapeBorders();
                                 gLabel.PositionAndShape.calculateBoundingBox();
-                                skybottomcalculator.updateSkyLineInRange(start, end, minimumOffset + gLabel.PositionAndShape.BorderMarginTop);
+                                skybottomcalculator.updateSkyLineInRange(start, end, chordMinimumOffset + gLabel.PositionAndShape.BorderMarginTop);
                             }
                             previousChordContainer = graphicalChordContainer;
                         }
