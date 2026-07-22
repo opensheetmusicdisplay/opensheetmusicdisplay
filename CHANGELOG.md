@@ -1,3 +1,24 @@
+# [2.1.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/2.0.0...2.1.0) (2026-07-22)
+
+
+### Bug Fixes
+
+* **Fingering:** Correct fingering order for multi-voice: Stack Above/Below fingerings in the pitch order of their notes (PR [#1685](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1685), [#1587](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1587)) ([261c3fe](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/261c3fea3c90b6a5872298623c1b659cde95f1b1))
+* **Incremental Rendering:** Don't jump to top on mobile when scroll-loading more ([#1690](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1690), [#1554](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1554)) ([a98725a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a98725a08a3ad420b2b0eb9bd66f9c1fbec9700b))
+* **Layout:** Fix misaligned voices with dotted durations. Align voices when a note's type and dots disagree with its duration (PR [#1697](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1697)) ([86b39fc](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/86b39fcd8245c7e6b9788fa0c9de7388f9d0e8fc))
+* **Repetitions:** Don't misread texts mentioning D.S. etc. as repetition instructions, e.g. "voice tacet on D.S." ([#1687](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1687)). Only detect an instruction if the whole text is the instruction ([4fc125e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4fc125e34d567ddd8806c55a4d2294680c0c4ff4))
+* **Repetitions:** Fix repetition instructions overlapping chord symbols (harmony) (PR [#1699](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1699), [#1689](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1689), [#1688](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1688)) ([5348e54](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5348e54f31706f7c14d21045cd8648ff79a5096c))
+* **Ties:** Fix ties being ignored when the notes only differ by enharmonic spelling, e.g. Gb to F# ([#1694](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1694)) (PR [#1695](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1695)). Match tied notes by sounding pitch instead of letter name ([0387b6c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0387b6c5b6c4eb446160b80058791076390e31e8))
+* **Octave Shifts:** Don't crash on unterminated octave-shift (PR [#1696](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1696), [#1376](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1376), [#1439](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1439)) ([9c84335](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9c84335bfb78820a8a8404f75df58af0a203a7a5))
+
+
+### Features
+
+* **Demo:** Screen Reader compatible buttons: All buttons are named, switch <div> to <button>, add name via aria-label for non-conventional buttons (no visual change) ([b0d4d22](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b0d4d22589e6cee63019689d5b203528d1dabd86))
+* **Slurs:** Prevent bloated slurs (unnecessarily high arcs): Flatten Slurs against obstacles and over long distances (PR [#1693](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1693), [#1466](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1466), [#971](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/971)) ([0837928](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/08379287913feb68f873ab2acf06ed164fb49415))
+
+
+
 # [2.0.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.9.9...2.0.0) (2026-06-15)
 
 
