@@ -121,6 +121,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         (this.stave as any).MeasureNumber = this.MeasureNumber; // for debug info. vexflow automatically uses stave.measure for rendering measure numbers
         // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
         this.hasMetronomeMark = false;
+        this.vfRepetitionWords = []; // the modifiers were discarded with the old stave above, so don't keep stale entries
 
         if (this.ParentStaff) {
             this.setLineNumber(this.ParentStaff.StafflineCount);
@@ -456,7 +457,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
           });
     }
 
-    public addWordRepetition(repetitionInstruction: RepetitionInstruction): void {
+    /**
+     * Adds a repetition instruction (e.g. Segno, D.S. al Fine) as a VexFlow StaveRepetition to the measure's stave
+     * (or as a Volta for endings).
+     * @param repetitionInstruction the instruction to add
+     * @returns the created VF.Repetition, or undefined if a volta (ending) was added instead
+     */
+    public addWordRepetition(repetitionInstruction: RepetitionInstruction): VF.Repetition {
         let instruction: number | undefined;
         let position: number = VF.StaveModifier.Position.END;
         const xShift: number = this.beginInstructionsWidth;
@@ -502,10 +509,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
             (repetition as any).xShiftAsPercentOfStaveWidth = this.rules.RepetitionEndInstructionXShiftAsPercentOfStaveWidth;
             this.stave.addModifier(repetition, position);
-            return;
+            this.vfRepetitionWords.push(repetition);
+            return repetition;
         }
 
         this.addVolta(repetitionInstruction);
+        return undefined;
     }
 
     protected addVolta(repetitionInstruction: RepetitionInstruction): void {

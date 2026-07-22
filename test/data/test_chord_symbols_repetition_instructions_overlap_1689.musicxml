@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN"
+        "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.0">
+    <work><work-title>test_chord_symbols_repetition_instructions_overlap_1689</work-title></work>
+    <part-list>
+        <score-part id="P1">
+            <part-name> </part-name>
+        </score-part>
+    </part-list>
+    <part id="P1">
+        <measure number="1">
+            <attributes>
+                <divisions>256</divisions>
+                <key>
+                    <fifths>2</fifths>
+                </key>
+                <time>
+                    <beats>4</beats>
+                    <beat-type>4</beat-type>
+                </time>
+                <clef>
+                    <sign>G</sign>
+                    <line>2</line>
+                </clef>
+            </attributes>
+            <direction placement="above">
+                <direction-type>
+                    <segno/>
+                </direction-type>
+                <sound segno="segno1"/>
+            </direction>
+            <harmony default-y="25">
+                <root>
+                    <root-step>D</root-step>
+                </root>
+                <kind>major</kind>
+            </harmony>
+            <note>
+                <rest/>
+                <duration>1024</duration>
+                <type>whole</type>
+            </note>
+        </measure>
+        <measure number="2">
+            <harmony default-y="25">
+                <root>
+                    <root-step>B</root-step>
+                </root>
+                <kind>minor-seventh</kind>
+            </harmony>
+            <note>
+                <rest/>
+                <duration>1024</duration>
+                <type>whole</type>
+            </note>
+            <direction placement="above">
+                <direction-type>
+                    <words>To Coda</words>
+                </direction-type>
+                <sound tocoda="coda1"/>
+            </direction>
+            <backup>
+                <duration>512</duration>
+            </backup>
+            <harmony default-y="25">
+                <root>
+                    <root-step>E</root-step>
+                </root>
+                <kind>dominant</kind>
+            </harmony>
+        </measure>
+        <measure number="3">
+            <harmony default-y="25">
+                <root>
+                    <root-step>G</root-step>
+                </root>
+                <kind>major</kind>
+                <bass>
+                    <bass-step>D</bass-step>
+                </bass>
+            </harmony>
+            <note>
+                <rest/>
+                <duration>1024</duration>
+                <type>whole</type>
+            </note>
+            <direction placement="above">
+                <direction-type>
+                    <words>D.S. al Coda</words>
+                </direction-type>
+                <sound dalsegno="segno1"/>
+            </direction>
+            <backup>
+                <duration>512</duration>
+            </backup>
+            <harmony default-y="25">
+                <root>
+                    <root-step>D</root-step>
+                </root>
+                <kind>major</kind>
+            </harmony>
+        </measure>
+        <measure number="4">
+            <harmony default-y="25">
+                <root>
+                    <root-step>D</root-step>
+                </root>
+                <kind>major</kind>
+                <bass>
+                    <bass-step>E</bass-step>
+                </bass>
+            </harmony>
+            <direction placement="above">
+                <direction-type>
+                    <coda/>
+                </direction-type>
+                <sound coda="coda1"/>
+            </direction>
+            <note>
+                <rest/>
+                <duration>1024</duration>
+                <type>whole</type>
+            </note>
+        </measure>
+    </part>
+</score-partwise>
