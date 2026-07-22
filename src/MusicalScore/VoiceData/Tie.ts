@@ -6,7 +6,7 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import log from "loglevel";
 
 /**
- * A [[Tie]] connects two notes of the same pitch and name, indicating that they have to be played as a single note.
+ * A [[Tie]] connects two notes of the same sounding pitch, indicating that they have to be played as a single note.
  */
 export class Tie {
 

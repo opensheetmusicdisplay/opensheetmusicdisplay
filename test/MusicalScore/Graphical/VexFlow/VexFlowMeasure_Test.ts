@@ -23,6 +23,8 @@ import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/C
 import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
 import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
+import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
+import { AccidentalEnum } from "../../../../src/Common/DataObjects/Pitch";
 
 describe("VexFlow Measure", () => {
 
@@ -54,6 +56,55 @@ describe("VexFlow Measure", () => {
       expect(gms.MeasureList[0].length).to.equal(1);
       expect(gms.MeasureList[0][0].staffEntries.length).to.equal(0);
       done();
+   });
+
+   it("Renders a tie between enharmonic spellings", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_tie_enharmonic_spelling_1694.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const graphicalTies: GraphicalTie[] = osmd.GraphicSheet.MeasureList
+            .flatMap((measureList: GraphicalMeasure[]): GraphicalMeasure[] => measureList)
+            .flatMap((measure: GraphicalMeasure): GraphicalStaffEntry[] => measure.staffEntries)
+            .flatMap((staffEntry: GraphicalStaffEntry): GraphicalTie[] => staffEntry.GraphicalTies);
+
+         expect(graphicalTies.length).to.equal(1);
+         const tieStartNote: VexFlowGraphicalNote = graphicalTies[0].StartNote as VexFlowGraphicalNote;
+         expect(tieStartNote.getTieSVGs().length, "tie curve is present in the rendered SVG").to.be.greaterThan(0);
+         // The tie is enharmonic (F#–Gb), so unlike a same-spelling tie the continued note keeps its
+         // own accidental: the second note must still draw its flat, not read as a plain G (#1694).
+         const tieEndNote: VexFlowGraphicalNote = graphicalTies[0].EndNote as VexFlowGraphicalNote;
+         expect(tieEndNote.DrawnAccidental, "continued enharmonic tie note keeps its accidental")
+            .to.equal(AccidentalEnum.FLAT);
+         done();
+      }).catch(done);
+   });
+
+   // Regression guard for #1695: the enharmonic-accidental fix must not make a same-letter tie
+   // re-draw its accidental. In this sample (Bb key) a B-natural at the end of m.9 is tied to a
+   // B in m.10; the continued note is the same written note held on, so no natural should be
+   // drawn on it (it was not drawn before the fix). More generally, no continued tie note here
+   // should introduce a natural.
+   it("Does not draw a natural on the continued note of a same-letter tie", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const graphicalTies: GraphicalTie[] = osmd.GraphicSheet.MeasureList
+            .flatMap((measureList: GraphicalMeasure[]): GraphicalMeasure[] => measureList)
+            .flatMap((measure: GraphicalMeasure): GraphicalStaffEntry[] => measure.staffEntries)
+            .flatMap((staffEntry: GraphicalStaffEntry): GraphicalTie[] => staffEntry.GraphicalTies);
+
+         expect(graphicalTies.length, "sample contains tied notes").to.be.greaterThan(0);
+         const continuedNaturals: GraphicalTie[] = graphicalTies.filter(
+            (t: GraphicalTie) => t.EndNote && (t.EndNote as VexFlowGraphicalNote).DrawnAccidental === AccidentalEnum.NATURAL);
+         expect(continuedNaturals.length, "no continued tie note re-draws a natural").to.equal(0);
+         done();
+      }).catch(done);
    });
 
    // Non-regression test for grace note fingering positioning

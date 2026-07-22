@@ -67,8 +67,19 @@ export class AccidentalCalculator {
 
         const tie: Tie = graphicalNote.sourceNote.NoteTie;
         if (tie && graphicalNote.sourceNote !== tie.StartNote) {
-            return; // don't add accidentals on continued tie note
-            // note that continued tie notes may incorrectly use the same pitch object, with the same accidentalXml value.
+            // The continued note of a tie carries its accidental over implicitly, so it's
+            // normally suppressed. The exception is an enharmonic tie (e.g. F#–Gb, #1694),
+            // which respells one sounding pitch with a *different letter name* — that note must
+            // draw its own accidental. Distinguish by letter (FundamentalNote), not by the
+            // accidental enum: a natural-to-natural tie across a barline (e.g. B♮ tied to B under
+            // a B♭ key signature) is the same written note and its NATURAL/NONE enums may differ,
+            // yet it must stay suppressed (#1695 review). Only a different letter falls through.
+            const startPitch: Pitch = tie.StartNote.Pitch;
+            const sameLetter: boolean = startPitch !== undefined
+                && startPitch.FundamentalNote === pitch.FundamentalNote;
+            if (sameLetter) {
+                return; // same written note held across the tie — accidental is implied
+            }
         }
 
         const isInCurrentAlterationsToKeyList: boolean = this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) >= 0;
