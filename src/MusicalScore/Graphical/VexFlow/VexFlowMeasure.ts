@@ -12,6 +12,7 @@ import {VexFlowConverter} from "./VexFlowConverter";
 import {NoteTypeHandler} from "../../VoiceData/NoteType";
 import {InstantaneousTempoExpression, TempoType} from "../../VoiceData/Expressions/InstantaneousTempoExpression";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
+import {MusicSystem} from "../MusicSystem";
 import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
@@ -786,8 +787,32 @@ export class VexFlowMeasure extends GraphicalMeasure {
             measureNode.id = `${this.MeasureNumber}`;
         }
 
-        // Draw stave lines
+        // Draw stave lines (may re-format, recalculating noteStartX)
         this.stave.setContext(ctx).draw();
+        // Re-sync noteStartX across column siblings — Stave.draw() calls
+        // format() if stave.setX() set formatted=false, which recalculates
+        // noteStartX from stave.x + modifier widths and may differ between
+        // staves with different modifiers (e.g., treble vs bass clef width).
+        const parentSystem: MusicSystem | undefined = this.parentStaffLine?.ParentSystem;
+        if (parentSystem) {
+          const measList: any = parentSystem.MeasureList;
+          const myIdx: number = measList?.indexOf(this) ?? -1;
+          if (myIdx >= 0) {
+            let maxStartX: number = this.stave.getNoteStartX();
+            for (const sibling of measList) {
+              if (sibling && sibling !== this) {
+                const sx: number = sibling.getVFStave()?.getNoteStartX() ?? 0;
+                if (sx > maxStartX) { maxStartX = sx; }
+              }
+            }
+            this.stave.setNoteStartX(maxStartX);
+            for (const sibling of measList) {
+              if (sibling && sibling !== this) {
+                sibling.getVFStave()?.setNoteStartX(maxStartX);
+              }
+            }
+          }
+        }
         // Draw all voices
         for (const voiceID in this.vfVoices) {
             if (this.vfVoices.hasOwnProperty(voiceID)) {
