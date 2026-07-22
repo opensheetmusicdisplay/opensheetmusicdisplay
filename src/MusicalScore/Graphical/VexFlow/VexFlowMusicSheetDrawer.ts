@@ -219,6 +219,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     private drawSlur(graphicalSlur: GraphicalSlur, abs: PointF2D): void {
         // lazy horizontal: the x-window gate is applied in drawSlurs() by note position (see lazyDrawsSlur)
+        for (const bezierPoint of [graphicalSlur.bezierStartPt, graphicalSlur.bezierStartControlPt,
+            graphicalSlur.bezierEndControlPt, graphicalSlur.bezierEndPt]) {
+            if (!bezierPoint || !Number.isFinite(bezierPoint.x) || !Number.isFinite(bezierPoint.y)) {
+                // would create an invalid SVG path (e.g. NaN coordinates from a degenerate curve calculation)
+                log.warn("VexFlowMusicSheetDrawer.drawSlur: skipping slur with invalid bezier points, measure " +
+                    graphicalSlur.staffEntries[0]?.parentMeasure?.MeasureNumber);
+                return;
+            }
+        }
         const curvePointsInPixels: PointF2D[] = [];
         // 1) create inner or original curve:
         const p1: PointF2D = new PointF2D(graphicalSlur.bezierStartPt.x + abs.x, graphicalSlur.bezierStartPt.y + abs.y);

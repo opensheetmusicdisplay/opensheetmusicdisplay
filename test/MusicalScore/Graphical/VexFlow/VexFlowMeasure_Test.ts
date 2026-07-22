@@ -506,4 +506,43 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // Regression test for NaN slur curves: measure 23 of the Moonlight sonata sample has a note carrying both a
+   // slur start and an orphan slur stop with the same number (Sibelius export quirk). The stop used to close the
+   // start on its very own note, creating a zero-length slur whose curve calculation divided 0 by 0, ending up
+   // as an invalid SVG path (<path d="... CNaN NaN ...">). Now the stop is ignored and no self-slur is created.
+   it("Creates no zero-length (NaN-curve) slur for a note with both a slur start and an orphan stop", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_slurs_long_steep_arc_moonlight_sonata_issue1466.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const xml: string = new XMLSerializer().serializeToString(score);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmd.load(xml).then(() => {
+         osmd.render();
+         let slursChecked: number = 0;
+         for (const page of osmd.GraphicSheet.MusicPages) {
+            for (const system of page.MusicSystems) {
+               for (const staffLine of system.StaffLines) {
+                  for (const gSlur of staffLine.GraphicalSlurs) {
+                     const measureNumber: number = gSlur.staffEntries[0]?.parentMeasure?.MeasureNumber;
+                     expect(gSlur.slur.StartNote, `slur in measure ${measureNumber} should not start and end on the same note`)
+                        .to.not.equal(gSlur.slur.EndNote);
+                     for (const p of [gSlur.bezierStartPt, gSlur.bezierStartControlPt, gSlur.bezierEndControlPt, gSlur.bezierEndPt]) {
+                        if (!p) { // cross-staff slurs can remain uncalculated (skipped at draw time)
+                           continue;
+                        }
+                        expect(Number.isFinite(p.x) && Number.isFinite(p.y),
+                           `slur bezier points in measure ${measureNumber} should be finite (got ${p.x}, ${p.y})`).to.equal(true);
+                     }
+                     slursChecked++;
+                  }
+               }
+            }
+         }
+         expect(slursChecked, "sanity check: the sample's slurs were iterated").to.be.greaterThan(50);
+         done();
+      }).catch(done);
+   });
+
 });

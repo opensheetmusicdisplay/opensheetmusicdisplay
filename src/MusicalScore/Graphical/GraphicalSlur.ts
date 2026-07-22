@@ -99,6 +99,18 @@ export class GraphicalSlur extends GraphicalCurve {
         const endX: number = startEndPoints.endX;
         let startY: number = startEndPoints.startY;
         let endY: number = startEndPoints.endY;
+
+        // Degenerate case: start and end point (nearly) coincide, e.g. for a zero-length slur from a malformed
+        // file. The curve calculation below would divide 0 by 0 (start-end angle, tangent slopes) and produce
+        // NaN control points, ending up as an invalid SVG path - use a collapsed (invisible) curve instead.
+        if (Math.abs(endX - startX) < 0.0001 && Math.abs(endY - startY) < 0.0001) {
+            this.bezierStartPt = new PointF2D(startX, startY);
+            this.bezierStartControlPt = new PointF2D(startX, startY);
+            this.bezierEndControlPt = new PointF2D(endX, endY);
+            this.bezierEndPt = new PointF2D(endX, endY);
+            return;
+        }
+
         const minAngle: number = rules.SlurTangentMinAngle;
         const maxAngle: number = rules.SlurTangentMaxAngle;
         let points: PointF2D[];
@@ -905,11 +917,17 @@ export class GraphicalSlur extends GraphicalCurve {
             if (Math.abs(points[i].y - Number.MAX_VALUE) < 0.0001 || Math.abs(points[i].y - (-Number.MAX_VALUE)) < 0.0001) {
                 continue;
             }
-            slope = Math.max(slope, (points[i].y - y) / (points[i].x - x));
+            const pointSlope: number = (points[i].y - y) / (points[i].x - x);
+            if (!Number.isNaN(pointSlope)) { // NaN if a point coincides with the start point (0/0)
+                slope = Math.max(slope, pointSlope);
+            }
         }
 
         // in case all Points don't have a meaningful value or the slope between Start- and EndPoint is just bigger
-        slope = Math.max(slope, Math.abs(end.y - y) / (end.x - x));
+        const startEndSlope: number = Math.abs(end.y - y) / (end.x - x);
+        if (!Number.isNaN(startEndSlope)) { // NaN if start and end point coincide (0/0)
+            slope = Math.max(slope, startEndSlope);
+        }
         //limit to 80 degrees
         slope = Math.min(slope, 5.6713);
 
@@ -931,11 +949,17 @@ export class GraphicalSlur extends GraphicalCurve {
             if (Math.abs(points[i].y - Number.MAX_VALUE) < 0.0001 || Math.abs(points[i].y - (-Number.MAX_VALUE)) < 0.0001) {
                 continue;
             }
-            slope = Math.min(slope, (y - points[i].y) / (x - points[i].x));
+            const pointSlope: number = (y - points[i].y) / (x - points[i].x);
+            if (!Number.isNaN(pointSlope)) { // NaN if a point coincides with the end point (0/0)
+                slope = Math.min(slope, pointSlope);
+            }
         }
 
         // in case no Point has a meaningful value or the slope between Start- and EndPoint is just smaller
-        slope = Math.min(slope, (y - start.y) / (x - start.x));
+        const startEndSlope: number = (y - start.y) / (x - start.x);
+        if (!Number.isNaN(startEndSlope)) { // NaN if start and end point coincide (0/0)
+            slope = Math.min(slope, startEndSlope);
+        }
         //limit to 80 degrees
         slope = Math.max(slope, -5.6713);
 
