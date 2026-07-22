@@ -507,7 +507,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         if (instruction) {
             const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
-            (repetition as any).xShiftAsPercentOfStaveWidth = this.rules.RepetitionEndInstructionXShiftAsPercentOfStaveWidth;
+            const stafflineMeasures: GraphicalMeasure[] = this.ParentStaffLine?.Measures;
+            if (!stafflineMeasures || stafflineMeasures[stafflineMeasures.length - 1] === this) {
+                // only shift end instructions like Fine to the right in the last measure of the staffline,
+                //   where the shifted text ends in free space. In earlier measures it would be shifted
+                //   into the next measure, where it can collide e.g. with that measure's end instruction (#1689).
+                (repetition as any).xShiftAsPercentOfStaveWidth = this.rules.RepetitionEndInstructionXShiftAsPercentOfStaveWidth;
+            }
             this.stave.addModifier(repetition, position);
             this.vfRepetitionWords.push(repetition);
             return repetition;

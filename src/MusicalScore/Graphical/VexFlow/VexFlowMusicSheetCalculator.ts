@@ -2011,10 +2011,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 
+  /** The repetition instruction boxes already placed per staff line, for their mutual collision checks.
+   *  (a WeakMap, so that the entries of a previous render's staff lines don't linger) */
+  private placedWordRepetitionBoxes: WeakMap<StaffLine, {startX: number, endX: number, top: number}[]> = new WeakMap();
+
   /**
-   * Shifts a repetition instruction (VF.Repetition, e.g. Coda sign or "D.S. al Fine" text) above the skyline
-   * and reserves its space in the skyline, so that it doesn't overlap with other objects in its range,
-   * e.g. chord symbols, which are calculated before the repetition instructions (see #1689).
+   * Shifts a repetition instruction (VF.Repetition, e.g. Coda sign or "D.S. al Fine" text) above
+   * other objects in its range, e.g. chord symbols, which are calculated before the repetition
+   * instructions, or previously placed repetition instructions (see #1689).
+   * Shifted instructions reserve their space in the skyline, so that the staffline borders account for them.
    * The horizontal and default vertical position replicate the drawing code
    * in VexFlowPatch/src/staverepetition.js (drawSymbolText() etc).
    * @param measure the (uppermost) measure the repetition instruction was added to
@@ -2097,8 +2102,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       startX = measureStartX + measureWidth - 0.5 - textWidthUnits - 2.4;
       if (type === repetitionTypes.DC || type === repetitionTypes.DC_AL_FINE || type === repetitionTypes.DS ||
           type === repetitionTypes.DS_AL_FINE || type === repetitionTypes.FINE) {
-        // these are additionally shifted to the right, see xShiftAsPercentOfStaveWidth in staverepetition.js
-        startX += measureWidth * this.rules.RepetitionEndInstructionXShiftAsPercentOfStaveWidth;
+        // these are additionally shifted to the right (only in the staffline's last measure, see addWordRepetition()),
+        //   see xShiftAsPercentOfStaveWidth in staverepetition.js
+        startX += measureWidth * ((repetition as any).xShiftAsPercentOfStaveWidth ?? 0);
       }
       endX = startX + textWidthUnits;
       if (hasCodaGlyphAfterText) {
@@ -2120,14 +2126,37 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const defaultTop: number = -4.5 + yShiftUnits;
     const defaultBottom: number = -2.5 + yShiftUnits;
     const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
-    const skyLineMin: number = skyBottomLineCalculator.getSkyLineMinInRange(startX, endX);
+    let collisionMin: number = skyBottomLineCalculator.getSkyLineMinInRange(startX, endX);
+    if (collisionMin === -Infinity || collisionMin === Infinity) {
+      collisionMin = 0;
+    }
+    // repetition instructions in their default position don't reserve skyline space (see below),
+    //   so also check against the already placed repetition instructions of this staff line:
+    let placedBoxes: {startX: number, endX: number, top: number}[] = this.placedWordRepetitionBoxes.get(staffLine);
+    if (!placedBoxes) {
+      placedBoxes = [];
+      this.placedWordRepetitionBoxes.set(staffLine, placedBoxes);
+    }
+    for (const box of placedBoxes) {
+      if (box.endX > startX && box.startX < endX) {
+        collisionMin = Math.min(collisionMin, box.top);
+      }
+    }
     let collisionShiftUnits: number = 0;
-    if (skyLineMin < defaultBottom && skyLineMin !== -Infinity && skyLineMin !== Infinity) {
-      // something (e.g. a chord symbol) protrudes into the default position -> shift the repetition above it
-      collisionShiftUnits = skyLineMin - defaultBottom;
+    if (collisionMin < defaultBottom) {
+      // something (e.g. a chord symbol or another repetition instruction) protrudes
+      //   into the default position -> shift the repetition above it
+      collisionShiftUnits = collisionMin - defaultBottom;
       repetition.setShiftY((repetition as any).y_shift + collisionShiftUnits * unitInPixels);
     }
-    skyBottomLineCalculator.updateSkyLineInRange(startX, endX, defaultTop + collisionShiftUnits);
+    placedBoxes.push({ startX: startX, endX: endX, top: defaultTop + collisionShiftUnits });
+    if (collisionShiftUnits < 0) {
+      // only instructions that were shifted upwards reserve their space in the skyline, so that the
+      //   staffline borders (and thus the system spacing) account for them. Unshifted instructions stay
+      //   in their default band close above the staff, which shouldn't increase the system spacing
+      //   (as it also didn't before repetition instructions were placed via the skyline).
+      skyBottomLineCalculator.updateSkyLineInRange(startX, endX, defaultTop + collisionShiftUnits);
+    }
   }
 
   protected calculateSkyBottomLines(): void {
