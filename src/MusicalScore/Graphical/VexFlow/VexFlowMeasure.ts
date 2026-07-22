@@ -1039,6 +1039,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
                             (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
                         }
+                        this.applyLedgerLineEngravingRule(vfBeam);
                         vfbeams.push(vfBeam);
                     } else {
                         log.debug("Warning! Beam with no notes!");
@@ -1161,6 +1162,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                                     (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
                                     (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
                                 }
+                                this.applyLedgerLineEngravingRule(vfBeam);
                                 this.autoTupletVfBeams.push(vfBeam);
 
                                 const osmdBeam: Beam = new Beam(autoBeamId++);
@@ -1195,6 +1197,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
                 (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
             }
+            this.applyLedgerLineEngravingRule(vfBeam);
             this.autoTupletVfBeams.push(vfBeam);
 
             const osmdBeam: Beam = new Beam(autoBeamId++);
@@ -1237,8 +1240,154 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
                     (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
                 }
+                this.applyLedgerLineEngravingRule(vfBeam);
                 this.autoVfBeams.push(vfBeam);
             }
+        }
+    }
+
+    /**
+     * Enhances engraving for specific scenarios, such as scale runs that reach deep into ledger lines.
+     * VexFlow naturally pushes beams far outward to ensure minimum stem lengths. However, for notes
+     * extremely high or low on the staff, this results in visually sparse, floating beams. Musicians
+     * generally prefer beams to anchor closer to the staff (e.g. the 2nd/3rd line) to reduce visual spread,
+     * provided it doesn't violate minimum stem lengths.
+     *
+     * This patch hooks into VexFlow's calculateSlope method to apply a post-calculation y_shift.
+     * By exclusively extending stems (pulling down-stems down and up-stems up), we mathematically
+     * guarantee we never squash stems or cross noteheads, perfectly preserving VexFlow's minimum bounds.
+     */
+    private applyLedgerLineEngravingRule(vfBeam: VF.Beam): void {
+        const patchSlope: any = (originalMethod: any): any => {
+            return function(this: any): void {
+                if (originalMethod) {
+                    originalMethod.call(this);
+                }
+
+                if (!this.notes || this.notes.length === 0) {
+                    return;
+                }
+
+                const stemDirection: number = this.stem_direction;
+                if (stemDirection !== -1 && stemDirection !== 1) {
+                    return; // Ignore cross-staff or mixed beams
+                }
+
+                const stave: VF.Stave = this.notes[0].getStave();
+                if (!stave) {
+                    return;
+                }
+
+                let hasLedgerLine: boolean = false;
+                for (const note of this.notes) {
+                    const ys: number[] = note.getYs();
+                    if (ys.length === 0) { continue; }
+
+                    if (stemDirection === -1 && Math.min(...ys) <= stave.getYForLine(0)) {
+                        hasLedgerLine = true;
+                        break;
+                    } else if (stemDirection === 1 && Math.max(...ys) >= stave.getYForLine(4)) {
+                        hasLedgerLine = true;
+                        break;
+                    }
+                }
+
+                if (!hasLedgerLine) {
+                    return; // Normal run, let VexFlow do its thing.
+                }
+
+                const firstStemX: number = this.notes[0].getStemX();
+                const lastStemX: number = this.notes[this.notes.length - 1].getStemX();
+
+                const firstNoteYs: number[] = this.notes[0].getYs();
+                const lastNoteYs: number[] = this.notes[this.notes.length - 1].getYs();
+                if (firstNoteYs.length === 0 || lastNoteYs.length === 0) { return; }
+
+                const firstInnerY: number = stemDirection === -1 ? Math.max(...firstNoteYs) : Math.min(...firstNoteYs);
+                const lastInnerY: number = stemDirection === -1 ? Math.max(...lastNoteYs) : Math.min(...lastNoteYs);
+
+                let dx: number = lastStemX - firstStemX;
+                if (dx === 0) { dx = 1; }
+
+                const staffCenterY: number = stave.getYForLine(2); // Y=20 (3rd line)
+                const SLANT_AMOUNT: number = 2.5; // Uniform general slope (0.25 staff spaces)
+
+                const distFirst: number = Math.abs(firstInnerY - staffCenterY);
+                const distLast: number = Math.abs(lastInnerY - staffCenterY);
+
+                // For DOWN stems, the extreme edge pushes UP (subtract slant).
+                // For UP stems, the extreme edge pushes DOWN (add slant).
+                const slantVector: number = stemDirection === -1 ? -SLANT_AMOUNT : SLANT_AMOUNT;
+
+                let targetFirstY: number = 0;
+                let targetLastY: number = 0;
+
+                // RATIONALE: VexFlow natively applies excessively steep slopes for extreme ledger line runs,
+                // causing the beam to overlap visually with dense ledger lines.
+                // To minimize visual distraction:
+                // 1. We anchor the "inner" note (the note closest to the staff) exactly to the middle
+                //    of the staff (the 3rd line, Y=20).
+                // 2. We apply a uniform, ultra-gentle outward slant (0.25 spaces) toward the "extreme" note.
+                // This confines the beam securely within the clean inner space of the staff, completely
+                // clear of all ledger lines, while still providing a subtle "hint" of the musical contour.
+                if (distFirst < distLast) {
+                    // First note is closer to staff (inner note). Last note is extreme note.
+                    targetFirstY = staffCenterY;
+                    targetLastY = staffCenterY + slantVector;
+                } else if (distFirst > distLast) {
+                    // Last note is closer to staff (inner note). First note is extreme note.
+                    targetFirstY = staffCenterY + slantVector;
+                    targetLastY = staffCenterY;
+                } else {
+                    // Both are equally far (flat beam).
+                    targetFirstY = staffCenterY + (slantVector / 2);
+                    targetLastY = staffCenterY + (slantVector / 2);
+                }
+
+                this.slope = (targetLastY - targetFirstY) / dx;
+
+                const MIN_STEM_HEIGHT: number = 25; // ~2.5 spaces
+                let requiredYShift: number = 0;
+
+                // Safety bound: Ensure the dynamically sloped beam never squashes any stem
+                for (let i: number = 0; i < this.notes.length; i++) {
+                    const note: any = this.notes[i];
+                    const stemX: number = note.getStemX();
+                    const noteheadYs: number[] = note.getYs();
+                    if (noteheadYs.length === 0) { continue; }
+
+                    const extremeY: number = stemDirection === -1 ? Math.max(...noteheadYs) : Math.min(...noteheadYs);
+                    const proposedBeamYAtNote: number = targetFirstY + (stemX - firstStemX) * this.slope;
+
+                    if (stemDirection === -1) {
+                        const minBeamYAtNote: number = extremeY + MIN_STEM_HEIGHT;
+                        if (proposedBeamYAtNote < minBeamYAtNote) {
+                            requiredYShift = Math.max(requiredYShift, minBeamYAtNote - proposedBeamYAtNote);
+                        }
+                    } else {
+                        const maxBeamYAtNote: number = extremeY - MIN_STEM_HEIGHT;
+                        if (proposedBeamYAtNote > maxBeamYAtNote) {
+                            requiredYShift = Math.min(requiredYShift, maxBeamYAtNote - proposedBeamYAtNote);
+                        }
+                    }
+                }
+
+                targetFirstY += requiredYShift;
+                let defaultFirstY: number = 0;
+                if (this.notes[0].getStemExtents) {
+                    defaultFirstY = this.notes[0].getStemExtents().topY;
+                }
+
+                // Directly override VexFlow's calculated y_shift
+                this.y_shift = targetFirstY - defaultFirstY;
+            };
+        };
+
+        if ((<any>vfBeam).calculateSlope) {
+            (<any>vfBeam).calculateSlope = patchSlope((<any>vfBeam).calculateSlope);
+        }
+        if ((<any>vfBeam).calculateFlatSlope) {
+            (<any>vfBeam).calculateFlatSlope = patchSlope((<any>vfBeam).calculateFlatSlope);
         }
     }
 
