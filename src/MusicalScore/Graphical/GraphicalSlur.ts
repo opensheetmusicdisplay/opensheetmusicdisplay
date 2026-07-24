@@ -7,74 +7,34 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
-import { BoundingBox } from "./BoundingBox";
 import { Matrix2D } from "../../Common/DataObjects/Matrix2D";
-import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { Fraction } from "../../Common/DataObjects/Fraction";
-import { StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
 import * as VF from "vexflow";
 import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 
-/** Return staff-relative Y of notehead center from VF5 geometry.
- *  VF5 getYForNote(line) = stave.y + headroom*spacing + 5*spacing - line*spacing
- *  OSMD staff-relative origin is top staff line (Y=0, increasing downward).
- *  osmdY = (getYForNote(line) - topStaffLine) / unitInPixels = 5 - line */
-function getVF5NoteheadStaffY(note: GraphicalNote): number {
-    const vfgNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
-    if (vfgNote.notehead) {
-        return 5 - vfgNote.notehead().line;
-    }
-    return note.PositionAndShape?.RelativePosition?.y ?? 0;
-}
-/** Return staffLine-relative X from VF5's actual rendered position (in OSMD units).
- *  Falls back to OSMD model positions when VF stave is unavailable. */
-function getVF5SlurX(note: GraphicalNote): number {
-    const vfgNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
-    const vfNote: VF.StaveNote = vfgNote.vfnote?.[0] as VF.StaveNote;
-    const vfStave: VF.Stave | undefined = vfNote?.getStave?.();
-    if (vfNote && vfStave) {
-        const staveX: number = vfStave.getX();
-        const measureRelX: number = note.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-        const staffLinePixelX: number = staveX - measureRelX * 10;
-        const centerPx: number = vfNote.getAbsoluteX() + vfNote.getGlyphWidth() / 2;
-        return (centerPx - staffLinePixelX) / 10;
-    }
-    return note.PositionAndShape.RelativePosition.x
-         + note.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
-         + note.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-}
-
 export class GraphicalSlur extends GraphicalCurve {
-    // private intersection: PointF2D;
-
-    constructor(slur: Slur, rules: EngravingRules) {
-        super();
-        this.slur = slur;
-        this.rules = rules;
-    }
-
     public slur: Slur;
     public staffEntries: GraphicalStaffEntry[] = [];
     public placement: PlacementEnum;
     public graceStart: boolean;
     public graceEnd: boolean;
-    private rules: EngravingRules;
-    public SVGElement: Node;
-    /** Debug: obstacle points (end staff skyline → start staff frame) used for bow adjustment. */
+    /** SVGElement set by VexFlowMusicSheetDrawer at draw time. */
+    public SVGElement?: Node;
+    /** Debug obstacle points (for visual regression skyline overlay). */
     public debugSkyPoints: PointF2D[] = [];
-    /** Category classification for each debugSkyPoints entry ("stem", "notehead", "beam", "rest"). */
+    /** Labels for each debug obstacle point. */
     public debugSkyCategories: string[] = [];
 
-    /**
-     * Compares the timespan of two Graphical Slurs
-     * @param x
-     * @param y
-     */
+    constructor(slur: Slur, rules?: EngravingRules) {
+        super();
+        this.slur = slur;
+    }
+
     public static Compare (x: GraphicalSlur, y: GraphicalSlur ): number {
-        if (x.staffEntries.length < 1) { // x.staffEntries[i] can return undefined in Beethoven Moonlight Sonata sample
+        if (x.staffEntries.length < 1) {
             return -1;
         } else if (y.staffEntries.length < 1) {
             return 1;
@@ -95,10 +55,6 @@ export class GraphicalSlur extends GraphicalCurve {
         return 0;
     }
 
-    /**
-     *
-     * @param rules
-     */
     public calculateCurve(rules: EngravingRules): void {
 
         // single GraphicalSlur means a single Curve, eg each GraphicalSlurObject is meant to be on the same StaffLine
@@ -108,14 +64,14 @@ export class GraphicalSlur extends GraphicalCurve {
 
         // where the Slur (not the graphicalObject) starts and ends (could belong to another StaffLine)
         let slurStartNote: GraphicalNote = startStaffEntry.findGraphicalNoteFromNote(this.slur.StartNote);
-        if (!slurStartNote && this.graceStart) {
+        if (slurStartNote === undefined && this.graceStart) {
             slurStartNote = startStaffEntry.findGraphicalNoteFromGraceNote(this.slur.StartNote);
         }
-        if (!slurStartNote) {
+        if (slurStartNote === undefined) {
             slurStartNote = startStaffEntry.findEndTieGraphicalNoteFromNoteWithStartingSlur(this.slur.StartNote, this.slur);
         }
         let slurEndNote: GraphicalNote = endStaffEntry.findGraphicalNoteFromNote(this.slur.EndNote);
-        if (!slurEndNote && this.graceEnd) {
+        if (slurEndNote === undefined && this.graceEnd) {
             slurEndNote = endStaffEntry.findGraphicalNoteFromGraceNote(this.slur.EndNote);
         }
 
@@ -134,15 +90,18 @@ export class GraphicalSlur extends GraphicalCurve {
         let endY: number = startEndPoints.endY;
         const minAngle: number = rules.SlurTangentMinAngle;
         const maxAngle: number = rules.SlurTangentMaxAngle;
+        let start: PointF2D, end: PointF2D;
         let points: PointF2D[];
 
         if (this.placement === PlacementEnum.Above) {
             startY -= rules.SlurNoteHeadYOffset;
             endY -= rules.SlurNoteHeadYOffset;
+            start = new PointF2D(startX, startY);
+            end = new PointF2D(endX, endY);
             const startUpperRight: PointF2D = new PointF2D(this.staffEntries[0].parentMeasure.PositionAndShape.RelativePosition.x
                                                            + this.staffEntries[0].PositionAndShape.RelativePosition.x,
                                                            startY);
-            if (slurStartNote) {
+            if (slurStartNote !== undefined) {
                     startUpperRight.x += this.staffEntries[0].PositionAndShape.BorderRight;
             } else  {
                     // continuing Slur from previous StaffLine - must start after last Instruction of first Measure
@@ -157,16 +116,8 @@ export class GraphicalSlur extends GraphicalCurve {
             const endUpperLeft: PointF2D = new PointF2D(this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
                                                         + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
                                                         endY);
-            if (slurEndNote) {
-                // When there are 3+ staff entries, BorderLeft on the last entry can
-                // include predecessors in the same measure, narrowing the skyline query
-                // so much that intermediate entries are missed. Use endX to bound the
-                // query on the right so all intermediate entries are covered.
-                if (this.staffEntries.length > 2) {
-                    endUpperLeft.x = endX;
-                } else {
+            if (slurEndNote !== undefined) {
                     endUpperLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
-                }
             } else {
                     // Slur continues to next StaffLine - must reach the end of current StaffLine
                     endUpperLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
@@ -180,7 +131,6 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // SkyLinePointsList between firstStaffEntry startUpperRightPoint and lastStaffentry endUpperLeftPoint
             points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
-
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endUpperLeft.x - startUpperRight.x) / 2 + startUpperRight.x,
@@ -206,125 +156,62 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in SkyLine
                 // and tangent Lines characteristica
-            let startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
-            let endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
-            // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
-            // and the X-distance from StartPoint to EndPoint
-            const heightWidthRatio: number = this.calculateHeightWidthRatio(end2.x, transformedPoints);
+            const leftLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
+            const rightLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
+            const leftLineD: number = start2.y - start2.x * leftLineSlope;
+            const rightLineD: number = end2.y - end2.x * rightLineSlope;
 
-            // Cap slope asymmetry: a single skyline point very close to start
-            // or end can create arbitrarily large slopes that balloon the other
-            // side after equalization. Limit ratio to 3:1.
-            const leftAbs: number = Math.abs(startLineSlope);
-            const rightAbs: number = Math.abs(endLineSlope);
-            if (leftAbs > 3 * rightAbs) {
-                startLineSlope = 3 * rightAbs * Math.sign(startLineSlope);
-            } else if (rightAbs > 3 * leftAbs) {
-                endLineSlope = 3 * leftAbs * Math.sign(endLineSlope);
+            // calculate IntersectionPoint of the 2 Lines
+                // if same Slope, then Point.X between Start and End and Point.Y fixed
+            const intersectionPoint: PointF2D = new PointF2D();
+            let sameSlope: boolean = false;
+            if (Math.abs(Math.abs(leftLineSlope) - Math.abs(rightLineSlope)) < 0.0001) {
+                intersectionPoint.x = end2.x / 2;
+                intersectionPoint.y = 0;
+                sameSlope = true;
+            } else {
+                intersectionPoint.x = (rightLineD - leftLineD) / (leftLineSlope - rightLineSlope);
+                intersectionPoint.y = leftLineSlope * intersectionPoint.x + leftLineD;
             }
 
-            // Equalize to the steeper side so real obstacles are cleared.
-            const eqSlope: number = Math.max(startLineSlope, -endLineSlope);
-            startLineSlope = eqSlope;
-            endLineSlope = -eqSlope;
-
-            const startYOffset: number = 0;
-            const endYOffset: number = 0;
-
             // calculate tangent Lines Angles
-            let startAngle: number = minAngle;
-            let endAngle: number = -minAngle;
-            const result: {startAngle: number, endAngle: number} =
-                this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
-            startAngle = result.startAngle;
-            endAngle = result.endAngle;
+                // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
+            const leftAngle: number = minAngle;
+            const rightAngle: number = -minAngle;
+            // if the calculated Slopes (left and right) are equal, then Angles have fixed values
+            if (!sameSlope) {
+                this.calculateAngles(leftAngle, rightAngle, leftLineSlope, rightLineSlope, maxAngle);
+            }
 
             // calculate Curve's Control Points
-            const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =
-                this.calculateControlPoints(end2.x, startAngle, endAngle, transformedPoints, heightWidthRatio, startY, endY);
+            const controlPoints: {leftControlPoint: PointF2D, rightControlPoint: PointF2D} =
+                this.calculateControlPoints(end2.x, leftAngle, rightAngle, transformedPoints);
 
-            let startControlPoint: PointF2D = controlPoints.startControlPoint;
-            let endControlPoint: PointF2D = controlPoints.endControlPoint;
+            let leftControlPoint: PointF2D = controlPoints.leftControlPoint;
+            let rightControlPoint: PointF2D = controlPoints.rightControlPoint;
 
             // transform ControlPoints to original Coordinate System
                 // (rotate back and translate back)
-            startControlPoint = transposeMatrix.vectorMultiplication(startControlPoint);
-            startControlPoint.x += startX;
-            startControlPoint.y = -startControlPoint.y + startY;
-            endControlPoint = transposeMatrix.vectorMultiplication(endControlPoint);
-            endControlPoint.x += startX;
-            endControlPoint.y = -endControlPoint.y + startY;
+            leftControlPoint = transposeMatrix.vectorMultiplication(leftControlPoint);
+            leftControlPoint.x += startX;
+            leftControlPoint.y = -leftControlPoint.y + startY;
+            rightControlPoint = transposeMatrix.vectorMultiplication(rightControlPoint);
+            rightControlPoint.x += startX;
+            rightControlPoint.y = -rightControlPoint.y + startY;
 
-            // For cross-staff beams: ensure control points clear the highest
-            // notehead in the beam's voice. The skyline above only covers the
-            // start staff line. The slur itself may start and end on the same
-            // staff but the voice's beam can still cross staves.
-            if (slurStartNote && slurStartNote instanceof VexFlowGraphicalNote) {
-                const startVN: any = (slurStartNote as VexFlowGraphicalNote).vfnote?.[0];
-                const beamForNotes: any = startVN?.beam;
-                if (beamForNotes && this.isBeamCrossStaff(beamForNotes, slurStartNote)) {
-                    const beamNotes: any[] = beamForNotes.getNotes();
-                    let voiceUpperY: number = Infinity;
-                    let voiceLowerY: number = -Infinity;
-                    for (const bn of beamNotes) {
-                        const ns: any = bn.checkStave?.() || bn.stave;
-                        if (!ns) { continue; }
-                        const kps: any[] = bn.getKeyProps?.() || [];
-                        for (const kp of kps) {
-                            const noteYPx: number = ns.getYForNote(kp.line);
-                            voiceUpperY = Math.min(voiceUpperY, noteYPx);
-                            voiceLowerY = Math.max(voiceLowerY, noteYPx);
-                        }
-                    }
-                    // Convert to staff-relative units (same frame as control points)
-                    const staveYPx: number =
-                        startStaffEntry.parentMeasure.ParentStaffLine
-                            ?.PositionAndShape?.AbsolutePosition?.y ?? 0;
-                    const voiceUpperRel: number =
-                        voiceUpperY / unitInPixels - staveYPx;
-                    const voiceLowerRel: number =
-                        voiceLowerY / unitInPixels - staveYPx;
-                    const margin: number = rules.SlurCrossStaffMinBow;
-                    const maxMargin: number = rules.SlurCrossStaffMaxBow;
-                    if (this.placement === PlacementEnum.Above) {
-                        // Floor: cp must clear highest notehead in the voice
-                        // Ceiling: cp shouldn't balloon to infinity
-                        const floorY: number = voiceUpperRel - margin;
-                        const ceilingY: number = voiceUpperRel - maxMargin;
-                        if (startControlPoint.y > floorY) {
-                            startControlPoint.y = floorY;
-                        } else if (startControlPoint.y < ceilingY) {
-                            startControlPoint.y = ceilingY;
-                        }
-                        if (endControlPoint.y > floorY) {
-                            endControlPoint.y = floorY;
-                        } else if (endControlPoint.y < ceilingY) {
-                            endControlPoint.y = ceilingY;
-                        }
-                    } else if (this.placement === PlacementEnum.Below) {
-                        const floorY: number = voiceLowerRel + margin;
-                        const ceilingY: number = voiceLowerRel + maxMargin;
-                        if (startControlPoint.y < floorY) {
-                            startControlPoint.y = floorY;
-                        } else if (startControlPoint.y > ceilingY) {
-                            startControlPoint.y = ceilingY;
-                        }
-                        if (endControlPoint.y < floorY) {
-                            endControlPoint.y = floorY;
-                        } else if (endControlPoint.y > ceilingY) {
-                            endControlPoint.y = ceilingY;
-                        }
-                    }
-                }
-            }
+            /* for DEBUG only */
+            // this.intersection = transposeMatrix.vectorMultiplication(intersectionPoint);
+            // this.intersection.x += startX;
+            // this.intersection.y = -this.intersection.y + startY;
+            /* for DEBUG only */
 
             // set private members
-            this.bezierStartPt = new PointF2D(startX, startY - startYOffset);
-            this.bezierStartControlPt = new PointF2D(startControlPoint.x, startControlPoint.y - startYOffset);
-            this.bezierEndControlPt = new PointF2D(endControlPoint.x, endControlPoint.y - endYOffset);
-            this.bezierEndPt = new PointF2D(endX, endY - endYOffset);
+            this.bezierStartPt = start;
+            this.bezierStartControlPt = leftControlPoint;
+            this.bezierEndControlPt = rightControlPoint;
+            this.bezierEndPt = end;
 
-            // calculate slur Curvepoints and update Skyline
+            // calculate CurvePoints
             const length: number = staffLine.SkyLine.length;
             const startIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierStartPt.x, length);
             const endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierEndPt.x, length);
@@ -349,12 +236,14 @@ export class GraphicalSlur extends GraphicalCurve {
         } else {
             startY += rules.SlurNoteHeadYOffset;
             endY += rules.SlurNoteHeadYOffset;
+            start = new PointF2D(startX, startY);
+            end = new PointF2D(endX, endY);
 
             // firstStaffEntry startLowerRightPoint and lastStaffentry endLowerLeftPoint
             const startLowerRight: PointF2D = new PointF2D(this.staffEntries[0].parentMeasure.PositionAndShape.RelativePosition.x
                                                            + this.staffEntries[0].PositionAndShape.RelativePosition.x,
                                                            startY);
-            if (slurStartNote) {
+            if (slurStartNote !== undefined) {
                 startLowerRight.x += this.staffEntries[0].PositionAndShape.BorderRight;
             } else {
                 // continuing Slur from previous StaffLine - must start after last Instruction of first Measure
@@ -368,12 +257,8 @@ export class GraphicalSlur extends GraphicalCurve {
             const endLowerLeft: PointF2D = new PointF2D(this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
                                                         + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
                                                         endY);
-            if (slurEndNote) {
-                if (this.staffEntries.length > 2) {
-                    endLowerLeft.x = endX;
-                } else {
-                    endLowerLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
-                }
+            if (slurEndNote !== undefined) {
+                endLowerLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
             } else {
                 // Slur continues to next StaffLine - must reach the end of current StaffLine
                 endLowerLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
@@ -411,60 +296,53 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in BottomLine
             // and tangent Lines characteristica
-            let startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
-            let endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
+            const leftLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
+            const rightLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
+            const leftLineD: number = start2.y - start2.x * leftLineSlope;
+            const rightLineD: number = end2.y - end2.x * rightLineSlope;
 
-            // Cap slope asymmetry: a single skyline point very close to start
-            // or end can create arbitrarily large slopes that balloon the other
-            // side after equalization. Limit ratio to 3:1.
-            const leftAbsB: number = Math.abs(startLineSlope);
-            const rightAbsB: number = Math.abs(endLineSlope);
-            if (leftAbsB > 3 * rightAbsB) {
-                startLineSlope = 3 * rightAbsB * Math.sign(startLineSlope);
-            } else if (rightAbsB > 3 * leftAbsB) {
-                endLineSlope = 3 * leftAbsB * Math.sign(endLineSlope);
+            // calculate IntersectionPoint of the 2 Lines
+            // if same Slope, then Point.X between Start and End and Point.Y fixed
+            const intersectionPoint: PointF2D = new PointF2D();
+            let sameSlope: boolean = false;
+            if (Math.abs(Math.abs(leftLineSlope) - Math.abs(rightLineSlope)) < 0.0001) {
+                intersectionPoint.x = end2.x / 2;
+                intersectionPoint.y = 0;
+                sameSlope = true;
+            } else {
+                intersectionPoint.x = (rightLineD - leftLineD) / (leftLineSlope - rightLineSlope);
+                intersectionPoint.y = leftLineSlope * intersectionPoint.x + leftLineD;
             }
 
-            // Equalize to the steeper side so real obstacles are cleared.
-            const eqSlopeB: number = Math.max(startLineSlope, -endLineSlope);
-            startLineSlope = eqSlopeB;
-            endLineSlope = -eqSlopeB;
-
-            // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
-            // and the X-distance from StartPoint to EndPoint
-            const heightWidthRatio: number = this.calculateHeightWidthRatio(end2.x, transformedPoints);
-
-            const startYOffset: number = 0;
-            const endYOffset: number = 0;
-
             // calculate tangent Lines Angles
-            let startAngle: number = minAngle;
-            let endAngle: number = -minAngle;
-            const result: {startAngle: number, endAngle: number} =
-                this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
-            startAngle = result.startAngle;
-            endAngle = result.endAngle;
+            // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
+            const leftAngle: number = minAngle;
+            const rightAngle: number = -minAngle;
+            // if the calculated Slopes (left and right) are equal, then Angles have fixed values
+            if (!sameSlope) {
+                this.calculateAngles(leftAngle, rightAngle, leftLineSlope, rightLineSlope, maxAngle);
+            }
 
             // calculate Curve's Control Points
-            const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =
-                this.calculateControlPoints(end2.x, startAngle, endAngle, transformedPoints, heightWidthRatio, startY, endY);
-            let startControlPoint: PointF2D = controlPoints.startControlPoint;
-            let endControlPoint: PointF2D = controlPoints.endControlPoint;
+            const controlPoints: {leftControlPoint: PointF2D, rightControlPoint: PointF2D} =
+                this.calculateControlPoints(end2.x, leftAngle, rightAngle, transformedPoints);
+            let leftControlPoint: PointF2D = controlPoints.leftControlPoint;
+            let rightControlPoint: PointF2D = controlPoints.rightControlPoint;
 
             // transform ControlPoints to original Coordinate System
             // (rotate back and translate back)
-            startControlPoint = transposeMatrix.vectorMultiplication(startControlPoint);
-            startControlPoint.x += startX;
-            startControlPoint.y += startY;
-            endControlPoint = transposeMatrix.vectorMultiplication(endControlPoint);
-            endControlPoint.x += startX;
-            endControlPoint.y += startY;
+            leftControlPoint = transposeMatrix.vectorMultiplication(leftControlPoint);
+            leftControlPoint.x += startX;
+            leftControlPoint.y += startY;
+            rightControlPoint = transposeMatrix.vectorMultiplication(rightControlPoint);
+            rightControlPoint.x += startX;
+            rightControlPoint.y += startY;
 
             // set private members
-            this.bezierStartPt = new PointF2D(startX, startY + startYOffset);
-            this.bezierStartControlPt = new PointF2D(startControlPoint.x, startControlPoint.y + startYOffset);
-            this.bezierEndControlPt = new PointF2D(endControlPoint.x, endControlPoint.y + endYOffset);
-            this.bezierEndPt = new PointF2D(endX, endY + endYOffset);
+            this.bezierStartPt = start;
+            this.bezierStartControlPt = leftControlPoint;
+            this.bezierEndControlPt = rightControlPoint;
+            this.bezierEndPt = end;
 
             /* for DEBUG only */
             // this.intersection = transposeMatrix.vectorMultiplication(intersectionPoint);
@@ -483,7 +361,7 @@ export class GraphicalSlur extends GraphicalCurve {
                 const diff: number = i / samplingUnit - this.bezierStartPt.x;
                 const curvePoint: PointF2D = this.calculateCurvePointAtIndex(Math.abs(diff) / distance);
 
-                // update start- and endIndex for better accuracy
+                // update left- and rightIndex for better accuracy
                 let index: number = skyBottomLineCalculator.getLeftIndexForPointX(curvePoint.x, length);
                 // update BottomLine with final slur curve:
                 if (index >= startIndex) {
@@ -497,805 +375,6 @@ export class GraphicalSlur extends GraphicalCurve {
         }
     }
 
-
-    /**
-     * Calculates the bezier curve for a slur that crosses between two staves (e.g. left hand to right hand),
-     * where the start and end notes lie on different stafflines that are stacked vertically within the same
-     * MusicSystem. Unlike [[calculateCurve]], this runs at draw time, because it needs the final vertical
-     * positions of both stafflines, which aren't fixed until the system Y-layout (after calculateSlurs()).
-     *
-     * The resulting bezier points are stored relative to the start note's staffline, so the regular drawSlur()
-     * (which adds that staffline's absolute position) renders them at the correct absolute location.
-     * @returns true if the curve was calculated and can be drawn, false otherwise (e.g. missing notes, or the
-     * two staves are not in the same MusicSystem - a cross-staff plus cross-system slur is not supported).
-     */
-    public calculateCurveCrossStaff(rules: EngravingRules): boolean {
-        const slurStartNote: GraphicalNote = rules.GNote(this.slur.StartNote);
-        const slurEndNote: GraphicalNote = rules.GNote(this.slur.EndNote);
-        if (!slurStartNote || !slurEndNote) {
-            return false;
-        }
-        const startStaffLine: StaffLine = slurStartNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
-        const endStaffLine: StaffLine = slurEndNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
-        if (!startStaffLine || !endStaffLine) {
-            return false;
-        }
-        // Only handle staves stacked within the same MusicSystem (the regular cross-staff case).
-        if (startStaffLine.ParentMusicSystem !== endStaffLine.ParentMusicSystem) {
-            return false;
-        }
-        const systemBox: BoundingBox = startStaffLine.ParentMusicSystem.PositionAndShape;
-
-        // X: use the container-based positions from positionRelativeToBox (these are correct for X).
-        // Y: use VF5 notehead geometry (getVF5NoteheadStaffY), because PositionAndShape on notes
-        //     carries only a small centering offset, not the actual staff position.
-        const startXPos: PointF2D = this.positionRelativeToBox(slurStartNote.PositionAndShape, systemBox);
-        const endXPos: PointF2D = this.positionRelativeToBox(slurEndNote.PositionAndShape, systemBox);
-        const staffLineOffset: PointF2D = startStaffLine.PositionAndShape.RelativePosition;
-        const startX: number = startXPos.x - staffLineOffset.x;
-        const endX: number = endXPos.x - staffLineOffset.x;
-
-        // Compute notehead Y from VF5's actual rendered geometry.
-        const startStaffAbsY: number = startStaffLine.PositionAndShape.AbsolutePosition.y;
-        const endStaffAbsY: number = endStaffLine.PositionAndShape.AbsolutePosition.y;
-        const startNoteY: number = this.vfNoteYRelative(slurStartNote, startStaffAbsY);
-        // For end note: use its own staff line Y (endStaffAbsY) as the
-        // forced stave position. Non-beamed cross-staff notes may still
-        // have the wrong VF stave (voice's owner stave, not target stave).
-        const endNoteY: number = this.vfNoteYRelative(slurEndNote, startStaffAbsY,
-            endStaffAbsY);
-
-        this.placement = PlacementEnum.Above;
-
-        const yGap: number = rules.SlurNoteHeadYOffset;
-
-        // If start/end notes are in cross-staff beams, compute the beam Y in
-        // staff-relative OSMD units so the slur anchor sits at the beam edge
-        // rather than at the notehead (which may be far from the beam).
-        const startBeamY: number | undefined = this.beamYForNote(slurStartNote, startStaffAbsY);
-        const endBeamY: number | undefined = this.beamYForNote(slurEndNote, startStaffAbsY);
-
-        const startY: number = startBeamY ?? (startNoteY - yGap);
-        const endY: number = endBeamY ?? (endNoteY - yGap);
-
-        // The curve bows out (vertically) from the line connecting the two notes.
-        const dx: number = endX - startX;
-        const dy: number = endY - startY;
-        const distance: number = Math.sqrt(dx * dx + dy * dy);
-
-        const bow: number = Math.max(rules.SlurCrossStaffMinBow,
-                                     Math.min(rules.SlurCrossStaffMaxBow,
-                                         distance * rules.SlurCrossStaffBowFactor));
-        const bowSign: number = -1;
-
-        // ── Debug obstacle visualization ────────────────────────────────────
-        // Populate debug circles (skyline + rests). Bow is geometric only.
-        this.debugSkyPoints = [];
-        this.debugSkyCategories = [];
-        const scanSky: (sl: StaffLine, toFrame: boolean) => void
-            = (staffLine: StaffLine, toFrame: boolean): void => {
-            const calc: SkyBottomLineCalculator = staffLine?.SkyBottomLineCalculator;
-            if (!calc) { return; }
-            const line: number[] = staffLine.SkyLine;
-            const sU: number = calc.SamplingUnit;
-            const rX: number = staffLine.PositionAndShape.RelativePosition.x;
-            const aY: number = staffLine.PositionAndShape.AbsolutePosition.y;
-            const xO: number = toFrame ? rX - startStaffLine.PositionAndShape.RelativePosition.x : 0;
-            const yO: number = toFrame ? aY - startStaffAbsY : 0;
-            const sI: number = toFrame ? startX + (startStaffLine.PositionAndShape.RelativePosition.x - rX) : startX;
-            const eI: number = toFrame ? endX + (startStaffLine.PositionAndShape.RelativePosition.x - rX) : endX;
-            let si: number = calc.getRightIndexForPointX(sI, line.length);
-            let ei: number = calc.getLeftIndexForPointX(eI, line.length);
-            if (si < 0) { si = 0; }
-            if (ei >= line.length) { ei = line.length - 1; }
-            for (let i: number = si; i < ei; i++) {
-                const v: number = line[i];
-                if (v !== 0) {
-                    this.debugSkyPoints.push(new PointF2D(
-                        (0.5 + i) / sU + xO, v + yO));
-                    this.debugSkyCategories.push("skyline");
-                }
-            }
-        };
-        if (endStaffLine) { scanSky(endStaffLine, true); }
-        if (startStaffLine) { scanSky(startStaffLine, false); }
-
-        const addRest: (gvEntry: GraphicalVoiceEntry) => void
-            = (gvEntry: GraphicalVoiceEntry): void => {
-            for (const n of gvEntry.notes ?? []) {
-                if (!n.sourceNote?.isRest?.() || !n.PositionAndShape) { continue; }
-                const box: any = n.PositionAndShape;
-                const ap: any = box.AbsolutePosition;
-                if (!ap) { continue; }
-                const rX: number = ap.x - startStaffLine.PositionAndShape.AbsolutePosition.x;
-                if (rX >= Math.min(startX, endX) - 10 && rX <= Math.max(startX, endX) + 10) {
-                    this.debugSkyPoints.push(new PointF2D(rX, ap.y - (box.BorderTop ?? 0) - startStaffAbsY));
-                    this.debugSkyCategories.push("rest");
-                }
-            }
-        };
-        for (const se of this.staffEntries) {
-            const sl_: StaffLine = se?.parentMeasure?.ParentStaffLine;
-            if (sl_) { for (const gve of se.graphicalVoiceEntries ?? []) { addRest(gve); } }
-        }
-        if (endStaffLine) {
-            for (const m_ of endStaffLine.Measures ?? []) {
-                for (const se of (m_ as any).staffEntries ?? []) {
-                    for (const gve of (se as any).graphicalVoiceEntries ?? []) { if (gve) { addRest(gve); } }
-                }
-            }
-        }
-
-        const concreteObstaclePoints: PointF2D[] = [];
-        const attachedVoices: Set<any> = new Set<any>([
-            slurStartNote.parentVoiceEntry?.parentVoiceEntry?.ParentVoice,
-            slurEndNote.parentVoiceEntry?.parentVoiceEntry?.ParentVoice,
-        ]);
-        const addConcreteObstacles: (staffLine: StaffLine) => void = (staffLine: StaffLine): void => {
-            for (const measure of staffLine.Measures ?? []) {
-                for (const staffEntry of (measure as any).staffEntries ?? []) {
-                    for (const voiceEntry of staffEntry.graphicalVoiceEntries ?? []) {
-                        if (!attachedVoices.has(voiceEntry.parentVoiceEntry?.ParentVoice)) { continue; }
-                        for (const note of voiceEntry.notes ?? []) {
-                            const box: any = note.PositionAndShape;
-                            const absPos: any = box?.AbsolutePosition;
-                            if (!absPos) { continue; }
-                            const noteX: number = absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x;
-                            if (noteX < Math.min(startX, endX) || noteX > Math.max(startX, endX)) { continue; }
-                            const noteY: number = absPos.y - (box.BorderTop ?? 0) - startStaffAbsY;
-                            concreteObstaclePoints.push(new PointF2D(noteX, noteY));
-                            this.debugSkyPoints.push(new PointF2D(noteX, noteY));
-                            this.debugSkyCategories.push("notehead");
-
-                            // ── (c) Modifiers (accidentals, articulations) ──
-                            {
-                                const vfNoteM: any = (note as any).vfnote?.[0];
-                                if (vfNoteM) {
-                                    const vfBBox: any = vfNoteM.getBoundingBox?.();
-                                    if (vfBBox && Number.isFinite(vfBBox.y)) {
-                                        const modX: number = (vfBBox.x ?? 0) / unitInPixels
-                                            - startStaffLine.PositionAndShape.AbsolutePosition.x;
-                                        const modY: number = vfBBox.y / unitInPixels - startStaffAbsY;
-                                        if (modX >= Math.min(startX, endX) && modX <= Math.max(startX, endX)) {
-                                            this.debugSkyPoints.push(new PointF2D(modX, modY));
-                                            this.debugSkyCategories.push("modifier");
-                                            if (Number.isFinite(vfBBox.w)) {
-                                                const modX2: number = (vfBBox.x + vfBBox.w) / unitInPixels
-                                                    - startStaffLine.PositionAndShape.AbsolutePosition.x;
-                                                if (modX2 >= Math.min(startX, endX) && modX2 <= Math.max(startX, endX)) {
-                                                    this.debugSkyPoints.push(new PointF2D(modX2, modY));
-                                                    this.debugSkyCategories.push("modifier");
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            const vfNote: any = (note as any).vfnote?.[0];
-                            const stemExtents: any = vfNote?.getStemExtents?.();
-                            const stave: any = vfNote?.checkStave?.() || vfNote?.stave;
-                            if (!stemExtents || !stave
-                                || !Number.isFinite(stemExtents.topY)
-                                || !Number.isFinite(stemExtents.bottomY)) { continue; }
-                            const stemX: number = (vfNote.getAbsoluteX?.() ?? 0) / unitInPixels
-                                - startStaffLine.PositionAndShape.AbsolutePosition.x;
-                            this.debugSkyPoints.push(new PointF2D(
-                                stemX, stemExtents.topY / unitInPixels - startStaffAbsY,
-                            ));
-                            concreteObstaclePoints.push(new PointF2D(
-                                stemX, stemExtents.topY / unitInPixels - startStaffAbsY,
-                            ));
-                            this.debugSkyCategories.push("stem");
-                            this.debugSkyPoints.push(new PointF2D(
-                                stemX, stemExtents.bottomY / unitInPixels - startStaffAbsY,
-                            ));
-                            concreteObstaclePoints.push(new PointF2D(
-                                stemX, stemExtents.bottomY / unitInPixels - startStaffAbsY,
-                            ));
-                            this.debugSkyCategories.push("stem");
-                        }
-                    }
-                }
-            }
-        };
-        addConcreteObstacles(startStaffLine);
-        if (endStaffLine !== startStaffLine) { addConcreteObstacles(endStaffLine); }
-        if (this.debugSkyPoints.length === 0) {
-            const addMeasureNotes: (measure: any) => void = (measure: any): void => {
-                for (const staffEntry of measure?.staffEntries ?? []) {
-                    for (const voiceEntry of staffEntry.graphicalVoiceEntries ?? []) {
-                        for (const note of voiceEntry.notes ?? []) {
-                            const box: any = note.PositionAndShape;
-                            const absPos: any = box?.AbsolutePosition;
-                            if (!absPos) { continue; }
-                            this.debugSkyPoints.push(new PointF2D(
-                                absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x,
-                                absPos.y - (box.BorderTop ?? 0) - startStaffAbsY,
-                            ));
-                            concreteObstaclePoints.push(new PointF2D(
-                                absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x,
-                                absPos.y - (box.BorderTop ?? 0) - startStaffAbsY,
-                            ));
-                            this.debugSkyCategories.push("notehead");
-                        }
-                    }
-                }
-            };
-            addMeasureNotes(slurStartNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure);
-            addMeasureNotes(slurEndNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure);
-        }
-
-        // Separate skyline/rest/modifier points for a dedicated bow computation.
-        // The "skyline" category (from scanSky) captures ALL drawn elements and is
-        // prone to cross-staff noise (beams/slurs spanning grand staff). Filter it
-        // to within StaffHeight of the chord — beyond that is unrealistic for any
-        // within-staff element. Modifiers (accidentals, articulations) and rests
-        // are precise obstacles and use the full |dy| bound.
-        const skylinePoints: PointF2D[] = [];
-        for (let pi: number = 0; pi < this.debugSkyPoints.length; pi++) {
-            const cat: string = this.debugSkyCategories[pi] ?? "";
-            if (cat !== "skyline" && cat !== "rest" && cat !== "modifier") { continue; }
-            const pt: PointF2D = this.debugSkyPoints[pi];
-            const t: number = (pt.x - startX) / dx;
-            if (t <= 0.15 || t >= 0.85) { continue; }
-            const chordY: number = startY + dy * t;
-            if (Math.abs(pt.y - chordY) > Math.abs(dy)) { continue; }
-            // General skyline includes cross-staff drawing noise; clamp to StaffHeight.
-            if (cat === "skyline" && Math.abs(pt.y - chordY) > startStaffLine.StaffHeight) { continue; }
-            skylinePoints.push(pt);
-        }
-
-        let clearanceBow: number = bow;
-        // Concrete obstacles (noteheads, stems): capped at StaffHeight to prevent
-        // ballooning on short slurs (M2, M4, etc.) where near-chord obstacles
-        // are already handled by the base bow geometry.
-        for (const obstacle of concreteObstaclePoints) {
-            const t: number = (obstacle.x - startX) / dx;
-            if (t <= 0 || t >= 1) { continue; }
-            const chordY: number = startY + dy * t;
-            if (Math.abs(obstacle.y - chordY) > Math.abs(dy)) { continue; }
-            const weight: number = 3 * t * (1 - t);
-            const requiredBow: number = this.placement === PlacementEnum.Above
-                ? (chordY - obstacle.y + rules.SlurNoteHeadYOffset) / weight
-                : (obstacle.y - chordY + rules.SlurNoteHeadYOffset) / weight;
-            if (requiredBow > clearanceBow) { clearanceBow = requiredBow; }
-        }
-        clearanceBow = Math.min(clearanceBow, startStaffLine.StaffHeight);
-        // Skyline obstacles (modifiers): use a proportional cap (distance-based)
-        // so long slurs (M10, M12, M21) can clear modifier heights.
-        let skyBow: number = clearanceBow;
-        for (const obstacle of skylinePoints) {
-            const t: number = (obstacle.x - startX) / dx;
-            const chordY: number = startY + dy * t;
-            const weight: number = 3 * t * (1 - t);
-            const requiredBow: number = this.placement === PlacementEnum.Above
-                ? (chordY - obstacle.y + rules.SlurNoteHeadYOffset) / weight
-                : (obstacle.y - chordY + rules.SlurNoteHeadYOffset) / weight;
-            if (requiredBow > skyBow) { skyBow = requiredBow; }
-        }
-        skyBow = Math.min(skyBow, Math.max(distance * 0.28, startStaffLine.StaffHeight * 2));
-        clearanceBow = Math.max(clearanceBow, skyBow);
-        this.bezierStartPt = new PointF2D(startX, startY);
-        this.bezierStartControlPt = new PointF2D(startX + dx * 0.3, startY + dy * 0.3 + bowSign * clearanceBow);
-        this.bezierEndControlPt = new PointF2D(startX + dx * 0.7, startY + dy * 0.7 + bowSign * clearanceBow);
-        this.bezierEndPt = new PointF2D(endX, endY);
-        return true;
-    }
-
-    /**
-     * Returns the notehead Y of `note` relative to the start staff line.
-     * Uses VexFlow's stave.getYForNote() for the actual rendered position,
-     * converted to OSMD units. Falls back to OSMD model positions.
-     */
-    private vfNoteYRelative(note: GraphicalNote, staffAbsY: number,
-                             forceStaffAbsY?: number): number {
-        const gNote: any = note as VexFlowGraphicalNote;
-        const vfNote: any = gNote.vfnote?.[0];
-        if (vfNote) {
-            const stave: any = vfNote.checkStave?.() || vfNote.stave;
-            const keyProps: any[] = vfNote.getKeyProps?.() || [];
-            if (keyProps.length > 0) {
-                let noteAbsPixels: number;
-                if (forceStaffAbsY !== undefined) {
-                    // Use explicit staff Y (e.g. for cross-staff notes whose
-                    // VF stave wasn't reassigned by positionCrossStaffBeams).
-                    // Formula: getYForNote(line) = stave.y + 50 - line*10
-                    // with OSMD defaults (spaceAboveStaffLn=0, spacing=10).
-                    noteAbsPixels = forceStaffAbsY * unitInPixels
-                        + 50 - keyProps[0].line * unitInPixels;
-                } else if (stave) {
-                    noteAbsPixels = stave.getYForNote(keyProps[0].line);
-                } else {
-                    const fallbackY: number = note.PositionAndShape?.AbsolutePosition?.y ?? 0;
-                    return fallbackY - staffAbsY;
-                }
-                const noteAbsUnits: number = noteAbsPixels / unitInPixels;
-                return noteAbsUnits - staffAbsY;
-            }
-        }
-        const absY: number = note.PositionAndShape?.AbsolutePosition?.y ?? 0;
-        return absY - staffAbsY;
-    }
-
-    /**
-     * If `note` belongs to a cross-staff beam, returns the beam Y in OSMD units
-     * relative to the start staff line (same coordinate system as startNoteY/endNoteY).
-     * The beam Y is the anchor point from positionCrossStaffBeams() — 35% from
-     * the upper stave's bottom line toward the lower stave's top line.
-     * Returns undefined if the note is not in a cross-staff beam.
-     */
-    private beamYForNote(note: GraphicalNote, startStaffLineY: number, relativeToOwnStave: boolean = false): number | undefined {
-        const gNote: any = note;
-        // Find the VF5 note that is actually beamed — vfnote[] may contain
-        // multiple notes (e.g. quarter + 16th on same pitch) and the beam
-        // is on a different element than vfnote[0].
-        const vfNote: any = (gNote.vfnote ?? []).find((n: any) => n?.beam);
-        if (!vfNote) { return undefined; }
-        const beam: any = vfNote.beam;
-        if (!beam) { return undefined; }
-        const stave: any = vfNote.checkStave?.() || vfNote.stave;
-        if (!stave) { return undefined; }
-
-        // Only adjust when the beam is on the same side of the notehead as the slur.
-        // For "Above" placement: UP-stem notes (beam above notehead) need to clear beam.
-        // DOWN-stem notes (beam below notehead) — no conflict.
-        const stemDir: number = vfNote.getStemDirection?.() ?? 0;
-        if (this.placement === PlacementEnum.Above && stemDir !== 1) { return undefined; }
-        if (this.placement === PlacementEnum.Below && stemDir !== -1) { return undefined; }
-
-        const measure: any = gNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
-        if (!measure) { return undefined; }
-
-        // Find the sibling measure — the beam is in the OWNER's crossStaffBeamSiblings
-        let ownerMeasure: any;
-        let siblingMeasure: any;
-        const col: any[] = measure.ParentMusicSystem?.GraphicalMeasures;
-        if (col) {
-            let colIdx: number = -1;
-            for (let ci: number = 0; ci < col.length; ci++) {
-                if (col[ci].indexOf(measure) >= 0) { colIdx = ci; break; }
-            }
-            if (colIdx >= 0) {
-                for (const m of col[colIdx]) {
-                    for (const [b, sib] of (m as any).crossStaffBeamSiblings ?? []) {
-                        if (b === beam) { ownerMeasure = m; siblingMeasure = sib; break; }
-                    }
-                    if (siblingMeasure) { break; }
-                }
-            }
-        }
-        if (siblingMeasure) {
-            // Read the beam position directly from positionCrossStaffBeams
-            // (flatBeamOffset = midpoint, clamped to stave bounds).
-            // This is the authoritative value — no need to recompute here.
-            const flatY: number | undefined = (beam as any).renderOptions?.flatBeamOffset;
-            if (flatY !== undefined) {
-                if (relativeToOwnStave && stave) {
-                    return (flatY - stave.getYForLine(0)) / unitInPixels;
-                }
-                return flatY / unitInPixels - startStaffLineY;
-            }
-            // Fallback: not yet positioned, use stave-midpoint estimate
-            const ownerStave: any = ownerMeasure!.getVFStave();
-            const sibStave: any = siblingMeasure.getVFStave();
-            const ownerY0: number = ownerStave.getYForLine(0);
-            const sibY0: number = sibStave.getYForLine(0);
-            const localBelow: boolean = ownerY0 > sibY0;
-            const upperStave: any = localBelow ? sibStave : ownerStave;
-            const lowerStave: any = localBelow ? ownerStave : sibStave;
-            const upBot: number = upperStave.getYForLine(4);
-            const lowTop: number = lowerStave.getYForLine(0);
-            const beamYPx: number = upBot + (lowTop - upBot) * 0.5;
-            if (relativeToOwnStave && stave) {
-                return (beamYPx - stave.getYForLine(0)) / unitInPixels;
-            }
-            return beamYPx / unitInPixels - startStaffLineY;
-        }
-
-        // Regular single-staff beam — use stem-tip Y (beam top for beamed notes).
-        // The stem-direction check at the top of this method already ensures
-        // the beam is on the correct side of the notehead for this slur's placement.
-        const stemTipPx: number = vfNote.getStemExtents?.()?.topY ?? 0;
-        if (relativeToOwnStave && stave && stemTipPx > 0) {
-            return (stemTipPx - stave.getYForLine(0)) / unitInPixels;
-        }
-        if (stemTipPx > 0) {
-            return stemTipPx / unitInPixels - startStaffLineY;
-        }
-        return undefined;
-    }
-
-    /**
-     * Returns true if the beam is in any measure's crossStaffBeamSiblings
-     * (authoritative — populated during fixCrossStaffBeams/fixCrossStaffTuplets).
-     */
-    private isBeamCrossStaff(beam: any, note?: GraphicalNote): boolean {
-        // Search the note's measure column for crossStaffBeamSiblings
-        const gNote: any = note as VexFlowGraphicalNote;
-        const measure: any = gNote?.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
-        if (!measure) { return false; }
-        const col: any[] = measure.ParentMusicSystem?.GraphicalMeasures;
-        if (!col) { return false; }
-        let colIdx: number = -1;
-        for (let ci: number = 0; ci < col.length; ci++) {
-            if (col[ci].indexOf(measure) >= 0) { colIdx = ci; break; }
-        }
-        if (colIdx < 0) { return false; }
-        for (const m of col[colIdx]) {
-            const siblings: any = (m as any).crossStaffBeamSiblings;
-            if (!siblings) { continue; }
-            for (const [b] of siblings) {
-                if (b === beam) { return true; }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * At draw time: if this slur's start note is in a cross-staff beam,
-     * adjust bezier control points so the curve clears the highest notehead
-     * in that beam. Called from drawSlurs for non-isCrossed slurs whose
-     * voice crosses staves (curve was computed at layout time before VF
-     * beams existed, so it didn't account for treble noteheads).
-     */
-    public clampToVoiceSkyline(rules: EngravingRules): void {
-        if (!this.bezierStartPt || !this.bezierStartControlPt ||
-            !this.bezierEndControlPt || !this.bezierEndPt) { return; }
-        // Get the start note's VF note and its beam
-        const gNote: any = this.staffEntries?.[0]
-            ?.findGraphicalNoteFromNote?.(this.slur.StartNote);
-        const vfN: any = gNote?.vfnote?.[0];
-        const beam: any = vfN?.beam;
-        if (!beam || !this.isBeamCrossStaff(beam, gNote)) { return; }
-
-        // Find highest notehead Y in the beam (staff-relative)
-        const staffLine: any = this.staffEntries?.[0]
-            ?.parentMeasure?.ParentStaffLine;
-        if (!staffLine) { return; }
-        const startStaffAbsY: number =
-            staffLine.PositionAndShape?.AbsolutePosition?.y ?? 0;
-        let voiceUpperY: number = Infinity;
-        for (const bn of beam.getNotes()) {
-            const ns: any = bn.checkStave?.() || bn.stave;
-            if (!ns) { continue; }
-            for (const kp of bn.getKeyProps?.() || []) {
-                const noteYPx: number = ns.getYForNote(kp.line);
-                const noteY: number = noteYPx / unitInPixels - startStaffAbsY;
-                voiceUpperY = Math.min(voiceUpperY, noteY);
-            }
-        }
-        if (!isFinite(voiceUpperY)) { return; }
-
-        const startY: number = this.bezierStartPt.y;
-        const dy: number = this.bezierEndPt.y - startY;
-        const startX: number = this.bezierStartPt.x;
-        const endX: number = this.bezierEndPt.x;
-        // ── Skyline obstacle scan on end staff ────────────────────────────
-        const endNote: GraphicalNote = rules.GNote(this.slur.EndNote);
-        const endStaffLine: StaffLine | undefined =
-            endNote?.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
-        const endStaffAbsY: number = endStaffLine?.PositionAndShape?.AbsolutePosition?.y ?? startStaffAbsY;
-        this.debugSkyPoints = [];
-        this.debugSkyCategories = [];
-        if (endStaffLine) {
-            const skyCalc: SkyBottomLineCalculator = endStaffLine?.SkyBottomLineCalculator;
-            if (skyCalc) {
-                const skyLine: number[] = endStaffLine.SkyLine;
-                const sUnit: number = skyCalc.SamplingUnit;
-                const relX: number = endStaffLine.PositionAndShape.RelativePosition.x;
-                const xOff: number = relX - (staffLine.PositionAndShape?.RelativePosition?.x ?? 0);
-                const yOff: number = endStaffAbsY - startStaffAbsY;
-                const sIn: number = startX + xOff;
-                const eIn: number = endX + xOff;
-                let startIdx: number = skyCalc.getRightIndexForPointX(sIn, skyLine.length);
-                let endIdx: number = skyCalc.getLeftIndexForPointX(eIn, skyLine.length);
-                if (startIdx < 0) { startIdx = 0; }
-                if (endIdx >= skyLine.length) { endIdx = skyLine.length - 1; }
-                for (let i: number = startIdx; i < endIdx; i++) {
-                    const sv: number = skyLine[i];
-                    if (sv !== 0) {
-                        const obsX: number = (0.5 + i) / sUnit + xOff;
-                        const obsY: number = sv + yOff;
-                        this.debugSkyPoints.push(new PointF2D(obsX, obsY));
-                        this.debugSkyCategories.push("skyline");
-                    }
-                }
-            }
-        }
-
-        // ── Direct rest detection on end staff ────────────────────────────
-        if (endStaffLine) {
-            for (const meas of endStaffLine.Measures ?? []) {
-                for (const se of (meas as any).staffEntries ?? []) {
-                    for (const gve of (se as any).graphicalVoiceEntries ?? []) {
-                        if (!gve) { continue; }
-                        for (const n of gve.notes ?? []) {
-                            if (!n.sourceNote?.isRest?.() || !n.PositionAndShape) { continue; }
-                            const box: any = n.PositionAndShape;
-                            const absPos: any = box.AbsolutePosition;
-                            if (!absPos) { continue; }
-                            const rhX: number = absPos.x - (staffLine.PositionAndShape?.AbsolutePosition?.x ?? 0);
-                            const restTopY: number = absPos.y - (box.BorderTop ?? 0);
-                            this.debugSkyPoints.push(new PointF2D(rhX, restTopY - startStaffAbsY));
-                            this.debugSkyCategories.push("rest");
-                        }
-                    }
-                }
-            }
-        }
-
-        const margin: number = rules.SlurNoteHeadYOffset;
-        // cp1Y = startY + dy*0.3 - bow must be ≤ voiceUpperY - margin
-        const cp1Y: number = this.bezierStartControlPt.y;
-        // cp1Y = startY + dy*0.3 - bow  →  bow = startY + dy*0.3 - cp1Y
-        let bow: number = startY + dy * 0.3 - cp1Y;
-        // Minimum bow to clear voiceUpperY
-        const minBow: number = startY + dy * 0.3 - voiceUpperY + margin;
-        if (minBow > bow) {
-            bow = minBow;
-        }
-        // Recompute control points
-        this.bezierStartControlPt.y = startY + dy * 0.3 - bow;
-        this.bezierEndControlPt.y = startY + dy * 0.7 - bow;
-    }
-
-    /**
-     * Detect when a slur is visually cross-staff (VF staves differ) even though
-     * the source model assigns both notes to the same staff (isCrossed()=false).
-     * Scan end-staff obstacles (skyline + rests) and adjust bezier bow to clear them.
-     */
-    public adjustForVisualCrossStaff(rules: EngravingRules): void {
-        if (!this.bezierStartPt || !this.bezierEndPt ||
-            !this.bezierStartControlPt || !this.bezierEndControlPt) { return; }
-        if (this.slur.isCrossed()) { return; } // Already handled by calculateCurveCrossStaff
-
-        // Detect visual cross-staff: compare VF staves of start vs end note
-        const startNote: GraphicalNote = rules.GNote(this.slur.StartNote);
-        const endNote: GraphicalNote = rules.GNote(this.slur.EndNote);
-        if (!startNote || !endNote) { return; }
-        const startVfNote: any = (startNote as any).vfnote?.[0];
-        const endVfNote: any = (endNote as any).vfnote?.[0];
-        if (!startVfNote || !endVfNote) { return; }
-        const startStave: any = startVfNote.checkStave?.() || startVfNote.stave;
-        const endStave: any = endVfNote.checkStave?.() || endVfNote.stave;
-        if (!startStave || !endStave || startStave === endStave) { return; }
-
-        // Get start staff line (the OSMD staff line that owns this slur).
-        const startStaffLine: StaffLine | undefined = startNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
-        if (!startStaffLine) { return; }
-        const startStaffAbsY: number = startStaffLine.PositionAndShape.AbsolutePosition.y;
-        // Find the visual staff line for the endpoint.
-        // The end note's OSMD parent chain returns the same staff line as start,
-        // so pick the OTHER staff line in the same music system.
-        const musicSystem: any = startStaffLine.ParentMusicSystem;
-        const systemStaffLines: StaffLine[] | undefined = musicSystem?.StaffLines;
-        let endStaffLine: StaffLine | undefined;
-        if (systemStaffLines && systemStaffLines.length >= 2) {
-            endStaffLine = systemStaffLines[0] === startStaffLine
-                ? systemStaffLines[1]
-                : systemStaffLines[0];
-        }
-        if (!endStaffLine) {
-            return; // Could not find the visual end staff line
-        }
-        const startX: number = this.bezierStartPt.x;
-        const endX: number = this.bezierEndPt.x;
-        this.debugSkyPoints = [];
-        this.debugSkyCategories = [];
-        // X range for obstacle collection: span the slur's measures using positionRelativeToBox
-        // (same coord frame as the noteheads collected below).
-        const sysBox: any = startStaffLine.ParentMusicSystem?.PositionAndShape;
-        const measBounds: { xMin: number, xMax: number } = ((): { xMin: number, xMax: number } => {
-            const sm: any = startNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
-            const em: any = endStaffLine ? endNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure : undefined;
-            const offX: number = startStaffLine.PositionAndShape.RelativePosition.x;
-            let xMin: number = startX - 30, xMax: number = endX + 30;
-            for (const m of [sm, em].filter(Boolean)) {
-                if (!m?.PositionAndShape || !sysBox) {continue;}
-                const mp: PointF2D = this.positionRelativeToBox(m.PositionAndShape, sysBox);
-                const mw: number = m.PositionAndShape.BorderRight ?? 20;
-                xMin = Math.min(xMin, mp.x - offX - 2);
-                xMax = Math.max(xMax, mp.x - offX + mw + 2);
-            }
-            return { xMin, xMax };
-        })();
-        const measureXMin: number = measBounds.xMin;
-        const measureXMax: number = measBounds.xMax;
-
-        // ── Helper: add a candidate obstacle point (deduplicated within tolerance) ──
-        const obsKeys: Set<string> = new Set();
-        const addObs: (x: number, y: number, category: string) => void = (x: number, y: number, category: string): void => {
-            if (x < measureXMin || x > measureXMax) { return; }
-            const key: string = `${Math.round(x * 10)},${Math.round(y * 10)}`;
-            if (obsKeys.has(key)) { return; }
-            obsKeys.add(key);
-            this.debugSkyPoints.push(new PointF2D(x, y));
-            this.debugSkyCategories.push(category);
-        };
-        // Add bounding-box corners (absPos in pixels, convert to OSMD units).
-        const addBox: (absPos: any, bl: number, br: number,
-                       bt: number, bb: number, category: string) => void
-            = (absPos, bl, br, bt, bb, category): void => {
-            const bx: number = absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x;
-            if (bx < measureXMin || bx > measureXMax) { return; }
-            const ay: number = absPos.y;
-            if (bl > 0 || br > 0 || bt > 0 || bb > 0) {
-                addObs(bx - bl, ay - bt - startStaffAbsY, category);
-                addObs(bx + br, ay - bt - startStaffAbsY, category);
-                addObs(bx - bl, ay + bb - startStaffAbsY, category);
-                addObs(bx + br, ay + bb - startStaffAbsY, category);
-            } // skip zero-area boxes — they have no obstacle extent
-        };
-        // ── Collect obstacles from a staff line ──
-        const scanMeasure: (meas: any) => void = (meas: any): void => {
-            const sl: any = (meas as any).ParentStaffLine;
-            for (const se of (meas as any).staffEntries ?? []) {
-                    for (const gve of (se as any).graphicalVoiceEntries ?? []) {
-                        if (!gve) { continue; }
-                        for (const n of gve.notes ?? []) {
-                            // ── (a) Notehead from OSMD BoundingBox (same coord frame as bezier) ──
-                            if (n.PositionAndShape) {
-                                const box: any = n.PositionAndShape;
-                                const absPos: any = box.AbsolutePosition;
-                                if (absPos) {
-                                    const nhX: number = absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x;
-                                    const nhY: number = absPos.y - startStaffAbsY - (box.BorderTop ?? 0);
-                                    if (nhX >= measureXMin && nhX <= measureXMax) { addObs(nhX, nhY, "notehead"); }
-                                }
-                            }
-                            // ── (b) Stem bounds (from VF stem extents) ──
-                            const vfgN: any = n;
-                            const vfN: any = vfgN.vfnote?.[0];
-                            if (vfN) {
-                                const se2: any = vfN.getStemExtents?.();
-                                if (se2 && se2.topY != null && se2.bottomY != null) {
-                                    const ns2: any = vfN.checkStave?.() || vfN.stave;
-                                    if (ns2) {
-                                        const stemTop: number = se2.topY / unitInPixels - startStaffAbsY;
-                                        const stemBot: number = se2.bottomY / unitInPixels - startStaffAbsY;
-                                        const stemXpx: number = vfN.getAbsoluteX?.() ?? 0;
-                                        const staveXpx: number = ns2.getX?.() ?? 0;
-                                        const stemX: number = (stemXpx - staveXpx) / unitInPixels
-                                            + (sl.PositionAndShape.RelativePosition.x
-                                               - startStaffLine.PositionAndShape.RelativePosition.x);
-                                        if (stemX >= measureXMin && stemX <= measureXMax) {
-                                            addObs(stemX, stemTop, "stem");
-                                            addObs(stemX, stemBot, "stem");
-                                        }
-                                    }
-                                }
-                                // ── (c) Beam bounding box ──
-                                const beam_: any = vfN.beam;
-                                if (beam_ && this.isBeamCrossStaff(beam_, n)) {
-                                    for (const bn of beam_.getNotes()) {
-                                        const ns3: any = bn.checkStave?.() || bn.stave;
-                                        if (!ns3) { continue; }
-                                        for (const kp of bn.getKeyProps?.() || []) {
-                                            const nYPx: number = ns3.getYForNote(kp.line);
-                                            const nY: number = nYPx / unitInPixels - startStaffAbsY;
-                                            const nAbsXpx: number = bn.getAbsoluteX?.() ?? 0;
-                                            const nStaveXpx: number = ns3.getX?.() ?? 0;
-                                            const nX: number = (nAbsXpx - nStaveXpx) / unitInPixels
-                                                + (sl.PositionAndShape.RelativePosition.x
-                                                   - startStaffLine.PositionAndShape.RelativePosition.x);
-                                            if (nX >= measureXMin && nX <= measureXMax) { addObs(nX, nY, "beam"); }
-                                        }
-                                    }
-                                    // Beam start/stop Y from first/last note
-                                    const bnArr: any[] = beam_.getNotes();
-                                    if (bnArr.length >= 2) {
-                                        const firstNote: any = bnArr[0];
-                                        const lastNote: any = bnArr[bnArr.length - 1];
-                                        const fs: any = firstNote.checkStave?.() || firstNote.stave;
-                                        const ls: any = lastNote.checkStave?.() || lastNote.stave;
-                                        if (fs && ls) {
-                                            for (const kp of firstNote.getKeyProps?.() || []) {
-                                                const bY: number = fs.getYForNote(kp.line) / unitInPixels - startStaffAbsY;
-                                                const bX: number = (firstNote.getAbsoluteX?.() ?? fs.getX()) / unitInPixels
-                                                + (sl.PositionAndShape.RelativePosition.x
-                                                       - startStaffLine.PositionAndShape.RelativePosition.x);
-                                                if (bX >= measureXMin && bX <= measureXMax) { addObs(bX, bY, "beam"); }
-                                            }
-                                            for (const kp of lastNote.getKeyProps?.() || []) {
-                                                const bY: number = ls.getYForNote(kp.line) / unitInPixels - startStaffAbsY;
-                                                const bX: number = (lastNote.getAbsoluteX?.() ?? ls.getX()) / unitInPixels
-                                                + (sl.PositionAndShape.RelativePosition.x
-                                                       - startStaffLine.PositionAndShape.RelativePosition.x);
-                                                if (bX >= measureXMin && bX <= measureXMax) { addObs(bX, bY, "beam"); }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        // ── (d) Rests in this voice entry ──
-                        for (const n of gve.notes ?? []) {
-                            if (!n.sourceNote?.isRest?.() || !n.PositionAndShape) { continue; }
-                            const box: any = n.PositionAndShape;
-                            const absPos: any = box.AbsolutePosition;
-                            if (!absPos) { continue; }
-                            addBox(absPos, box.BorderLeft ?? 0, box.BorderRight ?? 0,
-                                   box.BorderTop ?? 0, box.BorderBottom ?? 0, "rest");
-                        }
-                    }
-                }
-        };
-        const sMeas: any = startNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
-        const eMeas: any = endNote.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
-        const scannedMeasures: Set<any> = new Set<any>();
-        const scanLineMeasures: (line: StaffLine | undefined) => void = (line: StaffLine | undefined): void => {
-            for (const measure of line?.Measures ?? []) {
-                const measurePosition: PointF2D = sysBox
-                    ? this.positionRelativeToBox(measure.PositionAndShape, sysBox)
-                    : new PointF2D(measure.PositionAndShape.RelativePosition.x, 0);
-                const measureStartX: number = measurePosition.x
-                    - startStaffLine.PositionAndShape.RelativePosition.x;
-                const measureEndX: number = measureStartX + measure.PositionAndShape.Size.width;
-                if (measureEndX < measureXMin || measureStartX > measureXMax) { continue; }
-                if (!scannedMeasures.has(measure)) {
-                    scannedMeasures.add(measure);
-                    scanMeasure(measure);
-                }
-            }
-        };
-        scanLineMeasures(startStaffLine);
-        scanLineMeasures(endStaffLine);
-        if (sMeas && !scannedMeasures.has(sMeas)) { scanMeasure(sMeas); }
-        if (eMeas && !scannedMeasures.has(eMeas)) { scanMeasure(eMeas); }
-
-        const addVisualNoteheads: (line: StaffLine | undefined) => void = (line: StaffLine | undefined): void => {
-            for (const measure of line?.Measures ?? []) {
-                for (const staffEntry of (measure as any).staffEntries ?? []) {
-                    for (const voiceEntry of staffEntry.graphicalVoiceEntries ?? []) {
-                        for (const note of voiceEntry.notes ?? []) {
-                            const box: any = note.PositionAndShape;
-                            const absPos: any = box?.AbsolutePosition;
-                            if (!absPos) { continue; }
-                            addObs(
-                                absPos.x - startStaffLine.PositionAndShape.AbsolutePosition.x,
-                                absPos.y - (box.BorderTop ?? 0) - startStaffAbsY,
-                                "notehead",
-                            );
-                        }
-                    }
-                }
-            }
-        };
-        addVisualNoteheads(startStaffLine);
-        addVisualNoteheads(endStaffLine);
-
-        const dy: number = this.bezierEndPt.y - this.bezierStartPt.y;
-        const baseBow: number = this.placement === PlacementEnum.Above
-            ? Math.max(
-                this.bezierStartPt.y + dy * 0.3 - this.bezierStartControlPt.y,
-                this.bezierStartPt.y + dy * 0.7 - this.bezierEndControlPt.y,
-            )
-            : Math.max(
-                this.bezierStartControlPt.y - (this.bezierStartPt.y + dy * 0.3),
-                this.bezierEndControlPt.y - (this.bezierStartPt.y + dy * 0.7),
-            );
-        const bow: number = Math.max(rules.SlurCrossStaffMinBow, baseBow);
-        const bowSign: number = this.placement === PlacementEnum.Above ? -1 : 1;
-        this.bezierStartControlPt.y = this.bezierStartPt.y + dy * 0.3 + bowSign * bow;
-        this.bezierEndControlPt.y = this.bezierStartPt.y + dy * 0.7 + bowSign * bow;
-    }
-
-    /**
-     * Sums the relative positions from box up to (but not including) the given ancestor box, giving box's
-     * position in the ancestor's coordinate system.
-     */
-    private positionRelativeToBox(box: BoundingBox, ancestor: BoundingBox): PointF2D {
-        let x: number = 0;
-        let y: number = 0;
-        let current: BoundingBox = box;
-        while (current && current !== ancestor) {
-            x += current.RelativePosition.x;
-            y += current.RelativePosition.y;
-            current = current.Parent;
-        }
-        return new PointF2D(x, y);
-    }
 
     /**
      * This method calculates the Start and End Positions of the Slur Curve.
@@ -1319,244 +398,92 @@ export class GraphicalSlur extends GraphicalCurve {
         let endX: number = 0;
         let endY: number = 0;
 
-        if (slurStartNote) {
-            // must be relative to StaffLine — use VF5 actual rendered position
-            startX = getVF5SlurX(slurStartNote);
+        if (slurStartNote !== undefined) {
+            // must be relative to StaffLine
+            startX = slurStartNote.PositionAndShape.RelativePosition.x + slurStartNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
+                                            + slurStartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
+
+            // If Slur starts on a Gracenote
+            if (this.graceStart) {
+                startX += slurStartNote.parentVoiceEntry.parentStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
+            }
 
             //const first: GraphicalNote = slurStartNote.parentVoiceEntry.notes[0];
 
             // Determine Start/End Point coordinates with the VoiceEntry of the Start/EndNote of the slur
             const slurStartVE: GraphicalVoiceEntry = slurStartNote.parentVoiceEntry;
 
-            // Get extreme notehead staff Y from VF5 notehead geometry (line * 0.5).
-            // PositionAndShape.RelativePosition.y on notes is a centering offset, NOT staff position.
-            let extremeNoteStaffY: number = getVF5NoteheadStaffY(slurStartNote);
-
-            if (slurStartVE.notes.length > 1) {
-                if (this.placement === PlacementEnum.Above) {
-                    for (const n of slurStartVE.notes) {
-                        const ny: number = getVF5NoteheadStaffY(n);
-                        if (ny < extremeNoteStaffY) { extremeNoteStaffY = ny; }
-                    }
-                } else {
-                    for (const n of slurStartVE.notes) {
-                        const ny: number = getVF5NoteheadStaffY(n);
-                        if (ny > extremeNoteStaffY) { extremeNoteStaffY = ny; }
-                    }
-                }
-            }
-
-            const startStaffAbsY: number = staffLine.PositionAndShape.AbsolutePosition.y;
-            const startBeamY: number | undefined =
-                this.beamYForNote(slurStartNote, startStaffAbsY, true);
-
             if (this.placement === PlacementEnum.Above) {
-                if (startBeamY !== undefined) {
-                    startY = startBeamY;
-                } else if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Down) {
-                    startY = extremeNoteStaffY - 0.5; // notehead top (stem away from slur)
-                } else {
-                    startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
-                }
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    startY = Math.min(startY, slurStartVE.parentStaffEntry.getSkylineMin());
-                }
+                startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
             } else {
-                if (startBeamY !== undefined) {
-                    startY = startBeamY;
-                } else if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
-                    startY = extremeNoteStaffY + 0.5; // notehead bottom (stem away from slur)
-                } else {
-                    // Below + DOWN: stem tip points TOWARD the slur →
-                    // anchor at the stem tip (VF topY for this VF5 fork).
-                    const svfN: any = (slurStartNote as VexFlowGraphicalNote)?.vfnote?.[0];
-                    const sStave: any = svfN?.checkStave?.() || svfN?.stave;
-                    if (svfN && sStave) {
-                        startY = ((svfN.getStemExtents()?.topY ?? 0) - sStave.getYForLine(0)) / unitInPixels;
-                    } else {
-                        startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
-                    }
-                }
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    startY = Math.max(startY, slurStartVE.parentStaffEntry.getBottomlineMax());
-                }
+                startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
             }
 
-            // If the stem points towards the starting point of the slur, shift the slur by a small amount to start (approximately) at the x-position
-            // of the notehead. Note: an exact calculation using the position of the note is too complicate for the payoff
-            if ( slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Down && this.placement === PlacementEnum.Below ) {
-                startX -= 0.5;
-            }
-            if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Up && this.placement === PlacementEnum.Above) {
-                startX += 0.5;
-            }
-            // if (first.NoteStem && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
+            // if (first.NoteStem !== undefined && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
             //     startX += first.NoteStem.PositionAndShape.RelativePosition.x;
             //     startY = skyBottomLineCalculator.getSkyLineMinAtPoint(staffLine, startX);
             // } else {
             //     const last: GraphicalNote = <GraphicalNote>slurStartNote[slurEndNote.parentVoiceEntry.notes.length - 1];
-            //     if (last.NoteStem && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
+            //     if (last.NoteStem !== undefined && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
             //         startX += last.NoteStem.PositionAndShape.RelativePosition.x;
             //         startY = skyBottomLineCalculator.getBottomLineMaxAtPoint(staffLine, startX);
             //     } else {
             //     }
             // }
         } else {
-            startX = 0;
+            startX = staffLine.Measures[0].beginInstructionsWidth;
         }
 
-        if (slurEndNote) {
-            endX = getVF5SlurX(slurEndNote);
+        if (slurEndNote !== undefined) {
+            endX = slurEndNote.PositionAndShape.RelativePosition.x + slurEndNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
+                + slurEndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
+
+            // If Slur ends in a Gracenote
+            if (this.graceEnd) {
+                endX += slurEndNote.parentVoiceEntry.parentStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
+            }
 
             const slurEndVE: GraphicalVoiceEntry = slurEndNote.parentVoiceEntry;
-
-            // check for articulation -> shift end y (slur further outward)
-            //   this should not be necessary for the start note, and for accents (>) it's even counter productive there
-            //   TODO alternatively, we could fix the bounding box of the note to include the ornament, but that seems tricky
-            let articulationPlacement: PlacementEnum; // whether there's an articulation and where
-            for (const articulation of slurEndVE.parentVoiceEntry.Articulations) {
-                articulationPlacement = articulation.placement;
-                if (articulation.placement === PlacementEnum.NotYetDefined) {
-                    for (const modifier of ((slurEndNote as VexFlowGraphicalNote).vfnote[0] as any).modifiers) {
-                        if (modifier.getCategory() === VF.Articulation.CATEGORY) {
-                            if (modifier.position === VF.Modifier.Position.ABOVE) {
-                                articulation.placement = PlacementEnum.Above;
-                                articulationPlacement = PlacementEnum.Above;
-                            } else if (modifier.position === VF.Modifier.Position.BELOW) {
-                                articulation.placement = PlacementEnum.Below;
-                                articulationPlacement = PlacementEnum.Below;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            // Get extreme notehead staff Y from VF5 notehead geometry (line * 0.5).
-            let endExtremeNoteStaffY: number = getVF5NoteheadStaffY(slurEndNote);
-            if (slurEndVE.notes.length > 1) {
-                if (this.placement === PlacementEnum.Above) {
-                    for (const n of slurEndVE.notes) {
-                        const ny: number = getVF5NoteheadStaffY(n);
-                        if (ny < endExtremeNoteStaffY) { endExtremeNoteStaffY = ny; }
-                    }
-                } else {
-                    for (const n of slurEndVE.notes) {
-                        const ny: number = getVF5NoteheadStaffY(n);
-                        if (ny > endExtremeNoteStaffY) { endExtremeNoteStaffY = ny; }
-                    }
-                }
-            }
-
-            const endStaffAbsY: number = staffLine.PositionAndShape.AbsolutePosition.y;
-            // Use VF-stave-relative Y (relativeToOwnStave=true) to match the start
-            // note's beamYForNote convention. The start note already uses this.
-            // Absolute pixel/10 (relativeToOwnStave=false) is incompatible with
-            // drawSlur's abs.y which is in a different coordinate frame.
-            const endBeamY: number | undefined =
-                this.beamYForNote(slurEndNote, endStaffAbsY, true);
-            // Fallback: use VF stem direction when OSMD model doesn't have it set
-            const endVFStemDirForY: number =
-                (slurEndNote as VexFlowGraphicalNote)?.vfnote?.[0]?.getStemDirection?.() ?? 0;
-
             if (this.placement === PlacementEnum.Above) {
-                if (endBeamY !== undefined) {
-                    endY = endBeamY;
-                } else if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down
-                    || endVFStemDirForY < 0) {
-                    endY = endExtremeNoteStaffY - 0.5; // notehead top (stem away from slur)
+                endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
+            } else {
+                endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
+            }
+        } else if (this.slur && this.slur.isCrossed()) {
+            // Cross-staff: end note on different staff — use VF5 stave position.
+            const endGN: GraphicalNote = rules.GNote(this.slur.EndNote);
+            const vfNt: VF.StaveNote = (endGN as VexFlowGraphicalNote)?.vfnote?.[0] as VF.StaveNote;
+            const vfSt: VF.Stave | undefined = vfNt?.getStave?.();
+            if (vfNt && vfSt) {
+                const startMeasRelX: number = staffLine.Measures[0]?.PositionAndShape?.RelativePosition?.x ?? 0;
+                const staveOriginPx: number = vfSt.getX() - startMeasRelX * unitInPixels;
+                const noteCenterPx: number = vfNt.getAbsoluteX() + vfNt.getGlyphWidth() / 2;
+                endX = (noteCenterPx - staveOriginPx) / unitInPixels;
+                const kps: any[] = vfNt.getKeyProps?.() ?? [];
+                const topLine: number = kps.length > 0 ? Math.max(...kps.map((kp: any) => kp.line)) : 2;
+                endY = 5 - topLine;
+                if (this.placement === PlacementEnum.Below) {
+                    endY += rules.SlurNoteHeadYOffset;
                 } else {
-                    endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
-                }
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    endY = Math.min(endY, slurEndVE.parentStaffEntry.getSkylineMin());
-                }
-                if (articulationPlacement === PlacementEnum.Above) {
-                    endY -= this.rules.SlurEndArticulationYOffset;
+                    endY -= rules.SlurNoteHeadYOffset;
                 }
             } else {
-                if (endBeamY !== undefined) {
-                    endY = endBeamY;
-                } else if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Up
-                    || endVFStemDirForY > 0) {
-                    endY = endExtremeNoteStaffY + 0.5; // notehead bottom (stem away from slur)
-                } else if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down
-                    || endVFStemDirForY < 0) {
-                    // Below + DOWN: stem tip points TOWARD the slur →
-                    // anchor at the stem tip (VF topY for this VF5 fork).
-                    const evfN: any = (slurEndNote as VexFlowGraphicalNote)?.vfnote?.[0];
-                    const eStave: any = evfN?.checkStave?.() || evfN?.stave;
-                    if (evfN && eStave) {
-                        endY = ((evfN.getStemExtents()?.topY ?? 0) - eStave.getYForLine(0)) / unitInPixels;
-                    } else {
-                        endY = endExtremeNoteStaffY + 0.5;
-                    }
-                } else {
-                    endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
-                }
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    endY = Math.max(endY, slurEndVE.parentStaffEntry.getBottomlineMax());
-                }
-                if (articulationPlacement === PlacementEnum.Below) {
-                    endY += this.rules.SlurEndArticulationYOffset;
-                }
+                endX = staffLine.PositionAndShape.Size.width;
             }
-
-            // If the stem points towards the endpoint of the slur, shift the slur by a small amount to start (approximately) at the x-position
-            // of the notehead. Note: an exact calculation using the position of the note is too complicate for the payoff
-            if ( slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down && this.placement === PlacementEnum.Below ) {
-                endX -= 0.5;
-            }
-            if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Up && this.placement === PlacementEnum.Above) {
-                endX += 0.5;
-            }
-            // const first: GraphicalNote = <GraphicalNote>slurEndNote.parentVoiceEntry.notes[0];
-            // if (first.NoteStem && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
-            //     endX += first.NoteStem.PositionAndShape.RelativePosition.x;
-            //     endY = skyBottomLineCalculator.getSkyLineMinAtPoint(staffLine, endX);
-            // } else {
-            //     const last: GraphicalNote = <GraphicalNote>slurEndNote.parentVoiceEntry.notes[slurEndNote.parentVoiceEntry.notes.length - 1];
-            //     if (last.NoteStem && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
-            //         endX += last.NoteStem.PositionAndShape.RelativePosition.x;
-            //         endY = skyBottomLineCalculator.getBottomLineMaxAtPoint(staffLine, endX);
-            //     } else {
-            //         if (this.placement === PlacementEnum.Above) {
-            //             const highestNote: GraphicalNote = last;
-            //             endY = highestNote.PositionAndShape.RelativePosition.y;
-            //             if (highestNote.NoteHead) {
-            //                 endY += highestNote.NoteHead.PositionAndShape.BorderMarginTop;
-            //             } else { endY += highestNote.PositionAndShape.BorderTop; }
-            //         } else {
-            //             const lowestNote: GraphicalNote = first;
-            //             endY = lowestNote.parentVoiceEntry
-            //             lowestNote.PositionAndShape.RelativePosition.y;
-            //             if (lowestNote.NoteHead) {
-            //                 endY += lowestNote.NoteHead.PositionAndShape.BorderMarginBottom;
-            //             } else { endY += lowestNote.PositionAndShape.BorderBottom; }
-            //         }
-            //     }
-            // }
         } else {
             endX = staffLine.PositionAndShape.Size.width;
         }
 
         // if GraphicalSlur breaks over System, then the end/start of the curve is at the corresponding height with the known start/end
-        if (!slurStartNote && !slurEndNote) {
-            startY = -1.5;
-            endY = -1.5;
+        if (slurStartNote === undefined && slurEndNote === undefined) {
+            startY = 0;
+            endY = 0;
         }
-        if (!slurStartNote) {
-            if (this.placement === PlacementEnum.Above) {
-                startY = endY - 1;
-            } else {
-                startY = endY + 1;
-            }
+        if (slurStartNote === undefined) {
+            startY = endY;
         }
-        if (!slurEndNote) {
-            if (this.placement === PlacementEnum.Above) {
-                endY = startY - 1;
-            } else {
-                endY = startY + 1;
-            }
+        if (slurEndNote === undefined) {
+            endY = startY;
         }
 
         // if two slurs start/end at the same GraphicalNote, then the second gets an offset
@@ -1571,17 +498,6 @@ export class GraphicalSlur extends GraphicalCurve {
             } else { endY += rules.SlursStartingAtSameStaffEntryYOffset; }
         }
 
-        // Cap slurs to within staff area. Use notehead-based positioning from
-        // calculateStartAndEnd as the primary anchor; the cap only prevents
-        // pathologic values (e.g., unset start/end). 4.0 = staff height, generous margin.
-        if (this.placement === PlacementEnum.Above) {
-            startY = Math.min(startY, 4.0);
-            endY = Math.min(endY, 4.0);
-        } else {
-            startY = Math.max(startY, -4.0);
-            endY = Math.max(endY, -4.0);
-        }
-
         return {startX, startY, endX, endY};
     }
 
@@ -1592,77 +508,19 @@ export class GraphicalSlur extends GraphicalCurve {
      */
     private calculatePlacement(skyBottomLineCalculator: SkyBottomLineCalculator, staffLine: StaffLine): void {
         // old version: when lyrics are given place above:
-        // if ( !this.slur.StartNote.ParentVoiceEntry.LyricsEntries.isEmpty || (this.slur.EndNote
+        // if ( !this.slur.StartNote.ParentVoiceEntry.LyricsEntries.isEmpty || (this.slur.EndNote !== undefined
         //                                     && !this.slur.EndNote.ParentVoiceEntry.LyricsEntries.isEmpty) ) {
         //     this.placement = PlacementEnum.Above;
         //     return;
-        // }
 
-        if (this.rules.SlurPlacementFromXML && this.slur.PlacementXml !== PlacementEnum.NotYetDefined) {
-            this.placement = this.slur.PlacementXml;
-            return;
-        }
-
-        // if any StaffEntry belongs to a Measure with multiple Voices, than
-        // if Slur's Start- or End-Note belongs to a LinkedVoice Below else Above
-        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            if (graphicalStaffEntry.parentMeasure.hasMultipleVoices()) {
-                if (this.slur.StartNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice ||
-                    this.slur.EndNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice) {
-                    this.placement = PlacementEnum.Below;
-                } else { this.placement = PlacementEnum.Above; }
-                return;
-            }
-        }
-
-        // when lyrics are given place above:
-        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            if (graphicalStaffEntry.LyricsEntries.length > 0) {
-                this.placement = PlacementEnum.Above;
-                return;
-            }
-        }
-        const startStaffEntry: GraphicalStaffEntry = this.staffEntries[0];
-        const endStaffEntry: GraphicalStaffEntry = this.staffEntries[this.staffEntries.length - 1];
-
-        // single Voice, opposite to StemDirection
-        // here should only be one voiceEntry, so we can take graphicalVoiceEntries[0]:
-        const startStemDirection: StemDirectionType = startStaffEntry.graphicalVoiceEntries[0].parentVoiceEntry.StemDirection;
-        const endStemDirection: StemDirectionType = endStaffEntry.graphicalVoiceEntries[0].parentVoiceEntry.StemDirection;
-        if (startStemDirection  ===
-            endStemDirection) {
-            this.placement = (startStemDirection === StemDirectionType.Up) ? PlacementEnum.Below : PlacementEnum.Above;
-            if (this.rules.SlurPlacementAtStems) {
-                this.placement = (startStemDirection === StemDirectionType.Up) ? PlacementEnum.Above : PlacementEnum.Below;
-            }
-        } else {
-            // Placement at the side with the minimum border
-            let sX: number = startStaffEntry.PositionAndShape.BorderLeft + startStaffEntry.PositionAndShape.RelativePosition.x
-                        + startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-            let eX: number = endStaffEntry.PositionAndShape.BorderRight + endStaffEntry.PositionAndShape.RelativePosition.x
-                        + endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-
-            if (this.graceStart) {
-                sX += endStaffEntry.PositionAndShape.RelativePosition.x;
-            }
-            if (this.graceEnd) {
-                eX += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-            }
-
-            // get SkyBottomLine borders
-            const minAbove: number = skyBottomLineCalculator.getSkyLineMinInRange(sX, eX) * -1;
-            const maxBelow: number = skyBottomLineCalculator.getBottomLineMaxInRange(sX, eX) - staffLine.StaffHeight;
-
-            if (maxBelow > minAbove) {
-                this.placement = PlacementEnum.Above;
-            } else { this.placement = PlacementEnum.Below; }
+        // The default placement for slurs is above.
+        if (this.placement !== PlacementEnum.Below) {
+            this.placement = PlacementEnum.Above;
         }
     }
 
     /**
-     * This method calculates the Points between Start- and EndPoint (case above).
+     * Calculate Slur Top SkyLine Points between two Points.
      * @param start
      * @param end
      * @param staffLine
@@ -1670,30 +528,21 @@ export class GraphicalSlur extends GraphicalCurve {
      */
     private calculateTopPoints(start: PointF2D, end: PointF2D, staffLine: StaffLine, skyBottomLineCalculator: SkyBottomLineCalculator): PointF2D[] {
         const points: PointF2D[] = [];
-        let startIndex: number = skyBottomLineCalculator.getRightIndexForPointX(start.x, staffLine.SkyLine.length);
-        let endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(end.x, staffLine.SkyLine.length);
-
-        if (startIndex < 0) {
-            startIndex = 0;
-        }
-        if (endIndex >= staffLine.SkyLine.length) {
-            endIndex = staffLine.SkyLine.length - 1;
-        }
-
-        for (let i: number = startIndex; i < endIndex; i++) {
-            const skylineValue: number = staffLine.SkyLine[i];
-            // ignore default value (= 0) which is upper border of staffline
-            if (skylineValue !== 0) {
-                const point: PointF2D = new PointF2D((0.5 + i) / skyBottomLineCalculator.SamplingUnit, skylineValue);
-                points.push(point);
+        const length: number = staffLine.SkyLine.length;
+        const startIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(start.x, length);
+        const endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(end.x, length);
+        if (startIndex < endIndex) {
+            for (let i: number = startIndex; i < endIndex; i++) {
+                const pointX: number = i / skyBottomLineCalculator.SamplingUnit;
+                const skyValue: number = staffLine.SkyLine[i];
+                points.push(new PointF2D(pointX, skyValue));
             }
         }
-
         return points;
     }
 
     /**
-     * This method calculates the Points between Start- and EndPoint (case below).
+     * Calculate Slur Bottom BottomLine Points between two Points.
      * @param start
      * @param end
      * @param staffLine
@@ -1701,102 +550,73 @@ export class GraphicalSlur extends GraphicalCurve {
      */
     private calculateBottomPoints(start: PointF2D, end: PointF2D, staffLine: StaffLine, skyBottomLineCalculator: SkyBottomLineCalculator): PointF2D[] {
         const points: PointF2D[] = [];
-
-        // get BottomLine indices
-        let startIndex: number = skyBottomLineCalculator.getRightIndexForPointX(start.x, staffLine.BottomLine.length);
-        let endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(end.x, staffLine.BottomLine.length);
-        if (startIndex < 0) {
-            startIndex = 0;
-        }
-        if (endIndex >= staffLine.BottomLine.length) {
-            endIndex = staffLine.BottomLine.length - 1;
-        }
-
-        for (let i: number = startIndex; i < endIndex; i++) {
-            const bottomLineValue: number = staffLine.BottomLine[i];
-
-            // ignore default value (= 4) which is lower border of staffline
-            if (bottomLineValue !== 0) {
-                const point: PointF2D = new PointF2D((0.5 + i) / skyBottomLineCalculator.SamplingUnit, bottomLineValue);
-                points.push(point);
+        const length: number = staffLine.BottomLine.length;
+        const startIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(start.x, length);
+        const endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(end.x, length);
+        if (startIndex < endIndex) {
+            for (let i: number = startIndex; i < endIndex; i++) {
+                const pointX: number = i / skyBottomLineCalculator.SamplingUnit;
+                const bottomValue: number = staffLine.BottomLine[i];
+                points.push(new PointF2D(pointX, bottomValue));
             }
         }
-
         return points;
     }
 
     /**
-     * This method calculates the maximum slope between StartPoint and BetweenPoints.
+     * This method calculates the maximum Slope of the Line from Startpoint to a Point P (here to all Points in the skyLine).
+     * It is used to calculate the startAngle of the Curve.
      * @param points
      * @param start
      * @param end
      */
     private calculateMaxLeftSlope(points: PointF2D[], start: PointF2D, end: PointF2D): number {
-        let slope: number = -Number.MAX_VALUE;
-        const x: number = start.x;
-        const y: number = start.y;
-
-        for (let i: number = 0; i < points.length; i++) {
-            if (Math.abs(points[i].y - Number.MAX_VALUE) < 0.0001 || Math.abs(points[i].y - (-Number.MAX_VALUE)) < 0.0001) {
-                continue;
+        // slope of Line from Start- to endpoint max + constraint that the Curve must be under the StartSkyLine- and under the EndSkyLinePoint
+        let maxLeftSlope: number = (end.y - start.y) / (end.x - start.x);
+        for (const point2 of points) {
+            const slope: number = (point2.y - start.y) / (point2.x - start.x);
+            if (slope > maxLeftSlope) {
+                maxLeftSlope = slope;
             }
-            slope = Math.max(slope, (points[i].y - y) / (points[i].x - x));
         }
-
-        // in case all Points don't have a meaningful value or the slope between Start- and EndPoint is just bigger
-        slope = Math.max(slope, Math.abs(end.y - y) / (end.x - x));
-        //limit to 80 degrees
-        slope = Math.min(slope, 5.6713);
-
-        return slope;
+        return maxLeftSlope;
     }
 
     /**
-     * This method calculates the maximum slope between EndPoint and BetweenPoints.
+     * This method calculates the maximum Slope of the Line from Endpoint to a Point P (here to all Points in the skyLine).
+     * It is used to calculate the endAngle of the Curve.
      * @param points
      * @param start
      * @param end
      */
     private calculateMaxRightSlope(points: PointF2D[], start: PointF2D, end: PointF2D): number {
-        let slope: number = Number.MAX_VALUE;
-        const x: number = end.x;
-        const y: number = end.y;
-
-        for (let i: number = 0; i < points.length; i++) {
-            if (Math.abs(points[i].y - Number.MAX_VALUE) < 0.0001 || Math.abs(points[i].y - (-Number.MAX_VALUE)) < 0.0001) {
-                continue;
+        // slope of Line from End- to Startpoint max + constraint that the Curve must be under the StartSkyLine- and under the EndSkyLinePoint
+        let maxRightSlope: number = (start.y - end.y) / (start.x - end.x); // = (end.y - start.y) / (end.x - start.x)
+        for (const point2 of points) {
+            const slope: number = (point2.y - end.y) / (point2.x - end.x);
+            if (slope > maxRightSlope) {
+                maxRightSlope = slope;
             }
-            slope = Math.min(slope, (y - points[i].y) / (x - points[i].x));
         }
-
-        // in case no Point has a meaningful value or the slope between Start- and EndPoint is just smaller
-        slope = Math.min(slope, (y - start.y) / (x - start.x));
-        //limit to 80 degrees
-        slope = Math.max(slope, -5.6713);
-
-        return slope;
+        return maxRightSlope;
     }
 
     /**
-     * This method returns the maximum (meaningful) points.Y.
+     * This method returns the highest Y in a list of points.
      * @param points
      */
     private getPointListMaxY(points: PointF2D[]): number {
-        let max: number = -Number.MAX_VALUE;
-
-        for (let idx: number = 0, len: number = points.length; idx < len; ++idx) {
-            const point: PointF2D = points[idx];
-            if (Math.abs(point.y - (-Number.MAX_VALUE)) < 0.0001 || Math.abs(point.y - Number.MAX_VALUE) < 0.0001) {
-                continue;
+        let maxY: number = 0;
+        for (const point of points) {
+            if (point.y > maxY) {
+                maxY = point.y;
             }
-            max = Math.max(max, point.y);
         }
-
-        return max;
+        return maxY;
     }
 
     /**
-     * This method calculates the translated and rotated PointsList (case above).
+     * This method calculates and returns a list of translated and rotated Points.
      * @param points
      * @param startX
      * @param startY
@@ -1804,21 +624,15 @@ export class GraphicalSlur extends GraphicalCurve {
      */
     private calculateTranslatedAndRotatedPointListAbove(points: PointF2D[], startX: number, startY: number, rotationMatrix: Matrix2D): PointF2D[] {
         const transformedPoints: PointF2D[] = [];
-        for (let i: number = 0; i < points.length; i++) {
-            if (Math.abs(points[i].y - Number.MAX_VALUE) < 0.0001 || Math.abs(points[i].y - (-Number.MAX_VALUE)) < 0.0001) {
-                continue;
-            }
-
-            let point: PointF2D = new PointF2D(points[i].x - startX, -(points[i].y - startY));
-            point = rotationMatrix.vectorMultiplication(point);
-            transformedPoints.push(point);
+        for (const point of points) {
+            const transformedPoint: PointF2D = rotationMatrix.vectorMultiplication(new PointF2D(point.x - startX, -(point.y - startY)));
+            transformedPoints.push(transformedPoint);
         }
-
         return transformedPoints;
     }
 
     /**
-     * This method calculates the translated and rotated PointsList (case below).
+     * This method calculates and returns a list of translated and rotated Points.
      * @param points
      * @param startX
      * @param startY
@@ -1826,146 +640,99 @@ export class GraphicalSlur extends GraphicalCurve {
      */
     private calculateTranslatedAndRotatedPointListBelow(points: PointF2D[], startX: number, startY: number, rotationMatrix: Matrix2D): PointF2D[] {
         const transformedPoints: PointF2D[] = [];
-        for (let i: number = 0; i < points.length; i++) {
-            if (Math.abs(points[i].y - Number.MAX_VALUE) < 0.0001 || Math.abs(points[i].y - (-Number.MAX_VALUE)) < 0.0001) {
-                continue;
-            }
-            let point: PointF2D = new PointF2D(points[i].x - startX, points[i].y - startY);
-            point = rotationMatrix.vectorMultiplication(point);
-            transformedPoints.push(point);
+        for (const point of points) {
+            const transformedPoint: PointF2D = rotationMatrix.vectorMultiplication(new PointF2D(point.x - startX, point.y - startY));
+            transformedPoints.push(transformedPoint);
         }
-
         return transformedPoints;
     }
 
     /**
-     * This method calculates the HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
-     * and the X-distance from StartPoint to EndPoint.
+     * This method calculates the two Control Points for the Slur Curve.
      * @param endX
-     * @param points
-     */
-    private calculateHeightWidthRatio(endX: number, points: PointF2D[]): number {
-        if (points.length === 0) {
-            return 0;
-        }
-
-        // in case of negative points
-        const max: number = Math.max(0, this.getPointListMaxY(points));
-
-        return max / endX;
-    }
-
-    /**
-     * This method calculates the 2 ControlPoints of the SlurCurve.
-     * @param endX
-     * @param startAngle
-     * @param endAngle
-     * @param points
-     */
-    private calculateControlPoints(endX: number, startAngle: number, endAngle: number,
-                                   points: PointF2D[], heightWidthRatio: number,
-                                   startY: number, endY: number
-    ): { startControlPoint: PointF2D, endControlPoint: PointF2D } {
-        let heightFactor: number = this.rules.SlurHeightFactor;
-        let widthFlattenFactor: number = 1;
-        const cutoffAngle: number = this.rules.SlurHeightFlattenLongSlursCutoffAngle;
-        const cutoffWidth: number = this.rules.SlurHeightFlattenLongSlursCutoffWidth;
-        // Don't flatten when real obstacles exist (heightWidthRatio > 0.08).
-        // Steep angles from actual high notes must be preserved to clear them.
-        // The flattening is only aesthetic for smooth empty-staff slurs.
-        const obstacleRatio: number = points.length > 0 ? heightWidthRatio : 0;
-        const hasRealObstacles: boolean = obstacleRatio > 0.08;
-        // When real obstacles exist, slightly boost arc height so the cubic
-        // bezier (which peaks between the CPs) clears intermediate high notes.
-        if (hasRealObstacles) {
-            heightFactor *= 1.03;
-        }
-        if (!hasRealObstacles && startAngle > cutoffAngle && endX > cutoffWidth) {
-            // Steep and wide: full formula with angle-dependent multiplier.
-            widthFlattenFactor += endX / 70 * this.rules.SlurHeightFlattenLongSlursFactorByWidth;
-            widthFlattenFactor *= 1 + (startAngle / 30 * this.rules.SlurHeightFlattenLongSlursFactorByAngle);
-            heightFactor /= widthFlattenFactor;
-        } else if (!hasRealObstacles && endX > cutoffWidth * 2) {
-            // Wide but not steep: stronger pure-width flattening.
-            widthFlattenFactor += endX / 18 * this.rules.SlurHeightFlattenLongSlursFactorByWidth;
-            heightFactor /= widthFlattenFactor;
-        }
-        // TODO also offer a widthFlattenFactor for smaller slurs?
-
-        // debug:
-        // const measureNumber: number = this.staffEntries[0].parentMeasure.MeasureNumber; // debug
-        // if (measureNumber === 10) {
-        //     console.log("endX: " + endX);
-        //     console.log("widthFlattenFactor: " + widthFlattenFactor);
-        //     console.log("heightFactor: " + heightFactor);
-        //     console.log("startAngle: " + startAngle);
-        //     console.log("heightWidthRatio: " + heightWidthRatio);
-        // }
-
-        // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
-        // and the X-distance from StartPoint to EndPoint
-        // use this HeightWidthRatio to get a "normalized" Factor (based on tested parameters)
-        // this Factor denotes the Length of the TangentLine of the Curve (a proportion of the X-distance from StartPoint to EndPoint)
-        // finally from this Length and the calculated Angles we get the coordinates of the Control Points
-        const maxFactor: number = hasRealObstacles ? 0.55 : 0.5;
-        const factorStart: number = Math.min(maxFactor, Math.max(0.1, 1.7 * startAngle / 80 * heightFactor * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
-        const factorEnd: number = Math.min(maxFactor, Math.max(0.1, 1.7 * (-endAngle) / 80 * heightFactor * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
-
-        const startControlPoint: PointF2D = new PointF2D();
-        startControlPoint.x = endX * factorStart * Math.cos(startAngle * GraphicalSlur.degreesToRadiansFactor);
-        startControlPoint.y = endX * factorStart * Math.sin(startAngle * GraphicalSlur.degreesToRadiansFactor);
-
-        const endControlPoint: PointF2D = new PointF2D();
-        endControlPoint.x = endX - (endX * factorEnd * Math.cos(endAngle * GraphicalSlur.degreesToRadiansFactor));
-        endControlPoint.y = -(endX * factorEnd * Math.sin(endAngle * GraphicalSlur.degreesToRadiansFactor));
-        //Soften the slur in a "brute-force" way
-        let controlPointYDiff: number = startControlPoint.y - endControlPoint.y;
-        while (this.rules.SlurMaximumYControlPointDistance &&
-               Math.abs(controlPointYDiff) > this.rules.SlurMaximumYControlPointDistance) {
-            if (controlPointYDiff < 0) {
-                startControlPoint.y += 1;
-                endControlPoint.y -= 1;
-            } else {
-                startControlPoint.y -= 1;
-                endControlPoint.y += 1;
-            }
-            controlPointYDiff = startControlPoint.y - endControlPoint.y;
-        }
-        return {startControlPoint: startControlPoint, endControlPoint: endControlPoint};
-    }
-
-    /**
-     * This method calculates the angles for the Curve's Tangent Lines.
      * @param leftAngle
      * @param rightAngle
-     * @param startLineSlope
-     * @param endLineSlope
+     * @param points
+     */
+    private calculateControlPoints(endX: number,
+                                            leftAngle: number,
+                                            rightAngle: number,
+                                            points: PointF2D[]): {leftControlPoint: PointF2D, rightControlPoint: PointF2D} {
+
+        // Some test values:
+        // let k: number = 0.4; // (k > 0) -> lower values = flatter curve near endpoints; higher values... "fatter" curve near endpoints
+        const k: number = GraphicalSlur.k;
+        // let d: number = 0.4; // (d > 0) -> greater values = more influence of slopes (Wider Curve)
+        const d: number = GraphicalSlur.d;
+
+        const leftCp: PointF2D = new PointF2D(0, 0);
+        const rightCp: PointF2D = new PointF2D(endX, 0);
+
+        const cp_x: number = k * endX;
+
+        // only to avoid NaN (divided by 0)
+        if (leftAngle === 0) {
+            leftCp.y = 0;
+        } else {
+            const cp_y: number = cp_x * Math.tan(leftAngle * GraphicalSlur.degreesToRadiansFactor) * d;
+            leftCp.y = cp_y;
+        }
+        if (rightAngle === 0) {
+            rightCp.y = 0;
+        } else {
+            const cp_y: number = cp_x * Math.tan(-rightAngle * GraphicalSlur.degreesToRadiansFactor) * d;
+            rightCp.y = cp_y;
+        }
+
+        // For above slurs, the control point Y values are the highest points of the skyline
+        if (this.placement === PlacementEnum.Above) {
+            if (points.length > 0) {
+                const maxY: number = this.getPointListMaxY(points);
+                if (maxY > leftCp.y) {
+                    leftCp.y = maxY;
+                }
+                if (maxY > rightCp.y) {
+                    rightCp.y = maxY;
+                }
+            }
+        }
+
+        return {leftControlPoint: leftCp, rightControlPoint: rightCp};
+    }
+
+    /**
+     * This method reads the current minAngle and maxAngle and calculates the actual Angles for the Curve's Control Points.
+     * @param leftAngle
+     * @param rightAngle
+     * @param leftLineSlope
+     * @param rightLineSlope
      * @param maxAngle
      */
-    private calculateAngles(minAngle: number, startLineSlope: number, endLineSlope: number, maxAngle: number):
-    {startAngle: number, endAngle: number} {
-        // calculate Angles from the calculated Slopes, adding also a given angle
-        const angle: number = 20;
+    private calculateAngles(leftAngle: number, rightAngle: number, leftLineSlope: number, rightLineSlope: number, maxAngle: number): void {
 
-        let calculatedStartAngle: number = Math.atan(startLineSlope) / GraphicalSlur.degreesToRadiansFactor;
-        if (startLineSlope > 0) {
-            calculatedStartAngle += angle;
-        } else {
-            calculatedStartAngle -= angle;
-        }
+        // original version with calculated angles:
+        const calculatedLeftAngle: number = Math.atan(leftLineSlope) * 180 / Math.PI * 0.75;
+        const calculatedRightAngle: number = Math.atan(rightLineSlope) * 180 / Math.PI * 0.75;
 
-        let calculatedEndAngle: number = Math.atan(endLineSlope) / GraphicalSlur.degreesToRadiansFactor;
-        if (endLineSlope < 0) {
-            calculatedEndAngle -= angle;
-        } else {
-            calculatedEndAngle += angle;
-        }
-
-        // +/- 80 is the max/min allowed Angle
-        const leftAngle: number = Math.min(Math.max(minAngle, calculatedStartAngle), maxAngle);
-        const rightAngle: number = Math.max(Math.min(-minAngle, calculatedEndAngle), -maxAngle);
-        return {"startAngle": leftAngle, "endAngle": rightAngle};
+        leftAngle = Math.min(Math.max(leftAngle, calculatedLeftAngle), maxAngle);
+        rightAngle = Math.max(Math.min(rightAngle, calculatedRightAngle), -maxAngle);
     }
 
     private static degreesToRadiansFactor: number = Math.PI / 180;
+    private static k: number = 0.9;
+    private static d: number = 0.2;
+
+    // ── Stubs for VexFlowMusicSheetDrawer ──────────────────────────────────────
+
+    /** Replaced by original calculateCurve — cross-staff slurs use same code path. */
+    public calculateCurveCrossStaff(rules: EngravingRules): boolean {
+        this.calculateCurve(rules);
+        return true;
+    }
+
+    /** No-op: original algorithm doesn't need post-hoc beam clamping. */
+    public clampToVoiceSkyline(_rules: EngravingRules): void { /* no-op */ }
+
+    /** No-op: original algorithm doesn't need visual cross-staff adjustment. */
+    public adjustForVisualCrossStaff(_rules: EngravingRules): void { /* no-op */ }
 }
