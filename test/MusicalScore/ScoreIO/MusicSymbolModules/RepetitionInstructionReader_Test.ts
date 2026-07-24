@@ -9,6 +9,53 @@ import { MultiExpression } from "../../../../src/MusicalScore/VoiceData/Expressi
 import { UnknownExpression } from "../../../../src/MusicalScore/VoiceData/Expressions/UnknownExpression";
 
 describe("RepetitionInstructionReader", () => {
+    describe("handleLineRepetitionInstructions", () => {
+        const reader: RepetitionInstructionReader = new RepetitionInstructionReader();
+        reader.MusicSheet = new MusicSheet();
+
+        function handleBarline(xml: string, measureIndex: number = 7): RepetitionInstruction[] {
+            reader.repetitionInstructions.length = 0;
+            reader.prepareReadingMeasure(undefined, measureIndex);
+            const doc: Document = new DOMParser().parseFromString(xml, "text/xml");
+            const barlineNode: IXmlElement = new IXmlElement(doc.documentElement);
+            reader.handleLineRepetitionInstructions(barlineNode);
+            return reader.repetitionInstructions.slice();
+        }
+
+        function findInstruction(
+            instructions: RepetitionInstruction[],
+            type: RepetitionInstructionEnum,
+        ): RepetitionInstruction {
+            return instructions.find((instruction: RepetitionInstruction): boolean => instruction.type === type);
+        }
+
+        it("parses backward repeat times and ending number lists", () => {
+            const instructions: RepetitionInstruction[] = handleBarline(
+                `<barline location="right">
+                    <ending number="1, 2 + 4-5" type="stop">1, 2 + 4-5</ending>
+                    <repeat direction="backward" times="4"/>
+                </barline>`,
+            );
+
+            expect(findInstruction(instructions, RepetitionInstructionEnum.Ending)?.endingIndices).to.deep.equal([
+                1, 2, 4, 5,
+            ]);
+            expect(findInstruction(instructions, RepetitionInstructionEnum.BackJumpLine)?.Times).to.equal(4);
+        });
+
+        it("parses multi-digit ending ranges", () => {
+            const instructions: RepetitionInstruction[] = handleBarline(
+                `<barline location="left">
+                    <ending number="10 - 12, 15" type="start">10 - 12, 15</ending>
+                </barline>`,
+            );
+
+            expect(findInstruction(instructions, RepetitionInstructionEnum.Ending)?.endingIndices).to.deep.equal([
+                10, 11, 12, 15,
+            ]);
+        });
+    });
+
     describe("handleRepetitionInstructionsFromWordsOrSymbols", () => {
         const reader: RepetitionInstructionReader = new RepetitionInstructionReader();
         reader.MusicSheet = new MusicSheet();
