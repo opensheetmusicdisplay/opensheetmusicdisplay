@@ -14,6 +14,7 @@ import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/Graphic
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
 import { Fraction } from "../../../src/Common/DataObjects/Fraction";
 import { AccidentalEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
+import { TransposeCalculator } from "../../../src/Plugins/Transpose/TransposeCalculator";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -146,6 +147,133 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         opensheetmusicdisplay.load(score).then(
             (_: {}) => {
                 opensheetmusicdisplay.render();
+                done();
+            },
+            done
+        );
+    });
+
+    it("keeps rest display hints fixed when the score transposes", (done: Mocha.Done) => {
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voice</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <rest>
+          <display-step>B</display-step>
+          <display-octave>4</display-octave>
+        </rest>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+    </measure>
+  </part>
+</score-partwise>`;
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+        function firstRenderedRestPitch(currentOsmd: OpenSheetMusicDisplay): string {
+            const restNote: any = currentOsmd.GraphicSheet.MeasureList
+                .flatMap((measureList: any[]) => measureList)
+                .flatMap((measure: any) => measure.staffEntries)
+                .flatMap((staffEntry: any) => staffEntry.graphicalVoiceEntries)
+                .flatMap((gve: any) => gve.notes)
+                .find((graphicalNote: any) => graphicalNote.sourceNote?.isRest?.());
+            expect(restNote, "expected a rendered rest note").to.not.equal(undefined);
+            return restNote.vfpitch[0];
+        }
+
+        osmd.load(xml).then(
+            () => {
+                osmd.render();
+                const restPitchBeforeTranspose: string = firstRenderedRestPitch(osmd);
+
+                osmd.TransposeCalculator = new TransposeCalculator();
+                osmd.Sheet.Transpose = 2;
+                osmd.updateGraphic();
+                osmd.render();
+
+                expect(firstRenderedRestPitch(osmd)).to.equal(restPitchBeforeTranspose);
+                done();
+            },
+            done
+        );
+    });
+
+    it("maps bass rest display hints onto centered rest lines", (done: Mocha.Done) => {
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano LH</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <note>
+        <rest>
+          <display-step>D</display-step>
+          <display-octave>3</display-octave>
+        </rest>
+        <duration>2</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <rest>
+          <display-step>F</display-step>
+          <display-octave>3</display-octave>
+        </rest>
+        <duration>2</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <rest>
+          <display-step>D</display-step>
+          <display-octave>3</display-octave>
+        </rest>
+        <duration>4</duration>
+        <type>half</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>`;
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+        function renderedRestPitches(currentOsmd: OpenSheetMusicDisplay): string[] {
+            return currentOsmd.GraphicSheet.MeasureList
+                .flatMap((measureList: any[]) => measureList)
+                .flatMap((measure: any) => measure.staffEntries)
+                .flatMap((staffEntry: any) => staffEntry.graphicalVoiceEntries)
+                .flatMap((gve: any) => gve.notes)
+                .filter((graphicalNote: any) => graphicalNote.sourceNote?.isRest?.())
+                .map((graphicalNote: any) => graphicalNote.vfpitch[0]);
+        }
+
+        osmd.load(xml).then(
+            () => {
+                osmd.render();
+                expect(renderedRestPitches(osmd)).to.deep.equal(["bn/4", "dn/5", "bn/4"]);
                 done();
             },
             done

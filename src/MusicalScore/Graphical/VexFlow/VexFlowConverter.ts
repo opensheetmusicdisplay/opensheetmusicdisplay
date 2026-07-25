@@ -40,6 +40,8 @@ import { Staff } from "../../VoiceData/Staff";
  * from OSMD objects to VexFlow objects.
  */
 export class VexFlowConverter {
+    private static readonly trebleLineNoteNames: string[] = ["c", "d", "e", "f", "g", "a", "b"];
+
     /**
      * Mapping from numbers of alterations on the key signature to major keys
      * @type {[alterationsNo: number]: string; }
@@ -155,22 +157,14 @@ export class VexFlowConverter {
      */
     public static pitch(pitch: Pitch, isRest: boolean, clef: ClefInstruction,
                         notehead: Notehead = undefined, octaveOffsetGiven: number = undefined): [string, string, ClefInstruction] {
+        if (isRest) {
+            return [VexFlowConverter.restPitch(pitch, clef), "", clef];
+        }
+
         //FIXME: The octave seems to need a shift of three?
-        //FIXME: Also rests seem to use different offsets depending on the clef.
         let octaveOffset: number = octaveOffsetGiven;
         if (octaveOffsetGiven === undefined) {
             octaveOffset = 3;
-        }
-        if (isRest && octaveOffsetGiven === undefined) {
-            octaveOffset = 0;
-            if (clef.ClefType === ClefEnum.F) {
-                octaveOffset = 2;
-            }
-            if (clef.ClefType === ClefEnum.C) {
-                octaveOffset = 2;
-            }
-            // TODO the pitch for rests will be the start position, for eights rests it will be the bottom point
-            // maybe we want to center on the display position instead of having the bottom there?
         }
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
@@ -182,9 +176,18 @@ export class VexFlowConverter {
         return [fund + "n/" + octave + noteheadCode, acc, clef];
     }
 
+    private static restPitch(pitch: Pitch, clef: ClefInstruction): string {
+        const clefType: string = VexFlowConverter.Clef(clef).type || "treble";
+        const renderedPitch: string = `${NoteEnum[pitch.FundamentalNote].toLowerCase()}n/${pitch.Octave}`;
+        const sourceLine: number = VF.keyProperties(renderedPitch, clefType, {octave_shift: 0}).line;
+        const lineIndex: number = Math.round(sourceLine * 2) + 28;
+        const noteIndex: number = ((lineIndex % 7) + 7) % 7;
+        const octave: number = (lineIndex - noteIndex) / 7;
+        return `${VexFlowConverter.trebleLineNoteNames[noteIndex]}n/${octave}`;
+    }
+
     public static restToNotePitch(pitch: Pitch, clefType: ClefEnum): Pitch {
         let octave: number = pitch.Octave;
-        // offsets see pitch()
         switch (clefType) {
             case ClefEnum.C:
             case ClefEnum.F: {
