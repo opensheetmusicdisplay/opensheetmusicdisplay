@@ -1447,7 +1447,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const sourceNote: Note = voiceEntry.notes[0].sourceNote;
                     const graphicalLength: Fraction = voiceEntry.notes[0].graphicalNoteLength;
                     const vfTicks: VF.Fraction = vexFlowVoiceEntry.vfStaveNote.getTicks();
-                    // whole measure rests keep their vexflow "w" ticks: nothing follows them
+                    // whole measure rests keep their VexFlow whole-note ticks: nothing follows them
                     //   in the voice, and correcting them would change spacing unnecessarily.
                     const isWholeMeasureRest: boolean = sourceNote.IsWholeMeasureRest ||
                         graphicalLength.RealValue === this.parentSourceMeasure.ActiveTimeSignature.RealValue;

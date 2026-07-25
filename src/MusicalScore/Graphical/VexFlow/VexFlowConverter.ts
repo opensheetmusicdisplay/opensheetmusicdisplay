@@ -345,14 +345,12 @@ export class VexFlowConverter {
                     if (gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1) {
                         keys = ["b/4"];
                     }
-                    duration = "w";
+                    duration = "1";
                     numDots = 0;
-                    // If it's a whole rest we want it smack in the middle. Apparently there is still an issue in vexflow:
-                    // https://github.com/0xfe/vexflow/issues/579 The author reports that he needs to add some negative x shift
-                    // if the measure has no modifiers.
+                    // Whole-measure rests need the VexFlow bar-rest duration so align_center
+                    // can place them in the visual middle of the bar.
                     alignCenter = true;
-                    xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
-                    // affects VexFlowStaffEntry.calculateXPosition()
+                    xShift = 0;
                 }
                 //If we have more than one visible voice entry, shift the rests so no collision occurs
                 if (note.sourceNote.ParentStaff.Voices.length > 1) {
@@ -401,7 +399,7 @@ export class VexFlowConverter {
                                     //   this is more of "reverse engineering" or rather "advance engineering" the graphical notes,
                                     //   which are unfortunately not built/drawn yet here.
                                 }
-                                if (duration.includes("w")) {
+                                if (isWholeMeasureRest) {
                                     linesShift /= 2; // TODO maybe a different fix, whole notes may need another look
                                 }
                                 linesShift += (Math.ceil(rules.RestCollisionYPadding) * 0.5); // 0.5 is smallest unit
