@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <movement_title>test_fingering_reversed_rare_1587_bottom_staff</movement_title>
+  <part-list>
+    <score-part id="P1">
+      <part-name>[Piano] (a)</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>3</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n2">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <dot/>
+        <staff>1</staff>
+      </note>
+      <note id="n1">
+        <chord/>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <dot/>
+        <staff>1</staff>
+      </note>
+      <note id="n0">
+        <chord/>
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <dot/>
+        <staff>1</staff>
+        <notations>
+          <technical>
+            <fingering default-y="34" default-x="3">1</fingering>
+            <fingering default-y="52" default-x="3">3</fingering>
+            <fingering default-y="69" default-x="3">5</fingering>
+          </technical>
+        </notations>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n5">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+      <note id="n4">
+        <chord/>
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+      <note id="n3">
+        <chord/>
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <dot/>
+        <staff>2</staff>
+        <notations>
+          <technical>
+            <fingering default-y="-60" default-x="3">4</fingering>
+            <fingering default-y="-42" default-x="3">2</fingering>
+            <fingering default-y="-25" default-x="3">1</fingering>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

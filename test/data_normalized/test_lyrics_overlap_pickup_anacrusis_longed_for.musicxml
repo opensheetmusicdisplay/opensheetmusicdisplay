@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_lyrics_overlap_pickup_anacrusis</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Soprano</part-name>
+      <part-abbreviation>S.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="0">
+      <attributes>
+        <divisions>2</divisions>
+        <key>
+          <fifths>4</fifths>
+        </key>
+        <time>
+          <beats>2</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="130.34" default-y="-25" id="n0">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <lyric number="1">
+          <text>Longed</text>
+        </lyric>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <note default-x="12.5" default-y="-15" id="n1">
+        <pitch>
+          <step>C</step>
+          <alter>1</alter>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>for</text>
+        </lyric>
+      </note>
+      <note default-x="321.27" default-y="-10" id="n2">
+        <pitch>
+          <step>D</step>
+          <alter>1</alter>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>space</text>
+        </lyric>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

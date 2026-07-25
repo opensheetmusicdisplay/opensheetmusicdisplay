@@ -1,0 +1,227 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_lyrics_x-alignment_whole_rest_second_voice</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+    <part-group number="1" type="start">
+      <group-symbol>brace</group-symbol>
+    </part-group>
+    <score-part id="P2">
+      <part-name>Piano</part-name>
+    </score-part>
+    <part-group number="1" type="stop"/>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="83.49" default-y="-25.00" id="n0">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>1. lorem</text>
+        </lyric>
+        <lyric number="2">
+          <text>2. lorem</text>
+        </lyric>
+      </note>
+      <note default-x="177.84" default-y="-25.00" id="n1">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>ipsum</text>
+        </lyric>
+        <lyric number="2">
+          <text>ipsum</text>
+        </lyric>
+      </note>
+      <note default-x="272.19" default-y="-25.00" id="n2">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>dolor</text>
+        </lyric>
+        <lyric number="2">
+          <text>dolor</text>
+        </lyric>
+      </note>
+      <note default-x="366.54" default-y="-25.00" id="n3">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>sit</text>
+        </lyric>
+        <lyric number="2">
+          <text>sit</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>4</duration>
+      </backup>
+      <note id="r0">
+        <rest/>
+        <duration>4</duration>
+        <voice>2</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="30.73" default-y="-25.00" id="n4">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>amet</text>
+        </lyric>
+        <lyric number="2">
+          <text>amet</text>
+        </lyric>
+      </note>
+      <note default-x="149.36" default-y="-25.00" id="n5">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>consectetur</text>
+        </lyric>
+        <lyric number="2">
+          <text>consectetur</text>
+        </lyric>
+      </note>
+      <note default-x="267.98" default-y="-25.00" id="n6">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>adipiscing</text>
+        </lyric>
+        <lyric number="2">
+          <text>adipiscing</text>
+        </lyric>
+      </note>
+      <note default-x="386.61" default-y="-25.00" id="n7">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>elit</text>
+        </lyric>
+        <lyric number="2">
+          <text>elit</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>4</duration>
+      </backup>
+      <note id="r1">
+        <rest/>
+        <duration>4</duration>
+        <voice>2</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+  <part id="P2">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="r2">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r3">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

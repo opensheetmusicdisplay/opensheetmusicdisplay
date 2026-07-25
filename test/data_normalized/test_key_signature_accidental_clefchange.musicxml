@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_key_signature_accidental_clefchange</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="r0">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>1</fifths>
+        </key>
+      </attributes>
+      <note default-x="24.76" default-y="-20.00" id="n0">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <attributes>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>1</divisions>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <note default-x="13.00" default-y="-35.00" id="n1">
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>-1</fifths>
+        </key>
+      </attributes>
+      <note default-x="23.12" default-y="-25.00" id="n2">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

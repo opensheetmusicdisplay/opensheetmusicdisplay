@@ -1,0 +1,740 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <movement_title>test_tremolo_between_notes</movement_title>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n0">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n2">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n4">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n6">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <backup>
+        <duration>3072</duration>
+      </backup>
+      <note id="n1">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n3">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n5">
+        <pitch>
+          <step>B</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n7">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n8">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n10">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n12">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n14">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <backup>
+        <duration>3072</duration>
+      </backup>
+      <note id="n9">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n11">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n13">
+        <pitch>
+          <step>B</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n15">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n16">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n18">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n20">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n22">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <backup>
+        <duration>3072</duration>
+      </backup>
+      <note id="n17">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n19">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n21">
+        <pitch>
+          <step>B</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n23">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n24">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n26">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n28">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n30">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>1</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <backup>
+        <duration>3072</duration>
+      </backup>
+      <note id="n25">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n27">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n29">
+        <pitch>
+          <step>B</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="start">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n31">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>2</actual-notes>
+          <normal-notes>1</normal-notes>
+        </time-modification>
+        <staff>2</staff>
+        <notations>
+          <ornaments>
+            <tremolo type="stop">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n32">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>3072</duration>
+      </backup>
+      <note id="n33">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>5</voice>
+        <type>whole</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

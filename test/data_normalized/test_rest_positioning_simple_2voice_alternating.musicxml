@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_rest_positioning_simple_2voice_alternating</work_title>
+  </work>
+  <part-list>
+    <part-group number="1" type="start">
+      <group-symbol>brace</group-symbol>
+    </part-group>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+    <part-group number="1" type="stop"/>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>1</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="81.69" default-y="-5.00" id="n0">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="r1">
+        <rest/>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r0">
+        <rest/>
+        <duration>1</duration>
+        <voice>2</voice>
+        <type>eighth</type>
+      </note>
+      <note default-x="212.66" default-y="10.00" id="n1">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

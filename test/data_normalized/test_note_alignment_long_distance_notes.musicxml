@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test note alignment long distance</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="80.72" default-y="-40.00" id="n0">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <backup>
+        <duration>4</duration>
+      </backup>
+      <note default-x="82.64" default-y="-10.00" id="n1">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>2</voice>
+        <stem>up</stem>
+        <type>half</type>
+      </note>
+      <note id="r0">
+        <rest/>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>half</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

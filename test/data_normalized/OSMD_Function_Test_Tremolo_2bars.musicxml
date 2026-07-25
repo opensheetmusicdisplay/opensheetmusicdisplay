@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>OSMD Function Test - Tremolo</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="79.27" default-y="-30.00" id="n0">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <ornaments>
+            <tremolo type="single">1</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note default-x="209.85" default-y="-25.00" id="n1">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <ornaments>
+            <tremolo type="single">2</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note default-x="340.43" default-y="-20.00" id="n2">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <notations>
+          <ornaments>
+            <tremolo type="single">2</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note default-x="471.01" default-y="-15.00" id="n3">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <notations>
+          <ornaments>
+            <tremolo type="single">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.00" default-y="-30.00" id="n4">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <notations>
+          <ornaments>
+            <tremolo type="single">1</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <note default-x="253.23" default-y="-30.00" id="n5">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <notations>
+          <ornaments>
+            <tremolo type="single">4</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

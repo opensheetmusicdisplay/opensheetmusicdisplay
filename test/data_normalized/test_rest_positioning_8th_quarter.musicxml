@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_rest_positioning_8th_quarter</work_title>
+  </work>
+  <part-list>
+    <part-group number="1" type="start">
+      <group-symbol>brace</group-symbol>
+    </part-group>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+    <part-group number="1" type="stop"/>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>3</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="80.72" default-y="-45.00" id="n0">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note default-x="140.19" default-y="-15.00" id="n1">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note default-x="199.66" default-y="-5.00" id="n2">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+      </note>
+      <backup>
+        <duration>6</duration>
+      </backup>
+      <note id="r0">
+        <rest/>
+        <duration>1</duration>
+        <voice>2</voice>
+        <type>eighth</type>
+      </note>
+      <note id="r1">
+        <rest/>
+        <duration>1</duration>
+        <voice>2</voice>
+        <type>eighth</type>
+      </note>
+      <note id="r2">
+        <rest/>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r3">
+        <rest/>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

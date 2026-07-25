@@ -1,0 +1,369 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>Test - StaveRepetitions (Coda etc) - Positioning</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>64</divisions>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>120</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="120"/>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n0">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="start" orientation="under" placement="below"/>
+          <slur number="1" type="start" orientation="under" placement="below"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n1">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="stop" orientation="under" placement="below"/>
+          <slur number="1" type="stop"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n2">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="start" orientation="under" placement="below"/>
+          <slur number="1" type="start" orientation="under" placement="below"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n3">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="stop" orientation="under" placement="below"/>
+          <slur number="1" type="stop"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>64</divisions>
+      </attributes>
+      <note id="n4">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="start" orientation="under" placement="below"/>
+          <slur number="1" type="start" orientation="under" placement="below"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n5">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="stop" orientation="under" placement="below"/>
+          <slur number="1" type="stop"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n6">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="start" orientation="under" placement="below"/>
+          <slur number="1" type="start" orientation="under" placement="below"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n7">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="stop" orientation="under" placement="below"/>
+          <slur number="1" type="stop"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>256</duration>
+      </backup>
+      <note id="r0">
+        <rest/>
+        <duration>256</duration>
+        <voice>3</voice>
+        <type>whole</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>64</divisions>
+      </attributes>
+      <note id="n8">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="start" orientation="under" placement="below"/>
+          <slur number="1" type="start" orientation="under" placement="below"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n9">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="stop" orientation="under" placement="below"/>
+          <slur number="1" type="stop"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n10">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="start" orientation="under" placement="below"/>
+          <slur number="1" type="start" orientation="under" placement="below"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n11">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="stop" orientation="under" placement="below"/>
+          <slur number="1" type="stop"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>256</duration>
+      </backup>
+      <note id="r1">
+        <rest/>
+        <duration>256</duration>
+        <voice>3</voice>
+        <type>whole</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>64</divisions>
+      </attributes>
+      <note id="n12">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="start" orientation="under" placement="below"/>
+          <slur number="1" type="start" orientation="under" placement="below"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n13">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="stop" orientation="under" placement="below"/>
+          <slur number="1" type="stop"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n14">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="start" orientation="under" placement="below"/>
+          <slur number="1" type="start" orientation="under" placement="below"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <note id="n15">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <slur color="#000000" type="stop" orientation="under" placement="below"/>
+          <slur number="1" type="stop"/>
+        </notations>
+        <lyric number="1">
+          <text>test</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>256</duration>
+      </backup>
+      <note id="r2">
+        <rest/>
+        <duration>256</duration>
+        <voice>3</voice>
+        <type>whole</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <divisions>64</divisions>
+      </attributes>
+      <note id="r3">
+        <rest/>
+        <duration>256</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <backup>
+        <duration>256</duration>
+      </backup>
+      <note id="r4">
+        <rest/>
+        <duration>256</duration>
+        <voice>3</voice>
+        <type>whole</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

@@ -1,0 +1,191 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_lyrics_number_string_space</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voice</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <key>
+          <fifths>0</fifths>
+          <mode>none</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n0">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>This</text>
+        </lyric>
+        <lyric number="2">
+          <text>Das</text>
+        </lyric>
+        <lyric number="3">
+          <text>This</text>
+        </lyric>
+        <lyric number="4">
+          <text>Das</text>
+        </lyric>
+      </note>
+      <note id="n1">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>is</text>
+        </lyric>
+        <lyric number="2">
+          <text>ist</text>
+        </lyric>
+        <lyric number="3">
+          <text>is</text>
+        </lyric>
+        <lyric number="4">
+          <text>ist</text>
+        </lyric>
+      </note>
+      <note id="n2">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>verse</text>
+        </lyric>
+        <lyric number="2">
+          <text>Vers</text>
+        </lyric>
+        <lyric number="3">
+          <text>verse</text>
+        </lyric>
+        <lyric number="4">
+          <text>Vers</text>
+        </lyric>
+      </note>
+      <note id="n3">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>one.</text>
+        </lyric>
+        <lyric number="2">
+          <text>eins.</text>
+        </lyric>
+        <lyric number="3">
+          <text>two.</text>
+        </lyric>
+        <lyric number="4">
+          <text>zwei.</text>
+        </lyric>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>4</divisions>
+      </attributes>
+      <note id="n4">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>That’s</text>
+        </lyric>
+        <lyric number="2">
+          <text>Und</text>
+        </lyric>
+      </note>
+      <note id="n5">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>the</text>
+        </lyric>
+        <lyric number="2">
+          <text>der</text>
+        </lyric>
+      </note>
+      <note id="n6">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>re</text>
+        </lyric>
+        <lyric number="2">
+          <text>Ref</text>
+        </lyric>
+      </note>
+      <note id="n7">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <lyric number="1">
+          <text>frain.</text>
+        </lyric>
+        <lyric number="2">
+          <text>rain.</text>
+        </lyric>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

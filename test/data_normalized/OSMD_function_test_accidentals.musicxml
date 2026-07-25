@@ -1,0 +1,256 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>OSMD Function Test - Accidentals</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="84.60" default-y="-50.00" id="n0">
+        <pitch>
+          <step>C</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <lyric number="1">
+          <text>Sharp</text>
+        </lyric>
+      </note>
+      <note id="r0">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="53.36" default-y="-40.00" id="n1">
+        <pitch>
+          <step>E</step>
+          <alter>2</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <lyric number="1">
+          <text>DoubleSharp</text>
+        </lyric>
+      </note>
+      <note id="r1">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="48.17" default-y="-30.00" id="n2">
+        <pitch>
+          <step>G</step>
+          <alter>3</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <lyric number="1">
+          <text>TripleSharp</text>
+        </lyric>
+      </note>
+      <note id="r2">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="55.12" default-y="-30.00" id="n3">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <lyric number="1">
+          <text>QuarterSharp</text>
+        </lyric>
+      </note>
+      <note id="r3">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r4">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="6">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note default-x="64.34" default-y="-50.00" id="n4">
+        <pitch>
+          <step>C</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <lyric number="1">
+          <text>Flat</text>
+        </lyric>
+      </note>
+      <note id="r5">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="7">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="44.92" default-y="-40.00" id="n5">
+        <pitch>
+          <step>E</step>
+          <alter>-2</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <lyric number="1">
+          <text>DoubleFlat</text>
+        </lyric>
+      </note>
+      <note id="r6">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="8">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="39.73" default-y="-30.00" id="n6">
+        <pitch>
+          <step>G</step>
+          <alter>-3</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <lyric number="1">
+          <text>TripleFlat</text>
+        </lyric>
+      </note>
+      <note id="r7">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="9">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="46.68" default-y="-30.00" id="n7">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <lyric number="1">
+          <text>QuarterFlat</text>
+        </lyric>
+      </note>
+      <note id="r8">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="10">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r9">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

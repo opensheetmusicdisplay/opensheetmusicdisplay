@@ -1,0 +1,148 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>OSMD Function Test - Metronome Marks</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>79</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="79"/>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note id="r0">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>120</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="120"/>
+      </direction>
+      <note id="r1">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>160</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="160"/>
+      </direction>
+      <note id="r2">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>240</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="240"/>
+      </direction>
+      <note id="r3">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>40</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="40"/>
+      </direction>
+      <note id="r4">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="6">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>60</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="60"/>
+      </direction>
+      <print new-system="yes"/>
+      <note id="r5">
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

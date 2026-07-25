@@ -1,0 +1,765 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <movement_title>Test - Rehearsal Marks Bolivia</movement_title>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Lead sheet</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <barline location="left">
+        <repeat direction="forward"/>
+      </barline>
+      <attributes>
+        <divisions>768</divisions>
+        <key>
+          <fifths>2</fifths>
+          <mode>major</mode>
+        </key>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n0">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n1">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n2">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n3">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n4">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="6">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n5">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="7">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n6">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <barline location="middle">
+        <repeat direction="backward"/>
+      </barline>
+    </measure>
+    <!--=======================================================-->
+    <measure number="8">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n7">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="9">
+      <attributes>
+        <divisions>768</divisions>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+      </attributes>
+      <print new-system="yes"/>
+      <harmony>
+        <root>
+          <root-step>E</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="△7">major-seventh</kind>
+      </harmony>
+      <note id="n8">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="10">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+        </root>
+        <kind text="13">dominant-13th</kind>
+      </harmony>
+      <note id="n9">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="11">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>D</root-step>
+        </root>
+        <kind text="△7">major-seventh</kind>
+      </harmony>
+      <note id="n10">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="12">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="13">dominant-13th</kind>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>-1</degree-alter>
+          <degree-type>alter</degree-type>
+        </degree>
+      </harmony>
+      <note id="n11">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="13">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="△7">major-seventh</kind>
+      </harmony>
+      <note id="n12">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="14">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+          <root-alter>1</root-alter>
+        </root>
+        <kind text="7">dominant</kind>
+        <degree>
+          <degree-value>13</degree-value>
+          <degree-alter>-1</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note id="n13">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="15">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+        </root>
+        <kind text="m7">minor-seventh</kind>
+      </harmony>
+      <note id="n14">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="16">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="△7">major-seventh</kind>
+        <degree>
+          <degree-value>11</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note id="n15">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="17">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+        </root>
+        <kind text="m7">minor-seventh</kind>
+      </harmony>
+      <note id="n16">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="18">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+        </root>
+        <kind text="m7">minor-seventh</kind>
+        <bass>
+          <bass-step>A</bass-step>
+        </bass>
+        <bass>
+          <bass-step>A</bass-step>
+        </bass>
+      </harmony>
+      <note id="n17">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="19">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+          <root-alter>1</root-alter>
+        </root>
+        <kind text="ø7">half-diminished</kind>
+      </harmony>
+      <note id="n18">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="20">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="m7">minor-seventh</kind>
+      </harmony>
+      <note id="n19">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+      <harmony>
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n20">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="21">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="△7">major-seventh</kind>
+      </harmony>
+      <note id="n21">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="22">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>-1</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note id="n22">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="23">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="△7">major-seventh</kind>
+      </harmony>
+      <note id="n23">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="24">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note id="n24">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="25">
+      <barline location="left">
+        <repeat direction="forward"/>
+      </barline>
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n25">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="26">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n26">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="27">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n27">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="28">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n28">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="29">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n29">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="30">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n30">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="31">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n31">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <barline location="middle">
+        <repeat direction="backward"/>
+      </barline>
+    </measure>
+    <!--=======================================================-->
+    <measure number="32">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>G</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+      </harmony>
+      <note id="n32">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

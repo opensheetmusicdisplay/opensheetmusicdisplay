@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_graceslash_simple</work_title>
+  </work>
+  <part-list>
+    <part-group number="1" type="start">
+      <group-symbol>brace</group-symbol>
+    </part-group>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+    <part-group number="1" type="stop"/>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>-3</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="118.84" default-y="0.00" id="n1">
+        <grace slash="yes"/>
+        <pitch>
+          <step>F</step>
+          <octave>5</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note default-x="129.34" default-y="5.00" id="n2">
+        <grace slash="yes"/>
+        <pitch>
+          <step>G</step>
+          <octave>5</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note default-x="140.44" default-y="10.00" id="n0">
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+      <note default-x="292.57" default-y="-15.00" id="n3">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <notations>
+          <articulations>
+            <staccato/>
+          </articulations>
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

@@ -1,0 +1,1753 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <movement_title>test_direction_offset_node_words_placement</movement_title>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Drum Set</part-name>
+      <part-abbreviation>Dr.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>768</divisions>
+        <time>
+          <beats>6</beats>
+          <beat-type>8</beat-type>
+        </time>
+        <clef number="1">
+          <sign>percussion</sign>
+          <line>None</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>192</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="192"/>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n1">
+        <unpitched>
+          <display-step>D</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="n0">
+        <chord/>
+        <unpitched>
+          <display-step>A</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="r0">
+        <rest/>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n2">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r1">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r2">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n4">
+        <unpitched>
+          <display-step>D</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="n3">
+        <chord/>
+        <unpitched>
+          <display-step>A</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="r3">
+        <rest/>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n5">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r4">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r5">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n7">
+        <unpitched>
+          <display-step>D</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="n6">
+        <chord/>
+        <unpitched>
+          <display-step>A</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="r6">
+        <rest/>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n8">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r7">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="6">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n9">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="r8">
+        <rest/>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="7">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n10">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="r9">
+        <rest/>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="8">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n11">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="r10">
+        <rest/>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="9">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n12">
+        <unpitched>
+          <display-step>A</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n14">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n15">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n16">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n17">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n18">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n13">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r11">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="10">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n19">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n21">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n22">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n23">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n24">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n25">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n20">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r12">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="11">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n26">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n28">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n29">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n30">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n31">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n32">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n27">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r13">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="12">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n33">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n35">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n36">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n37">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n38">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n39">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n34">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r14">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="13">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n40">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n42">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n43">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n44">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n45">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n46">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n41">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r15">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="14">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n47">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n49">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n50">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n51">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n52">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n53">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n48">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r16">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="15">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n54">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n56">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n57">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n58">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n59">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n60">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n55">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r17">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="16">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n61">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n63">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n64">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n65">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n66">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n67">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n62">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r18">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="17">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n68">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n70">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n71">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n72">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n73">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n74">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n69">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r19">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="18">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n75">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n77">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n78">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n79">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n80">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n81">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n76">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r20">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="19">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n82">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n84">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n85">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n86">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n87">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n88">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n83">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r21">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="20">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n89">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n91">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n92">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n93">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n94">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n95">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n90">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r22">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="21">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n96">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n98">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n99">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n100">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n101">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n102">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n97">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r23">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="22">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n103">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <articulations>
+            <accent/>
+          </articulations>
+        </notations>
+      </note>
+      <note id="n105">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n106">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n107">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n108">
+        <unpitched>
+          <display-step>D</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note id="n109">
+        <unpitched>
+          <display-step>A</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n104">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r24">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="23">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note print-object="no" id="r25">
+        <rest/>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="r26">
+        <rest/>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n110">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r27">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="24">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n112">
+        <unpitched>
+          <display-step>D</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="n111">
+        <chord/>
+        <unpitched>
+          <display-step>A</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note id="r28">
+        <rest/>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n113">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+      </note>
+      <note print-object="no" id="r29">
+        <rest/>
+        <duration>1152</duration>
+        <voice>2</voice>
+        <type>quarter</type>
+        <dot/>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

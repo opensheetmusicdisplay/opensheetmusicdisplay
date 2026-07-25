@@ -1,0 +1,279 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_wedge_cresc_dim_simultaneous_quartet</work_title>
+  </work>
+  <part-list>
+    <part-group number="1" type="start">
+      <group-symbol>bracket</group-symbol>
+    </part-group>
+    <score-part id="P1">
+      <part-name>Violin I</part-name>
+    </score-part>
+    <score-part id="P2">
+      <part-name>Violin II</part-name>
+    </score-part>
+    <score-part id="P3">
+      <part-name>Viola</part-name>
+    </score-part>
+    <score-part id="P4">
+      <part-name>Violoncello</part-name>
+    </score-part>
+    <part-group number="1" type="stop"/>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="crescendo"/>
+        </direction-type>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="84.45" default-y="-30.00" id="n0">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note default-x="181.58" default-y="-30.00" id="n1">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note default-x="278.70" default-y="-30.00" id="n2">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note default-x="375.83" default-y="-30.00" id="n3">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="stop"/>
+        </direction-type>
+      </direction>
+    </measure>
+  </part>
+  <part id="P2">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="diminuendo"/>
+        </direction-type>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="84.45" default-y="-157.44" id="n4">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note default-x="181.58" default-y="-157.44" id="n5">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note default-x="278.70" default-y="-157.44" id="n6">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note default-x="375.83" default-y="-157.44" id="n7">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="stop"/>
+        </direction-type>
+      </direction>
+    </measure>
+  </part>
+  <part id="P3">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>C</sign>
+          <line>3</line>
+        </clef>
+      </attributes>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="crescendo"/>
+        </direction-type>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="84.45" default-y="-289.88" id="n8">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note default-x="181.58" default-y="-289.88" id="n9">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="stop"/>
+        </direction-type>
+      </direction>
+      <direction>
+        <direction-type>
+          <wedge number="2" type="diminuendo"/>
+        </direction-type>
+      </direction>
+      <note default-x="278.70" default-y="-289.88" id="n10">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note default-x="375.83" default-y="-289.88" id="n11">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="2" type="stop"/>
+        </direction-type>
+      </direction>
+    </measure>
+  </part>
+  <part id="P4">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="diminuendo"/>
+        </direction-type>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="83.49" default-y="-417.32" id="n12">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

@@ -1,0 +1,149 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n0">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <technical>
+            <fingering>1</fingering>
+            <fingering substitution="yes">2</fingering>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="n2">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <technical>
+            <fingering>5</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note id="n1">
+        <chord/>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <technical>
+            <fingering>3</fingering>
+            <fingering substitution="yes">4</fingering>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="n4">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <technical>
+            <fingering placement="below">8</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note id="n3">
+        <chord/>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <technical>
+            <fingering placement="below">6</fingering>
+            <fingering placement="below" substitution="yes">7</fingering>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="n6">
+        <pitch>
+          <step>F</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <technical>
+            <fingering>10</fingering>
+            <fingering substitution="yes">11</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note id="n5">
+        <chord/>
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <technical>
+            <fingering>9</fingering>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

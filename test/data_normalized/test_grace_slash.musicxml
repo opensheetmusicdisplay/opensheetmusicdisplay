@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test grace slash</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="75.21" default-y="-20" id="n1">
+        <grace slash="yes"/>
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note default-x="94.68" default-y="-25" id="n0">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note default-x="129.68" default-y="-20" id="r0">
+        <rest/>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note default-x="145.21" default-y="-30" id="n3">
+        <grace slash="yes"/>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <slur number="1" type="start" bezier-x="6.13699" bezier-y="-6.720718"/>
+        </notations>
+      </note>
+      <note default-x="164.68" default-y="-25" id="n2">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slur type="stop" number="1" bezier-x="-4.569736" bezier-y="-7.870719"/>
+          <slur number="1" type="stop"/>
+        </notations>
+      </note>
+      <note default-x="182.17" default-y="-20" id="n5">
+        <grace slash="yes"/>
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <slur number="1" type="start" bezier-x="2.80116" bezier-y="-9.02259"/>
+        </notations>
+      </note>
+      <note default-x="201.63" default-y="-25" id="n4">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slur type="stop" number="1" bezier-x="-7.905566" bezier-y="-5.172588"/>
+          <slur number="1" type="stop"/>
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

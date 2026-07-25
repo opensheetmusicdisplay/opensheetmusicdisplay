@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_wedge_diminuendo_duplicated</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="diminuendo"/>
+        </direction-type>
+      </direction>
+      <direction>
+        <direction-type>
+          <wedge number="2" type="diminuendo"/>
+        </direction-type>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="73.72" default-y="-30.00" id="n0">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+      </note>
+      <note id="r0">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="stop"/>
+        </direction-type>
+      </direction>
+      <direction>
+        <direction-type>
+          <wedge number="2" type="stop"/>
+        </direction-type>
+      </direction>
+    </measure>
+  </part>
+</score-partwise>

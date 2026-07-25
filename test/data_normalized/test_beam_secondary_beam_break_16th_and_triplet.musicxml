@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_beam_secondary_beam_break_16th_and_triplet</work_title>
+    <work_number>None</work_number>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name> </part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>480</divisions>
+        <time>
+          <beats>1</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>percussion</sign>
+          <line>None</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n0">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>120</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note id="n1">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>120</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note id="n2">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>80</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+        <notations>
+          <tuplet number="1" type="start">
+            <tuplet-actual>
+              <tuplet-number>3</tuplet-number>
+              <tuplet-type>16th</tuplet-type>
+            </tuplet-actual>
+            <tuplet-normal>
+              <tuplet-number>2</tuplet-number>
+              <tuplet-type>16th</tuplet-type>
+            </tuplet-normal>
+          </tuplet>
+        </notations>
+      </note>
+      <note id="n3">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>80</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+      </note>
+      <note id="n4">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>80</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+        <notations>
+          <tuplet number="1" type="stop"/>
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

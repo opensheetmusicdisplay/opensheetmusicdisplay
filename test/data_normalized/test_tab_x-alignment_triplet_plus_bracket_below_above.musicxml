@@ -1,0 +1,408 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <movement_title>test_tab_x-alignment_triplet_plus_bracket_below_above</movement_title>
+  <part-list>
+    <part-group number="1" type="start">
+      <group-symbol>bracket</group-symbol>
+    </part-group>
+    <score-part id="P1">
+      <part-name>Electric Guitar</part-name>
+      <part-abbreviation>El. Guit.</part-abbreviation>
+    </score-part>
+    <score-part id="P2">
+      <part-name>Acoustic Guitar</part-name>
+    </score-part>
+    <part-group number="1" type="stop"/>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>6</divisions>
+        <key>
+          <fifths>-4</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="134.14" default-y="-70.00" id="n0">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note default-x="250.77" default-y="-70.00" id="n1">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>3</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note default-x="323.66" default-y="-70.00" id="n2">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>3</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="r0">
+        <rest/>
+        <duration>12</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>6</divisions>
+      </attributes>
+      <note id="r1">
+        <rest/>
+        <duration>12</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+      <note default-x="180.07" default-y="-70.00" id="n3">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+      </note>
+      <note default-x="265.70" default-y="-70.00" id="n4">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+      </note>
+      <note default-x="351.34" default-y="-70.00" id="n5">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>6</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="r2">
+        <rest/>
+        <duration>12</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+      <note default-x="271.59" default-y="-70.00" id="n6">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+      </note>
+      <note default-x="355.18" default-y="-70.00" id="n7">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+      </note>
+      <note default-x="438.77" default-y="-70.00" id="n8">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+      </note>
+    </measure>
+  </part>
+  <part id="P2">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>6</divisions>
+        <key>
+          <fifths>-4</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>TAB</sign>
+          <line>5</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="137.04" default-y="-205.00" id="n9">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="253.67" default-y="-205.00" id="n10">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>3</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="326.56" default-y="-205.00" id="n11">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>3</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r3">
+        <rest/>
+        <duration>12</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>6</divisions>
+      </attributes>
+      <note id="r4">
+        <rest/>
+        <duration>12</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+      <note default-x="182.97" default-y="-205.00" id="n12">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="268.60" default-y="-205.00" id="n13">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="354.24" default-y="-205.00" id="n14">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>6</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="r5">
+        <rest/>
+        <duration>12</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+      <note default-x="274.49" default-y="-205.00" id="n15">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="358.08" default-y="-205.00" id="n16">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="441.67" default-y="-205.00" id="n17">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

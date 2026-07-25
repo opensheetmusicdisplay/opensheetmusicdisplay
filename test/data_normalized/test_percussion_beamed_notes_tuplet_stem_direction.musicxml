@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>Test - Percussion Beamed Notes+Tuplet Stem Direction</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>P1</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>256</divisions>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>2</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>percussion</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="75" default-y="27" id="n0">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>85</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+        <notations>
+          <tuplet number="1" type="start">
+            <tuplet-actual>
+              <tuplet-number>3</tuplet-number>
+              <tuplet-type>eighth</tuplet-type>
+            </tuplet-actual>
+            <tuplet-normal>
+              <tuplet-number>2</tuplet-number>
+              <tuplet-type>eighth</tuplet-type>
+            </tuplet-normal>
+          </tuplet>
+        </notations>
+      </note>
+      <note default-x="212" default-y="27" id="n1">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>85</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+      </note>
+      <note default-x="349" default-y="27" id="n2">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <notehead filled="yes">x</notehead>
+        <duration>86</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>3</actual-notes>
+          <normal-notes>2</normal-notes>
+        </time-modification>
+        <notations>
+          <tuplet number="1" type="stop"/>
+        </notations>
+      </note>
+      <note default-x="486" default-y="19" id="n3">
+        <unpitched>
+          <display-step>D</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>64</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="615" default-y="19" id="n4">
+        <unpitched>
+          <display-step>D</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>64</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="744" default-y="19" id="n5">
+        <unpitched>
+          <display-step>D</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>64</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="873" default-y="19" id="n6">
+        <unpitched>
+          <display-step>D</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>64</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

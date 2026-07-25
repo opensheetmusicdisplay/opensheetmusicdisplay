@@ -1,0 +1,774 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <movement_title>test_courtesy_accidentals</movement_title>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+        <key>
+          <fifths>2</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>6</beats>
+          <beat-type>8</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>192</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="192"/>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n0">
+        <pitch>
+          <step>C</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <dot/>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r0">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n1">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <dot/>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r1">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n2">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <dot/>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r2">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n3">
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <dot/>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r3">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n4">
+        <pitch>
+          <step>C</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <dot/>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r4">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="6">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n5">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <dot/>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r5">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="7">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n6">
+        <pitch>
+          <step>D</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <dot/>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r6">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="8">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n7">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <staff>1</staff>
+      </note>
+      <note id="r8">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+      </note>
+      <note id="r9">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+      </note>
+      <note id="r10">
+        <rest/>
+        <duration>1152</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <dot/>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r7">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="9">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="r11">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r12">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="10">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n8">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="n9">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="n10">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r13">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="11">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n11">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="r15">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="r16">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r14">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="12">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n12">
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="n13">
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="n14">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r17">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="13">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n15">
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="r19">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="r20">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="r18">
+        <rest/>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="14">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r21">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n16">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="15">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r22">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n17">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="16">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r23">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n18">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="17">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="r24">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n19">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="18">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r25">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n20">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="19">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r26">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n21">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>half</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="20">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r27">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n22">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>1152</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+      <note id="r28">
+        <rest/>
+        <duration>1152</duration>
+        <voice>5</voice>
+        <type>quarter</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="21">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="r29">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n23">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>1152</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+      <note id="r30">
+        <rest/>
+        <duration>1152</duration>
+        <voice>5</voice>
+        <type>quarter</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="22">
+      <attributes>
+        <staves>2</staves>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r31">
+        <rest/>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2304</duration>
+      </backup>
+      <note id="n24">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>1152</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+      <note id="r32">
+        <rest/>
+        <duration>1152</duration>
+        <voice>5</voice>
+        <type>quarter</type>
+        <dot/>
+        <staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

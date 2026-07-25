@@ -1,0 +1,250 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_lyrics_overlap_pickup_anacrusis_minden_m1</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="0">
+      <attributes>
+        <divisions>4</divisions>
+        <key>
+          <fifths>1</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>80</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="80"/>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="97.47" default-y="-55" id="n0">
+        <pitch>
+          <step>B</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <lyric number="1">
+          <text>1. Min</text>
+        </lyric>
+        <lyric number="2">
+          <text>2. Meg</text>
+        </lyric>
+        <lyric number="3">
+          <text>3. Az</text>
+        </lyric>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+      </attributes>
+      <harmony print-frame="no">
+        <root>
+          <root-step>E</root-step>
+        </root>
+        <kind text="m">minor</kind>
+      </harmony>
+      <note default-x="12.5" default-y="-30" id="n1">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <lyric number="1">
+          <text>den</text>
+        </lyric>
+        <lyric number="2">
+          <text>ke</text>
+        </lyric>
+        <lyric number="3">
+          <text>Úr</text>
+        </lyric>
+      </note>
+      <note default-x="104.88" default-y="-30" id="n2">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">begin</beam>
+        <lyric number="1">
+          <text>i</text>
+        </lyric>
+        <lyric number="2">
+          <text>res</text>
+        </lyric>
+        <lyric number="3">
+          <text>an</text>
+        </lyric>
+      </note>
+      <note default-x="166.46" default-y="-30" id="n3">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <tie type="start"/>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <tied type="start"/>
+        </notations>
+        <lyric number="1">
+          <text>dő</text>
+        </lyric>
+        <lyric number="2">
+          <text>tem</text>
+        </lyric>
+        <lyric number="3">
+          <text>gya</text>
+        </lyric>
+      </note>
+      <note default-x="228.05" default-y="-30" id="n4">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <tied type="stop"/>
+        </notations>
+        <lyric number="1">
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="320.43" default-y="-30" id="n5">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <lyric number="1">
+          <text>ben</text>
+        </lyric>
+        <lyric number="2">
+          <text>az</text>
+        </lyric>
+        <lyric number="3">
+          <text>tá</text>
+        </lyric>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>B</root-step>
+        </root>
+        <kind text="m">minor</kind>
+      </harmony>
+      <note default-x="412.81" default-y="-35" id="n6">
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <lyric number="1">
+          <text>ál</text>
+        </lyric>
+        <lyric number="2">
+          <text>U</text>
+        </lyric>
+        <lyric number="3">
+          <text>bort</text>
+        </lyric>
+      </note>
+      <note default-x="505.18" default-y="-55" id="n7">
+        <pitch>
+          <step>B</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <lyric number="1">
+          <text>dom,</text>
+        </lyric>
+        <lyric number="2">
+          <text>rat,</text>
+        </lyric>
+        <lyric number="3">
+          <text>jár</text>
+        </lyric>
+      </note>
+      <note default-x="597.56" default-y="-20" id="r0">
+        <rest/>
+        <duration>3</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note default-x="714.67" default-y="-55" id="n8">
+        <pitch>
+          <step>B</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <lyric number="1">
+          <text>di</text>
+        </lyric>
+        <lyric number="2">
+          <text>s meg</text>
+        </lyric>
+        <lyric number="3">
+          <text>az</text>
+        </lyric>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

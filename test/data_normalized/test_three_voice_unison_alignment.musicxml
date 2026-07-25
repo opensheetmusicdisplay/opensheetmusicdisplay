@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Music</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>2</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n0">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="n3">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="n1">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note id="n4">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="n2">
+        <pitch>
+          <step>B</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>3</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note id="n5">
+        <pitch>
+          <step>B</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>3</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

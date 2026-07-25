@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_chord_whole_rest_overlap</work_title>
+  </work>
+  <part-list>
+    <part-group number="1" type="start">
+      <group-symbol>brace</group-symbol>
+    </part-group>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+    <part-group number="1" type="stop"/>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <staves>2</staves>
+        <divisions>256</divisions>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <harmony color="#000000" default-y="25">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>minor-sixth</kind>
+        <staff>1</staff>
+      </harmony>
+      <note default-x="42" id="r0">
+        <rest/>
+        <duration>1024</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <staff>1</staff>
+      </note>
+      <harmony color="#000000" default-y="25">
+        <root>
+          <root-step>D</root-step>
+        </root>
+        <kind>minor-seventh</kind>
+        <staff>1</staff>
+      </harmony>
+      <backup>
+        <duration>1024</duration>
+      </backup>
+      <note default-x="42" id="r1">
+        <rest/>
+        <duration>1024</duration>
+        <voice>2</voice>
+        <type>whole</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <staves>2</staves>
+        <divisions>256</divisions>
+      </attributes>
+      <harmony color="#000000" default-y="25">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>minor-sixth</kind>
+        <staff>1</staff>
+      </harmony>
+      <note id="r2">
+        <rest/>
+        <duration>1024</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <staff>1</staff>
+      </note>
+      <harmony color="#000000" default-y="25">
+        <root>
+          <root-step>D</root-step>
+        </root>
+        <kind>minor</kind>
+        <staff>1</staff>
+      </harmony>
+      <backup>
+        <duration>1024</duration>
+      </backup>
+      <note id="r3">
+        <rest/>
+        <duration>1024</duration>
+        <voice>2</voice>
+        <type>whole</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

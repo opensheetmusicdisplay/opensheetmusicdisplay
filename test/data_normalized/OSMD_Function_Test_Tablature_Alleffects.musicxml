@@ -1,0 +1,248 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>OSMD Function Test Tablature - All Effects</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Guitar</part-name>
+      <part-abbreviation>Gtr.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>TAB</sign>
+          <line>5</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>120</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="120"/>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n0">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>0</fret>
+            <hammer-on number="1" type="start">H</hammer-on>
+          </technical>
+        </notations>
+      </note>
+      <note id="n1">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>1</fret>
+            <hammer-on number="1" type="stop"/>
+            <bend>
+              <bend-alter>4</bend-alter>
+            </bend>
+          </technical>
+        </notations>
+      </note>
+      <note id="n2">
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>2</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>2</fret>
+            <pull-off number="1" type="start">P</pull-off>
+          </technical>
+        </notations>
+      </note>
+      <note id="n3">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>3</fret>
+            <pull-off number="1" type="stop"/>
+          </technical>
+        </notations>
+      </note>
+      <note id="n4">
+        <pitch>
+          <step>A</step>
+          <alter>1</alter>
+          <octave>2</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>6</fret>
+          </technical>
+          <slide type="start" number="6"/>
+        </notations>
+      </note>
+      <note id="n5">
+        <chord/>
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>5</fret>
+          </technical>
+          <slide type="stop" number="6"/>
+        </notations>
+      </note>
+      <note id="n6">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>5</fret>
+          </technical>
+          <slide type="start" number="6"/>
+        </notations>
+      </note>
+      <note id="n7">
+        <pitch>
+          <step>A</step>
+          <alter>1</alter>
+          <octave>2</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>6</fret>
+          </technical>
+          <slide type="stop" number="6"/>
+          <ornaments>
+            <wavy-line type="start"/>
+          </ornaments>
+        </notations>
+      </note>
+      <note id="n8">
+        <pitch>
+          <step>B</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>7</fret>
+          </technical>
+          <ornaments>
+            <wavy-line type="stop"/>
+          </ornaments>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <note id="n9">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>8</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r0">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="n10">
+        <pitch>
+          <step>C</step>
+          <alter>1</alter>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>6</string>
+            <fret>9</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r1">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

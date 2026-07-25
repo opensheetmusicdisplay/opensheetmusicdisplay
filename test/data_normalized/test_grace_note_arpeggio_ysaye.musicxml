@@ -1,0 +1,291 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>Test - Grace Arpeggio (Ysaye Ballade)</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>8</divisions>
+        <key>
+          <fifths>-1</fifths>
+        </key>
+        <time>
+          <beats>3</beats>
+          <beat-type>8</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="89.83" default-y="-45.00" id="n1">
+        <grace/>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <notations>
+          <technical>
+            <fingering>0</fingering>
+          </technical>
+          <arpeggiate/>
+        </notations>
+      </note>
+      <note default-x="89.83" default-y="-35.00" id="n2">
+        <chord/>
+        <grace/>
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <notations>
+          <technical>
+            <fingering>0</fingering>
+          </technical>
+          <arpeggiate/>
+        </notations>
+      </note>
+      <note default-x="89.83" default-y="-25.00" id="n3">
+        <chord/>
+        <grace/>
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <notations>
+          <technical>
+            <fingering>0</fingering>
+          </technical>
+          <arpeggiate/>
+        </notations>
+      </note>
+      <note default-x="120.37" default-y="-5.00" id="n0">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <beam number="3">begin</beam>
+        <notations>
+          <slur type="start" placement="above" number="1"/>
+          <technical>
+            <fingering>4</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="195.08" default-y="0.00" id="n4">
+        <pitch>
+          <step>F</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        <notations>
+          <technical>
+            <fingering>2</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="269.78" default-y="-25.00" id="n5">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        <notations>
+          <technical>
+            <fingering>0</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="344.49" default-y="-45.00" id="n6">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        <notations>
+          <technical>
+            <fingering>0</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="419.19" default-y="-65.00" id="n7">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        <notations>
+          <technical>
+            <fingering>0</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="493.90" default-y="-45.00" id="n8">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        <notations>
+          <technical>
+            <fingering>0</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="568.61" default-y="-25.00" id="n9">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+      </note>
+      <note default-x="643.31" default-y="0.00" id="n10">
+        <pitch>
+          <step>F</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        <notations>
+          <technical>
+            <fingering>2</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="718.02" default-y="25.00" id="n11">
+        <pitch>
+          <step>D</step>
+          <octave>6</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        <notations>
+          <technical>
+            <fingering>3</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="792.73" default-y="10.00" id="n12">
+        <pitch>
+          <step>A</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+        <notations>
+          <technical>
+            <fingering>1</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note default-x="867.43" default-y="15.00" id="n13">
+        <pitch>
+          <step>B</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <beam number="3">continue</beam>
+      </note>
+      <note default-x="942.14" default-y="-5.00" id="n14">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>32nd</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <beam number="3">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+          <technical>
+            <fingering>0</fingering>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

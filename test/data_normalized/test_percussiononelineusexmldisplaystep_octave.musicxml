@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>Test - PercussionOneLineUseXMLDisplayStep Octave</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Gankogui</part-name>
+      <part-abbreviation>Perc.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>256</divisions>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>percussion</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="76" default-y="34" id="n0">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note default-x="161" default-y="34" id="n1">
+        <unpitched>
+          <display-step>D</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>64</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="216" id="n2">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note default-x="271" default-y="37" id="n3">
+        <unpitched>
+          <display-step>F</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note default-x="357" default-y="34" id="n4">
+        <unpitched>
+          <display-step>G</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>128</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note default-x="429" default-y="34" id="n5">
+        <unpitched>
+          <display-step>A</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>128</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note default-x="501" default-y="34" id="n6">
+        <unpitched>
+          <display-step>B</display-step>
+          <display-octave>4</display-octave>
+        </unpitched>
+        <duration>128</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note default-x="573" default-y="34" id="n7">
+        <unpitched>
+          <display-step>C</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>128</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>256</divisions>
+      </attributes>
+      <note id="r0">
+        <rest/>
+        <duration>1024</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

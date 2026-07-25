@@ -1,0 +1,205 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_octaveshift_multiline_grace_notes</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note default-x="79.25" default-y="-50" id="n0">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <direction placement="below">
+        <direction-type>
+          <octave-shift type="up" size="8" number="1"/>
+        </direction-type>
+      </direction>
+      <print new-system="yes"/>
+      <note default-x="57.13" default-y="20" id="n1">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note default-x="57.13" default-y="30" id="n2">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note default-x="897.12" default-y="35" id="n4">
+        <grace/>
+        <pitch>
+          <step>F</step>
+          <octave>5</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="912.59" default-y="40" id="n5">
+        <grace/>
+        <pitch>
+          <step>G</step>
+          <octave>5</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="928.06" default-y="45" id="n6">
+        <grace/>
+        <pitch>
+          <step>A</step>
+          <octave>5</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="943.52" default-y="50" id="n7">
+        <grace/>
+        <pitch>
+          <step>B</step>
+          <octave>5</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="958.99" default-y="55" id="n8">
+        <grace/>
+        <pitch>
+          <step>C</step>
+          <octave>6</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="974.45" default-y="60" id="n9">
+        <grace/>
+        <pitch>
+          <step>D</step>
+          <octave>6</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="989.92" default-y="65" id="n10">
+        <grace/>
+        <pitch>
+          <step>E</step>
+          <octave>6</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="1005.38" default-y="70" id="n11">
+        <grace/>
+        <pitch>
+          <step>F</step>
+          <octave>6</octave>
+        </pitch>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note default-x="58.09" default-y="40" id="n3">
+        <pitch>
+          <step>G</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+      <direction placement="below">
+        <direction-type>
+          <octave-shift type="stop" size="8" number="1"/>
+        </direction-type>
+      </direction>
+      <note default-x="110.59" default-y="20" id="n12">
+        <pitch>
+          <step>C</step>
+          <octave>6</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="12.5" default-y="-50" id="n13">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

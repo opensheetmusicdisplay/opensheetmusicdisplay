@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_rest_positioning_16th</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>2</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="r0">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note default-x="160.07" default-y="0.00" id="n1">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+      </note>
+      <note default-x="245.44" default-y="10.00" id="n2">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <backup>
+        <duration>8</duration>
+      </backup>
+      <note default-x="74.69" default-y="-10.00" id="n0">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r1">
+        <rest/>
+        <duration>1</duration>
+        <voice>2</voice>
+        <type>16th</type>
+      </note>
+      <note id="r2">
+        <rest/>
+        <duration>1</duration>
+        <voice>2</voice>
+        <type>16th</type>
+      </note>
+      <note id="r3">
+        <rest/>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>eighth</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

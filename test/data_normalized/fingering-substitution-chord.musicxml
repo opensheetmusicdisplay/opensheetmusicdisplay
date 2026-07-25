@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n1">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <technical>
+            <fingering placement="above">3</fingering>
+            <fingering placement="above" substitution="yes">4</fingering>
+          </technical>
+        </notations>
+      </note>
+      <note id="n0">
+        <chord/>
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <technical>
+            <fingering placement="above">2</fingering>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

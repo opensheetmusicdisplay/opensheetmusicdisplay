@@ -1,0 +1,425 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>test_divisions_after_first_note_JingleBellRock_extract</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Keybd</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <staves>2</staves>
+        <divisions>64</divisions>
+        <key>
+          <fifths>-2</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>100</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="100"/>
+      </direction>
+      <direction>
+        <direction-type>
+          <dynamics>
+            <f/>
+          </dynamics>
+        </direction-type>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind relative-x="1" relative-y="20"/>
+        <kind relative-x="1" relative-y="20">major</kind>
+      </harmony>
+      <note id="n1">
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <lyric number="1">
+          <text>Jin</text>
+        </lyric>
+      </note>
+      <note id="n0">
+        <chord/>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <lyric number="1">
+          <text>Jin</text>
+        </lyric>
+      </note>
+      <note id="n4">
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <lyric number="1">
+          <text>gle</text>
+        </lyric>
+      </note>
+      <note id="n3">
+        <chord/>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <lyric number="1">
+          <text>gle</text>
+        </lyric>
+      </note>
+      <note id="n6">
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <text>bell,</text>
+        </lyric>
+      </note>
+      <note id="n5">
+        <chord/>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <text>bell,</text>
+        </lyric>
+      </note>
+      <note id="n9">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <lyric number="1">
+          <text>jin</text>
+        </lyric>
+      </note>
+      <note id="n8">
+        <chord/>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <lyric number="1">
+          <text>jin</text>
+        </lyric>
+      </note>
+      <note id="n12">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <lyric number="1">
+          <text>gle</text>
+        </lyric>
+      </note>
+      <note id="n11">
+        <chord/>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <lyric number="1">
+          <text>gle</text>
+        </lyric>
+      </note>
+      <note id="n14">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <text>bell,</text>
+        </lyric>
+      </note>
+      <note id="n13">
+        <chord/>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <text>bell,</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>256</duration>
+      </backup>
+      <note id="n2">
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>2</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>3</voice>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+      <note id="n7">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>3</voice>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+      <note id="n10">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>3</voice>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+      <note id="n15">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>3</voice>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <staves>2</staves>
+        <divisions>64</divisions>
+      </attributes>
+      <note id="n17">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <lyric number="1">
+          <text>jin</text>
+        </lyric>
+      </note>
+      <note id="n16">
+        <chord/>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <lyric number="1">
+          <text>jin</text>
+        </lyric>
+      </note>
+      <note id="n19">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <lyric number="1">
+          <text>gle</text>
+        </lyric>
+      </note>
+      <note id="n20">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <lyric number="1">
+          <text>bell</text>
+        </lyric>
+      </note>
+      <note id="n22">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>32</duration>
+        <tie type="start"/>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <tied type="start"/>
+        </notations>
+        <lyric number="1">
+          <text>rock,</text>
+        </lyric>
+      </note>
+      <note id="n23">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>128</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <type>half</type>
+        <staff>1</staff>
+        <notations>
+          <tied type="stop"/>
+        </notations>
+      </note>
+      <direction>
+        <direction-type>
+          <dashes number="1" type="stop"/>
+        </direction-type>
+      </direction>
+      <backup>
+        <duration>256</duration>
+      </backup>
+      <note id="n18">
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>2</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>3</voice>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+      <note id="n21">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>3</voice>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+      <note id="n24">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>3</voice>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+      <note id="n25">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>64</duration>
+        <voice>3</voice>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

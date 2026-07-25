@@ -14,6 +14,7 @@ import { Fraction } from "../../Common/DataObjects/Fraction";
 import { VexFlowGraphicalNote } from "./VexFlow";
 import * as VF from "vexflow";
 import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
+import { GraphicalMeasure } from "./GraphicalMeasure";
 
 export class GraphicalSlur extends GraphicalCurve {
     public slur: Slur;
@@ -455,23 +456,29 @@ export class GraphicalSlur extends GraphicalCurve {
             const vfNt: VF.StaveNote = (endGN as VexFlowGraphicalNote)?.vfnote?.[0] as VF.StaveNote;
             const vfSt: VF.Stave | undefined = vfNt?.getStave?.();
             if (vfNt && vfSt) {
-                const startMeasRelX: number = staffLine.Measures[0]?.PositionAndShape?.RelativePosition?.x ?? 0;
-                const staveOriginPx: number = vfSt.getX() - startMeasRelX * unitInPixels;
+                const endMeasure: GraphicalMeasure = endGN?.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
+                const endMeasRelX: number = endMeasure?.PositionAndShape?.RelativePosition?.x ?? 0;
+                const staveOriginPx: number = vfSt.getX() - endMeasRelX * unitInPixels;
                 const noteCenterPx: number = vfNt.getAbsoluteX() + vfNt.getGlyphWidth() / 2;
                 endX = (noteCenterPx - staveOriginPx) / unitInPixels;
                 const kps: any[] = vfNt.getKeyProps?.() ?? [];
                 const topLine: number = kps.length > 0 ? Math.max(...kps.map((kp: any) => kp.line)) : 2;
                 endY = 5 - topLine;
-                if (this.placement === PlacementEnum.Below) {
-                    endY += rules.SlurNoteHeadYOffset;
-                } else {
-                    endY -= rules.SlurNoteHeadYOffset;
+                // SlurNoteHeadYOffset applied in calculateCurve — not here.
+
+                // Account for Y offset between start and end staves (cross-staff).
+                // Use OSMD model abs Y (VF5 stave Y not yet set at draw time).
+                const endStaffLine: StaffLine = endGN?.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
+                if (endStaffLine && endStaffLine !== staffLine) {
+                    const yOffset: number = endStaffLine.PositionAndShape.AbsolutePosition.y
+                        - staffLine.PositionAndShape.AbsolutePosition.y;
+                    endY += yOffset;
                 }
             } else {
-                endX = staffLine.PositionAndShape.Size.width;
+                endX = Math.max(staffLine.PositionAndShape.Size.width, 0);
             }
         } else {
-            endX = staffLine.PositionAndShape.Size.width;
+            endX = Math.max(staffLine.PositionAndShape.Size.width, 0);
         }
 
         // if GraphicalSlur breaks over System, then the end/start of the curve is at the corresponding height with the known start/end
@@ -482,7 +489,7 @@ export class GraphicalSlur extends GraphicalCurve {
         if (slurStartNote === undefined) {
             startY = endY;
         }
-        if (slurEndNote === undefined) {
+        if (slurEndNote === undefined && !(this.slur?.isCrossed())) {
             endY = startY;
         }
 
@@ -685,7 +692,8 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         // For above slurs, the control point Y values are the highest points of the skyline
-        if (this.placement === PlacementEnum.Above) {
+        // Skip for cross-staff: transformed skyline produces extreme Y values between staves.
+        if (this.placement === PlacementEnum.Above && !this.slur?.isCrossed()) {
             if (points.length > 0) {
                 const maxY: number = this.getPointListMaxY(points);
                 if (maxY > leftCp.y) {

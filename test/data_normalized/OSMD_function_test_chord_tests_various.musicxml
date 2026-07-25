@@ -1,0 +1,730 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>Various Chord Tests</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>suspended-fourth</kind>
+      </harmony>
+      <note default-x="69.27" default-y="-15.00" id="n0">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+          <root-alter>1</root-alter>
+        </root>
+        <kind>suspended-fourth</kind>
+      </harmony>
+      <note default-x="129.79" default-y="-15.00" id="n1">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>dominant</kind>
+        <degree>
+          <degree-value>4</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>3</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>subtract</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="11.99" default-y="-20.00" id="n2">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note default-x="47.79" default-y="-20.00" id="n3">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>dominant-ninth</kind>
+        <degree>
+          <degree-value>4</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>3</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>subtract</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="83.59" default-y="-20.00" id="n4">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note default-x="119.40" default-y="-20.00" id="n5">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>suspended-fourth</kind>
+        <degree>
+          <degree-value>7</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>11</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="15.14" default-y="-20.00" id="n6">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>suspended-fourth</kind>
+        <degree>
+          <degree-value>7</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>11</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>13</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="102.61" default-y="-20.00" id="n7">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note default-x="130.04" default-y="-20.00" id="n8">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <tie type="start"/>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <tied type="start"/>
+        </notations>
+      </note>
+      <note default-x="157.48" default-y="-20.00" id="n9">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <notations>
+          <tied type="stop"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="sus2">suspended-second</kind>
+      </harmony>
+      <note default-x="11.73" default-y="-15.00" id="n10">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+          <root-alter>1</root-alter>
+        </root>
+        <kind text="sus2">suspended-second</kind>
+      </harmony>
+      <note default-x="72.31" default-y="-15.00" id="n11">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>suspended-second</kind>
+        <degree>
+          <degree-value>7</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="11.73" default-y="-15.00" id="n12">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>suspended-second</kind>
+        <degree>
+          <degree-value>7</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="83.40" default-y="-15.00" id="n13">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="6">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>suspended-second</kind>
+        <degree>
+          <degree-value>7</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>11</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="11.73" default-y="-15.00" id="n14">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>suspended-second</kind>
+        <degree>
+          <degree-value>7</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>11</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>13</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="94.49" default-y="-15.00" id="n15">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="7">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="maj9">major-ninth</kind>
+      </harmony>
+      <note default-x="11.73" default-y="-15.00" id="n16">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r0">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="mmaj7" parentheses-degrees="yes">major-minor</kind>
+      </harmony>
+      <note id="r1">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r2">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="8">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="mmaj7" parentheses-degrees="yes">major-minor</kind>
+      </harmony>
+      <note default-x="58.18" default-y="-15.00" id="n17">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r3">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="N.C.">none</kind>
+      </harmony>
+      <note id="r4">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r5">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="9">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="NC">none</kind>
+      </harmony>
+      <note default-x="11.73" default-y="-15.00" id="n18">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r6">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="6">major-sixth</kind>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="95.91" default-y="-15.00" id="n19">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r7">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="10">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="mi6">minor-sixth</kind>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="11.73" default-y="-15.00" id="n20">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="miMa7">major-minor</kind>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="88.42" default-y="-15.00" id="n21">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="11">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="miMa7">major-minor</kind>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="11.73" default-y="-15.00" id="n22">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="miMa7">major-minor</kind>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="107.26" default-y="-15.00" id="n23">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="12">
+      <attributes>
+        <divisions>2</divisions>
+      </attributes>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind>major</kind>
+        <degree>
+          <degree-value>5</degree-value>
+          <degree-alter>-1</degree-alter>
+          <degree-type>alter</degree-type>
+        </degree>
+        <degree>
+          <degree-value>5</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>-1</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="11.73" default-y="-15.00" id="n24">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+      <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="7">dominant</kind>
+        <degree>
+          <degree-value>5</degree-value>
+          <degree-alter>-1</degree-alter>
+          <degree-type>alter</degree-type>
+        </degree>
+        <degree>
+          <degree-value>5</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>-1</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+        <degree>
+          <degree-value>9</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note default-x="126.98" default-y="-15.00" id="n25">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

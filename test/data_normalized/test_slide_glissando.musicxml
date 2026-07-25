@@ -1,0 +1,5260 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <movement_title>test_slide_glissando</movement_title>
+  <part-list>
+    <part-group number="1" type="start">
+      <group-symbol>bracket</group-symbol>
+    </part-group>
+    <score-part id="P1">
+      <part-name>Bass Guitar</part-name>
+      <part-abbreviation>Bass</part-abbreviation>
+    </score-part>
+    <score-part id="P2">
+      <part-name>4-string Bass Guitar</part-name>
+      <part-abbreviation>Bass</part-abbreviation>
+    </score-part>
+    <part-group number="1" type="stop"/>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>768</divisions>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>78</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="78"/>
+      </direction>
+      <print new-page="yes" new-system="yes"/>
+      <note id="r0">
+        <rest/>
+        <duration>3072</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r1">
+        <rest/>
+        <duration>3072</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r2">
+        <rest/>
+        <duration>3072</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r3">
+        <rest/>
+        <duration>3072</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n0">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r4">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r5">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n1">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <tie type="start"/>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <tied type="start"/>
+        </notations>
+      </note>
+      <note id="n2">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">forward hook</beam>
+        <notations>
+          <tied type="stop"/>
+        </notations>
+      </note>
+      <note id="n3">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <beam number="1">end</beam>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="6">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n4">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r6">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r7">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r8">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n5">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="7">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n6">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r9">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r10">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r11">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n7">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="8">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n8">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r12">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r13">
+        <rest/>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="9">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n9">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r14">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r15">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n10">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <tie type="start"/>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <tied type="start"/>
+        </notations>
+      </note>
+      <note id="n11">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">forward hook</beam>
+        <notations>
+          <tied type="stop"/>
+        </notations>
+      </note>
+      <note id="n12">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <beam number="1">end</beam>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="10">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n13">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r16">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r17">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r18">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n14">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="11">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n15">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r19">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r20">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r21">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n16">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="12">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n17">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r22">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r23">
+        <rest/>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="13">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n18">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r24">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r25">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n19">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <tie type="start"/>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <tied type="start"/>
+        </notations>
+      </note>
+      <note id="n20">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">forward hook</beam>
+        <notations>
+          <tied type="stop"/>
+        </notations>
+      </note>
+      <note id="n21">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <beam number="1">end</beam>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="14">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n22">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r26">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r27">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r28">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n23">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="15">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n24">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r29">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r30">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r31">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n25">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="16">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n26">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r32">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r33">
+        <rest/>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="17">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n27">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r34">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r35">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n28">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <tie type="start"/>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <tied type="start"/>
+        </notations>
+      </note>
+      <note id="n29">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">forward hook</beam>
+        <notations>
+          <tied type="stop"/>
+        </notations>
+      </note>
+      <note id="n30">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <beam number="1">end</beam>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="18">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n31">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r36">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r37">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r38">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n32">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="19">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n33">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r39">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r40">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r41">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n34">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="20">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n35">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r42">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r43">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="n36">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="start" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="21">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n37">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="r44">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n38">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note id="n39">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n40">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="r45">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n41">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <slide type="start" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="22">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n42">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="r46">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n43">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+      </note>
+      <note id="n44">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+      </note>
+      <note id="n45">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n46">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="n47">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note id="n48">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="n49">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <slide type="start" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="23">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n50">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="r47">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n51">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note id="n52">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n53">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="r48">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n54">
+        <pitch>
+          <step>B</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note id="n55">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note id="n56">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="24">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n57">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r49">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r50">
+        <rest/>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="25">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n58">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r51">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n59">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note id="n60">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n61">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="r52">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n62">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <slide type="start" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="26">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n63">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="r53">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n64">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+      </note>
+      <note id="n65">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+      </note>
+      <note id="n66">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n67">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="n68">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note id="n69">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="n70">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <slide type="start" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="27">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n71">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="r54">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n72">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note id="n73">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n74">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="r55">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n75">
+        <pitch>
+          <step>B</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note id="n76">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note id="n77">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="28">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n78">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r56">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n79">
+        <pitch>
+          <step>B</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <slide type="start" number="1"/>
+        </notations>
+      </note>
+      <note id="n80">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <slide type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="n81">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="n82">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+      </note>
+      <note id="n83">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+      </note>
+      <note id="n84">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="29">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n85">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r57">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n86">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note id="n87">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n88">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="r58">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n89">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <slide type="start" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="30">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n90">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="r59">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n91">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+      </note>
+      <note id="n92">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+      </note>
+      <note id="n93">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n94">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="n95">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note id="n96">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="n97">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <slide type="start" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="31">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n98">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="r60">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n99">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note id="n100">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n101">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="r61">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n102">
+        <pitch>
+          <step>B</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note id="n103">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note id="n104">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="32">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n105">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+      </note>
+      <note id="r62">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n106">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note id="n107">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="n108">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note id="n109">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+      </note>
+      <note id="n110">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="n111">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <slide type="start" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="33">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n112">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="r63">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n113">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note id="n114">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n115">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="r64">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n116">
+        <pitch>
+          <step>F</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <slide type="start" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="34">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n117">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="r65">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n118">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+      </note>
+      <note id="n119">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+      </note>
+      <note id="n120">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n121">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="n122">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+      </note>
+      <note id="n123">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+      </note>
+      <note id="n124">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <slide type="start" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="35">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n125">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+        </notations>
+      </note>
+      <note id="r66">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n126">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+      </note>
+      <note id="n127">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n128">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+      </note>
+      <note id="r67">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n129">
+        <pitch>
+          <step>B</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+        </notations>
+      </note>
+      <note id="n130">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note id="n131">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="36">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n132">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="37">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n133">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+      </note>
+      <note id="r68">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r69">
+        <rest/>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+  </part>
+  <part id="P2">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>768</divisions>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>TAB</sign>
+          <line>5</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="r70">
+        <rest/>
+        <duration>3072</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r71">
+        <rest/>
+        <duration>3072</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r72">
+        <rest/>
+        <duration>3072</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="r73">
+        <rest/>
+        <duration>3072</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n134">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r74">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r75">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n135">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <tied type="start"/>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r76">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n136">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="6">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n137">
+        <pitch>
+          <step>E</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r77">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r78">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r79">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n138">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="7">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n139">
+        <pitch>
+          <step>D</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r80">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r81">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r82">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n140">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="8">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n141">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r83">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r84">
+        <rest/>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="9">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n142">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r85">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r86">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n143">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <tied type="start"/>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r87">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n144">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="10">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n145">
+        <pitch>
+          <step>E</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r88">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r89">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r90">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n146">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="11">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n147">
+        <pitch>
+          <step>D</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r91">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r92">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r93">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n148">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="12">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n149">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r94">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r95">
+        <rest/>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="13">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n150">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r96">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r97">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n151">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <tied type="start"/>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r98">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n152">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="14">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n153">
+        <pitch>
+          <step>E</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r99">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r100">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r101">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n154">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="15">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n155">
+        <pitch>
+          <step>D</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r102">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r103">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r104">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n156">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="16">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n157">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r105">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r106">
+        <rest/>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="17">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n158">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r107">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r108">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n159">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <tied type="start"/>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r109">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n160">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="18">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n161">
+        <pitch>
+          <step>E</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r110">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r111">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r112">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n162">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="19">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n163">
+        <pitch>
+          <step>D</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r113">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r114">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r115">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n164">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="20">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n165">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r116">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r117">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="n166">
+        <pitch>
+          <step>D</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="21">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="n167">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r118">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n168">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n169">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n170">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r119">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n171">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <slide type="start" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="22">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n172">
+        <pitch>
+          <step>D</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r120">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n173">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n174">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n175">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n176">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n177">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n178">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n179">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <slide type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="23">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n180">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r121">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n181">
+        <pitch>
+          <step>E</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n182">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n183">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r122">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n184">
+        <pitch>
+          <step>B</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>2</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n185">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n186">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="24">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n187">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r123">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r124">
+        <rest/>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="25">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n188">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r125">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n189">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n190">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n191">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r126">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n192">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <slide type="start" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="26">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n193">
+        <pitch>
+          <step>D</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r127">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n194">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n195">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n196">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n197">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n198">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n199">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n200">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <slide type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="27">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n201">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r128">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n202">
+        <pitch>
+          <step>E</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n203">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n204">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r129">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n205">
+        <pitch>
+          <step>B</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>2</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n206">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n207">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="28">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n208">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r130">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n209">
+        <pitch>
+          <step>B</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <notations>
+          <slide type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>2</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n210">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <slide type="stop" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n211">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n212">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n213">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n214">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="29">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n215">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r131">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n216">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n217">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n218">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r132">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n219">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <slide type="start" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="30">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n220">
+        <pitch>
+          <step>D</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r133">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n221">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n222">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n223">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n224">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n225">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n226">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n227">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <slide type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="31">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n228">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r134">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n229">
+        <pitch>
+          <step>E</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n230">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n231">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r135">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n232">
+        <pitch>
+          <step>B</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>2</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n233">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n234">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="32">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <note id="n235">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r136">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n236">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n237">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n238">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="start" number="1"/>
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n239">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n240">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n241">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <slide type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="33">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n242">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r137">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n243">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n244">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n245">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r138">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n246">
+        <pitch>
+          <step>F</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>576</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <notations>
+          <slide type="start" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>1</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="34">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n247">
+        <pitch>
+          <step>D</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r139">
+        <rest/>
+        <duration>384</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note id="n248">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n249">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n250">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n251">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n252">
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n253">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n254">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <slide type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="35">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n255">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <slide type="stop" number="1"/>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r140">
+        <rest/>
+        <duration>576</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <dot/>
+      </note>
+      <note id="n256">
+        <pitch>
+          <step>E</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n257">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">begin</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n258">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>384</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <beam number="1">end</beam>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r141">
+        <rest/>
+        <duration>192</duration>
+        <voice>1</voice>
+        <type>16th</type>
+      </note>
+      <note id="n259">
+        <pitch>
+          <step>B</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur type="start" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>2</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n260">
+        <pitch>
+          <step>C</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="n261">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>192</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur type="stop" number="1"/>
+          <technical>
+            <string>3</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="36">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n262">
+        <pitch>
+          <step>G</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="37">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="n263">
+        <pitch>
+          <step>A</step>
+          <octave>1</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>5</fret>
+          </technical>
+        </notations>
+      </note>
+      <note id="r142">
+        <rest/>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+      </note>
+      <note id="r143">
+        <rest/>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

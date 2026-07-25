@@ -1,0 +1,245 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>Tuplet Multi-Voice Alignment Test</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>28</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>9</beats>
+          <beat-type>8</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="r0">
+        <rest/>
+        <duration>21</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+        <notations>
+          <tuplet number="1" type="start">
+            <tuplet-actual>
+              <tuplet-number>6</tuplet-number>
+              <tuplet-type>eighth</tuplet-type>
+            </tuplet-actual>
+            <tuplet-normal>
+              <tuplet-number>9</tuplet-number>
+              <tuplet-type>eighth</tuplet-type>
+            </tuplet-normal>
+          </tuplet>
+        </notations>
+      </note>
+      <note id="n1">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>21</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+      </note>
+      <note id="n0">
+        <chord/>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>21</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+        <beam number="1">begin</beam>
+      </note>
+      <note id="n5">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>21</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+      </note>
+      <note id="n4">
+        <chord/>
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>21</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+        <beam number="1">continue</beam>
+      </note>
+      <note id="n6">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>21</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+        <beam number="1">continue</beam>
+      </note>
+      <note id="n7">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>21</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+        <beam number="1">continue</beam>
+      </note>
+      <note id="n10">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>21</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+        <beam number="1">end</beam>
+      </note>
+      <backup>
+        <duration>126</duration>
+      </backup>
+      <note print-object="no" id="r1">
+        <rest/>
+        <duration>21</duration>
+        <voice>2</voice>
+        <type>eighth</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+        <notations>
+          <tuplet number="2" type="start">
+            <tuplet-actual>
+              <tuplet-number>6</tuplet-number>
+              <tuplet-type>eighth</tuplet-type>
+            </tuplet-actual>
+            <tuplet-normal>
+              <tuplet-number>9</tuplet-number>
+              <tuplet-type>eighth</tuplet-type>
+            </tuplet-normal>
+          </tuplet>
+        </notations>
+      </note>
+      <note id="n3">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>42</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+      </note>
+      <note id="n2">
+        <chord/>
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>42</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+      </note>
+      <forward>
+        <duration>21</duration>
+      </forward>
+      <note id="n9">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>42</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+      </note>
+      <note id="n8">
+        <chord/>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>42</duration>
+        <voice>2</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>6</actual-notes>
+          <normal-notes>9</normal-notes>
+        </time-modification>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

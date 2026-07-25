@@ -1,3 +1,4 @@
+import fs from "fs";
 import { OpenSheetMusicDisplay } from "../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 
 /**
@@ -10,6 +11,12 @@ export class TestUtils {
     public static getScore(name: string): Document {
         const path: string = "test/data/" + name;
         return ((globalThis as any).__xml__)[path];
+    }
+
+    public static getScoreNormalized(name: string): Document {
+        const fullPath: string = __dirname + "/../data_normalized/" + name;
+        const content: string = fs.readFileSync(fullPath, "utf-8");
+        return new DOMParser().parseFromString(content, "text/xml");
     }
 
     public static getMXL(scoreName: string): string {

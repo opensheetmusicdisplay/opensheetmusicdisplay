@@ -1,0 +1,1312 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<score-partwise>
+  <work>
+    <work_title>OSMD Function Test - Multiple Rest Measures</work_title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+    </score-part>
+    <score-part id="P2">
+      <part-name>Violin</part-name>
+      <part-abbreviation>Vln.</part-abbreviation>
+    </score-part>
+    <score-part id="P3">
+      <part-name>Violoncello</part-name>
+      <part-abbreviation>Vc.</part-abbreviation>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+        <key>
+          <fifths>1</fifths>
+        </key>
+        <time>
+          <beats>2</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="r0">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r1">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r2">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r3">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="13.80" default-y="-50.00" id="n0">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r4">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.00" default-y="-45.00" id="n1">
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r5">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r6">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r7">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="6">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r8">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r9">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="7">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r10">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r11">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="8">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r12">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r13">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="9">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.36" default-y="-25.00" id="n2">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r14">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="10">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r15">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r16">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="11">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r17">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r18">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="12">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r19">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r20">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="13">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.00" default-y="-30.00" id="n3">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="r22">
+        <rest/>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r21">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="14">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.00" default-y="-35.00" id="n4">
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="r24">
+        <rest/>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r23">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="15">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r25">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r26">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="16">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r27">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r28">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="17">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.00" default-y="-25.00" id="n5">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="r30">
+        <rest/>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r29">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="18">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.00" default-y="-20.00" id="n6">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="r32">
+        <rest/>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r31">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="19">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r33">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r34">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="20">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r35">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r36">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="21">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r37">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r38">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="22">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r39">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r40">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="23">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r41">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r42">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="24">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.00" default-y="-15.00" id="n7">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note id="r44">
+        <rest/>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r43">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="25">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="r45">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r46">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="26">
+      <attributes>
+        <staves>2</staves>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r47">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <note id="r48">
+        <rest/>
+        <duration>2</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+  </part>
+  <part id="P2">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>1</fifths>
+        </key>
+        <time>
+          <beats>2</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="r49">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r50">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r51">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r52">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.36" default-y="-250.00" id="n8">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="6">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r53">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="7">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r54">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="8">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r55">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="9">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.36" default-y="-245.00" id="n9">
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="10">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r56">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="11">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r57">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="12">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r58">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="13">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r59">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="14">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r60">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="15">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r61">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="16">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r62">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="17">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r63">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="18">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r64">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="19">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r65">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="20">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r66">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="21">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r67">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="22">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r68">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="23">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r69">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="24">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r70">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="25">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="r71">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="26">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r72">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+  </part>
+  <part id="P3">
+    <!--=======================================================-->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>1</fifths>
+        </key>
+        <time>
+          <beats>2</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef number="1">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <print new-page="yes" new-system="yes"/>
+      <note id="r73">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="2">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r74">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="3">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r75">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="4">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r76">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="5">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.36" default-y="-320.00" id="n10">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="6">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r77">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="7">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r78">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="8">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r79">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="9">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note default-x="10.36" default-y="-325.00" id="n11">
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>half</type>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="10">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r80">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="11">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r81">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="12">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r82">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="13">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r83">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="14">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r84">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="15">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r85">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="16">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r86">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="17">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r87">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="18">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r88">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="19">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r89">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="20">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r90">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="21">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r91">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="22">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r92">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="23">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r93">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="24">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r94">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="25">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <print new-system="yes"/>
+      <note id="r95">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="26">
+      <attributes>
+        <divisions>1</divisions>
+      </attributes>
+      <note id="r96">
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+      </note>
+    </measure>
+  </part>
+</score-partwise>
