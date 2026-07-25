@@ -134,8 +134,8 @@ export class GraphicalSlur extends GraphicalCurve {
             points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
 
             if (points.length === 0) {
-                const pointF: PointF2D = new PointF2D((endUpperLeft.x - startUpperRight.x) / 2 + startUpperRight.x,
-                                                      (endUpperLeft.y - startUpperRight.y) / 2 + startUpperRight.y);
+                const pointF: PointF2D = new PointF2D((endX - startX) / 2 + startX,
+                                                      (endY - startY) / 2 + startY);
                 points.push(pointF);
             }
 
@@ -275,8 +275,8 @@ export class GraphicalSlur extends GraphicalCurve {
             points = this.calculateBottomPoints(startLowerRight, endLowerLeft, staffLine, skyBottomLineCalculator);
 
             if (points.length === 0) {
-                const pointF: PointF2D = new PointF2D((endLowerLeft.x - startLowerRight.x) / 2 + startLowerRight.x,
-                                                      (endLowerLeft.y - startLowerRight.y) / 2 + startLowerRight.y);
+                const pointF: PointF2D = new PointF2D((endX - startX) / 2 + startX,
+                                                      (endY - startY) / 2 + startY);
                 points.push(pointF);
             }
 

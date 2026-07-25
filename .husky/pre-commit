@@ -1,4 +1,4 @@
-npm run lint
+cd "$(dirname "$0")/.." && npm run lint
 
 # Cross-staff debug harness must never be removed — it is the canonical
 # inspection tool for beam/slur/notehead positioning data from SVG output.
