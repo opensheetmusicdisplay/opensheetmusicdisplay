@@ -131,7 +131,32 @@ export class GraphicalSlur extends GraphicalCurve {
             }
 
             // SkyLinePointsList between firstStaffEntry startUpperRightPoint and lastStaffentry endUpperLeftPoint
-            points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
+            const skylineStart: PointF2D = new PointF2D(startX, startY);
+            const skylineEnd: PointF2D = new PointF2D(endX, endY);
+            points = this.calculateTopPoints(skylineStart, skylineEnd, staffLine, skyBottomLineCalculator);
+
+            // For cross-staff slurs, merge the end staff's skyline so obstacles
+            // on other staves (accidentals, stems) are included in clearance.
+            if (this.slur && this.slur.isCrossed()) {
+                const musicSystem: any = staffLine.ParentMusicSystem;
+                if (musicSystem) {
+                    const startRelY: number = staffLine.PositionAndShape.RelativePosition.y;
+                    const sampUnit: number = skyBottomLineCalculator.SamplingUnit;
+                    for (const otherSl of musicSystem.StaffLines) {
+                        if (otherSl === staffLine) { continue; }
+                        const otherSky: number[] = otherSl.SkyLine;
+                        if (!otherSky || otherSky.length === 0) { continue; }
+                        const yOffset: number = otherSl.PositionAndShape.RelativePosition.y - startRelY;
+                        const otherSampUnit: number = otherSl.SkyBottomLineCalculator
+                            ? otherSl.SkyBottomLineCalculator.SamplingUnit : sampUnit;
+                        const sIdx: number = Math.max(0, Math.floor(startX * otherSampUnit));
+                        const eIdx: number = Math.min(otherSky.length, Math.ceil(endX * otherSampUnit));
+                        for (let si: number = sIdx; si < eIdx; si++) {
+                            points.push(new PointF2D(si / otherSampUnit, otherSky[si] + yOffset));
+                        }
+                    }
+                }
+            }
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endX - startX) / 2 + startX,
@@ -183,7 +208,6 @@ export class GraphicalSlur extends GraphicalCurve {
             if (!sameSlope) {
                 this.calculateAngles(leftAngle, rightAngle, leftLineSlope, rightLineSlope, maxAngle);
             }
-
             // calculate Curve's Control Points
             const controlPoints: {leftControlPoint: PointF2D, rightControlPoint: PointF2D} =
                 this.calculateControlPoints(end2.x, leftAngle, rightAngle, transformedPoints);
@@ -205,6 +229,15 @@ export class GraphicalSlur extends GraphicalCurve {
             // this.intersection.x += startX;
             // this.intersection.y = -this.intersection.y + startY;
             /* for DEBUG only */
+
+            // Clamp control points: descending chords push left CP behind startX
+            // via sinθ term in inverse rotation (cp_y > 0, sinθ < 0 → x shift < 0).
+            if (leftControlPoint.x < start.x) {
+                leftControlPoint.x = start.x;
+            }
+            if (rightControlPoint.x > end.x) {
+                rightControlPoint.x = end.x;
+            }
 
             // set private members
             this.bezierStartPt = start;
@@ -272,7 +305,9 @@ export class GraphicalSlur extends GraphicalCurve {
             }
 
             // BottomLinePointsList between firstStaffEntry startLowerRightPoint and lastStaffentry endLowerLeftPoint
-            points = this.calculateBottomPoints(startLowerRight, endLowerLeft, staffLine, skyBottomLineCalculator);
+            const bottomStart: PointF2D = new PointF2D(startX, startY);
+            const bottomEnd: PointF2D = new PointF2D(endX, endY);
+            points = this.calculateBottomPoints(bottomStart, bottomEnd, staffLine, skyBottomLineCalculator);
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endX - startX) / 2 + startX,
@@ -339,17 +374,25 @@ export class GraphicalSlur extends GraphicalCurve {
             rightControlPoint.x += startX;
             rightControlPoint.y += startY;
 
-            // set private members
-            this.bezierStartPt = start;
-            this.bezierStartControlPt = leftControlPoint;
-            this.bezierEndControlPt = rightControlPoint;
-            this.bezierEndPt = end;
-
             /* for DEBUG only */
             // this.intersection = transposeMatrix.vectorMultiplication(intersectionPoint);
             // this.intersection.x += startX;
             // this.intersection.y += startY;
             /* for DEBUG only */
+
+            // Prevent backward control points (same as Above branch).
+            if (leftControlPoint.x < start.x) {
+                leftControlPoint.x = start.x;
+            }
+            if (rightControlPoint.x > end.x) {
+                rightControlPoint.x = end.x;
+            }
+
+            // set private members
+            this.bezierStartPt = start;
+            this.bezierStartControlPt = leftControlPoint;
+            this.bezierEndControlPt = rightControlPoint;
+            this.bezierEndPt = end;
 
             // calculate CurvePoints
             const length: number = staffLine.BottomLine.length;
@@ -609,20 +652,6 @@ export class GraphicalSlur extends GraphicalCurve {
     }
 
     /**
-     * This method returns the highest Y in a list of points.
-     * @param points
-     */
-    private getPointListMaxY(points: PointF2D[]): number {
-        let maxY: number = 0;
-        for (const point of points) {
-            if (point.y > maxY) {
-                maxY = point.y;
-            }
-        }
-        return maxY;
-    }
-
-    /**
      * This method calculates and returns a list of translated and rotated Points.
      * @param points
      * @param startX
@@ -692,15 +721,65 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         // For above slurs, the control point Y values are the highest points of the skyline
-        // Skip for cross-staff: transformed skyline produces extreme Y values between staves.
-        if (this.placement === PlacementEnum.Above && !this.slur?.isCrossed()) {
+        // plus clearance to ensure the bezier curve clears obstacles (skyline = obstacle top edge).
+        // Only apply when there IS a skyline obstacle above the default curve (maxY > cp_y).
+        // Cap relative to angle-based cp_y to prevent ballooning on long flat chords.
+        // For each skyline point at X ratio r (0..1 of chord), compute the cubic bezier
+        // parameter t where B_x(t) = r*endX, then the Y factor f = 3t(1-t). The bezier
+        // Y at that t is f * (cp_left*(1-t) + cp_right*t). For symmetric CPs this peaks
+        // at t=0.5 with f=0.75; near edges f is smaller so cp_y must be higher.
+        const skylineClearance: number = 1.5; // OSMD units (~15px VF5)
+        let overrideFired: boolean = false;
+        if (this.placement === PlacementEnum.Above) {
             if (points.length > 0) {
-                const maxY: number = this.getPointListMaxY(points);
-                if (maxY > leftCp.y) {
-                    leftCp.y = maxY;
+                const angleCpY: number = leftCp.y;
+                // Compute required cp_y for each skyline point based on its X position.
+                // Cubic bezier X: r = B_x(t) = 3t² - 2t³ for t ∈ [0,1].
+                // Inverse: solve 2t³ - 3t² + r = 0 via triple-angle substitution.
+                // For r ≤ 0.5: t = 0.5 - sin(asin(1-2r)/3)
+                // For r > 0.5: t = 0.5 + sin(asin(2r-1)/3)
+                // Y factor f = 3t(1-t), required cp_y = pt.y / f.
+                let maxRequiredLeft: number = 0;
+                let maxRequiredRight: number = 0;
+                for (const pt of points) {
+                    const r: number = Math.max(0.001, Math.min(0.999, pt.x / endX));
+                    const asinArg: number = r <= 0.5 ? 1 - 2 * r : 2 * r - 1;
+                    const t: number = r <= 0.5
+                        ? 0.5 - Math.sin(Math.asin(asinArg) / 3)
+                        : 0.5 + Math.sin(Math.asin(asinArg) / 3);
+                    const f: number = 3 * t * (1 - t);
+                    const requiredCpY: number = pt.y / Math.max(f, 0.01);
+                    if (pt.x <= endX * 0.5) {
+                        maxRequiredLeft = Math.max(maxRequiredLeft, requiredCpY);
+                    } else {
+                        maxRequiredRight = Math.max(maxRequiredRight, requiredCpY);
+                    }
                 }
-                if (maxY > rightCp.y) {
-                    rightCp.y = maxY;
+                if (maxRequiredLeft === 0) { maxRequiredLeft = maxRequiredRight; }
+                if (maxRequiredRight === 0) { maxRequiredRight = maxRequiredLeft; }
+                const globalRequired: number = Math.max(maxRequiredLeft, maxRequiredRight);
+                const ratio: number = globalRequired / Math.max(angleCpY, 0.001);
+                const capMultiplier: number =
+                    ratio > 5 ? 2.5 :
+                    ratio > 3 ? 3 :
+                    angleCpY > 3 ? 1.6 : 4;
+                const maxCpY: number = angleCpY * capMultiplier;
+                const effectiveClearance: number = globalRequired > 5 ? 0.3 : skylineClearance;
+                if (maxRequiredLeft > angleCpY) {
+                    overrideFired = true;
+                    leftCp.y = Math.min(maxRequiredLeft + effectiveClearance, maxCpY);
+                }
+                if (maxRequiredRight > rightCp.y) {
+                    rightCp.y = Math.min(maxRequiredRight + effectiveClearance, maxCpY);
+                }
+            }
+            if (!overrideFired) {
+                const minCpY: number = endX * (0.15 / 0.75); // 15% chord at bezier peak
+                if (leftCp.y < minCpY) {
+                    leftCp.y = minCpY;
+                }
+                if (rightCp.y < minCpY) {
+                    rightCp.y = minCpY;
                 }
             }
         }
