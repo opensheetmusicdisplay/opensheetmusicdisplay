@@ -3583,17 +3583,12 @@ export abstract class MusicSheetCalculator {
 
         // if on the same StaffLine
         if (lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine === nextLyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine) {
-            // start- and End margins from the text Labels
-            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
-                startStaffEntry.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight -
-                lyricEntry.GraphicalLabel.CenteringXShift; // TODO not sure why this is necessary, see Christbaum measure 9+11, Land der Berge 11-12
-
-            const endX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
-                endStaffentry.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x +
-                nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
+            const startStaffEntryX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+                startStaffEntry.PositionAndShape.RelativePosition.x;
+            const endStaffEntryX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
+                endStaffentry.PositionAndShape.RelativePosition.x;
+            const startX: number = lyricEntry.getFootprint(startStaffEntryX).rightEdgeX;
+            const endX: number = nextLyricEntry.getFootprint(endStaffEntryX).leftEdgeX;
             const y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
             let numberOfDashes: number = 1;
             if ((endX - startX) > this.rules.MinimumDistanceBetweenDashes * 3) {
@@ -3613,9 +3608,9 @@ export abstract class MusicSheetCalculator {
         } else {
             // start and end on different StaffLines
             // start margin from the text Label until the End of StaffLine
-            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
-                startStaffEntry.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+            const startStaffEntryX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+                startStaffEntry.PositionAndShape.RelativePosition.x;
+            const startX: number = lyricEntry.getFootprint(startStaffEntryX).rightEdgeX;
             const lastGraphicalMeasure: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
             const endX: number = lastGraphicalMeasure.PositionAndShape.RelativePosition.x + lastGraphicalMeasure.PositionAndShape.Size.width;
             let y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
@@ -3630,9 +3625,9 @@ export abstract class MusicSheetCalculator {
                 !(endStaffentry === endStaffentry.parentMeasure.staffEntries[0] &&
                 endStaffentry.parentMeasure === endStaffentry.parentMeasure.ParentStaffLine.Measures[0])) {
                 const secondStartX: number = nextStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;
-                const secondEndX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
-                    endStaffentry.PositionAndShape.RelativePosition.x +
-                    nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
+                const endStaffEntryX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
+                    endStaffentry.PositionAndShape.RelativePosition.x;
+                const secondEndX: number = nextLyricEntry.getFootprint(endStaffEntryX).leftEdgeX;
                 y = nextLyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
                 this.calculateDashes(nextStaffLine, secondStartX, secondEndX, y);
             }
@@ -3750,9 +3745,9 @@ export abstract class MusicSheetCalculator {
         // if on the same StaffLine
         if (startStaffLine === endStaffLine && endStaffEntry.parentMeasure.ParentStaffLine) {
             // start- and End margins from the text Labels
-            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
-                startStaffEntry.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+            const startStaffEntryX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+                startStaffEntry.PositionAndShape.RelativePosition.x;
+            const startX: number = lyricEntry.getFootprint(startStaffEntryX).rightEdgeX;
             // + startStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
             const endX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.RelativePosition.x +
@@ -3768,9 +3763,9 @@ export abstract class MusicSheetCalculator {
         } else { // start and end on different StaffLines
             // start margin from the text Label until the End of StaffLine
             const lastMeasureBb: BoundingBox = startStaffLine.Measures[startStaffLine.Measures.length - 1].PositionAndShape;
-            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
-                startStaffEntry.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+            const startStaffEntryX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+                startStaffEntry.PositionAndShape.RelativePosition.x;
+            const startX: number = lyricEntry.getFootprint(startStaffEntryX).rightEdgeX;
             const endX: number = lastMeasureBb.RelativePosition.x +
                 lastMeasureBb.Size.width;
             // needed in order to line up with the Label's text bottom line

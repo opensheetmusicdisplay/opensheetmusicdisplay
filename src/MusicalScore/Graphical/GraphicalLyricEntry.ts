@@ -6,6 +6,16 @@ import {Label} from "../Label";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import { EngravingRules } from "./EngravingRules";
+import { BoundingBox } from "./BoundingBox";
+
+export interface LyricFootprint {
+    anchorX: number;
+    labelWidth: number;
+    leftEdgeX: number;
+    leftExtent: number;
+    rightEdgeX: number;
+    rightExtent: number;
+}
 
 /**
  * The graphical counterpart of a [[LyricsEntry]]
@@ -19,16 +29,9 @@ export class GraphicalLyricEntry {
     constructor(lyricsEntry: LyricsEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricsHeight: number, staffHeight: number) {
         this.lyricsEntry = lyricsEntry;
         this.graphicalStaffEntry = graphicalStaffEntry;
-        const lyricsTextAlignment: TextAlignmentEnum = graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules.LyricsAlignmentStandard;
-        // for small notes with long text, use center alignment
-        // TODO use this, fix center+left alignment combination spacing
-        if (lyricsEntry.Text.length >= 4
-            && lyricsEntry.Parent.Notes[0].Length.Denominator > 4
-            && lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
-            // lyricsTextAlignment = TextAlignmentAndPlacement.CenterBottom;
-        }
-        const label: Label = new Label(lyricsEntry.Text);
         const rules: EngravingRules = this.graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules;
+        const lyricsTextAlignment: TextAlignmentEnum = rules.LyricsAlignmentStandard;
+        const label: Label = new Label(lyricsEntry.Text);
         this.graphicalLabel = new GraphicalLabel(
             label,
             lyricsHeight,
@@ -38,14 +41,10 @@ export class GraphicalLyricEntry {
         );
         this.graphicalLabel.Label.colorDefault = rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0, staffHeight);
+        if (lyricsTextAlignment === TextAlignmentEnum.CenterBottom) {
+            this.graphicalLabel.SvgTextAnchor = "middle";
+        }
         this.graphicalLabel.setLabelPositionAndShapeBorders(); // needed to have Size.width
-        if (this.graphicalLabel.PositionAndShape.Size.width < rules.LyricsExtraXShiftForShortLyricsWidthThreshold) {
-            this.graphicalLabel.PositionAndShape.RelativePosition.x += rules.LyricsExtraXShiftForShortLyrics;
-            this.graphicalLabel.CenteringXShift = rules.LyricsExtraXShiftForShortLyrics;
-        }
-        if (lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
-            this.graphicalLabel.PositionAndShape.RelativePosition.x -= 1; // make lyrics optically left-aligned
-        }
     }
 
     public hasDashFromLyricWord(): boolean {
@@ -76,5 +75,24 @@ export class GraphicalLyricEntry {
     }
     public set StaffEntryParent(value: GraphicalStaffEntry) {
         this.graphicalStaffEntry = value;
+    }
+
+    public getAnchorX(staffEntryXPosition: number = 0): number {
+        return staffEntryXPosition + this.graphicalLabel.PositionAndShape.RelativePosition.x;
+    }
+
+    public getFootprint(staffEntryXPosition: number = 0): LyricFootprint {
+        const anchorX: number = this.getAnchorX(staffEntryXPosition);
+        const boundingBox: BoundingBox = this.graphicalLabel.PositionAndShape;
+        const leftEdgeX: number = anchorX + boundingBox.BorderLeft;
+        const rightEdgeX: number = anchorX + boundingBox.BorderRight;
+        return {
+            anchorX,
+            labelWidth: boundingBox.Size.width,
+            leftEdgeX,
+            leftExtent: anchorX - leftEdgeX,
+            rightEdgeX,
+            rightExtent: rightEdgeX - anchorX,
+        };
     }
 }
