@@ -663,6 +663,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         // Draw stave lines
         this.stave.setContext(ctx).draw();
+        this.centerWholeMeasureRests();
         // Draw all voices
         for (const voiceID in this.vfVoices) {
             if (this.vfVoices.hasOwnProperty(voiceID)) {
@@ -746,9 +747,36 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // set the width of the voices to the current measure width:
             // (The width of the voices does not include the instructions (StaveModifiers))
             this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels, this);
+            this.centerWholeMeasureRests();
         }
 
         // this.correctNotePositions(); // now done at the end of draw()
+    }
+
+    private centerWholeMeasureRests(): void {
+        const measureCenterX: number = (this.stave.getNoteStartX() + this.stave.getNoteEndX()) / 2;
+        for (const staffEntry of this.staffEntries as VexFlowStaffEntry[]) {
+            for (const voiceEntry of staffEntry.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
+                const sourceNote: Note = voiceEntry.notes[0]?.sourceNote;
+                const vexNote: any = voiceEntry.vfStaveNote as any;
+                if (!sourceNote?.isRest?.() || !vexNote?.getBoundingBox || !vexNote?.getStave) {
+                    continue;
+                }
+                const isWholeMeasureRest: boolean = sourceNote.IsWholeMeasureRest ||
+                    sourceNote.isWholeRest();
+                if (!isWholeMeasureRest) {
+                    continue;
+                }
+                const boundingBox: any = vexNote.getBoundingBox();
+                const restCenterX: number = boundingBox.getX() + boundingBox.getW() / 2;
+                const delta: number = measureCenterX - restCenterX;
+                if (!isFinite(delta) || Math.abs(delta) < 0.001) {
+                    continue;
+                }
+                vexNote.setCenterAlignment?.(true);
+                vexNote.center_x_shift = (vexNote.center_x_shift ?? 0) + delta;
+            }
+        }
     }
 
     // correct position / bounding box (note.setIndex() needs to have been called)
