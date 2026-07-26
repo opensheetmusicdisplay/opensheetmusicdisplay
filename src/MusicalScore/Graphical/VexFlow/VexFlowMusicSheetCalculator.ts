@@ -204,7 +204,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           if (measure.hasOnlyRests && !mvoice.ticksUsed.equals(mvoice.totalTicks)) {
             // fix layouting issues with whole measure rests in one staff and notes in other. especially in 12/8 rthythm (#1187)
             mvoice.ticksUsed = mvoice.totalTicks;
-            // Vexflow 1.2.93: needs VexFlowPatch for formatter.js (see #1187)
           }
           voices.push(mvoice);
           allVoices.push(mvoice);
@@ -225,7 +224,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   Without the reset, a re-render reads the previous render's centered whole rest position
       //   there, where the first render read the unshifted one - making e.g. the lyrics/chord symbol
       //   elongation of the following measures (and thus the whole layout) differ from the first render.
-      // - the beam-applied stem extension (same reset as the VexFlowPatch beam.js postFormat fix
+      // - the beam-applied stem extension (same reset pattern as the legacy beam post-format fix
       //   for #1636, which only runs when the beam is drawn): Articulation.draw() positions
       //   articulations at the stem tip *before* the beams (re-)extend the stems, so without the
       //   reset, articulations on beamed notes sit higher on re-renders than on the first render.
@@ -1148,7 +1147,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   normal rendering (e.g. high drum-stave notes) and in lazy/incremental rendering (the mark's measure can be
       //   drawn at a slightly different x, over taller notes, than a normal render). Only the Above chord
       //   symbol was previously considered here; now the notes under the mark are too.
-      let minBottomY: number; // undefined -> no clamping in StaveSection.draw (VexFlowPatch)
+      let minBottomY: number; // undefined -> no clamping in the StaveSection draw path
       const staffLine: StaffLine = gMeasure.ParentStaffLine;
       if (staffLine) {
         // x-footprint of the rehearsal mark box at the measure start (absolute units, as the skyline is
@@ -1178,7 +1177,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const topRelative: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(start, end);
         if (topRelative < 0) { // only lift if something actually rises above the staff here
           const marginInUnits: number = 0.5; // small gap between mark bottom and what's below it
-          // StaveSection.draw (VexFlowPatch) shifts the mark up so its box bottom doesn't exceed
+          // StaveSection.draw() shifts the mark up so its box bottom doesn't exceed
           //   stave.getYForLine(0) + minBottomY (px), keeping the mark above that element:
           minBottomY = (topRelative - marginInUnits) * unitInPixels;
           // reserve skyline over the range so updateStaffLineBorders/calculateSystemYLayout make room for the lifted mark
@@ -1187,7 +1186,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
 
-      // fontSize and minBottomY are extra arguments from VexFlowPatch (stave.js / stavesection.js)
+      // fontSize and minBottomY are extra arguments on the current setSection() path.
       (vfStave as any).setSection(
         rehearsalExpression.label,
         yOffset,
@@ -2048,7 +2047,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * instructions, or previously placed repetition instructions (see #1689).
    * Shifted instructions reserve their space in the skyline, so that the staffline borders account for them.
    * The horizontal and default vertical position replicate the drawing code
-   * in VexFlowPatch/src/staverepetition.js (drawSymbolText() etc).
+   * in the current VexFlow repetition text rendering path.
    * @param measure the (uppermost) measure the repetition instruction was added to
    * @param repetition the VexFlow repetition (stave modifier) to place, created by addWordRepetition()
    */

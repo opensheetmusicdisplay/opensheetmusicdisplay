@@ -91,8 +91,8 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
                 if (this.endMeasure?.parentSourceMeasure.Rules.OctaveShiftOnWholeMeasureNoteUntilEndOfMeasure &&
                     vve.notes[0].sourceNote.isWholeMeasureNote()) {
                     // draw whole note octave shift until end of measure
-                    //   Instead, we could try to fix the display of very short octaveshift brackets,
-                    //   which seem to overlap text (-> VF.TextBracket VexFlowPatch?).
+                    //   Instead, we could try to fix the display of very short octave-shift brackets,
+                    //   which still seem to overlap nearby text in some cases.
                     this.graphicalEndAtMeasureEnd = true;
                 }
                 return true;
@@ -110,7 +110,6 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         const self: VexFlowOctaveShift = this;
         if (this.graphicalEndAtMeasureEnd) {
             // draw until end of measure (measure end barline):
-            //   hack for Vexflow 1.2.93 (will need to be adjusted for Vexflow 4+):
             //   create a mock object with all the data Vexflow uses for the TextBracket
             //   (Vexflow theoretically expects a note here, from which it takes position and width)
             stopObject = {

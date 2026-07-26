@@ -40,7 +40,8 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
 
         // padding_right doesn't work well for clefs at measure end. this.endInstructionsWidth is also not yet set correctly here.
         // const padding_right: number = this.rules.MultipleRestMeasureElementPaddingRight * 10;
-        // padding is instead included in Vexflow in multimeasurerest.js:draw() (via VexFlowPatch), to not get too close to end repeat barline
+        // padding is instead included in VexFlow's MultiMeasureRest.draw() path, so the rest
+        // stays clear of the end repeat barline.
         // Also, we probably don't yet know whether we have an end measure clef here.
         // see e.g. test/data/test_multiple_rest_measures_repeat_3_measures.musicxml, issue #1329
 

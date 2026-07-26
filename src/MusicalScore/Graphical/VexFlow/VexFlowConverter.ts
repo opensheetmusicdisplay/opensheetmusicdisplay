@@ -535,8 +535,8 @@ export class VexFlowConverter {
                 rules.LyricsUseXPaddingForLongLyrics &&
                 lyricsEntries.length > 0 &&
                 nextOrCloseNoteHasLyrics) {
-                // VexFlowPatch: add padding to the right for large lyrics,
-                //   so that measure doesn't need to be enlarged too much for spacing
+                // Add padding to the right for large lyrics so the measure doesn't need to be
+                // enlarged too much just for spacing.
 
                 let hasShortNotes: boolean = false;
                 let padding: number = 0;
@@ -1065,8 +1065,9 @@ export class VexFlowConverter {
         });
         if (isXNotehead) {
             // (vfnote as any).render_options.fretScale = rules.TabXNoteheadScale; // doesn't work, is overwritten later
-            (vfnote as any).render_options.scale = rules.TabXNoteheadScale; // VexFlowPatch
-            (vfnote as any).render_options.TabUseXNoteheadAlternativeGlyph = rules.TabUseXNoteheadAlternativeGlyph; // VexFlowPatch
+            (vfnote as any).render_options.scale = rules.TabXNoteheadScale;
+            (vfnote as any).render_options.TabUseXNoteheadAlternativeGlyph =
+                rules.TabUseXNoteheadAlternativeGlyph;
             vfnote.updateWidth(); // use .scale, update glyph
         }
         if (rules.UsePageBackgroundColorForTabNotes) {

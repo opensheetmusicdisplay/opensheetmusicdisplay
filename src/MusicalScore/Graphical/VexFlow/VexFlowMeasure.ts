@@ -375,7 +375,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     // instead of not rendering the key signature, technically, we render it, but with transparent color. this helps layout / x-alignment.
 
                     // SVG compatibility: also set visibility="hidden".
-                    //   this helps make the key invisible instead of black in some systems like apps, outside the browser. (VexFlowPatch)
+                    //   this helps make the key invisible instead of black in some systems like apps, outside the browser.
                     (modifier as any).hidden = true;
                     break;
                 }
@@ -408,7 +408,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // instead of not rendering the time signature, technically, we render it, but with transparent color. this helps layout / x-alignment.
 
             // SVG compatibility: also set visibility="hidden".
-            //   this helps make the modifier invisible instead of black in some systems like apps, outside the browser. (VexFlowPatch)
+            //   this helps make the modifier invisible instead of black in some systems like apps, outside the browser.
             (timeSig as any).hidden = true;
         }
         this.updateInstructionWidth();
@@ -529,7 +529,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         this.stave.setEndBarType(VF.Barline.type.END);
                         break;
                     case SystemLinesEnum.DoubleBold:
-                        this.stave.setEndBarType(8); // VexFlowPatch added
+                        this.stave.setEndBarType(8); // legacy double-heavy barline type
                         break;
                     case SystemLinesEnum.None:
                         this.stave.setEndBarType(VF.Barline.type.NONE);

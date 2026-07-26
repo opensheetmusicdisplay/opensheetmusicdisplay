@@ -20,7 +20,6 @@ export default defineConfig(
             "react-native/",
             "src/SamplePlayerPatch/",
             "src/SoundfontPlayerPatch/",
-            "src/VexFlowPatch/",
         ],
     },
     eslint.configs.recommended,
