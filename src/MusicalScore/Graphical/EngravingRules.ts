@@ -115,6 +115,16 @@ export class EngravingRules {
     public BeamSlopeMaxAngle: number;
     public StemMinAllowedDistanceBetweenNoteHeadAndBeamLine: number;
     public SetWantedStemDirectionByXml: boolean;
+    /** Whether transposition preserves the spelling logic of the original notes (interval-preserving transposition),
+     * instead of re-choosing an enharmonic spelling per note from the key signature.
+     * When true, every note keeps its written interval relation to the original: the letter name moves by the
+     * generic interval between the original and the transposed key, and the accidental follows from that
+     * (Ab -> Bb when transposing +2, never A#; Ab -> Cb into Eb major, never B; C# and Db stay distinct).
+     * Double sharps/flats are produced where they are the correct spelling.
+     * Needed for chromatic material (jazz licks, enclosures, altered dominants), where substituting an "easier"
+     * enharmonic reverses the written direction of a neighbor note.
+     * Default false: keeps the readability-oriented enharmonic choices of the default TransposeCalculator. */
+    public StrictTransposeSpelling: boolean;
     public GraceNoteScalingFactor: number;
     public GraceNoteXOffset: number;
     /** Set this to e.g. -0.5 or -0.8 to put grace notes a lot closer to the main note. */
@@ -748,6 +758,7 @@ export class EngravingRules {
         this.BeamSlopeMaxAngle = 10.0;
         this.StemMinAllowedDistanceBetweenNoteHeadAndBeamLine = 1.0;
         this.SetWantedStemDirectionByXml = true;
+        this.StrictTransposeSpelling = false;
         // also see stemwidth further below
 
         // GraceNote Variables

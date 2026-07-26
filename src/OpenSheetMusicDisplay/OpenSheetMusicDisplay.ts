@@ -2201,6 +2201,10 @@ export class OpenSheetMusicDisplay {
     }
 
     public set TransposeCalculator(calculator: ITransposeCalculator) {
+        if (calculator) {
+            // give the calculator access to the transposition rules, e.g. EngravingRules.StrictTransposeSpelling
+            calculator.rules = this.rules;
+        }
         MusicSheetCalculator.transposeCalculator = calculator;
     }
 
