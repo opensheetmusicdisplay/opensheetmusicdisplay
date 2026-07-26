@@ -1,5 +1,5 @@
 import log from "loglevel";
-import { Font, FontInfo } from "vexflow";
+import { Font, FontInfo } from "vexflow/core";
 
 /**
  * A virtual VexFlow rendering context that computes the vertical extents (min and max y)

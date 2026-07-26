@@ -1,4 +1,4 @@
-import * as VF from "vexflow";
+import * as VF from "vexflow/core";
 
 import {VexFlowBackend} from "./VexFlowBackend";
 import {VexFlowConverter} from "./VexFlowConverter";

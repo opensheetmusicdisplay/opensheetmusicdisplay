@@ -3,7 +3,7 @@ import { BoundingBox } from "../BoundingBox";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalWavyLine } from "../GraphicalWavyLine";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
-import * as VF from "vexflow";
+import * as VF from "vexflow/core";
 
 const LEGACY_WAVE_HEIGHT: number = 6;
 const LEGACY_VIBRATO_WIDTH: number = 20;

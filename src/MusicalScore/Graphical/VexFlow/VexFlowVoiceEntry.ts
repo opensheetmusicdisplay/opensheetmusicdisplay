@@ -1,4 +1,4 @@
-import * as VF from "vexflow";
+import * as VF from "vexflow/core";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";

@@ -10,7 +10,7 @@ import {VexFlowMeasure} from "../../../../src/MusicalScore/Graphical/VexFlow/Vex
 import {VexFlowVoiceEntry} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
 import {Note} from "../../../../src/MusicalScore/VoiceData/Note";
 import {Fraction} from "../../../../src/Common/DataObjects/Fraction";
-import VexFlow, * as VF from "vexflow";
+import VexFlow, * as VF from "vexflow/core";
 
 describe("VexFlow Measure - Tuplet Voice Alignment", () => {
 
