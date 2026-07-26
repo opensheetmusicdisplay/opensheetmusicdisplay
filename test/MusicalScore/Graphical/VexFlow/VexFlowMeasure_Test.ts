@@ -58,6 +58,30 @@ describe("VexFlow Measure", () => {
       done();
    });
 
+   it("Formats joined volta ending ranges with an en dash and trailing period", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_repeat_volta_joined_1_2_separate_3.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+
+         const firstEndingMeasure: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(1, 0);
+         const thirdEndingMeasure: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(2, 0);
+
+         function getVoltaLabels(measure: GraphicalMeasure): string[] {
+            const stave: { getModifiers(): { getCategory(): string, number?: string }[] } = (measure as any).stave;
+            return stave.getModifiers()
+               .filter((modifier: { getCategory(): string }): boolean => modifier.getCategory() === "voltas")
+               .map((modifier: { number?: string }): string => String(modifier.number || ""));
+         }
+
+         expect(getVoltaLabels(firstEndingMeasure)).to.deep.equal(["1–2."]);
+         expect(getVoltaLabels(thirdEndingMeasure)).to.deep.equal(["3."]);
+         done();
+      }).catch(done);
+   });
+
    it("Renders a tie between enharmonic spellings", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_tie_enharmonic_spelling_1694.musicxml");
       const div: HTMLElement = TestUtils.getDivElement(document);

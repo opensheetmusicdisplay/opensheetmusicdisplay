@@ -41,6 +41,35 @@ import { TabNote } from "../../VoiceData/TabNote";
 
 // type StemmableNote = VF.StemmableNote;
 
+function formatVoltaRange(startIndex: number, endIndex: number): string {
+    return startIndex === endIndex ? `${startIndex}` : `${startIndex}\u2013${endIndex}`;
+}
+
+function formatVoltaLabel(endingIndices: number[] = []): string {
+    if (!endingIndices.length) {
+        return "";
+    }
+
+    const labelParts: string[] = [];
+    let rangeStartIndex: number = endingIndices[0];
+    let previousIndex: number = endingIndices[0];
+
+    for (let index: number = 1; index < endingIndices.length; index++) {
+        const currentIndex: number = endingIndices[index];
+        if (currentIndex === previousIndex + 1) {
+            previousIndex = currentIndex;
+            continue;
+        }
+
+        labelParts.push(formatVoltaRange(rangeStartIndex, previousIndex));
+        rangeStartIndex = currentIndex;
+        previousIndex = currentIndex;
+    }
+
+    labelParts.push(formatVoltaRange(rangeStartIndex, previousIndex));
+    return `${labelParts.join(", ")}.`;
+}
+
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, sourceMeasure?: SourceMeasure, staffLine?: StaffLine) {
         super(staff, sourceMeasure, staffLine);
@@ -624,7 +653,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             //convert to VF units (pixels)
             vexFlowVoltaHeight *= 10;
-            this.stave.setVoltaType(voltaType, repetitionInstruction.endingIndices[0], vexFlowVoltaHeight);
+            const voltaLabel: string = formatVoltaLabel(repetitionInstruction.endingIndices);
+            // VexFlow's runtime Volta modifier accepts string labels, but the vendored type definition still narrows this to number.
+            this.stave.setVoltaType(voltaType, voltaLabel as unknown as number, vexFlowVoltaHeight);
             skyBottomLineCalculator.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
         }
     }
