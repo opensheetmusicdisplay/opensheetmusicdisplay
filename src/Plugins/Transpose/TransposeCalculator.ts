@@ -17,6 +17,11 @@ export class TransposeCalculator implements ITransposeCalculator {
             //   just because sharps fit the key signature better.
         }
 
+        const preservedSingleSemitonePitch: Pitch = this.tryPreservePitchLetterForSingleSemitoneTranspose(pitch, halftones);
+        if (preservedSingleSemitonePitch) {
+            return preservedSingleSemitonePitch;
+        }
+
         let transposedFundamentalNote: NoteEnum = NoteEnum.C;
         let transposedOctave: number = 0;
         let transposedAccidental: AccidentalEnum = AccidentalEnum.NONE;
@@ -82,6 +87,25 @@ export class TransposeCalculator implements ITransposeCalculator {
         const transposedPitch: Pitch = new Pitch(transposedFundamentalNote, transposedOctave, transposedAccidental);
         return transposedPitch;
     }
+
+    private tryPreservePitchLetterForSingleSemitoneTranspose(pitch: Pitch, halftones: number): Pitch {
+        const octaveSteps: number = Math.trunc(halftones / 12);
+        const chromaticRemainder: number = halftones - octaveSteps * 12;
+        if (Math.abs(chromaticRemainder) !== 1) {
+            return undefined;
+        }
+        const transposedAccidentalHalfTones: number =
+            Pitch.HalfTonesFromAccidental(pitch.Accidental) + chromaticRemainder;
+        if (Math.abs(transposedAccidentalHalfTones) > 3) {
+            return undefined;
+        }
+        return new Pitch(
+            pitch.FundamentalNote,
+            pitch.Octave + octaveSteps,
+            Pitch.AccidentalFromHalfTones(transposedAccidentalHalfTones),
+        );
+    }
+
     public transposeKey(keyInstruction: KeyInstruction, transpose: number): void {
         let currentIndex: number = 0;
         let previousKeyType: number = 0;

@@ -459,7 +459,7 @@ export class VexFlowConverter {
         let vfnote: VF.StaveNote;
         const vfnoteStruct: any = {
             alignCenter: alignCenter,
-            auto_stem: true,
+            autoStem: true,
             clef: vfClefType,
             duration: duration,
             keys: keys,
@@ -468,8 +468,8 @@ export class VexFlowConverter {
 
         const firstNote: Note = gve.notes[0].sourceNote;
         if (firstNote.IsCueNote) {
-            vfnoteStruct.glyph_font_scale = VexFlow.NOTATION_FONT_SCALE * 0.66;
-            vfnoteStruct.stroke_px = VF.GraceNote.LEDGER_LINE_OFFSET;
+            vfnoteStruct.glyphFontScale = VexFlow.NOTATION_FONT_SCALE * 0.66;
+            vfnoteStruct.strokePx = VF.GraceNote.LEDGER_LINE_OFFSET;
         }
 
         if (gve.parentVoiceEntry.IsGrace || gve.notes[0].sourceNote.IsCueNote) {
@@ -671,7 +671,15 @@ export class VexFlowConverter {
                     vfnote.setStemDirection(VF.Stem.DOWN);
                     gve.parentVoiceEntry.StemDirection = StemDirectionType.Down;
                     break;
-                default:
+                default: {
+                    const autoStemDirection: number = vfnote.getStemDirection?.();
+                    if (autoStemDirection === VF.Stem.UP) {
+                        gve.parentVoiceEntry.StemDirection = StemDirectionType.Up;
+                    } else if (autoStemDirection === VF.Stem.DOWN) {
+                        gve.parentVoiceEntry.StemDirection = StemDirectionType.Down;
+                    }
+                    break;
+                }
             }
         }
 

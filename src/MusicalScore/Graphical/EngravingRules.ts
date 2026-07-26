@@ -1180,26 +1180,30 @@ export class EngravingRules {
         this.ChordSymbolLabelTexts.setValue(key, value);
     }
     public resetChordSymbolLabelTexts(chordtexts: Dictionary<ChordSymbolEnum, string>): Dictionary<ChordSymbolEnum, string> {
+        const diminishedSymbol: string = "o";
+        const halfDiminishedSymbol: string = "ø";
+        const augmentedSymbol: string = "+";
+        const majorSeventhSymbol: string = "△";
         chordtexts.setValue(ChordSymbolEnum.minor, "m");
-        chordtexts.setValue(ChordSymbolEnum.augmented, "aug");
-        chordtexts.setValue(ChordSymbolEnum.diminished, "dim");
+        chordtexts.setValue(ChordSymbolEnum.augmented, augmentedSymbol);
+        chordtexts.setValue(ChordSymbolEnum.diminished, diminishedSymbol);
         chordtexts.setValue(ChordSymbolEnum.dominant, "7");
-        chordtexts.setValue(ChordSymbolEnum.majorseventh, "maj7");
+        chordtexts.setValue(ChordSymbolEnum.majorseventh, majorSeventhSymbol);
         chordtexts.setValue(ChordSymbolEnum.minorseventh, "m7");
-        chordtexts.setValue(ChordSymbolEnum.diminishedseventh, "dim7");
-        chordtexts.setValue(ChordSymbolEnum.augmentedseventh, "aug7");
-        chordtexts.setValue(ChordSymbolEnum.halfdiminished, `m7${this.ChordAccidentalTexts.getValue(AccidentalEnum.FLAT)}5`);
-        chordtexts.setValue(ChordSymbolEnum.majorminor, "m(maj7)");
-        chordtexts.setValue(ChordSymbolEnum.majorsixth, "maj6");
+        chordtexts.setValue(ChordSymbolEnum.diminishedseventh, `${diminishedSymbol}7`);
+        chordtexts.setValue(ChordSymbolEnum.augmentedseventh, `${augmentedSymbol}7`);
+        chordtexts.setValue(ChordSymbolEnum.halfdiminished, `${halfDiminishedSymbol}7`);
+        chordtexts.setValue(ChordSymbolEnum.majorminor, `m${majorSeventhSymbol}`);
+        chordtexts.setValue(ChordSymbolEnum.majorsixth, "6");
         chordtexts.setValue(ChordSymbolEnum.minorsixth, "m6");
         chordtexts.setValue(ChordSymbolEnum.dominantninth, "9");
-        chordtexts.setValue(ChordSymbolEnum.majorninth, "maj9");
+        chordtexts.setValue(ChordSymbolEnum.majorninth, `${majorSeventhSymbol}9`);
         chordtexts.setValue(ChordSymbolEnum.minorninth, "m9");
         chordtexts.setValue(ChordSymbolEnum.dominant11th, "11");
-        chordtexts.setValue(ChordSymbolEnum.major11th, "maj11");
+        chordtexts.setValue(ChordSymbolEnum.major11th, `${majorSeventhSymbol}11`);
         chordtexts.setValue(ChordSymbolEnum.minor11th, "m11");
         chordtexts.setValue(ChordSymbolEnum.dominant13th, "13");
-        chordtexts.setValue(ChordSymbolEnum.major13th, "maj13");
+        chordtexts.setValue(ChordSymbolEnum.major13th, `${majorSeventhSymbol}13`);
         chordtexts.setValue(ChordSymbolEnum.minor13th, "m13");
         chordtexts.setValue(ChordSymbolEnum.suspendedsecond, "sus2");
         chordtexts.setValue(ChordSymbolEnum.suspendedfourth, "sus4");
@@ -1253,9 +1257,9 @@ export class EngravingRules {
         this.addChordName("11sus2", "suspendedsecond", ["11"], [], []);
         this.addChordName("13sus2", "dominant13th", ["2"], [], ["3"]);
         this.addChordName("13sus2", "suspendedsecond", ["13"], [], []);
-        this.addChordName("m(maj9)", "majorminor", ["9"], [], []);
-        this.addChordName("m(maj11)", "majorminor", ["11"], [], []);
-        this.addChordName("m(maj13)", "majorminor", ["13"], [], []);
+        this.addChordName("m△9", "majorminor", ["9"], [], []);
+        this.addChordName("m△11", "majorminor", ["11"], [], []);
+        this.addChordName("m△13", "majorminor", ["13"], [], []);
         this.addChordName("69", "majorsixth", ["9"], [], []);
         this.addChordName("mi69", "minorsixth", ["9"], [], []);
     }

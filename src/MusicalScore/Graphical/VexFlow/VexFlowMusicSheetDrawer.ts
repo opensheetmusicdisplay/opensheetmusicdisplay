@@ -899,7 +899,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         let node: Node;
         for (let i: number = 0; i < graphicalLabel.TextLines?.length; i++) {
-            const currLine: {text: string, xOffset: number, width: number, runs?: {text: string, width: number, fontFamily?: string}[]} =
+            const currLine: {
+                text: string;
+                xOffset: number;
+                width: number;
+                runs?: {text: string, width: number, fontFamily?: string, fontScale?: number, baselineShift?: number}[];
+            } =
                 graphicalLabel.TextLines[i];
             let newNode: Node;
             if (currLine.runs?.length > 0) {
@@ -907,9 +912,25 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 let runOffset: number = 0;
                 for (const run of currLine.runs) {
                     const runOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset + runOffset);
-                    const linePosition: PointF2D = new PointF2D(screenPosition.x + runOffsetInPixel, screenPosition.y);
+                    const runFontScale: number = run.fontScale ?? 1;
+                    const runBaselineShift: number = run.baselineShift ?? 0;
+                    const runHeight: number = height * runFontScale;
+                    const runFontHeightInPixel: number = fontHeightInPixel * runFontScale;
+                    const linePosition: PointF2D = new PointF2D(
+                        screenPosition.x + runOffsetInPixel,
+                        screenPosition.y + fontHeightInPixel * runBaselineShift,
+                    );
                     const runNode: Node =
-                        this.backend.renderText(height, fontStyle, font, run.text, fontHeightInPixel, linePosition, color, run.fontFamily || fontFamily);
+                        this.backend.renderText(
+                            runHeight,
+                            fontStyle,
+                            font,
+                            run.text,
+                            runFontHeightInPixel,
+                            linePosition,
+                            color,
+                            run.fontFamily || fontFamily,
+                        );
                     if (!lineNode) {
                         lineNode = runNode;
                     } else {

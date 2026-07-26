@@ -28,6 +28,13 @@ type ChordMusicTextToken = {
 
 export const DORICO_DEFAULT_TEXT_FONT_FAMILY: string = "Academico";
 export const DORICO_MUSIC_TEXT_FONT_FAMILY: string = "Bravura Text";
+export const DORICO_CHORD_DIMINISHED_SYMBOL: string = "o";
+export const DORICO_CHORD_HALFDIMINISHED_SYMBOL: string = "ø";
+export const DORICO_CHORD_AUGMENTED_SYMBOL: string = "+";
+export const DORICO_CHORD_MAJOR_SEVENTH_SYMBOL: string = "△";
+
+const CHORD_SUPERSCRIPT_FONT_SCALE: number = 0.72;
+const CHORD_SUPERSCRIPT_BASELINE_SHIFT: number = -0.35;
 
 export const DORICO_TEXT_FONT_AUDIT: DoricoTextFontAudit = Object.freeze({
     defaultScoreText: DORICO_DEFAULT_TEXT_FONT_FAMILY,
@@ -55,11 +62,12 @@ export function getDoricoMusicTextFontFamily(): string {
 }
 
 export function buildDoricoChordSymbolTextLines(text: string, rules?: EngravingRules): LabelTextLine[] {
+    const musicTextTokens: ChordMusicTextToken[] = collectChordMusicTextTokens(rules);
     return [
         {
             runs: splitChordSymbolRuns(
-                text,
-                collectChordMusicTextTokens(rules),
+                splitChordSymbolSegments(text),
+                musicTextTokens,
                 getDoricoDefaultTextFontFamily(rules),
                 getDoricoMusicTextFontFamily(),
             ),
@@ -74,6 +82,14 @@ function collectChordMusicTextTokens(rules?: EngravingRules): ChordMusicTextToke
     addChordMusicTextToken(tokenMap, "♯", "♯");
     addChordMusicTextToken(tokenMap, "𝄪", "𝄪");
     addChordMusicTextToken(tokenMap, "𝄫", "𝄫");
+    addChordMusicTextToken(tokenMap, "△", "△");
+    addChordMusicTextToken(tokenMap, "ø", "ø");
+    addChordMusicTextToken(tokenMap, DORICO_CHORD_MAJOR_SEVENTH_SYMBOL, DORICO_CHORD_MAJOR_SEVENTH_SYMBOL);
+    addChordMusicTextToken(tokenMap, DORICO_CHORD_HALFDIMINISHED_SYMBOL, DORICO_CHORD_HALFDIMINISHED_SYMBOL);
+    addChordMusicTextToken(tokenMap, "\uE870", "\uE870");
+    addChordMusicTextToken(tokenMap, "\uE871", "\uE871");
+    addChordMusicTextToken(tokenMap, "\uE872", "\uE872");
+    addChordMusicTextToken(tokenMap, "\uE873", "\uE873");
 
     addRuleAccidentalToken(tokenMap, rules, AccidentalEnum.FLAT, "b", "♭");
     addRuleAccidentalToken(tokenMap, rules, AccidentalEnum.NATURAL, "n", "♮");
@@ -86,46 +102,76 @@ function collectChordMusicTextTokens(rules?: EngravingRules): ChordMusicTextToke
         .sort((left, right) => right.source.length - left.source.length || right.source.localeCompare(left.source));
 }
 
+type ChordLayoutSegment = {
+    text: string;
+    superscript?: boolean;
+};
+
 function splitChordSymbolRuns(
-    text: string,
+    segments: ChordLayoutSegment[],
     musicTextTokens: ChordMusicTextToken[],
     textFontFamily: string,
     musicTextFontFamily: string,
 ): LabelTextRun[] {
     const runs: LabelTextRun[] = [];
-    let index: number = 0;
 
-    while (index < text.length) {
-        const token: ChordMusicTextToken = musicTextTokens.find((candidate) =>
-            text.startsWith(candidate.source, index) && isChordMusicTextContext(text, index, candidate.source.length),
-        );
-        if (token) {
-            appendRun(runs, token.display, musicTextFontFamily);
-            index += token.source.length;
-            continue;
-        }
+    for (const segment of segments) {
+        let index: number = 0;
+        while (index < segment.text.length) {
+            const token: ChordMusicTextToken = musicTextTokens.find((candidate) =>
+                segment.text.startsWith(candidate.source, index) &&
+                isChordMusicTextContext(segment.text, index, candidate.source.length),
+            );
+            if (token) {
+                appendRun(
+                    runs,
+                    token.display,
+                    musicTextFontFamily,
+                    segment.superscript ? CHORD_SUPERSCRIPT_FONT_SCALE : 1,
+                    segment.superscript ? CHORD_SUPERSCRIPT_BASELINE_SHIFT : 0,
+                );
+                index += token.source.length;
+                continue;
+            }
 
-        const nextSymbol: string = Array.from(text.slice(index))[0] || "";
-        if (!nextSymbol) {
-            break;
+            const nextSymbol: string = Array.from(segment.text.slice(index))[0] || "";
+            if (!nextSymbol) {
+                break;
+            }
+            appendRun(
+                runs,
+                nextSymbol,
+                textFontFamily,
+                segment.superscript ? CHORD_SUPERSCRIPT_FONT_SCALE : 1,
+                segment.superscript ? CHORD_SUPERSCRIPT_BASELINE_SHIFT : 0,
+            );
+            index += nextSymbol.length;
         }
-        appendRun(runs, nextSymbol, textFontFamily);
-        index += nextSymbol.length;
     }
 
     return runs;
 }
 
-function appendRun(runs: LabelTextRun[], text: string, fontFamily: string): void {
+function appendRun(
+    runs: LabelTextRun[],
+    text: string,
+    fontFamily: string,
+    fontScale: number,
+    baselineShift: number,
+): void {
     if (!text) {
         return;
     }
     const previousRun: LabelTextRun = runs[runs.length - 1];
-    if (previousRun?.fontFamily === fontFamily) {
+    if (
+        previousRun?.fontFamily === fontFamily &&
+        (previousRun.fontScale ?? 1) === fontScale &&
+        (previousRun.baselineShift ?? 0) === baselineShift
+    ) {
         previousRun.text += text;
         return;
     }
-    runs.push({ text, fontFamily });
+    runs.push({ text, fontFamily, fontScale, baselineShift });
 }
 
 function containsNonAscii(text: string): boolean {
@@ -172,6 +218,46 @@ function isChordMusicTextContext(text: string, index: number, tokenLength: numbe
         return isChordNoteLetter(nextCharacter) || isDigit(nextCharacter);
     }
     return false;
+}
+
+function splitChordSymbolSegments(text: string): ChordLayoutSegment[] {
+    if (!text) {
+        return [];
+    }
+
+    const bassIndex: number = findChordBassIndex(text);
+    const mainText: string = bassIndex >= 0 ? text.slice(0, bassIndex) : text;
+    const bassText: string = bassIndex >= 0 ? text.slice(bassIndex) : "";
+    const rootText: string = matchChordRoot(mainText);
+    if (!rootText) {
+        return [{ text }];
+    }
+
+    const segments: ChordLayoutSegment[] = [{ text: rootText }];
+    const suffixText: string = mainText.slice(rootText.length);
+    if (suffixText) {
+        segments.push({ text: suffixText, superscript: true });
+    }
+    if (bassText) {
+        segments.push({ text: bassText });
+    }
+    return segments;
+}
+
+function findChordBassIndex(text: string): number {
+    for (let index: number = 1; index < text.length - 1; index++) {
+        if (text.charAt(index) === "/" && isChordNoteLetter(text.charAt(index + 1))) {
+            return index;
+        }
+    }
+    return -1;
+}
+
+function matchChordRoot(text: string): string {
+    const match: RegExpMatchArray = text.match(
+        /^[A-Ga-g](?:(?:bb|##|x|b|#|n|♭|♮|♯|𝄪|𝄫)+)?/u,
+    );
+    return match?.[0] ?? "";
 }
 
 function isChordNoteLetter(character: string): boolean {

@@ -6,6 +6,8 @@ import {FontStyles} from "../Common/Enums/FontStyles";
 export interface LabelTextRun {
     text: string;
     fontFamily?: string;
+    fontScale?: number;
+    baselineShift?: number;
 }
 
 export interface LabelTextLine {
