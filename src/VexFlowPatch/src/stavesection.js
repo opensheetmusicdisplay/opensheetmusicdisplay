@@ -17,7 +17,7 @@ export class StaveSection extends StaveModifier {
     this.shift_y = shift_y;
     this.minBottomY = undefined; // VexFlowPatch: if set, shift the box up so its bottom doesn't exceed this y (px), to clear chord symbols
     this.font = {
-      family: 'sans-serif',
+      family: 'Academico',
       size: 12,
       weight: 'bold',
     };

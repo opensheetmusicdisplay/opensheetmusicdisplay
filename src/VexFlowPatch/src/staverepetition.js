@@ -33,7 +33,7 @@ export class Repetition extends StaveModifier {
     this.x_shift = 0;
     this.y_shift = y_shift;
     this.font = {
-      family: 'times',
+      family: 'Academico',
       size: 12,
       weight: 'bold italic',
     };

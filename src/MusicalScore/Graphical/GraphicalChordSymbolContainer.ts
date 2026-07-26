@@ -8,6 +8,7 @@ import {EngravingRules} from "./EngravingRules";
 import { KeyInstruction } from "../VoiceData/Instructions/KeyInstruction";
 import { PlacementEnum } from "../VoiceData/Expressions";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
+import { buildDoricoChordSymbolTextLines, getDoricoDefaultTextFontFamily } from "./DoricoTextFontRouting";
 
 export class GraphicalChordSymbolContainer extends GraphicalObject {
     private chordSymbolContainer: ChordSymbolContainer;
@@ -33,7 +34,10 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         const placement: PlacementEnum = this.GetChordSymbolContainer.Placement;
         const textAlignment: TextAlignmentEnum = placement === PlacementEnum.Above ?
             this.rules.ChordSymbolTextAlignmentTop : this.rules.ChordSymbolTextAlignmentBottom;
-        this.graphicalLabel = new GraphicalLabel(new Label(text), textHeight, textAlignment, this.rules, this.boundingBox);
+        const label: Label = new Label(text);
+        label.fontFamily = getDoricoDefaultTextFontFamily(this.rules);
+        label.textLines = buildDoricoChordSymbolTextLines(text, this.rules);
+        this.graphicalLabel = new GraphicalLabel(label, textHeight, textAlignment, this.rules, this.boundingBox);
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(this.rules.ChordSymbolRelativeXOffset, 0.0);
         this.graphicalLabel.Label.colorDefault = this.rules.DefaultColorChordSymbol;
     }

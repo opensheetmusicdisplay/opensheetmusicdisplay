@@ -1250,7 +1250,7 @@ export class OpenSheetMusicDisplay {
             this.rules.DefaultColorTitle = options.defaultColorTitle;
         }
         if (options.defaultFontFamily) {
-            this.rules.DefaultFontFamily = options.defaultFontFamily; // default "Times New Roman", also used if font family not found
+            this.rules.DefaultFontFamily = options.defaultFontFamily; // default "Academico", also used if font family not found
         }
         if (options.defaultFontStyle) {
             this.rules.DefaultFontStyle = options.defaultFontStyle; // e.g. FontStyles.Bold

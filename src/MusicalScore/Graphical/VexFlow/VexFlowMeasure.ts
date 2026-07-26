@@ -38,12 +38,18 @@ import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { GraphicalTie } from "../GraphicalTie";
 import { Note } from "../../VoiceData/Note";
 import { TabNote } from "../../VoiceData/TabNote";
+import { getDoricoDefaultTextFontFamily } from "../DoricoTextFontRouting";
 
 // type StemmableNote = VF.StemmableNote;
 
 function formatVoltaRange(startIndex: number, endIndex: number): string {
     return startIndex === endIndex ? `${startIndex}` : `${startIndex}\u2013${endIndex}`;
 }
+
+type FontAssignableModifier = {
+    getCategory?: () => string;
+    setFont?: (font: { family?: string }) => unknown;
+};
 
 function formatVoltaLabel(endingIndices: number[] = []): string {
     if (!endingIndices.length) {
@@ -143,6 +149,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0
         });
+        (this.stave as any).setFont?.({ family: getDoricoDefaultTextFontFamily(this.rules) });
         if (this.InitiallyActiveClef) {
             (this.stave as any).clef = VexFlowConverter.Clef(this.InitiallyActiveClef).type;
             // Vexflow sets stave.clef to treble by default. It needs this info e.g. for key signature accidentals on new key sig
@@ -536,6 +543,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         if (instruction) {
             const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
+            (repetition as any).setFont?.({ family: getDoricoDefaultTextFontFamily(this.rules) });
             const stafflineMeasures: GraphicalMeasure[] = this.ParentStaffLine?.Measures;
             if (!stafflineMeasures || stafflineMeasures[stafflineMeasures.length - 1] === this) {
                 // only shift end instructions like Fine to the right in the last measure of the staffline,
@@ -656,6 +664,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const voltaLabel: string = formatVoltaLabel(repetitionInstruction.endingIndices);
             // VexFlow's runtime Volta modifier accepts string labels, but the vendored type definition still narrows this to number.
             this.stave.setVoltaType(voltaType, voltaLabel as unknown as number, vexFlowVoltaHeight);
+            const modifiers: FontAssignableModifier[] =
+                ((this.stave as any).modifiers as FontAssignableModifier[]) || [];
+            const voltaModifier: FontAssignableModifier | undefined = [...modifiers]
+                .reverse()
+                .find((modifier) => modifier.getCategory?.() === "voltas");
+            voltaModifier?.setFont?.({ family: getDoricoDefaultTextFontFamily(this.rules) });
             skyBottomLineCalculator.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
         }
     }

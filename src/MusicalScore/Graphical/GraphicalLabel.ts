@@ -1,9 +1,12 @@
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
-import { Label } from "../Label";
+import { Label, LabelTextLine, LabelTextRun } from "../Label";
 import { BoundingBox } from "./BoundingBox";
 import { Clickable } from "./Clickable";
 import { EngravingRules } from "./EngravingRules";
 import { MusicSheetCalculator } from "./MusicSheetCalculator";
+
+type GraphicalLabelRun = LabelTextRun & { width: number };
+type GraphicalLabelLine = { text: string, xOffset: number, width: number, runs?: GraphicalLabelRun[] };
 
 /**
  * The graphical counterpart of a Label
@@ -11,7 +14,7 @@ import { MusicSheetCalculator } from "./MusicSheetCalculator";
 export class GraphicalLabel extends Clickable {
     private label: Label;
     private rules: EngravingRules;
-    public TextLines: {text: string, xOffset: number, width: number}[];
+    public TextLines: GraphicalLabelLine[];
     /** A reference to the Node in the SVG, if SVGBackend, otherwise undefined.
      *  Allows manipulation without re-rendering, e.g. for dynamics, lyrics, etc.
      *  For the Canvas backend, this is unfortunately not possible.
@@ -51,25 +54,37 @@ export class GraphicalLabel extends Clickable {
      * Create also the text-lines and their offsets here
      */
     public setLabelPositionAndShapeBorders(): void {
-        if (this.Label.text.trim() === "") {
+        if (!this.hasRenderableText()) {
             return;
         }
         this.TextLines = [];
         const labelMarginBorderFactor: number = this.rules?.LabelMarginBorderFactor ?? 0.1;
-        const lines: string[] = this.Label.text.split(/[\n\r]+/g);
-        const numOfLines: number = lines.length;
+        const sourceLines: LabelTextLine[] = this.Label.textLines?.length > 0
+            ? this.Label.textLines
+            : this.Label.text.split(/[\n\r]+/g).map((line: string) => ({
+                runs: [{ text: line.trim(), fontFamily: this.label.fontFamily }],
+            }));
+        const numOfLines: number = sourceLines.length;
         let maxWidth: number = 0;
-        for (let i: number = 0; i < numOfLines; i++) {
-            const line: string = lines[i].trim();
-            const widthToHeightRatio: number =
-            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
-               line, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
-            const currWidth: number = this.Label.fontHeight * widthToHeightRatio;
-            // const currWidth: number = MusicSheetCalculator.TextMeasurer.computeTextWidth(
-            //     line, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
+        for (const sourceLine of sourceLines) {
+            const runs: GraphicalLabelRun[] = [];
+            let lineText: string = "";
+            let currWidth: number = 0;
+            for (const sourceRun of sourceLine.runs || []) {
+                if (!sourceRun?.text) {
+                    continue;
+                }
+                const fontFamily: string = sourceRun.fontFamily || this.label.fontFamily;
+                const widthToHeightRatio: number =
+                MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
+                   sourceRun.text, this.Label.font, this.Label.fontStyle, fontFamily);
+                const runWidth: number = this.Label.fontHeight * widthToHeightRatio;
+                lineText += sourceRun.text;
+                currWidth += runWidth;
+                runs.push({ text: sourceRun.text, fontFamily, width: runWidth });
+            }
             maxWidth = Math.max(maxWidth, currWidth);
-            // here push only text and width of the text:
-            this.TextLines.push({text: line, xOffset: 0, width: currWidth});
+            this.TextLines.push({ text: lineText, xOffset: 0, width: currWidth, runs });
         }
 
         // maxWidth is calculated ->
@@ -160,5 +175,14 @@ export class GraphicalLabel extends Clickable {
         bbox.BorderMarginLeft = bbox.BorderLeft - height * labelMarginBorderFactor;
         bbox.BorderMarginBottom = bbox.BorderBottom + height * labelMarginBorderFactor;
         bbox.BorderMarginRight = bbox.BorderRight + height * labelMarginBorderFactor;
+    }
+
+    private hasRenderableText(): boolean {
+        if (this.Label.text.trim() !== "") {
+            return true;
+        }
+        return this.Label.textLines?.some((line: LabelTextLine) =>
+            line.runs?.some((run: LabelTextRun) => run.text.trim() !== ""),
+        ) ?? false;
     }
 }

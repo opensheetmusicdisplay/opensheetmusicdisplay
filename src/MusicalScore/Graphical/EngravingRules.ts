@@ -1014,7 +1014,7 @@ export class EngravingRules {
         this.ColorFlags = true;
         this.applyDefaultColorMusic("#000000"); // black. undefined is only black if a note's color hasn't been changed before.
         this.DefaultColorCursor = "#33e02f"; // green
-        this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
+        this.DefaultFontFamily = "Academico"; // default score text family
         this.DefaultFontStyle = FontStyles.Regular;
         this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
         this.MaxMeasureToDrawIndex = Number.MAX_VALUE;

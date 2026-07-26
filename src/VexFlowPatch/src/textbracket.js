@@ -54,7 +54,7 @@ export class TextBracket extends Element {
     this.line = 1;
 
     this.font = {
-      family: 'Serif',
+      family: 'Academico',
       size: 15,
       weight: 'italic',
     };

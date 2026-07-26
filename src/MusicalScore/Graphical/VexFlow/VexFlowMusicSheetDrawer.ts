@@ -905,11 +905,31 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         let node: Node;
         for (let i: number = 0; i < graphicalLabel.TextLines?.length; i++) {
-            const currLine: {text: string, xOffset: number, width: number} = graphicalLabel.TextLines[i];
-            const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
-            const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
-            const newNode: Node =
-                this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
+            const currLine: {text: string, xOffset: number, width: number, runs?: {text: string, width: number, fontFamily?: string}[]} =
+                graphicalLabel.TextLines[i];
+            let newNode: Node;
+            if (currLine.runs?.length > 0) {
+                let lineNode: Node;
+                let runOffset: number = 0;
+                for (const run of currLine.runs) {
+                    const runOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset + runOffset);
+                    const linePosition: PointF2D = new PointF2D(screenPosition.x + runOffsetInPixel, screenPosition.y);
+                    const runNode: Node =
+                        this.backend.renderText(height, fontStyle, font, run.text, fontHeightInPixel, linePosition, color, run.fontFamily || fontFamily);
+                    if (!lineNode) {
+                        lineNode = runNode;
+                    } else {
+                        lineNode.appendChild(runNode);
+                    }
+                    runOffset += run.width;
+                }
+                newNode = lineNode;
+            } else {
+                const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
+                const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
+                newNode =
+                    this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
+            }
             if (!node) {
                 node = newNode;
             } else {

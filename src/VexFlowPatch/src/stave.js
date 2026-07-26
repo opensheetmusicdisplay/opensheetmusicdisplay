@@ -32,7 +32,7 @@ export class Stave extends Element {
     this.clef = 'treble';
     this.endClef = undefined;
     this.font = {
-      family: 'sans-serif',
+      family: 'Academico',
       size: 8,
       weight: '',
     };

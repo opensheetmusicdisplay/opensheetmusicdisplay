@@ -73,6 +73,7 @@ import { VexFlowGlissando } from "./VexFlowGlissando";
 import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { Staff } from "../../VoiceData/Staff";
+import { getDoricoDefaultTextFontFamily } from "../DoricoTextFontRouting";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -1142,7 +1143,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // x-footprint of the rehearsal mark box at the measure start (absolute units, as the skyline is
         //   indexed). xOffset/fontSize are in px; the label width is a conservative estimate.
         let start: number = gMeasure.PositionAndShape.AbsolutePosition.x;
-        let end: number = start + (xOffset + rehearsalExpression.label.length * fontSize * 0.6 + fontSize) / unitInPixels;
+        const rehearsalTextFontFamily: string = getDoricoDefaultTextFontFamily(this.rules);
+        const rehearsalTextWidthUnits: number = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
+          rehearsalExpression.label,
+          Fonts.TimesNewRoman,
+          FontStyles.Bold,
+          rehearsalTextFontFamily,
+        ) * (fontSize / unitInPixels);
+        const rehearsalBoxWidthUnits: number = Math.max(rehearsalTextWidthUnits + 0.6, 18 / unitInPixels);
+        let end: number = start + xOffset / unitInPixels + rehearsalBoxWidthUnits;
         // also clear an Above chord symbol in the measure: it is placed (calculateChordSymbols, earlier)
         //   against the skyline and can sit right where the mark goes, possibly beyond the mark's footprint.
         const chord: GraphicalChordSymbolContainer = this.rules.RehearsalMarkAboveChordSymbol
@@ -1168,7 +1177,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
 
       // fontSize and minBottomY are extra arguments from VexFlowPatch (stave.js / stavesection.js)
-      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize, minBottomY);
+      (vfStave as any).setSection(
+        rehearsalExpression.label,
+        yOffset,
+        xOffset,
+        fontSize,
+        minBottomY,
+        getDoricoDefaultTextFontFamily(this.rules),
+      );
       return; // only draw one rehearsal mark at top (visible) instrument
     }
   }
@@ -2073,10 +2089,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const fontHeightUnits: number = 1.6; // staverepetition.js draws the text with a 12pt (16px) font
     let textWidthUnits: number = 0;
     if (text.length > 0) {
-      // measure with the same font family string ("times") that staverepetition.js draws with,
-      //   so that the measured width matches the drawn width even if the font falls back to another one
+      // measure with the same Dorico-style text font path that staverepetition.js now draws with,
+      //   so that the measured width matches the drawn width even if the browser synthesizes bold italic
       textWidthUnits = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
-        text, Fonts.TimesNewRoman, FontStyles.BoldItalic, "times") * fontHeightUnits;
+        text,
+        Fonts.TimesNewRoman,
+        FontStyles.BoldItalic,
+        getDoricoDefaultTextFontFamily(this.rules),
+      ) * fontHeightUnits;
     }
     const glyphWidthUnits: number = 2.4; // coda/segno glyph width (plus the 12px gap after the text for symbol_x)
     const measureStartX: number = measure.PositionAndShape.RelativePosition.x;
@@ -2674,4 +2694,3 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 }
-

@@ -11,8 +11,6 @@
     "lint": "npm run eslint",
     "test": "karma start --single-run --no-auto-watch",
     "test:watch": "karma start --no-single-run --auto-watch --browsers ChromeNoSecurity",
-    "prebuild": "npm run prebuildVexflow",
-    "prebuildVexflow": "ncp src/VexFlowPatch/src/ node_modules/vexflow/src/",
     "prepare": "npm run husky && npm run build",
     "build": "npm run lint && npm run build:webpack",
     "build:webpack": "webpack --progress --config webpack.prod.js",
@@ -37,9 +35,9 @@
     "generate:current:singletest": "node test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 ^Beethoven --osmdtestingsingle",
     "generate:blessed": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/blessed png 0 0 allSmall --osmdtesting",
     "test:visual": "bash ./test/Util/visual_regression.sh ./visual_regression",
-    "test:visual:build": "npm run prebuild && npm run build:webpack && npm run generate:current && npm run test:visual",
-    "test:visual:build:batch": "npm run prebuild && npm run build:webpack && npm run generate:current:batch && npm run test:visual",
-    "test:visual:build:webgl": "npm run prebuild && npm run build:webpack && npm run generate:current:webgl && npm run test:visual",
+    "test:visual:build": "npm run build:webpack && npm run generate:current && npm run test:visual",
+    "test:visual:build:batch": "npm run build:webpack && npm run generate:current:batch && npm run test:visual",
+    "test:visual:build:webgl": "npm run build:webpack && npm run generate:current:webgl && npm run test:visual",
     "test:visual:singletest": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven"
   },
   "pre-commit": [
@@ -74,7 +72,7 @@
     "jszip": "3.10.1",
     "loglevel": "^1.8.0",
     "typescript-collections": "^1.3.3",
-    "vexflow": "1.2.93"
+    "vexflow": "file:../vexflow"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -102,7 +100,6 @@
     "karma-webpack": "^5.0.1",
     "karma-xml2js-preprocessor": "^0.2.0",
     "mocha": "^11.7.5",
-    "ncp": "^2.0.0",
     "svg2pdf.js": "^2.7.0",
     "ts-loader": "^9.5.7",
     "typedoc": "^0.28.19",

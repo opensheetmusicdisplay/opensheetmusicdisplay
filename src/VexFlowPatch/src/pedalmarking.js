@@ -105,7 +105,7 @@ export class PedalMarking extends Element {
     this.custom_release_text = '';
 
     this.font = {
-      family: 'Times New Roman',
+      family: 'Academico',
       size: 12,
       weight: 'italic bold',
     };

@@ -7,6 +7,7 @@ import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import log from "loglevel";
+import { DORICO_DEFAULT_TEXT_FONT_FAMILY } from "../DoricoTextFontRouting";
 
 /**
  * The vexflow adaptation of a graphical shift.
@@ -136,6 +137,7 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
             superscript: this.supscript,
             text: this.text,
         });
+        (vfBracket as any).setFont?.({ family: DORICO_DEFAULT_TEXT_FONT_FAMILY });
         if (this.endsOnDifferentStaffLine) {
             // make bracket open-ended (--- instead of ---|) if not ending on current staffline
             (vfBracket as any).render_options.show_bracket = false;

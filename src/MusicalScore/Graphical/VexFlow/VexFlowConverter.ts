@@ -1283,7 +1283,7 @@ export class VexFlowConverter {
                        font: Fonts = Fonts.TimesNewRoman, rules: EngravingRules, fontFamily: string = undefined): string {
         let style: string = "normal";
         let weight: string = "normal";
-        let family: string = `'${rules.DefaultFontFamily}'`; // default "'Times New Roman'"
+        let family: string = `'${rules.DefaultFontFamily}'`; // default "'Academico'"
 
         switch (fontStyle) {
             case FontStyles.Bold:

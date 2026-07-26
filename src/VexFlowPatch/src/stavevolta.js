@@ -23,7 +23,7 @@ export class Volta extends StaveModifier {
     this.y_shift = y_shift;
     this.number = number;
     this.font = {
-      family: 'sans-serif',
+      family: 'Academico',
       size: 9,
       weight: 'bold',
     };

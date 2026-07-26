@@ -8,6 +8,7 @@ import { MusicSymbol } from "../MusicSymbol";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { Fraction } from "../../../Common/DataObjects/Fraction";
+import { DORICO_DEFAULT_TEXT_FONT_FAMILY } from "../DoricoTextFontRouting";
 /**
  * The vexflow adaptation of a pedal marking
  */
@@ -131,6 +132,7 @@ export class VexFlowPedal extends GraphicalPedal {
         }
         pedalMarking.setStyle(this.vfStyle);
         pedalMarking.setLine(this.line);
+        (pedalMarking as any).setFont?.({ family: DORICO_DEFAULT_TEXT_FONT_FAMILY });
         pedalMarking.setCustomText(this.DepressText, this.ReleaseText);
         //If our end note is at the end of a stave, set that value
         if(!this.endVfVoiceEntry ||
