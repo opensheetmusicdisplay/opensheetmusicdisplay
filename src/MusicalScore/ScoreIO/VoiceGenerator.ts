@@ -315,7 +315,7 @@ export class VoiceGenerator {
   private readArticulations(notationNode: IXmlElement, currentVoiceEntry: VoiceEntry, currentNote: Note): void {
     const articNode: IXmlElement = notationNode.element("articulations");
     if (articNode) {
-      this.articulationReader.addArticulationExpression(articNode, currentVoiceEntry);
+      this.articulationReader.addArticulationExpression(articNode, currentVoiceEntry, currentNote);
     }
     const fermaNode: IXmlElement = notationNode.element("fermata");
     if (fermaNode) {

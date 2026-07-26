@@ -863,6 +863,29 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
     }
 
+    private applySvgTextAnchor(node: Node, textAnchor: "start" | "middle" | "end"): void {
+        if (!textAnchor || !(node instanceof Element)) {
+            return;
+        }
+        const textNodes: Element[] = node.matches("text")
+            ? [node]
+            : Array.from(node.querySelectorAll("text"));
+        for (const textNode of textNodes) {
+            textNode.setAttribute("text-anchor", textAnchor);
+        }
+    }
+
+    private getSvgTextAnchorOffset(graphicalLabel: GraphicalLabel, lineWidth: number): number {
+        switch (graphicalLabel.SvgTextAnchor) {
+            case "middle":
+                return lineWidth / 2;
+            case "end":
+                return lineWidth;
+            default:
+                return 0;
+        }
+    }
+
     /**
      * Renders a Label to the screen (e.g. Title, composer..)
      * @param graphicalLabel holds the label string, the text height in units and the font parameters
@@ -910,6 +933,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             if (currLine.runs?.length > 0) {
                 let lineNode: Node;
                 let runOffset: number = 0;
+                const lineAnchorOffsetInPixel: number = this.calculatePixelDistance(
+                    this.getSvgTextAnchorOffset(graphicalLabel, currLine.width),
+                );
                 for (const run of currLine.runs) {
                     const runOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset + runOffset);
                     const runFontScale: number = run.fontScale ?? 1;
@@ -917,7 +943,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                     const runHeight: number = height * runFontScale;
                     const runFontHeightInPixel: number = fontHeightInPixel * runFontScale;
                     const linePosition: PointF2D = new PointF2D(
-                        screenPosition.x + runOffsetInPixel,
+                        screenPosition.x + runOffsetInPixel + lineAnchorOffsetInPixel,
                         screenPosition.y + fontHeightInPixel * runBaselineShift,
                     );
                     const runNode: Node =
@@ -931,6 +957,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                             color,
                             run.fontFamily || fontFamily,
                         );
+                    if (graphicalLabel.SvgTextAnchor && currLine.runs.length === 1) {
+                        this.applySvgTextAnchor(runNode, graphicalLabel.SvgTextAnchor);
+                    }
                     if (!lineNode) {
                         lineNode = runNode;
                     } else {
@@ -941,9 +970,18 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 newNode = lineNode;
             } else {
                 const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
-                const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
+                const lineAnchorOffsetInPixel: number = this.calculatePixelDistance(
+                    this.getSvgTextAnchorOffset(graphicalLabel, currLine.width),
+                );
+                const linePosition: PointF2D = new PointF2D(
+                    screenPosition.x + xOffsetInPixel + lineAnchorOffsetInPixel,
+                    screenPosition.y,
+                );
                 newNode =
                     this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
+                if (graphicalLabel.SvgTextAnchor) {
+                    this.applySvgTextAnchor(newNode, graphicalLabel.SvgTextAnchor);
+                }
             }
             if (!node) {
                 node = newNode;

@@ -22,6 +22,9 @@ export class GraphicalLabel extends Clickable {
     private label: Label;
     private rules: EngravingRules;
     public TextLines: GraphicalLabelLine[];
+    /** Optional SVG text-anchor override for single-run labels whose visual centering
+     *  should be delegated to the browser instead of OSMD's width estimate. */
+    public SvgTextAnchor: "start" | "middle" | "end";
     /** A reference to the Node in the SVG, if SVGBackend, otherwise undefined.
      *  Allows manipulation without re-rendering, e.g. for dynamics, lyrics, etc.
      *  For the Canvas backend, this is unfortunately not possible.

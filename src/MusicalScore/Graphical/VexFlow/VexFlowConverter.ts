@@ -24,6 +24,7 @@ import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
 import { Note, TremoloBetweenNotes, TremoloInfo } from "../../../MusicalScore/VoiceData/Note";
+import { Articulation } from "../../VoiceData/Articulation";
 import StaveNote = VF.StaveNote;
 import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
@@ -762,7 +763,20 @@ export class VexFlowConverter {
             return;
         }
 
-        for (const articulation of gNote.sourceNote.ParentVoiceEntry.Articulations) {
+        const sourceNote: Note = gNote.sourceNote;
+        const vexFlowGraphicalNote: VexFlowGraphicalNote = gNote as VexFlowGraphicalNote;
+        const noteArticulations: Articulation[] = sourceNote.Articulations || [];
+        const voiceEntryArticulations: Articulation[] =
+            vexFlowGraphicalNote.vfnoteIndex === 0
+                ? sourceNote.ParentVoiceEntry.Articulations.filter((articulation) =>
+                    articulation.articulationEnum === ArticulationEnum.fermata ||
+                    articulation.articulationEnum === ArticulationEnum.invertedfermata
+                )
+                : [];
+        const articulations: Articulation[] = [...noteArticulations, ...voiceEntryArticulations];
+        const modifierIndex: number = vexFlowGraphicalNote.vfnoteIndex ?? 0;
+
+        for (const articulation of articulations) {
             let vfArtPosition: number = VF.Modifier.Position.ABOVE;
 
             if (vfnote.getStemDirection() === VF.Stem.UP) {
@@ -869,7 +883,6 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.invertedfermata: {
                     const pve: VoiceEntry = gNote.sourceNote.ParentVoiceEntry;
-                    const sourceNote: Note = gNote.sourceNote;
                     // find inverted fermata, push it to last voice entry in staffentry list,
                     //   so that it doesn't overlap notes (gets displayed right below higher note)
                     //   TODO this could maybe be moved elsewhere or done more elegantly,
@@ -926,7 +939,7 @@ export class VexFlowConverter {
             }
             if (vfArt) {
                 vfArt.setPosition(vfArtPosition);
-                (vfnote as StaveNote).addModifier(vfArt, 0);
+                (vfnote as StaveNote).addModifier(vfArt, modifierIndex);
             }
         }
     }

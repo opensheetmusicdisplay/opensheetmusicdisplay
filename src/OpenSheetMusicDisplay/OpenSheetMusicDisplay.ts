@@ -1553,11 +1553,12 @@ export class OpenSheetMusicDisplay {
                 }
 
                 // restore old cursor state
-                if (this.rules.RestoreCursorAfterRerender) {
-                    this.cursors[i].hidden = hidden;
+                const recreatedCursor: Cursor = this.cursors[i];
+                if (this.rules.RestoreCursorAfterRerender && recreatedCursor) {
+                    recreatedCursor.hidden = hidden;
                     if (previousIterator) {
-                        this.cursors[i].iterator = previousIterator;
-                        this.cursors[i].update();
+                        recreatedCursor.iterator = previousIterator;
+                        recreatedCursor.update();
                     }
                 }
             }

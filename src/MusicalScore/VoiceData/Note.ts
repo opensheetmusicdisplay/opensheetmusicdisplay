@@ -14,6 +14,7 @@ import {NoteType} from "./NoteType";
 import { SourceMeasure } from "./SourceMeasure";
 import { TechnicalInstruction } from "./Instructions";
 import { Glissando } from "../../MusicalScore/VoiceData/Glissando";
+import { Articulation } from "./Articulation";
 
 /**
  * Represents a single pitch with a duration (length)
@@ -48,6 +49,7 @@ export class Note {
     /** The NoteType given in the XML, e.g. quarter, which can be a normal quarter or tuplet quarter -> can have different length/fraction */
     private noteTypeXml: NoteType;
     public DotsXml: number;
+    private articulations: Articulation[] = [];
     /** The amount of notes the tuplet of this note (if there is one) replaces. */
     private normalNotes: number;
     private isRestFlag: boolean;
@@ -135,6 +137,17 @@ export class Note {
     }
     public get ParentStaff(): Staff {
         return this.parentStaffEntry.ParentStaff;
+    }
+    public get Articulations(): Articulation[] {
+        return this.articulations;
+    }
+    public hasArticulation(articulation: Articulation): boolean {
+        for (const existingArticulation of this.articulations) {
+            if (existingArticulation.Equals(articulation)) {
+                return true;
+            }
+        }
+        return false;
     }
     public get Length(): Fraction {
         return this.length;

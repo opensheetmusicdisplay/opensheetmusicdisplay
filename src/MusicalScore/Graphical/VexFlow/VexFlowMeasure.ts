@@ -1719,7 +1719,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const graphicalVoiceEntries: GraphicalVoiceEntry[] = graphicalStaffEntry.graphicalVoiceEntries;
             for (const gve of graphicalVoiceEntries) {
                 const vfStaveNote: StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
-                VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0], this.rules);
+                for (const graphicalNote of gve.notes) {
+                    VexFlowConverter.generateArticulations(vfStaveNote, graphicalNote, this.rules);
+                }
             }
         }
     }
