@@ -236,12 +236,36 @@ function splitChordSymbolSegments(text: string): ChordLayoutSegment[] {
     const segments: ChordLayoutSegment[] = [{ text: rootText }];
     const suffixText: string = mainText.slice(rootText.length);
     if (suffixText) {
-        segments.push({ text: suffixText, superscript: true });
+        const baselinePrefix: string = matchChordBaselineQualityPrefix(suffixText);
+        if (baselinePrefix) {
+            segments.push({ text: baselinePrefix });
+        }
+        const superscriptText: string = suffixText.slice(baselinePrefix.length);
+        if (superscriptText) {
+            segments.push({ text: superscriptText, superscript: true });
+        }
     }
     if (bassText) {
         segments.push({ text: bassText });
     }
     return segments;
+}
+
+function matchChordBaselineQualityPrefix(text: string): string {
+    const lowered: string = text.toLowerCase();
+    if (lowered.startsWith("minor")) {
+        return text.slice(0, "minor".length);
+    }
+    if (lowered.startsWith("min")) {
+        return text.slice(0, "min".length);
+    }
+    if (lowered.startsWith("mi")) {
+        return text.slice(0, "mi".length);
+    }
+    if (lowered.startsWith("m") && !lowered.startsWith("maj")) {
+        return text.slice(0, "m".length);
+    }
+    return "";
 }
 
 function findChordBassIndex(text: string): number {

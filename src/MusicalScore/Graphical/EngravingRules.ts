@@ -810,7 +810,7 @@ export class EngravingRules {
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.MeasureNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.MeasureNumberLabelOffset = 2;
-        this.MeasureNumberLabelXOffset = -0.5;
+        this.MeasureNumberLabelXOffset = 0;
         this.TupletsRatioed = false;
         this.TupletsRatioedUseXMLValue = true;
         this.TupletsBracketed = false;

@@ -691,15 +691,17 @@ export abstract class MusicSheetCalculator {
         len = lyricsStaffEntriesList.length;
         for (const staffEntry of lyricsStaffEntriesList) {
 
-            // Filter verse numbers
-            const filteredLyricVersesNumber: string[] = [];
+            const chorusVerseNumbers: string[] = [];
+            const nonChorusVerseNumbers: string[] = [];
             let isChorus: boolean = true;
             for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
                 isChorus &&= staffEntry.LyricsEntries[i].LyricsEntry.IsChorus;
             }
             for (const lyricVerseNumber of lyricVersesNumber){
-                if (relevantVerseNumbers[lyricVerseNumber] === isChorus) {
-                    filteredLyricVersesNumber.push(lyricVerseNumber);
+                if (relevantVerseNumbers[lyricVerseNumber] === true) {
+                    chorusVerseNumbers.push(lyricVerseNumber);
+                } else if (relevantVerseNumbers[lyricVerseNumber] === false) {
+                    nonChorusVerseNumbers.push(lyricVerseNumber);
                 }
             }
 
@@ -711,12 +713,21 @@ export abstract class MusicSheetCalculator {
                 // read the verseNumber and get index of this number in the sorted LyricVerseNumbersList of Instrument
                 // eg verseNumbers: 2,3,4,6 => 1,2,3,4
                 const verseNumber: string = lyricEntry.LyricsEntry.VerseNumber;
-                const sortedLyricVerseNumberIndex: number = filteredLyricVersesNumber.indexOf(verseNumber);
                 const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight + this.rules.VerticalBetweenLyricsDistance +
                     this.rules.LyricsYOffsetToStaffHeight;
+                let versePositionIndex: number;
+                if (isChorus) {
+                    const chorusIndex: number = Math.max(0, chorusVerseNumbers.indexOf(verseNumber));
+                    const chorusBaseIndex: number = nonChorusVerseNumbers.length > 0
+                        ? Math.max(0, (nonChorusVerseNumbers.length - chorusVerseNumbers.length) / 2)
+                        : 0;
+                    versePositionIndex = chorusBaseIndex + chorusIndex;
+                } else {
+                    versePositionIndex = Math.max(0, nonChorusVerseNumbers.indexOf(verseNumber));
+                }
 
                 // Y-position calculated according to aforementioned mapping
-                const position: number = firstPosition + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * sortedLyricVerseNumberIndex;
+                const position: number = firstPosition + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * versePositionIndex;
                 // TODO not sure what this leadsheet lyrics positioning was supposed to be, but it seems to ALWAYS put the lyrics inside the stafflines now.
                 // if (this.leadSheet) {
                 //     position = 3.4 + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);

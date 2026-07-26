@@ -3,11 +3,19 @@ import {VoiceEntry} from "../VoiceEntry";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 
 export class LyricsEntry {
-    constructor(text: string, verseNumber: string, word: LyricWord, parent: VoiceEntry, syllableNumber: number = -1) {
+    constructor(
+        text: string,
+        verseNumber: string,
+        word: LyricWord,
+        parent: VoiceEntry,
+        syllableNumber: number = -1,
+        verseName?: string,
+    ) {
         this.text = text;
         this.word = word;
         this.parent = parent;
         this.verseNumber = verseNumber;
+        this.verseName = verseName?.trim().toLowerCase() || "";
         if (syllableNumber >= 0) {
             this.syllableIndex = syllableNumber;
         }
@@ -16,6 +24,7 @@ export class LyricsEntry {
     private word: LyricWord;
     private parent: VoiceEntry;
     private verseNumber: string;
+    private verseName: string;
     private syllableIndex: number;
     public extend: boolean;
 
@@ -43,12 +52,16 @@ export class LyricsEntry {
         return this.syllableIndex;
     }
 
+    public get VerseName(): string {
+        return this.verseName;
+    }
+
     public get IsTranslation(): boolean {
-        return this.VerseNumber.endsWith("translation");
+        return this.VerseName.endsWith("translation") || this.VerseNumber.endsWith("translation");
     }
 
     public get IsChorus(): boolean {
-        return this.VerseNumber.startsWith("chorus");
+        return this.VerseName === "chorus" || this.VerseNumber.startsWith("chorus");
     }
 
     public get FontStyle(): FontStyles {

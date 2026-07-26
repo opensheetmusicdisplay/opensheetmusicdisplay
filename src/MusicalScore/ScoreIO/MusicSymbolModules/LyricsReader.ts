@@ -6,7 +6,7 @@ import {ITextTranslation} from "../../Interfaces/ITextTranslation";
 import {MusicSheet} from "../../MusicSheet";
 
 export class LyricsReader {
-    private openLyricWords: { [_: number]: LyricWord } = {};
+    private openLyricWords: { [_: string]: LyricWord } = {};
     private currentLyricWord: LyricWord;
     private musicSheet: MusicSheet;
 
@@ -71,21 +71,34 @@ export class LyricsReader {
                                     syllabic = "middle";
                                 }
                             }
-                            let currentLyricVerseNumber: string = "1";
-                            if (lyricNode.attributes() !== undefined && lyricNode.attribute("number")) {
-                                currentLyricVerseNumber = lyricNode.attribute("number").value;
-                            }
+                            const currentLyricVerseName: string = this.readLyricVerseName(lyricNode);
+                            const currentLyricVerseNumber: string =
+                                this.resolveLyricVerseIdentifier(lyricNode, currentLyricVerseName);
                             let lyricsEntry: LyricsEntry = undefined;
                             if (syllabic === "single" || syllabic === "end") {
                                 if (this.openLyricWords[currentLyricVerseNumber]) { // word end given or some word still open
                                     this.currentLyricWord = this.openLyricWords[currentLyricVerseNumber];
                                     const syllableNumber: number = this.currentLyricWord.Syllables.length;
-                                    lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry, syllableNumber);
+                                    lyricsEntry = new LyricsEntry(
+                                        text,
+                                        currentLyricVerseNumber,
+                                        this.currentLyricWord,
+                                        currentVoiceEntry,
+                                        syllableNumber,
+                                        currentLyricVerseName,
+                                    );
                                     this.currentLyricWord.Syllables.push(lyricsEntry);
                                     delete this.openLyricWords[currentLyricVerseNumber];
                                     this.currentLyricWord = undefined;
                                 } else { // single syllable given or end given while no word has been started
-                                    lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, undefined, currentVoiceEntry);
+                                    lyricsEntry = new LyricsEntry(
+                                        text,
+                                        currentLyricVerseNumber,
+                                        undefined,
+                                        currentVoiceEntry,
+                                        -1,
+                                        currentLyricVerseName,
+                                    );
                                 }
                                 lyricsEntry.extend = lyricNode.element("extend") !== undefined;
                             } else if (syllabic === "begin") { // first finishing, if a word already is open (can only happen, when wrongly given)
@@ -95,17 +108,38 @@ export class LyricsReader {
                                 }
                                 this.currentLyricWord = new LyricWord();
                                 this.openLyricWords[currentLyricVerseNumber] = this.currentLyricWord;
-                                lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry, 0);
+                                lyricsEntry = new LyricsEntry(
+                                    text,
+                                    currentLyricVerseNumber,
+                                    this.currentLyricWord,
+                                    currentVoiceEntry,
+                                    0,
+                                    currentLyricVerseName,
+                                );
                                 this.currentLyricWord.Syllables.push(lyricsEntry);
                             } else if (syllabic === "middle") {
                                 if (this.openLyricWords[currentLyricVerseNumber]) {
                                     this.currentLyricWord = this.openLyricWords[currentLyricVerseNumber];
                                     const syllableNumber: number = this.currentLyricWord.Syllables.length;
-                                    lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry, syllableNumber);
+                                    lyricsEntry = new LyricsEntry(
+                                        text,
+                                        currentLyricVerseNumber,
+                                        this.currentLyricWord,
+                                        currentVoiceEntry,
+                                        syllableNumber,
+                                        currentLyricVerseName,
+                                    );
                                     this.currentLyricWord.Syllables.push(lyricsEntry);
                                 } else {
                                     // in case the wrong syllabel information is given, create a single Entry and add it to currentVoiceEntry
-                                    lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, undefined, currentVoiceEntry);
+                                    lyricsEntry = new LyricsEntry(
+                                        text,
+                                        currentLyricVerseNumber,
+                                        undefined,
+                                        currentVoiceEntry,
+                                        -1,
+                                        currentLyricVerseName,
+                                    );
                                 }
                             }
                             // add each LyricEntry to currentVoiceEntry
@@ -132,5 +166,26 @@ export class LyricsReader {
                 }
             }
         }
+    }
+
+    private readLyricVerseName(lyricNode: IXmlElement): string {
+        if (lyricNode.attributes() === undefined || !lyricNode.attribute("name")) {
+            return "";
+        }
+        return lyricNode.attribute("name").value.trim().toLowerCase();
+    }
+
+    private resolveLyricVerseIdentifier(lyricNode: IXmlElement, lyricVerseName: string): string {
+        const lyricNumberAttribute: string = lyricNode.attribute("number")?.value?.trim() || "";
+        if (lyricVerseName && !lyricNumberAttribute) {
+            return lyricVerseName;
+        }
+        if (!lyricVerseName || lyricVerseName === "verse" || !lyricNumberAttribute) {
+            return lyricNumberAttribute || "1";
+        }
+        if (lyricNumberAttribute.toLowerCase() === lyricVerseName) {
+            return lyricNumberAttribute;
+        }
+        return `${lyricVerseName}:${lyricNumberAttribute}`;
     }
 }
