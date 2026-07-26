@@ -91,14 +91,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(this.rules);
     MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
 
-    // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
-    //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
-    if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "gonville") {
-      (VF as any).DEFAULT_FONT_STACK = [(VF as any).Fonts?.Gonville, (VF as any).Fonts?.Bravura, (VF as any).Fonts?.Custom];
-    } else if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "petaluma") {
-      (VF as any).DEFAULT_FONT_STACK = [(VF as any).Fonts?.Petaluma, (VF as any).Fonts?.Gonville, (VF as any).Fonts?.Bravura];
-    }
-    // else keep new vexflow default Bravura (more cursive, bold)
   }
 
   protected clearRecreatedObjects(): void {
@@ -178,7 +170,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const allVoices: VF.Voice[] = [];
     const formatter: VF.Formatter = new VF.Formatter({
       // maxIterations: 2,
-      softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
+      softmaxFactor: this.rules.SoftmaxFactorVexFlow,
     });
 
     let maxStaffEntries: number = measures[0].staffEntries.length;

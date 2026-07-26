@@ -497,6 +497,8 @@ export class EngravingRules {
     public DefaultColorCursor: string;
     public DefaultFontFamily: string;
     public DefaultFontStyle: FontStyles;
+    /** Legacy compatibility field. The modern VexFlow runtime in this fork uses its own
+     * notation-font stack directly, so this no longer switches the active notation font. */
     public DefaultVexFlowNoteFont: string;
     public MaxMeasureToDrawIndex: number;
     /** The setting given in osmd.setOptions(), which may lead to a different index if there's a pickup measure. */
@@ -993,7 +995,7 @@ export class EngravingRules {
         this.MetronomeMarksDrawn = true;
         this.MetronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.MetronomeMarkYShift = -1.0; // note this is correlated with TempoYSpacing: one-sided change can cause collisions
-        this.SoftmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
+        this.SoftmaxFactorVexFlow = 15; // Lower than the VexFlow default to avoid overly wide note spacing.
         // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
         // if too low, smaller notes aren't positioned correctly.
         this.StaggerSameWholeNotes = true;
@@ -1016,7 +1018,7 @@ export class EngravingRules {
         this.DefaultColorCursor = "#33e02f"; // green
         this.DefaultFontFamily = "Academico"; // default score text family
         this.DefaultFontStyle = FontStyles.Regular;
-        this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
+        this.DefaultVexFlowNoteFont = "Bravura"; // legacy no-op compatibility value on the modern VexFlow path
         this.MaxMeasureToDrawIndex = Number.MAX_VALUE;
         this.MaxMeasureToDrawNumber = Number.MAX_VALUE;
         this.MinMeasureToDrawIndex = 0;

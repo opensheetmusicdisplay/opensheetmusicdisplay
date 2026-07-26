@@ -39,6 +39,8 @@ import { Note } from "../../VoiceData/Note";
 import { TabNote } from "../../VoiceData/TabNote";
 import { getDoricoDefaultTextFontFamily } from "../DoricoTextFontRouting";
 
+const DOUBLE_HEAVY_BARLINE_TYPE: number = 8;
+
 // type StemmableNote = VF.StemmableNote;
 
 function formatVoltaRange(startIndex: number, endIndex: number): string {
@@ -529,7 +531,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         this.stave.setEndBarType(VF.Barline.type.END);
                         break;
                     case SystemLinesEnum.DoubleBold:
-                        this.stave.setEndBarType(8); // legacy double-heavy barline type
+                        this.stave.setEndBarType(DOUBLE_HEAVY_BARLINE_TYPE);
                         break;
                     case SystemLinesEnum.None:
                         this.stave.setEndBarType(VF.Barline.type.NONE);
