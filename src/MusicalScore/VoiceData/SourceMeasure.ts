@@ -92,6 +92,9 @@ export class SourceMeasure {
      *  Not the same as GraphicalMeasure.hasOnlyRests, because one SourceMeasure can have many GraphicalMeasures (staffs).
      */
     public allRests: boolean = false;
+    /** Snapshot of the authored/XML multi-rest count before any auto-generated rerender state mutates multipleRestMeasures. */
+    public initialMultipleRestMeasures: number = undefined;
+    public initialMultipleRestMeasuresInitialized: boolean = false;
     public isReducedToMultiRest: boolean = false;
     /** If this measure is a MultipleRestMeasure, this is the number of the measure in that sequence of measures. */
     public multipleRestMeasureNumber: number = 0;

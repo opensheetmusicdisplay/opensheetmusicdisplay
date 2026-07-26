@@ -150,6 +150,16 @@ export abstract class MusicSheetCalculator {
         this.graphicalMusicSheet.Initialize();
         const measureList: GraphicalMeasure[][] = this.graphicalMusicSheet.MeasureList;
 
+        for (const sourceMeasure of musicSheet.SourceMeasures) {
+            if (!sourceMeasure.initialMultipleRestMeasuresInitialized) {
+                sourceMeasure.initialMultipleRestMeasures = sourceMeasure.multipleRestMeasures;
+                sourceMeasure.initialMultipleRestMeasuresInitialized = true;
+            }
+            sourceMeasure.multipleRestMeasures = sourceMeasure.initialMultipleRestMeasures;
+            sourceMeasure.isReducedToMultiRest = false;
+            sourceMeasure.multipleRestMeasureNumber = 0;
+        }
+
         // one AccidentalCalculator for each Staff (regardless of Instrument)
         const accidentalCalculators: AccidentalCalculator[] = this.createAccidentalCalculators();
 

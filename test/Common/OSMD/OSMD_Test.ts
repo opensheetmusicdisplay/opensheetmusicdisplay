@@ -15,6 +15,7 @@ import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote
 import { Fraction } from "../../../src/Common/DataObjects/Fraction";
 import { AccidentalEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
 import { TransposeCalculator } from "../../../src/Plugins/Transpose/TransposeCalculator";
+import { SourceMeasure } from "../../../src/MusicalScore/VoiceData/SourceMeasure";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -495,6 +496,131 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             }
             // After 100 steps in the visible score, cursor reached 3rd note from 17, a C
             expect(osmd.cursors[0].NotesUnderCursor()[0].halfTone).to.equal(60);
+        });
+    });
+    describe("auto multi-rest rerender with hidden instruments", () => {
+        const scoreXml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voice</part-name>
+    </score-part>
+    <score-part id="P2">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <note><rest measure="yes"/><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="3">
+      <note><rest measure="yes"/><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="4">
+      <note><rest measure="yes"/><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="5">
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch><step>E</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="3">
+      <note>
+        <pitch><step>F</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="4">
+      <note>
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="5">
+      <note>
+        <pitch><step>A</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>`;
+
+        it("recalculates auto multi-rests from scratch when hiding and re-showing an instrument", () => {
+            const div: HTMLElement = TestUtils.getDivElement(document);
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+            return osmd.load(scoreXml).then(() => {
+                osmd.render();
+
+                const restMeasures: SourceMeasure[] = osmd.Sheet.SourceMeasures.slice(1, 4);
+                for (const measure of restMeasures) {
+                    expect(measure.isReducedToMultiRest).to.equal(false);
+                    expect(measure.multipleRestMeasureNumber).to.equal(0);
+                    expect(measure.multipleRestMeasures || 0).to.equal(0);
+                }
+
+                osmd.Sheet.Instruments[1].Visible = false;
+                osmd.updateGraphic();
+                osmd.render();
+
+                expect(restMeasures[0].multipleRestMeasures).to.equal(3);
+                expect(restMeasures[0].multipleRestMeasureNumber).to.equal(1);
+                expect(restMeasures[1].multipleRestMeasureNumber).to.equal(2);
+                expect(restMeasures[2].multipleRestMeasureNumber).to.equal(3);
+                for (const measure of restMeasures) {
+                    expect(measure.isReducedToMultiRest).to.equal(true);
+                }
+
+                osmd.Sheet.Instruments[1].Visible = true;
+                osmd.updateGraphic();
+                osmd.render();
+
+                for (const measure of restMeasures) {
+                    expect(measure.isReducedToMultiRest).to.equal(false);
+                    expect(measure.multipleRestMeasureNumber).to.equal(0);
+                    expect(measure.multipleRestMeasures || 0).to.equal(0);
+                }
+            });
         });
     });
     describe("cursor", () => {
