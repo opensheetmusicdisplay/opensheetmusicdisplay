@@ -1,4 +1,5 @@
 import log from "loglevel";
+import { Font, FontInfo } from "vexflow";
 
 /**
  * A virtual VexFlow rendering context that computes the vertical extents (min and max y)
@@ -69,6 +70,9 @@ export class GeometricSkyBottomLineContext {
     private currentStrokeStyle: string = "#000000";
     private strokeTransparent: boolean = false;
     private currentFont: string = "10pt Arial";
+    private currentRotationDegrees: number = 0;
+    private currentRotationPivotX: number = 0;
+    private currentRotationPivotY: number = 0;
     private stateStack: IGeometricContextState[] = [];
 
     // current path: flattened line segments in device coordinates, stored as quadruples (x0, y0, x1, y1)
@@ -362,6 +366,11 @@ export class GeometricSkyBottomLineContext {
         // no-op
     }
 
+    /** Pointer rectangles are only for interactivity in real canvas/SVG backends. */
+    public pointerRect(x: number, y: number, width: number, height: number): GeometricSkyBottomLineContext {
+        return this;
+    }
+
     /**
      * Merges the ink extents of the text, character by character (a single box for the whole string
      * would e.g. claim ascender height above lowercase letters, unlike the rasterized text the
@@ -386,8 +395,9 @@ export class GeometricSkyBottomLineContext {
             const inkLeft: number = pen + charExtents.inkLeft * absScaleX;
             const inkRight: number = pen + charExtents.inkRight * absScaleX;
             if (inkRight > inkLeft) { // e.g. spaces have no ink
-                this.mergeColumns(inkLeft, inkRight,
-                    baseline - charExtents.ascent * absScaleY, baseline + charExtents.descent * absScaleY);
+                const top: number = baseline - charExtents.ascent * absScaleY;
+                const bottom: number = baseline + charExtents.descent * absScaleY;
+                this.mergeTextBounds(inkLeft, inkRight, top, bottom);
             }
             pen += charExtents.advance * absScaleX;
         }
@@ -452,6 +462,9 @@ export class GeometricSkyBottomLineContext {
             strokeStyle: this.currentStrokeStyle,
             strokeTransparent: this.strokeTransparent,
             font: this.currentFont,
+            rotationDegrees: this.currentRotationDegrees,
+            rotationPivotX: this.currentRotationPivotX,
+            rotationPivotY: this.currentRotationPivotY,
         });
     }
 
@@ -468,6 +481,9 @@ export class GeometricSkyBottomLineContext {
             this.currentStrokeStyle = state.strokeStyle;
             this.strokeTransparent = state.strokeTransparent;
             this.currentFont = state.font;
+            this.currentRotationDegrees = state.rotationDegrees;
+            this.currentRotationPivotX = state.rotationPivotX;
+            this.currentRotationPivotY = state.rotationPivotY;
         }
     }
 
@@ -524,9 +540,8 @@ export class GeometricSkyBottomLineContext {
         this.currentLineWidth = width;
     }
 
-    public setFont(family: string, size: number, weight: string|number): GeometricSkyBottomLineContext {
-        // same format as VexFlow's CanvasContext.setFont():
-        this.currentFont = (weight || "") + " " + size + "pt " + family;
+    public setFont(f?: string | FontInfo, size?: string | number, weight?: string|number, style?: string): GeometricSkyBottomLineContext {
+        this.currentFont = Font.toCSSString(Font.validate(f, size, weight, style));
         return this;
     }
 
@@ -541,6 +556,15 @@ export class GeometricSkyBottomLineContext {
 
     public set font(font: string) {
         this.currentFont = font;
+    }
+
+    public getFont(): string {
+        return this.currentFont;
+    }
+
+    public resize(width: number, height: number): GeometricSkyBottomLineContext {
+        this.initialize(width, height);
+        return this;
     }
 
     //#endregion
@@ -558,6 +582,17 @@ export class GeometricSkyBottomLineContext {
 
     public closeGroup(): void {
         // no-op
+    }
+
+    public openRotation(angleDegrees: number, x: number, y: number): void {
+        this.save();
+        this.currentRotationDegrees = angleDegrees;
+        this.currentRotationPivotX = this.deviceX(x);
+        this.currentRotationPivotY = this.deviceY(y);
+    }
+
+    public closeRotation(): void {
+        this.restore();
     }
 
     public getGroup(): undefined {
@@ -716,6 +751,37 @@ export class GeometricSkyBottomLineContext {
         }
     }
 
+    private mergeTextBounds(left: number, right: number, top: number, bottom: number): void {
+        if (this.currentRotationDegrees === 0) {
+            this.mergeColumns(left, right, top, bottom);
+            return;
+        }
+        const topLeft: IDevicePoint = this.rotateDevicePoint(left, top);
+        const topRight: IDevicePoint = this.rotateDevicePoint(right, top);
+        const bottomLeft: IDevicePoint = this.rotateDevicePoint(left, bottom);
+        const bottomRight: IDevicePoint = this.rotateDevicePoint(right, bottom);
+        const rotatedLeft: number = Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+        const rotatedRight: number = Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+        const rotatedTop: number = Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+        const rotatedBottom: number = Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+        this.mergeColumns(rotatedLeft, rotatedRight, rotatedTop, rotatedBottom);
+    }
+
+    private rotateDevicePoint(x: number, y: number): IDevicePoint {
+        if (this.currentRotationDegrees === 0) {
+            return { x, y };
+        }
+        const radians: number = this.currentRotationDegrees * Math.PI / 180;
+        const cos: number = Math.cos(radians);
+        const sin: number = Math.sin(radians);
+        const relativeX: number = x - this.currentRotationPivotX;
+        const relativeY: number = y - this.currentRotationPivotY;
+        return {
+            x: this.currentRotationPivotX + relativeX * cos - relativeY * sin,
+            y: this.currentRotationPivotY + relativeX * sin + relativeY * cos,
+        };
+    }
+
     /** Font size in px, parsed from the current font string (e.g. "italic 10pt Arial" or "12px Times"). */
     private fontSizeInPixels(): number {
         const match: RegExpMatchArray = this.currentFont?.match(/([0-9.]+)\s*(pt|px)/);
@@ -804,10 +870,12 @@ export class GeometricSkyBottomLineContext {
                     advance,
                     ascent: metrics.actualBoundingBoxAscent,
                     descent: metrics.actualBoundingBoxDescent,
-                    // ink span relative to the pen: [-actualBoundingBoxLeft, actualBoundingBoxRight],
-                    // clamped to the advance box (some environments report slightly off side bearings)
-                    inkLeft: Math.max(0, -metrics.actualBoundingBoxLeft),
-                    inkRight: Math.min(advance, metrics.actualBoundingBoxRight),
+                    // Ink span relative to the pen. Keep overhangs outside the advance box:
+                    // clamping them inward drops the tails of music glyphs at the symbol edges,
+                    // which then shortens the skyline/bottom-line exactly where the raster path
+                    // still sees ink.
+                    inkLeft: -metrics.actualBoundingBoxLeft,
+                    inkRight: metrics.actualBoundingBoxRight,
                 };
             }
             if (!extents) {
@@ -1016,4 +1084,12 @@ interface IGeometricContextState {
     strokeStyle: string;
     strokeTransparent: boolean;
     font: string;
+    rotationDegrees: number;
+    rotationPivotX: number;
+    rotationPivotY: number;
+}
+
+interface IDevicePoint {
+    x: number;
+    y: number;
 }

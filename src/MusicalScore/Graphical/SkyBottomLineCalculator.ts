@@ -8,6 +8,19 @@ import { BoundingBox } from "./BoundingBox";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
 import { GeometricSkyBottomLineContext } from "./GeometricSkyBottomLineContext";
+
+function getRasterImageDataContext(vexFlowContext: any): CanvasRenderingContext2D | undefined {
+    if (!vexFlowContext) {
+        return undefined;
+    }
+    if (typeof vexFlowContext.getImageData === "function") {
+        return vexFlowContext as CanvasRenderingContext2D;
+    }
+    if (typeof vexFlowContext.context2D?.getImageData === "function") {
+        return vexFlowContext.context2D as CanvasRenderingContext2D;
+    }
+    return undefined;
+}
 /**
  * This class calculates and holds the skyline and bottom line information.
  * It also has functions to update areas of the two lines if new elements are
@@ -153,7 +166,12 @@ export class SkyBottomLineCalculator {
             // imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order
             // RGBA is 32 bit word with 8 bits red, 8 bits green, 8 bits blue and 8 bit alpha. Alpha should be 0 for all background colors.
             // Since we are only interested in black or white we can take 32bit words at once
-            const imageData: any = ctx.getImageData(0, 0, width, height);
+            const rasterContext: CanvasRenderingContext2D | undefined = getRasterImageDataContext(ctx);
+            const imageData: any = rasterContext?.getImageData(0, 0, width, height);
+            if (!imageData) {
+                log.warn("SkyBottomLineCalculator.calculateLines: no raster getImageData context available");
+                continue;
+            }
             const rgbaLength: number = 4;
             const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * samplingUnit), 1);
             const tmpSkyLine: number[] = new Array(measureArrayLength);

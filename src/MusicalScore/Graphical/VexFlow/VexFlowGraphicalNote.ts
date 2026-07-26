@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 import {ColoringOptions, GraphicalNote, VisibilityOptions} from "../GraphicalNote";
 import {Note} from "../../VoiceData/Note";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
@@ -114,6 +113,30 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return this.vfnote[0].getAttribute("id");
     }
 
+    private getBeamStartCount(): number {
+        const vfNote: any = this.vfnote?.[0];
+        const beam: any = vfNote?.beam;
+        if (!beam || typeof vfNote?.getStemX !== "function") {
+            return 0;
+        }
+        const noteStemX: number = vfNote.getStemX() - VF.Stem.WIDTH / 2;
+        if (!isFinite(noteStemX)) {
+            return 0;
+        }
+        const durations: string[] = ["4", "8", "16", "32", "64", "128", "256", "512", "1024"];
+        let count: number = 0;
+        for (const duration of durations) {
+            const beamLines: { start?: number }[] | undefined = beam.getBeamLines?.(duration);
+            if (!beamLines?.length) {
+                continue;
+            }
+            if (beamLines.some((beamLine) => Math.abs((beamLine.start ?? Number.NaN) - noteStemX) < 0.01)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     /** Toggle visibility of the note, making it and its stem and beams invisible for `false`.
      * By default, this will also hide the note's slurs and ties (see visibilityOptions).
      * (This only works with the default SVG backend, not with the Canvas backend/renderer)
@@ -185,7 +208,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         if (!this.vfnote) {
             return undefined; // e.g. MultiRestMeasure
         }
-        return this.vfnote[0].getAttribute("el");
+        return this.vfnote[0].getAttribute("el") ?? this.vfnote[0].getSVGElement?.();
     }
 
     /** Gets the SVG path element of the note's stem. */
@@ -196,7 +219,10 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             return groupOrPath.children[0] as HTMLElement;
             // We want to return the same type of node every time, not a path node if no beam and a group node if it has a beam.
         }
-        return groupOrPath;
+        if (groupOrPath) {
+            return groupOrPath;
+        }
+        return (this.vfnote?.[0] as any)?.getStem?.()?.getSVGElement?.() as HTMLElement;
         // more correct, but Vex.Prefix() is not in the definitions:
         //return document.getElementById((Vex as any).Prefix(this.getSVGId() + "-stem"));
     }
@@ -210,6 +236,16 @@ export class VexFlowGraphicalNote extends GraphicalNote {
                 break;
             }
             beamSVGs.push(newSVG);
+        }
+        if (beamSVGs.length > 0) {
+            return beamSVGs;
+        }
+        const beamSvg: HTMLElement = (this.vfnote?.[0] as any)?.beam?.getSVGElement?.() as HTMLElement;
+        const beamStartCount: number = this.getBeamStartCount();
+        for (let i: number = 0; i < beamStartCount; i++) {
+            if (beamSvg) {
+                beamSVGs.push(beamSvg);
+            }
         }
         return beamSVGs;
     }

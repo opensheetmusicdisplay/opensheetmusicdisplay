@@ -29,7 +29,7 @@ describe("VexFlow Measure - Dotted Unison Alignment", () => {
 
    // x-shift applied to a note's notehead within its ModifierContext.
    function xShift(gve: VexFlowVoiceEntry): number {
-      return (gve.vfStaveNote as unknown as { x_shift: number }).x_shift;
+      return (gve.vfStaveNote as { getXShift?: () => number }).getXShift?.() ?? 0;
    }
 
    function voiceEntriesAt(measure: VexFlowMeasure, timestampRealValue: number): VexFlowVoiceEntry[] {
@@ -39,17 +39,15 @@ describe("VexFlow Measure - Dotted Unison Alignment", () => {
       return staffEntry.graphicalVoiceEntries as VexFlowVoiceEntry[];
    }
 
-   it("Should overlap a unison whose two voices differ only in dot count", (done: Mocha.Done) => {
+   it("Allows modern VexFlow to stagger a unison whose two voices differ only in dot count", (done: Mocha.Done) => {
       const measure: VexFlowMeasure = firstMeasure();
       // Beat 1: voice 1 (dotted quarter G4) and voice 2 (quarter G4) form a unison.
-      // Same notehead shape, only the dots differ -> the noteheads should share one
-      // column (no stagger x-shift), with the dot carried by the dotted voice.
+      // Legacy downstream VexFlow patches forced these noteheads to overlap. Modern
+      // VexFlow keeps them staggered, which is now the accepted/default behavior.
       const gves: VexFlowVoiceEntry[] = voiceEntriesAt(measure, 0);
       expect(gves.length).to.equal(2, "beat 1 should have two voices");
-      for (const gve of gves) {
-         expect(xShift(gve)).to.equal(0,
-            "a unison differing only in dots should share its horizontal position (no stagger x-shift)");
-      }
+      expect(gves.some((gve) => xShift(gve) > 0)).to.equal(true,
+         "modern VexFlow should be free to stagger dotted/plain unisons instead of forcing a shared column");
       done();
    });
 

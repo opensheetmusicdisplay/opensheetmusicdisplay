@@ -1,5 +1,4 @@
-import Vex, { IRenderContext } from "vexflow";
-import VF = Vex.Flow;
+import VexFlow, * as VF from "vexflow";
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -64,15 +63,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
         // vexflow 3.x: change default font
         if (this.rules.DefaultVexFlowNoteFont === "gonville") {
-            (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+            (VF as any).DEFAULT_FONT_STACK = [(VF as any).Fonts?.Gonville, (VF as any).Fonts?.Bravura, (VF as any).Fonts?.Custom];
         } // else keep new vexflow default Bravura (more cursive, bold).
 
         // sizing defaults in Vexflow
-        (Vex.Flow as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
-        (Vex.Flow as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
+        VexFlow.STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
+        VexFlow.STEM_WIDTH = this.rules.StemWidth * unitInPixels;
         // sets scale/size of notes/rest notes:
-        (Vex.Flow as any).DEFAULT_NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
-        (Vex.Flow as any).DEFAULT_TAB_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
+        VexFlow.NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
+        VexFlow.TABLATURE_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
 
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
@@ -121,7 +120,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawStaffLine(staffLine: StaffLine): void {
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.RenderContext = this.backend.getContext();
         const stafflineNode: Node = ctx.openGroup();
         if (stafflineNode) {
             (stafflineNode as SVGGElement).classList.add("staffline");
@@ -210,7 +209,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         } else {
             const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;
             if (vfTie) {
-                const context: IRenderContext = this.backend.getContext();
+                const context: VF.RenderContext = this.backend.getContext();
                 vfTie.setContext(context);
                 vfTie.draw();
             }
@@ -722,7 +721,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (!this.lazyDrawsLeftEdgeOnce()) {
             return; // lazy horizontal: the brace is a once-only left-edge element, drawn with the first batch
         }
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.RenderContext = this.backend.getContext();
         ctx.openGroup("brace");
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBrace = (brace as VexFlowInstrumentBrace);
@@ -734,7 +733,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (!this.lazyDrawsLeftEdgeOnce()) {
             return; // lazy horizontal: the group bracket is a once-only left-edge element (first batch only)
         }
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.RenderContext = this.backend.getContext();
         ctx.openGroup("bracket");
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBracket = (bracket as VexFlowInstrumentBracket);
@@ -763,10 +762,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                     continue; // lazy horizontal: span not yet fully in the frontier
                 }
                 const vexFlowOctaveShift: VexFlowOctaveShift = graphicalOctaveShift as VexFlowOctaveShift;
-                const ctx: Vex.IRenderContext = this.backend.getContext();
+                const ctx: VF.RenderContext = this.backend.getContext();
                 const textBracket: VF.TextBracket = vexFlowOctaveShift.getTextBracket();
                 if (this.rules.DefaultColorMusic) {
-                    (textBracket as any).render_options.color = this.rules.DefaultColorMusic;
+                    textBracket.renderOptions.color = this.rules.DefaultColorMusic;
                 }
                 textBracket.setContext(ctx);
                 try {
@@ -785,9 +784,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 if (!this.lazyDrawsSpanToMeasure(vexFlowPedal.endMeasure)) {
                     continue; // lazy horizontal: span not yet fully in the frontier
                 }
-                const ctx: Vex.IRenderContext = this.backend.getContext();
-                const pedalMarking: Vex.Flow.PedalMarking = vexFlowPedal.getPedalMarking();
-                (pedalMarking as any).render_options.color = this.rules.DefaultColorMusic;
+                const ctx: VF.RenderContext = this.backend.getContext();
+                const pedalMarking: VF.PedalMarking = vexFlowPedal.getPedalMarking();
+                pedalMarking.renderOptions.color = this.rules.DefaultColorMusic;
                 pedalMarking.setContext(ctx);
                 pedalMarking.draw();
             }
@@ -802,8 +801,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 if (!this.lazyDrawsSpanToMeasure(wavyEndMeasure)) {
                     continue; // lazy horizontal: span not yet fully in the frontier
                 }
-                const ctx: Vex.IRenderContext = this.backend.getContext();
-                const vfVibratoBracket: Vex.Flow.VibratoBracket = vexFlowVibratoBracket.getVibratoBracket();
+                const ctx: VF.RenderContext = this.backend.getContext();
+                const vfVibratoBracket: VF.VibratoBracket = vexFlowVibratoBracket.getVibratoBracket();
                 (vfVibratoBracket as any).setContext(ctx);
                 vfVibratoBracket.draw();
             }

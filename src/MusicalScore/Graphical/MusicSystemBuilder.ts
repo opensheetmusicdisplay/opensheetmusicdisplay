@@ -21,6 +21,7 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SystemLinePosition} from "./SystemLinePosition";
 import { MusicSheet } from "../MusicSheet";
+import * as VF from "vexflow";
 
 export class MusicSystemBuilder {
     protected measureList: GraphicalMeasure[][];
@@ -532,7 +533,7 @@ export class MusicSystemBuilder {
             );
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
         }
-        staves[0].formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
+        VF.Stave.formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
         return totalBeginInstructionLengthX;
     }
 

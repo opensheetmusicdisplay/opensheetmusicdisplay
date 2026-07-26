@@ -13,8 +13,7 @@ import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
 import { MusicSystem } from "../../../src/MusicalScore/Graphical/MusicSystem";
 import { BoundingBox } from "../../../src/MusicalScore/Graphical/BoundingBox";
 import { TestUtils } from "../../Util/TestUtils";
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "vexflow";
 
 interface LabelRect {
     left: number;
