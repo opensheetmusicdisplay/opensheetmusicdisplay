@@ -164,6 +164,10 @@ export class GraphicalSlur extends GraphicalCurve {
                 points.push(pointF);
             }
 
+            // DEBUG: store original skyline points for SVG overlay visualization.
+            this.debugSkyPoints = points.map((p: PointF2D) => new PointF2D(p.x, p.y));
+            this.debugSkyCategories = points.map((_) => "skyline");
+
             // Angle between original x-Axis and Line from Start-Point to End-Point
             const startEndLineAngleRadians: number = (Math.atan((endY - startY) / (endX - startX)));
 
@@ -730,7 +734,10 @@ export class GraphicalSlur extends GraphicalCurve {
         // at t=0.5 with f=0.75; near edges f is smaller so cp_y must be higher.
         const skylineClearance: number = 1.5; // OSMD units (~15px VF5)
         let overrideFired: boolean = false;
-        if (this.placement === PlacementEnum.Above) {
+        // Only fire override for cross-staff slurs. Same-staff skyline includes
+        // beam/stem geometry that belongs to the same note group — the natural
+        // angle-based bezier clears the noteheads without ballooning.
+        if (this.placement === PlacementEnum.Above && this.slur?.isCrossed?.()) {
             if (points.length > 0) {
                 const angleCpY: number = leftCp.y;
                 // Compute required cp_y for each skyline point based on its X position.
