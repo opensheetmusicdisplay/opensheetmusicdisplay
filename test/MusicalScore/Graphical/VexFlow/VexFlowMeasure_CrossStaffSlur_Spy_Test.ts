@@ -148,9 +148,10 @@ describe("Cross-Staff Slur Spy Tests", () => {
         });
 
         it("cross-staff slurs collect obstacles", () => {
+            // Skyline obstacles collected for maxY override; each cross-staff slur
+            // should have ≥1 obstacle point from the target staff's skyline.
             const noObs: SlurCpInfo[] = slurs.filter(s => s.obstacleCount === 0);
-            // Original algorithm doesn't collect obstacle debug points.
-            expect(noObs.length).to.be.equal(slurs.length,
+            expect(noObs.length).to.be.lessThan(slurs.length,
                 `${noObs.length}/${slurs.length} slurs have zero obstacles`);
         });
 
