@@ -28,6 +28,8 @@ export class GraphicalSlur extends GraphicalCurve {
     public debugSkyPoints: PointF2D[] = [];
     /** Labels for each debug obstacle point. */
     public debugSkyCategories: string[] = [];
+    /** Minimum cp_y from cross-staff merged-obstacle clearance. */
+    private mergedClearanceCpY: number = -Infinity;
 
     constructor(slur: Slur, rules?: EngravingRules) {
         super();
@@ -92,6 +94,7 @@ export class GraphicalSlur extends GraphicalCurve {
         const minAngle: number = rules.SlurTangentMinAngle;
         const maxAngle: number = rules.SlurTangentMaxAngle;
         let points: PointF2D[];
+        let localPointCount: number = 0;
 
         const isAbove: boolean = this.placement === PlacementEnum.Above;
         const yDir: number = isAbove ? -1 : 1; // flip Y for Above (skyline negative, transform negates)
@@ -104,6 +107,9 @@ export class GraphicalSlur extends GraphicalCurve {
         // Collect sky (Above) or bottom (Below) line points
         if (isAbove) {
             points = this.calculateTopPoints(new PointF2D(startX, startY), new PointF2D(endX, endY), staffLine, skyBottomLineCalculator);
+            // Track how many points come from the local staff vs merged staves.
+            // Only local points feed the maxY override; merged points still shape angles.
+            localPointCount = points.length;
             // For cross-staff slurs, merge other staves' skylines into obstacle set
             if (this.slur && this.slur.isCrossed()) {
                 const musicSystem: any = staffLine.ParentMusicSystem;
@@ -126,8 +132,15 @@ export class GraphicalSlur extends GraphicalCurve {
                             ? otherSl.SkyBottomLineCalculator.SamplingUnit : sampUnit;
                         const sIdx: number = Math.max(0, Math.floor(startX * otherSampUnit));
                         const eIdx: number = Math.min(otherSky.length, Math.ceil(endX * otherSampUnit));
+                        const chordSpan: number = endX - startX;
                         for (let si: number = sIdx; si < eIdx; si++) {
-                            points.push(new PointF2D(si / otherSampUnit, otherSky[si] + yOffset));
+                            // Interpolate yOffset linearly from 0 at startX to full at endX.
+                            // The chord line itself transitions between staves, so points
+                            // near startNote should not be shifted by the full staff gap.
+                            const x: number = si / otherSampUnit;
+                            const t: number = chordSpan > 0 ? (x - startX) / chordSpan : 0;
+                            const interpYOffset: number = yOffset * Math.max(0, Math.min(1, t));
+                            points.push(new PointF2D(x, otherSky[si] + interpYOffset));
                         }
                     }
                 }
@@ -136,6 +149,7 @@ export class GraphicalSlur extends GraphicalCurve {
             this.debugSkyCategories = points.map((_) => "skyline");
         } else {
             points = this.calculateBottomPoints(new PointF2D(startX, startY), new PointF2D(endX, endY), staffLine, skyBottomLineCalculator);
+            localPointCount = points.length;
         }
 
         if (points.length === 0) {
@@ -157,6 +171,46 @@ export class GraphicalSlur extends GraphicalCurve {
             transformedPoints.push(rotationMatrix.vectorMultiplication(new PointF2D(pt.x - startX, yDir * (pt.y - startY))));
         }
 
+        // Cross-staff merged obstacle clearance: compute required cp_y using
+        // original-space chord fraction (t_orig), not transformed t. The rotation
+        // shifts X for high-Y points, making them appear near-end in transformed
+        // space where the bezier is too flat to clear them.
+        // Also applies a staff-gap-based minimum lift when no merged obstacle
+        // is above the chord in the mid-span (skyline may miss small obstacles).
+        this.mergedClearanceCpY = -Infinity;
+        if (this.slur?.isCrossed() && isAbove && points.length > localPointCount) {
+            const chordDx: number = endX - startX;
+            const chordDy: number = endY - startY;
+            const chordLenSq: number = chordDx * chordDx + chordDy * chordDy;
+            const minT: number = 0.15;
+            const maxT: number = 0.85;
+            const maxMult: number = 1.5;
+            for (let i: number = localPointCount; i < points.length; i++) {
+                const orig: PointF2D = points[i];
+                const dx: number = orig.x - startX;
+                const dy: number = orig.y - startY;
+                const tOrig: number = (dx * chordDx + dy * chordDy) / chordLenSq;
+                if (tOrig < minT || tOrig > maxT) { continue; }
+                const trans: PointF2D = transformedPoints[i];
+                if (trans.y <= 0) { continue; }
+                const needed: number = Math.min(
+                    trans.y / (3 * tOrig * (1 - tOrig)),
+                    trans.y * maxMult,
+                );
+                if (needed > this.mergedClearanceCpY) {
+                    this.mergedClearanceCpY = needed;
+                }
+            }
+            // Staff-gap fallback: if no merged obstacle detected above chord,
+            // apply a gap-based minimum lift. Assumes cross-staff slurs need
+            // extra arc to clear remote obstacles the skyline may miss.
+            const staffGap: number = Math.abs(chordDy);
+            const gapMinCpY: number = staffGap * 0.7;
+            if (this.mergedClearanceCpY < gapMinCpY) {
+                this.mergedClearanceCpY = gapMinCpY;
+            }
+        }
+
         // Tangent slopes
         const leftLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
         const rightLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
@@ -175,7 +229,9 @@ export class GraphicalSlur extends GraphicalCurve {
             intersectionPoint.y = leftLineSlope * intersectionPoint.x + leftLineD;
         }
 
-        // Angles
+        // Angles — original code uses minAngle only. calculateAngles was a
+        // no-op (JS passes by value), so slopes never influenced the angle.
+        // Restored no-op; merged points shape the curve via per-point clearance.
         const leftAngle: number = minAngle;
         const rightAngle: number = -minAngle;
         if (!sameSlope) {
@@ -184,7 +240,7 @@ export class GraphicalSlur extends GraphicalCurve {
 
         // Control points
         const controlPoints: {leftControlPoint: PointF2D, rightControlPoint: PointF2D} =
-            this.calculateControlPoints(end2.x, leftAngle, rightAngle, transformedPoints);
+            this.calculateControlPoints(end2.x, leftAngle, rightAngle, transformedPoints, localPointCount);
 
         // Back-transform to original coordinates
         let leftControlPoint: PointF2D = controlPoints.leftControlPoint;
@@ -478,11 +534,14 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param leftAngle
      * @param rightAngle
      * @param points
+     * @param localPointCount number of leading points from the local staff
+     *   (remaining points come from cross-staff merge); only these feed maxY.
      */
     private calculateControlPoints(endX: number,
                                             leftAngle: number,
                                             rightAngle: number,
-                                            points: PointF2D[]): {leftControlPoint: PointF2D, rightControlPoint: PointF2D} {
+                                            points: PointF2D[],
+                                            localPointCount: number = points.length): {leftControlPoint: PointF2D, rightControlPoint: PointF2D} {
 
         // Some test values:
         // let k: number = 0.4; // (k > 0) -> lower values = flatter curve near endpoints; higher values... "fatter" curve near endpoints
@@ -509,17 +568,18 @@ export class GraphicalSlur extends GraphicalCurve {
             rightCp.y = cp_y;
         }
 
-        // For above slurs, lift control points above the highest skyline obstacle.
-        // If no obstacles above the angle-based curve (maxY <= cp_y), leave natural cp_y.
+        // Lift CPs above local skyline obstacles. Cross-staff clearance from
+        // merged obstacles is pre-computed in calculateCurve (mergedClearanceCpY).
         if (this.placement === PlacementEnum.Above) {
-            if (points.length > 0) {
-                const maxY: number = Math.max(...points.map(p => p.y));
-                if (maxY > leftCp.y) {
-                    leftCp.y = maxY;
-                }
-                if (maxY > rightCp.y) {
-                    rightCp.y = maxY;
-                }
+            const localPts: PointF2D[] = points.slice(0, localPointCount);
+            if (localPts.length > 0) {
+                const localMax: number = Math.max(...localPts.map(p => p.y));
+                if (localMax > leftCp.y) { leftCp.y = localMax; }
+                if (localMax > rightCp.y) { rightCp.y = localMax; }
+            }
+            if (this.mergedClearanceCpY > leftCp.y) {
+                leftCp.y = this.mergedClearanceCpY;
+                rightCp.y = this.mergedClearanceCpY;
             }
         }
 
@@ -534,8 +594,10 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param rightLineSlope
      * @param maxAngle
      */
-    private calculateAngles(leftAngle: number, rightAngle: number, leftLineSlope: number, rightLineSlope: number, maxAngle: number): void {
-
+    private calculateAngles(
+        leftAngle: number, rightAngle: number, leftLineSlope: number,
+        rightLineSlope: number, maxAngle: number,
+    ): void {
         // original version with calculated angles:
         const calculatedLeftAngle: number = Math.atan(leftLineSlope) * 180 / Math.PI * 0.75;
         const calculatedRightAngle: number = Math.atan(rightLineSlope) * 180 / Math.PI * 0.75;
