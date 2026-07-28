@@ -171,21 +171,24 @@ export class GraphicalSlur extends GraphicalCurve {
             transformedPoints.push(rotationMatrix.vectorMultiplication(new PointF2D(pt.x - startX, yDir * (pt.y - startY))));
         }
 
-        // Cross-staff merged obstacle clearance: compute required cp_y using
-        // original-space chord fraction (t_orig), not transformed t. The rotation
-        // shifts X for high-Y points, making them appear near-end in transformed
-        // space where the bezier is too flat to clear them.
-        // Also applies a staff-gap-based minimum lift when no merged obstacle
-        // is above the chord in the mid-span (skyline may miss small obstacles).
+        // Per-point clearance: compute required cp_y so the bezier at each
+        // obstacle's original-space chord fraction (t_orig) exceeds the
+        // obstacle's transformed-space Y. Uses t_orig (projected onto chord
+        // line) instead of transformed t — the rotation shifts X for high-Y
+        // points, making them appear near-end in transformed space.
+        // For cross-staff slurs, applies to merged points only + staff-gap
+        // fallback. For all slurs, replaces the old maxY override which was
+        // mathematically wrong (cp_y=obstacle_Y gives bezier height < obstacle_Y).
         this.mergedClearanceCpY = -Infinity;
-        if (this.slur?.isCrossed() && isAbove && points.length > localPointCount) {
+        if (isAbove) {
             const chordDx: number = endX - startX;
             const chordDy: number = endY - startY;
             const chordLenSq: number = chordDx * chordDx + chordDy * chordDy;
             const minT: number = 0.15;
             const maxT: number = 0.85;
             const maxMult: number = 1.5;
-            for (let i: number = localPointCount; i < points.length; i++) {
+            const startI: number = this.slur?.isCrossed() ? localPointCount : 0;
+            for (let i: number = startI; i < points.length; i++) {
                 const orig: PointF2D = points[i];
                 const dx: number = orig.x - startX;
                 const dy: number = orig.y - startY;
@@ -201,13 +204,14 @@ export class GraphicalSlur extends GraphicalCurve {
                     this.mergedClearanceCpY = needed;
                 }
             }
-            // Staff-gap fallback: if no merged obstacle detected above chord,
-            // apply a gap-based minimum lift. Assumes cross-staff slurs need
-            // extra arc to clear remote obstacles the skyline may miss.
-            const staffGap: number = Math.abs(chordDy);
-            const gapMinCpY: number = staffGap * 0.7;
-            if (this.mergedClearanceCpY < gapMinCpY) {
-                this.mergedClearanceCpY = gapMinCpY;
+            // Staff-gap fallback for cross-staff slurs: if no merged obstacle
+            // detected above chord, apply a minimum lift based on staff gap.
+            if (this.slur?.isCrossed()) {
+                const staffGap: number = Math.abs(chordDy);
+                const gapMinCpY: number = staffGap * 0.7;
+                if (this.mergedClearanceCpY < gapMinCpY) {
+                    this.mergedClearanceCpY = gapMinCpY;
+                }
             }
         }
 
@@ -568,19 +572,11 @@ export class GraphicalSlur extends GraphicalCurve {
             rightCp.y = cp_y;
         }
 
-        // Lift CPs above local skyline obstacles. Cross-staff clearance from
-        // merged obstacles is pre-computed in calculateCurve (mergedClearanceCpY).
-        if (this.placement === PlacementEnum.Above) {
-            const localPts: PointF2D[] = points.slice(0, localPointCount);
-            if (localPts.length > 0) {
-                const localMax: number = Math.max(...localPts.map(p => p.y));
-                if (localMax > leftCp.y) { leftCp.y = localMax; }
-                if (localMax > rightCp.y) { rightCp.y = localMax; }
-            }
-            if (this.mergedClearanceCpY > leftCp.y) {
-                leftCp.y = this.mergedClearanceCpY;
-                rightCp.y = this.mergedClearanceCpY;
-            }
+        // Lift CPs above obstacles. mergedClearanceCpY is pre-computed in
+        // calculateCurve per-point with original t (accounts for bezier fraction).
+        if (this.placement === PlacementEnum.Above && this.mergedClearanceCpY > leftCp.y) {
+            leftCp.y = this.mergedClearanceCpY;
+            rightCp.y = this.mergedClearanceCpY;
         }
 
         return {leftControlPoint: leftCp, rightControlPoint: rightCp};
