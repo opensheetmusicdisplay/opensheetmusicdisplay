@@ -58,7 +58,7 @@ describe("VexFlow Measure", () => {
       done();
    });
 
-   it("Formats joined volta ending ranges with an en dash and trailing period", (done: Mocha.Done) => {
+   it("Formats consecutive volta pairs as dotted labels", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_repeat_volta_joined_1_2_separate_3.musicxml");
       const div: HTMLElement = TestUtils.getDivElement(document);
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -79,7 +79,7 @@ describe("VexFlow Measure", () => {
                .map((modifier: { number?: string, text?: string }): string => String(modifier.number ?? modifier.text ?? ""));
          }
 
-         expect(getVoltaLabels(firstEndingMeasure)).to.deep.equal(["1–2."]);
+         expect(getVoltaLabels(firstEndingMeasure)).to.deep.equal(["1.2."]);
          expect(getVoltaLabels(thirdEndingMeasure)).to.deep.equal(["3."]);
          done();
       }).catch(done);

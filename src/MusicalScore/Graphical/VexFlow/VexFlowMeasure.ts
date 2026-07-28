@@ -44,7 +44,13 @@ const DOUBLE_HEAVY_BARLINE_TYPE: number = 8;
 // type StemmableNote = VF.StemmableNote;
 
 function formatVoltaRange(startIndex: number, endIndex: number): string {
-    return startIndex === endIndex ? `${startIndex}` : `${startIndex}\u2013${endIndex}`;
+    if (startIndex === endIndex) {
+        return `${startIndex}.`;
+    }
+    if (endIndex === startIndex + 1) {
+        return `${startIndex}.${endIndex}.`;
+    }
+    return `${startIndex}\u2013${endIndex}.`;
 }
 
 type FontAssignableModifier = {
@@ -134,7 +140,7 @@ function formatVoltaLabel(endingIndices: number[] = []): string {
     }
 
     labelParts.push(formatVoltaRange(rangeStartIndex, previousIndex));
-    return `${labelParts.join(", ")}.`;
+    return labelParts.join(", ");
 }
 
 export class VexFlowMeasure extends GraphicalMeasure {
