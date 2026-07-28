@@ -338,7 +338,12 @@ export class TransposeCalculator implements ITransposeCalculator {
         while (newIndex < 0) {
             newIndex += 12;
         }
-        keyInstruction.Key = TransposeCalculator.keyMapping[newIndex];
+        const mappedKey: number = TransposeCalculator.keyMapping[newIndex];
+        // Six accidentals is the one enharmonic key-signature tie in this mapping:
+        // +6 denotes F#/D# and -6 denotes Gb/Eb. Keep the direction of the
+        // chromatic move so a downward semitone from E minor becomes Eb minor,
+        // matching the flat spelling used for its notes and chord symbols.
+        keyInstruction.Key = mappedKey === 6 && transpose < 0 ? -6 : mappedKey;
         keyInstruction.isTransposedBy = transpose;
     }
 }
