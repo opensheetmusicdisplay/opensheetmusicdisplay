@@ -110,8 +110,15 @@ export class GraphicalSlur extends GraphicalCurve {
                 if (musicSystem) {
                     const startRelY: number = staffLine.PositionAndShape.RelativePosition.y;
                     const sampUnit: number = skyBottomLineCalculator.SamplingUnit;
+                    // Only merge from staves of the same instrument (e.g., Piano RH↔LH).
+                    // Skip unrelated staves (e.g., vocal staff above piano).
+                    const myInstrument: any = staffLine.Measures.length > 0 ? (staffLine.Measures[0] as any).parentStaff?.ParentInstrument : undefined;
                     for (const otherSl of musicSystem.StaffLines) {
                         if (otherSl === staffLine) { continue; }
+                        if (myInstrument) {
+                            const otherInst: any = otherSl.Measures.length > 0 ? (otherSl.Measures[0] as any).parentStaff?.ParentInstrument : undefined;
+                            if (otherInst !== myInstrument) { continue; }
+                        }
                         const otherSky: number[] = otherSl.SkyLine;
                         if (!otherSky || otherSky.length === 0) { continue; }
                         const yOffset: number = otherSl.PositionAndShape.RelativePosition.y - startRelY;
@@ -189,8 +196,20 @@ export class GraphicalSlur extends GraphicalCurve {
         rightControlPoint.x += startX;
         rightControlPoint.y = yDir * rightControlPoint.y + startY;
 
-        // Clamp to prevent backward CPs
-        if (leftControlPoint.x < slurStart.x) { leftControlPoint.x = slurStart.x; }
+        // Clamp to prevent backward CPs.
+        // When left CP is pushed left of start by the back-rotation, spread it right
+        // proportionally to bow depth to avoid a purely vertical initial tangent.
+        if (leftControlPoint.x < slurStart.x) {
+            const span: number = slurEnd.x - slurStart.x;
+            const bow: number = Math.abs(leftControlPoint.y - slurStart.y);
+            if (bow > span * 0.5) {
+                // Spread left CP right: higher bow → more horizontal spread
+                const excess: number = bow - span * 0.5;
+                leftControlPoint.x = slurStart.x + Math.min(span * 0.4, excess * 0.5);
+            } else {
+                leftControlPoint.x = slurStart.x;
+            }
+        }
         if (rightControlPoint.x > slurEnd.x) { rightControlPoint.x = slurEnd.x; }
 
         // Set bezier
