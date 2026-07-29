@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <work>
+    <work-title>test_Braille_MultiStaff_Piano</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!-- Measure 1: G major, 3/4 time
+         RH (staff 1): G4♩ A4♩ B4♩
+         LH (staff 2): G2♩. D3♪ B2♩  -->
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>1</fifths></key>
+        <time><beats>3</beats><beat-type>4</beat-type></time>
+        <staves>2</staves>
+        <clef number="1"><sign>G</sign><line>2</line></clef>
+        <clef number="2"><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <!-- RH: G4 A4 B4 (quarter notes) -->
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>2</duration><type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>4</octave></pitch>
+        <duration>2</duration><type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>4</octave></pitch>
+        <duration>2</duration><type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <!-- LH: G2♩. D3♪ B2♩ -->
+      <backup><duration>6</duration></backup>
+      <note>
+        <pitch><step>G</step><octave>2</octave></pitch>
+        <duration>3</duration><type>quarter</type><dot/>
+        <staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>3</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>2</octave></pitch>
+        <duration>2</duration><type>quarter</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!-- Measure 2:
+         RH (staff 1): D5♩ C5♩ B4♩
+         LH (staff 2): G2♩ G2♩ G2♩  -->
+    <measure number="2">
+      <!-- RH: D5 C5 B4 -->
+      <note>
+        <pitch><step>D</step><octave>5</octave></pitch>
+        <duration>2</duration><type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>2</duration><type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>4</octave></pitch>
+        <duration>2</duration><type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <!-- LH: G2 G2 G2 -->
+      <backup><duration>6</duration></backup>
+      <note>
+        <pitch><step>G</step><octave>2</octave></pitch>
+        <duration>2</duration><type>quarter</type>
+        <staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>2</octave></pitch>
+        <duration>2</duration><type>quarter</type>
+        <staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>2</octave></pitch>
+        <duration>2</duration><type>quarter</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!-- Measure 3:
+         RH (staff 1): G4 dotted half
+         LH (staff 2): G2 dotted half  -->
+    <measure number="3">
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>6</duration><type>half</type><dot/>
+        <staff>1</staff>
+      </note>
+      <backup><duration>6</duration></backup>
+      <note>
+        <pitch><step>G</step><octave>2</octave></pitch>
+        <duration>6</duration><type>half</type><dot/>
+        <staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

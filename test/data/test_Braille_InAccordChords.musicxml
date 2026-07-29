@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN"
+  "http://www.musicxml.org/dtds/partwise.dtd">
+<!--
+  Test score for braille M4: In-accord where one voice has chords.
+  C major, 4/4, treble clef.
+  Measure 1:
+    Voice 1: E4-G4 half chord, F4-A4 half chord (upper voice with intervals)
+    Voice 2: C4 whole (lower voice, single note)
+  Tests interaction between chord rendering (M3) and in-accord (M4).
+-->
+<score-partwise version="3.1">
+  <work><work-title>test_Braille_InAccordChords</work-title></work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Treble</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <!-- Voice 1: E4-G4 half chord, F4-A4 half chord -->
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>up</stem>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>up</stem>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>up</stem>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>A</step><octave>4</octave></pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>up</stem>
+      </note>
+      <!-- Voice 2: C4 whole -->
+      <backup>
+        <duration>8</duration>
+      </backup>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>8</duration>
+        <voice>2</voice>
+        <type>whole</type>
+        <stem>down</stem>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

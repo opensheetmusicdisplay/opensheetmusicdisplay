@@ -49,9 +49,15 @@ module.exports = {
     ],
     devServer: {
         static: [
+            // demo must be served before build: build/ holds copies of demo assets (demo.css etc.)
+            //   from the last npm run build -- possibly of another branch -- which would otherwise
+            //   shadow the live demo/ files under webpack-dev-server (first static dir match wins).
+            // samples are additionally served under /samples to match the hosted demo layout
+            //   (demo/index.js sampleFolder = "samples/", see hosted braille demo).
+            { directory: path.join(__dirname, 'test/data'), publicPath: '/samples' },
             path.join(__dirname, 'test/data'),
-            path.join(__dirname, 'build'),
-            path.join(__dirname, 'demo')
+            path.join(__dirname, 'demo'),
+            path.join(__dirname, 'build')
         ],
         port: 8000,
         compress: false
