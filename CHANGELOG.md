@@ -1,3 +1,17 @@
+## [2.1.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/2.1.0...2.1.1) (2026-07-29)
+
+
+### Bug Fixes
+
+* **Slurs:** Fix NaN slur curve (invalid SVG path) when a note has both a slur start and an orphan slur stop ([45ece8f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/45ece8fa9f4ff1b51a6dfe29515e18530a64b1aa))
+
+
+### Features
+
+* **Braille:** OSMD Music Braille output: Full Music Braille implementation, facsimile mode, lyrics, bar-over-bar, ensemble format, documentation (src/Plugins/Braille/README.md, UserGuide.md), etc ([#1701](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1701)) (PR [#1702](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1702)) ([967beca](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/967becafb3b2db932d68e54034f662a03832a8d4))
+
+
+
 # [2.1.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/2.0.0...2.1.0) (2026-07-22)
 
 
