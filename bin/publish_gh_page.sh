@@ -64,18 +64,21 @@ if [ "$DEMO_ONLY" != "1" ]; then
 fi
 
 # Copy demo application (full replace, so stale samples/bundles do not linger).
-# build/index.html is the webpack-generated demo page (from the demo/index.html template);
-# *.min.js includes demo.min.js, opensheetmusicdisplay.min.js and the lazy-loaded chunks
-# (e.g. jsPDF submodules) that are fetched relative to the page at runtime.
+# build/index.html is the webpack-generated demo page (from the demo/index.html template).
+# Bundles: demo.min.js (self-contained, includes OSMD) and its lazy-loaded chunks
+# (e.g. jsPDF submodules), which are fetched relative to the page at runtime.
+# The library-only bundle opensheetmusicdisplay.min.js is not referenced by the demo page
+# (see the HtmlWebpackPlugin chunks option in webpack.common.js) and is not published.
 rm -rf "$TARGET/demo"
 mkdir -p "$TARGET/demo"
 cp build/index.html build/favicon.ico "$TARGET/demo/"
-cp build/*.min.js "$TARGET/demo/"
 shopt -s nullglob
-LICENSE_FILES=(build/*.LICENSE.txt)
-if [ ${#LICENSE_FILES[@]} -gt 0 ]; then
-    cp "${LICENSE_FILES[@]}" "$TARGET/demo/"
-fi
+for f in build/*.min.js build/*.LICENSE.txt; do
+    case "$(basename "$f")" in
+        opensheetmusicdisplay.min.js|opensheetmusicdisplay.min.js.LICENSE.txt) ;;
+        *) cp "$f" "$TARGET/demo/";;
+    esac
+done
 shopt -u nullglob
 # Demo assets referenced relatively by index.html/demo.css but not emitted by webpack
 cp demo/demo.css "$TARGET/demo/"

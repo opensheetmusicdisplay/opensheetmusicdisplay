@@ -44,7 +44,11 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: 'demo/index.html',
             favicon: 'demo/favicon.ico',
-            title: 'OSMD Demo'
+            title: 'OSMD Demo',
+            // only inject the demo bundle: demo.js bundles OSMD itself, so the library entry
+            //   (opensheetmusicdisplay.js) would be ~1.3 MB of redundant download on the page,
+            //   and its global was overwritten by the later-loaded demo bundle anyway
+            chunks: ['demo']
         })
     ],
     devServer: {
