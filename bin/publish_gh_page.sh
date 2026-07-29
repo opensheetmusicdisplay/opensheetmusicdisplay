@@ -48,6 +48,11 @@ fi
 
 CLONED=0
 if [ -z "$TARGET" ]; then
+    if [ -e opensheetmusicdisplay.github.io ]; then
+        echo "Error: ./opensheetmusicdisplay.github.io already exists (left over from a failed run?)." >&2
+        echo "Remove it, or pass its path as an argument to publish into it without pushing." >&2
+        exit 1
+    fi
     git clone git@github.com:opensheetmusicdisplay/opensheetmusicdisplay.github.io.git
     TARGET=opensheetmusicdisplay.github.io
     CLONED=1
@@ -109,10 +114,21 @@ if [ "$CLONED" = "1" ]; then
     cd "$TARGET"
     git status
     git add -A
-    git commit -m "Pushed auto-generated class documentation and demo for $TAG"
-    git tag -a "$TAG" -m "Class documentation and demo for $TAG"
-    git push origin master --follow-tags
-    echo "Deployed class documentation and demo for $TAG successfully."
+    if git diff --cached --quiet; then
+        echo "No changes compared to the published github.io state - nothing to publish."
+    else
+        git commit -m "Pushed auto-generated class documentation and demo for $TAG"
+        # Tag only if this release tag does not exist in the github.io repository yet, so the
+        # demo can also be re-published between releases (re-running for an already published
+        # release tag must not fail; the tag then stays on the first publish commit).
+        if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "Tag $TAG already exists in the github.io repository - pushing without a new tag."
+        else
+            git tag -a "$TAG" -m "Class documentation and demo for $TAG"
+        fi
+        git push origin master --follow-tags
+        echo "Deployed class documentation and demo for $TAG successfully."
+    fi
     cd ..
     rm -rf opensheetmusicdisplay.github.io
 else
