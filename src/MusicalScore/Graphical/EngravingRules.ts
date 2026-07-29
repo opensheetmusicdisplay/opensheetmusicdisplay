@@ -281,7 +281,7 @@ export class EngravingRules {
     /** How much spacing/padding should be added after notes with long lyrics on short notes
      * (>4 characters on <8th note),
      * so that the measure doesn't need to be elongated too much to avoid lyrics collisions.
-     * Default 1 = 10 pixels */
+     * Default 1.14 = 11.4 pixels */
     public LyricsXPaddingFactorForLongLyrics: number;
     /** How wide a text needs to be to trigger lyrics padding for short notes.
      * This is visual width, not number of characters, as e.g. 'zzz' is wider than 'iii'.
@@ -906,7 +906,7 @@ export class EngravingRules {
         this.LyricsExtraXShiftForShortLyrics = 0.5; // also see ChordSymbolExtraXShiftForShortChordSymbols, same principle
         this.LyricsExtraXShiftForShortLyricsWidthThreshold = 1.4; // width of '+': 1.12, 'II': 1.33 (benefits from x-shift), 'III': 1.99 (doesn't benefit)
         this.LyricsUseXPaddingForLongLyrics = true;
-        this.LyricsXPaddingFactorForLongLyrics = 1.0;
+        this.LyricsXPaddingFactorForLongLyrics = 1.14;
         this.LyricsXPaddingWidthThreshold = 1.7; // generateImages script with png might need more for 8th notes, e.g. Chloe
         this.LyricsXPaddingReductionForLongNotes = 0.7;
         this.LyricsXPaddingReductionForLastNoteInMeasure = 1.2;
