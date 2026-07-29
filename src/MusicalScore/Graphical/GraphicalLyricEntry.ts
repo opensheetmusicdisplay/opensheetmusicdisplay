@@ -25,13 +25,16 @@ export class GraphicalLyricEntry {
     private graphicalLyricWord: GraphicalLyricWord;
     private graphicalLabel: GraphicalLabel;
     private graphicalStaffEntry: GraphicalStaffEntry;
+    private rules: EngravingRules;
 
     constructor(lyricsEntry: LyricsEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricsHeight: number, staffHeight: number) {
         this.lyricsEntry = lyricsEntry;
         this.graphicalStaffEntry = graphicalStaffEntry;
-        const rules: EngravingRules = this.graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules;
+        this.rules = this.graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules;
+        const rules: EngravingRules = this.rules;
         const lyricsTextAlignment: TextAlignmentEnum = rules.LyricsAlignmentStandard;
         const label: Label = new Label(lyricsEntry.Text);
+        label.fontStyle = lyricsEntry.FontStyle;
         this.graphicalLabel = new GraphicalLabel(
             label,
             lyricsHeight,
@@ -94,5 +97,42 @@ export class GraphicalLyricEntry {
             rightEdgeX,
             rightExtent: rightEdgeX - anchorX,
         };
+    }
+
+    /**
+     * Stable identity for the lyric line this entry belongs to.
+     *
+     * A positional array index is not stable when a timestamp omits one or more
+     * verses, and a chorus may share a numeric MusicXML verse identifier with a
+     * regular verse. Keep both concerns explicit in the key.
+     */
+    public getLineIdentity(): string {
+        const kind: string = this.lyricsEntry.IsChorus
+            ? "chorus"
+            : this.lyricsEntry.IsTranslation
+                ? "translation"
+                : "verse";
+        return `${kind}:${this.lyricsEntry.VerseNumber || "1"}`;
+    }
+
+    /** Measure a rendered lyric dash using this entry's actual lyric font. */
+    public getDashWidth(): number {
+        const sourceLabel: Label = this.graphicalLabel.Label;
+        const dashLabel: Label = new Label(
+            "-",
+            TextAlignmentEnum.CenterBottom,
+            sourceLabel.font,
+        );
+        dashLabel.fontFamily = sourceLabel.fontFamily;
+        dashLabel.fontStyle = sourceLabel.fontStyle;
+        dashLabel.colorDefault = sourceLabel.colorDefault;
+        const dash: GraphicalLabel = new GraphicalLabel(
+            dashLabel,
+            sourceLabel.fontHeight,
+            TextAlignmentEnum.CenterBottom,
+            this.rules,
+        );
+        dash.setLabelPositionAndShapeBorders();
+        return Math.max(0, dash.PositionAndShape.Size.width);
     }
 }

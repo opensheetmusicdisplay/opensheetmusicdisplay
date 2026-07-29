@@ -37,7 +37,6 @@ import { Staff } from "../../VoiceData/Staff";
 
 interface LyricLookaheadInfo {
     nextMatchingLyric?: GraphicalLyricEntry;
-    spacingCredit: number;
 }
 
 /**
@@ -503,40 +502,33 @@ export class VexFlowConverter {
 
                 const lyricLookahead: Map<string, LyricLookaheadInfo> = new Map<string, LyricLookaheadInfo>();
                 for (const lyricsEntry of lyricsEntries) {
-                    const verseNumber: string = lyricsEntry.LyricsEntry.VerseNumber;
+                    const lineIdentity: string = lyricsEntry.getLineIdentity();
                     let nextMatchingLyric: GraphicalLyricEntry = undefined;
-                    let spacingCredit: number = 0;
-                    let lastTimestamp: Fraction = currentStaffEntry.relInMeasureTimestamp.clone();
                     for (let seIndex: number = currentStaffEntryIndex + 1; seIndex < measureStaffEntries.length; seIndex++) {
                         const nextStaffEntry: GraphicalStaffEntry = measureStaffEntries[seIndex];
-                        if (!nextStaffEntry.graphicalVoiceEntries[0]) {
+                        const hasCurrentVoiceEntry: boolean = nextStaffEntry.graphicalVoiceEntries.some(
+                            (voiceEntry: GraphicalVoiceEntry) =>
+                                voiceEntry?.parentVoiceEntry?.ParentVoice === gve.parentVoiceEntry.ParentVoice,
+                        );
+                        if (!hasCurrentVoiceEntry) {
                             continue;
                         }
-                        const nextTimestamp: Fraction = nextStaffEntry.relInMeasureTimestamp.clone();
-                        const totalDistanceFromFirstNote: Fraction = Fraction.minus(nextTimestamp, gve.parentVoiceEntry.Timestamp);
-                        if (totalDistanceFromFirstNote.RealValue > 0.25) {
-                            break;
-                        }
                         nextMatchingLyric = nextStaffEntry.LyricsEntries.find((entry: GraphicalLyricEntry) =>
-                            entry.LyricsEntry?.VerseNumber === verseNumber,
+                            entry.getLineIdentity() === lineIdentity,
                         );
-                        if (nextMatchingLyric) {
-                            break;
-                        }
-                        const lastDistanceCovered: Fraction = Fraction.minus(nextTimestamp, lastTimestamp);
-                        spacingCredit += lastDistanceCovered.RealValue * 32;
-                        lastTimestamp = nextTimestamp;
+                        // Padding is local to consecutive rhythmic entries in this voice.
+                        // Sparse lyric lines are handled by the measured residual pass.
+                        break;
                     }
-                    lyricLookahead.set(verseNumber, {
+                    lyricLookahead.set(lineIdentity, {
                         nextMatchingLyric,
-                        spacingCredit,
                     });
                 }
 
-                let padding: number = 0;
-                let leadingLyricXShift: number = 0;
+                let rightPadding: number = 0;
+                let leftPadding: number = 0;
                 for (const lyricsEntry of lyricsEntries) {
-                    const lookahead: LyricLookaheadInfo = lyricLookahead.get(lyricsEntry.LyricsEntry.VerseNumber);
+                    const lookahead: LyricLookaheadInfo = lyricLookahead.get(lyricsEntry.getLineIdentity());
                     if (!lookahead?.nextMatchingLyric && !isLastNoteInMeasure) {
                         if (currentStaffEntryIndex !== 0) {
                             continue;
@@ -545,26 +537,26 @@ export class VexFlowConverter {
                     const footprint: LyricFootprint = lyricsEntry.getFootprint();
                     if (currentStaffEntryIndex === 0) {
                         const availableLeadingAllowance: number = rules.LyricsXPaddingWidthThreshold / 2;
-                        leadingLyricXShift = Math.max(
-                            leadingLyricXShift,
+                        leftPadding = Math.max(
+                            leftPadding,
                             footprint.leftExtent + rules.HorizontalBetweenLyricsDistance - availableLeadingAllowance,
                         );
                     }
-                    const currentRightExtent: number =
-                        footprint.rightExtent + (lyricsEntry.hasDashFromLyricWord() ? 0.5 : 0);
+                    const hasDash: boolean = lyricsEntry.hasDashFromLyricWord();
+                    const dashWidth: number = hasDash ? lyricsEntry.getDashWidth() : 0;
+                    const currentRightExtent: number = footprint.rightExtent + dashWidth;
                     let requiredRightAllowance: number = currentRightExtent;
                     if (lookahead?.nextMatchingLyric) {
                         const nextFootprint: LyricFootprint = lookahead.nextMatchingLyric.getFootprint();
-                        const minSpacing: number = lyricsEntry.hasDashFromLyricWord()
-                            ? rules.BetweenSyllableMinimumDistance + 1.0
+                        const minSpacing: number = hasDash
+                            ? rules.BetweenSyllableMinimumDistance
                             : rules.HorizontalBetweenLyricsDistance;
                         requiredRightAllowance += nextFootprint.leftExtent + minSpacing;
                     }
 
-                    let availableAllowance: number =
-                        rules.LyricsXPaddingWidthThreshold / 2 + (lookahead?.spacingCredit ?? 0);
+                    let availableAllowance: number = rules.LyricsXPaddingWidthThreshold / 2;
                     if (isLastNoteInMeasure) {
-                        availableAllowance += lyricsEntry.hasDashFromLyricWord()
+                        availableAllowance += hasDash
                             ? rules.LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord
                             : rules.LyricsXPaddingReductionForLastNoteInMeasure;
                     }
@@ -574,13 +566,13 @@ export class VexFlowConverter {
                     if (!rules.LyricsXPaddingForLastNoteInMeasure && isLastNoteInMeasure) {
                         continue;
                     }
-                    padding = Math.max(padding, requiredRightAllowance - availableAllowance);
+                    rightPadding = Math.max(rightPadding, requiredRightAllowance - availableAllowance);
                 }
-                if (padding > 0) {
-                    (vfnote as any).paddingRight = 10 * rules.LyricsXPaddingFactorForLongLyrics * padding;
-                }
-                if (leadingLyricXShift > 0) {
-                    xShift += 10 * rules.LyricsXPaddingFactorForLongLyrics * leadingLyricXShift;
+                if (leftPadding > 0 || rightPadding > 0) {
+                    vfnote.setLayoutPadding(
+                        10 * rules.LyricsXPaddingFactorForLongLyrics * Math.max(0, leftPadding),
+                        10 * rules.LyricsXPaddingFactorForLongLyrics * Math.max(0, rightPadding),
+                    );
                 }
             }
         }

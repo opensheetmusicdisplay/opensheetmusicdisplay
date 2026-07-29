@@ -74,15 +74,31 @@ import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { Staff } from "../../VoiceData/Staff";
 import { getDoricoDefaultTextFontFamily } from "../DoricoTextFontRouting";
 
+interface ContainerEntryInfo {
+  anchorX?: number;
+  cumulativeOverlap: number;
+  dashSpaceAtEnd?: number;
+  extend: boolean;
+  labelWidth: number;
+  leftExtent?: number;
+  measureMinimumWidth?: number;
+  measureNumber: number;
+  needsDashSpaceAtEnd?: boolean;
+  rightExtent?: number;
+  text: string;
+  xPosition?: number;
+}
+
+type ContainerEntryDict = Record<string, ContainerEntryInfo>;
+type ContainerOverflows = Record<string, number>;
+
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
-  /** space needed for a dash for lyrics spacing, calculated once */
-  private dashSpace: number;
   public beamsNeedUpdate: boolean = false;
   /** Per-staff overflow (in pre-elongation units) of the previous measure's last lyric/chord
    *  past its bar line. Used to prevent the next measure's first lyric/chord from colliding
-   *  with the overflow. Indexed first by Staff, then by verse/container index. */
-  private previousLyricOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
-  private previousChordOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
+   *  with the overflow. Indexed first by Staff, then by stable lyric-line/chord key. */
+  private previousLyricOverflowsByStaff: Map<Staff, ContainerOverflows> = new Map<Staff, ContainerOverflows>();
+  private previousChordOverflowsByStaff: Map<Staff, ContainerOverflows> = new Map<Staff, ContainerOverflows>();
 
   constructor(rules: EngravingRules) {
     super();
@@ -103,7 +119,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // slightly differently than the first render.
     this.previousLyricOverflowsByStaff.clear();
     this.previousChordOverflowsByStaff.clear();
-    this.dashSpace = undefined;
     for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
       for (const graphicalMeasure of graphicalMeasures) {
         (<VexFlowMeasure>graphicalMeasure)?.clean();
@@ -411,42 +426,42 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return minStaffEntriesWidth;
   }
 
-  private calculateElongationFactor(containers: (GraphicalLyricEntry|GraphicalChordSymbolContainer)[], staffEntry: GraphicalStaffEntry, lastEntryDict: any,
+  private calculateElongationFactor(containers: (GraphicalLyricEntry|GraphicalChordSymbolContainer)[],
+                                    staffEntry: GraphicalStaffEntry, lastEntryDict: ContainerEntryDict,
                                     oldMinimumStaffEntriesWidth: number, elongationFactorForMeasureWidth: number,
                                     measureNumber: number, oldMinSpacing: number, nextMeasureOverlap: number): number {
     let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
     let currentContainerIndex: number = 0;
 
-    let needsDashSpaceAtEnd: boolean = false;
     for (const container of containers) {
       const alignment: TextAlignmentEnum = container.GraphicalLabel.Label.textAlignment;
       let minSpacing: number = oldMinSpacing;
 
       let overlapAllowedIntoNextMeasure: number = nextMeasureOverlap;
-      needsDashSpaceAtEnd = false;
+      let needsDashSpaceAtEnd: boolean = false;
+      let dashSpaceAtEnd: number = 0;
+      const containerKey: string = container instanceof GraphicalLyricEntry
+        ? container.getLineIdentity()
+        : String(currentContainerIndex);
+      const previousEntry: ContainerEntryInfo = lastEntryDict[containerKey];
 
       if (container instanceof GraphicalLyricEntry && container.ParentLyricWord) {
         // spacing for multi-syllable words
         if (container.LyricsEntry.SyllableIndex > 0) { // syllables after first
-          // give a little more spacing for dash between syllables
+          // Keep the measured dash between adjacent syllables in addition to
+          // the configured breathing room around it.
           minSpacing = this.rules.BetweenSyllableMinimumDistance;
-          if (TextAlignment.IsCenterAligned(alignment)) {
-            minSpacing += 1.0; // TODO check for previous lyric alignment too. though center is not standard
-            // without this, there's not enough space for dashes between long syllables on eigth notes
+          if (previousEntry?.measureNumber === measureNumber && previousEntry.needsDashSpaceAtEnd) {
+            minSpacing += previousEntry.dashSpaceAtEnd ?? 0;
           }
         }
         const syllables: LyricsEntry[] = container.ParentLyricWord.GetLyricWord.Syllables;
         if (syllables.length > 1) {
           if (container.LyricsEntry.SyllableIndex < syllables.length - 1) {
             needsDashSpaceAtEnd = true;
+            dashSpaceAtEnd = container.getDashWidth();
             // if a middle syllable of a word, give less measure overlap into next measure, to give room for dash
-            if (this.dashSpace === undefined) { // don't replace undefined check
-              this.dashSpace = 1.5;
-              // better method, doesn't work:
-              // this.dashLength = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom)
-              //   .PositionAndShape.Size.width; // always returns 0
-            }
-            overlapAllowedIntoNextMeasure -= this.dashSpace;
+            overlapAllowedIntoNextMeasure -= dashSpaceAtEnd;
           }
         }
       }
@@ -455,7 +470,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const staffEntryXPosition: number = vexStaffEntry.PositionAndShape.RelativePosition.x;
       if (container instanceof GraphicalLyricEntry) {
         const footprint: LyricFootprint = container.getFootprint(staffEntryXPosition);
-        const previousEntry: any = lastEntryDict[currentContainerIndex];
 
         if (previousEntry?.extend) {
           // TODO handle extend of last entry (extend is stored in lyrics entry of preceding syllable)
@@ -500,15 +514,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
         let lyricElongationFactorForPreviousEntry: number = 1;
         if (previousEntry) {
-          const lastNoteDuration: Fraction = previousEntry.sourceNoteDuration;
           if (lyricCurrentSpacingToPreviousEntry > 0) {
             lyricElongationFactorForPreviousEntry =
               lyricSpacingNeededToPreviousEntry / lyricCurrentSpacingToPreviousEntry;
           } else if (lyricSpacingNeededToPreviousEntry > 0) {
             lyricElongationFactorForPreviousEntry = this.rules.MaximumLyricsElongationFactor;
-          }
-          if ((lastNoteDuration?.Denominator ?? 0) > 4) {
-            lyricElongationFactorForPreviousEntry *= 1.1;
           }
         }
 
@@ -531,9 +541,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           lyricOverlap += previousEntry.cumulativeOverlap;
         }
 
-        lastEntryDict[currentContainerIndex] = {
+        lastEntryDict[containerKey] = {
           anchorX: footprint.anchorX,
           cumulativeOverlap: lyricOverlap,
+          dashSpaceAtEnd,
           extend: container.LyricsEntry.extend,
           labelWidth: footprint.labelWidth,
           leftExtent: footprint.leftExtent,
@@ -541,11 +552,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           measureNumber: measureNumber,
           needsDashSpaceAtEnd: needsDashSpaceAtEnd,
           rightExtent: footprint.rightExtent,
-          sourceNoteDuration: container.LyricsEntry?.Parent?.Notes?.[0]?.Length,
           text: container.LyricsEntry.Text,
           xPosition: footprint.leftEdgeX,
         };
-        currentContainerIndex++;
         continue;
       }
 
@@ -559,8 +568,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       let spacingNeededToLastContainer: number;
       let currentSpacingToLastContainer: number;
-      if (lastEntryDict[currentContainerIndex]) {
-        currentSpacingToLastContainer = xPosition - lastEntryDict[currentContainerIndex].xPosition;
+      if (previousEntry) {
+        currentSpacingToLastContainer = xPosition - previousEntry.xPosition;
       }
 
       let currentSpacingToMeasureEnd: number;
@@ -571,15 +580,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         overlapAllowedIntoNextMeasure /= 4;
         currentSpacingToMeasureEnd = maxXInMeasure - xPosition;
         spacingNeededToMeasureEnd = (labelWidth / 2) - overlapAllowedIntoNextMeasure;
-        if (lastEntryDict[currentContainerIndex]) {
+        if (previousEntry) {
           spacingNeededToLastContainer =
-            lastEntryDict[currentContainerIndex].labelWidth / 2 + labelWidth / 2 + minSpacing;
+            previousEntry.labelWidth / 2 + labelWidth / 2 + minSpacing;
         }
       } else {
         currentSpacingToMeasureEnd = maxXInMeasure - xPosition;
         spacingNeededToMeasureEnd = labelWidth - overlapAllowedIntoNextMeasure;
-        if (lastEntryDict[currentContainerIndex]) {
-          spacingNeededToLastContainer = lastEntryDict[currentContainerIndex].labelWidth + minSpacing;
+        if (previousEntry) {
+          spacingNeededToLastContainer = previousEntry.labelWidth + minSpacing;
         }
       }
 
@@ -590,7 +599,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         elongationFactorNeededForMeasureEnd = (xPosition + spacingNeededToMeasureEnd) / oldMinimumStaffEntriesWidth;
       }
       let elongationFactorNeededForLastContainer: number = 1;
-      if (lastEntryDict[currentContainerIndex]) {
+      if (previousEntry) {
         elongationFactorNeededForLastContainer =
           spacingNeededToLastContainer / currentSpacingToLastContainer;
       }
@@ -606,18 +615,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       );
 
       let overlap: number = Math.max((spacingNeededToLastContainer - currentSpacingToLastContainer) || 0, 0);
-      if (lastEntryDict[currentContainerIndex]) {
-        overlap += lastEntryDict[currentContainerIndex].cumulativeOverlap;
+      if (previousEntry) {
+        overlap += previousEntry.cumulativeOverlap;
       }
 
-      lastEntryDict[currentContainerIndex] = {
+      lastEntryDict[containerKey] = {
         cumulativeOverlap: overlap,
+        dashSpaceAtEnd: 0,
         extend: false,
         labelWidth: labelWidth,
         measureMinimumWidth: oldMinimumStaffEntriesWidth,
         measureNumber: measureNumber,
         needsDashSpaceAtEnd: false,
-        sourceNoteDuration: false,
         text: container.GraphicalLabel.Label.text,
         xPosition: xPosition,
       };
@@ -629,57 +638,38 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   /**
-   * @param previousLyricOverflows Per-verse-index array (`[verseIndex]`) holding how far the
+   * @param previousLyricOverflows Per-line map holding how far the
    *   previous measure's last lyric extends past its bar line into this measure (in pre-elongation
-   *   units, +dashSpace if mid-word). Used to seed lastLyricEntryDict so the first lyric in this
+   *   units, plus the measured dash width if mid-word). Used to seed lastLyricEntryDict so the first lyric in this
    *   measure is forced to leave clearance from the overhang.
    * @param previousChordOverflows Same as previousLyricOverflows but for chord symbols.
    * @returns
    *   - `factor`: regular elongation factor from within-measure spacing constraints (subject to
    *     MaximumLyricsElongationFactor cap by the caller).
-   *   - `lastLyricEntryDict` / `lastChordEntryDict`: final state of the per-verse last-entry
+   *   - `lastLyricEntryDict` / `lastChordEntryDict`: final state of each lyric line/chord slot
    *     dicts after processing. The caller uses these (with the post-cap measure width) to
    *     compute the overflows passed into the next measure's call.
    */
   public calculateElongationFactorFromStaffEntries(staffEntries: GraphicalStaffEntry[], oldMinimumStaffEntriesWidth: number,
                                                   elongationFactorForMeasureWidth: number, measureNumber: number,
-                                                  previousLyricOverflows?: number[],
-                                                  previousChordOverflows?: number[]): {
+                                                  previousLyricOverflows?: ContainerOverflows,
+                                                  previousChordOverflows?: ContainerOverflows): {
     factor: number;
-    lastLyricEntryDict: { [i: number]: any };
-    lastChordEntryDict: { [i: number]: any };
+    lastLyricEntryDict: ContainerEntryDict;
+    lastChordEntryDict: ContainerEntryDict;
   } {
-    interface EntryInfo {
-      anchorX?: number;
-      cumulativeOverlap: number;
-      extend: boolean;
-      labelWidth: number;
-      leftExtent?: number;
-      measureMinimumWidth?: number;
-      needsDashSpaceAtEnd?: boolean;
-      rightExtent?: number;
-      xPosition?: number;
-      sourceNoteDuration: Fraction;
-      text: string;
-      measureNumber: number;
-    }
-    // holds lyrics entries for verses i
-    interface EntryDict {
-      [i: number]: EntryInfo;
-    }
-
     let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
 
-    const lastLyricEntryDict: EntryDict = {}; // holds info about last lyric entries for all verses j???
-    const lastChordEntryDict: EntryDict = {}; // holds info about last chord entries for all verses j???
+    const lastLyricEntryDict: ContainerEntryDict = {};
+    const lastChordEntryDict: ContainerEntryDict = {};
 
     // Seed dicts with previous-measure overflow as synthetic entries, so the first lyric/chord
     // in this measure is forced to leave clearance from the previous measure's overhang.
     if (previousLyricOverflows) {
-      for (let i: number = 0; i < previousLyricOverflows.length; i++) {
-        const overflow: number = previousLyricOverflows[i];
+      for (const key of Object.keys(previousLyricOverflows)) {
+        const overflow: number = previousLyricOverflows[key];
         if (overflow > 0) {
-          lastLyricEntryDict[i] = {
+          lastLyricEntryDict[key] = {
             anchorX: 0,
             cumulativeOverlap: 0,
             extend: false,
@@ -688,7 +678,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             measureMinimumWidth: oldMinimumStaffEntriesWidth,
             measureNumber: measureNumber - 1,
             rightExtent: overflow,
-            sourceNoteDuration: new Fraction(1, 4),
             text: "",
             xPosition: 0,
           };
@@ -696,15 +685,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
     if (previousChordOverflows) {
-      for (let i: number = 0; i < previousChordOverflows.length; i++) {
-        const overflow: number = previousChordOverflows[i];
+      for (const key of Object.keys(previousChordOverflows)) {
+        const overflow: number = previousChordOverflows[key];
         if (overflow > 0) {
-          lastChordEntryDict[i] = {
+          lastChordEntryDict[key] = {
             cumulativeOverlap: 0,
             extend: false,
             labelWidth: overflow,
             measureNumber: measureNumber - 1,
-            sourceNoteDuration: new Fraction(1, 4),
             text: "",
             xPosition: 0,
           };
@@ -754,8 +742,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     interface PerStaffResult {
       staff: Staff;
-      lastLyricEntryDict: { [i: number]: any };
-      lastChordEntryDict: { [i: number]: any };
+      lastLyricEntryDict: ContainerEntryDict;
+      lastChordEntryDict: ContainerEntryDict;
     }
     const perStaffResults: PerStaffResult[] = [];
     const visibleStaves: Set<Staff> = new Set<Staff>();
@@ -766,11 +754,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       const staff: Staff = measure.ParentStaff;
       visibleStaves.add(staff);
-      const previousLyricOverflows: number[] = this.previousLyricOverflowsByStaff.get(staff);
-      const previousChordOverflows: number[] = this.previousChordOverflowsByStaff.get(staff);
+      const previousLyricOverflows: ContainerOverflows = this.previousLyricOverflowsByStaff.get(staff);
+      const previousChordOverflows: ContainerOverflows = this.previousChordOverflowsByStaff.get(staff);
 
       // (measure as VexFlowMeasure).format(); // needed to get vexflow bbox / x-position
-      const result: { factor: number, lastLyricEntryDict: { [i: number]: any }, lastChordEntryDict: { [i: number]: any } } =
+      const result: {
+        factor: number;
+        lastLyricEntryDict: ContainerEntryDict;
+        lastChordEntryDict: ContainerEntryDict;
+      } =
         this.calculateElongationFactorFromStaffEntries(
           measure.staffEntries,
           oldMinimumStaffEntriesWidth,
@@ -792,13 +784,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     const newMinimumStaffEntriesWidth: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
 
-    // Compute overflow of this measure's last lyric/chord into the next measure, per staff and per verse,
+    // Compute overflow of this measure's last lyric/chord into the next measure, per staff and lyric line,
     // so the next measure's calculation can leave clearance for it.
     // overflow is measured against newMinimumStaffEntriesWidth (the bar position) using the same
     // pre-elongation xPosition convention used elsewhere in this calculator.
     for (const result of perStaffResults) {
-      const lyricOverflows: number[] = this.computeContainerOverflows(result.lastLyricEntryDict, newMinimumStaffEntriesWidth);
-      const chordOverflows: number[] = this.computeContainerOverflows(result.lastChordEntryDict, newMinimumStaffEntriesWidth);
+      const lyricOverflows: ContainerOverflows =
+        this.computeContainerOverflows(result.lastLyricEntryDict, newMinimumStaffEntriesWidth);
+      const chordOverflows: ContainerOverflows =
+        this.computeContainerOverflows(result.lastChordEntryDict, newMinimumStaffEntriesWidth);
       this.previousLyricOverflowsByStaff.set(result.staff, lyricOverflows);
       this.previousChordOverflowsByStaff.set(result.staff, chordOverflows);
     }
@@ -818,11 +812,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return newMinimumStaffEntriesWidth;
   }
 
-  private computeContainerOverflows(lastEntryDict: { [i: number]: any }, measureWidth: number): number[] {
-    const overflows: number[] = [];
+  private computeContainerOverflows(lastEntryDict: ContainerEntryDict, measureWidth: number): ContainerOverflows {
+    const overflows: ContainerOverflows = {};
     for (const key of Object.keys(lastEntryDict)) {
-      const i: number = Number(key);
-      const entry: any = lastEntryDict[i];
+      const entry: ContainerEntryInfo = lastEntryDict[key];
       if (!entry) {
         continue;
       }
@@ -836,13 +829,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         overflow = Math.max(0, rightEdge - measureWidth);
       }
       // If this lyric is a multi-syllable mid-word, the next syllable is connected by a dash.
-      // The previous-measure elongation already reserved this.dashSpace for the dash via
-      // overlapAllowedIntoNextMeasure -= dashSpace; the next measure's first lyric must clear
+      // The previous-measure elongation already reserved the measured dash width via
+      // overlapAllowedIntoNextMeasure -= dashSpaceAtEnd; the next measure's first lyric must clear
       // the dash too, otherwise the dash has no room to render between the two syllables.
-      if (entry.needsDashSpaceAtEnd && this.dashSpace !== undefined) {
-        overflow += this.dashSpace;
+      if (entry.needsDashSpaceAtEnd) {
+        overflow += entry.dashSpaceAtEnd ?? 0;
       }
-      overflows[i] = overflow;
+      overflows[key] = overflow;
     }
     return overflows;
   }
