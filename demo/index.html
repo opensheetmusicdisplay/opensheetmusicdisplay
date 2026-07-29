@@ -17,6 +17,9 @@
     <div class="column" id="selectSampleContainer">
         <h3 class="ui header" id="selectSampleTitle">Select a sample:</h3>
         <select class="ui selection dropdown" id="selectSample" style="visibility: hidden" aria-label="Select a sample"></select>
+        <button type="button" class="ui button" id="open-file-btn" style="visibility: hidden"
+                aria-label="Open file: load your own MusicXML file (.xml, .musicxml or .mxl)">Open file...</button>
+        <input type="file" id="open-file-input" accept=".xml,.musicxml,.mxl" style="display: none"/>
     </div>
     <h1 class="ui centered header fixed" id="header" style="opacity: 0.0">
         <img src="./favicon.ico?" class="ui image" aria-label="OSMD Logo">
@@ -135,6 +138,42 @@
                 </div>
             </div>
             <div class="column advanced-setting">
+                <h3 class="ui header hide-on-portrait">Braille options:</h3>
+                <button type="button" class ="portraitCollapsible show-on-portrait">Braille options</button>
+                <div class="ui relaxed list">
+                    <div class="item">
+                        <div class="ui toggle checkbox">
+                            <input type="checkbox" name="public" id="braille-show-classical-checkbox" checked>
+                            <label for="braille-show-classical-checkbox">Show classical score above braille</label>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="ui toggle checkbox">
+                            <input type="checkbox" name="public" id="braille-lyrics-checkbox">
+                            <label for="braille-lyrics-checkbox">Enable braille lyrics</label>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="ui toggle checkbox">
+                            <input type="checkbox" name="public" id="braille-facsimile-checkbox">
+                            <label for="braille-facsimile-checkbox">Enable facsimile mode</label>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="ui toggle checkbox">
+                            <input type="checkbox" name="public" id="braille-bar-over-bar-checkbox">
+                            <label for="braille-bar-over-bar-checkbox">Bar-over-bar (keyboard)</label>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="ui toggle checkbox">
+                            <input type="checkbox" name="public" id="braille-ensemble-checkbox">
+                            <label for="braille-ensemble-checkbox">Ensemble (instrument abbreviations)</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column advanced-setting">
                 <h3 class="ui header hide-on-portrait">Debug controls:</h3>
                 <button type="button" class ="portraitCollapsible show-on-portrait">Debug controls</button>
                 <div>
@@ -168,7 +207,7 @@
                 <button type="button" class ="portraitCollapsible show-on-portrait">Transpose by Semitone(s)</button>
                 <div class="ui action input collapsibleContent" id="transposeInput">
                     <input type="number" id="transpose" value="0" aria-label="Semitones to transpose"/>
-                    <button class="ui button" id="transpose-btn">Transpose</button>
+                    <button type="button" class="ui button" id="transpose-btn">Transpose</button>
                 </div>
             </div>
         </div>

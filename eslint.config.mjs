@@ -121,7 +121,7 @@ export default defineConfig(
                     code: 160,
                 },
             ],
-            "no-bitwise": "error",
+            "no-bitwise": "off", // needed for braille dot combinations
             "no-caller": "error",
             "no-cond-assign": "error",
             "no-console": [
