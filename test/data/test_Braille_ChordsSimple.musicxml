@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN"
+  "http://www.musicxml.org/dtds/partwise.dtd">
+<!--
+  Test score for braille M3: Simple chords in treble clef.
+  C major, 4/4 time.
+  Measure 1: C-E-G quarter chord, F-A-C5 quarter chord, G-B-D5 quarter chord, C5 quarter note
+  Tests: chord interval rendering, treble clef reading direction (highest note written, intervals down).
+-->
+<score-partwise version="3.1">
+  <work><work-title>test_Braille_ChordsSimple</work-title></work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Treble</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <!-- Chord 1: C4-E4-G4 (C major triad) -->
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <!-- Chord 2: F4-A4-C5 (F major triad) -->
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>A</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <!-- Chord 3: G4-B4-D5 (G major triad) -->
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>B</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>D</step><octave>5</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <!-- Single note: C5 -->
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

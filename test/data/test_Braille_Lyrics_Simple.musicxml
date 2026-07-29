@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <work>
+    <work-title>test_Braille_Lyrics_Simple</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voice</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!-- A simple vocal melody with lyrics to test braille lyrics output:
+         - C major, 4/4, 4 measures
+         - Mix of single-syllable and multi-syllable words
+         - Measure 3 has a melisma (extend) on "on" spanning 2 notes
+         Verse 1: "the sun will be shining on_ a new day"
+         Verse 2: "the moon will be glowing on_ a dark night" -->
+
+    <!-- Measure 1: "the sun will" (3 single-syllable words) -->
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>4</duration><type>quarter</type>
+        <lyric number="1"><syllabic>single</syllabic><text>the</text></lyric>
+        <lyric number="2"><syllabic>single</syllabic><text>the</text></lyric>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>4</duration><type>quarter</type>
+        <lyric number="1"><syllabic>single</syllabic><text>sun</text></lyric>
+        <lyric number="2"><syllabic>single</syllabic><text>moon</text></lyric>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>4</duration><type>quarter</type>
+        <lyric number="1"><syllabic>single</syllabic><text>will</text></lyric>
+        <lyric number="2"><syllabic>single</syllabic><text>will</text></lyric>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>4</duration><type>quarter</type>
+        <lyric number="1"><syllabic>single</syllabic><text>be</text></lyric>
+        <lyric number="2"><syllabic>single</syllabic><text>be</text></lyric>
+      </note>
+    </measure>
+
+    <!-- Measure 2: v1 "shi-ning", v2 "glow-ing" -->
+    <measure number="2">
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>8</duration><type>half</type>
+        <lyric number="1"><syllabic>begin</syllabic><text>shi</text></lyric>
+        <lyric number="2"><syllabic>begin</syllabic><text>glow</text></lyric>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>8</duration><type>half</type>
+        <lyric number="1"><syllabic>end</syllabic><text>ning</text></lyric>
+        <lyric number="2"><syllabic>end</syllabic><text>ing</text></lyric>
+      </note>
+    </measure>
+
+    <!-- Measure 3: "on" with melisma spanning 2 notes, then "a" -->
+    <measure number="3">
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>4</duration><type>quarter</type>
+        <lyric number="1"><syllabic>single</syllabic><text>on</text><extend/></lyric>
+        <lyric number="2"><syllabic>single</syllabic><text>on</text><extend/></lyric>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>4</octave></pitch>
+        <duration>4</duration><type>quarter</type>
+        <!-- no lyric: melisma continuation from "on" in both verses -->
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>4</duration><type>quarter</type>
+        <lyric number="1"><syllabic>single</syllabic><text>a</text></lyric>
+        <lyric number="2"><syllabic>single</syllabic><text>a</text></lyric>
+      </note>
+      <note>
+        <rest/><duration>4</duration><type>quarter</type>
+      </note>
+    </measure>
+
+    <!-- Measure 4: v1 "new day", v2 "dark night" -->
+    <measure number="4">
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>4</duration><type>quarter</type>
+        <lyric number="1"><syllabic>single</syllabic><text>new</text></lyric>
+        <lyric number="2"><syllabic>single</syllabic><text>dark</text></lyric>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>8</duration><type>half</type>
+        <lyric number="1"><syllabic>single</syllabic><text>day</text></lyric>
+        <lyric number="2"><syllabic>single</syllabic><text>night</text></lyric>
+      </note>
+      <note>
+        <rest/><duration>4</duration><type>quarter</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

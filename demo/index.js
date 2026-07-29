@@ -1,4 +1,5 @@
 import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
+import { BrailleConverter } from '../src/Plugins/Braille/BrailleConverter';
 import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
 import * as jsPDF  from '../node_modules/jspdf/dist/jspdf.es.min';
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.umd.min';
@@ -71,6 +72,14 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             "Schumann, R. - Dichterliebe": "Dichterliebe01.xml",
             "Telemann, G.P. - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
             "Telemann, G.P. - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
+            // Music Braille demo samples, kept at the bottom (niche feature). Selecting one switches the
+            //   braille display on automatically (see setSampleSpecificOptions). These five showcase the
+            //   main braille formats; the full set of ~28 test_Braille_* files remains in test/data.
+            "Music Braille Test - Accidentals": "test_Braille_Accidentals.musicxml",
+            "Music Braille Test - Lyrics": "test_Braille_Lyrics_Simple.musicxml",
+            "Music Braille Test - Bar-over-bar (Piano)": "test_Braille_BarOverBar.musicxml",
+            "Music Braille Test - Ensemble (String Quartet)": "test_Braille_Ensemble_Quartet.musicxml",
+            "Music Braille Test - Facsimile": "test_Braille_Facsimile_option.musicxml", // also switches facsimile mode on (see setSampleSpecificOptions)
         },
 
         zoom = 1.0,
@@ -82,6 +91,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         err,
         error_tr,
         canvas,
+        openFileBtn,
+        openFileInput,
         selectSample,
         selectBounding,
         skylineDebug,
@@ -104,7 +115,16 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         darkModeBtn,
         transpose,
         transposeBtn,
-        versionDiv;
+        versionDiv,
+        // Music Braille demo option elements (see the "Music Braille" section at the bottom of this file)
+        brailleContainer,
+        brailleOptionsDetails,
+        brailleShowCheckbox,
+        brailleShowClassicalCheckbox,
+        brailleLyricsCheckbox,
+        brailleFacsimileCheckbox,
+        brailleBarOverBarCheckbox,
+        brailleEnsembleCheckbox;
     
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -123,6 +143,13 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var pageBreaksOptionStashedValue = false;
     var pageBreaksOptionNeedsReset = false;
     var systemBreaksOptionStashedValue = false; // reset handled by pageBreaksOptionNeedsReset
+    // Music Braille sample stashes (see the braille hooks in setSampleSpecificOptions):
+    var brailleSampleNeedsReset = false;
+    var brailleSampleStashedShowBraille = false; // braille display state before a braille sample switched it on
+    var brailleFacsimileSampleNeedsReset = false;
+    var brailleFacsimileSampleStashedCheckbox = false; // facsimile checkbox state before the facsimile sample forced it on
+    var brailleFacsimileSampleStashedSystemBreaks = false; // NewSystemAtXMLNewSystemAttribute before the facsimile sample forced it on
+    var sheetRendered = false; // whether osmd.render() ran for the currently loaded sheet (see "Show classical score (above braille)" option)
 
     var showControls = true;
     var showExportPdfControl = false;
@@ -235,6 +262,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         resetCursorBtn = document.getElementById("reset-cursor-btn");
         followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
         incrementalCheckbox = document.getElementById("incremental-checkbox");
+        openFileBtn = document.getElementById("open-file-btn");
+        openFileInput = document.getElementById("open-file-input");
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
         debugReRenderBtn = document.getElementById("debug-re-render-btn");
@@ -251,12 +280,34 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         versionDiv = document.getElementById('versionDiv');
         zoomControlsButtons = document.getElementById('zoomControlsButtons')
 
+        // ── Music Braille demo option (see the "Music Braille" section at the bottom of this file) ──
+        brailleContainer = document.createElement("div");
+        brailleContainer.id = 'brailleContainer'; // so demo.css can reserve sidebar width like #osmdCanvasDiv
+        brailleOptionsDetails = document.getElementById("brailleOptionsDetails");
+        brailleShowCheckbox = document.getElementById("braille-show-checkbox");
+        brailleShowClassicalCheckbox = document.getElementById("braille-show-classical-checkbox");
+        brailleLyricsCheckbox = document.getElementById("braille-lyrics-checkbox");
+        brailleFacsimileCheckbox = document.getElementById("braille-facsimile-checkbox");
+        brailleBarOverBarCheckbox = document.getElementById("braille-bar-over-bar-checkbox");
+        brailleEnsembleCheckbox = document.getElementById("braille-ensemble-checkbox");
+        if (findGetParameter('braille') === '1' && brailleShowCheckbox) {
+            // ?braille=1: start with the Music Braille score displayed and its options section expanded --
+            //   lets braille users be linked directly to a braille-enabled demo, without having to find
+            //   the collapsed "Music Braille options" section first. Same effect as checking
+            //   "Show Music Braille score (below classical)" manually.
+            brailleShowCheckbox.checked = true;
+            if (brailleOptionsDetails) {
+                brailleOptionsDetails.open = true;
+            }
+        }
+        updateClassicalScoreVisibility(); // browsers may also restore changed checkbox states on reload
+
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
         showDebugControls = paramDebugControls !== '0';
         if (showDebugControls) {
             var elementsToEnable = [
-                selectSample, selectBounding, selectPageSizes[0], divControls
+                selectSample, selectBounding, selectPageSizes[0], divControls, openFileBtn
             ];
             for (var i=0; i<elementsToEnable.length; i++) {
                 if (elementsToEnable[i]) { // make sure this element is not null/exists in the index.html, e.g. github.io demo has different index.html
@@ -525,6 +576,23 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             }
         }
 
+        if (openFileBtn && openFileInput) {
+            // "Open file..." next to the sample select: an accessible alternative to drag&drop for
+            //   loading your own files -- a native file dialog works with keyboard and screen reader alone.
+            //   The visible, aria-labeled button forwards the click to the hidden <input type=file>
+            //   (display:none also removes the input from the accessibility tree), so NVDA & co announce
+            //   a single, properly named control instead of the browser's default file widget.
+            openFileBtn.onclick = function () {
+                openFileInput.click();
+            };
+            openFileInput.onchange = function () {
+                if (openFileInput.files && openFileInput.files.length > 0) {
+                    openLocalFile(openFileInput.files[0]);
+                }
+                openFileInput.value = ""; // reset so picking the same file again still fires onchange
+            };
+        }
+
         if (debugReRenderBtn) {
             debugReRenderBtn.onclick = function () {
                 rerender();
@@ -534,6 +602,66 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (debugClearBtn) {
             debugClearBtn.onclick = function () {
                 openSheetMusicDisplay.clear();
+            }
+        }
+
+        // ── Music Braille option checkboxes (see the "Music Braille" section at the bottom of this file) ──
+        if (brailleShowCheckbox) {
+            // Master toggle: converts and shows the Music Braille score below the classical one, or removes it.
+            brailleShowCheckbox.onchange = function () {
+                updateClassicalScoreVisibility(); // switching braille off forces the classical score back on
+                if (classicalScoreEnabled() || (brailleEnabled() && brailleFacsimileCheckbox && brailleFacsimileCheckbox.checked)) {
+                    ensureSheetRendered();
+                }
+                renderBraille(); // renders, or clears the braille output when it was just switched off
+            }
+        }
+
+        if (brailleShowClassicalCheckbox) {
+            // Toggle the classical (non-braille) score above the braille (only effective while the braille
+            //   score is shown). Unchecking hides it and skips rendering for subsequently loaded scores,
+            //   which makes large scores load much faster -- osmd.load() alone builds the data model the
+            //   braille conversion reads. Re-checking shows the score again and renders the current sheet
+            //   if it was loaded without rendering.
+            brailleShowClassicalCheckbox.onchange = function () {
+                updateClassicalScoreVisibility();
+                if (classicalScoreEnabled()) {
+                    ensureSheetRendered();
+                }
+                // the braille output itself is unaffected -- no re-conversion needed
+            }
+        }
+
+        if (brailleLyricsCheckbox) {
+            // re-convert the already-loaded sheet with the new lyrics setting; no reload/re-render of the score needed
+            brailleLyricsCheckbox.onchange = function () {
+                renderBraille();
+            }
+        }
+
+        if (brailleFacsimileCheckbox) {
+            // facsimile reads the rendered GraphicSheet. Normally the score is already rendered; if it
+            //   was loaded without rendering ("Show classical score (above braille)" off), render it now
+            //   (it stays hidden via CSS). Then re-convert the braille -- no score reload needed.
+            brailleFacsimileCheckbox.onchange = function () {
+                if (brailleFacsimileCheckbox.checked) {
+                    ensureSheetRendered();
+                }
+                renderBraille();
+            }
+        }
+
+        if (brailleBarOverBarCheckbox) {
+            // bar-over-bar is a pure re-conversion of the loaded sheet; no score reload/re-render needed
+            brailleBarOverBarCheckbox.onchange = function () {
+                renderBraille();
+            }
+        }
+
+        if (brailleEnsembleCheckbox) {
+            // ensemble is a pure re-conversion of the loaded sheet; no score reload/re-render needed
+            brailleEnsembleCheckbox.onchange = function () {
+                renderBraille();
             }
         }
 
@@ -595,6 +723,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         //openSheetMusicDisplay.setDrawBoundingBox("GraphicalLabel", false);
         openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to see more detailed control flow information in console
         document.body.appendChild(canvas);
+        document.body.appendChild(brailleContainer); // braille output target -- stays empty until the braille option is enabled
 
         if (versionDiv) {
             versionDiv.innerHTML = "OSMD Version: " + openSheetMusicDisplay.Version.replace("-release", "").replace("-dev", "");
@@ -683,6 +812,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
      * If you just call render() instead of renderAndScrollBack(),
      *   it will scroll you back to the top of the page, even if you were scrolled to the bottom before. */
     function renderAndScrollBack() {
+        sheetRendered = true; // braille: tracked for the "Show classical score (above braille)" load-without-render path
         if (incrementalCheckbox && incrementalCheckbox.checked) {
             // Incremental ("system by system") rendering: paint the first batch now and append more as the
             //   user scrolls toward the not-yet-rendered edge (page bottom, or the right edge for a single
@@ -782,7 +912,20 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
                 openSheetMusicDisplay.zoom = zoom;
                 // openSheetMusicDisplay.Sheet.Instruments[0].Staves[1].Visible = false;
                 //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
-                renderAndScrollBack();
+
+                // braille: settings for the Music Braille samples (e.g. test_Braille_Facsimile_option) are
+                //   applied per-sample in setSampleSpecificOptions() (which runs before this load), and
+                //   restored when another score loads.
+                sheetRendered = false; // fresh data model -- nothing rendered for it yet
+                // Braille display on + "Show classical score (above braille)" off skips the classical
+                //   (visual) render: load() alone builds the data model the braille conversion reads, so
+                //   large scores load much faster. Exception: braille facsimile mode mirrors the rendered
+                //   layout (GraphicSheet), so it needs a render -- which stays hidden via CSS in that case.
+                //   With the braille display off (the default), this always renders, as before the feature.
+                if (classicalScoreEnabled() || (brailleEnabled() && brailleFacsimileCheckbox && brailleFacsimileCheckbox.checked)) {
+                    renderAndScrollBack();
+                }
+                renderBraille(); // no-op (clears the output) unless the braille display is enabled
             },
             function (e) {
                 errorLoadingOrRenderingSheet(e, "rendering");
@@ -886,6 +1029,51 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         } else if (drawPartNamesOptionNeedsReset) {
             openSheetMusicDisplay.setOptions({ drawPartNames: drawPartNamesOptionStashedValue, drawPartAbbreviations: drawPartAbbreviationsStashedValue });
             drawPartNamesOptionNeedsReset = false;
+        }
+
+        // ── Music Braille sample hooks (see the "Music Braille" section at the bottom of this file) ──
+        // Selecting one of the Music Braille demo samples switches the braille display on automatically --
+        //   they exist to showcase braille -- and expands the collapsed "Music Braille options" section so
+        //   its settings are visible. The previous display state is restored when a non-braille sample is
+        //   selected again. (Setting .checked here doesn't fire onchange; renderBraille() runs anyway after
+        //   load and reads the updated checkboxes.)
+        if (!isCustom && str.includes("test_Braille_")) {
+            if (!brailleSampleNeedsReset) { // only stash once for a row of consecutive braille samples
+                brailleSampleStashedShowBraille = brailleEnabled();
+                brailleSampleNeedsReset = true;
+            }
+            if (brailleShowCheckbox) {
+                brailleShowCheckbox.checked = true;
+            }
+            if (brailleOptionsDetails) {
+                brailleOptionsDetails.open = true;
+            }
+            updateClassicalScoreVisibility(); // braille on: an unchecked "Show classical score" takes effect again
+        } else if (brailleSampleNeedsReset) {
+            if (brailleShowCheckbox) {
+                brailleShowCheckbox.checked = brailleSampleStashedShowBraille;
+            }
+            brailleSampleNeedsReset = false;
+            updateClassicalScoreVisibility(); // braille restored to off forces the classical score back on
+        }
+        // test_Braille_Facsimile_option.musicxml is designed to demonstrate facsimile braille: turn facsimile
+        //   output on and let the system line breaks follow the MusicXML, so the braille mirrors the intended
+        //   print layout. Stash the prior facsimile checkbox + newSystem settings, restored when another score
+        //   is selected.
+        if (!isCustom && str.includes("test_Braille_Facsimile_option")) {
+            brailleFacsimileSampleStashedCheckbox = !!(brailleFacsimileCheckbox && brailleFacsimileCheckbox.checked);
+            brailleFacsimileSampleStashedSystemBreaks = openSheetMusicDisplay.EngravingRules.NewSystemAtXMLNewSystemAttribute;
+            if (brailleFacsimileCheckbox) {
+                brailleFacsimileCheckbox.checked = true;
+            }
+            openSheetMusicDisplay.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
+            brailleFacsimileSampleNeedsReset = true;
+        } else if (brailleFacsimileSampleNeedsReset) {
+            if (brailleFacsimileCheckbox) {
+                brailleFacsimileCheckbox.checked = brailleFacsimileSampleStashedCheckbox;
+            }
+            openSheetMusicDisplay.EngravingRules.NewSystemAtXMLNewSystemAttribute = brailleFacsimileSampleStashedSystemBreaks;
+            brailleFacsimileSampleNeedsReset = false;
         }
     }
 
@@ -1122,6 +1310,251 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         // pdf.output("pdfobjectnewwindow", {filename: "osmd_createPDF.pdf"}); // open PDF in new tab/window
     }
 
+    // Load a local MusicXML file (a File object) into OSMD. Shared by the drag&drop handler and the
+    //   "Open file..." button next to the sample select (the keyboard/screen-reader friendly path).
+    function openLocalFile(file) {
+        var filename = file.name.toLowerCase();
+        var isXmlFile = filename.indexOf(".xml") > 0 || filename.indexOf(".musicxml") > 0;
+        var isMxlFile = filename.indexOf(".mxl") > 0;
+        if (!isXmlFile && !isMxlFile) {
+            alert("No valid .xml/.mxl/.musicxml file!");
+            return;
+        }
+        if (selectSample) {
+            // Add "Custom" entry to the sample select and select it (removed again when a sample loads)
+            selectSample.appendChild(custom);
+            custom.selected = "selected";
+        }
+        var reader = new FileReader();
+        reader.onload = function (res) {
+            selectSampleOnChange(res.target.result); // a string argument is loaded as raw file content, not as URL
+        };
+        if (isXmlFile) {
+            reader.readAsText(file);
+        } else {
+            reader.readAsBinaryString(file); // .mxl is zipped -- osmd.load() detects and unzips binary strings
+        }
+    }
+
+    // ═══════════════════════════ Music Braille (optional demo feature) ═══════════════════════════
+    // Everything braille-related in the demo lives below (plus the small hooks marked "braille"/"Music
+    //   Braille" in init(), selectSampleOnChange() and setSampleSpecificOptions()) -- non-braille usage
+    //   of the demo can ignore this section entirely. The braille score is only converted and shown when
+    //   the user enables "Show Music Braille score (below classical)" in the collapsed "Music Braille
+    //   options" section at the bottom of the sidebar, selects one of the "Music Braille Test" samples,
+    //   or opens the demo with ?braille=1. See src/Plugins/Braille/README.md for the braille module.
+
+    /** Whether the Music Braille score display is enabled ("Show Music Braille score" checkbox). */
+    function brailleEnabled() {
+        return !!(brailleShowCheckbox && brailleShowCheckbox.checked);
+    }
+
+    // ── "Show classical score (above braille)" option ────────────────────────────────────────
+    // Only effective while the braille score is shown (braille off means classical on, so the demo
+    //   can never end up displaying nothing). When unchecked, the visual (non-braille) score is
+    //   hidden and newly loaded scores are not rendered at all: osmd.load() alone builds the data
+    //   model the braille conversion reads, skipping the whole graphical layout step -- the expensive
+    //   part for large scores. Braille facsimile mode is the exception: it mirrors the rendered
+    //   layout (GraphicSheet), so it forces a render; the classical score then simply stays hidden.
+    function classicalScoreEnabled() {
+        if (!brailleEnabled()) {
+            return true; // hiding the classical score is a braille display option
+        }
+        return !brailleShowClassicalCheckbox || brailleShowClassicalCheckbox.checked;
+    }
+
+    // Hide/show the classical score via a body class (see demo.css). visibility + height:0 instead
+    //   of display:none, so the container keeps its width and OSMD can still render into it.
+    function updateClassicalScoreVisibility() {
+        if (classicalScoreEnabled()) {
+            document.body.classList.remove("classical-score-hidden");
+        } else {
+            document.body.classList.add("classical-score-hidden");
+        }
+    }
+
+    // Render the current sheet if it was loaded without rendering (classical score disabled).
+    //   Needed when the user re-enables the classical score or enables facsimile mode.
+    function ensureSheetRendered() {
+        if (!sheetRendered && openSheetMusicDisplay && openSheetMusicDisplay.Sheet) {
+            renderAndScrollBack();
+        }
+    }
+
+    // (Re)convert the currently loaded sheet to braille and repopulate the braille container.
+    //   Called once after each load, and again whenever a braille UI option changes (e.g. the lyrics
+    //   checkbox) -- so toggling an option re-renders just the braille, no score reload needed.
+    //   While the braille display is disabled (the default), this only clears the container.
+    function renderBraille() {
+        if (!brailleContainer) {
+            return;
+        }
+        if (!brailleEnabled()) {
+            // braille display off: leave no stale output (or its headings) in the page/accessibility tree
+            brailleContainer.innerHTML = "";
+            return;
+        }
+        if (!openSheetMusicDisplay || !openSheetMusicDisplay.Sheet) {
+            return; // nothing loaded yet
+        }
+        const converter = new BrailleConverter();
+        // ── Braille output settings ──────────────────────────────────────
+        // brailleFormat: "facsimile" mirrors the print layout (adds clefs, ottava brackets, system line breaks)
+        //   by reading the rendered GraphicSheet; "nonfacsimile" is standard braille music (default). Facsimile
+        //   follows OSMD's own system breaks, which usually look better than the MusicXML's. To make the breaks
+        //   follow the MusicXML instead, set EngravingRules.NewSystemAtXMLNewSystemAttribute = true yourself.
+        const brailleFormat = (brailleFacsimileCheckbox && brailleFacsimileCheckbox.checked) ? "facsimile" : "nonfacsimile"; // "Enable facsimile mode" UI toggle (off by default)
+        const barOverBarFormat = !!(brailleBarOverBarCheckbox && brailleBarOverBarCheckbox.checked); // "Bar-over-bar (keyboard)" UI toggle: vertically aligned measures (off by default)
+        const ensembleFormat = !!(brailleEnsembleCheckbox && brailleEnsembleCheckbox.checked); // "Ensemble" UI toggle: bar-over-bar with instrument abbreviations (off by default)
+        const lyricsFormat = !!(brailleLyricsCheckbox && brailleLyricsCheckbox.checked); // "Enable braille lyrics" UI toggle (off by default)
+        // Note: bar-over-bar and ensemble require monospace font for visual alignment.
+        // Lyrics uses the same monospace formatting for consistent appearance.
+        const needsMonospace = barOverBarFormat || ensembleFormat || lyricsFormat;
+        // ────────────────────────────────────────────────────────────────────
+        const output = converter.convert(openSheetMusicDisplay.Sheet, {
+            // staffIndex: 0, // uncomment to render only one staff (e.g. RH of piano)
+            //   multiStaff is auto-detected: scores with >1 staff render all staves with hand signs
+            barOverBar: barOverBarFormat,
+            ensemble: ensembleFormat,
+            lyrics: lyricsFormat,
+            format: brailleFormat,
+            graphicSheet: openSheetMusicDisplay.GraphicSheet, // only needed for facsimile option (format: "facsimile")
+        });
+        brailleContainer.innerHTML = "";
+        // Real heading elements so screen readers list them under Headings (e.g. NVDA Elements List).
+        //   <h2> makes the score the page's single top-level output landmark -- with only the OSMD title
+        //   at <h1> and everything else at <h3>, a braille user can jump straight here. The debug section's
+        //   "Braille Debug Output" heading (in createBrailleDebugTable) is the <h3> that nests under this.
+        var scoreHeading = document.createElement("h2");
+        scoreHeading.textContent = "Music Braille Score";
+        scoreHeading.style.fontFamily = "sans-serif";
+        scoreHeading.style.fontSize = "20px";
+        scoreHeading.style.margin = "0";
+        scoreHeading.style.padding = "12px 8px 0 8px"; // align left edge with the braille text below (8px), gap comes from its own top padding
+        brailleContainer.appendChild(scoreHeading);
+        var brailleTextDiv = document.createElement("div");
+        brailleTextDiv.style.fontSize = "24px";
+        brailleTextDiv.style.fontFamily = needsMonospace
+            ? "'Consolas', 'Courier New', 'DejaVu Sans Mono', monospace" : "serif";
+        brailleTextDiv.style.padding = "12px 8px";
+        brailleTextDiv.style.whiteSpace = needsMonospace ? "pre" : "pre-line";
+        if (needsMonospace) {
+            brailleTextDiv.style.fontFeatureSettings = "'liga' 0"; // disable ligatures for uniform width
+        }
+        brailleTextDiv.textContent = output.text;
+        brailleContainer.appendChild(brailleTextDiv);
+        brailleContainer.appendChild(createBrailleDebugTable(output, brailleFormat));
+        window.brailleDebug = {
+            output: output,
+            text: output.text,
+            debugEntries: output.debugEntries
+        };
+    }
+
+    /**
+     * Creates an HTML table showing braille debug/translation information.
+     * Each row shows: index, braille character, meaning, and measure number.
+     * Barline rows are highlighted for easy visual grouping by measure.
+     */
+    function createBrailleDebugTable(output, format) {
+        var container = document.createElement("div");
+        container.style.padding = "8px";
+        container.style.marginTop = "8px";
+
+        var heading = document.createElement("h3"); // h3 nests under the "Music Braille Score" <h2> without skipping a level
+        heading.textContent = "Braille Debug Output";
+        heading.style.margin = "0 0 2px 0";
+        heading.style.fontFamily = "sans-serif";
+        heading.style.fontSize = "1em"; // keep its prior <h4> size -- heading level is semantic, not visual
+        container.appendChild(heading);
+
+        var modeLabel = document.createElement("div");
+        modeLabel.textContent = (format || "nonfacsimile") + " mode";
+        modeLabel.style.fontFamily = "sans-serif";
+        modeLabel.style.fontSize = "12px";
+        modeLabel.style.fontStyle = "italic";
+        modeLabel.style.color = "#888";
+        modeLabel.style.marginBottom = "8px";
+        container.appendChild(modeLabel);
+
+        var table = document.createElement("table");
+        table.style.borderCollapse = "collapse";
+        table.style.fontFamily = "monospace";
+        table.style.fontSize = "13px";
+        table.style.width = "auto";
+
+        // Header row
+        var thead = document.createElement("thead");
+        var headerRow = document.createElement("tr");
+        var headers = ["#", "Braille", "Meaning", "Measure"];
+        for (var h = 0; h < headers.length; h++) {
+            var th = document.createElement("th");
+            th.textContent = headers[h];
+            th.style.padding = "4px 12px";
+            th.style.borderBottom = "2px solid #333";
+            th.style.textAlign = "left";
+            th.style.fontFamily = "sans-serif";
+            th.style.fontSize = "12px";
+            th.style.color = "#555";
+            headerRow.appendChild(th);
+        }
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // Body rows
+        var tbody = document.createElement("tbody");
+        var entries = output.debugEntries;
+        for (var i = 0; i < entries.length; i++) {
+            var entry = entries[i];
+            var isBarline = entry.meaning === "barline";
+            var tr = document.createElement("tr");
+
+            if (isBarline) {
+                tr.style.backgroundColor = "#e8f0fe";
+                tr.style.fontWeight = "bold";
+                tr.style.color = "#1a56db";
+            } else if (i % 2 === 0) {
+                tr.style.backgroundColor = "#fafafa";
+            }
+
+            // Index column
+            var tdIndex = document.createElement("td");
+            tdIndex.textContent = i;
+            tdIndex.style.padding = "3px 12px";
+            tdIndex.style.borderBottom = "1px solid #e0e0e0";
+            tdIndex.style.color = "#999";
+            tr.appendChild(tdIndex);
+
+            // Braille character column
+            var tdBraille = document.createElement("td");
+            tdBraille.textContent = entry.braille;
+            tdBraille.style.padding = "3px 12px";
+            tdBraille.style.borderBottom = "1px solid #e0e0e0";
+            tdBraille.style.fontSize = "18px";
+            tr.appendChild(tdBraille);
+
+            // Meaning column
+            var tdMeaning = document.createElement("td");
+            tdMeaning.textContent = entry.meaning;
+            tdMeaning.style.padding = "3px 12px";
+            tdMeaning.style.borderBottom = "1px solid #e0e0e0";
+            tr.appendChild(tdMeaning);
+
+            // Measure number column
+            var tdMeasure = document.createElement("td");
+            tdMeasure.textContent = entry.measureNumber;
+            tdMeasure.style.padding = "3px 12px";
+            tdMeasure.style.borderBottom = "1px solid #e0e0e0";
+            tdMeasure.style.textAlign = "center";
+            tr.appendChild(tdMeasure);
+
+            tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        container.appendChild(table);
+        return container;
+    }
+
     // Register events: load, drag&drop
     window.addEventListener("load", function () {
         init();
@@ -1141,23 +1574,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         if (!event.dataTransfer || !event.dataTransfer.files || event.dataTransfer.files.length === 0) {
             return;
         }
-        // Add "Custom..." score
-        selectSample.appendChild(custom);
-        custom.selected = "selected";
-        // Read dragged file
-        var reader = new FileReader();
-        reader.onload = function (res) {
-            selectSampleOnChange(res.target.result);
-        };
-        var filename = event.dataTransfer.files[0].name;
-        if (filename.toLowerCase().indexOf(".xml") > 0
-            || filename.toLowerCase().indexOf(".musicxml") > 0) {
-            reader.readAsText(event.dataTransfer.files[0]);
-        } else if (event.dataTransfer.files[0].name.toLowerCase().indexOf(".mxl") > 0) {
-            reader.readAsBinaryString(event.dataTransfer.files[0]);
-        }
-        else {
-            alert("No vaild .xml/.mxl/.musicxml file!");
-        }
+        openLocalFile(event.dataTransfer.files[0]);
     });
 }());
