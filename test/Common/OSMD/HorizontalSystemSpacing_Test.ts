@@ -4,6 +4,7 @@ import {
   VexFlowHorizontalSpacingCandidateDiagnostics,
   VexFlowHorizontalSpacingColumnDiagnostics,
   VexFlowHorizontalSpacingDiagnostics,
+  VexFlowHorizontalSpacingGapDiagnostics,
   VexFlowHorizontalSpacingSystemDiagnostics,
 } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowHorizontalSpacing";
 import { LyricFootprint } from "../../../src/MusicalScore/Graphical/GraphicalLyricEntry";
@@ -118,8 +119,10 @@ describe("Horizontal system spacing", (): void => {
     await osmd.load(pickupAndFullMeasureScore());
     osmd.render();
 
+    const system: VexFlowHorizontalSpacingSystemDiagnostics =
+      getDiagnostics(osmd).selectedSystems[0];
     const columns: VexFlowHorizontalSpacingColumnDiagnostics[] =
-      getDiagnostics(osmd).selectedSystems[0].columns;
+      system.columns;
     const systemStart: VexFlowHorizontalSpacingColumnDiagnostics =
       columns.find((column): boolean => column.kind === "system-start");
     const boundary: VexFlowHorizontalSpacingColumnDiagnostics =
@@ -148,22 +151,29 @@ describe("Horizontal system spacing", (): void => {
       boundary.baseX - pickupColumn.baseX,
       0.001,
     );
+    const terminalGap: VexFlowHorizontalSpacingGapDiagnostics =
+      getTerminalGap(system, 0);
+    expect(terminalGap.kind).to.equal("measure-terminal");
+    expect(terminalGap.measureNumber).to.equal(0);
+    expect(terminalGap.hardWeight).to.equal(0);
+    expect(terminalGap.residualWeight).to.equal(0);
+    expect(terminalGap.hardAddedWidthPx).to.be.closeTo(0, 0.001);
+    expect(terminalGap.residualAddedWidthPx).to.be.closeTo(0, 0.001);
+    expect(terminalGap.finalWidthPx).to.be.closeTo(
+      terminalGap.baseWidthPx +
+      terminalGap.hardAddedWidthPx +
+      terminalGap.residualAddedWidthPx,
+      0.001,
+    );
   });
 
-  it("retains hard lyric clearance across a compact pickup boundary", async (): Promise<void> => {
+  it("retains hard lyric clearance while redirecting a spanning pickup deficit", async (): Promise<void> => {
     const osmd: OpenSheetMusicDisplay = createOsmd();
     await osmd.load(pickupAndFullMeasureScore(true));
     osmd.render();
 
     const system: VexFlowHorizontalSpacingSystemDiagnostics =
       getDiagnostics(osmd).selectedSystems[0];
-    const systemStart: VexFlowHorizontalSpacingColumnDiagnostics =
-      system.columns.find((column): boolean => column.kind === "system-start");
-    const boundary: VexFlowHorizontalSpacingColumnDiagnostics =
-      system.columns.find((column): boolean => column.kind === "measure-boundary");
-    const pickupAddition: number =
-      (boundary.finalX - systemStart.finalX) -
-      (boundary.baseX - systemStart.baseX);
     const lyricConstraint: ResolvedHorizontalSpacingConstraint =
       system.resolvedConstraints.find(
         (constraint): boolean =>
@@ -174,7 +184,267 @@ describe("Horizontal system spacing", (): void => {
     expect(lyricConstraint.finalDistance).to.be.at.least(
       lyricConstraint.minimumDistance - 0.001,
     );
-    expect(pickupAddition).to.be.greaterThan(0);
+    const pickupTerminalGap: VexFlowHorizontalSpacingGapDiagnostics =
+      getTerminalGap(system, 0);
+    expect(pickupTerminalGap.hardWeight).to.equal(0);
+    expect(pickupTerminalGap.hardAddedWidthPx).to.be.closeTo(0, 0.001);
+    expect(
+      system.gaps.some(
+        (gap): boolean =>
+          gap.hardAddedWidthPx > 0.001 &&
+          gap.fromColumn >= lyricConstraint.fromColumn &&
+          gap.toColumn <= lyricConstraint.toColumn,
+      ),
+    ).to.equal(true);
+  });
+
+  it("caps preferred multi-onset terminal padding and redirects discretionary width", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(quarterRestScore());
+    osmd.render();
+
+    const system: VexFlowHorizontalSpacingSystemDiagnostics =
+      getDiagnostics(osmd).selectedSystems[0];
+    const terminalGap: VexFlowHorizontalSpacingGapDiagnostics =
+      getTerminalGap(system, 0);
+    const lastColumn: VexFlowHorizontalSpacingColumnDiagnostics =
+      system.columns[terminalGap.fromColumn];
+    const context: VF.TickContext = notationContexts(osmd).find(
+      (candidate: VF.TickContext): boolean =>
+        candidate.getTickID() === lastColumn.tickIds[0],
+    );
+    const measure: any = osmd.GraphicSheet.MeasureList[0].find(
+      (candidate: any): boolean => candidate?.isVisible?.() !== false,
+    );
+    const contextMetrics: ReturnType<VF.TickContext["getMetrics"]> = context.getMetrics();
+    const baseTerminalPaddingPx: number =
+      terminalGap.baseWidthPx -
+      contextMetrics.notePx -
+      contextMetrics.totalRightPx -
+      measure.endInstructionsWidth * 10;
+
+    expect(terminalGap.notationRightExtentPx).to.be.closeTo(
+      contextMetrics.notePx + contextMetrics.totalRightPx,
+      0.001,
+    );
+    expect(terminalGap.endInstructionsWidthPx).to.be.closeTo(
+      measure.endInstructionsWidth * 10,
+      0.001,
+    );
+    expect(terminalGap.baseTerminalPaddingPx).to.be.closeTo(
+      baseTerminalPaddingPx,
+      0.001,
+    );
+    expect(baseTerminalPaddingPx).to.be.at.least(-0.001);
+    expect(baseTerminalPaddingPx).to.be.at.most(
+      VF.Stave.rightPadding + 0.001,
+    );
+    expect(terminalGap.hardWeight).to.equal(0);
+    expect(terminalGap.residualWeight).to.equal(0);
+    expect(terminalGap.residualAddedWidthPx).to.be.closeTo(0, 0.001);
+    expect(
+      system.gaps.some(
+        (gap): boolean =>
+          gap.kind === "rhythmic" && gap.residualAddedWidthPx > 0.001,
+      ),
+    ).to.equal(true);
+  });
+
+  it("allows a direct terminal hard constraint to exceed the preferred cap", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(terminalLyricScore());
+    osmd.render();
+
+    const system: VexFlowHorizontalSpacingSystemDiagnostics =
+      getDiagnostics(osmd).selectedSystems[0];
+    const terminalGap: VexFlowHorizontalSpacingGapDiagnostics =
+      getTerminalGap(system, 0);
+    const terminalConstraint: ResolvedHorizontalSpacingConstraint =
+      system.resolvedConstraints.find(
+        (constraint): boolean =>
+          constraint.reason === "system-edge" &&
+          constraint.fromColumn === terminalGap.fromColumn &&
+          constraint.toColumn === terminalGap.toColumn &&
+          constraint.addedDistance > 0.001,
+      );
+
+    expect(terminalGap.hardWeight).to.equal(0);
+    expect(terminalGap.residualWeight).to.equal(0);
+    expect(terminalGap.hardAddedWidthPx).to.be.greaterThan(0);
+    expect(terminalGap.residualAddedWidthPx).to.be.closeTo(0, 0.001);
+    expect(terminalGap.directConstraintReasons).to.include("system-edge");
+    expect(terminalGap.finalWidthPx).to.be.closeTo(
+      terminalGap.baseWidthPx + terminalGap.hardAddedWidthPx,
+      0.001,
+    );
+    expect(terminalConstraint).to.not.equal(undefined);
+    expect(terminalConstraint.finalDistance).to.be.at.least(
+      terminalConstraint.minimumDistance - 0.001,
+    );
+  });
+
+  it("keeps an ordinary full-measure rest on the original centering path", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(wholeMeasureRestScore());
+    osmd.render();
+
+    const system: VexFlowHorizontalSpacingSystemDiagnostics =
+      getDiagnostics(osmd).selectedSystems[0];
+    const terminalGap: VexFlowHorizontalSpacingGapDiagnostics =
+      getTerminalGap(system, 0);
+    const rest: any = osmd.GraphicSheet.MeasureList[0]
+      .flatMap((measure: any): unknown[] => measure?.staffEntries ?? [])
+      .flatMap((staffEntry: any): unknown[] => staffEntry.graphicalVoiceEntries ?? [])
+      .find((voiceEntry: any): boolean => {
+        const sourceNote: any = voiceEntry.notes?.[0]?.sourceNote;
+        return sourceNote?.isRest?.() &&
+          (sourceNote.IsWholeMeasureRest || sourceNote.isWholeRest?.());
+      });
+    expect(rest).to.not.equal(undefined);
+    const restBox: any = rest.vfStaveNote.getBoundingBox();
+    const stave: VF.Stave = rest.vfStaveNote.getStave();
+    const restCenterX: number = restBox.getX() + restBox.getW() / 2;
+    const measureCenterX: number = (stave.getNoteStartX() + stave.getNoteEndX()) / 2;
+
+    expect(terminalGap.hardWeight).to.be.greaterThan(0);
+    expect(terminalGap.residualWeight).to.be.greaterThan(0);
+    expect(restCenterX).to.be.closeTo(measureCenterX, 0.01);
+  });
+
+  it("preserves an empty measure across a full graphical rebuild", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(emptyMeasureScore());
+    osmd.render();
+
+    const snapshot: () => {
+      baseWidthPx: number;
+      finalWidthPx: number;
+      measureWidth: number;
+      residualAddedWidthPx: number;
+    } = (): {
+      baseWidthPx: number;
+      finalWidthPx: number;
+      measureWidth: number;
+      residualAddedWidthPx: number;
+    } => {
+      const system: VexFlowHorizontalSpacingSystemDiagnostics =
+        getDiagnostics(osmd).selectedSystems[0];
+      const emptyGap: VexFlowHorizontalSpacingGapDiagnostics =
+        system.gaps.find(
+          (gap): boolean =>
+            gap.kind === "empty-measure" &&
+            gap.measureIndex === 0,
+        );
+      const measure: any = osmd.GraphicSheet.MeasureList[0].find(
+        (candidate: any): boolean => candidate?.isVisible?.() !== false,
+      );
+
+      expect(system.columns.some((column): boolean => column.kind === "rhythmic"))
+        .to.equal(false);
+      expect(emptyGap).to.not.equal(undefined);
+      expect(emptyGap.hardWeight).to.be.greaterThan(0);
+      expect(emptyGap.residualWeight).to.be.greaterThan(0);
+      expect(emptyGap.finalWidthPx).to.be.closeTo(
+        emptyGap.baseWidthPx +
+        emptyGap.hardAddedWidthPx +
+        emptyGap.residualAddedWidthPx,
+        0.001,
+      );
+      expect(measure.staffEntries).to.have.length(0);
+      expect(measure.PositionAndShape.Size.width).to.be.greaterThan(0);
+
+      return {
+        baseWidthPx: emptyGap.baseWidthPx,
+        finalWidthPx: emptyGap.finalWidthPx,
+        measureWidth: measure.PositionAndShape.Size.width,
+        residualAddedWidthPx: emptyGap.residualAddedWidthPx,
+      };
+    };
+
+    const first: ReturnType<typeof snapshot> = snapshot();
+    osmd.updateGraphic();
+    osmd.render();
+    const rebuilt: ReturnType<typeof snapshot> = snapshot();
+
+    expect(rebuilt.baseWidthPx).to.be.closeTo(first.baseWidthPx, 0.001);
+    expect(rebuilt.finalWidthPx).to.be.closeTo(first.finalWidthPx, 0.001);
+    expect(rebuilt.measureWidth).to.be.closeTo(first.measureWidth, 0.001);
+    expect(rebuilt.residualAddedWidthPx).to.be.closeTo(
+      first.residualAddedWidthPx,
+      0.001,
+    );
+  });
+
+  it("preserves terminal repeat instructions across a full graphical rebuild", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(terminalRepeatScore());
+    osmd.render();
+
+    const snapshot: () => {
+      baseTerminalPaddingPx: number;
+      endInstructionsWidthPx: number;
+      finalWidthPx: number;
+      measureWidth: number;
+    } = (): {
+      baseTerminalPaddingPx: number;
+      endInstructionsWidthPx: number;
+      finalWidthPx: number;
+      measureWidth: number;
+    } => {
+      const system: VexFlowHorizontalSpacingSystemDiagnostics =
+        getDiagnostics(osmd).selectedSystems[0];
+      const terminalGap: VexFlowHorizontalSpacingGapDiagnostics =
+        getTerminalGap(system, 0);
+      const measure: any = osmd.GraphicSheet.MeasureList[0].find(
+        (candidate: any): boolean => candidate?.isVisible?.() !== false,
+      );
+
+      expect(terminalGap.hardWeight).to.equal(0);
+      expect(terminalGap.residualWeight).to.equal(0);
+      expect(terminalGap.endInstructionsWidthPx).to.be.greaterThan(0);
+      expect(terminalGap.baseTerminalPaddingPx).to.be.at.least(-0.001);
+      expect(terminalGap.baseTerminalPaddingPx).to.be.at.most(
+        VF.Stave.rightPadding + 0.001,
+      );
+      expect(terminalGap.finalWidthPx).to.be.closeTo(
+        terminalGap.baseWidthPx +
+        terminalGap.hardAddedWidthPx +
+        terminalGap.residualAddedWidthPx,
+        0.001,
+      );
+      expect(terminalGap.finalWidthPx).to.be.at.least(
+        terminalGap.notationRightExtentPx +
+        terminalGap.endInstructionsWidthPx -
+        0.001,
+      );
+      expect(measure.endInstructionsWidth * 10).to.be.closeTo(
+        terminalGap.endInstructionsWidthPx,
+        0.001,
+      );
+
+      return {
+        baseTerminalPaddingPx: terminalGap.baseTerminalPaddingPx,
+        endInstructionsWidthPx: terminalGap.endInstructionsWidthPx,
+        finalWidthPx: terminalGap.finalWidthPx,
+        measureWidth: measure.PositionAndShape.Size.width,
+      };
+    };
+
+    const first: ReturnType<typeof snapshot> = snapshot();
+    osmd.updateGraphic();
+    osmd.render();
+    const rebuilt: ReturnType<typeof snapshot> = snapshot();
+
+    expect(rebuilt.baseTerminalPaddingPx).to.be.closeTo(
+      first.baseTerminalPaddingPx,
+      0.001,
+    );
+    expect(rebuilt.endInstructionsWidthPx).to.be.closeTo(
+      first.endInstructionsWidthPx,
+      0.001,
+    );
+    expect(rebuilt.finalWidthPx).to.be.closeTo(first.finalWidthPx, 0.001);
+    expect(rebuilt.measureWidth).to.be.closeTo(first.measureWidth, 0.001);
   });
 
   it("does not justify a pickup-only system into its zero-duration leading gap", async (): Promise<void> => {
@@ -436,6 +706,20 @@ function getDiagnostics(osmd: OpenSheetMusicDisplay): VexFlowHorizontalSpacingDi
       HorizontalSpacingDiagnostics: VexFlowHorizontalSpacingDiagnostics;
     }
   ).HorizontalSpacingDiagnostics;
+}
+
+function getTerminalGap(
+  system: VexFlowHorizontalSpacingSystemDiagnostics,
+  measureIndex: number,
+): VexFlowHorizontalSpacingGapDiagnostics {
+  const gap: VexFlowHorizontalSpacingGapDiagnostics = system.gaps.find(
+    (candidate: VexFlowHorizontalSpacingGapDiagnostics): boolean =>
+      candidate.kind === "measure-terminal" &&
+      candidate.measureIndex === measureIndex,
+  );
+  expect(gap, `expected terminal gap for system-local measure ${measureIndex}`)
+    .to.not.equal(undefined);
+  return gap;
 }
 
 function notePaddings(osmd: OpenSheetMusicDisplay): { leftPx: number, rightPx: number }[] {
@@ -716,6 +1000,112 @@ function quarterRestScore(): string {
         <pitch><step>D</step><octave>4</octave></pitch>
         <duration>1</duration><type>quarter</type>
       </note>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+function terminalLyricScore(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><type>quarter</type>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><type>quarter</type>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>uncompromisingly-extraordinary</text>
+        </lyric>
+      </note>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+function wholeMeasureRestScore(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+function emptyMeasureScore(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <forward><duration>4</duration></forward>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+function terminalRepeatScore(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><type>quarter</type>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><type>quarter</type>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>1</duration><type>quarter</type>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>1</duration><type>quarter</type>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+        <repeat direction="backward"/>
+      </barline>
     </measure>
   </part>
 </score-partwise>`;

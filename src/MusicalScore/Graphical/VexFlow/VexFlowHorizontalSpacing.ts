@@ -26,6 +26,7 @@ const FIXED_GAP_WEIGHT: number = 0.000001;
 
 interface MeasureProfile {
   compactPickup: boolean;
+  compactTerminal: boolean;
   columns: ProfileColumn[];
   graphicalMeasures: GraphicalMeasure[];
   intrinsicHardWidthPx: number;
@@ -102,6 +103,7 @@ export interface VexFlowHorizontalSpacingSystemDiagnostics {
   addedWidthPx: number;
   columns: VexFlowHorizontalSpacingColumnDiagnostics[];
   constraintCount: number;
+  gaps: VexFlowHorizontalSpacingGapDiagnostics[];
   intrinsicHardWidthPx: number;
   measureNumbers: number[];
   minimumVariableWidth: number;
@@ -117,6 +119,30 @@ export interface VexFlowHorizontalSpacingColumnDiagnostics {
   kind: "system-start" | "measure-boundary" | "rhythmic" | "system-end";
   measureIndex?: number;
   tickIds: number[];
+}
+
+export type VexFlowHorizontalSpacingGapKind =
+  "empty-measure" |
+  "measure-leading" |
+  "measure-terminal" |
+  "rhythmic";
+
+export interface VexFlowHorizontalSpacingGapDiagnostics {
+  baseTerminalPaddingPx?: number;
+  baseWidthPx: number;
+  directConstraintReasons: HorizontalSpacingConstraint["reason"][];
+  endInstructionsWidthPx?: number;
+  finalWidthPx: number;
+  fromColumn: number;
+  hardAddedWidthPx: number;
+  hardWeight: number;
+  kind: VexFlowHorizontalSpacingGapKind;
+  measureIndex?: number;
+  measureNumber?: number;
+  notationRightExtentPx?: number;
+  residualAddedWidthPx: number;
+  residualWeight: number;
+  toColumn: number;
 }
 
 /**
@@ -141,7 +167,11 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
   public evaluateCandidate(
     measures: SystemMeasureSpacingInput[],
   ): HorizontalSystemSpacingCandidate {
-    const solution: CandidateSolution = this.solveCandidate(measures);
+    // Keep Stage 5's line-break evaluation widths. Terminal compaction is a
+    // selected-system refinement: allowing preferred (rather than hard)
+    // terminal space to admit another measure can orphan the following
+    // system even though no notation or lyric constraint changed.
+    const solution: CandidateSolution = this.solveCandidate(measures, false);
     const candidateId: number = ++this.candidateId;
     const minimumVariableWidth: number = solution.minimumVariableWidthPx / unitInPixels;
     this.diagnostics.candidateEvaluations.push({
@@ -178,7 +208,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     availableVariableWidth: number,
     maximumSoftScalingFactor?: number,
   ): HorizontalSystemSpacingLayout {
-    const solution: CandidateSolution = this.solveCandidate(measures);
+    const solution: CandidateSolution = this.solveCandidate(measures, true);
     const intrinsicHardTotalPx: number = sum(solution.intrinsicHardWidthsPx);
     const selectedHardWidthsPx: number[] = solution.baseHardWidthsPx.map(
       (width: number, index: number): number => width + solution.addedWidthByMeasurePx[index],
@@ -267,6 +297,74 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         }),
       ),
       constraintCount: solution.constraints.length,
+      gaps: solution.nodes.slice(0, -1).map(
+        (
+          leftNode: CandidateNode,
+          gapIndex: number,
+        ): VexFlowHorizontalSpacingGapDiagnostics => {
+          const rightNode: CandidateNode = solution.nodes[gapIndex + 1];
+          const kind: VexFlowHorizontalSpacingGapKind = gapKind(
+            leftNode,
+            rightNode,
+          );
+          const measureIndex: number = measureIndexForGap(
+            leftNode,
+            rightNode,
+            measures.length,
+          );
+          const baseWidthPx: number =
+            rightNode.basePositionPx -
+            leftNode.basePositionPx;
+          const endInstructionsWidthPx: number | undefined =
+            kind === "measure-terminal" && measureIndex >= 0
+              ? measures[measureIndex].endInstructionsWidth * unitInPixels
+              : undefined;
+          const notationRightExtentPx: number | undefined =
+            kind === "measure-terminal"
+              ? leftNode.column?.notationRightExtentPx
+              : undefined;
+          return {
+            baseTerminalPaddingPx:
+              kind === "measure-terminal"
+                ? baseWidthPx -
+                  (notationRightExtentPx ?? 0) -
+                  (endInstructionsWidthPx ?? 0)
+                : undefined,
+            baseWidthPx,
+            directConstraintReasons: Array.from(
+              new Set(
+                solution.constraints
+                  .filter(
+                    (constraint: HorizontalSpacingConstraint): boolean =>
+                      constraint.fromColumn === gapIndex &&
+                      constraint.toColumn === gapIndex + 1,
+                  )
+                  .map(
+                    (constraint: HorizontalSpacingConstraint): HorizontalSpacingConstraint["reason"] =>
+                      constraint.reason,
+                  ),
+              ),
+            ),
+            endInstructionsWidthPx,
+            finalWidthPx:
+              finalPositionsPx[gapIndex + 1] -
+              finalPositionsPx[gapIndex],
+            fromColumn: gapIndex,
+            hardAddedWidthPx: addedGaps[gapIndex],
+            hardWeight: solution.gapWeights[gapIndex],
+            kind,
+            measureIndex: measureIndex >= 0 ? measureIndex : undefined,
+            measureNumber:
+              measureIndex >= 0
+                ? measures[measureIndex].graphicalMeasures[0]?.MeasureNumber
+                : undefined,
+            notationRightExtentPx,
+            residualAddedWidthPx: residualAddedGaps[gapIndex],
+            residualWeight: solution.residualGapWeights[gapIndex],
+            toColumn: gapIndex + 1,
+          };
+        },
+      ),
       intrinsicHardWidthPx: intrinsicHardTotalPx,
       measureNumbers: measureNumbers(measures),
       minimumVariableWidth: solution.minimumVariableWidthPx / unitInPixels,
@@ -311,7 +409,10 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     setDiagnostics(this.graphicalMusicSheet, this.diagnostics);
   }
 
-  private solveCandidate(measures: SystemMeasureSpacingInput[]): CandidateSolution {
+  private solveCandidate(
+    measures: SystemMeasureSpacingInput[],
+    compactPreferredTerminals: boolean,
+  ): CandidateSolution {
     if (measures.length === 0) {
       return emptySolution();
     }
@@ -338,11 +439,14 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
       const intrinsicBaseFloorPx: number = profile?.compactPickup
         ? 0
         : intrinsicHardWidthPx;
-      const baseVariableWidthPx: number = Math.max(
+      const uncappedBaseVariableWidthPx: number = Math.max(
         input.baseVariableWidth * unitInPixels,
         profile?.minimumRequiredWidthPx ?? 0,
         intrinsicBaseFloorPx,
       );
+      const baseVariableWidthPx: number = compactPreferredTerminals
+        ? capPreferredTerminalWidth(uncappedBaseVariableWidthPx, profile)
+        : uncappedBaseVariableWidthPx;
       baseVariableWidthsPx.push(baseVariableWidthPx);
       baseHardWidthsPx.push(Math.min(baseVariableWidthPx, intrinsicHardWidthPx));
       intrinsicHardWidthsPx.push(intrinsicHardWidthPx);
@@ -389,7 +493,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
       .slice(0, -1)
       .map(
         (node: CandidateNode, gapIndex: number): number =>
-          rhythmicWeightBetweenNodes(
+          hardWeightBetweenNodes(
             node,
             nodes[gapIndex + 1],
             profilesByInput,
@@ -512,21 +616,33 @@ function rhythmicWeightBetweenNodes(
 }
 
 /**
- * Keep the final rhythmic cell of a short implicit measure compact during
- * system justification. Its base width and all hard notation/lyric
- * constraints still apply; only optional residual width is redirected to the
- * other eligible rhythmic gaps in the system.
+ * A terminal cell may still grow when a hard constraint applies directly to
+ * it, but it is not an aesthetic receiver when a spanning deficit can be
+ * balanced across other rhythmic cells.
+ */
+function hardWeightBetweenNodes(
+  leftNode: CandidateNode,
+  rightNode: CandidateNode,
+  profilesByInput: MeasureProfile[],
+): number {
+  if (isCompactTerminalGap(leftNode, rightNode, profilesByInput)) {
+    return 0;
+  }
+  return rhythmicWeightBetweenNodes(leftNode, rightNode, profilesByInput);
+}
+
+/**
+ * Keep eligible final rhythmic cells compact during system justification.
+ * Their capped base width and all hard notation/lyric constraints still
+ * apply; only optional residual width is redirected to the other eligible
+ * rhythmic gaps in the system.
  */
 function residualWeightBetweenNodes(
   leftNode: CandidateNode,
   rightNode: CandidateNode,
   profilesByInput: MeasureProfile[],
 ): number {
-  if (
-    leftNode.column &&
-    !rightNode.column &&
-    profilesByInput[leftNode.column.inputIndex]?.compactPickup
-  ) {
+  if (isCompactTerminalGap(leftNode, rightNode, profilesByInput)) {
     return 0;
   }
   const weight: number = rhythmicWeightBetweenNodes(
@@ -537,6 +653,35 @@ function residualWeightBetweenNodes(
   // FIXED_GAP_WEIGHT keeps the hard-constraint solver numerically stable,
   // but a zero-duration gap must not receive optional system justification.
   return weight <= FIXED_GAP_WEIGHT ? 0 : weight;
+}
+
+function isCompactTerminalGap(
+  leftNode: CandidateNode,
+  rightNode: CandidateNode,
+  profilesByInput: MeasureProfile[],
+): boolean {
+  if (!leftNode.column || rightNode.column) {
+    return false;
+  }
+  const inputIndex: number = leftNode.column.inputIndex;
+  return profilesByInput[inputIndex]?.compactTerminal === true &&
+    rightNode.boundaryInputIndex === inputIndex + 1;
+}
+
+function gapKind(
+  leftNode: CandidateNode,
+  rightNode: CandidateNode,
+): VexFlowHorizontalSpacingGapKind {
+  if (leftNode.column && rightNode.column) {
+    return "rhythmic";
+  }
+  if (leftNode.column) {
+    return "measure-terminal";
+  }
+  if (rightNode.column) {
+    return "measure-leading";
+  }
+  return "empty-measure";
 }
 
 function measureIndexForGap(
@@ -567,6 +712,29 @@ function measureRhythmicWeight(sourceMeasure: SourceMeasure): number {
     return 1;
   }
   return Math.max(FIXED_GAP_WEIGHT, Math.min(1, duration / meter));
+}
+
+function capPreferredTerminalWidth(
+  baseVariableWidthPx: number,
+  profile?: MeasureProfile,
+): number {
+  if (!profile?.compactTerminal) {
+    return baseVariableWidthPx;
+  }
+  // Stave.rightPadding is VexFlow's public view of
+  // Metrics.get("Stave.endPaddingMax"), and is present in the fontless core
+  // runtime used by OSMD.
+  const configuredPaddingPx: number = VF.Stave.rightPadding;
+  const maximumPaddingPx: number =
+    Number.isFinite(configuredPaddingPx) && configuredPaddingPx >= 0
+      ? configuredPaddingPx
+      : 0;
+  const maximumPreferredWidthPx: number =
+    profile.minimumRequiredWidthPx + maximumPaddingPx;
+  return Math.max(
+    profile.minimumRequiredWidthPx,
+    Math.min(baseVariableWidthPx, maximumPreferredWidthPx),
+  );
 }
 
 function isShortImplicitMeasure(sourceMeasure: SourceMeasure): boolean {
@@ -685,6 +853,7 @@ function collectMeasureProfiles(
       : 0;
     const profile: MeasureProfile = {
       compactPickup: isShortImplicitMeasure(sourceMeasure),
+      compactTerminal: isShortImplicitMeasure(sourceMeasure) || columns.length > 1,
       columns,
       graphicalMeasures,
       intrinsicHardWidthPx,
