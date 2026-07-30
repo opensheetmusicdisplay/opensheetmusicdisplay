@@ -8,6 +8,7 @@ import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { Note } from "../../VoiceData/Note";
 import { AccidentalEnum } from "../../../Common/DataObjects/Pitch";
 import { BoundingBox } from "../BoundingBox";
+import { LyricAlignmentMode } from "../../VoiceData/Lyrics/LyricsEntry";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -75,10 +76,53 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             }
         }
         this.PositionAndShape.RelativePosition.x -= lastBorderLeft;
+        this.synchronizeLyricAnchorOffsets(stave);
         // TODO sometimes subtracting lastBorderLeft fixes the x-position for lyrics spacing, sometimes it makes it wrong
         //   e.g. wrong for Beethoven Geliebte measure 1 ("auf - dem", distance < width of "auf"), correct for measure 3 ("spä - hend")
         //   this leads to a (lyrics) measure elongation of ~1.3 for measure 1, though it doesn't need any elongation (should be factor 1)
         this.PositionAndShape.calculateBoundingBox();
+    }
+
+    /**
+     * Anchor lyrics to the pitched glyph belonging to their own voice.
+     *
+     * A GraphicalStaffEntry's generic origin is derived from the complete
+     * VexFlow note bounds. Those bounds include flags and modifiers, so using
+     * that origin directly can pull a lyric away from the notehead (most
+     * visibly on an unbeamed sixteenth note). Lyrics conventionally ignore
+     * those decorations: ordinary syllables are centred on the notehead/stem
+     * width, while a melismatic body begins at its left edge.
+     */
+    /**
+     * Synchronize lyric anchors after VexFlow has finalized the rendered note
+     * positions. VexFlow can make a last sub-pixel adjustment while drawing a
+     * stave, so the drawer calls this again before OSMD draws lyric labels.
+     */
+    public synchronizeLyricAnchorOffsets(stave: VF.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave()): void {
+        for (const lyricEntry of this.LyricsEntries) {
+            const voiceEntry: VexFlowVoiceEntry = this.graphicalVoiceEntries.find(
+                (candidate: VexFlowVoiceEntry): boolean =>
+                    candidate.parentVoiceEntry === lyricEntry.LyricsEntry.Parent,
+            ) as VexFlowVoiceEntry;
+            const staveNote: any = voiceEntry?.vfStaveNote;
+            if (!staveNote || staveNote.isRest?.()) {
+                continue;
+            }
+
+            const noteheadBeginX: number = staveNote.getNoteHeadBeginX?.();
+            const noteheadEndX: number = staveNote.getNoteHeadEndX?.();
+            if (!Number.isFinite(noteheadBeginX) || !Number.isFinite(noteheadEndX)) {
+                continue;
+            }
+
+            const lyricAnchorX: number =
+                lyricEntry.LyricsEntry.AlignmentMode === LyricAlignmentMode.MelismaLeft
+                    ? noteheadBeginX
+                    : (noteheadBeginX + noteheadEndX) / 2;
+            const anchorWithinMeasure: number = (lyricAnchorX - stave.getX()) / unitInPixels;
+            lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x =
+                anchorWithinMeasure - this.PositionAndShape.RelativePosition.x;
+        }
     }
 
     public setMaxAccidentals(): number {

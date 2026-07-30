@@ -74,6 +74,20 @@ describe("Horizontal system spacing", (): void => {
     expect(getDiagnostics(osmd).addedWidthPx).to.be.closeTo(firstAddedWidth, 0.001);
   });
 
+  it("shares cross-measure lyric clearance across both sides of the barline", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(crossMeasureLyricScore());
+    osmd.render();
+
+    const previousPadding: { leftPx: number, rightPx: number } =
+      notePaddingsForMeasure(osmd, 0)[0];
+    const currentPadding: { leftPx: number, rightPx: number } =
+      notePaddingsForMeasure(osmd, 1)[0];
+    expect(previousPadding.rightPx).to.be.greaterThan(0);
+    expect(currentPadding.leftPx).to.be.greaterThan(0);
+    expect(previousPadding.rightPx).to.be.closeTo(currentPadding.leftPx, 0.001);
+  });
+
   it("does not let a width factor reduce intrinsic quarter-rest clearance", async (): Promise<void> => {
     const osmd: OpenSheetMusicDisplay = createOsmd();
     await osmd.load(quarterRestScore());
@@ -176,6 +190,74 @@ describe("Horizontal system spacing", (): void => {
       0.001,
     );
   });
+
+  it("anchors lyrics to notehead geometry without including a flag", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(flaggedLyricScore());
+    osmd.render();
+
+    const staffEntries: any[] = osmd.GraphicSheet.MeasureList[0][0].staffEntries;
+    const melismaStaffEntry: any = staffEntries.find(
+      (staffEntry: any): boolean =>
+        staffEntry.LyricsEntries.some(
+          (entry: any): boolean => entry.LyricsEntry.Text === "wide",
+        ),
+    );
+    const ordinaryStaffEntry: any = staffEntries.find(
+      (staffEntry: any): boolean =>
+        staffEntry.LyricsEntries.some(
+          (entry: any): boolean => entry.LyricsEntry.Text === "last",
+        ),
+    );
+    const assertAnchor: (
+      staffEntry: any,
+      text: string,
+      expectedAnchor: (note: any) => number,
+    ) => void = (
+      staffEntry: any,
+      text: string,
+      expectedAnchor: (note: any) => number,
+    ): void => {
+      const lyricEntry: any = staffEntry.LyricsEntries.find(
+        (entry: any): boolean => entry.LyricsEntry.Text === text,
+      );
+      const voiceEntry: VexFlowVoiceEntry = staffEntry.graphicalVoiceEntries.find(
+        (entry: VexFlowVoiceEntry): boolean =>
+          entry.parentVoiceEntry === lyricEntry.LyricsEntry.Parent,
+      ) as VexFlowVoiceEntry;
+      const staveNote: any = voiceEntry.vfStaveNote;
+      const stave: VF.Stave = staffEntry.parentMeasure.getVFStave();
+      const actualAnchor: number =
+        stave.getX() +
+        (
+          staffEntry.PositionAndShape.RelativePosition.x +
+          lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x
+        ) * 10;
+      expect(actualAnchor).to.be.closeTo(expectedAnchor(staveNote), 0.001);
+    };
+
+    assertAnchor(
+      melismaStaffEntry,
+      "wide",
+      (note: any): number => note.getNoteHeadBeginX(),
+    );
+    assertAnchor(
+      ordinaryStaffEntry,
+      "last",
+      (note: any): number =>
+        (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2,
+    );
+
+    const ordinaryLyric: any = ordinaryStaffEntry.LyricsEntries[0];
+    const ordinaryVoice: VexFlowVoiceEntry = ordinaryStaffEntry.graphicalVoiceEntries.find(
+      (entry: VexFlowVoiceEntry): boolean =>
+        entry.parentVoiceEntry === ordinaryLyric.LyricsEntry.Parent,
+    ) as VexFlowVoiceEntry;
+    expect(ordinaryVoice.vfStaveNote.hasFlag()).to.equal(true);
+    expect(
+      Math.abs(ordinaryLyric.GraphicalLabel.PositionAndShape.RelativePosition.x),
+    ).to.be.greaterThan(0.1);
+  });
 });
 
 function createOsmd(): OpenSheetMusicDisplay {
@@ -192,6 +274,18 @@ function getDiagnostics(osmd: OpenSheetMusicDisplay): VexFlowHorizontalSpacingDi
 
 function notePaddings(osmd: OpenSheetMusicDisplay): { leftPx: number, rightPx: number }[] {
   return osmd.GraphicSheet.MeasureList.flatMap((verticalMeasures): unknown[] => verticalMeasures)
+    .flatMap((measure: any): unknown[] => measure?.staffEntries ?? [])
+    .flatMap((staffEntry: any): unknown[] => staffEntry.graphicalVoiceEntries ?? [])
+    .map((voiceEntry: any): { leftPx: number, rightPx: number } =>
+      voiceEntry.vfStaveNote.getLayoutPadding(),
+    );
+}
+
+function notePaddingsForMeasure(
+  osmd: OpenSheetMusicDisplay,
+  measureIndex: number,
+): { leftPx: number, rightPx: number }[] {
+  return (osmd.GraphicSheet.MeasureList[measureIndex] ?? [])
     .flatMap((measure: any): unknown[] => measure?.staffEntries ?? [])
     .flatMap((staffEntry: any): unknown[] => staffEntry.graphicalVoiceEntries ?? [])
     .map((voiceEntry: any): { leftPx: number, rightPx: number } =>
@@ -267,6 +361,35 @@ function denseLyricScore(): string {
         <duration>1</duration><type>quarter</type>
         <lyric number="1"><syllabic>single</syllabic><text>extraordinarily</text></lyric>
       </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><type>quarter</type>
+        <lyric number="1"><syllabic>single</syllabic><text>uncompromisingly</text></lyric>
+      </note>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+function crossMeasureLyricScore(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>1</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><type>quarter</type>
+        <lyric number="1"><syllabic>single</syllabic><text>extraordinarily</text></lyric>
+      </note>
+    </measure>
+    <measure number="2">
       <note>
         <pitch><step>D</step><octave>4</octave></pitch>
         <duration>1</duration><type>quarter</type>
@@ -398,6 +521,44 @@ function denseNotationPickupScore(): string {
         <pitch><step>A</step><alter>-1</alter><octave>4</octave></pitch>
         <duration>1</duration><type>eighth</type><accidental>flat</accidental>
       </note>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+function flaggedLyricScore(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><type>16th</type>
+        <lyric number="1"><syllabic>single</syllabic><text>wide</text><extend type="start"/></lyric>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><type>16th</type>
+        <lyric number="1"><syllabic>single</syllabic><text>next</text></lyric>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>1</duration><type>16th</type>
+        <lyric number="1"><syllabic>single</syllabic><text>then</text></lyric>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>1</duration><type>16th</type>
+        <lyric number="1"><syllabic>single</syllabic><text>last</text></lyric>
+      </note>
+      <note><rest/><duration>12</duration><type>half</type><dot/></note>
     </measure>
   </part>
 </score-partwise>`;

@@ -42,9 +42,18 @@ export class LyricWord {
         if (startIndex < 0 || endIndex <= startIndex + 1) {
             return false;
         }
+        // A tied continuation sustains the preceding onset. It must not turn
+        // otherwise consecutive syllables into a graphical melisma.
         return voiceEntries.slice(startIndex + 1, endIndex).some(
             (voiceEntry: VoiceEntry): boolean =>
-                !voiceEntry.IsGrace && voiceEntry.Notes.some(note => !note.isRest()),
+                !voiceEntry.IsGrace && voiceEntry.Notes.some(
+                    note =>
+                        !note.isRest() &&
+                        (
+                            !note.NoteTie ||
+                            note.NoteTie.StartNote === note
+                        ),
+                ),
         );
     }
 }

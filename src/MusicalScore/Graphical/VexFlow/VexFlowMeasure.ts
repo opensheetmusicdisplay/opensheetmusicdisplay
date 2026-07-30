@@ -861,6 +861,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
             ctx.closeGroup();
         }
         this.correctNotePositions();
+        for (const staffEntry of this.staffEntries as VexFlowStaffEntry[]) {
+            staffEntry.synchronizeLyricAnchorOffsets(this.stave);
+        }
     }
 
     // this currently formats multiple measures, see VexFlowMusicSheetCalculator.formatMeasures()

@@ -328,6 +328,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     const hardLayoutResult: HorizontalSpacingConstraintResult = solveHorizontalSpacingConstraints(
       hardLayoutBasePositions,
       constraints,
+      gapWeights,
     );
     const columns: VexFlowHorizontalSpacingColumnDiagnostics[] = nodes.map(
       (node: CandidateNode, columnIndex: number): VexFlowHorizontalSpacingColumnDiagnostics => ({
@@ -358,7 +359,17 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         continue;
       }
       const leftNode: CandidateNode = nodes[gapIndex];
+      const rightNode: CandidateNode = nodes[gapIndex + 1];
       if (leftNode.column) {
+        if (
+          rightNode.column &&
+          leftNode.column.inputIndex !== rightNode.column.inputIndex
+        ) {
+          const leftSharePx: number = addedGapPx / 2;
+          addedWidthByMeasurePx[leftNode.column.inputIndex] += leftSharePx;
+          addedWidthByMeasurePx[rightNode.column.inputIndex] += addedGapPx - leftSharePx;
+          continue;
+        }
         addedWidthByMeasurePx[leftNode.column.inputIndex] += addedGapPx;
         continue;
       }
@@ -377,15 +388,23 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         continue;
       }
       const leftNode: CandidateNode = nodes[gapIndex];
+      const rightNode: CandidateNode = nodes[gapIndex + 1];
       if (leftNode.column) {
-        for (const context of leftNode.column.contexts) {
-          const current: { leftPx: number, rightPx: number } = contextPadding.get(context) ?? {
-            leftPx: 0,
-            rightPx: 0,
-          };
-          current.rightPx += addedGapPx;
-          contextPadding.set(context, current);
+        if (
+          rightNode.column &&
+          leftNode.column.inputIndex !== rightNode.column.inputIndex
+        ) {
+          const leftSharePx: number = addedGapPx / 2;
+          addColumnContextPadding(contextPadding, leftNode.column, 0, leftSharePx);
+          addColumnContextPadding(
+            contextPadding,
+            rightNode.column,
+            addedGapPx - leftSharePx,
+            0,
+          );
+          continue;
         }
+        addColumnContextPadding(contextPadding, leftNode.column, 0, addedGapPx);
         continue;
       }
 
@@ -393,14 +412,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         (node: CandidateNode): boolean => !!node.column,
       );
       if (firstColumnNode?.column) {
-        for (const context of firstColumnNode.column.contexts) {
-          const current: { leftPx: number, rightPx: number } = contextPadding.get(context) ?? {
-            leftPx: 0,
-            rightPx: 0,
-          };
-          current.leftPx += addedGapPx;
-          contextPadding.set(context, current);
-        }
+        addColumnContextPadding(contextPadding, firstColumnNode.column, addedGapPx, 0);
       }
     }
 
@@ -415,6 +427,23 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
       minimumVariableWidthPx: sum(baseVariableWidthsPx) + sum(constraintResult.addedGaps),
       rhythmicWeights,
     };
+  }
+}
+
+function addColumnContextPadding(
+  contextPadding: Map<VF.TickContext, { leftPx: number, rightPx: number }>,
+  column: CandidateColumn,
+  leftPx: number,
+  rightPx: number,
+): void {
+  for (const context of column.contexts) {
+    const current: { leftPx: number, rightPx: number } = contextPadding.get(context) ?? {
+      leftPx: 0,
+      rightPx: 0,
+    };
+    current.leftPx += leftPx;
+    current.rightPx += rightPx;
+    contextPadding.set(context, current);
   }
 }
 

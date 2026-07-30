@@ -75,6 +75,60 @@ describe("LyricsReader semantics", () => {
         expect(explicitBegin.IsMelismatic).to.be.true;
     });
 
+    it("does not treat a tied continuation as an intervening syllable onset", (): void => {
+        const mindenPath: string =
+            "test/data/test_lyrics_overlap_pickup_anacrusis_dash_minden_m1.musicxml";
+        const mindenDocument: Document = ((window as any).__xml__)[mindenPath];
+        expect(mindenDocument).to.not.be.undefined;
+        const mindenScore: IXmlElement = new IXmlElement(
+            mindenDocument.getElementsByTagName("score-partwise")[0],
+        );
+        const mindenSheet: MusicSheet = new MusicSheetReader().createMusicSheet(
+            mindenScore,
+            mindenPath,
+        );
+        const mindenVoiceEntries: VoiceEntry[] =
+            mindenSheet.Instruments[0].Voices[0].VoiceEntries;
+        const iSyllable: LyricsEntry = lyricByText(
+            mindenVoiceEntries,
+            "i",
+        );
+        const middleSyllable: LyricsEntry = lyricByText(
+            mindenVoiceEntries,
+            "dő",
+        );
+        const endSyllable: LyricsEntry = lyricByText(
+            mindenVoiceEntries,
+            "ben",
+        );
+
+        expect(iSyllable.Word).to.equal(middleSyllable.Word);
+        expect(middleSyllable.Word).to.equal(endSyllable.Word);
+        const middleIndex: number = mindenVoiceEntries.indexOf(
+            middleSyllable.Parent,
+        );
+        const endIndex: number = mindenVoiceEntries.indexOf(
+            endSyllable.Parent,
+        );
+        const interveningEntries: VoiceEntry[] = mindenVoiceEntries.slice(
+            middleIndex + 1,
+            endIndex,
+        );
+        expect(interveningEntries).to.have.length(1);
+        expect(
+            interveningEntries[0].Notes.every(
+                note =>
+                    !!note.NoteTie &&
+                    note.NoteTie.StartNote !== note,
+            ),
+        ).to.be.true;
+        expect(iSyllable.IsMelismatic).to.be.false;
+        expect(middleSyllable.IsMelismatic).to.be.false;
+        expect(middleSyllable.AlignmentMode).to.equal(
+            LyricAlignmentMode.Center,
+        );
+    });
+
     it("separates literal stanza prefixes from the lyric body", (): void => {
         const ordinaryPrefix: LyricsEntry = lyricAt(0, "2");
         const melismaticPrefix: LyricsEntry = lyricAt(0, "3");
@@ -201,3 +255,20 @@ describe("LyricsReader semantics", () => {
         });
     });
 });
+
+function lyricByText(
+    voiceEntries: VoiceEntry[],
+    text: string,
+): LyricsEntry {
+    let result: LyricsEntry;
+    for (const voiceEntry of voiceEntries) {
+        voiceEntry.LyricsEntries.forEach(
+            (_verseNumber: string, lyricEntry: LyricsEntry): void => {
+                if (lyricEntry.Text === text) {
+                    result = lyricEntry;
+                }
+            },
+        );
+    }
+    return result;
+}
