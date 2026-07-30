@@ -305,9 +305,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   there, where the first render read the unshifted one - making e.g. the lyrics/chord symbol
       //   elongation of the following measures (and thus the whole layout) differ from the first render.
       // - the beam-applied stem extension (same reset pattern as the legacy beam post-format fix
-      //   for #1636, which only runs when the beam is drawn): Articulation.draw() positions
-      //   articulations at the stem tip *before* the beams (re-)extend the stems, so without the
-      //   reset, articulations on beamed notes sit higher on re-renders than on the first render.
+      //   for #1636) and Stage 6's absolute slur/articulation clearance. Both are recalculated
+      //   from final geometry later in this render and must not leak into the next rebuild.
       // - TabNote widths: TabNote.setStave() re-measures the fret text width once a stave has a
       //   rendering context, i.e. during the draws at the end of a render. updateWidth() restores
       //   the construction-time width (from VexFlow's glyph table), which is what the first
@@ -339,6 +338,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
           if (note.updateWidth && note.glyphs) { // TabNote
             note.updateWidth();
+          }
+          for (const modifier of note.modifiers ?? []) {
+            if (modifier.getCategory?.() === VF.Articulation.CATEGORY) {
+              modifier.setOutwardShift?.(0);
+            }
           }
         }
       }
@@ -2680,17 +2684,83 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         //vfStaffLine.SlursInVFStaffLine = vfSlurs;
       } // loop over MusicSystems
 
-    // order slurs that were saved to the Staffline
+    // Link every same-source segment before calculating curves. Placement is a source-slur
+    // decision, not a system-segment decision, so all segments share the placement selected
+    // at the real start note. Endpoint articulations are then moved absolutely against that
+    // fixed attachment. The displaced final bounds are merged into the existing skyline;
+    // rerunning the complete skyline pass here would repeat its formatter side effects.
+    const segmentsBySource: Map<Slur, {segment: GraphicalSlur, staffLine: StaffLine}[]> = new Map();
     for (const musicSystem of this.musicSystems) {
       for (const staffLine of musicSystem.StaffLines) {
-        // Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
+        for (const segment of staffLine.GraphicalSlurs) {
+          let linkedSegments: {segment: GraphicalSlur, staffLine: StaffLine}[] = segmentsBySource.get(segment.slur);
+          if (!linkedSegments) {
+            linkedSegments = [];
+            segmentsBySource.set(segment.slur, linkedSegments);
+          }
+          linkedSegments.push({segment, staffLine});
+        }
+      }
+    }
+
+    for (const [sourceSlur, linkedSegments] of segmentsBySource) {
+      if (sourceSlur.isCrossed()) {
+        const startNote: GraphicalNote = this.rules.GNote(sourceSlur.StartNote);
+        const endNote: GraphicalNote = this.rules.GNote(sourceSlur.EndNote);
+        const startLine: StaffLine = startNote?.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
+        const endLine: StaffLine = endNote?.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
+        if (startLine && endLine && startLine.ParentMusicSystem !== endLine.ParentMusicSystem) {
+          for (const {segment} of linkedSegments) {
+            segment.markUnsupportedCrossStaffSystemBreak();
+          }
+          log.warn(
+            "Cross-staff slur across a system break is not yet supported " +
+            `(measures ${sourceSlur.StartNote.SourceMeasure.MeasureNumber}–` +
+            `${sourceSlur.EndNote.SourceMeasure.MeasureNumber}).`,
+          );
+        }
+        continue;
+      }
+
+      const sourceStartNote: GraphicalNote = this.rules.GNote(sourceSlur.StartNote);
+      const sourceStartLine: StaffLine =
+        sourceStartNote?.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
+      const placementSegment: GraphicalSlur =
+        linkedSegments.find(({staffLine}): boolean => staffLine === sourceStartLine)?.segment
+        ?? linkedSegments[0].segment;
+      const placement: PlacementEnum = placementSegment.determinePlacement();
+
+      for (let index: number = 0; index < linkedSegments.length; index++) {
+        const {segment, staffLine} = linkedSegments[index];
+        segment.setLinkedSegment(index, linkedSegments.length, placement);
+        if (segment.prepareEndpointArticulationClearance()) {
+          for (const shift of segment.diagnostics.articulationShifts) {
+            if (placement === PlacementEnum.Above) {
+              staffLine.SkyBottomLineCalculator.updateSkyLineInRange(
+                shift.bounds.left,
+                shift.bounds.right,
+                shift.bounds.top,
+              );
+            } else {
+              staffLine.SkyBottomLineCalculator.updateBottomLineInRange(
+                shift.bounds.left,
+                shift.bounds.right,
+                shift.bounds.bottom,
+              );
+            }
+          }
+        }
+      }
+    }
+
+    // Calculate curves only after final notehead, beam, articulation, and skyline geometry exists.
+    for (const musicSystem of this.musicSystems) {
+      for (const staffLine of musicSystem.StaffLines) {
         const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
         for (const gSlur of sortedGSlurs) {
-            // crossed slurs will be handled later:
-            if (gSlur.slur.isCrossed()) {
-                continue;
-            }
+          if (!gSlur.slur.isCrossed()) {
             gSlur.calculateCurve(this.rules);
+          }
         }
       }
     }

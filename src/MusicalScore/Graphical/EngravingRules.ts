@@ -327,6 +327,8 @@ export class EngravingRules {
     public SlurNoteHeadYOffset: number;
     public SlurEndArticulationYOffset: number;
     public SlurStartArticulationYOffsetOfArticulation: number;
+    /** Minimum outward clearance between a slur attachment and a coincident endpoint articulation, in staff spaces. */
+    public SlurArticulationClearance: number;
     public SlurStemXOffset: number;
     public SlurSlopeMaxAngle: number;
     public SlurTangentMinAngle: number;
@@ -857,6 +859,7 @@ export class EngravingRules {
         this.SlurNoteHeadYOffset = 0.5;
         this.SlurEndArticulationYOffset = 0.8;
         this.SlurStartArticulationYOffsetOfArticulation = 0.5;
+        this.SlurArticulationClearance = 0.35;
         this.SlurStemXOffset = 0.3;
         this.SlurSlopeMaxAngle = 15.0;
         this.SlurTangentMinAngle = 30.0;

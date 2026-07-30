@@ -271,6 +271,16 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.x * unitInPixels,
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
+        // Slur layout calculates articulation clearance while the measure stave
+        // still uses system-local coordinates. Once the stave is moved to its
+        // absolute page position, refresh the same idempotent geometry before
+        // VexFlow draws it. Otherwise draw() consumes a valid but translated
+        // layout and the glyph appears near the page/staff origin.
+        for (const staffEntry of measure.staffEntries) {
+            for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                (voiceEntry as any).vfStaveNote?.layoutArticulations?.();
+            }
+        }
         try {
             measure.draw(this.backend.getContext());
             // Vexflow errors can happen here. If we don't catch errors, rendering will stop after this measure.

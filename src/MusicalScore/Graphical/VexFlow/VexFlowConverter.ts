@@ -30,7 +30,6 @@ import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
-import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { Staff } from "../../VoiceData/Staff";
 
@@ -699,16 +698,6 @@ export class VexFlowConverter {
             switch (articulationEnum) {
                 case ArticulationEnum.accent: {
                     vfArt = new VF.Articulation("a>");
-                    const slurs: Slur[] = gNote.sourceNote.NoteSlurs;
-                    for (const slur of slurs) {
-                        if (slur.StartNote === gNote.sourceNote) { // && slur.PlacementXml === articulation.placement
-                            if (slur.PlacementXml === PlacementEnum.Above) {
-                                vfArt.setYShift(-rules.SlurStartArticulationYOffsetOfArticulation * 10);
-                            } else if (slur.PlacementXml === PlacementEnum.Below) {
-                                vfArt.setYShift(rules.SlurStartArticulationYOffsetOfArticulation * 10);
-                            }
-                        }
-                    }
                     (vfArt as any).render_options = {
                         ...(vfArt as any).render_options,
                         extra_left_px: 0,
@@ -824,6 +813,9 @@ export class VexFlowConverter {
             }
             if (vfArt) {
                 vfArt.setPosition(vfArtPosition);
+                (vfArt as any).osmdArticulationEnum = articulationEnum;
+                (vfArt as any).osmdSourceArticulation = articulation;
+                (vfArt as any).osmdGraphicalNote = gNote;
                 (vfnote as StaveNote).addModifier(vfArt, modifierIndex);
             }
         }

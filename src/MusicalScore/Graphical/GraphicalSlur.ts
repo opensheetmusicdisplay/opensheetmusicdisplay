@@ -10,12 +10,52 @@ import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { BoundingBox } from "./BoundingBox";
 import { Matrix2D } from "../../Common/DataObjects/Matrix2D";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
-import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { Fraction } from "../../Common/DataObjects/Fraction";
 import { StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
 import * as VF from "vexflow/core";
+
+const vexflowUnitInPixels: number = 10;
+
+export interface GraphicalSlurBoundsDiagnostics {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+}
+
+export interface GraphicalSlurArticulationShiftDiagnostics {
+    baseline: PointF2D;
+    endpoint: "start" | "end";
+    glyph: string;
+    type: string;
+    previousShiftPx: number;
+    finalShiftPx: number;
+    bounds: GraphicalSlurBoundsDiagnostics;
+}
+
+export interface GraphicalSlurDiagnostics {
+    segmentIndex: number;
+    segmentCount: number;
+    placement?: PlacementEnum;
+    startNotehead?: GraphicalSlurBoundsDiagnostics;
+    endNotehead?: GraphicalSlurBoundsDiagnostics;
+    articulationShifts: GraphicalSlurArticulationShiftDiagnostics[];
+    unsupportedRouting?: "cross-staff-cross-system";
+}
+
+interface RenderedSlurEndpointGeometry {
+    notehead: GraphicalSlurBoundsDiagnostics;
+    stem?: GraphicalSlurBoundsDiagnostics;
+    articulations: {
+        baseline: PointF2D;
+        modifier: any;
+        type: string;
+        position: number;
+        bounds: GraphicalSlurBoundsDiagnostics;
+    }[];
+}
 
 export class GraphicalSlur extends GraphicalCurve {
     // private intersection: PointF2D;
@@ -33,6 +73,11 @@ export class GraphicalSlur extends GraphicalCurve {
     public graceEnd: boolean;
     private rules: EngravingRules;
     public SVGElement: Node;
+    public diagnostics: GraphicalSlurDiagnostics = {
+        segmentIndex: 0,
+        segmentCount: 1,
+        articulationShifts: [],
+    };
 
     /**
      * Compares the timespan of two Graphical Slurs
@@ -61,6 +106,211 @@ export class GraphicalSlur extends GraphicalCurve {
         return 0;
     }
 
+    public setLinkedSegment(index: number, count: number, placement: PlacementEnum): void {
+        this.diagnostics.segmentIndex = index;
+        this.diagnostics.segmentCount = count;
+        this.diagnostics.placement = placement;
+        this.placement = placement;
+    }
+
+    public markUnsupportedCrossStaffSystemBreak(): void {
+        this.diagnostics.unsupportedRouting = "cross-staff-cross-system";
+    }
+
+    public determinePlacement(): PlacementEnum {
+        const staffLine: StaffLine = this.staffEntries[0]?.parentMeasure?.ParentStaffLine;
+        if (!staffLine) {
+            return this.placement;
+        }
+        this.calculatePlacement(staffLine.SkyBottomLineCalculator, staffLine);
+        this.diagnostics.placement = this.placement;
+        return this.placement;
+    }
+
+    /**
+     * Move endpoint-side articulations beyond the slur's fixed notehead
+     * attachment. Returns true when any final articulation geometry changed.
+     */
+    public prepareEndpointArticulationClearance(): boolean {
+        const staffLine: StaffLine = this.staffEntries[0]?.parentMeasure?.ParentStaffLine;
+        if (!staffLine || (this.placement !== PlacementEnum.Above && this.placement !== PlacementEnum.Below)) {
+            return false;
+        }
+        this.diagnostics.articulationShifts = [];
+        const { startNote, endNote } = this.resolveEndpointNotes();
+        let changed: boolean = false;
+        if (startNote) {
+            changed = this.displaceEndpointArticulations(startNote, staffLine, "start") || changed;
+        }
+        if (endNote && endNote !== startNote) {
+            changed = this.displaceEndpointArticulations(endNote, staffLine, "end") || changed;
+        }
+        return changed;
+    }
+
+    private resolveEndpointNotes(): {startNote: GraphicalNote, endNote: GraphicalNote} {
+        const startStaffEntry: GraphicalStaffEntry = this.staffEntries[0];
+        const endStaffEntry: GraphicalStaffEntry = this.staffEntries[this.staffEntries.length - 1];
+        if (!startStaffEntry || !endStaffEntry) {
+            return {startNote: undefined, endNote: undefined};
+        }
+        let startNote: GraphicalNote = startStaffEntry.findGraphicalNoteFromNote(this.slur.StartNote);
+        if (!startNote && this.graceStart) {
+            startNote = startStaffEntry.findGraphicalNoteFromGraceNote(this.slur.StartNote);
+        }
+        if (!startNote) {
+            startNote = startStaffEntry.findEndTieGraphicalNoteFromNoteWithStartingSlur(this.slur.StartNote, this.slur);
+        }
+        let endNote: GraphicalNote = endStaffEntry.findGraphicalNoteFromNote(this.slur.EndNote);
+        if (!endNote && this.graceEnd) {
+            endNote = endStaffEntry.findGraphicalNoteFromGraceNote(this.slur.EndNote);
+        }
+        return {startNote, endNote};
+    }
+
+    private renderedEndpointGeometry(note: GraphicalNote, staffLine: StaffLine): RenderedSlurEndpointGeometry {
+        const vexflowNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
+        const vfNote: any = vexflowNote.vfnote?.[0] as any;
+        const noteIndex: number = vexflowNote.vfnote?.[1] ?? vexflowNote.vfnoteIndex ?? 0;
+        if (!vfNote) {
+            return undefined;
+        }
+        vfNote.layoutArticulations?.();
+        const stave: any = vfNote.getStave?.();
+        const measureX: number = note.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
+        const staveX: number = stave?.getX?.() ?? 0;
+        const staffTopY: number = stave?.getYForLine?.(0) ?? stave?.getY?.() ?? 0;
+        const selectedBounds: any = vfNote.getSelectedNoteHeadBounds?.(noteIndex);
+        let noteheadBoundingBox: any = selectedBounds?.boundingBox;
+        if (!noteheadBoundingBox) {
+            const noteheads: any[] = vfNote.noteHeads ?? vfNote.note_heads ?? [];
+            noteheadBoundingBox = noteheads[noteIndex]?.getBoundingBox?.();
+        }
+        if (!noteheadBoundingBox) {
+            return undefined;
+        }
+
+        const toStaffLineBounds: (boundingBox: any) => GraphicalSlurBoundsDiagnostics = (
+            boundingBox: any,
+        ): GraphicalSlurBoundsDiagnostics => {
+            const leftPx: number = boundingBox.getX?.() ?? boundingBox.x;
+            const topPx: number = boundingBox.getY?.() ?? boundingBox.y;
+            const widthPx: number = boundingBox.getW?.() ?? boundingBox.w;
+            const heightPx: number = boundingBox.getH?.() ?? boundingBox.h;
+            return {
+                left: measureX + (leftPx - staveX) / vexflowUnitInPixels,
+                right: measureX + (leftPx + widthPx - staveX) / vexflowUnitInPixels,
+                top: staffLine.TopLineOffset + (topPx - staffTopY) / vexflowUnitInPixels,
+                bottom: staffLine.TopLineOffset + (topPx + heightPx - staffTopY) / vexflowUnitInPixels,
+            };
+        };
+        const toStaffLinePoint: (x: number, y: number) => PointF2D = (
+            x: number,
+            y: number,
+        ): PointF2D => new PointF2D(
+            measureX + (x - staveX) / vexflowUnitInPixels,
+            staffLine.TopLineOffset + (y - staffTopY) / vexflowUnitInPixels,
+        );
+
+        const notehead: GraphicalSlurBoundsDiagnostics = toStaffLineBounds(noteheadBoundingBox);
+        let stem: GraphicalSlurBoundsDiagnostics;
+        if (vfNote.hasStem?.() && vfNote.getStemExtents && vfNote.getStemX) {
+            const extents: {topY: number, baseY: number} = vfNote.getStemExtents();
+            const stemX: number = measureX + (vfNote.getStemX() - staveX) / vexflowUnitInPixels;
+            const top: number = staffLine.TopLineOffset +
+                (Math.min(extents.topY, extents.baseY) - staffTopY) / vexflowUnitInPixels;
+            const bottom: number = staffLine.TopLineOffset +
+                (Math.max(extents.topY, extents.baseY) - staffTopY) / vexflowUnitInPixels;
+            stem = {
+                left: stemX - VF.Stem.WIDTH / vexflowUnitInPixels / 2,
+                right: stemX + VF.Stem.WIDTH / vexflowUnitInPixels / 2,
+                top,
+                bottom,
+            };
+        }
+
+        const articulations: RenderedSlurEndpointGeometry["articulations"] = [];
+        for (const modifier of vfNote.modifiers ?? []) {
+            if (modifier.getCategory?.() !== VF.Articulation.CATEGORY ||
+                (modifier.getIndex?.() ?? modifier.index) !== noteIndex) {
+                continue;
+            }
+            const layout: any = modifier.layout?.();
+            const boundingBox: any = layout?.boundingBox ?? modifier.getBoundingBox?.();
+            if (!boundingBox) {
+                continue;
+            }
+            articulations.push({
+                baseline: toStaffLinePoint(
+                    layout?.x ?? modifier.getX?.() ?? modifier.x,
+                    layout?.y ?? modifier.getY?.() ?? modifier.y,
+                ),
+                modifier,
+                type: modifier.type ?? modifier.getText?.() ?? "unknown",
+                position: modifier.getPosition?.() ?? modifier.position,
+                bounds: toStaffLineBounds(boundingBox),
+            });
+        }
+
+        return {notehead, stem, articulations};
+    }
+
+    private displaceEndpointArticulations(
+        note: GraphicalNote,
+        staffLine: StaffLine,
+        endpoint: "start" | "end",
+    ): boolean {
+        const geometry: RenderedSlurEndpointGeometry = this.renderedEndpointGeometry(note, staffLine);
+        if (!geometry) {
+            return false;
+        }
+        if (endpoint === "start") {
+            this.diagnostics.startNotehead = geometry.notehead;
+        } else {
+            this.diagnostics.endNotehead = geometry.notehead;
+        }
+        const vfPosition: number = this.placement === PlacementEnum.Above
+            ? VF.Modifier.Position.ABOVE
+            : VF.Modifier.Position.BELOW;
+        const supportedTypes: Set<string> = new Set(["a.", "a-", "a>", "a^"]);
+        const attachmentY: number = this.placement === PlacementEnum.Above
+            ? geometry.notehead.top - this.rules.SlurNoteHeadYOffset
+            : geometry.notehead.bottom + this.rules.SlurNoteHeadYOffset;
+        let changed: boolean = false;
+
+        for (const articulation of geometry.articulations) {
+            if (articulation.position !== vfPosition || !supportedTypes.has(articulation.type)) {
+                continue;
+            }
+            const currentShiftPx: number = articulation.modifier.getOutwardShift?.() ?? 0;
+            const missingClearanceUnits: number = this.placement === PlacementEnum.Above
+                ? articulation.bounds.bottom - (attachmentY - this.rules.SlurArticulationClearance)
+                : attachmentY + this.rules.SlurArticulationClearance - articulation.bounds.top;
+            const finalShiftPx: number = currentShiftPx +
+                Math.max(0, missingClearanceUnits * vexflowUnitInPixels);
+            if (finalShiftPx > currentShiftPx + 0.001) {
+                articulation.modifier.setOutwardShift?.(finalShiftPx);
+                articulation.modifier.layout?.();
+                changed = true;
+            }
+            const finalGeometry: RenderedSlurEndpointGeometry = this.renderedEndpointGeometry(note, staffLine);
+            const finalArticulation: RenderedSlurEndpointGeometry["articulations"][number] =
+                finalGeometry?.articulations.find(
+                (candidate): boolean => candidate.modifier === articulation.modifier,
+            );
+            this.diagnostics.articulationShifts.push({
+                baseline: finalArticulation?.baseline ?? articulation.baseline,
+                endpoint,
+                glyph: String(articulation.modifier.getText?.() ?? ""),
+                type: articulation.type,
+                previousShiftPx: currentShiftPx,
+                finalShiftPx,
+                bounds: finalArticulation?.bounds ?? articulation.bounds,
+            });
+        }
+        return changed;
+    }
+
     /**
      *
      * @param rules
@@ -70,29 +320,18 @@ export class GraphicalSlur extends GraphicalCurve {
         // single GraphicalSlur means a single Curve, eg each GraphicalSlurObject is meant to be on the same StaffLine
         // a Slur can span more than one GraphicalSlurObjects
         const startStaffEntry: GraphicalStaffEntry = this.staffEntries[0];
-        const endStaffEntry: GraphicalStaffEntry = this.staffEntries[this.staffEntries.length - 1];
-
-        // where the Slur (not the graphicalObject) starts and ends (could belong to another StaffLine)
-        let slurStartNote: GraphicalNote = startStaffEntry.findGraphicalNoteFromNote(this.slur.StartNote);
-        if (!slurStartNote && this.graceStart) {
-            slurStartNote = startStaffEntry.findGraphicalNoteFromGraceNote(this.slur.StartNote);
-        }
-        if (!slurStartNote) {
-            slurStartNote = startStaffEntry.findEndTieGraphicalNoteFromNoteWithStartingSlur(this.slur.StartNote, this.slur);
-        }
-        let slurEndNote: GraphicalNote = endStaffEntry.findGraphicalNoteFromNote(this.slur.EndNote);
-        if (!slurEndNote && this.graceEnd) {
-            slurEndNote = endStaffEntry.findGraphicalNoteFromGraceNote(this.slur.EndNote);
-        }
+        const {startNote: slurStartNote, endNote: slurEndNote} = this.resolveEndpointNotes();
 
         const staffLine: StaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
-        this.calculatePlacement(skyBottomLineCalculator, staffLine);
+        if (this.placement !== PlacementEnum.Above && this.placement !== PlacementEnum.Below) {
+            this.calculatePlacement(skyBottomLineCalculator, staffLine);
+        }
 
         // the Start- and End Reference Points for the Sky-BottomLine
         const startEndPoints: {startX: number, startY: number, endX: number, endY: number} =
-            this.calculateStartAndEnd(slurStartNote, slurEndNote, staffLine, rules, skyBottomLineCalculator);
+            this.calculateStartAndEnd(slurStartNote, slurEndNote, staffLine, rules);
 
         const startX: number = startEndPoints.startX;
         const endX: number = startEndPoints.endX;
@@ -117,36 +356,8 @@ export class GraphicalSlur extends GraphicalCurve {
         if (this.placement === PlacementEnum.Above) {
             startY -= rules.SlurNoteHeadYOffset;
             endY -= rules.SlurNoteHeadYOffset;
-            const startUpperRight: PointF2D = new PointF2D(this.staffEntries[0].parentMeasure.PositionAndShape.RelativePosition.x
-                                                           + this.staffEntries[0].PositionAndShape.RelativePosition.x,
-                                                           startY);
-            if (slurStartNote) {
-                    startUpperRight.x += this.staffEntries[0].PositionAndShape.BorderRight;
-            } else  {
-                    // continuing Slur from previous StaffLine - must start after last Instruction of first Measure
-                    startUpperRight.x = this.staffEntries[0].parentMeasure.beginInstructionsWidth;
-            }
-
-            // must also add the GraceStaffEntry's ParentStaffEntry Position
-            if (this.graceStart) {
-                startUpperRight.x += endStaffEntry.PositionAndShape.RelativePosition.x;
-            }
-
-            const endUpperLeft: PointF2D = new PointF2D(this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
-                                                        + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
-                                                        endY);
-            if (slurEndNote) {
-                    endUpperLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
-            } else {
-                    // Slur continues to next StaffLine - must reach the end of current StaffLine
-                    endUpperLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
-                    + this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.Size.width;
-            }
-
-            // must also add the GraceStaffEntry's ParentStaffEntry Position
-            if (this.graceEnd) {
-                endUpperLeft.x += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-            }
+            const startUpperRight: PointF2D = new PointF2D(startX, startY);
+            const endUpperLeft: PointF2D = new PointF2D(endX, endY);
 
             // SkyLinePointsList between firstStaffEntry startUpperRightPoint and lastStaffentry endUpperLeftPoint
             points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
@@ -263,6 +474,7 @@ export class GraphicalSlur extends GraphicalCurve {
             this.bezierStartControlPt = new PointF2D(startControlPoint.x, startControlPoint.y - startYOffset);
             this.bezierEndControlPt = new PointF2D(endControlPoint.x, endControlPoint.y - endYOffset);
             this.bezierEndPt = new PointF2D(endX, endY - endYOffset);
+            this.applySystemBreakTangents(Boolean(slurStartNote), Boolean(slurEndNote));
 
             // calculate slur Curvepoints and update Skyline
             const length: number = staffLine.SkyLine.length;
@@ -291,35 +503,8 @@ export class GraphicalSlur extends GraphicalCurve {
             endY += rules.SlurNoteHeadYOffset;
 
             // firstStaffEntry startLowerRightPoint and lastStaffentry endLowerLeftPoint
-            const startLowerRight: PointF2D = new PointF2D(this.staffEntries[0].parentMeasure.PositionAndShape.RelativePosition.x
-                                                           + this.staffEntries[0].PositionAndShape.RelativePosition.x,
-                                                           startY);
-            if (slurStartNote) {
-                startLowerRight.x += this.staffEntries[0].PositionAndShape.BorderRight;
-            } else {
-                // continuing Slur from previous StaffLine - must start after last Instruction of first Measure
-                startLowerRight.x = this.staffEntries[0].parentMeasure.beginInstructionsWidth;
-            }
-
-            // must also add the GraceStaffEntry's ParentStaffEntry Position
-            if (this.graceStart) {
-                startLowerRight.x += endStaffEntry.PositionAndShape.RelativePosition.x;
-            }
-            const endLowerLeft: PointF2D = new PointF2D(this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
-                                                        + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
-                                                        endY);
-            if (slurEndNote) {
-                endLowerLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
-            } else {
-                // Slur continues to next StaffLine - must reach the end of current StaffLine
-                endLowerLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
-                    + this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.Size.width;
-            }
-
-            // must also add the GraceStaffEntry's ParentStaffEntry Position
-            if (this.graceEnd) {
-                endLowerLeft.x += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-            }
+            const startLowerRight: PointF2D = new PointF2D(startX, startY);
+            const endLowerLeft: PointF2D = new PointF2D(endX, endY);
 
             // BottomLinePointsList between firstStaffEntry startLowerRightPoint and lastStaffentry endLowerLeftPoint
             points = this.calculateBottomPoints(startLowerRight, endLowerLeft, staffLine, skyBottomLineCalculator);
@@ -423,6 +608,7 @@ export class GraphicalSlur extends GraphicalCurve {
             this.bezierStartControlPt = new PointF2D(startControlPoint.x, startControlPoint.y + startYOffset);
             this.bezierEndControlPt = new PointF2D(endControlPoint.x, endControlPoint.y + endYOffset);
             this.bezierEndPt = new PointF2D(endX, endY + endYOffset);
+            this.applySystemBreakTangents(Boolean(slurStartNote), Boolean(slurEndNote));
 
             /* for DEBUG only */
             // this.intersection = transposeMatrix.vectorMultiplication(intersectionPoint);
@@ -455,6 +641,15 @@ export class GraphicalSlur extends GraphicalCurve {
         }
     }
 
+    private applySystemBreakTangents(hasStartNote: boolean, hasEndNote: boolean): void {
+        if (!hasStartNote) {
+            this.bezierStartControlPt.y = this.bezierStartPt.y;
+        }
+        if (!hasEndNote) {
+            this.bezierEndControlPt.y = this.bezierEndPt.y;
+        }
+    }
+
 
     /**
      * Calculates the bezier curve for a slur that crosses between two staves (e.g. left hand to right hand),
@@ -480,6 +675,7 @@ export class GraphicalSlur extends GraphicalCurve {
         }
         // Only handle staves stacked within the same MusicSystem (the regular cross-staff case).
         if (startStaffLine.ParentMusicSystem !== endStaffLine.ParentMusicSystem) {
+            this.markUnsupportedCrossStaffSystemBreak();
             return false;
         }
         const systemBox: BoundingBox = startStaffLine.ParentMusicSystem.PositionAndShape;
@@ -558,183 +754,53 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param rules
      * @param skyBottomLineCalculator
      */
-    private calculateStartAndEnd(   slurStartNote: GraphicalNote,
-                                    slurEndNote: GraphicalNote,
-                                    staffLine: StaffLine,
-                                    rules: EngravingRules,
-                                    skyBottomLineCalculator: SkyBottomLineCalculator): {startX: number, startY: number, endX: number, endY: number} {
-        let startX: number = 0;
-        let startY: number = 0;
-        let endX: number = 0;
-        let endY: number = 0;
+    private calculateStartAndEnd(
+        slurStartNote: GraphicalNote,
+        slurEndNote: GraphicalNote,
+        staffLine: StaffLine,
+        rules: EngravingRules,
+    ): {startX: number, startY: number, endX: number, endY: number} {
+        const continuationY: number = this.placement === PlacementEnum.Above
+            ? staffLine.TopLineOffset - 1.5
+            : staffLine.BottomLineOffset + 1.5;
+        let startX: number = this.staffEntries[0].parentMeasure.beginInstructionsWidth;
+        let startY: number = continuationY;
+        let endX: number = staffLine.PositionAndShape.Size.width;
+        let endY: number = continuationY;
 
         if (slurStartNote) {
-            // must be relative to StaffLine
-            startX = slurStartNote.PositionAndShape.RelativePosition.x + slurStartNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
-                                            + slurStartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-
-            // If Slur starts on a Gracenote
-            if (this.graceStart) {
-                startX += slurStartNote.parentVoiceEntry.parentStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-            }
-
-            //const first: GraphicalNote = slurStartNote.parentVoiceEntry.notes[0];
-
-            // Determine Start/End Point coordinates with the VoiceEntry of the Start/EndNote of the slur
-            const slurStartVE: GraphicalVoiceEntry = slurStartNote.parentVoiceEntry;
-
-            if (this.placement === PlacementEnum.Above) {
-                startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    startY = Math.min(endY, slurStartVE.parentStaffEntry.getSkylineMin());
-                    // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
-                    //     if (articulation.placement === PlacementEnum.Above) {
-                    //         startY -= this.rules.SlurEndArticulationYOffset;
-                    //         break;
-                    //     }
-                    // }
-                }
+            const geometry: RenderedSlurEndpointGeometry = this.renderedEndpointGeometry(slurStartNote, staffLine);
+            if (geometry) {
+                this.diagnostics.startNotehead = geometry.notehead;
+                startX = geometry.notehead.right;
+                startY = this.placement === PlacementEnum.Above ? geometry.notehead.top : geometry.notehead.bottom;
             } else {
-                startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    startY = Math.max(endY, slurStartVE.parentStaffEntry.getBottomlineMax());
-                }
-                // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
-                //     if (articulation.placement === PlacementEnum.Below) {
-                //         startY += 1;
-                //         break;
-                //     }
-                // }
+                const startEntry: GraphicalStaffEntry = slurStartNote.parentVoiceEntry.parentStaffEntry;
+                startX = startEntry.parentMeasure.PositionAndShape.RelativePosition.x
+                    + startEntry.PositionAndShape.RelativePosition.x
+                    + slurStartNote.PositionAndShape.RelativePosition.x;
+                startY = slurStartNote.parentVoiceEntry.PositionAndShape.RelativePosition.y
+                    + (this.placement === PlacementEnum.Above
+                        ? slurStartNote.parentVoiceEntry.PositionAndShape.BorderTop
+                        : slurStartNote.parentVoiceEntry.PositionAndShape.BorderBottom);
             }
-
-            // If the stem points towards the starting point of the slur, shift the slur by a small amount to start (approximately) at the x-position
-            // of the notehead. Note: an exact calculation using the position of the note is too complicate for the payoff
-            if ( slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Down && this.placement === PlacementEnum.Below ) {
-                startX -= 0.5;
-            }
-            if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Up && this.placement === PlacementEnum.Above) {
-                startX += 0.5;
-            }
-            // if (first.NoteStem && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
-            //     startX += first.NoteStem.PositionAndShape.RelativePosition.x;
-            //     startY = skyBottomLineCalculator.getSkyLineMinAtPoint(staffLine, startX);
-            // } else {
-            //     const last: GraphicalNote = <GraphicalNote>slurStartNote[slurEndNote.parentVoiceEntry.notes.length - 1];
-            //     if (last.NoteStem && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
-            //         startX += last.NoteStem.PositionAndShape.RelativePosition.x;
-            //         startY = skyBottomLineCalculator.getBottomLineMaxAtPoint(staffLine, startX);
-            //     } else {
-            //     }
-            // }
-        } else {
-            startX = 0;
         }
 
         if (slurEndNote) {
-            endX = slurEndNote.PositionAndShape.RelativePosition.x + slurEndNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
-                + slurEndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-
-            // If Slur ends in a Gracenote
-            if (this.graceEnd) {
-                endX += slurEndNote.parentVoiceEntry.parentStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-            }
-
-            const slurEndVE: GraphicalVoiceEntry = slurEndNote.parentVoiceEntry;
-
-            // check for articulation -> shift end y (slur further outward)
-            //   this should not be necessary for the start note, and for accents (>) it's even counter productive there
-            //   TODO alternatively, we could fix the bounding box of the note to include the ornament, but that seems tricky
-            let articulationPlacement: PlacementEnum; // whether there's an articulation and where
-            for (const articulation of slurEndVE.parentVoiceEntry.Articulations) {
-                articulationPlacement = articulation.placement;
-                if (articulation.placement === PlacementEnum.NotYetDefined) {
-                    for (const modifier of ((slurEndNote as VexFlowGraphicalNote).vfnote[0] as any).modifiers) {
-                        if (modifier.getCategory() === VF.Articulation.CATEGORY) {
-                            if (modifier.position === VF.Modifier.Position.ABOVE) {
-                                articulation.placement = PlacementEnum.Above;
-                                articulationPlacement = PlacementEnum.Above;
-                            } else if (modifier.position === VF.Modifier.Position.BELOW) {
-                                articulation.placement = PlacementEnum.Below;
-                                articulationPlacement = PlacementEnum.Below;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            if (this.placement === PlacementEnum.Above) {
-                endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    endY = Math.min(endY, slurEndVE.parentStaffEntry.getSkylineMin());
-                }
-                if (articulationPlacement === PlacementEnum.Above) {
-                    endY -= this.rules.SlurEndArticulationYOffset;
-                }
+            const geometry: RenderedSlurEndpointGeometry = this.renderedEndpointGeometry(slurEndNote, staffLine);
+            if (geometry) {
+                this.diagnostics.endNotehead = geometry.notehead;
+                endX = geometry.notehead.left;
+                endY = this.placement === PlacementEnum.Above ? geometry.notehead.top : geometry.notehead.bottom;
             } else {
-                endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    endY = Math.max(endY, slurEndVE.parentStaffEntry.getBottomlineMax());
-                }
-                if (articulationPlacement === PlacementEnum.Below) {
-                    endY += this.rules.SlurEndArticulationYOffset;
-                }
-            }
-
-            // If the stem points towards the endpoint of the slur, shift the slur by a small amount to start (approximately) at the x-position
-            // of the notehead. Note: an exact calculation using the position of the note is too complicate for the payoff
-            if ( slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down && this.placement === PlacementEnum.Below ) {
-                endX -= 0.5;
-            }
-            if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Up && this.placement === PlacementEnum.Above) {
-                endX += 0.5;
-            }
-            // const first: GraphicalNote = <GraphicalNote>slurEndNote.parentVoiceEntry.notes[0];
-            // if (first.NoteStem && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
-            //     endX += first.NoteStem.PositionAndShape.RelativePosition.x;
-            //     endY = skyBottomLineCalculator.getSkyLineMinAtPoint(staffLine, endX);
-            // } else {
-            //     const last: GraphicalNote = <GraphicalNote>slurEndNote.parentVoiceEntry.notes[slurEndNote.parentVoiceEntry.notes.length - 1];
-            //     if (last.NoteStem && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
-            //         endX += last.NoteStem.PositionAndShape.RelativePosition.x;
-            //         endY = skyBottomLineCalculator.getBottomLineMaxAtPoint(staffLine, endX);
-            //     } else {
-            //         if (this.placement === PlacementEnum.Above) {
-            //             const highestNote: GraphicalNote = last;
-            //             endY = highestNote.PositionAndShape.RelativePosition.y;
-            //             if (highestNote.NoteHead) {
-            //                 endY += highestNote.NoteHead.PositionAndShape.BorderMarginTop;
-            //             } else { endY += highestNote.PositionAndShape.BorderTop; }
-            //         } else {
-            //             const lowestNote: GraphicalNote = first;
-            //             endY = lowestNote.parentVoiceEntry
-            //             lowestNote.PositionAndShape.RelativePosition.y;
-            //             if (lowestNote.NoteHead) {
-            //                 endY += lowestNote.NoteHead.PositionAndShape.BorderMarginBottom;
-            //             } else { endY += lowestNote.PositionAndShape.BorderBottom; }
-            //         }
-            //     }
-            // }
-        } else {
-            endX = staffLine.PositionAndShape.Size.width;
-        }
-
-        // if GraphicalSlur breaks over System, then the end/start of the curve is at the corresponding height with the known start/end
-        if (!slurStartNote && !slurEndNote) {
-            startY = -1.5;
-            endY = -1.5;
-        }
-        if (!slurStartNote) {
-            if (this.placement === PlacementEnum.Above) {
-                startY = endY - 1;
-            } else {
-                startY = endY + 1;
-            }
-        }
-        if (!slurEndNote) {
-            if (this.placement === PlacementEnum.Above) {
-                endY = startY - 1;
-            } else {
-                endY = startY + 1;
+                const endEntry: GraphicalStaffEntry = slurEndNote.parentVoiceEntry.parentStaffEntry;
+                endX = endEntry.parentMeasure.PositionAndShape.RelativePosition.x
+                    + endEntry.PositionAndShape.RelativePosition.x
+                    + slurEndNote.PositionAndShape.RelativePosition.x;
+                endY = slurEndNote.parentVoiceEntry.PositionAndShape.RelativePosition.y
+                    + (this.placement === PlacementEnum.Above
+                        ? slurEndNote.parentVoiceEntry.PositionAndShape.BorderTop
+                        : slurEndNote.parentVoiceEntry.PositionAndShape.BorderBottom);
             }
         }
 
