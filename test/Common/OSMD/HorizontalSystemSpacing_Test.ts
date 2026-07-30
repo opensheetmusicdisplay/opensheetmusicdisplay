@@ -113,7 +113,7 @@ describe("Horizontal system spacing", (): void => {
     assertSelectedTargetsMatchRenderedContexts(osmd);
   });
 
-  it("allocates system residual by pickup duration rather than per-measure softmax", async (): Promise<void> => {
+  it("keeps optional system residual out of an implicit pickup's terminal gap", async (): Promise<void> => {
     const osmd: OpenSheetMusicDisplay = createOsmd();
     await osmd.load(pickupAndFullMeasureScore());
     osmd.render();
@@ -124,10 +124,16 @@ describe("Horizontal system spacing", (): void => {
       columns.find((column): boolean => column.kind === "system-start");
     const boundary: VexFlowHorizontalSpacingColumnDiagnostics =
       columns.find((column): boolean => column.kind === "measure-boundary");
+    const pickupColumn: VexFlowHorizontalSpacingColumnDiagnostics =
+      columns.find(
+        (column): boolean =>
+          column.kind === "rhythmic" && column.measureIndex === 0,
+      );
     const systemEnd: VexFlowHorizontalSpacingColumnDiagnostics =
       columns.find((column): boolean => column.kind === "system-end");
     expect(systemStart).to.not.equal(undefined);
     expect(boundary).to.not.equal(undefined);
+    expect(pickupColumn).to.not.equal(undefined);
     expect(systemEnd).to.not.equal(undefined);
 
     const pickupAddition: number =
@@ -136,9 +142,66 @@ describe("Horizontal system spacing", (): void => {
     const fullMeasureAddition: number =
       (systemEnd.finalX - boundary.finalX) -
       (systemEnd.baseX - boundary.baseX);
-    expect(pickupAddition).to.be.greaterThan(0);
+    expect(pickupAddition).to.be.closeTo(0, 0.001);
     expect(fullMeasureAddition).to.be.greaterThan(0);
-    expect(pickupAddition / fullMeasureAddition).to.be.closeTo(0.125, 0.001);
+    expect(boundary.finalX - pickupColumn.finalX).to.be.closeTo(
+      boundary.baseX - pickupColumn.baseX,
+      0.001,
+    );
+  });
+
+  it("retains hard lyric clearance across a compact pickup boundary", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(pickupAndFullMeasureScore(true));
+    osmd.render();
+
+    const system: VexFlowHorizontalSpacingSystemDiagnostics =
+      getDiagnostics(osmd).selectedSystems[0];
+    const systemStart: VexFlowHorizontalSpacingColumnDiagnostics =
+      system.columns.find((column): boolean => column.kind === "system-start");
+    const boundary: VexFlowHorizontalSpacingColumnDiagnostics =
+      system.columns.find((column): boolean => column.kind === "measure-boundary");
+    const pickupAddition: number =
+      (boundary.finalX - systemStart.finalX) -
+      (boundary.baseX - systemStart.baseX);
+    const lyricConstraint: ResolvedHorizontalSpacingConstraint =
+      system.resolvedConstraints.find(
+        (constraint): boolean =>
+          constraint.reason === "lyric" && constraint.addedDistance > 0.001,
+      );
+
+    expect(lyricConstraint).to.not.equal(undefined);
+    expect(lyricConstraint.finalDistance).to.be.at.least(
+      lyricConstraint.minimumDistance - 0.001,
+    );
+    expect(pickupAddition).to.be.greaterThan(0);
+  });
+
+  it("does not justify a pickup-only system into its zero-duration leading gap", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(pickupAndFullMeasureScore(false, true));
+    osmd.Sheet.Rules.NewSystemAtXMLNewSystemAttribute = true;
+    osmd.render();
+
+    const pickupSystem: VexFlowHorizontalSpacingSystemDiagnostics =
+      getDiagnostics(osmd).selectedSystems[0];
+    expect(getDiagnostics(osmd).selectedSystems).to.have.length(2);
+    const pickupColumn: VexFlowHorizontalSpacingColumnDiagnostics =
+      pickupSystem.columns.find(
+        (column): boolean => column.kind === "rhythmic",
+      );
+    const systemEnd: VexFlowHorizontalSpacingColumnDiagnostics =
+      pickupSystem.columns.find(
+        (column): boolean => column.kind === "system-end",
+      );
+
+    expect(pickupColumn).to.not.equal(undefined);
+    expect(systemEnd).to.not.equal(undefined);
+    expect(pickupColumn.finalX - pickupColumn.baseX).to.be.closeTo(0, 0.001);
+    expect(systemEnd.finalX - systemEnd.baseX).to.be.closeTo(
+      pickupSystem.addedWidthPx,
+      0.001,
+    );
   });
 
   it("uses elapsed onset intervals for melisma spacing across staves", async (): Promise<void> => {
@@ -546,7 +609,10 @@ function crossMeasureLyricScore(): string {
 </score-partwise>`;
 }
 
-function pickupAndFullMeasureScore(): string {
+function pickupAndFullMeasureScore(
+  withCrossBarLyrics: boolean = false,
+  forceSystemBreak: boolean = false,
+): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="4.0">
   <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
@@ -561,10 +627,19 @@ function pickupAndFullMeasureScore(): string {
       <note>
         <pitch><step>C</step><octave>4</octave></pitch>
         <duration>1</duration><type>eighth</type>
+        ${withCrossBarLyrics
+          ? '<lyric number="1"><text>extraordinarily</text></lyric>'
+          : ""}
       </note>
     </measure>
     <measure number="1">
-      <note><pitch><step>C</step><octave>4</octave></pitch><duration>2</duration><type>quarter</type></note>
+      ${forceSystemBreak ? '<print new-system="yes"/>' : ""}
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch><duration>2</duration><type>quarter</type>
+        ${withCrossBarLyrics
+          ? '<lyric number="1"><text>crowded</text></lyric>'
+          : ""}
+      </note>
       <note><pitch><step>D</step><octave>4</octave></pitch><duration>2</duration><type>quarter</type></note>
       <note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><type>quarter</type></note>
       <note><pitch><step>F</step><octave>4</octave></pitch><duration>2</duration><type>quarter</type></note>

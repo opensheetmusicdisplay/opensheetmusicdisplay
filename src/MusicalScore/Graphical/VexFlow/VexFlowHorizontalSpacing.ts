@@ -25,6 +25,7 @@ const SYSTEM_LYRIC_PADDING_SOURCE: string = "osmd-system-lyrics";
 const FIXED_GAP_WEIGHT: number = 0.000001;
 
 interface MeasureProfile {
+  compactPickup: boolean;
   columns: ProfileColumn[];
   graphicalMeasures: GraphicalMeasure[];
   intrinsicHardWidthPx: number;
@@ -65,6 +66,7 @@ interface CandidateLyric {
 
 interface CandidateSolution {
   addedWidthByMeasurePx: number[];
+  baseHardWidthsPx: number[];
   baseVariableWidthsPx: number[];
   columns: VexFlowHorizontalSpacingColumnDiagnostics[];
   constraintResult: HorizontalSpacingConstraintResult;
@@ -73,6 +75,7 @@ interface CandidateSolution {
   intrinsicHardWidthsPx: number[];
   minimumVariableWidthPx: number;
   nodes: CandidateNode[];
+  residualGapWeights: number[];
 }
 
 export interface VexFlowHorizontalSpacingDiagnostics {
@@ -177,13 +180,13 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
   ): HorizontalSystemSpacingLayout {
     const solution: CandidateSolution = this.solveCandidate(measures);
     const intrinsicHardTotalPx: number = sum(solution.intrinsicHardWidthsPx);
-    const selectedHardWidthsPx: number[] = solution.intrinsicHardWidthsPx.map(
+    const selectedHardWidthsPx: number[] = solution.baseHardWidthsPx.map(
       (width: number, index: number): number => width + solution.addedWidthByMeasurePx[index],
     );
     const selectedHardTotalPx: number = sum(selectedHardWidthsPx);
     const softWidthsPx: number[] = solution.baseVariableWidthsPx.map(
       (width: number, index: number): number =>
-        Math.max(0, width - solution.intrinsicHardWidthsPx[index]),
+        Math.max(0, width - solution.baseHardWidthsPx[index]),
     );
     const softTotalPx: number = sum(softWidthsPx);
     const availableVariableWidthPx: number = Math.max(0, availableVariableWidth * unitInPixels);
@@ -196,8 +199,11 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         ? availableSoftWidthPx
         : Math.min(availableSoftWidthPx, softTotalPx * maximumSoftScalingFactor);
     const residualWidthPx: number = Math.max(0, targetSoftWidthPx - softTotalPx);
-    const totalGapWeight: number = Math.max(FIXED_GAP_WEIGHT, sum(solution.gapWeights));
-    const residualAddedGaps: number[] = solution.gapWeights.map(
+    const totalGapWeight: number = Math.max(
+      FIXED_GAP_WEIGHT,
+      sum(solution.residualGapWeights),
+    );
+    const residualAddedGaps: number[] = solution.residualGapWeights.map(
       (weight: number): number => residualWidthPx * weight / totalGapWeight,
     );
     const finalPositionsPx: number[] = [solution.constraintResult.positions[0]];
@@ -274,7 +280,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     return {
       measureVariableWidths,
       minimumVariableWidth:
-        (intrinsicHardTotalPx + sum(solution.addedWidthByMeasurePx) + softTotalPx) / unitInPixels,
+        (selectedHardTotalPx + softTotalPx) / unitInPixels,
     };
   }
 
@@ -311,6 +317,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     }
 
     const baseVariableWidthsPx: number[] = [];
+    const baseHardWidthsPx: number[] = [];
     const intrinsicHardWidthsPx: number[] = [];
     const nodes: CandidateNode[] = [{
       basePositionPx: 0,
@@ -328,13 +335,17 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         .find((candidate: MeasureProfile): boolean => !!candidate);
       profilesByInput.push(profile);
       const intrinsicHardWidthPx: number = profile?.intrinsicHardWidthPx ?? 0;
+      const intrinsicBaseFloorPx: number = profile?.compactPickup
+        ? 0
+        : intrinsicHardWidthPx;
       const baseVariableWidthPx: number = Math.max(
         input.baseVariableWidth * unitInPixels,
         profile?.minimumRequiredWidthPx ?? 0,
-        intrinsicHardWidthPx,
+        intrinsicBaseFloorPx,
       );
       baseVariableWidthsPx.push(baseVariableWidthPx);
-      intrinsicHardWidthsPx.push(Math.min(baseVariableWidthPx, intrinsicHardWidthPx));
+      baseHardWidthsPx.push(Math.min(baseVariableWidthPx, intrinsicHardWidthPx));
+      intrinsicHardWidthsPx.push(intrinsicHardWidthPx);
       if (inputIndex > 0) {
         nodes.push({
           basePositionPx: systemPositionPx,
@@ -384,6 +395,16 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
             profilesByInput,
           ),
       );
+    const residualGapWeights: number[] = nodes
+      .slice(0, -1)
+      .map(
+        (node: CandidateNode, gapIndex: number): number =>
+          residualWeightBetweenNodes(
+            node,
+            nodes[gapIndex + 1],
+            profilesByInput,
+          ),
+      );
     const constraintResult: HorizontalSpacingConstraintResult = solveHorizontalSpacingConstraints(
       basePositions,
       constraints,
@@ -421,6 +442,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
 
     return {
       addedWidthByMeasurePx,
+      baseHardWidthsPx,
       baseVariableWidthsPx,
       columns,
       constraintResult,
@@ -429,6 +451,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
       intrinsicHardWidthsPx,
       minimumVariableWidthPx: sum(baseVariableWidthsPx) + sum(constraintResult.addedGaps),
       nodes,
+      residualGapWeights,
     };
   }
 }
@@ -488,6 +511,34 @@ function rhythmicWeightBetweenNodes(
   return Math.max(FIXED_GAP_WEIGHT, emptyMeasureWeight ?? 0);
 }
 
+/**
+ * Keep the final rhythmic cell of a short implicit measure compact during
+ * system justification. Its base width and all hard notation/lyric
+ * constraints still apply; only optional residual width is redirected to the
+ * other eligible rhythmic gaps in the system.
+ */
+function residualWeightBetweenNodes(
+  leftNode: CandidateNode,
+  rightNode: CandidateNode,
+  profilesByInput: MeasureProfile[],
+): number {
+  if (
+    leftNode.column &&
+    !rightNode.column &&
+    profilesByInput[leftNode.column.inputIndex]?.compactPickup
+  ) {
+    return 0;
+  }
+  const weight: number = rhythmicWeightBetweenNodes(
+    leftNode,
+    rightNode,
+    profilesByInput,
+  );
+  // FIXED_GAP_WEIGHT keeps the hard-constraint solver numerically stable,
+  // but a zero-duration gap must not receive optional system justification.
+  return weight <= FIXED_GAP_WEIGHT ? 0 : weight;
+}
+
 function measureIndexForGap(
   leftNode: CandidateNode,
   rightNode: CandidateNode,
@@ -512,10 +563,19 @@ function finitePositive(value: number): number | undefined {
 function measureRhythmicWeight(sourceMeasure: SourceMeasure): number {
   const duration: number = finitePositive(sourceMeasure?.Duration?.RealValue);
   const meter: number = finitePositive(sourceMeasure?.ActiveTimeSignature?.RealValue);
-  if (!sourceMeasure?.ImplicitMeasure || duration === undefined || meter === undefined) {
+  if (!isShortImplicitMeasure(sourceMeasure) || duration === undefined || meter === undefined) {
     return 1;
   }
   return Math.max(FIXED_GAP_WEIGHT, Math.min(1, duration / meter));
+}
+
+function isShortImplicitMeasure(sourceMeasure: SourceMeasure): boolean {
+  const duration: number = finitePositive(sourceMeasure?.Duration?.RealValue);
+  const meter: number = finitePositive(sourceMeasure?.ActiveTimeSignature?.RealValue);
+  return !!sourceMeasure?.ImplicitMeasure &&
+    duration !== undefined &&
+    meter !== undefined &&
+    duration < meter;
 }
 
 function measureEndTimestamp(
@@ -624,6 +684,7 @@ function collectMeasureProfiles(
       ? lastColumn.basePositionPx + lastColumn.notationRightExtentPx
       : 0;
     const profile: MeasureProfile = {
+      compactPickup: isShortImplicitMeasure(sourceMeasure),
       columns,
       graphicalMeasures,
       intrinsicHardWidthPx,
@@ -1106,6 +1167,7 @@ function emptyDiagnostics(): VexFlowHorizontalSpacingDiagnostics {
 function emptySolution(): CandidateSolution {
   return {
     addedWidthByMeasurePx: [],
+    baseHardWidthsPx: [],
     baseVariableWidthsPx: [],
     columns: [],
     constraintResult: {
@@ -1118,6 +1180,7 @@ function emptySolution(): CandidateSolution {
     intrinsicHardWidthsPx: [],
     minimumVariableWidthPx: 0,
     nodes: [],
+    residualGapWeights: [],
   };
 }
 

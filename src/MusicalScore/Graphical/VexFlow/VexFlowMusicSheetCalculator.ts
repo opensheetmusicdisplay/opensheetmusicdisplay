@@ -355,19 +355,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const formatterMinimumWidthPx: number = formatter.preCalculateMinTotalWidth(allVoices);
       const hardNotationWidth: number =
         formatter.getMinTotalWidth() / unitInPixels;
-      let softStaffEntriesWidth: number =
-        Math.max(0, formatterMinimumWidthPx / unitInPixels - hardNotationWidth)
-        * this.rules.VoiceSpacingMultiplierVexflow
-        + this.rules.VoiceSpacingAddendVexflow
-        + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
       if (parentSourceMeasure?.ImplicitMeasure) {
-        // Shrink only elastic rhythmic spacing in the ratio that the pickup
-        // measure is shorter than a full measure. Noteheads, modifiers, and
-        // layout-only padding are hard engraving geometry and remain unchanged.
-        softStaffEntriesWidth =
+        // Preserve the compact preferred width used for pickups. The
+        // system-level constraint planner subsequently floors this against
+        // the pickup's actual right-hand notation extent and enforces every
+        // cross-measure hard clearance.
+        minStaffEntriesWidth =
+          (
+            formatterMinimumWidthPx / unitInPixels *
+            this.rules.VoiceSpacingMultiplierVexflow +
+            this.rules.VoiceSpacingAddendVexflow +
+            maxStaffEntries * staffEntryFactor
+          ) *
           parentSourceMeasure.Duration.RealValue /
-          parentSourceMeasure.ActiveTimeSignature.RealValue *
-          softStaffEntriesWidth;
+          parentSourceMeasure.ActiveTimeSignature.RealValue;
         // e.g. a 1/4 pickup measure in a 3/4 time signature should be 1/4 / 3/4 = 1/3 as long (a third)
         // it seems like this should be respected by staffEntries.length and preCaculateMinTotalWidth, but apparently not,
         //   without this the pickup measures were always too long.
@@ -386,18 +387,24 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
           }
         }
-        softStaffEntriesWidth += barlineSpacing;
+        minStaffEntriesWidth += barlineSpacing;
         // add more than the original staffEntries scaling again: (removing it above makes it too short)
         if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
-          softStaffEntriesWidth += maxStaffEntriesPlusAccidentals * staffEntryFactor * 1.5; // don't scale this for implicit measures
+          minStaffEntriesWidth += maxStaffEntriesPlusAccidentals * staffEntryFactor * 1.5; // don't scale this for implicit measures
           // in fact overscale it, this needs a lot of space the more staffEntries (and modifiers like accidentals) there are
         } else if (measureListIndex > 1 && maxStaffEntries === 1) {
           // do this also for measures not after repetitions:
-          softStaffEntriesWidth += this.rules.PickupMeasureSpacingSingleNoteAddend;
+          minStaffEntriesWidth += this.rules.PickupMeasureSpacingSingleNoteAddend;
         }
-        softStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
+        minStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
+      } else {
+        const softStaffEntriesWidth: number =
+          Math.max(0, formatterMinimumWidthPx / unitInPixels - hardNotationWidth)
+          * this.rules.VoiceSpacingMultiplierVexflow
+          + this.rules.VoiceSpacingAddendVexflow
+          + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
+        minStaffEntriesWidth = softStaffEntriesWidth + hardNotationWidth;
       }
-      minStaffEntriesWidth = softStaffEntriesWidth + hardNotationWidth;
 
         // TODO this could use some fine-tuning. currently using *1.5 + 1 by default, results in decent spacing.
       // firstMeasure.formatVoices = (w: number) => {
