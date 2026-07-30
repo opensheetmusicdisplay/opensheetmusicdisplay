@@ -11,6 +11,7 @@ import { BoundingBox } from "./BoundingBox";
 import { Matrix2D } from "../../Common/DataObjects/Matrix2D";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
+import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { Fraction } from "../../Common/DataObjects/Fraction";
 import { StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
@@ -41,9 +42,13 @@ export interface GraphicalSlurDiagnostics {
     placement?: PlacementEnum;
     startNotehead?: GraphicalSlurBoundsDiagnostics;
     endNotehead?: GraphicalSlurBoundsDiagnostics;
+    startAttachment?: SlurEndpointAttachment;
+    endAttachment?: SlurEndpointAttachment;
     articulationShifts: GraphicalSlurArticulationShiftDiagnostics[];
     unsupportedRouting?: "cross-staff-cross-system";
 }
+
+export type SlurEndpointAttachment = "notehead" | "stem" | "voice-entry" | "system-edge";
 
 interface RenderedSlurEndpointGeometry {
     notehead: GraphicalSlurBoundsDiagnostics;
@@ -253,6 +258,34 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         return {notehead, stem, articulations};
+    }
+
+    /**
+     * A slur attached to a chord uses the outer notehead on its placement
+     * side. MusicXML commonly associates both the upper and lower slur with
+     * the chord's first source note, so that source-note index alone cannot
+     * identify the visually correct head.
+     */
+    private renderedOuterChordGeometry(
+        note: GraphicalNote,
+        staffLine: StaffLine,
+    ): RenderedSlurEndpointGeometry {
+        const chordNotes: GraphicalNote[] = note.parentVoiceEntry.notes;
+        let selected: RenderedSlurEndpointGeometry;
+        for (const chordNote of chordNotes) {
+            const candidate: RenderedSlurEndpointGeometry =
+                this.renderedEndpointGeometry(chordNote, staffLine);
+            if (!candidate) {
+                continue;
+            }
+            if (!selected
+                || (this.placement === PlacementEnum.Above
+                    ? candidate.notehead.top < selected.notehead.top
+                    : candidate.notehead.bottom > selected.notehead.bottom)) {
+                selected = candidate;
+            }
+        }
+        return selected;
     }
 
     private displaceEndpointArticulations(
@@ -692,24 +725,14 @@ export class GraphicalSlur extends GraphicalCurve {
         const startNoteY: number = startPos.y - staffLineOffset.y;
         const endNoteY: number = endPos.y - staffLineOffset.y;
 
-        // The staff higher up on the page has the smaller y value.
-        const endStaffAbove: boolean =
-            endStaffLine.PositionAndShape.RelativePosition.y < startStaffLine.PositionAndShape.RelativePosition.y;
-
         const noteHeadHalfHeight: number = 0.5;
         const yGap: number = rules.SlurNoteHeadYOffset; // gap between notehead and slur tip
-        let startY: number;
-        let endY: number;
-        if (endStaffAbove) {
-            // slur leaves the lower (start) note upwards and reaches the higher (end) note from below
-            startY = startNoteY - noteHeadHalfHeight - yGap;
-            endY = endNoteY + noteHeadHalfHeight + yGap;
-            this.placement = PlacementEnum.Above;
-        } else {
-            startY = startNoteY + noteHeadHalfHeight + yGap;
-            endY = endNoteY - noteHeadHalfHeight - yGap;
-            this.placement = PlacementEnum.Below;
-        }
+        // Piano cross-staff gestures conventionally remain one upward-bowing
+        // phrase. Approaching either endpoint from below makes one end look
+        // inverted and attaches it beneath the destination notehead.
+        const startY: number = startNoteY - noteHeadHalfHeight - yGap;
+        const endY: number = endNoteY - noteHeadHalfHeight - yGap;
+        this.placement = PlacementEnum.Above;
 
         // The curve bows out (vertically) from the line connecting the two notes.
         const dx: number = endX - startX;
@@ -717,7 +740,7 @@ export class GraphicalSlur extends GraphicalCurve {
         const distance: number = Math.sqrt(dx * dx + dy * dy);
         const bow: number = Math.max(rules.SlurCrossStaffMinBow,
                                      Math.min(rules.SlurCrossStaffMaxBow, distance * rules.SlurCrossStaffBowFactor));
-        const bowSign: number = this.placement === PlacementEnum.Above ? -1 : 1; // -1 = upwards (smaller y)
+        const bowSign: number = -1; // upwards (smaller y)
 
         this.bezierStartPt = new PointF2D(startX, startY);
         this.bezierStartControlPt = new PointF2D(startX + dx * 0.25, startY + dy * 0.25 + bowSign * bow);
@@ -769,39 +792,101 @@ export class GraphicalSlur extends GraphicalCurve {
         let endY: number = continuationY;
 
         if (slurStartNote) {
-            const geometry: RenderedSlurEndpointGeometry = this.renderedEndpointGeometry(slurStartNote, staffLine);
+            const startVoiceEntry: GraphicalVoiceEntry = slurStartNote.parentVoiceEntry;
+            const startStaffEntry: GraphicalStaffEntry = startVoiceEntry.parentStaffEntry;
+            startX = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x
+                + startStaffEntry.PositionAndShape.RelativePosition.x
+                + slurStartNote.PositionAndShape.RelativePosition.x;
+            if (this.graceStart) {
+                startX += startStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
+            }
+            startY = startVoiceEntry.PositionAndShape.RelativePosition.y
+                + (this.placement === PlacementEnum.Above
+                    ? startVoiceEntry.PositionAndShape.BorderTop
+                    : startVoiceEntry.PositionAndShape.BorderBottom);
+            if (this.rules.SlurPlacementUseSkyBottomLine) {
+                startY = this.placement === PlacementEnum.Above
+                    ? Math.min(startY, startStaffEntry.getSkylineMin())
+                    : Math.max(startY, startStaffEntry.getBottomlineMax());
+            }
+
+            const chordEndpoint: boolean = startVoiceEntry.notes.length > 1;
+            const geometry: RenderedSlurEndpointGeometry = chordEndpoint
+                ? this.renderedOuterChordGeometry(slurStartNote, staffLine)
+                : this.renderedEndpointGeometry(slurStartNote, staffLine);
             if (geometry) {
                 this.diagnostics.startNotehead = geometry.notehead;
-                startX = geometry.notehead.right;
-                startY = this.placement === PlacementEnum.Above ? geometry.notehead.top : geometry.notehead.bottom;
-            } else {
-                const startEntry: GraphicalStaffEntry = slurStartNote.parentVoiceEntry.parentStaffEntry;
-                startX = startEntry.parentMeasure.PositionAndShape.RelativePosition.x
-                    + startEntry.PositionAndShape.RelativePosition.x
-                    + slurStartNote.PositionAndShape.RelativePosition.x;
-                startY = slurStartNote.parentVoiceEntry.PositionAndShape.RelativePosition.y
-                    + (this.placement === PlacementEnum.Above
-                        ? slurStartNote.parentVoiceEntry.PositionAndShape.BorderTop
-                        : slurStartNote.parentVoiceEntry.PositionAndShape.BorderBottom);
             }
+
+            const stemSide: boolean =
+                (startVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up
+                    && this.placement === PlacementEnum.Above)
+                || (startVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Down
+                    && this.placement === PlacementEnum.Below);
+            const tieFallback: boolean = slurStartNote.sourceNote !== this.slur.StartNote;
+            if (geometry && chordEndpoint && !tieFallback) {
+                startX = geometry.notehead.right;
+                this.diagnostics.startAttachment = "notehead";
+            } else if (geometry && !stemSide && !tieFallback) {
+                startX = geometry.notehead.right;
+                this.diagnostics.startAttachment = "notehead";
+            } else if (stemSide) {
+                startX += startVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up ? 0.5 : -0.5;
+                this.diagnostics.startAttachment = "stem";
+            } else {
+                this.diagnostics.startAttachment = "voice-entry";
+            }
+        } else {
+            this.diagnostics.startAttachment = "system-edge";
         }
 
         if (slurEndNote) {
-            const geometry: RenderedSlurEndpointGeometry = this.renderedEndpointGeometry(slurEndNote, staffLine);
+            const endVoiceEntry: GraphicalVoiceEntry = slurEndNote.parentVoiceEntry;
+            const endStaffEntry: GraphicalStaffEntry = endVoiceEntry.parentStaffEntry;
+            endX = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x
+                + endStaffEntry.PositionAndShape.RelativePosition.x
+                + slurEndNote.PositionAndShape.RelativePosition.x;
+            if (this.graceEnd) {
+                endX += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
+            }
+            endY = endVoiceEntry.PositionAndShape.RelativePosition.y
+                + (this.placement === PlacementEnum.Above
+                    ? endVoiceEntry.PositionAndShape.BorderTop
+                    : endVoiceEntry.PositionAndShape.BorderBottom);
+            if (this.rules.SlurPlacementUseSkyBottomLine) {
+                endY = this.placement === PlacementEnum.Above
+                    ? Math.min(endY, endStaffEntry.getSkylineMin())
+                    : Math.max(endY, endStaffEntry.getBottomlineMax());
+            }
+
+            const chordEndpoint: boolean = endVoiceEntry.notes.length > 1;
+            const geometry: RenderedSlurEndpointGeometry = chordEndpoint
+                ? this.renderedOuterChordGeometry(slurEndNote, staffLine)
+                : this.renderedEndpointGeometry(slurEndNote, staffLine);
             if (geometry) {
                 this.diagnostics.endNotehead = geometry.notehead;
-                endX = geometry.notehead.left;
-                endY = this.placement === PlacementEnum.Above ? geometry.notehead.top : geometry.notehead.bottom;
-            } else {
-                const endEntry: GraphicalStaffEntry = slurEndNote.parentVoiceEntry.parentStaffEntry;
-                endX = endEntry.parentMeasure.PositionAndShape.RelativePosition.x
-                    + endEntry.PositionAndShape.RelativePosition.x
-                    + slurEndNote.PositionAndShape.RelativePosition.x;
-                endY = slurEndNote.parentVoiceEntry.PositionAndShape.RelativePosition.y
-                    + (this.placement === PlacementEnum.Above
-                        ? slurEndNote.parentVoiceEntry.PositionAndShape.BorderTop
-                        : slurEndNote.parentVoiceEntry.PositionAndShape.BorderBottom);
             }
+
+            const stemSide: boolean =
+                (endVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up
+                    && this.placement === PlacementEnum.Above)
+                || (endVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Down
+                    && this.placement === PlacementEnum.Below);
+            const tieFallback: boolean = slurEndNote.sourceNote !== this.slur.EndNote;
+            if (geometry && chordEndpoint && !tieFallback) {
+                endX = geometry.notehead.left;
+                this.diagnostics.endAttachment = "notehead";
+            } else if (geometry && !stemSide && !tieFallback) {
+                endX = geometry.notehead.left;
+                this.diagnostics.endAttachment = "notehead";
+            } else if (stemSide) {
+                endX += endVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up ? 0.5 : -0.5;
+                this.diagnostics.endAttachment = "stem";
+            } else {
+                this.diagnostics.endAttachment = "voice-entry";
+            }
+        } else {
+            this.diagnostics.endAttachment = "system-edge";
         }
 
         // if two slurs start/end at the same GraphicalNote, then the second gets an offset

@@ -278,7 +278,20 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // layout and the glyph appears near the page/staff origin.
         for (const staffEntry of measure.staffEntries) {
             for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
-                (voiceEntry as any).vfStaveNote?.layoutArticulations?.();
+                const vfStaveNote: any = (voiceEntry as any).vfStaveNote;
+                const hasArticulation: boolean = vfStaveNote?.modifiers?.some(
+                    (modifier: any): boolean => modifier.getCategory?.() === VF.Articulation.CATEGORY,
+                );
+                if (!hasArticulation) {
+                    continue;
+                }
+                const stave: any = vfStaveNote?.getStave?.();
+                if (stave) {
+                    // Moving a VexFlow stave does not automatically refresh its
+                    // notes' cached notehead/stem Y coordinates.
+                    vfStaveNote.setStave(stave);
+                }
+                vfStaveNote?.layoutArticulations?.();
             }
         }
         try {
