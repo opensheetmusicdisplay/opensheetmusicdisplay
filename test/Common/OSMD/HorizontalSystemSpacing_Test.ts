@@ -1,11 +1,15 @@
 import { expect } from "chai";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import {
-    VexFlowHorizontalSpacingCandidateDiagnostics,
-    VexFlowHorizontalSpacingDiagnostics,
+  VexFlowHorizontalSpacingCandidateDiagnostics,
+  VexFlowHorizontalSpacingColumnDiagnostics,
+  VexFlowHorizontalSpacingDiagnostics,
+  VexFlowHorizontalSpacingSystemDiagnostics,
 } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowHorizontalSpacing";
 import { LyricFootprint } from "../../../src/MusicalScore/Graphical/GraphicalLyricEntry";
 import { VexFlowVoiceEntry } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
+import { ResolvedHorizontalSpacingConstraint } from
+  "../../../src/MusicalScore/Graphical/VexFlow/HorizontalSpacingConstraintSolver";
 import { TestUtils } from "../../Util/TestUtils";
 import * as VF from "vexflow/core";
 
@@ -59,7 +63,7 @@ describe("Horizontal system spacing", (): void => {
     expect(() => JSON.stringify(diagnostics)).to.not.throw();
   });
 
-  it("replaces named system padding idempotently on rerender", async (): Promise<void> => {
+  it("keeps selected system targets idempotent without converting them to padding", async (): Promise<void> => {
     const osmd: OpenSheetMusicDisplay = createOsmd();
     await osmd.load(denseLyricScore());
     osmd.render();
@@ -67,6 +71,12 @@ describe("Horizontal system spacing", (): void => {
     const firstPaddings: { leftPx: number, rightPx: number }[] = notePaddings(osmd);
     const firstAddedWidth: number = getDiagnostics(osmd).addedWidthPx;
     expect(firstAddedWidth).to.be.greaterThan(0);
+    expect(
+      firstPaddings.every(
+        (padding: { leftPx: number, rightPx: number }): boolean =>
+          padding.leftPx === 0 && padding.rightPx === 0,
+      ),
+    ).to.equal(true);
 
     osmd.render();
 
@@ -74,7 +84,7 @@ describe("Horizontal system spacing", (): void => {
     expect(getDiagnostics(osmd).addedWidthPx).to.be.closeTo(firstAddedWidth, 0.001);
   });
 
-  it("shares cross-measure lyric clearance across both sides of the barline", async (): Promise<void> => {
+  it("keeps cross-measure lyric clearance before a tick-zero accidental", async (): Promise<void> => {
     const osmd: OpenSheetMusicDisplay = createOsmd();
     await osmd.load(crossMeasureLyricScore());
     osmd.render();
@@ -83,9 +93,102 @@ describe("Horizontal system spacing", (): void => {
       notePaddingsForMeasure(osmd, 0)[0];
     const currentPadding: { leftPx: number, rightPx: number } =
       notePaddingsForMeasure(osmd, 1)[0];
-    expect(previousPadding.rightPx).to.be.greaterThan(0);
-    expect(currentPadding.leftPx).to.be.greaterThan(0);
-    expect(previousPadding.rightPx).to.be.closeTo(currentPadding.leftPx, 0.001);
+    expect(previousPadding.rightPx).to.be.closeTo(0, 0.001);
+    expect(currentPadding.leftPx).to.be.closeTo(0, 0.001);
+    const lyricConstraint: ResolvedHorizontalSpacingConstraint =
+      getDiagnostics(osmd).resolvedConstraints.find(
+        (constraint): boolean => constraint.reason === "lyric",
+      );
+    expect(lyricConstraint).to.not.equal(undefined);
+    expect(lyricConstraint.finalDistance).to.be.at.least(
+      lyricConstraint.minimumDistance - 0.001,
+    );
+    expect(
+      getDiagnostics(osmd).selectedSystems[0].columns.some(
+        (column): boolean => column.kind === "measure-boundary",
+      ),
+    ).to.equal(true);
+    assertSelectedTargetsMatchRenderedContexts(osmd);
+    osmd.render();
+    assertSelectedTargetsMatchRenderedContexts(osmd);
+  });
+
+  it("allocates system residual by pickup duration rather than per-measure softmax", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(pickupAndFullMeasureScore());
+    osmd.render();
+
+    const columns: VexFlowHorizontalSpacingColumnDiagnostics[] =
+      getDiagnostics(osmd).selectedSystems[0].columns;
+    const systemStart: VexFlowHorizontalSpacingColumnDiagnostics =
+      columns.find((column): boolean => column.kind === "system-start");
+    const boundary: VexFlowHorizontalSpacingColumnDiagnostics =
+      columns.find((column): boolean => column.kind === "measure-boundary");
+    const systemEnd: VexFlowHorizontalSpacingColumnDiagnostics =
+      columns.find((column): boolean => column.kind === "system-end");
+    expect(systemStart).to.not.equal(undefined);
+    expect(boundary).to.not.equal(undefined);
+    expect(systemEnd).to.not.equal(undefined);
+
+    const pickupAddition: number =
+      (boundary.finalX - systemStart.finalX) -
+      (boundary.baseX - systemStart.baseX);
+    const fullMeasureAddition: number =
+      (systemEnd.finalX - boundary.finalX) -
+      (systemEnd.baseX - boundary.baseX);
+    expect(pickupAddition).to.be.greaterThan(0);
+    expect(fullMeasureAddition).to.be.greaterThan(0);
+    expect(pickupAddition / fullMeasureAddition).to.be.closeTo(0.125, 0.001);
+  });
+
+  it("uses elapsed onset intervals for melisma spacing across staves", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(melismaWithSustainedPianoScore());
+    osmd.Sheet.MeasureWidthFactor = 0.2;
+    osmd.render();
+
+    const system: VexFlowHorizontalSpacingSystemDiagnostics =
+      getDiagnostics(osmd).selectedSystems[0];
+    expect(system.addedWidthPx, "fixture must create a lyric deficit").to.be.greaterThan(0);
+    const rhythmicColumns: VexFlowHorizontalSpacingColumnDiagnostics[] =
+      system.columns.filter(
+        (column): boolean => column.kind === "rhythmic",
+      );
+    expect(rhythmicColumns.length).to.be.at.least(3);
+    const firstAddition: number =
+      rhythmicColumns[1].finalX - rhythmicColumns[0].finalX -
+      (rhythmicColumns[1].baseX - rhythmicColumns[0].baseX);
+    const secondAddition: number =
+      rhythmicColumns[2].finalX - rhythmicColumns[1].finalX -
+      (rhythmicColumns[2].baseX - rhythmicColumns[1].baseX);
+    expect(firstAddition, "first equal-duration interval must receive added space").to.be.greaterThan(0);
+    expect(firstAddition).to.be.closeTo(secondAddition, 0.001);
+    assertSelectedTargetsMatchRenderedContexts(osmd);
+  });
+
+  it("restores selected system tick positions after final VexFlow formatting", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(denseLyricScore());
+    osmd.render();
+
+    assertSelectedTargetsMatchRenderedContexts(osmd);
+    osmd.render();
+    assertSelectedTargetsMatchRenderedContexts(osmd);
+  });
+
+  it("uses the first visible staff profile when an earlier instrument is hidden", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(melismaWithSustainedPianoScore());
+    osmd.Sheet.Instruments[0].Visible = false;
+    osmd.render();
+
+    expect(getDiagnostics(osmd).selectedSystems).to.have.length(1);
+    expect(
+      getDiagnostics(osmd).selectedSystems[0].columns.some(
+        (column): boolean => column.kind === "rhythmic",
+      ),
+    ).to.equal(true);
+    assertSelectedTargetsMatchRenderedContexts(osmd);
   });
 
   it("does not let a width factor reduce intrinsic quarter-rest clearance", async (): Promise<void> => {
@@ -314,6 +417,48 @@ function notationContexts(osmd: OpenSheetMusicDisplay): VF.TickContext[] {
   );
 }
 
+function assertSelectedTargetsMatchRenderedContexts(osmd: OpenSheetMusicDisplay): void {
+  const system: VexFlowHorizontalSpacingSystemDiagnostics =
+    getDiagnostics(osmd).selectedSystems[0];
+  for (const column of system.columns.filter(
+    (candidate): boolean => candidate.kind === "rhythmic",
+  )) {
+    const measureNumber: number = system.measureNumbers[column.measureIndex];
+    const verticalMeasureList: any[] = osmd.GraphicSheet.MeasureList.find(
+      (candidates: any[]): boolean =>
+        candidates.some(
+          (candidate: any): boolean => candidate?.MeasureNumber === measureNumber,
+        ),
+    );
+    const measure: any = verticalMeasureList?.find(
+      (candidate: any): boolean => candidate?.isVisible?.() !== false,
+    );
+    expect(measure).to.not.equal(undefined);
+    const contexts: Map<number, VF.TickContext> = new Map<number, VF.TickContext>();
+    for (const verticalMeasure of verticalMeasureList) {
+      if (verticalMeasure?.isVisible?.() === false) {
+        continue;
+      }
+      for (const staffEntry of verticalMeasure.staffEntries) {
+        for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+          const voiceContext: VF.TickContext =
+            (voiceEntry as VexFlowVoiceEntry).vfStaveNote?.getTickContext?.();
+          if (voiceContext) {
+            contexts.set(voiceContext.getTickID(), voiceContext);
+          }
+        }
+      }
+    }
+    const context: VF.TickContext = contexts.get(column.tickIds[0]);
+    expect(context).to.not.equal(undefined);
+    const renderedSystemX: number =
+      measure.PositionAndShape.RelativePosition.x * 10 +
+      measure.beginInstructionsWidth * 10 +
+      context.getX();
+    expect(renderedSystemX).to.be.closeTo(column.finalX, 0.001);
+  }
+}
+
 function twoMeasureSystemBreakScore(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="4.0">
@@ -362,8 +507,9 @@ function denseLyricScore(): string {
         <lyric number="1"><syllabic>single</syllabic><text>extraordinarily</text></lyric>
       </note>
       <note>
-        <pitch><step>D</step><octave>4</octave></pitch>
+        <pitch><step>D</step><alter>1</alter><octave>4</octave></pitch>
         <duration>1</duration><type>quarter</type>
+        <accidental>sharp</accidental>
         <lyric number="1"><syllabic>single</syllabic><text>uncompromisingly</text></lyric>
       </note>
     </measure>
@@ -395,6 +541,84 @@ function crossMeasureLyricScore(): string {
         <duration>1</duration><type>quarter</type>
         <lyric number="1"><syllabic>single</syllabic><text>uncompromisingly</text></lyric>
       </note>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+function pickupAndFullMeasureScore(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="0" implicit="yes">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+      </note>
+    </measure>
+    <measure number="1">
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>2</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>2</duration><type>quarter</type></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><type>quarter</type></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>2</duration><type>quarter</type></note>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+function melismaWithSustainedPianoScore(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1"><part-name>Voice</part-name></score-part>
+    <score-part id="P2"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>3</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric number="1"><syllabic>begin</syllabic><text>extraordinarily</text></lyric>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>2</duration><type>quarter</type>
+        <lyric number="1"><syllabic>end</syllabic><text>uncompromisingly</text></lyric>
+      </note>
+      <note><rest/><duration>2</duration><type>quarter</type></note>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>3</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>4</duration><type>half</type>
+      </note>
+      <note><pitch><step>D</step><octave>3</octave></pitch><duration>1</duration><type>eighth</type></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>1</duration><type>eighth</type></note>
     </measure>
   </part>
 </score-partwise>`;

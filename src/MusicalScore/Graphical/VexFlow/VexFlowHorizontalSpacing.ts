@@ -12,12 +12,14 @@ import {
   SystemMeasureSpacingInput,
 } from "../HorizontalSystemSpacing";
 import { Staff } from "../../VoiceData/Staff";
+import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import {
   HorizontalSpacingConstraint,
   HorizontalSpacingConstraintResult,
   solveHorizontalSpacingConstraints,
 } from "./HorizontalSpacingConstraintSolver";
+import { VexFlowMeasure } from "./VexFlowMeasure";
 
 const SYSTEM_LYRIC_PADDING_SOURCE: string = "osmd-system-lyrics";
 const FIXED_GAP_WEIGHT: number = 0.000001;
@@ -26,6 +28,7 @@ interface MeasureProfile {
   columns: ProfileColumn[];
   graphicalMeasures: GraphicalMeasure[];
   intrinsicHardWidthPx: number;
+  leadingRhythmicWeight: number;
   minimumRequiredWidthPx: number;
   rhythmicWeight: number;
 }
@@ -37,6 +40,7 @@ interface ProfileColumn {
   notationLeftExtentPx: number;
   notationRightExtentPx: number;
   rhythmicWeight: number;
+  timestamp: number;
 }
 
 interface CandidateColumn extends ProfileColumn {
@@ -45,7 +49,9 @@ interface CandidateColumn extends ProfileColumn {
 
 interface CandidateNode {
   basePositionPx: number;
+  boundaryInputIndex?: number;
   column?: CandidateColumn;
+  kind: "system-start" | "measure-boundary" | "rhythmic" | "system-end";
 }
 
 interface CandidateLyric {
@@ -63,10 +69,10 @@ interface CandidateSolution {
   columns: VexFlowHorizontalSpacingColumnDiagnostics[];
   constraintResult: HorizontalSpacingConstraintResult;
   constraints: HorizontalSpacingConstraint[];
-  contextPadding: Map<VF.TickContext, { leftPx: number, rightPx: number }>;
+  gapWeights: number[];
   intrinsicHardWidthsPx: number[];
   minimumVariableWidthPx: number;
-  rhythmicWeights: number[];
+  nodes: CandidateNode[];
 }
 
 export interface VexFlowHorizontalSpacingDiagnostics {
@@ -105,7 +111,7 @@ export interface VexFlowHorizontalSpacingColumnDiagnostics {
   baseX: number;
   columnIndex: number;
   finalX: number;
-  kind: "system-start" | "rhythmic" | "system-end";
+  kind: "system-start" | "measure-boundary" | "rhythmic" | "system-end";
   measureIndex?: number;
   tickIds: number[];
 }
@@ -126,7 +132,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     this.graphicalMusicSheet = graphicalMusicSheet;
     this.rules = rules;
     setDiagnostics(this.graphicalMusicSheet, this.diagnostics);
-    this.profiles = collectMeasureProfiles(graphicalMusicSheet);
+    this.profiles = collectMeasureProfiles(graphicalMusicSheet, rules);
   }
 
   public evaluateCandidate(
@@ -170,12 +176,6 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     maximumSoftScalingFactor?: number,
   ): HorizontalSystemSpacingLayout {
     const solution: CandidateSolution = this.solveCandidate(measures);
-    solution.contextPadding.forEach(
-      (padding: { leftPx: number, rightPx: number }, context: VF.TickContext): void => {
-        applyContextPadding(context, padding.leftPx, padding.rightPx);
-      },
-    );
-
     const intrinsicHardTotalPx: number = sum(solution.intrinsicHardWidthsPx);
     const selectedHardWidthsPx: number[] = solution.intrinsicHardWidthsPx.map(
       (width: number, index: number): number => width + solution.addedWidthByMeasurePx[index],
@@ -196,13 +196,49 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         ? availableSoftWidthPx
         : Math.min(availableSoftWidthPx, softTotalPx * maximumSoftScalingFactor);
     const residualWidthPx: number = Math.max(0, targetSoftWidthPx - softTotalPx);
-    const totalWeight: number = Math.max(FIXED_GAP_WEIGHT, sum(solution.rhythmicWeights));
+    const totalGapWeight: number = Math.max(FIXED_GAP_WEIGHT, sum(solution.gapWeights));
+    const residualAddedGaps: number[] = solution.gapWeights.map(
+      (weight: number): number => residualWidthPx * weight / totalGapWeight,
+    );
+    const finalPositionsPx: number[] = [solution.constraintResult.positions[0]];
+    let accumulatedResidualWidthPx: number = 0;
+    for (let nodeIndex: number = 1; nodeIndex < solution.nodes.length; nodeIndex++) {
+      accumulatedResidualWidthPx += residualAddedGaps[nodeIndex - 1];
+      finalPositionsPx.push(
+        solution.constraintResult.positions[nodeIndex] +
+        accumulatedResidualWidthPx,
+      );
+    }
+    const measureBoundaryIndexes: number[] = measures.map(
+      (_measure: SystemMeasureSpacingInput, inputIndex: number): number =>
+        solution.nodes.findIndex(
+          (node: CandidateNode): boolean =>
+            (inputIndex === 0 && node.kind === "system-start") ||
+            (node.kind === "measure-boundary" && node.boundaryInputIndex === inputIndex),
+        ),
+    );
     const measureVariableWidths: number[] = measures.map(
-      (_measure: SystemMeasureSpacingInput, index: number): number =>
-        (selectedHardWidthsPx[index] +
-          softWidthsPx[index] +
-          (residualWidthPx * solution.rhythmicWeights[index]) / totalWeight) /
-        unitInPixels,
+      (measure: SystemMeasureSpacingInput, inputIndex: number): number => {
+        const startNodeIndex: number = measureBoundaryIndexes[inputIndex];
+        const endNodeIndex: number =
+          inputIndex + 1 < measures.length
+            ? measureBoundaryIndexes[inputIndex + 1]
+            : solution.nodes.length - 1;
+        const fullWidthPx: number =
+          finalPositionsPx[endNodeIndex] - finalPositionsPx[startNodeIndex];
+        return Math.max(
+          0,
+          fullWidthPx / unitInPixels -
+          measure.beginInstructionsWidth -
+          measure.endInstructionsWidth,
+        );
+      },
+    );
+    installHorizontalSpacingTargets(
+      measures,
+      solution.nodes,
+      finalPositionsPx,
+      measureBoundaryIndexes,
     );
 
     const addedGaps: number[] = solution.constraintResult.addedGaps;
@@ -215,7 +251,15 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     this.diagnostics.selectedSystems.push({
       addedGapCount: addedGaps.filter((width: number): boolean => width > 0.01).length,
       addedWidthPx: sum(addedGaps),
-      columns: solution.columns,
+      columns: solution.columns.map(
+        (
+          column: VexFlowHorizontalSpacingColumnDiagnostics,
+          columnIndex: number,
+        ): VexFlowHorizontalSpacingColumnDiagnostics => ({
+          ...column,
+          finalX: finalPositionsPx[columnIndex],
+        }),
+      ),
       constraintCount: solution.constraints.length,
       intrinsicHardWidthPx: intrinsicHardTotalPx,
       measureNumbers: measureNumbers(measures),
@@ -251,6 +295,11 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         note.clearLayoutPaddingForSource?.(SYSTEM_LYRIC_PADDING_SOURCE);
       }
     });
+    for (const verticalMeasures of this.graphicalMusicSheet.MeasureList ?? []) {
+      for (const measure of verticalMeasures ?? []) {
+        (measure as VexFlowMeasure)?.setHorizontalSpacingTargetPositions?.(undefined);
+      }
+    }
     this.diagnostics = emptyDiagnostics();
     this.candidateId = 0;
     setDiagnostics(this.graphicalMusicSheet, this.diagnostics);
@@ -263,14 +312,21 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
 
     const baseVariableWidthsPx: number[] = [];
     const intrinsicHardWidthsPx: number[] = [];
-    const rhythmicWeights: number[] = [];
-    const nodes: CandidateNode[] = [{ basePositionPx: 0 }];
+    const nodes: CandidateNode[] = [{
+      basePositionPx: 0,
+      boundaryInputIndex: 0,
+      kind: "system-start",
+    }];
     const contextToColumn: Map<VF.TickContext, number> = new Map<VF.TickContext, number>();
+    const profilesByInput: MeasureProfile[] = [];
     let systemPositionPx: number = 0;
 
     for (let inputIndex: number = 0; inputIndex < measures.length; inputIndex++) {
       const input: SystemMeasureSpacingInput = measures[inputIndex];
-      const profile: MeasureProfile = this.profiles.get(input.graphicalMeasures[0]);
+      const profile: MeasureProfile = input.graphicalMeasures
+        .map((measure: GraphicalMeasure): MeasureProfile => this.profiles.get(measure))
+        .find((candidate: MeasureProfile): boolean => !!candidate);
+      profilesByInput.push(profile);
       const intrinsicHardWidthPx: number = profile?.intrinsicHardWidthPx ?? 0;
       const baseVariableWidthPx: number = Math.max(
         input.baseVariableWidth * unitInPixels,
@@ -279,10 +335,13 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
       );
       baseVariableWidthsPx.push(baseVariableWidthPx);
       intrinsicHardWidthsPx.push(Math.min(baseVariableWidthPx, intrinsicHardWidthPx));
-      rhythmicWeights.push(
-        Math.max(FIXED_GAP_WEIGHT, profile?.rhythmicWeight ?? baseVariableWidthPx),
-      );
-
+      if (inputIndex > 0) {
+        nodes.push({
+          basePositionPx: systemPositionPx,
+          boundaryInputIndex: inputIndex,
+          kind: "measure-boundary",
+        });
+      }
       const contentStartPx: number = systemPositionPx + input.beginInstructionsWidth * unitInPixels;
       for (const profileColumn of profile?.columns ?? []) {
         const column: CandidateColumn = {
@@ -293,6 +352,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         nodes.push({
           basePositionPx: contentStartPx + profileColumn.basePositionPx,
           column,
+          kind: "rhythmic",
         });
         for (const context of profileColumn.contexts) {
           contextToColumn.set(context, columnIndex);
@@ -303,7 +363,11 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         baseVariableWidthPx +
         input.endInstructionsWidth * unitInPixels;
     }
-    nodes.push({ basePositionPx: systemPositionPx });
+    nodes.push({
+      basePositionPx: systemPositionPx,
+      boundaryInputIndex: measures.length,
+      kind: "system-end",
+    });
 
     const constraints: HorizontalSpacingConstraint[] = [
       ...collectSystemNotationConstraints(nodes),
@@ -312,21 +376,16 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     const basePositions: number[] = nodes.map((node: CandidateNode): number => node.basePositionPx);
     const gapWeights: number[] = nodes
       .slice(0, -1)
-      .map((node: CandidateNode): number => node.column?.rhythmicWeight ?? FIXED_GAP_WEIGHT);
+      .map(
+        (node: CandidateNode, gapIndex: number): number =>
+          rhythmicWeightBetweenNodes(
+            node,
+            nodes[gapIndex + 1],
+            profilesByInput,
+          ),
+      );
     const constraintResult: HorizontalSpacingConstraintResult = solveHorizontalSpacingConstraints(
       basePositions,
-      constraints,
-      gapWeights,
-    );
-    // Candidate widths are evaluated against VexFlow's elastic rhythmic
-    // positions. Those positions are deliberately discarded when the
-    // selected measure is formatted again, so their remaining clearance
-    // cannot be encoded as hard TickContext padding. Solve the same
-    // constraints against the formatter's true hard column extents to
-    // determine the padding that must survive that final justification.
-    const hardLayoutBasePositions: number[] = collectHardLayoutBasePositions(nodes, measures);
-    const hardLayoutResult: HorizontalSpacingConstraintResult = solveHorizontalSpacingConstraints(
-      hardLayoutBasePositions,
       constraints,
       gapWeights,
     );
@@ -335,24 +394,14 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         baseX: basePositions[columnIndex],
         columnIndex,
         finalX: constraintResult.positions[columnIndex],
-        kind:
-          columnIndex === 0
-            ? "system-start"
-            : columnIndex === nodes.length - 1
-              ? "system-end"
-              : "rhythmic",
-        measureIndex: node.column?.inputIndex,
+        kind: node.kind,
+        measureIndex: node.column?.inputIndex ?? node.boundaryInputIndex,
         tickIds: node.column
           ? node.column.contexts.map((context: VF.TickContext): number => context.getTickID())
           : [],
       }),
     );
     const addedWidthByMeasurePx: number[] = Array(measures.length).fill(0);
-    const contextPadding: Map<VF.TickContext, { leftPx: number, rightPx: number }> = new Map<
-      VF.TickContext,
-      { leftPx: number, rightPx: number }
-    >();
-
     for (let gapIndex: number = 0; gapIndex < constraintResult.addedGaps.length; gapIndex++) {
       const addedGapPx: number = constraintResult.addedGaps[gapIndex];
       if (addedGapPx <= 0.001) {
@@ -360,59 +409,13 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
       }
       const leftNode: CandidateNode = nodes[gapIndex];
       const rightNode: CandidateNode = nodes[gapIndex + 1];
-      if (leftNode.column) {
-        if (
-          rightNode.column &&
-          leftNode.column.inputIndex !== rightNode.column.inputIndex
-        ) {
-          const leftSharePx: number = addedGapPx / 2;
-          addedWidthByMeasurePx[leftNode.column.inputIndex] += leftSharePx;
-          addedWidthByMeasurePx[rightNode.column.inputIndex] += addedGapPx - leftSharePx;
-          continue;
-        }
-        addedWidthByMeasurePx[leftNode.column.inputIndex] += addedGapPx;
-        continue;
-      }
-
-      const firstColumnNode: CandidateNode = nodes.find(
-        (node: CandidateNode): boolean => !!node.column,
+      const measureIndex: number = measureIndexForGap(
+        leftNode,
+        rightNode,
+        measures.length,
       );
-      if (firstColumnNode?.column) {
-        addedWidthByMeasurePx[firstColumnNode.column.inputIndex] += addedGapPx;
-      }
-    }
-
-    for (let gapIndex: number = 0; gapIndex < hardLayoutResult.addedGaps.length; gapIndex++) {
-      const addedGapPx: number = hardLayoutResult.addedGaps[gapIndex];
-      if (addedGapPx <= 0.001) {
-        continue;
-      }
-      const leftNode: CandidateNode = nodes[gapIndex];
-      const rightNode: CandidateNode = nodes[gapIndex + 1];
-      if (leftNode.column) {
-        if (
-          rightNode.column &&
-          leftNode.column.inputIndex !== rightNode.column.inputIndex
-        ) {
-          const leftSharePx: number = addedGapPx / 2;
-          addColumnContextPadding(contextPadding, leftNode.column, 0, leftSharePx);
-          addColumnContextPadding(
-            contextPadding,
-            rightNode.column,
-            addedGapPx - leftSharePx,
-            0,
-          );
-          continue;
-        }
-        addColumnContextPadding(contextPadding, leftNode.column, 0, addedGapPx);
-        continue;
-      }
-
-      const firstColumnNode: CandidateNode = nodes.find(
-        (node: CandidateNode): boolean => !!node.column,
-      );
-      if (firstColumnNode?.column) {
-        addColumnContextPadding(contextPadding, firstColumnNode.column, addedGapPx, 0);
+      if (measureIndex >= 0) {
+        addedWidthByMeasurePx[measureIndex] += addedGapPx;
       }
     }
 
@@ -422,33 +425,170 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
       columns,
       constraintResult,
       constraints,
-      contextPadding,
+      gapWeights,
       intrinsicHardWidthsPx,
       minimumVariableWidthPx: sum(baseVariableWidthsPx) + sum(constraintResult.addedGaps),
-      rhythmicWeights,
+      nodes,
     };
   }
 }
 
-function addColumnContextPadding(
-  contextPadding: Map<VF.TickContext, { leftPx: number, rightPx: number }>,
-  column: CandidateColumn,
-  leftPx: number,
-  rightPx: number,
+function installHorizontalSpacingTargets(
+  measures: SystemMeasureSpacingInput[],
+  nodes: CandidateNode[],
+  finalPositionsPx: number[],
+  measureBoundaryIndexes: number[],
 ): void {
-  for (const context of column.contexts) {
-    const current: { leftPx: number, rightPx: number } = contextPadding.get(context) ?? {
-      leftPx: 0,
-      rightPx: 0,
-    };
-    current.leftPx += leftPx;
-    current.rightPx += rightPx;
-    contextPadding.set(context, current);
+  const targetsByMeasure: Map<number, number>[] = measures.map(
+    (): Map<number, number> => new Map<number, number>(),
+  );
+  for (let nodeIndex: number = 0; nodeIndex < nodes.length; nodeIndex++) {
+    const column: CandidateColumn = nodes[nodeIndex].column;
+    if (!column) {
+      continue;
+    }
+    const inputIndex: number = column.inputIndex;
+    const measureStartX: number = finalPositionsPx[measureBoundaryIndexes[inputIndex]];
+    const beginInstructionsWidthPx: number =
+      measures[inputIndex].beginInstructionsWidth * unitInPixels;
+    const localTargetX: number =
+      finalPositionsPx[nodeIndex] - measureStartX - beginInstructionsWidthPx;
+    for (const context of column.contexts) {
+      targetsByMeasure[inputIndex].set(context.getTickID(), localTargetX);
+    }
   }
+
+  for (let inputIndex: number = 0; inputIndex < measures.length; inputIndex++) {
+    for (const graphicalMeasure of measures[inputIndex].graphicalMeasures) {
+      if (!graphicalMeasure?.isVisible()) {
+        continue;
+      }
+      (graphicalMeasure as VexFlowMeasure).setHorizontalSpacingTargetPositions(
+        targetsByMeasure[inputIndex],
+      );
+    }
+  }
+}
+
+function rhythmicWeightBetweenNodes(
+  leftNode: CandidateNode,
+  rightNode: CandidateNode,
+  profilesByInput: MeasureProfile[],
+): number {
+  if (leftNode.column) {
+    return Math.max(FIXED_GAP_WEIGHT, leftNode.column.rhythmicWeight);
+  }
+  if (rightNode.column) {
+    const leadingWeight: number =
+      profilesByInput[rightNode.column.inputIndex]?.leadingRhythmicWeight;
+    return Math.max(FIXED_GAP_WEIGHT, leadingWeight ?? 0);
+  }
+  const measureIndex: number = leftNode.boundaryInputIndex;
+  const emptyMeasureWeight: number = profilesByInput[measureIndex]?.rhythmicWeight;
+  return Math.max(FIXED_GAP_WEIGHT, emptyMeasureWeight ?? 0);
+}
+
+function measureIndexForGap(
+  leftNode: CandidateNode,
+  rightNode: CandidateNode,
+  measureCount: number,
+): number {
+  if (leftNode.column) {
+    return leftNode.column.inputIndex;
+  }
+  if (rightNode.column) {
+    return rightNode.column.inputIndex;
+  }
+  const measureIndex: number = leftNode.boundaryInputIndex;
+  return Number.isInteger(measureIndex) && measureIndex >= 0 && measureIndex < measureCount
+    ? measureIndex
+    : -1;
+}
+
+function finitePositive(value: number): number | undefined {
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+function measureRhythmicWeight(sourceMeasure: SourceMeasure): number {
+  const duration: number = finitePositive(sourceMeasure?.Duration?.RealValue);
+  const meter: number = finitePositive(sourceMeasure?.ActiveTimeSignature?.RealValue);
+  if (!sourceMeasure?.ImplicitMeasure || duration === undefined || meter === undefined) {
+    return 1;
+  }
+  return Math.max(FIXED_GAP_WEIGHT, Math.min(1, duration / meter));
+}
+
+function measureEndTimestamp(
+  sourceMeasure: SourceMeasure,
+  lastColumnTimestamp?: number,
+): number {
+  const duration: number = finitePositive(sourceMeasure?.Duration?.RealValue);
+  const meter: number = finitePositive(sourceMeasure?.ActiveTimeSignature?.RealValue);
+  let endTimestamp: number;
+  if (meter === undefined) {
+    endTimestamp = duration ?? 1;
+  } else if (
+    sourceMeasure?.ImplicitMeasure &&
+    duration !== undefined &&
+    duration < meter
+  ) {
+    endTimestamp = duration;
+  } else if (duration !== undefined && duration > meter) {
+    endTimestamp = duration;
+  } else {
+    endTimestamp = meter;
+  }
+  return Math.max(
+    endTimestamp,
+    Number.isFinite(lastColumnTimestamp) ? lastColumnTimestamp : 0,
+  );
+}
+
+/**
+ * Give flexibility to elapsed musical intervals, not to the longest note
+ * beginning at an onset. This keeps equal vocal intervals equal even when
+ * another staff begins a sustained note at the same column.
+ */
+function assignTemporalRhythmicWeights(
+  columns: ProfileColumn[],
+  endTimestamp: number,
+  targetWeight: number,
+  softmaxFactor: number,
+): number {
+  if (columns.length === 0) {
+    return 0;
+  }
+  const spans: number[] = [Math.max(0, columns[0].timestamp)];
+  for (let index: number = 1; index < columns.length; index++) {
+    spans.push(Math.max(0, columns[index].timestamp - columns[index - 1].timestamp));
+  }
+  spans.push(Math.max(0, endTimestamp - columns[columns.length - 1].timestamp));
+
+  const safeEndTimestamp: number = finitePositive(endTimestamp) ?? 1;
+  const safeSoftmaxFactor: number = finitePositive(softmaxFactor) ?? 1;
+  const rawWeights: number[] = spans.map(
+    (span: number): number =>
+      span > 0
+        ? Math.pow(safeSoftmaxFactor, span / safeEndTimestamp)
+        : 0,
+  );
+  const rawTotal: number = sum(rawWeights);
+  if (!Number.isFinite(rawTotal) || rawTotal <= 0) {
+    columns[columns.length - 1].rhythmicWeight = targetWeight;
+    return 0;
+  }
+  const normalizedWeights: number[] = rawWeights.map(
+    (weight: number): number => targetWeight * weight / rawTotal,
+  );
+  for (let index: number = 0; index < columns.length; index++) {
+    columns[index].rhythmicWeight = normalizedWeights[index + 1];
+  }
+  return normalizedWeights[0];
 }
 
 function collectMeasureProfiles(
   graphicalMusicSheet: GraphicalMusicSheet,
+  rules: EngravingRules,
 ): Map<GraphicalMeasure, MeasureProfile> {
   const profiles: Map<GraphicalMeasure, MeasureProfile> = new Map<
     GraphicalMeasure,
@@ -461,8 +601,21 @@ function collectMeasureProfiles(
     if (graphicalMeasures.length === 0) {
       continue;
     }
-    const contextSet: Set<VF.TickContext> = collectContexts(graphicalMeasures);
-    const columns: ProfileColumn[] = groupContextsByTick(contextSet);
+    const sourceMeasure: SourceMeasure = graphicalMeasures[0].parentSourceMeasure;
+    const contextTimestamps: Map<VF.TickContext, number> =
+      collectContextTimestamps(graphicalMeasures);
+    const columns: ProfileColumn[] = groupContextsByTick(contextTimestamps);
+    const rhythmicEndTimestamp: number = measureEndTimestamp(
+      sourceMeasure,
+      columns[columns.length - 1]?.timestamp,
+    );
+    const rhythmicWeight: number = measureRhythmicWeight(sourceMeasure);
+    const leadingRhythmicWeight: number = assignTemporalRhythmicWeights(
+      columns,
+      rhythmicEndTimestamp,
+      rhythmicWeight,
+      rules.SoftmaxFactorVexFlow,
+    );
     const intrinsicHardWidthPx: number = sum(
       columns.map((column: ProfileColumn): number => column.intrinsicHardWidthPx),
     );
@@ -470,14 +623,11 @@ function collectMeasureProfiles(
     const minimumRequiredWidthPx: number = lastColumn
       ? lastColumn.basePositionPx + lastColumn.notationRightExtentPx
       : 0;
-    const rhythmicWeight: number = Math.max(
-      FIXED_GAP_WEIGHT,
-      sum(columns.map((column: ProfileColumn): number => column.rhythmicWeight)),
-    );
     const profile: MeasureProfile = {
       columns,
       graphicalMeasures,
       intrinsicHardWidthPx,
+      leadingRhythmicWeight,
       minimumRequiredWidthPx,
       rhythmicWeight,
     };
@@ -488,14 +638,16 @@ function collectMeasureProfiles(
   return profiles;
 }
 
-function groupContextsByTick(contexts: Set<VF.TickContext>): ProfileColumn[] {
+function groupContextsByTick(
+  contextTimestamps: Map<VF.TickContext, number>,
+): ProfileColumn[] {
   const contextsByTick: Map<number, VF.TickContext[]> = new Map<number, VF.TickContext[]>();
-  for (const context of contexts) {
+  contextTimestamps.forEach((_timestamp: number, context: VF.TickContext): void => {
     const tickId: number = context.getTickID();
     const group: VF.TickContext[] = contextsByTick.get(tickId) ?? [];
     group.push(context);
     contextsByTick.set(tickId, group);
-  }
+  });
   return Array.from(contextsByTick.values())
     .map((group: VF.TickContext[]): ProfileColumn => {
       for (const context of group) {
@@ -516,89 +668,19 @@ function groupContextsByTick(contexts: Set<VF.TickContext>): ProfileColumn[] {
               context.getMetrics().notePx + context.getMetrics().totalRightPx,
           ),
         ),
-        rhythmicWeight: Math.max(
-          ...group.map((context: VF.TickContext): number => vexFlowRhythmicWeight(context)),
+        rhythmicWeight: 0,
+        timestamp: Math.min(
+          ...group.map(
+            (context: VF.TickContext): number => contextTimestamps.get(context) ?? 0,
+          ),
         ),
       };
     })
     .sort(
       (left: ProfileColumn, right: ProfileColumn): number =>
+        left.timestamp - right.timestamp ||
         left.basePositionPx - right.basePositionPx,
     );
-}
-
-/**
- * Build the positions VexFlow would produce with no elastic rhythmic space.
- *
- * Candidate positions include rhythmic justification and are appropriate for
- * choosing a system width. Final formatting recalculates that justification,
- * though, so only these drawable/context extents and fixed instructions can
- * count towards an unshrinkable lyric clearance.
- */
-function collectHardLayoutBasePositions(
-  nodes: CandidateNode[],
-  measures: SystemMeasureSpacingInput[],
-): number[] {
-  if (nodes.length === 0) {
-    return [];
-  }
-  const positions: number[] = [0];
-  for (let index: number = 1; index < nodes.length; index++) {
-    positions.push(
-      positions[index - 1] + hardDistanceBetweenNodes(nodes[index - 1], nodes[index], measures),
-    );
-  }
-  return positions;
-}
-
-function hardDistanceBetweenNodes(
-  previousNode: CandidateNode,
-  currentNode: CandidateNode,
-  measures: SystemMeasureSpacingInput[],
-): number {
-  const previousColumn: CandidateColumn = previousNode.column;
-  const currentColumn: CandidateColumn = currentNode.column;
-  if (!previousColumn && currentColumn) {
-    return (
-      fullWidthsOfMeasures(measures, 0, currentColumn.inputIndex) +
-      measures[currentColumn.inputIndex].beginInstructionsWidth * unitInPixels +
-      currentColumn.notationLeftExtentPx
-    );
-  }
-  if (previousColumn && currentColumn) {
-    let distance: number =
-      previousColumn.notationRightExtentPx + currentColumn.notationLeftExtentPx;
-    if (previousColumn.inputIndex !== currentColumn.inputIndex) {
-      distance +=
-        measures[previousColumn.inputIndex].endInstructionsWidth * unitInPixels +
-        fullWidthsOfMeasures(measures, previousColumn.inputIndex + 1, currentColumn.inputIndex) +
-        measures[currentColumn.inputIndex].beginInstructionsWidth * unitInPixels;
-    }
-    return distance;
-  }
-  if (previousColumn && !currentColumn) {
-    return (
-      previousColumn.notationRightExtentPx +
-      measures[previousColumn.inputIndex].endInstructionsWidth * unitInPixels +
-      fullWidthsOfMeasures(measures, previousColumn.inputIndex + 1, measures.length)
-    );
-  }
-  return fullWidthsOfMeasures(measures, 0, measures.length);
-}
-
-function fullWidthsOfMeasures(
-  measures: SystemMeasureSpacingInput[],
-  startIndex: number,
-  endIndex: number,
-): number {
-  let widthPx: number = 0;
-  for (let index: number = startIndex; index < endIndex; index++) {
-    const measure: SystemMeasureSpacingInput = measures[index];
-    widthPx +=
-      (measure.beginInstructionsWidth + measure.baseVariableWidth + measure.endInstructionsWidth) *
-      unitInPixels;
-  }
-  return widthPx;
 }
 
 function collectSystemNotationConstraints(nodes: CandidateNode[]): HorizontalSpacingConstraint[] {
@@ -940,8 +1022,10 @@ function collectCurrentContexts(graphicalMusicSheet: GraphicalMusicSheet): Set<V
   return contexts;
 }
 
-function collectContexts(graphicalMeasures: GraphicalMeasure[]): Set<VF.TickContext> {
-  const contexts: Set<VF.TickContext> = new Set<VF.TickContext>();
+function collectContextTimestamps(
+  graphicalMeasures: GraphicalMeasure[],
+): Map<VF.TickContext, number> {
+  const contextTimestamps: Map<VF.TickContext, number> = new Map<VF.TickContext, number>();
   for (const measure of graphicalMeasures) {
     for (const staffEntry of measure.staffEntries) {
       for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
@@ -955,12 +1039,23 @@ function collectContexts(graphicalMeasures: GraphicalMeasure[]): Set<VF.TickCont
         ).vfStaveNote;
         const context: VF.TickContext = note?.getTickContext?.();
         if (context) {
-          contexts.add(context);
+          const timestamp: number =
+            staffEntry.relInMeasureTimestamp?.RealValue ??
+            staffEntry.sourceStaffEntry?.Timestamp?.RealValue ??
+            voiceEntry.parentVoiceEntry?.Timestamp?.RealValue ??
+            0;
+          const currentTimestamp: number = contextTimestamps.get(context);
+          contextTimestamps.set(
+            context,
+            Number.isFinite(currentTimestamp)
+              ? Math.min(currentTimestamp, Math.max(0, timestamp))
+              : Math.max(0, timestamp),
+          );
         }
       }
     }
   }
-  return contexts;
+  return contextTimestamps;
 }
 
 function findOwningVoiceEntry(
@@ -980,43 +1075,6 @@ function findOwningVoiceEntry(
 
 function isVisibleLyric(entry: GraphicalLyricEntry): boolean {
   return !!(entry.LyricsEntry.LyricText?.trim() || entry.LyricsEntry.StanzaNumberPrefix?.trim());
-}
-
-function vexFlowRhythmicWeight(context: VF.TickContext): number {
-  const ticks: number = context.getMaxTicks()?.value?.() ?? 0;
-  const tickable: VF.Tickable = context.getMaxTickable?.();
-  const weight: number = tickable?.getVoice?.()?.softmax?.(ticks);
-  return Number.isFinite(weight) && weight > 0 ? weight : 1;
-}
-
-function applyContextPadding(context: VF.TickContext, leftPx: number, rightPx: number): void {
-  const namedContext: VF.TickContext & {
-    applyLayoutPaddingForSource?: (
-      source: string,
-      leftDelta: number,
-      rightDelta: number,
-    ) => VF.TickContext;
-  } = context;
-  if (namedContext.applyLayoutPaddingForSource) {
-    namedContext.applyLayoutPaddingForSource(SYSTEM_LYRIC_PADDING_SOURCE, leftPx, rightPx);
-    return;
-  }
-
-  for (const tickable of context.getTickables()) {
-    const note: VF.Tickable & {
-      getLayoutPadding?: () => { leftPx: number, rightPx: number };
-      setLayoutPaddingForSource?: (source: string, left: number, right: number) => VF.Tickable;
-    } = tickable;
-    if (!note.getLayoutPadding || !note.setLayoutPaddingForSource) {
-      continue;
-    }
-    const baseline: { leftPx: number, rightPx: number } = note.getLayoutPadding();
-    note.setLayoutPaddingForSource(
-      SYSTEM_LYRIC_PADDING_SOURCE,
-      baseline.leftPx + leftPx,
-      baseline.rightPx + rightPx,
-    );
-  }
 }
 
 function setDiagnostics(
@@ -1056,10 +1114,10 @@ function emptySolution(): CandidateSolution {
       resolvedConstraints: [],
     },
     constraints: [],
-    contextPadding: new Map<VF.TickContext, { leftPx: number, rightPx: number }>(),
+    gapWeights: [],
     intrinsicHardWidthsPx: [],
     minimumVariableWidthPx: 0,
-    rhythmicWeights: [],
+    nodes: [],
   };
 }
 

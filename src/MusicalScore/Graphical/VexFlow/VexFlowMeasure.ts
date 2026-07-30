@@ -169,7 +169,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** The VexFlow Voices in the measure */
     public vfVoices: { [voiceID: number]: VF.Voice } = {};
     /** Call this function (if present) to x-format all the voices in the measure */
-    public formatVoices?: (width: number, parent: VexFlowMeasure) => void;
+    public formatVoices?: (width: number, parent: VexFlowMeasure) => VF.Formatter;
+    /**
+     * Final system-level x targets, indexed by VexFlow's measure-local tick ID.
+     *
+     * Formatter.format() recreates TickContexts on every pass, so the targets
+     * must survive independently of those short-lived objects.
+     */
+    private horizontalSpacingTargetPositions?: ReadonlyMap<number, number>;
     /** The VexFlow Ties in the measure */
     public vfTies: VF.StaveTie[] = [];
     /** The repetition instructions given as words or symbols (coda, dal segno..) */
@@ -204,6 +211,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * This is needed to evaluate a measure a second time by system builder.
      */
     public resetLayout(): void {
+        this.horizontalSpacingTargetPositions = undefined;
         // Take into account some space for the begin and end lines of the stave
         // Will be changed when repetitions will be implemented
         //this.beginInstructionsWidth = 20 / UnitInPixels;
@@ -873,12 +881,51 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (this.formatVoices) {
             // set the width of the voices to the current measure width:
             // (The width of the voices does not include the instructions (StaveModifiers))
-            this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels, this);
+            const formatter: VF.Formatter = this.formatVoices(
+                (this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels,
+                this,
+            );
+            this.applyHorizontalSpacingTargets(formatter);
             this.centerWholeMeasureRests();
             this.setStemDirectionFromVexFlow();
         }
 
         // this.correctNotePositions(); // now done at the end of draw()
+    }
+
+    public setHorizontalSpacingTargetPositions(
+        targets?: ReadonlyMap<number, number>,
+    ): void {
+        this.horizontalSpacingTargetPositions = targets
+            ? new Map<number, number>(targets)
+            : undefined;
+    }
+
+    /**
+     * Restore the selected system's exact rhythmic positions after VexFlow's
+     * final measure-local formatter pass.
+     *
+     * Centre-aligned tickables use a compensating shift. Preserve their
+     * absolute position here; whole-measure rests are centred deliberately in
+     * centerWholeMeasureRests() immediately afterwards.
+     */
+    private applyHorizontalSpacingTargets(formatter: VF.Formatter): void {
+        if (!formatter || !this.horizontalSpacingTargetPositions) {
+            return;
+        }
+        this.horizontalSpacingTargetPositions.forEach(
+            (targetX: number, tickId: number): void => {
+                const context: VF.TickContext = formatter.getTickContext(tickId);
+                if (!context || !Number.isFinite(targetX)) {
+                    return;
+                }
+                const deltaX: number = targetX - context.getX();
+                for (const tickable of context.getCenterAlignedTickables()) {
+                    tickable.setCenterXShift(tickable.getCenterXShift() - deltaX);
+                }
+                context.setX(targetX);
+            },
+        );
     }
 
     private centerWholeMeasureRests(): void {

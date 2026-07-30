@@ -127,13 +127,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected formatMeasures(): void {
     // let totalFinalizeBeamsTime: number = 0;
     for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
-      if (!verticalMeasureList || !verticalMeasureList[0]) {
+      const firstVisibleMeasure: VexFlowMeasure = verticalMeasureList?.find(
+        measure => measure?.isVisible(),
+      ) as VexFlowMeasure;
+      if (!firstVisibleMeasure) {
         continue;
       }
-      const firstVisibleMeasure: VexFlowMeasure = verticalMeasureList.find(measure => measure?.isVisible()) as VexFlowMeasure;
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
       firstVisibleMeasure.format();
       for (const measure of verticalMeasureList) {
+        if (!measure?.isVisible()) {
+          continue;
+        }
         for (const staffEntry of measure.staffEntries) {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
         }
@@ -400,14 +405,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // };
       MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
 
-      const formatVoicesDefault: (w: number, p: VexFlowMeasure) => void = (w, p) => {
+      const formatVoicesDefault: (w: number, p: VexFlowMeasure) => VF.Formatter = (w, p) => {
         if (p.getVFStave().getWidth() > 0) {
           formatter.formatToStave(allVoices, p.getVFStave());
         } else {
           formatter.format(allVoices, w);
         }
+        return formatter;
       };
-      const formatVoicesAlignRests: (w: number,  p: VexFlowMeasure) => void = (w, p) => {
+      const formatVoicesAlignRests: (w: number,  p: VexFlowMeasure) => VF.Formatter = (w, p) => {
         if (p.getVFStave().getWidth() > 0) {
           formatter.formatToStave(allVoices, p.getVFStave(), {
             alignRests: true,
@@ -418,6 +424,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             alignRests: true,
           });
         }
+        return formatter;
       };
 
       for (const measure of measures) {
