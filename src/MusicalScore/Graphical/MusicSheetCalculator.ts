@@ -72,9 +72,10 @@ import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSM
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
 import { GraphicalChordSymbolContainer } from "./GraphicalChordSymbolContainer";
-import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
+import { LyricExtendType, LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
 import { Voice } from "../VoiceData/Voice";
 import { TabNote } from "../VoiceData/TabNote";
+import { IHorizontalSystemSpacingPlanner } from "./HorizontalSystemSpacing";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -95,6 +96,7 @@ export abstract class MusicSheetCalculator {
     protected graphicalMusicSheet: GraphicalMusicSheet;
     protected rules: EngravingRules;
     protected musicSystems: MusicSystem[];
+    protected horizontalSystemSpacingPlanner: IHorizontalSystemSpacingPlanner;
     /** Lazy rendering: cache of computed sky/bottom lines, keyed per staff line by its system's
      *  measure range + staff index. A growing-prefix batch re-runs the (expensive) skyline pass over the
      *  whole prefix; this lets stable interior systems reuse the lines computed in an earlier batch instead
@@ -345,23 +347,23 @@ export abstract class MusicSheetCalculator {
         // let minLength: number = 0; // currently unused
         // const maxInstructionsLength: number = this.rules.MaxInstructionsConstValue;
         if (this.graphicalMusicSheet.MeasureList.length > 0) {
-            /** list of vertically ordered measures belonging to one bar */
-            // let measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[0];
-            // let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
-            // minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
-            // MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
-            // minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
+            const baseMeasureWidths: number[] = [];
+            for (let i: number = 0; i < this.graphicalMusicSheet.MeasureList.length; i++) {
+                const measureGroup: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[i];
+                baseMeasureWidths[i] = this.calculateMeasureXLayout(measureGroup);
+            }
+
             let maxWidth: number = 0;
             let measures: GraphicalMeasure[];
-            let measureWidthFactor: number = 1;
             for (let i: number = 0; i < this.graphicalMusicSheet.MeasureList.length; i++) {
                 measures = this.graphicalMusicSheet.MeasureList[i];
-                let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
+                let minimumStaffEntriesWidth: number = baseMeasureWidths[i];
                 minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
                 if (minimumStaffEntriesWidth > maxWidth) {
                     maxWidth = minimumStaffEntriesWidth;
                 }
                 const globalWidthFactor: number = this.graphicalMusicSheet.ParentMusicSheet.MeasureWidthFactor;
+                let measureWidthFactor: number = 1;
                 for (const verticalMeasure of measures) {
                     if (verticalMeasure?.parentSourceMeasure.WidthFactor) { // some of these GraphicalMeasures might be undefined (multi-rest)
                         measureWidthFactor = verticalMeasure.parentSourceMeasure.WidthFactor;
@@ -391,8 +393,14 @@ export abstract class MusicSheetCalculator {
                     MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, targetWidth);
                 }
             }
+            this.prepareHorizontalSystemSpacing();
         }
         // this.graphicalMusicSheet.MinAllowedSystemWidth = minLength; // currently unused
+    }
+
+    /** Prepare an optional renderer-specific planner after measure minima are final. */
+    protected prepareHorizontalSystemSpacing(): void {
+        this.horizontalSystemSpacingPlanner = undefined;
     }
 
     public calculateMeasureWidthFromStaffEntries(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
@@ -768,7 +776,7 @@ export abstract class MusicSheetCalculator {
                     this.calculateSingleLyricWord(lyricEntry);
                 }
                 // calculate the underscore line extend if needed
-                if (lyricEntry.LyricsEntry.extend) {
+                if (lyricEntry.LyricsEntry.ExtendType === LyricExtendType.Start) {
                     this.calculateLyricExtend(lyricEntry);
                 }
             }
@@ -985,7 +993,12 @@ export abstract class MusicSheetCalculator {
 
         // build the MusicSystems (and StaffLines)
         const musicSystemBuilder: MusicSystemBuilder = new MusicSystemBuilder();
-        musicSystemBuilder.initialize(this.graphicalMusicSheet, visibleMeasureList, numberOfStaffLines);
+        musicSystemBuilder.initialize(
+            this.graphicalMusicSheet,
+            visibleMeasureList,
+            numberOfStaffLines,
+            this.horizontalSystemSpacingPlanner,
+        );
         this.musicSystems = musicSystemBuilder.buildMusicSystems();
 
         this.formatMeasures();
@@ -3715,6 +3728,8 @@ export abstract class MusicSheetCalculator {
         let endStaffEntry: GraphicalStaffEntry = undefined;
         let endStaffLine: StaffLine = undefined;
         const staffIndex: number = startStaffEntry.parentMeasure.ParentStaff.idInMusicSheet;
+        const lyricLineIdentity: string = lyricEntry.getLineIdentity();
+        const lyricVoice: Voice = lyricEntry.LyricsEntry.Parent?.ParentVoice;
         if (!startStaffEntry.parentVerticalContainer) {
             // shouldn't happen since calculateVerticalContainersList covers all measure.staffEntries,
             // but skip rather than crash if some upstream parsing left a staff entry without a container
@@ -3730,13 +3745,23 @@ export abstract class MusicSheetCalculator {
             if (gse.hasOnlyRests()) {
                 break;
             }
-            if (gse.LyricsEntries.length > 0) {
+            const nextLineEntry: GraphicalLyricEntry = gse.LyricsEntries.find(
+                (candidate: GraphicalLyricEntry): boolean =>
+                    candidate.getLineIdentity() === lyricLineIdentity &&
+                    candidate.LyricsEntry.Parent?.ParentVoice === lyricVoice,
+            );
+            if (nextLineEntry &&
+                nextLineEntry.LyricsEntry.ExtendType !== LyricExtendType.Continue &&
+                nextLineEntry.LyricsEntry.ExtendType !== LyricExtendType.Stop) {
                 break;
             }
             endStaffEntry = gse;
             endStaffLine = endStaffEntry.parentMeasure.ParentStaffLine;
             if (!endStaffLine) {
                 endStaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
+            }
+            if (nextLineEntry?.LyricsEntry.ExtendType === LyricExtendType.Stop) {
+                break;
             }
         }
         if (!endStaffEntry || !endStaffLine) {

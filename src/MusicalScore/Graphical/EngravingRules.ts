@@ -442,6 +442,8 @@ export class EngravingRules {
 
     public VoiceSpacingMultiplierVexflow: number;
     public VoiceSpacingAddendVexflow: number;
+    /** Optical clearance after a visible quarter-rest glyph, in staff spaces. */
+    public QuarterRestRightClearance: number;
     public PickupMeasureWidthMultiplier: number;
     /** The spacing between a repetition that is followed by an implicit/pickup/incomplete measure.
      *  (E.g. in a 4/4 time signature, a measure that repeats after the 3rd beat, continuing with a pickup measure)
@@ -906,7 +908,7 @@ export class EngravingRules {
         this.LyricsExtraXShiftForShortLyrics = 0.5; // also see ChordSymbolExtraXShiftForShortChordSymbols, same principle
         this.LyricsExtraXShiftForShortLyricsWidthThreshold = 1.4; // width of '+': 1.12, 'II': 1.33 (benefits from x-shift), 'III': 1.99 (doesn't benefit)
         this.LyricsUseXPaddingForLongLyrics = true;
-        this.LyricsXPaddingFactorForLongLyrics = 1.14;
+        this.LyricsXPaddingFactorForLongLyrics = 1.0;
         this.LyricsXPaddingWidthThreshold = 1.7; // generateImages script with png might need more for 8th notes, e.g. Chloe
         this.LyricsXPaddingReductionForLongNotes = 0.7;
         this.LyricsXPaddingReductionForLastNoteInMeasure = 1.2;
@@ -984,6 +986,7 @@ export class EngravingRules {
         // xSpacing Variables
         this.VoiceSpacingMultiplierVexflow = 0.85;
         this.VoiceSpacingAddendVexflow = 3.0;
+        this.QuarterRestRightClearance = 0.45;
         this.PickupMeasureWidthMultiplier = 1.0;
         this.PickupMeasureRepetitionSpacing = 0.8;
         this.PickupMeasureSpacingSingleNoteAddend = 1.6;

@@ -879,11 +879,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     private centerWholeMeasureRests(): void {
+        const measureCenterX: number = (this.stave.getNoteStartX() + this.stave.getNoteEndX()) / 2;
         for (const staffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             for (const voiceEntry of staffEntry.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
                 const sourceNote: Note = voiceEntry.notes[0]?.sourceNote;
                 const vexNote: any = voiceEntry.vfStaveNote as any;
-                if (!sourceNote?.isRest?.() || !vexNote?.getStave) {
+                if (!sourceNote?.isRest?.() ||
+                    !vexNote?.getStave ||
+                    !vexNote?.getBoundingBox ||
+                    !vexNote?.getNoteHeadBeginX) {
                     continue;
                 }
                 const isWholeMeasureRest: boolean = sourceNote.IsWholeMeasureRest ||
@@ -892,6 +896,24 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     continue;
                 }
                 vexNote.setCenterAlignment?.(true);
+                const noteHeads: any[] = vexNote.noteHeads ?? [];
+                const positionNoteHeads: () => void = (): void => {
+                    const noteHeadBeginX: number = vexNote.getNoteHeadBeginX();
+                    noteHeads.forEach((noteHead: any): void => noteHead.setX?.(noteHeadBeginX));
+                };
+                // StaveNote.draw() performs this same positioning immediately
+                // before drawing. Do it here too so the bounding box reflects
+                // the current post-format centre shift, not a notehead x from
+                // construction or a previous render.
+                positionNoteHeads();
+                const boundingBox: any = vexNote.getBoundingBox();
+                const restCenterX: number = boundingBox.getX() + boundingBox.getW() / 2;
+                const delta: number = measureCenterX - restCenterX;
+                if (!isFinite(delta) || Math.abs(delta) < 0.001) {
+                    continue;
+                }
+                vexNote.setCenterXShift?.(vexNote.getCenterXShift() + delta);
+                positionNoteHeads();
             }
         }
     }

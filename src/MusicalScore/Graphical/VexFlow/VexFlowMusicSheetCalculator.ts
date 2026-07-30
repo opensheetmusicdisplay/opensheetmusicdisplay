@@ -73,6 +73,7 @@ import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/Wavy
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { Staff } from "../../VoiceData/Staff";
 import { getDoricoDefaultTextFontFamily } from "../DoricoTextFontRouting";
+import { VexFlowSystemSpacingPlanner } from "./VexFlowHorizontalSpacing";
 
 interface ContainerEntryInfo {
   anchorX?: number;
@@ -94,10 +95,7 @@ type ContainerOverflows = Record<string, number>;
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   public beamsNeedUpdate: boolean = false;
-  /** Per-staff overflow (in pre-elongation units) of the previous measure's last lyric/chord
-   *  past its bar line. Used to prevent the next measure's first lyric/chord from colliding
-   *  with the overflow. Indexed first by Staff, then by stable lyric-line/chord key. */
-  private previousLyricOverflowsByStaff: Map<Staff, ContainerOverflows> = new Map<Staff, ContainerOverflows>();
+  /** Per-staff overflow of the previous measure's final chord symbol. */
   private previousChordOverflowsByStaff: Map<Staff, ContainerOverflows> = new Map<Staff, ContainerOverflows>();
 
   constructor(rules: EngravingRules) {
@@ -110,6 +108,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected clearRecreatedObjects(): void {
+    this.horizontalSystemSpacingPlanner?.clearAppliedPadding();
     super.clearRecreatedObjects();
     MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
     // Reset the measure-to-measure carry state of the lyrics/chord symbol elongation calculation:
@@ -117,7 +116,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // overflow of the last lyric measure leaked into the *next* render's first measures
     // (when no later measure with staff entries overwrote it), making re-renders elongate
     // slightly differently than the first render.
-    this.previousLyricOverflowsByStaff.clear();
     this.previousChordOverflowsByStaff.clear();
     for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
       for (const graphicalMeasure of graphicalMeasures) {
@@ -150,6 +148,76 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
     this.beamsNeedUpdate = false;
+  }
+
+  protected prepareHorizontalSystemSpacing(): void {
+    for (const verticalMeasures of this.graphicalMusicSheet.MeasureList) {
+      const firstVisibleMeasure: VexFlowMeasure =
+        verticalMeasures.find(
+          (measure: GraphicalMeasure): boolean => !!measure?.isVisible(),
+        ) as VexFlowMeasure;
+      if (!firstVisibleMeasure?.formatVoices) {
+        continue;
+      }
+      const minimumWidth: number = verticalMeasures.reduce(
+        (width: number, measure: GraphicalMeasure): number =>
+          Math.max(width, measure?.minimumStaffEntriesWidth ?? 0),
+        0,
+      );
+      const contextsByTick: Map<number, VF.TickContext[]> =
+        new Map<number, VF.TickContext[]>();
+      for (const measure of verticalMeasures) {
+        if (!measure?.isVisible()) {
+          continue;
+        }
+        for (const staffEntry of measure.staffEntries) {
+          for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+            const context: VF.TickContext =
+              (voiceEntry as VexFlowVoiceEntry).vfStaveNote?.getTickContext?.();
+            if (!context) {
+              continue;
+            }
+            const tickId: number = context.getTickID();
+            const contexts: VF.TickContext[] = contextsByTick.get(tickId) ?? [];
+            if (!contexts.includes(context)) {
+              contexts.push(context);
+            }
+            contextsByTick.set(tickId, contexts);
+          }
+        }
+      }
+      const hardMinimumWidthPx: number = Array.from(
+        contextsByTick.values(),
+      ).reduce(
+        (total: number, contexts: VF.TickContext[]): number => {
+          const groupedWidth: number = contexts.reduce(
+            (width: number, context: VF.TickContext): number => {
+              context.preFormat();
+              return Math.max(width, context.getWidth());
+            },
+            0,
+          );
+          return total + groupedWidth;
+        },
+        0,
+      );
+      firstVisibleMeasure.formatVoices(
+        Math.max(minimumWidth * unitInPixels, hardMinimumWidthPx),
+        firstVisibleMeasure,
+      );
+      for (const measure of verticalMeasures) {
+        if (!measure?.isVisible()) {
+          continue;
+        }
+        for (const staffEntry of measure.staffEntries) {
+          (staffEntry as VexFlowStaffEntry).calculateXPosition();
+        }
+      }
+    }
+    this.horizontalSystemSpacingPlanner = new VexFlowSystemSpacingPlanner(
+      this.graphicalMusicSheet,
+      this.rules,
+    );
   }
 
   //protected clearSystemsAndMeasures(): void {
@@ -279,13 +347,22 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const staffEntryFactor: number = 0.3;
 
     if (allVoices.length > 0) {
-      minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
-      * this.rules.VoiceSpacingMultiplierVexflow
-      + this.rules.VoiceSpacingAddendVexflow
-      + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
+      const formatterMinimumWidthPx: number = formatter.preCalculateMinTotalWidth(allVoices);
+      const hardNotationWidth: number =
+        formatter.getMinTotalWidth() / unitInPixels;
+      let softStaffEntriesWidth: number =
+        Math.max(0, formatterMinimumWidthPx / unitInPixels - hardNotationWidth)
+        * this.rules.VoiceSpacingMultiplierVexflow
+        + this.rules.VoiceSpacingAddendVexflow
+        + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
       if (parentSourceMeasure?.ImplicitMeasure) {
-        // shrink width in the ratio that the pickup measure is shorter compared to a full measure('s time signature):
-        minStaffEntriesWidth = parentSourceMeasure.Duration.RealValue / parentSourceMeasure.ActiveTimeSignature.RealValue * minStaffEntriesWidth;
+        // Shrink only elastic rhythmic spacing in the ratio that the pickup
+        // measure is shorter than a full measure. Noteheads, modifiers, and
+        // layout-only padding are hard engraving geometry and remain unchanged.
+        softStaffEntriesWidth =
+          parentSourceMeasure.Duration.RealValue /
+          parentSourceMeasure.ActiveTimeSignature.RealValue *
+          softStaffEntriesWidth;
         // e.g. a 1/4 pickup measure in a 3/4 time signature should be 1/4 / 3/4 = 1/3 as long (a third)
         // it seems like this should be respected by staffEntries.length and preCaculateMinTotalWidth, but apparently not,
         //   without this the pickup measures were always too long.
@@ -304,17 +381,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
           }
         }
-        minStaffEntriesWidth += barlineSpacing;
+        softStaffEntriesWidth += barlineSpacing;
         // add more than the original staffEntries scaling again: (removing it above makes it too short)
         if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
-          minStaffEntriesWidth += maxStaffEntriesPlusAccidentals * staffEntryFactor * 1.5; // don't scale this for implicit measures
+          softStaffEntriesWidth += maxStaffEntriesPlusAccidentals * staffEntryFactor * 1.5; // don't scale this for implicit measures
           // in fact overscale it, this needs a lot of space the more staffEntries (and modifiers like accidentals) there are
         } else if (measureListIndex > 1 && maxStaffEntries === 1) {
           // do this also for measures not after repetitions:
-          minStaffEntriesWidth += this.rules.PickupMeasureSpacingSingleNoteAddend;
+          softStaffEntriesWidth += this.rules.PickupMeasureSpacingSingleNoteAddend;
         }
-        minStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
+        softStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
       }
+      minStaffEntriesWidth = softStaffEntriesWidth + hardNotationWidth;
 
         // TODO this could use some fine-tuning. currently using *1.5 + 1 by default, results in decent spacing.
       // firstMeasure.formatVoices = (w: number) => {
@@ -323,13 +401,23 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
 
       const formatVoicesDefault: (w: number, p: VexFlowMeasure) => void = (w, p) => {
-        formatter.formatToStave(allVoices, p.getVFStave());
+        if (p.getVFStave().getWidth() > 0) {
+          formatter.formatToStave(allVoices, p.getVFStave());
+        } else {
+          formatter.format(allVoices, w);
+        }
       };
       const formatVoicesAlignRests: (w: number,  p: VexFlowMeasure) => void = (w, p) => {
-        formatter.formatToStave(allVoices, p.getVFStave(), {
-          alignRests: true,
-          context: undefined
-        });
+        if (p.getVFStave().getWidth() > 0) {
+          formatter.formatToStave(allVoices, p.getVFStave(), {
+            alignRests: true,
+            context: undefined
+          });
+        } else {
+          formatter.format(allVoices, w, {
+            alignRests: true,
+          });
+        }
       };
 
       for (const measure of measures) {
@@ -638,17 +726,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   /**
-   * @param previousLyricOverflows Per-line map holding how far the
-   *   previous measure's last lyric extends past its bar line into this measure (in pre-elongation
-   *   units, plus the measured dash width if mid-word). Used to seed lastLyricEntryDict so the first lyric in this
-   *   measure is forced to leave clearance from the overhang.
+   * @param previousLyricOverflows Retained for API compatibility. Lyric
+   *   overflows are now represented by shared-column hard constraints.
    * @param previousChordOverflows Same as previousLyricOverflows but for chord symbols.
    * @returns
-   *   - `factor`: regular elongation factor from within-measure spacing constraints (subject to
+   *   - `factor`: residual chord-symbol elongation factor (subject to
    *     MaximumLyricsElongationFactor cap by the caller).
-   *   - `lastLyricEntryDict` / `lastChordEntryDict`: final state of each lyric line/chord slot
-   *     dicts after processing. The caller uses these (with the post-cap measure width) to
-   *     compute the overflows passed into the next measure's call.
+   *   - `lastLyricEntryDict`: empty compatibility result.
+   *   - `lastChordEntryDict`: final state of each chord slot, used to
+   *     compute overflow passed into the next measure.
    */
   public calculateElongationFactorFromStaffEntries(staffEntries: GraphicalStaffEntry[], oldMinimumStaffEntriesWidth: number,
                                                   elongationFactorForMeasureWidth: number, measureNumber: number,
@@ -663,27 +749,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const lastLyricEntryDict: ContainerEntryDict = {};
     const lastChordEntryDict: ContainerEntryDict = {};
 
-    // Seed dicts with previous-measure overflow as synthetic entries, so the first lyric/chord
-    // in this measure is forced to leave clearance from the previous measure's overhang.
-    if (previousLyricOverflows) {
-      for (const key of Object.keys(previousLyricOverflows)) {
-        const overflow: number = previousLyricOverflows[key];
-        if (overflow > 0) {
-          lastLyricEntryDict[key] = {
-            anchorX: 0,
-            cumulativeOverlap: 0,
-            extend: false,
-            labelWidth: overflow,
-            leftExtent: 0,
-            measureMinimumWidth: oldMinimumStaffEntriesWidth,
-            measureNumber: measureNumber - 1,
-            rightExtent: overflow,
-            text: "",
-            xPosition: 0,
-          };
-        }
-      }
-    }
+    // Lyric spacing is now represented by shared-column hard constraints.
+    // Keep this public parameter for API compatibility, but do not seed the
+    // removed measure-local lyric-overflow path.
+    void previousLyricOverflows;
     if (previousChordOverflows) {
       for (const key of Object.keys(previousChordOverflows)) {
         const overflow: number = previousChordOverflows[key];
@@ -700,21 +769,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
 
-    // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
+    // Lyric spacing is solved before this residual pass. Keep only chord
+    // symbols here until they are migrated to shared-column constraints.
     for (const staffEntry of staffEntries) {
-      if (staffEntry.LyricsEntries.length > 0 && this.rules.RenderLyrics) {
-        newElongationFactorForMeasureWidth =
-          this.calculateElongationFactor(
-            staffEntry.LyricsEntries,
-            staffEntry,
-            lastLyricEntryDict,
-            oldMinimumStaffEntriesWidth,
-            newElongationFactorForMeasureWidth,
-            measureNumber,
-            this.rules.HorizontalBetweenLyricsDistance,
-            this.rules.LyricOverlapAllowedIntoNextMeasure,
-          );
-      }
       if (staffEntry.graphicalChordContainers.length > 0 && this.rules.RenderChordSymbols) {
         newElongationFactorForMeasureWidth =
           this.calculateElongationFactor(
@@ -754,7 +811,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       const staff: Staff = measure.ParentStaff;
       visibleStaves.add(staff);
-      const previousLyricOverflows: ContainerOverflows = this.previousLyricOverflowsByStaff.get(staff);
       const previousChordOverflows: ContainerOverflows = this.previousChordOverflowsByStaff.get(staff);
 
       // (measure as VexFlowMeasure).format(); // needed to get vexflow bbox / x-position
@@ -768,7 +824,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           oldMinimumStaffEntriesWidth,
           elongationFactorForMeasureWidth,
           measure.MeasureNumber,
-          previousLyricOverflows,
+          undefined,
           previousChordOverflows,
         );
       elongationFactorForMeasureWidth = result.factor;
@@ -784,25 +840,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     const newMinimumStaffEntriesWidth: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
 
-    // Compute overflow of this measure's last lyric/chord into the next measure, per staff and lyric line,
-    // so the next measure's calculation can leave clearance for it.
+    // Compute overflow of this measure's final chord symbol into the next
+    // measure so the next residual pass can leave clearance for it.
     // overflow is measured against newMinimumStaffEntriesWidth (the bar position) using the same
     // pre-elongation xPosition convention used elsewhere in this calculator.
     for (const result of perStaffResults) {
-      const lyricOverflows: ContainerOverflows =
-        this.computeContainerOverflows(result.lastLyricEntryDict, newMinimumStaffEntriesWidth);
       const chordOverflows: ContainerOverflows =
         this.computeContainerOverflows(result.lastChordEntryDict, newMinimumStaffEntriesWidth);
-      this.previousLyricOverflowsByStaff.set(result.staff, lyricOverflows);
       this.previousChordOverflowsByStaff.set(result.staff, chordOverflows);
     }
-    // For staves that were skipped (invisible or empty) this measure, drop the previous overflow
-    // so it doesn't get applied across a gap.
-    for (const staff of Array.from(this.previousLyricOverflowsByStaff.keys())) {
-      if (!visibleStaves.has(staff)) {
-        this.previousLyricOverflowsByStaff.delete(staff);
-      }
-    }
+    // For staves that were skipped (invisible or empty) this measure, drop
+    // previous chord overflow so it doesn't get applied across a gap.
     for (const staff of Array.from(this.previousChordOverflowsByStaff.keys())) {
       if (!visibleStaves.has(staff)) {
         this.previousChordOverflowsByStaff.delete(staff);

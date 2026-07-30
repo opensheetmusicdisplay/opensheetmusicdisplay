@@ -22,6 +22,12 @@ import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SystemLinePosition} from "./SystemLinePosition";
 import { MusicSheet } from "../MusicSheet";
 import * as VF from "vexflow/core";
+import {
+    HorizontalSystemSpacingCandidate,
+    HorizontalSystemSpacingLayout,
+    IHorizontalSystemSpacingPlanner,
+    SystemMeasureSpacingInput,
+} from "./HorizontalSystemSpacing";
 
 export class MusicSystemBuilder {
     protected measureList: GraphicalMeasure[][];
@@ -41,14 +47,20 @@ export class MusicSystemBuilder {
     protected activeClefs: ClefInstruction[];
     protected globalSystemIndex: number = 0;
     protected leadSheet: boolean = false;
+    protected horizontalSystemSpacingPlanner: IHorizontalSystemSpacingPlanner;
 
     public initialize(
-        graphicalMusicSheet: GraphicalMusicSheet, measureList: GraphicalMeasure[][], numberOfStaffLines: number): void {
+        graphicalMusicSheet: GraphicalMusicSheet,
+        measureList: GraphicalMeasure[][],
+        numberOfStaffLines: number,
+        horizontalSystemSpacingPlanner?: IHorizontalSystemSpacingPlanner,
+    ): void {
         this.leadSheet = graphicalMusicSheet.LeadSheet;
         this.graphicalMusicSheet = graphicalMusicSheet;
         this.rules = this.graphicalMusicSheet.ParentMusicSheet.Rules;
         this.measureList = measureList;
         this.numberOfVisibleStaffLines = numberOfStaffLines;
+        this.horizontalSystemSpacingPlanner = horizontalSystemSpacingPlanner;
         this.activeRhythm = new Array(this.numberOfVisibleStaffLines);
         this.activeKeys = new Array(this.numberOfVisibleStaffLines);
         this.activeClefs = new Array(this.numberOfVisibleStaffLines);
@@ -142,21 +154,55 @@ export class MusicSystemBuilder {
                     }
                 }
             }
+            const spacingInput: SystemMeasureSpacingInput = {
+                baseVariableWidth: currentMeasureVarWidth,
+                beginInstructionsWidth: currentMeasureBeginInstructionsWidth,
+                endInstructionsWidth: currentMeasureEndInstructionsWidth,
+                graphicalMeasures,
+            };
+            const candidateSpacingInputs: SystemMeasureSpacingInput[] = [
+                ...this.currentSystemParams.spacingInputs(),
+                spacingInput,
+            ];
+            const candidateSpacing: HorizontalSystemSpacingCandidate =
+                this.horizontalSystemSpacingPlanner?.evaluateCandidate(candidateSpacingInputs);
+            const candidateVariableWidth: number =
+                candidateSpacing?.minimumVariableWidth ??
+                this.currentSystemParams.currentSystemVarWidth +
+                currentMeasureVarWidth;
+            const candidateFixedWidth: number =
+                this.currentSystemParams.currentSystemFixWidth +
+                currentMeasureBeginInstructionsWidth +
+                currentMeasureEndInstructionsWidth;
             const currentMeasureNumberInSystem: number = this.currentSystemParams.systemMeasures.length;
             const labelWidth: number = this.currentSystemParams.maxLabelLength > 0
                 ? this.currentSystemParams.maxLabelLength + this.rules.SystemLabelsRightMargin : 0;
             const measureFitsInSystem: boolean =
-                this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth + labelWidth < systemMaxWidth;
+                candidateFixedWidth +
+                candidateVariableWidth +
+                nextMeasureBeginInstructionWidth +
+                labelWidth <
+                systemMaxWidth;
             const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && sourceMeasure.printNewPageXml;
             const impliedSystemBreak: boolean = doXmlPageBreak || // also create new system if doing page break
                 (this.rules.NewSystemAtXMLNewPageAttribute && sourceMeasure.printNewPageXml);
             const doXmlLineBreak: boolean = impliedSystemBreak ||
                 (this.rules.NewSystemAtXMLNewSystemAttribute && sourceMeasure.printNewSystemXml) ||
                 currentMeasureNumberInSystem === this.rules.RenderXMeasuresPerLineAkaSystem && currentMeasureNumberInSystem > 0;
-            if (isSystemStartMeasure || (measureFitsInSystem && !doXmlLineBreak)) {
+            const acceptCandidate: boolean =
+                isSystemStartMeasure ||
+                (measureFitsInSystem && !doXmlLineBreak);
+            if (candidateSpacing) {
+                this.horizontalSystemSpacingPlanner.recordCandidateDecision(
+                    candidateSpacing,
+                    acceptCandidate,
+                );
+            }
+            if (acceptCandidate) {
                 this.addMeasureToSystem(
                     graphicalMeasures, measureStartLine, measureEndLine, totalMeasureWidth,
-                    currentMeasureBeginInstructionsWidth, currentMeasureVarWidth, currentMeasureEndInstructionsWidth
+                    currentMeasureBeginInstructionsWidth, currentMeasureVarWidth, currentMeasureEndInstructionsWidth,
+                    spacingInput, candidateSpacing
                 );
                 this.updateActiveClefs(sourceMeasure, graphicalMeasures);
                 this.measureListIndex++;
@@ -273,6 +319,9 @@ export class MusicSystemBuilder {
                 diff = measures[0].getLineWidth(SystemLinesEnum.DotsBoldBoldDots) / 2 - measures[0].getLineWidth(SystemLinesEnum.DotsThinBold);
             }
             this.currentSystemParams.currentSystemFixWidth -= diff;
+            if (measureParams.spacingInput) {
+                measureParams.spacingInput.endInstructionsWidth -= diff;
+            }
             for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
                 const measure: GraphicalMeasure = measures[idx];
                 measure.endInstructionsWidth -= diff;
@@ -282,16 +331,26 @@ export class MusicSystemBuilder {
 
     protected addMeasureToSystem(
         graphicalMeasures: GraphicalMeasure[], measureStartLine: SystemLinesEnum, measureEndLine: SystemLinesEnum,
-        totalMeasureWidth: number, currentMeasureBeginInstructionsWidth: number, currentVarWidth: number, currentMeasureEndInstructionsWidth: number
+        totalMeasureWidth: number, currentMeasureBeginInstructionsWidth: number, currentVarWidth: number,
+        currentMeasureEndInstructionsWidth: number, spacingInput?: SystemMeasureSpacingInput,
+        candidateSpacing?: HorizontalSystemSpacingCandidate
     ): void {
-        this.currentSystemParams.systemMeasures.push({beginLine: measureStartLine, endLine: measureEndLine});
+        this.currentSystemParams.systemMeasures.push({
+            beginLine: measureStartLine,
+            endLine: measureEndLine,
+            spacingInput,
+        });
         this.setMeasureWidth(
             graphicalMeasures, totalMeasureWidth, currentMeasureBeginInstructionsWidth, currentMeasureEndInstructionsWidth
         );
         this.addStaveMeasuresToSystem(graphicalMeasures);
-        this.currentSystemParams.currentWidth += totalMeasureWidth;
         this.currentSystemParams.currentSystemFixWidth += currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth;
-        this.currentSystemParams.currentSystemVarWidth += currentVarWidth;
+        this.currentSystemParams.currentSystemVarWidth =
+            candidateSpacing?.minimumVariableWidth ??
+            this.currentSystemParams.currentSystemVarWidth + currentVarWidth;
+        this.currentSystemParams.currentWidth =
+            this.currentSystemParams.currentSystemFixWidth +
+            this.currentSystemParams.currentSystemVarWidth;
         this.currentSystemParams.systemMeasureIndex++;
     }
 
@@ -1032,10 +1091,29 @@ export class MusicSystemBuilder {
         let scalingFactor: number = this.calculateXScalingFactor(
             this.currentSystemParams.currentSystemFixWidth, this.currentSystemParams.currentSystemVarWidth
         );
-        if (systemEndsPart) {
+        let systemSpacingLayout: HorizontalSystemSpacingLayout;
+        const spacingInputs: SystemMeasureSpacingInput[] =
+            this.currentSystemParams.spacingInputs();
+        const currentSystem: MusicSystem =
+            this.currentSystemParams.currentSystem;
+        if (this.horizontalSystemSpacingPlanner && spacingInputs.length > 0) {
+            const systemEndX: number =
+                currentSystem.StaffLines[0].PositionAndShape.Size.width;
+            const availableVariableWidth: number = Math.max(
+                0,
+                systemEndX - this.currentSystemParams.currentSystemFixWidth,
+            );
+            systemSpacingLayout =
+                this.horizontalSystemSpacingPlanner.applySelectedSystem(
+                    spacingInputs,
+                    availableVariableWidth,
+                    systemEndsPart
+                        ? this.rules.LastSystemMaxScalingFactor
+                        : undefined,
+                );
+        } else if (systemEndsPart) {
             scalingFactor = Math.min(scalingFactor, this.rules.LastSystemMaxScalingFactor);
         }
-        const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
         for (let visStaffIdx: number = 0, len: number = currentSystem.StaffLines.length; visStaffIdx < len; ++visStaffIdx) {
             const staffLine: StaffLine = currentSystem.StaffLines[visStaffIdx];
             let currentXPosition: number = 0.0;
@@ -1048,7 +1126,14 @@ export class MusicSystemBuilder {
                 //         beginInstructionsWidth *= 1; // TODO the first measure in a system is always slightly too big. why? try e.g. 0.6
                 //     }
                 // }
-                measure.setWidth(beginInstructionsWidth + measure.minimumStaffEntriesWidth * scalingFactor + measure.endInstructionsWidth);
+                const variableWidth: number =
+                    systemSpacingLayout?.measureVariableWidths[measureIndex] ??
+                    measure.minimumStaffEntriesWidth * scalingFactor;
+                measure.setWidth(
+                    beginInstructionsWidth +
+                    variableWidth +
+                    measure.endInstructionsWidth,
+                );
                 if (measureIndex < this.currentSystemParams.systemMeasures.length) {
                     const startLine: SystemLinesEnum = this.currentSystemParams.systemMeasures[measureIndex].beginLine;
                     const lineWidth: number = measure.getLineWidth(SystemLinesEnum.BoldThinDots);
@@ -1064,7 +1149,10 @@ export class MusicSystemBuilder {
                         default:
                     }
                 }
-                measure.staffEntriesScaleFactor = scalingFactor;
+                measure.staffEntriesScaleFactor =
+                    measure.minimumStaffEntriesWidth > 0
+                        ? variableWidth / measure.minimumStaffEntriesWidth
+                        : 1;
                 measure.layoutSymbols();
                 const nextMeasureHasRepStartLine: boolean = measureIndex + 1 < this.currentSystemParams.systemMeasures.length
                     && this.currentSystemParams.systemMeasures[measureIndex + 1].beginLine === SystemLinesEnum.BoldThinDots;
@@ -1409,9 +1497,21 @@ export class SystemBuildParameters {
     public IsSystemStartMeasure(): boolean {
         return this.systemMeasureIndex === 0;
     }
+
+    public spacingInputs(): SystemMeasureSpacingInput[] {
+        return this.systemMeasures
+            .map(
+                (measure: MeasureBuildParameters): SystemMeasureSpacingInput =>
+                    measure.spacingInput,
+            )
+            .filter(
+                (input: SystemMeasureSpacingInput): boolean => !!input,
+            );
+    }
 }
 
 export class MeasureBuildParameters {
     public beginLine: SystemLinesEnum;
     public endLine: SystemLinesEnum;
+    public spacingInput?: SystemMeasureSpacingInput;
 }
