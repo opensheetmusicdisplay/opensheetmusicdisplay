@@ -5,6 +5,7 @@ import { GraphicalMeasure } from "../GraphicalMeasure";
 import { GraphicalMusicSheet } from "../GraphicalMusicSheet";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
+import { GraphicalChordSymbolContainer } from "../GraphicalChordSymbolContainer";
 import {
   HorizontalSystemSpacingCandidate,
   HorizontalSystemSpacingLayout,
@@ -63,6 +64,23 @@ interface CandidateLyric {
   renderedRow: number;
   staff: Staff;
   voiceId: number;
+}
+
+interface CandidateHarmony {
+  columnIndex: number;
+  leftOffsetPx: number;
+  placement: number;
+  rightOffsetPx: number;
+  staff: Staff;
+}
+
+interface HarmonyFootprint {
+  leftOffsetPx: number;
+  rightOffsetPx: number;
+}
+
+interface MeasureHarmonyEvent extends HarmonyFootprint {
+  timestamp: number;
 }
 
 interface CandidateSolution {
@@ -487,6 +505,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     const constraints: HorizontalSpacingConstraint[] = [
       ...collectSystemNotationConstraints(nodes),
       ...collectSystemLyricConstraints(measures, contextToColumn, nodes.length - 1, this.rules),
+      ...collectSystemHarmonyConstraints(measures, contextToColumn, nodes.length - 1, this.rules),
     ];
     const basePositions: number[] = nodes.map((node: CandidateNode): number => node.basePositionPx);
     const gapWeights: number[] = nodes
@@ -848,9 +867,13 @@ function collectMeasureProfiles(
       columns.map((column: ProfileColumn): number => column.intrinsicHardWidthPx),
     );
     const lastColumn: ProfileColumn = columns[columns.length - 1];
-    const minimumRequiredWidthPx: number = lastColumn
+    const notationMinimumRequiredWidthPx: number = lastColumn
       ? lastColumn.basePositionPx + lastColumn.notationRightExtentPx
       : 0;
+    const minimumRequiredWidthPx: number = Math.max(
+      notationMinimumRequiredWidthPx,
+      measureHarmonyMinimumWidthPx(graphicalMeasures, rhythmicEndTimestamp, rules),
+    );
     const profile: MeasureProfile = {
       compactPickup: isShortImplicitMeasure(sourceMeasure),
       compactTerminal: isShortImplicitMeasure(sourceMeasure) || columns.length > 1,
@@ -866,6 +889,101 @@ function collectMeasureProfiles(
     }
   }
   return profiles;
+}
+
+function measureHarmonyMinimumWidthPx(
+  graphicalMeasures: GraphicalMeasure[],
+  measureEnd: number,
+  rules: EngravingRules,
+): number {
+  if (!rules.RenderChordSymbols || !Number.isFinite(measureEnd) || measureEnd <= 0) {
+    return 0;
+  }
+
+  let minimumWidthPx: number = 0;
+  for (const measure of graphicalMeasures) {
+    const tracks: Map<number, Map<number, HarmonyFootprint>> =
+      new Map<number, Map<number, HarmonyFootprint>>();
+    for (const staffEntry of measure.staffEntries) {
+      const timestamp: number =
+        staffEntry.relInMeasureTimestamp?.RealValue ??
+        staffEntry.sourceStaffEntry?.Timestamp?.RealValue ??
+        0;
+      const normalizedTimestamp: number = Math.max(
+        0,
+        Math.min(1, timestamp / measureEnd),
+      );
+      for (const container of (staffEntry.graphicalChordContainers ?? []) as GraphicalChordSymbolContainer[]) {
+        const placement: number = container.GetChordSymbolContainer.Placement;
+        const track: Map<number, HarmonyFootprint> =
+          tracks.get(placement) ??
+          new Map<number, HarmonyFootprint>();
+        const current: HarmonyFootprint =
+          track.get(normalizedTimestamp);
+        const leftOffsetPx: number =
+          (
+            container.PositionAndShape.RelativePosition.x +
+            container.PositionAndShape.BorderMarginLeft
+          ) * unitInPixels;
+        const rightOffsetPx: number =
+          (
+            container.PositionAndShape.RelativePosition.x +
+            container.PositionAndShape.BorderMarginRight
+          ) * unitInPixels;
+        track.set(normalizedTimestamp, {
+          leftOffsetPx: current
+            ? Math.min(current.leftOffsetPx, leftOffsetPx)
+            : leftOffsetPx,
+          rightOffsetPx: current
+            ? Math.max(current.rightOffsetPx, rightOffsetPx)
+            : rightOffsetPx,
+        });
+        tracks.set(placement, track);
+      }
+    }
+    tracks.forEach(
+      (track: Map<number, HarmonyFootprint>): void => {
+        const events: MeasureHarmonyEvent[] = Array.from(track.entries())
+          .map(([timestamp, footprint]) => ({ timestamp, ...footprint }))
+          .sort((left, right) => left.timestamp - right.timestamp);
+        if (events.length === 0) {
+          return;
+        }
+        const first: MeasureHarmonyEvent = events[0];
+        if (first.timestamp > 0) {
+          minimumWidthPx = Math.max(
+            minimumWidthPx,
+            Math.max(0, -first.leftOffsetPx) / first.timestamp,
+          );
+        }
+        for (let index: number = 1; index < events.length; index++) {
+          const previous: MeasureHarmonyEvent = events[index - 1];
+          const current: MeasureHarmonyEvent = events[index];
+          const elapsed: number = current.timestamp - previous.timestamp;
+          if (elapsed <= 0) {
+            continue;
+          }
+          minimumWidthPx = Math.max(
+            minimumWidthPx,
+            Math.max(
+              0,
+              previous.rightOffsetPx -
+              current.leftOffsetPx +
+              rules.ChordSymbolXSpacing * unitInPixels,
+            ) / elapsed,
+          );
+        }
+        const last: MeasureHarmonyEvent = events[events.length - 1];
+        if (last.timestamp < 1) {
+          minimumWidthPx = Math.max(
+            minimumWidthPx,
+            Math.max(0, last.rightOffsetPx) / (1 - last.timestamp),
+          );
+        }
+      },
+    );
+  }
+  return minimumWidthPx;
 }
 
 function groupContextsByTick(
@@ -1141,6 +1259,139 @@ function collectSystemLyricConstraints(
   return constraints;
 }
 
+function collectSystemHarmonyConstraints(
+  measures: SystemMeasureSpacingInput[],
+  contextToColumn: Map<VF.TickContext, number>,
+  endColumnIndex: number,
+  rules: EngravingRules,
+): HorizontalSpacingConstraint[] {
+  if (!rules.RenderChordSymbols) {
+    return [];
+  }
+
+  const harmonyByStaffAndPlacement: Map<Staff, Map<number, CandidateHarmony[]>> =
+    new Map<Staff, Map<number, CandidateHarmony[]>>();
+  for (const input of measures) {
+    for (const measure of input.graphicalMeasures) {
+      if (!measure?.isVisible()) {
+        continue;
+      }
+      for (const staffEntry of measure.staffEntries) {
+        const context: VF.TickContext = findStaffEntryTickContext(staffEntry);
+        const columnIndex: number = contextToColumn.get(context);
+        if (!Number.isInteger(columnIndex)) {
+          continue;
+        }
+        for (const container of (staffEntry.graphicalChordContainers ?? []) as GraphicalChordSymbolContainer[]) {
+          if (
+            !container ||
+            container.PositionAndShape.Parent !== staffEntry.PositionAndShape
+          ) {
+            // Whole-rest and direction-only harmonies retain their existing
+            // proportional positioning because they do not own a rhythmic
+            // VexFlow column.
+            continue;
+          }
+          const anchorOffsetPx: number =
+            (
+              staffEntry.PositionAndShape.RelativePosition.x +
+              container.PositionAndShape.RelativePosition.x
+            ) * unitInPixels -
+            context.getX();
+          const candidate: CandidateHarmony = {
+            columnIndex,
+            leftOffsetPx:
+              anchorOffsetPx +
+              container.PositionAndShape.BorderMarginLeft * unitInPixels,
+            placement: container.GetChordSymbolContainer.Placement,
+            rightOffsetPx:
+              anchorOffsetPx +
+              container.PositionAndShape.BorderMarginRight * unitInPixels,
+            staff: measure.ParentStaff,
+          };
+          const byPlacement: Map<number, CandidateHarmony[]> =
+            harmonyByStaffAndPlacement.get(candidate.staff) ??
+            new Map<number, CandidateHarmony[]>();
+          const track: CandidateHarmony[] =
+            byPlacement.get(candidate.placement) ?? [];
+          track.push(candidate);
+          byPlacement.set(candidate.placement, track);
+          harmonyByStaffAndPlacement.set(candidate.staff, byPlacement);
+        }
+      }
+    }
+  }
+
+  const constraints: HorizontalSpacingConstraint[] = [];
+  harmonyByStaffAndPlacement.forEach(
+    (byPlacement: Map<number, CandidateHarmony[]>): void => {
+      byPlacement.forEach((track: CandidateHarmony[]): void => {
+        const columnGroups: CandidateHarmony[][] = groupHarmonyByColumn(track);
+        for (const group of columnGroups) {
+          const columnIndex: number = group[0].columnIndex;
+          const leftOffsetPx: number = Math.min(
+            ...group.map((harmony: CandidateHarmony): number => harmony.leftOffsetPx),
+          );
+          const rightOffsetPx: number = Math.max(
+            ...group.map((harmony: CandidateHarmony): number => harmony.rightOffsetPx),
+          );
+          constraints.push({
+            fromColumn: 0,
+            minimumDistance: Math.max(0, -leftOffsetPx),
+            reason: "system-edge",
+            toColumn: columnIndex,
+          });
+          constraints.push({
+            fromColumn: columnIndex,
+            minimumDistance: Math.max(0, rightOffsetPx),
+            reason: "system-edge",
+            toColumn: endColumnIndex,
+          });
+        }
+        for (let groupIndex: number = 1; groupIndex < columnGroups.length; groupIndex++) {
+          const previousGroup: CandidateHarmony[] = columnGroups[groupIndex - 1];
+          const currentGroup: CandidateHarmony[] = columnGroups[groupIndex];
+          const previousRightOffsetPx: number = Math.max(
+            ...previousGroup.map((harmony: CandidateHarmony): number => harmony.rightOffsetPx),
+          );
+          const currentLeftOffsetPx: number = Math.min(
+            ...currentGroup.map((harmony: CandidateHarmony): number => harmony.leftOffsetPx),
+          );
+          constraints.push({
+            fromColumn: previousGroup[0].columnIndex,
+            minimumDistance: Math.max(
+              0,
+              previousRightOffsetPx -
+              currentLeftOffsetPx +
+              rules.ChordSymbolXSpacing * unitInPixels,
+            ),
+            reason: "harmony",
+            toColumn: currentGroup[0].columnIndex,
+          });
+        }
+      });
+    },
+  );
+  return constraints;
+}
+
+function groupHarmonyByColumn(harmonies: CandidateHarmony[]): CandidateHarmony[][] {
+  const sorted: CandidateHarmony[] = [...harmonies].sort(
+    (left: CandidateHarmony, right: CandidateHarmony): number =>
+      left.columnIndex - right.columnIndex,
+  );
+  const groups: CandidateHarmony[][] = [];
+  for (const harmony of sorted) {
+    const currentGroup: CandidateHarmony[] = groups[groups.length - 1];
+    if (!currentGroup || currentGroup[0].columnIndex !== harmony.columnIndex) {
+      groups.push([harmony]);
+    } else {
+      currentGroup.push(harmony);
+    }
+  }
+  return groups;
+}
+
 function groupLyricsByColumn(lyrics: CandidateLyric[]): CandidateLyric[][] {
   const sortedLyrics: CandidateLyric[] = [...lyrics].sort(
     (left: CandidateLyric, right: CandidateLyric): number =>
@@ -1156,6 +1407,24 @@ function groupLyricsByColumn(lyrics: CandidateLyric[]): CandidateLyric[][] {
     }
   }
   return groups;
+}
+
+function findStaffEntryTickContext(staffEntry: GraphicalStaffEntry): VF.TickContext {
+  for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+    if (voiceEntry.parentVoiceEntry?.IsGrace) {
+      continue;
+    }
+    const note: VF.Note = (
+      voiceEntry as GraphicalVoiceEntry & {
+        vfStaveNote?: VF.Note;
+      }
+    ).vfStaveNote;
+    const context: VF.TickContext = note?.getTickContext?.();
+    if (context) {
+      return context;
+    }
+  }
+  return undefined;
 }
 
 function lyricPairConstraint(

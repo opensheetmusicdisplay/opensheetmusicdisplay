@@ -87,5 +87,23 @@
       </harmony>
       <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
     </measure>
+    <measure number="4">
+      <print new-system="yes"/>
+      <attributes><time><beats>2</beats><beat-type>4</beat-type></time></attributes>
+      <harmony>
+        <root><root-step>C</root-step><root-alter>1</root-alter></root><kind>major-sixth</kind>
+        <degree>
+          <degree-value>9</degree-value><degree-alter>0</degree-alter><degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <harmony>
+        <root><root-step>E</root-step></root><kind>minor-sixth</kind>
+        <degree>
+          <degree-value>9</degree-value><degree-alter>0</degree-alter><degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+    </measure>
   </part>
 </score-partwise>

@@ -16,6 +16,7 @@ import { TestUtils } from "../../Util/TestUtils";
 import * as VF from "vexflow/core";
 
 interface LabelRect {
+    baseline: number;
     left: number;
     right: number;
     top: number;
@@ -69,6 +70,7 @@ function collectChordLabelRects(staffLine: StaffLine): LabelRect[] {
                 const label: GraphicalLabel = chordContainer.GraphicalLabel;
                 const pos: { x: number, y: number } = absolutePosition(label.PositionAndShape);
                 rects.push({
+                    baseline: pos.y,
                     left: pos.x + label.PositionAndShape.BorderLeft,
                     right: pos.x + label.PositionAndShape.BorderRight,
                     top: pos.y + label.PositionAndShape.BorderTop,
@@ -127,17 +129,17 @@ describe("Chord symbol and repetition instruction collision avoidance", () => {
             }
         });
 
-        it("stacks colliding chord symbols above each other", () => {
+        it("keeps horizontally constrained chord symbols on one line", () => {
             let stackedPairFound: boolean = false;
             for (const staffLine of staffLines) {
                 const rects: LabelRect[] = collectChordLabelRects(staffLine);
                 for (let i: number = 1; i < rects.length; i++) {
-                    if (Math.abs(rects[i].top - rects[i - 1].top) > 0.5) {
+                    if (Math.abs(rects[i].baseline - rects[i - 1].baseline) > 0.5) {
                         stackedPairFound = true;
                     }
                 }
             }
-            expect(stackedPairFound, "at least one chord symbol is stacked above a colliding one").to.equal(true);
+            expect(stackedPairFound, "chord symbols should reserve horizontal space").to.equal(false);
         });
     });
 

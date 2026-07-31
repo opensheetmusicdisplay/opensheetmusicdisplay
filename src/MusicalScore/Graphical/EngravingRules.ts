@@ -364,6 +364,8 @@ export class EngravingRules {
     public GlissandoDefaultWidth: number;
     public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
+    /** Text height for instantaneous dynamics such as pp, mf, and sfz. */
+    public InstantaneousDynamicTextHeight: number;
     public ContinuousDynamicTextHeight: number;
     /** Whether to use the XML offset value for expressions, especially wedges (crescendo). See #1477 */
     public UseEndOffsetForExpressions: boolean;
@@ -930,6 +932,7 @@ export class EngravingRules {
         // expressions variables
         this.TempoYSpacing = 0.5; // note this is correlated with MetronomeMarkYShift: one-sided change can cause collisions
         this.InstantaneousTempoTextHeight = 2.3;
+        this.InstantaneousDynamicTextHeight = 4.6;
         this.ContinuousDynamicTextHeight = 2.3;
         this.UseEndOffsetForExpressions = true;
         this.MoodTextHeight = 2.3;
@@ -1266,8 +1269,8 @@ export class EngravingRules {
         this.addChordName("m△9", "majorminor", ["9"], [], []);
         this.addChordName("m△11", "majorminor", ["11"], [], []);
         this.addChordName("m△13", "majorminor", ["13"], [], []);
-        this.addChordName("69", "majorsixth", ["9"], [], []);
-        this.addChordName("mi69", "minorsixth", ["9"], [], []);
+        this.addChordName("6/9", "majorsixth", ["9"], [], []);
+        this.addChordName("m6/9", "minorsixth", ["9"], [], []);
     }
 
     /**

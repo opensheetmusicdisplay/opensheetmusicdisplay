@@ -34,7 +34,7 @@ export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneou
             ),
         }];
         this.label = new GraphicalLabel(sourceLabel,
-                                        this.rules.ContinuousDynamicTextHeight,
+                                        this.rules.InstantaneousDynamicTextHeight,
                                         TextAlignmentEnum.CenterCenter,
                                         this.rules,
                                         this.PositionAndShape);

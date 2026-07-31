@@ -15,6 +15,10 @@ import {PlacementEnum} from "../VoiceData/Expressions";
 import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import {buildDoricoChordSymbolTextLines, getDoricoDefaultTextFontFamily} from "./DoricoTextFontRouting";
 import {GraphicalLine} from "./GraphicalLine";
+import {
+    SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+    SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+} from "../../Common/DataObjects/ChordSymbolGlyphs";
 
 export class GraphicalChordSymbolContainer extends GraphicalObject {
     private chordSymbolContainer: ChordSymbolContainer;
@@ -138,7 +142,7 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
             this.chordSymbolContainer.calculateComponentText(
                 component, this.transposeHalftones, this.keyInstruction,
             ),
-        ).join(" / ");
+        ).join("/");
         this.createLabel(text, TextAlignmentEnum.LeftBottom, this.rules.ChordSymbolRelativeXOffset, 0);
     }
 
@@ -185,7 +189,12 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
                 -this.textHeight * 0.15 + index * this.textHeight * 1.1,
             );
             if (previousLabel) {
-                this.positionDiagonalLowerLabel(previousLabel, label);
+                this.positionDiagonalLowerLabel(
+                    previousLabel,
+                    label,
+                    undefined,
+                    SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+                );
             }
             previousLabel = label;
         }
@@ -223,13 +232,18 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
             this.chordSymbolContainer.calculateBassText(component, this.transposeHalftones, this.keyInstruction),
             TextAlignmentEnum.LeftBottom,
             0,
-            this.textHeight * 0.95,
+            this.textHeight * 0.72,
         );
         if (component.BassArrangement === HarmonyBassArrangement.Vertical) {
             this.positionVerticalBassLabel(upperLabel, bassLabel, component);
             return;
         }
-        this.positionDiagonalLowerLabel(upperLabel, bassLabel, component.BassSeparator?.text);
+        this.positionDiagonalLowerLabel(
+            upperLabel,
+            bassLabel,
+            component.BassSeparator?.text,
+            SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+        );
     }
 
     private positionVerticalBassLabel(upperLabel: GraphicalLabel, bassLabel: GraphicalLabel,
@@ -259,32 +273,30 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         }
     }
 
-    private positionDiagonalLowerLabel(upperLabel: GraphicalLabel, lowerLabel: GraphicalLabel,
-                                       explicitSeparator?: string): void {
-        const lineLength: number = this.textHeight * 0.62;
-        const start: PointF2D = new PointF2D(
+    private positionDiagonalLowerLabel(
+        upperLabel: GraphicalLabel,
+        lowerLabel: GraphicalLabel,
+        explicitSeparator?: string,
+        slashGlyph: string = SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+    ): void {
+        const horizontalGap: number = this.textHeight * 0.04;
+        const separatorX: number =
             upperLabel.PositionAndShape.RelativePosition.x +
-                upperLabel.PositionAndShape.Size.width + this.textHeight * 0.12,
-            upperLabel.PositionAndShape.RelativePosition.y + this.textHeight * 0.07,
+            upperLabel.PositionAndShape.BorderRight +
+            horizontalGap;
+        const separatorY: number =
+            (upperLabel.PositionAndShape.RelativePosition.y +
+                lowerLabel.PositionAndShape.RelativePosition.y) / 2;
+        const separatorLabel: GraphicalLabel = this.createLabel(
+            explicitSeparator ?? slashGlyph,
+            TextAlignmentEnum.LeftCenter,
+            separatorX,
+            separatorY,
         );
-        const end: PointF2D = new PointF2D(start.x + lineLength, start.y + lineLength);
-        let lowerLabelX: number = end.x;
-        if (explicitSeparator) {
-            const separatorLabel: GraphicalLabel = this.createLabel(
-                explicitSeparator,
-                TextAlignmentEnum.LeftCenter,
-                start.x,
-                (start.y + end.y) / 2,
-            );
-            lowerLabelX = Math.max(
-                lowerLabelX,
-                separatorLabel.PositionAndShape.RelativePosition.x +
-                    separatorLabel.PositionAndShape.Size.width,
-            );
-        } else {
-            this.createSeparator(start, end);
-        }
-        lowerLabel.PositionAndShape.RelativePosition.x = lowerLabelX + this.textHeight * 0.12;
+        lowerLabel.PositionAndShape.RelativePosition.x =
+            separatorLabel.PositionAndShape.RelativePosition.x +
+            separatorLabel.PositionAndShape.BorderRight +
+            horizontalGap;
     }
 
     private createLabel(text: string, alignment: TextAlignmentEnum, x: number, y: number,

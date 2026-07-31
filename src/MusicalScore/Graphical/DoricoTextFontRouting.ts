@@ -1,6 +1,15 @@
 import { LabelTextLine, LabelTextRun } from "../Label";
 import { AccidentalEnum } from "../../Common/DataObjects/Pitch";
 import { EngravingRules } from "./EngravingRules";
+import {
+    SMUFL_CHORD_ACCIDENTAL_DOUBLE_FLAT_GLYPH,
+    SMUFL_CHORD_ACCIDENTAL_DOUBLE_SHARP_GLYPH,
+    SMUFL_CHORD_ACCIDENTAL_FLAT_GLYPH,
+    SMUFL_CHORD_ACCIDENTAL_NATURAL_GLYPH,
+    SMUFL_CHORD_ACCIDENTAL_SHARP_GLYPH,
+    SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+    SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+} from "../../Common/DataObjects/ChordSymbolGlyphs";
 
 type DoricoDeferredTextFontAudit = {
     tempo: string;
@@ -96,12 +105,32 @@ function collectChordMusicTextTokens(rules?: EngravingRules): ChordMusicTextToke
     addChordMusicTextToken(tokenMap, "\uE872", "\uE872");
     addChordMusicTextToken(tokenMap, "\uE873", "\uE873");
     addChordMusicTextToken(tokenMap, "\uE874", "\uE874");
+    addChordMusicTextToken(
+        tokenMap,
+        SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+        SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+    );
+    addChordMusicTextToken(
+        tokenMap,
+        SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+        SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+    );
 
-    addRuleAccidentalToken(tokenMap, rules, AccidentalEnum.FLAT, "b", "♭");
-    addRuleAccidentalToken(tokenMap, rules, AccidentalEnum.NATURAL, "n", "♮");
-    addRuleAccidentalToken(tokenMap, rules, AccidentalEnum.SHARP, "#", "♯");
-    addRuleAccidentalToken(tokenMap, rules, AccidentalEnum.DOUBLESHARP, "x", "𝄪");
-    addRuleAccidentalToken(tokenMap, rules, AccidentalEnum.DOUBLEFLAT, "bb", "𝄫");
+    addRuleAccidentalToken(
+        tokenMap, rules, AccidentalEnum.FLAT, "b", SMUFL_CHORD_ACCIDENTAL_FLAT_GLYPH,
+    );
+    addRuleAccidentalToken(
+        tokenMap, rules, AccidentalEnum.NATURAL, "n", SMUFL_CHORD_ACCIDENTAL_NATURAL_GLYPH,
+    );
+    addRuleAccidentalToken(
+        tokenMap, rules, AccidentalEnum.SHARP, "#", SMUFL_CHORD_ACCIDENTAL_SHARP_GLYPH,
+    );
+    addRuleAccidentalToken(
+        tokenMap, rules, AccidentalEnum.DOUBLESHARP, "x", SMUFL_CHORD_ACCIDENTAL_DOUBLE_SHARP_GLYPH,
+    );
+    addRuleAccidentalToken(
+        tokenMap, rules, AccidentalEnum.DOUBLEFLAT, "bb", SMUFL_CHORD_ACCIDENTAL_DOUBLE_FLAT_GLYPH,
+    );
 
     return Array.from(tokenMap.entries())
         .map(([source, display]) => ({ source, display }))

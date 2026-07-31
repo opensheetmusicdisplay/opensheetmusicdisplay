@@ -3,6 +3,7 @@ export type HorizontalSpacingConstraintReason =
     "lyric" |
     "hyphen" |
     "extender" |
+    "harmony" |
     "system-edge";
 
 export interface HorizontalSpacingConstraint {

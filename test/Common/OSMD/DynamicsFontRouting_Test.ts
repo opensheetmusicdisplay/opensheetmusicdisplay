@@ -45,6 +45,11 @@ describe("MusicXML dynamics font routing", (): void => {
     expect(graphicalExpressions.every((expression) =>
       expression.Label.Label.fontStyle === FontStyles.Regular,
     )).to.equal(true);
+    expect(graphicalExpressions.every((expression) =>
+      expression.Label.Label.fontHeight === osmd.Sheet.Rules.InstantaneousDynamicTextHeight,
+    )).to.equal(true);
+    expect(osmd.Sheet.Rules.InstantaneousDynamicTextHeight)
+      .to.equal(osmd.Sheet.Rules.ContinuousDynamicTextHeight * 2);
 
     const glyphs: (text: string) => string = (text: string): string => text.split("")
       .map((letter: string): string => TextDynamics.GLYPHS[letter])

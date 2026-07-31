@@ -1,14 +1,17 @@
 import {expect} from "chai";
 import {GraphicalChordSymbolContainer} from
   "../../../src/MusicalScore/Graphical/GraphicalChordSymbolContainer";
-import {GraphicalLine} from "../../../src/MusicalScore/Graphical/GraphicalLine";
+import {GraphicalLabel} from "../../../src/MusicalScore/Graphical/GraphicalLabel";
 import {
   ChordSymbolContainer,
   HarmonyArrangement,
   HarmonyBassArrangement,
 } from "../../../src/MusicalScore/VoiceData/ChordSymbolContainer";
 import {
+  SMUFL_CHORD_ACCIDENTAL_SHARP_GLYPH,
+  SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
   SMUFL_CHORD_AUGMENTED_GLYPH,
+  SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
   SMUFL_CHORD_DIMINISHED_GLYPH,
   SMUFL_CHORD_HALF_DIMINISHED_GLYPH,
   SMUFL_CHORD_MAJOR_SEVENTH_GLYPH,
@@ -51,11 +54,16 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
     const qualityTexts: string[] = sourceChords.slice(6, 11).map((chord) =>
       chord.calculateUpperHarmonyText(chord.Components[0], 0, key),
     );
-    expect(qualityTexts[0]).to.include(SMUFL_CHORD_MINOR_GLYPH);
+    expect(qualityTexts[0]).to.equal("Cm");
+    expect(qualityTexts[0]).to.not.include(SMUFL_CHORD_MINOR_GLYPH);
     expect(qualityTexts[1]).to.include(SMUFL_CHORD_AUGMENTED_GLYPH);
     expect(qualityTexts[2]).to.include(SMUFL_CHORD_DIMINISHED_GLYPH);
     expect(qualityTexts[3]).to.include(SMUFL_CHORD_HALF_DIMINISHED_GLYPH);
     expect(qualityTexts[4]).to.include(SMUFL_CHORD_MAJOR_SEVENTH_GLYPH);
+    expect(sourceChords[15].calculateUpperHarmonyText(sourceChords[15].Components[0], 0, key))
+      .to.equal("C#6/9");
+    expect(sourceChords[16].calculateUpperHarmonyText(sourceChords[16].Components[0], 0, key))
+      .to.equal("Em6/9");
   });
 
   it("lays out fraction, diagonal, custom, and abbreviated chord geometry inside aggregate bounds", async (): Promise<void> => {
@@ -74,17 +82,28 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
       .to.be.closeTo(vertical.GraphicalSeparators[0].Line.End.y, 0.0001);
 
     const diagonal: GraphicalChordSymbolContainer = firstSystem[2];
-    const diagonalLine: GraphicalLine = diagonal.GraphicalSeparators[0].Line;
-    expect(diagonalLine.End.x - diagonalLine.Start.x)
-      .to.be.closeTo(diagonalLine.End.y - diagonalLine.Start.y, 0.0001);
+    expect(diagonal.GraphicalSeparators).to.have.length(0);
+    expect(diagonal.GraphicalLabels.some((label) =>
+      label.Label.text === SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+    )).to.equal(true);
 
     const firstSlash: GraphicalChordSymbolContainer = firstSystem[3];
     const abbreviatedSlash: GraphicalChordSymbolContainer = firstSystem[4];
     expect(firstSlash.IsUpperChordAbbreviated).to.equal(false);
     expect(abbreviatedSlash.IsUpperChordAbbreviated).to.equal(true);
     expect(abbreviatedSlash.GraphicalLabels[0].Label.print).to.equal(false);
-    expect(abbreviatedSlash.GraphicalSeparators[0].Line.Start.x)
-      .to.be.closeTo(firstSlash.GraphicalSeparators[0].Line.Start.x, 0.001);
+    expect(firstSlash.GraphicalSeparators).to.have.length(0);
+    expect(abbreviatedSlash.GraphicalSeparators).to.have.length(0);
+    const firstSlashGlyph: GraphicalLabel = firstSlash.GraphicalLabels.find((label) =>
+      label.Label.text === SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+    );
+    const abbreviatedSlashGlyph: GraphicalLabel = abbreviatedSlash.GraphicalLabels.find((label) =>
+      label.Label.text === SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+    );
+    expect(firstSlashGlyph).to.not.equal(undefined);
+    expect(abbreviatedSlashGlyph).to.not.equal(undefined);
+    expect(abbreviatedSlashGlyph.PositionAndShape.RelativePosition.x)
+      .to.be.closeTo(firstSlashGlyph.PositionAndShape.RelativePosition.x, 0.001);
 
     const customSeparator: GraphicalChordSymbolContainer = firstSystem[5];
     expect(customSeparator.GraphicalSeparators).to.have.length(0);
@@ -116,7 +135,9 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
       SMUFL_CHORD_HALF_DIMINISHED_GLYPH,
       SMUFL_CHORD_AUGMENTED_GLYPH,
       SMUFL_CHORD_MAJOR_SEVENTH_GLYPH,
-      SMUFL_CHORD_MINOR_GLYPH,
+      SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+      SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+      SMUFL_CHORD_ACCIDENTAL_SHARP_GLYPH,
     ];
     const renderedText: SVGTextElement[] = Array.from(document.querySelectorAll("text"));
     for (const glyph of qualityGlyphs) {
@@ -124,6 +145,11 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
       expect(node, `missing chord glyph U+${glyph.charCodeAt(0).toString(16)}`).to.not.equal(undefined);
       expect(node.getAttribute("font-family")).to.equal("Bravura Text");
     }
+    const minorNode: SVGTextElement = renderedText.find((candidate) =>
+      candidate.textContent === "Cm",
+    );
+    expect(minorNode).to.not.equal(undefined);
+    expect(minorNode.getAttribute("font-family")).to.equal("Academico");
 
     const firstGeometry: string[] = harmonyGeometry(osmd);
     osmd.updateGraphic();

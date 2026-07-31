@@ -9,7 +9,6 @@ import {
     SMUFL_CHORD_DIMINISHED_GLYPH,
     SMUFL_CHORD_HALF_DIMINISHED_GLYPH,
     SMUFL_CHORD_MAJOR_SEVENTH_GLYPH,
-    SMUFL_CHORD_MINOR_GLYPH,
 } from "../../Common/DataObjects/ChordSymbolGlyphs";
 
 export class ChordSymbolContainer {
@@ -217,13 +216,6 @@ export class ChordSymbolContainer {
     private getTextFromChordKindEnum(kind: ChordSymbolEnum): string {
         const configured: string = this.rules.ChordSymbolLabelTexts.getValue(kind) ?? "";
         switch (kind) {
-            case ChordSymbolEnum.minor:
-            case ChordSymbolEnum.minorseventh:
-            case ChordSymbolEnum.minorsixth:
-            case ChordSymbolEnum.minorninth:
-            case ChordSymbolEnum.minor11th:
-            case ChordSymbolEnum.minor13th:
-                return configured.replace(/^(?:minor|mi|m)(?!aj)/i, SMUFL_CHORD_MINOR_GLYPH);
             case ChordSymbolEnum.augmented:
             case ChordSymbolEnum.augmentedseventh:
                 return configured.replace(/^(?:aug|\+)/i, SMUFL_CHORD_AUGMENTED_GLYPH);
