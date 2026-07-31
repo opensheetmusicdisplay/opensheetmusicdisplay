@@ -9,6 +9,8 @@ type DoricoDeferredTextFontAudit = {
 type DoricoTextFontAudit = {
     defaultScoreText: string;
     musicText: string;
+    dynamics: string;
+    literalDynamics: string;
     chordText: string;
     chordMusicText: string;
     measureNumbers: string;
@@ -27,6 +29,7 @@ type ChordMusicTextToken = {
 };
 
 export const DORICO_DEFAULT_TEXT_FONT_FAMILY: string = "Academico";
+export const DORICO_NOTATION_FONT_FAMILY: string = "Bravura";
 export const DORICO_MUSIC_TEXT_FONT_FAMILY: string = "Bravura Text";
 export const DORICO_CHORD_DIMINISHED_SYMBOL: string = "o";
 export const DORICO_CHORD_HALFDIMINISHED_SYMBOL: string = "ø";
@@ -39,6 +42,8 @@ const CHORD_SUPERSCRIPT_BASELINE_SHIFT: number = -0.35;
 export const DORICO_TEXT_FONT_AUDIT: DoricoTextFontAudit = Object.freeze({
     defaultScoreText: DORICO_DEFAULT_TEXT_FONT_FAMILY,
     musicText: DORICO_MUSIC_TEXT_FONT_FAMILY,
+    dynamics: DORICO_NOTATION_FONT_FAMILY,
+    literalDynamics: DORICO_DEFAULT_TEXT_FONT_FAMILY,
     chordText: DORICO_DEFAULT_TEXT_FONT_FAMILY,
     chordMusicText: DORICO_MUSIC_TEXT_FONT_FAMILY,
     measureNumbers: DORICO_DEFAULT_TEXT_FONT_FAMILY,

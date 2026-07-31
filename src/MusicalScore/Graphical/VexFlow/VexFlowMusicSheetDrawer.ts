@@ -936,7 +936,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             }
         }
         let { fontStyle, fontFamily } = graphicalLabel.Label;
-        if (!fontStyle) {
+        if (fontStyle === undefined || fontStyle === null) {
             fontStyle = this.rules.DefaultFontStyle;
         }
         if (!fontFamily) {

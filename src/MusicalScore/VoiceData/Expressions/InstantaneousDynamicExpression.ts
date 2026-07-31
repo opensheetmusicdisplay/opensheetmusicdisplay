@@ -37,10 +37,19 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     }
 
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number,
-                measure: SourceMeasure) {
+                measure: SourceMeasure, components?: InstantaneousDynamicComponent[]) {
         super(placement);
         this.parentMeasure = measure;
+        this.components = components?.length > 0
+            ? components.map((component: InstantaneousDynamicComponent) => ({...component}))
+            : [{
+                type: InstantaneousDynamicComponentType.Standard,
+                text: dynamicExpression,
+            }];
         this.dynamicEnum = DynamicEnum[dynamicExpression.toLowerCase()];
+        if (this.dynamicEnum === undefined) {
+            this.dynamicEnum = DynamicEnum.other;
+        }
         this.soundDynamic = soundDynamics;
         this.staffNumber = staffNumber;
     }
@@ -52,6 +61,7 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     private soundDynamic: number;
     private staffNumber: number;
     private length: number;
+    private components: InstantaneousDynamicComponent[];
     public InMeasureTimestamp: Fraction;
 
     public get ParentMultiExpression(): MultiExpression {
@@ -65,6 +75,12 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     }
     public set DynEnum(value: DynamicEnum) {
         this.dynamicEnum = value;
+    }
+    public get Components(): InstantaneousDynamicComponent[] {
+        return this.components;
+    }
+    public get DisplayText(): string {
+        return this.components.map((component: InstantaneousDynamicComponent) => component.text).join("");
     }
     public get SoundDynamic(): number {
         return this.soundDynamic;
@@ -160,6 +176,16 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         return 0.0;
     }
 
+}
+
+export enum InstantaneousDynamicComponentType {
+    Standard = "standard",
+    Literal = "literal",
+}
+
+export interface InstantaneousDynamicComponent {
+    type: InstantaneousDynamicComponentType;
+    text: string;
 }
 
 export enum DynamicEnum {
