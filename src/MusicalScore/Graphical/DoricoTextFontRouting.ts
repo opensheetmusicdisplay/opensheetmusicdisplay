@@ -139,7 +139,8 @@ function collectChordMusicTextTokens(rules?: EngravingRules): ChordMusicTextToke
 
 type ChordLayoutSegment = {
     text: string;
-    superscript?: boolean;
+    fontScale?: number;
+    baselineShift?: number;
 };
 
 function splitChordSymbolRuns(
@@ -162,8 +163,8 @@ function splitChordSymbolRuns(
                     runs,
                     token.display,
                     musicTextFontFamily,
-                    segment.superscript ? CHORD_SUPERSCRIPT_FONT_SCALE : 1,
-                    segment.superscript ? CHORD_SUPERSCRIPT_BASELINE_SHIFT : 0,
+                    segment.fontScale ?? 1,
+                    segment.baselineShift ?? 0,
                 );
                 index += token.source.length;
                 continue;
@@ -177,8 +178,8 @@ function splitChordSymbolRuns(
                 runs,
                 nextSymbol,
                 textFontFamily,
-                segment.superscript ? CHORD_SUPERSCRIPT_FONT_SCALE : 1,
-                segment.superscript ? CHORD_SUPERSCRIPT_BASELINE_SHIFT : 0,
+                segment.fontScale ?? 1,
+                segment.baselineShift ?? 0,
             );
             index += nextSymbol.length;
         }
@@ -277,7 +278,35 @@ function splitChordSymbolSegments(text: string): ChordLayoutSegment[] {
         }
         const superscriptText: string = suffixText.slice(baselinePrefix.length);
         if (superscriptText) {
-            segments.push({ text: superscriptText, superscript: true });
+            const sixNineMatch: RegExpMatchArray = superscriptText.match(/^(.*?)6\/9(.*)$/);
+            if (sixNineMatch) {
+                if (sixNineMatch[1]) {
+                    segments.push({
+                        text: sixNineMatch[1],
+                        fontScale: CHORD_SUPERSCRIPT_FONT_SCALE,
+                        baselineShift: CHORD_SUPERSCRIPT_BASELINE_SHIFT,
+                    });
+                }
+                // 6/9 is a compact diagonal extension, not a stacked fraction and
+                // not an altered-bass separator. Academico has no dedicated SMuFL
+                // glyph for the construction, so use its typographic fraction slash.
+                segments.push({ text: "6", fontScale: 0.62, baselineShift: -0.52 });
+                segments.push({ text: "\u2044", fontScale: 0.66, baselineShift: -0.25 });
+                segments.push({ text: "9", fontScale: 0.62, baselineShift: 0.02 });
+                if (sixNineMatch[2]) {
+                    segments.push({
+                        text: sixNineMatch[2],
+                        fontScale: CHORD_SUPERSCRIPT_FONT_SCALE,
+                        baselineShift: CHORD_SUPERSCRIPT_BASELINE_SHIFT,
+                    });
+                }
+            } else {
+                segments.push({
+                    text: superscriptText,
+                    fontScale: CHORD_SUPERSCRIPT_FONT_SCALE,
+                    baselineShift: CHORD_SUPERSCRIPT_BASELINE_SHIFT,
+                });
+            }
         }
     }
     if (bassText) {

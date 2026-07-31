@@ -105,5 +105,19 @@
       </harmony>
       <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
     </measure>
+    <measure number="5">
+      <print new-system="yes"/>
+      <attributes><time><beats>2</beats><beat-type>4</beat-type></time></attributes>
+      <harmony>
+        <root><root-step>D</root-step><root-alter>-1</root-alter></root><kind>major-seventh</kind>
+        <bass><bass-step>A</bass-step><bass-alter>-1</bass-alter></bass>
+      </harmony>
+      <note><pitch><step>D</step><alter>-1</alter><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <harmony arrangement="horizontal">
+        <root><root-step>G</root-step><root-alter>-1</root-alter></root><kind>major</kind>
+        <root><root-step>C</root-step></root><kind>dominant</kind>
+      </harmony>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+    </measure>
   </part>
 </score-partwise>

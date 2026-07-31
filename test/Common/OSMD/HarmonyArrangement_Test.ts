@@ -2,6 +2,8 @@ import {expect} from "chai";
 import {GraphicalChordSymbolContainer} from
   "../../../src/MusicalScore/Graphical/GraphicalChordSymbolContainer";
 import {GraphicalLabel} from "../../../src/MusicalScore/Graphical/GraphicalLabel";
+import {GraphicalLine} from "../../../src/MusicalScore/Graphical/GraphicalLine";
+import {LabelTextRun} from "../../../src/MusicalScore/Label";
 import {
   ChordSymbolContainer,
   HarmonyArrangement,
@@ -9,7 +11,6 @@ import {
 } from "../../../src/MusicalScore/VoiceData/ChordSymbolContainer";
 import {
   SMUFL_CHORD_ACCIDENTAL_SHARP_GLYPH,
-  SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
   SMUFL_CHORD_AUGMENTED_GLYPH,
   SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
   SMUFL_CHORD_DIMINISHED_GLYPH,
@@ -66,7 +67,7 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
       .to.equal("Em6/9");
   });
 
-  it("lays out fraction, diagonal, custom, and abbreviated chord geometry inside aggregate bounds", async (): Promise<void> => {
+  it("lays out canonical polychord, slash, custom, and abbreviated geometry inside aggregate bounds", async (): Promise<void> => {
     const osmd: OpenSheetMusicDisplay = await loadHarmonyScore();
     const systems: GraphicalChordSymbolContainer[][] = osmd.GraphicSheet.MusicPages
       .flatMap((page) => page.MusicSystems)
@@ -75,17 +76,11 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
         .flatMap((entry) => entry.graphicalChordContainers),
       );
     const firstSystem: GraphicalChordSymbolContainer[] = systems[0];
-    const vertical: GraphicalChordSymbolContainer = firstSystem[0];
-    expect(vertical.GraphicalLabels).to.have.length(2);
-    expect(vertical.GraphicalSeparators).to.have.length(1);
-    expect(vertical.GraphicalSeparators[0].Line.Start.y)
-      .to.be.closeTo(vertical.GraphicalSeparators[0].Line.End.y, 0.0001);
-
-    const diagonal: GraphicalChordSymbolContainer = firstSystem[2];
-    expect(diagonal.GraphicalSeparators).to.have.length(0);
-    expect(diagonal.GraphicalLabels.some((label) =>
-      label.Label.text === SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
-    )).to.equal(true);
+    // MusicXML arrangement metadata is retained, but all genuine polychords use
+    // the same centred fraction presentation.
+    for (const polychord of firstSystem.slice(0, 3)) {
+      expectCanonicalPolychord(polychord);
+    }
 
     const firstSlash: GraphicalChordSymbolContainer = firstSystem[3];
     const abbreviatedSlash: GraphicalChordSymbolContainer = firstSystem[4];
@@ -95,10 +90,10 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
     expect(firstSlash.GraphicalSeparators).to.have.length(0);
     expect(abbreviatedSlash.GraphicalSeparators).to.have.length(0);
     const firstSlashGlyph: GraphicalLabel = firstSlash.GraphicalLabels.find((label) =>
-      label.Label.text === SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+      label.Label.text === SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
     );
     const abbreviatedSlashGlyph: GraphicalLabel = abbreviatedSlash.GraphicalLabels.find((label) =>
-      label.Label.text === SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+      label.Label.text === SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
     );
     expect(firstSlashGlyph).to.not.equal(undefined);
     expect(abbreviatedSlashGlyph).to.not.equal(undefined);
@@ -120,12 +115,25 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
 
     expect(systems[2][0].IsUpperChordAbbreviated).to.equal(false);
     expect(systems[2][1].IsUpperChordAbbreviated).to.equal(true);
-    expect(systems[2][2].GraphicalLabels).to.have.length(1);
-    expect(systems[2][2].GraphicalSeparators).to.have.length(0);
-    expect(systems[2][3].GraphicalLabels).to.have.length(2);
-    expect(systems[2][3].GraphicalSeparators).to.have.length(1);
-    expect(systems[2][3].GraphicalSeparators[0].Line.Start.y)
-      .to.be.closeTo(systems[2][3].GraphicalSeparators[0].Line.End.y, 0.0001);
+    expectCanonicalSlashChord(systems[2][2]);
+    expectCanonicalSlashChord(systems[2][3]);
+
+    const sixNineChords: GraphicalChordSymbolContainer[] = systems[3];
+    for (const chord of sixNineChords) {
+      const runs: LabelTextRun[] = chord.GraphicalLabels[0].Label.textLines[0].runs;
+      const sixIndex: number = runs.findIndex((run) => run.text === "6");
+      expect(sixIndex).to.be.greaterThan(-1);
+      expect(runs[sixIndex + 1].text).to.equal("\u2044");
+      expect(runs[sixIndex + 2].text).to.equal("9");
+      expect(runs[sixIndex].baselineShift).to.be.lessThan(runs[sixIndex + 1].baselineShift);
+      expect(runs[sixIndex + 1].baselineShift).to.be.lessThan(runs[sixIndex + 2].baselineShift);
+    }
+
+    const referenceSlash: GraphicalChordSymbolContainer = systems[4][0];
+    expectCanonicalSlashChord(referenceSlash);
+    expect(referenceSlash.GraphicalLabels[0].Label.text).to.include(SMUFL_CHORD_MAJOR_SEVENTH_GLYPH);
+    const referencePolychord: GraphicalChordSymbolContainer = systems[4][1];
+    expectCanonicalPolychord(referencePolychord);
   });
 
   it("routes chord-quality symbols through explicit Bravura Text glyphs and remains rebuild-stable", async (): Promise<void> => {
@@ -135,7 +143,6 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
       SMUFL_CHORD_HALF_DIMINISHED_GLYPH,
       SMUFL_CHORD_AUGMENTED_GLYPH,
       SMUFL_CHORD_MAJOR_SEVENTH_GLYPH,
-      SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
       SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
       SMUFL_CHORD_ACCIDENTAL_SHARP_GLYPH,
     ];
@@ -150,6 +157,11 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
     );
     expect(minorNode).to.not.equal(undefined);
     expect(minorNode.getAttribute("font-family")).to.equal("Academico");
+    const fractionSlashNode: SVGTextElement = renderedText.find((candidate) =>
+      candidate.textContent === "\u2044",
+    );
+    expect(fractionSlashNode).to.not.equal(undefined);
+    expect(fractionSlashNode.getAttribute("font-family")).to.equal("Academico");
 
     const firstGeometry: string[] = harmonyGeometry(osmd);
     osmd.updateGraphic();
@@ -157,6 +169,40 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
     expect(harmonyGeometry(osmd)).to.deep.equal(firstGeometry);
   });
 });
+
+function expectCanonicalPolychord(chord: GraphicalChordSymbolContainer): void {
+  expect(chord.GraphicalLabels).to.have.length(2);
+  expect(chord.GraphicalSeparators).to.have.length(1);
+  const separator: GraphicalLine = chord.GraphicalSeparators[0].Line;
+  expect(separator.Start.y).to.be.closeTo(separator.End.y, 0.0001);
+  const labelCenters: number[] = chord.GraphicalLabels.map((label) =>
+    label.PositionAndShape.RelativePosition.x +
+    (label.PositionAndShape.BorderLeft + label.PositionAndShape.BorderRight) / 2,
+  );
+  expect(labelCenters[0]).to.be.closeTo(labelCenters[1], 0.001);
+  expect(separator.Start.x).to.be.lessThan(Math.min(...chord.GraphicalLabels.map((label) =>
+    label.PositionAndShape.RelativePosition.x + label.PositionAndShape.BorderLeft,
+  )));
+  expect(separator.End.x).to.be.greaterThan(Math.max(...chord.GraphicalLabels.map((label) =>
+    label.PositionAndShape.RelativePosition.x + label.PositionAndShape.BorderRight,
+  )));
+}
+
+function expectCanonicalSlashChord(chord: GraphicalChordSymbolContainer): void {
+  expect(chord.GraphicalSeparators).to.have.length(0);
+  expect(chord.GraphicalLabels).to.have.length(3);
+  const upper: GraphicalLabel = chord.GraphicalLabels[0];
+  const bass: GraphicalLabel = chord.GraphicalLabels[1];
+  const slash: GraphicalLabel = chord.GraphicalLabels[2];
+  expect(slash.Label.text).to.equal(SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH);
+  expect(upper.PositionAndShape.RelativePosition.y).to.be.lessThan(bass.PositionAndShape.RelativePosition.y);
+  expect(slash.PositionAndShape.RelativePosition.x).to.be.greaterThan(
+    upper.PositionAndShape.RelativePosition.x + upper.PositionAndShape.BorderRight,
+  );
+  expect(bass.PositionAndShape.RelativePosition.x).to.be.greaterThan(
+    slash.PositionAndShape.RelativePosition.x + slash.PositionAndShape.BorderRight,
+  );
+}
 
 async function loadHarmonyScore(): Promise<OpenSheetMusicDisplay> {
   const container: HTMLElement = TestUtils.getDivElement(document);

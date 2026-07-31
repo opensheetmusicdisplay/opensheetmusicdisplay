@@ -2,8 +2,6 @@ import {Label} from "../Label";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {
     ChordSymbolContainer,
-    HarmonyArrangement,
-    HarmonyBassArrangement,
     HarmonyChordComponent,
 } from "../VoiceData/ChordSymbolContainer";
 import {BoundingBox} from "./BoundingBox";
@@ -16,7 +14,6 @@ import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import {buildDoricoChordSymbolTextLines, getDoricoDefaultTextFontFamily} from "./DoricoTextFontRouting";
 import {GraphicalLine} from "./GraphicalLine";
 import {
-    SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
     SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
 } from "../../Common/DataObjects/ChordSymbolGlyphs";
 
@@ -91,8 +88,7 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     public abbreviateRepeatedUpperChord(): void {
         if (
             this.abbreviateUpperChord ||
-            !this.HasAlteredBass ||
-            this.chordSymbolContainer.Components[0]?.BassArrangement === HarmonyBassArrangement.Horizontal
+            !this.HasAlteredBass
         ) {
             return;
         }
@@ -106,18 +102,10 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         this.graphicalSeparators = [];
         const components: HarmonyChordComponent[] = this.chordSymbolContainer.Components;
         if (components.length > 1) {
-            switch (this.chordSymbolContainer.Arrangement) {
-                case HarmonyArrangement.Horizontal:
-                    this.layoutHorizontalComponents(components);
-                    break;
-                case HarmonyArrangement.Diagonal:
-                    this.layoutDiagonalComponents(components);
-                    break;
-                case HarmonyArrangement.Vertical:
-                default:
-                    this.layoutVerticalComponents(components);
-                    break;
-            }
+            // Preserve the source arrangement on ChordSymbolContainer, but use one
+            // unambiguous presentation for a genuine polychord: a centred fraction.
+            // Diagonal construction is reserved for an altered bass below one chord.
+            this.layoutVerticalComponents(components);
         } else if (components[0]?.BassPitch) {
             this.layoutSlashChord(components[0]);
         } else {
@@ -137,15 +125,6 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         this.createLabel(text, alignment, this.rules.ChordSymbolRelativeXOffset, 0);
     }
 
-    private layoutHorizontalComponents(components: HarmonyChordComponent[]): void {
-        const text: string = components.map((component: HarmonyChordComponent): string =>
-            this.chordSymbolContainer.calculateComponentText(
-                component, this.transposeHalftones, this.keyInstruction,
-            ),
-        ).join("/");
-        this.createLabel(text, TextAlignmentEnum.LeftBottom, this.rules.ChordSymbolRelativeXOffset, 0);
-    }
-
     private layoutVerticalComponents(components: HarmonyChordComponent[]): void {
         const labels: GraphicalLabel[] = components.map((component: HarmonyChordComponent): GraphicalLabel =>
             this.createLabel(
@@ -161,6 +140,7 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
             label.PositionAndShape.Size.width,
         ));
         const lineGap: number = this.textHeight * 0.28;
+        const ruleOverhang: number = this.textHeight * 0.08;
         labels.forEach((label: GraphicalLabel, index: number): void => {
             label.PositionAndShape.RelativePosition.x =
                 this.rules.ChordSymbolRelativeXOffset + (width - label.PositionAndShape.Size.width) / 2;
@@ -168,56 +148,17 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
                 index * (this.textHeight + lineGap) - (components.length - 1) * (this.textHeight + lineGap) / 2;
         });
         for (let index: number = 0; index < labels.length - 1; index++) {
-            const y: number = (labels[index].PositionAndShape.RelativePosition.y +
-                labels[index + 1].PositionAndShape.RelativePosition.y) / 2 - this.textHeight * 0.18;
+            // The rule occupies the actual gap between the upper baseline and the
+            // following label's top, rather than crossing the lower chord text.
+            const y: number = labels[index].PositionAndShape.RelativePosition.y + lineGap / 2;
             this.createSeparator(
-                new PointF2D(this.rules.ChordSymbolRelativeXOffset, y),
-                new PointF2D(this.rules.ChordSymbolRelativeXOffset + width, y),
+                new PointF2D(this.rules.ChordSymbolRelativeXOffset - ruleOverhang, y),
+                new PointF2D(this.rules.ChordSymbolRelativeXOffset + width + ruleOverhang, y),
             );
-        }
-    }
-
-    private layoutDiagonalComponents(components: HarmonyChordComponent[]): void {
-        let previousLabel: GraphicalLabel;
-        for (let index: number = 0; index < components.length; index++) {
-            const label: GraphicalLabel = this.createLabel(
-                this.chordSymbolContainer.calculateComponentText(
-                    components[index], this.transposeHalftones, this.keyInstruction,
-                ),
-                TextAlignmentEnum.LeftBottom,
-                index === 0 ? this.rules.ChordSymbolRelativeXOffset : 0,
-                -this.textHeight * 0.15 + index * this.textHeight * 1.1,
-            );
-            if (previousLabel) {
-                this.positionDiagonalLowerLabel(
-                    previousLabel,
-                    label,
-                    undefined,
-                    SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
-                );
-            }
-            previousLabel = label;
         }
     }
 
     private layoutSlashChord(component: HarmonyChordComponent): void {
-        if (component.BassArrangement === HarmonyBassArrangement.Horizontal) {
-            const text: string =
-                this.chordSymbolContainer.calculateUpperHarmonyText(
-                    component, this.transposeHalftones, this.keyInstruction,
-                ) +
-                (component.BassSeparator?.text ?? "/") +
-                this.chordSymbolContainer.calculateBassText(
-                    component, this.transposeHalftones, this.keyInstruction,
-                );
-            this.createLabel(
-                text,
-                TextAlignmentEnum.LeftBottom,
-                this.rules.ChordSymbolRelativeXOffset,
-                0,
-            );
-            return;
-        }
         const upperText: string = this.chordSymbolContainer.calculateUpperHarmonyText(
             component, this.transposeHalftones, this.keyInstruction,
         );
@@ -232,54 +173,23 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
             this.chordSymbolContainer.calculateBassText(component, this.transposeHalftones, this.keyInstruction),
             TextAlignmentEnum.LeftBottom,
             0,
-            this.textHeight * 0.72,
+            this.textHeight * 0.85,
         );
-        if (component.BassArrangement === HarmonyBassArrangement.Vertical) {
-            this.positionVerticalBassLabel(upperLabel, bassLabel, component);
-            return;
-        }
         this.positionDiagonalLowerLabel(
             upperLabel,
             bassLabel,
             component.BassSeparator?.text,
-            SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+            SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
         );
-    }
-
-    private positionVerticalBassLabel(upperLabel: GraphicalLabel, bassLabel: GraphicalLabel,
-                                      component: HarmonyChordComponent): void {
-        const width: number = Math.max(
-            upperLabel.PositionAndShape.Size.width,
-            bassLabel.PositionAndShape.Size.width,
-        );
-        upperLabel.PositionAndShape.RelativePosition.x =
-            this.rules.ChordSymbolRelativeXOffset + (width - upperLabel.PositionAndShape.Size.width) / 2;
-        upperLabel.PositionAndShape.RelativePosition.y = -this.textHeight * 0.25;
-        bassLabel.PositionAndShape.RelativePosition.x =
-            this.rules.ChordSymbolRelativeXOffset + (width - bassLabel.PositionAndShape.Size.width) / 2;
-        bassLabel.PositionAndShape.RelativePosition.y = this.textHeight * 1.05;
-        if (component.BassSeparator?.text) {
-            this.createLabel(
-                component.BassSeparator.text,
-                TextAlignmentEnum.CenterCenter,
-                this.rules.ChordSymbolRelativeXOffset + width / 2,
-                this.textHeight * 0.28,
-            );
-        } else {
-            this.createSeparator(
-                new PointF2D(this.rules.ChordSymbolRelativeXOffset, this.textHeight * 0.22),
-                new PointF2D(this.rules.ChordSymbolRelativeXOffset + width, this.textHeight * 0.22),
-            );
-        }
     }
 
     private positionDiagonalLowerLabel(
         upperLabel: GraphicalLabel,
         lowerLabel: GraphicalLabel,
         explicitSeparator?: string,
-        slashGlyph: string = SMUFL_CHORD_ALTERED_BASS_SLASH_GLYPH,
+        slashGlyph: string = SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
     ): void {
-        const horizontalGap: number = this.textHeight * 0.04;
+        const horizontalGap: number = this.textHeight * 0.02;
         const separatorX: number =
             upperLabel.PositionAndShape.RelativePosition.x +
             upperLabel.PositionAndShape.BorderRight +
