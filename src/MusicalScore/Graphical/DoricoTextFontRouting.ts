@@ -95,6 +95,7 @@ function collectChordMusicTextTokens(rules?: EngravingRules): ChordMusicTextToke
     addChordMusicTextToken(tokenMap, "\uE871", "\uE871");
     addChordMusicTextToken(tokenMap, "\uE872", "\uE872");
     addChordMusicTextToken(tokenMap, "\uE873", "\uE873");
+    addChordMusicTextToken(tokenMap, "\uE874", "\uE874");
 
     addRuleAccidentalToken(tokenMap, rules, AccidentalEnum.FLAT, "b", "♭");
     addRuleAccidentalToken(tokenMap, rules, AccidentalEnum.NATURAL, "n", "♮");

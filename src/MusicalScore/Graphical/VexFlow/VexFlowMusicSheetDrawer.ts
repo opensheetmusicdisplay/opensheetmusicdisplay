@@ -710,8 +710,26 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // Draw ChordSymbols
         if (staffEntry.graphicalChordContainers !== undefined && staffEntry.graphicalChordContainers.length > 0) {
             for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
-                const label: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
-                label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
+                for (const label of graphicalChordContainer.GraphicalLabels) {
+                    label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
+                }
+                for (const separator of graphicalChordContainer.GraphicalSeparators) {
+                    const absolute: PointF2D = separator.PositionAndShape.AbsolutePosition;
+                    const start: PointF2D = new PointF2D(
+                        absolute.x + separator.Line.Start.x,
+                        absolute.y + separator.Line.Start.y,
+                    );
+                    const end: PointF2D = new PointF2D(
+                        absolute.x + separator.Line.End.x,
+                        absolute.y + separator.Line.End.y,
+                    );
+                    separator.Line.SVGElement = this.drawLine(
+                        start,
+                        end,
+                        this.rules.DefaultColorChordSymbol,
+                        separator.Line.Width,
+                    );
+                }
             }
         }
         if (this.rules.RenderLyrics) {

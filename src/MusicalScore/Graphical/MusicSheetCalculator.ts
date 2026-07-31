@@ -1175,6 +1175,7 @@ export abstract class MusicSheetCalculator {
         for (const musicSystem of this.musicSystems) {
             for (const staffLine of musicSystem.StaffLines) {
                 const skybottomcalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+                this.applyHarmonyAbbreviations(staffLine);
                 let minimumOffset: number = Number.MAX_SAFE_INTEGER; // only calculated if option set
                 let maximumOffset: number = Number.MIN_SAFE_INTEGER;
                 if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "staffline") {
@@ -1187,6 +1188,7 @@ export abstract class MusicSheetCalculator {
                     minimumOffset = minOffset;
                     maximumOffset = maxOffset;
                 }
+                let previousChordContainer: GraphicalChordSymbolContainer;
                 for (let measureStafflineIndex: number = 0; measureStafflineIndex < staffLine.Measures.length; measureStafflineIndex++) {
                     const measure: GraphicalMeasure = staffLine.Measures[measureStafflineIndex];
                     if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "measure") {
@@ -1194,7 +1196,6 @@ export abstract class MusicSheetCalculator {
                         minimumOffset = minOffset;
                         maximumOffset = maxOffset;
                     }
-                    let previousChordContainer: GraphicalChordSymbolContainer;
                     for (const staffEntry of measure.staffEntries) {
                         if (!staffEntry.graphicalChordContainers || staffEntry.graphicalChordContainers.length === 0) {
                             continue;
@@ -1219,7 +1220,7 @@ export abstract class MusicSheetCalculator {
                                 if (previousChordContainer) {
                                     // prevent overlap to previous chord symbol
                                     newStartX = Math.max(newStartX, previousChordContainer.PositionAndShape.RelativePosition.x +
-                                        previousChordContainer.GraphicalLabel.PositionAndShape.Size.width +
+                                        previousChordContainer.PositionAndShape.Size.width +
                                         this.rules.ChordSymbolXSpacing);
                                 }
                                 graphicalChordContainer.PositionAndShape.RelativePosition.x = newStartX;
@@ -1304,23 +1305,41 @@ export abstract class MusicSheetCalculator {
                             if (placement !== PlacementEnum.Below) {
                                 yShift *= -1;
                             }
-                            const gLabel: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
                             if (placement === PlacementEnum.Below) {
-                                gLabel.PositionAndShape.RelativePosition.y = chordMaximumOffset + yShift;
-                                gLabel.setLabelPositionAndShapeBorders();
-                                gLabel.PositionAndShape.calculateBoundingBox();
+                                gps.RelativePosition.y = chordMaximumOffset + yShift;
                                 skybottomcalculator.updateBottomLineInRange(start, end,
-                                    chordMaximumOffset + gLabel.PositionAndShape.BorderMarginBottom +
+                                    gps.RelativePosition.y + gps.BorderMarginBottom +
                                     this.rules.ChordSymbolBottomMargin); // TODO somehow off without margin for I numeral
                             } else {
-                                gLabel.PositionAndShape.RelativePosition.y = chordMinimumOffset + yShift;
-                                gLabel.setLabelPositionAndShapeBorders();
-                                gLabel.PositionAndShape.calculateBoundingBox();
-                                skybottomcalculator.updateSkyLineInRange(start, end, chordMinimumOffset + gLabel.PositionAndShape.BorderMarginTop);
+                                gps.RelativePosition.y = chordMinimumOffset + yShift;
+                                skybottomcalculator.updateSkyLineInRange(
+                                    start,
+                                    end,
+                                    gps.RelativePosition.y + gps.BorderMarginTop,
+                                );
                             }
                             previousChordContainer = graphicalChordContainer;
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private applyHarmonyAbbreviations(staffLine: StaffLine): void {
+        let previous: GraphicalChordSymbolContainer;
+        for (const measure of staffLine.Measures) {
+            for (const staffEntry of measure.staffEntries) {
+                for (const current of staffEntry.graphicalChordContainers) {
+                    if (
+                        previous?.HasAlteredBass &&
+                        current.HasAlteredBass &&
+                        previous.UpperHarmonySignature === current.UpperHarmonySignature &&
+                        previous.BassSignature !== current.BassSignature
+                    ) {
+                        current.abbreviateRepeatedUpperChord();
+                    }
+                    previous = current;
                 }
             }
         }

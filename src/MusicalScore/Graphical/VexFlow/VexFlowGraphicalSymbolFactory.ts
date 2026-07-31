@@ -18,7 +18,6 @@ import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {GraphicalChordSymbolContainer} from "../GraphicalChordSymbolContainer";
-import {GraphicalLabel} from "../GraphicalLabel";
 import {EngravingRules} from "../EngravingRules";
 import { TechnicalInstruction } from "../../VoiceData/Instructions/TechnicalInstruction";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
@@ -214,24 +213,23 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                                                 rules
                                                 );
             const placement: PlacementEnum = graphicalChordSymbolContainer.GetChordSymbolContainer.Placement;
-            const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GraphicalLabel;
             if (placement === PlacementEnum.Below) {
-                graphicalLabel.PositionAndShape.RelativePosition.y = rules.StaffHeight + rules.ChordSymbolYOffset;
+                graphicalChordSymbolContainer.PositionAndShape.RelativePosition.y =
+                    rules.StaffHeight + rules.ChordSymbolYOffset;
             } else {
-                graphicalLabel.PositionAndShape.RelativePosition.y -= rules.ChordSymbolYOffset;
+                graphicalChordSymbolContainer.PositionAndShape.RelativePosition.y = -rules.ChordSymbolYOffset;
             }
-            graphicalLabel.setLabelPositionAndShapeBorders(); // to get Size.width
+            graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
             let extraXShiftForShortChordSymbols: number = 0;
-            if (graphicalLabel.PositionAndShape.Size.width < rules.ChordSymbolExtraXShiftWidthThreshold) {
+            if (graphicalChordSymbolContainer.PositionAndShape.Size.width < rules.ChordSymbolExtraXShiftWidthThreshold) {
                 extraXShiftForShortChordSymbols = rules.ChordSymbolExtraXShiftForShortChordSymbols;
             }
-            graphicalLabel.PositionAndShape.RelativePosition.x += xShift + extraXShiftForShortChordSymbols;
-            graphicalLabel.setLabelPositionAndShapeBorders();
+            graphicalChordSymbolContainer.PositionAndShape.RelativePosition.x += xShift + extraXShiftForShortChordSymbols;
             // TODO check for available space until next staffEntry or chord symbol? (x direction)
             graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
             graphicalStaffEntry.graphicalChordContainers.push(graphicalChordSymbolContainer);
 
-            xShift += graphicalLabel.PositionAndShape.Size.width + chordSymbolSpacing;
+            xShift += graphicalChordSymbolContainer.PositionAndShape.Size.width + chordSymbolSpacing;
         }
     }
 
