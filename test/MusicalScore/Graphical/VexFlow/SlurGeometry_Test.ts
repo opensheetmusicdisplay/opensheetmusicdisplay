@@ -179,11 +179,21 @@ describe("Stage 6 slur geometry", (): void => {
          expect(slur.diagnostics.endNotehead, "selected end notehead geometry").to.not.equal(undefined);
          if (slur.diagnostics.startAttachment === "notehead") {
             expect(slur.bezierStartPt.x).to.be.closeTo(slur.diagnostics.startNotehead.right, 0.001);
+            const expectedY: number = slur.placement === PlacementEnum.Above
+               ? slur.diagnostics.startNotehead.top - osmd.EngravingRules.SlurNoteHeadYOffset
+               : slur.diagnostics.startNotehead.bottom + osmd.EngravingRules.SlurNoteHeadYOffset;
+            expect(slur.bezierStartPt.y, "notehead-side start uses the selected head vertically")
+               .to.be.closeTo(expectedY, 0.001);
          } else {
             expect(["stem", "voice-entry"]).to.include(slur.diagnostics.startAttachment);
          }
          if (slur.diagnostics.endAttachment === "notehead") {
             expect(slur.bezierEndPt.x).to.be.closeTo(slur.diagnostics.endNotehead.left, 0.001);
+            const expectedY: number = slur.placement === PlacementEnum.Above
+               ? slur.diagnostics.endNotehead.top - osmd.EngravingRules.SlurNoteHeadYOffset
+               : slur.diagnostics.endNotehead.bottom + osmd.EngravingRules.SlurNoteHeadYOffset;
+            expect(slur.bezierEndPt.y, "notehead-side end uses the selected head vertically")
+               .to.be.closeTo(expectedY, 0.001);
          } else {
             expect(["stem", "voice-entry"]).to.include(slur.diagnostics.endAttachment);
          }

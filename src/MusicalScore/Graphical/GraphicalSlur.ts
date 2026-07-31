@@ -824,11 +824,11 @@ export class GraphicalSlur extends GraphicalCurve {
                 || (startVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Down
                     && this.placement === PlacementEnum.Below);
             const tieFallback: boolean = slurStartNote.sourceNote !== this.slur.StartNote;
-            if (geometry && chordEndpoint && !tieFallback) {
+            if (geometry && (chordEndpoint || !stemSide) && !tieFallback) {
                 startX = geometry.notehead.right;
-                this.diagnostics.startAttachment = "notehead";
-            } else if (geometry && !stemSide && !tieFallback) {
-                startX = geometry.notehead.right;
+                startY = this.placement === PlacementEnum.Above
+                    ? geometry.notehead.top
+                    : geometry.notehead.bottom;
                 this.diagnostics.startAttachment = "notehead";
             } else if (stemSide) {
                 startX += startVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up ? 0.5 : -0.5;
@@ -873,11 +873,11 @@ export class GraphicalSlur extends GraphicalCurve {
                 || (endVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Down
                     && this.placement === PlacementEnum.Below);
             const tieFallback: boolean = slurEndNote.sourceNote !== this.slur.EndNote;
-            if (geometry && chordEndpoint && !tieFallback) {
+            if (geometry && (chordEndpoint || !stemSide) && !tieFallback) {
                 endX = geometry.notehead.left;
-                this.diagnostics.endAttachment = "notehead";
-            } else if (geometry && !stemSide && !tieFallback) {
-                endX = geometry.notehead.left;
+                endY = this.placement === PlacementEnum.Above
+                    ? geometry.notehead.top
+                    : geometry.notehead.bottom;
                 this.diagnostics.endAttachment = "notehead";
             } else if (stemSide) {
                 endX += endVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up ? 0.5 : -0.5;
@@ -902,11 +902,19 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         if (this.placement === PlacementEnum.Above) {
-            startY = Math.min(startY, 1.5);
-            endY = Math.min(endY, 1.5);
+            if (this.diagnostics.startAttachment !== "notehead") {
+                startY = Math.min(startY, 1.5);
+            }
+            if (this.diagnostics.endAttachment !== "notehead") {
+                endY = Math.min(endY, 1.5);
+            }
         } else {
-            startY = Math.max(startY, staffLine.StaffHeight - 1.5);
-            endY = Math.max(endY, staffLine.StaffHeight - 1.5);
+            if (this.diagnostics.startAttachment !== "notehead") {
+                startY = Math.max(startY, staffLine.StaffHeight - 1.5);
+            }
+            if (this.diagnostics.endAttachment !== "notehead") {
+                endY = Math.max(endY, staffLine.StaffHeight - 1.5);
+            }
         }
 
         return {startX, startY, endX, endY};
