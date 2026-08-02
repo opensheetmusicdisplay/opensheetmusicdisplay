@@ -1234,9 +1234,10 @@ export abstract class MusicSheetCalculator {
                             }
                             // Reparented between-note harmony boxes do not yet
                             // have a recursively refreshed cached absolute x.
-                            gps.calculateAbsolutePosition();
-                            const start: number = gps.BorderMarginLeft + gps.AbsolutePosition.x;
-                            const end: number = gps.BorderMarginRight + gps.AbsolutePosition.x;
+                            const marginRange: {start: number, end: number} =
+                                this.getChordSymbolRangeInStaffLine(gps, staffLine, true);
+                            const start: number = marginRange.start;
+                            const end: number = marginRange.end;
                             const placement: PlacementEnum = graphicalChordContainer.GetChordSymbolContainer.Placement;
                             if (placement === PlacementEnum.Below) {
                                 if (!this.rules.ChordSymbolYAlignment || maximumOffset < 0) {
@@ -1258,8 +1259,10 @@ export abstract class MusicSheetCalculator {
                             if (this.rules.ChordSymbolYAlignment) {
                                 // check the collision only for the label without its margins (BorderLeft instead of BorderMarginLeft),
                                 //   so that chord symbols whose (visible) labels don't collide stay on the aligned position
-                                const collisionStart: number = gps.BorderLeft + gps.AbsolutePosition.x;
-                                const collisionEnd: number = gps.BorderRight + gps.AbsolutePosition.x;
+                                const collisionRange: {start: number, end: number} =
+                                    this.getChordSymbolRangeInStaffLine(gps, staffLine, false);
+                                const collisionStart: number = collisionRange.start;
+                                const collisionEnd: number = collisionRange.end;
                                 if (placement === PlacementEnum.Below) {
                                     chordMaximumOffset = Math.max(chordMaximumOffset,
                                                                   skybottomcalculator.getBottomLineMaxInRange(
@@ -1365,6 +1368,30 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    /**
+     * Convert a chord-symbol box into the coordinate space used by a
+     * StaffLine's skyline and bottomline arrays. Chord boxes are nested below
+     * staff entries and therefore calculate an absolute/system-space x,
+     * whereas the collision profiles always start at x=0 at the beginning of
+     * the indented staff line. The distinction is visible on first systems,
+     * where part names move the staff line to the right.
+     */
+    private getChordSymbolRangeInStaffLine(
+        chordBox: BoundingBox,
+        staffLine: StaffLine,
+        includeMargins: boolean,
+    ): {start: number, end: number} {
+        chordBox.calculateAbsolutePosition();
+        staffLine.PositionAndShape.calculateAbsolutePosition();
+        const staffLineX: number = staffLine.PositionAndShape.AbsolutePosition.x;
+        const left: number = includeMargins ? chordBox.BorderMarginLeft : chordBox.BorderLeft;
+        const right: number = includeMargins ? chordBox.BorderMarginRight : chordBox.BorderRight;
+        return {
+            start: chordBox.AbsolutePosition.x - staffLineX + left,
+            end: chordBox.AbsolutePosition.x - staffLineX + right,
+        };
+    }
+
     protected calculateAlignedChordSymbolsOffset(staffEntries: GraphicalStaffEntry[], sbc: SkyBottomLineCalculator):
         {minOffset: number, maxOffset: number}
     {
@@ -1373,9 +1400,11 @@ export abstract class MusicSheetCalculator {
         for (const staffEntry of staffEntries) {
             for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
                 const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
-                gps.calculateAbsolutePosition();
-                const start: number = gps.BorderMarginLeft + gps.AbsolutePosition.x;
-                const end: number = gps.BorderMarginRight + gps.AbsolutePosition.x;
+                const staffLine: StaffLine = staffEntry.parentMeasure.ParentStaffLine;
+                const range: {start: number, end: number} =
+                    this.getChordSymbolRangeInStaffLine(gps, staffLine, true);
+                const start: number = range.start;
+                const end: number = range.end;
                 const placement: PlacementEnum = graphicalChordContainer.GetChordSymbolContainer.Placement;
                 if (placement === PlacementEnum.Above) {
                     minOffset = Math.min(

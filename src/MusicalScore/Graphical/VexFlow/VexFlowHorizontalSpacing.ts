@@ -872,7 +872,7 @@ function collectMeasureProfiles(
       : 0;
     const minimumRequiredWidthPx: number = Math.max(
       notationMinimumRequiredWidthPx,
-      measureHarmonyMinimumWidthPx(graphicalMeasures, rhythmicEndTimestamp, rules),
+      unanchoredHarmonyMinimumWidthPx(graphicalMeasures, rhythmicEndTimestamp, rules),
     );
     const profile: MeasureProfile = {
       compactPickup: isShortImplicitMeasure(sourceMeasure),
@@ -891,7 +891,14 @@ function collectMeasureProfiles(
   return profiles;
 }
 
-function measureHarmonyMinimumWidthPx(
+/**
+ * Retain the legacy proportional width floor only for harmony that cannot be
+ * tied to a rhythmic VexFlow column. Rhythmically anchored chord symbols are
+ * handled by collectSystemHarmonyConstraints(), which applies their actual
+ * local footprints without turning a late chord's terminal overhang into a
+ * whole-measure width multiplier.
+ */
+function unanchoredHarmonyMinimumWidthPx(
   graphicalMeasures: GraphicalMeasure[],
   measureEnd: number,
   rules: EngravingRules,
@@ -914,6 +921,12 @@ function measureHarmonyMinimumWidthPx(
         Math.min(1, timestamp / measureEnd),
       );
       for (const container of (staffEntry.graphicalChordContainers ?? []) as GraphicalChordSymbolContainer[]) {
+        if (
+          container?.PositionAndShape.Parent === staffEntry.PositionAndShape &&
+          findStaffEntryTickContext(staffEntry)
+        ) {
+          continue;
+        }
         const placement: number = container.GetChordSymbolContainer.Placement;
         const track: Map<number, HarmonyFootprint> =
           tracks.get(placement) ??

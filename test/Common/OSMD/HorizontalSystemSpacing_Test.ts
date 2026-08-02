@@ -283,6 +283,37 @@ describe("Horizontal system spacing", (): void => {
     );
   });
 
+  it("keeps a wide late harmony footprint out of the base terminal padding", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(wideTerminalHarmonyScore());
+    osmd.render();
+
+    const system: VexFlowHorizontalSpacingSystemDiagnostics =
+      getDiagnostics(osmd).selectedSystems[0];
+    const terminalGap: VexFlowHorizontalSpacingGapDiagnostics =
+      getTerminalGap(system, 0);
+    const terminalConstraint: ResolvedHorizontalSpacingConstraint =
+      system.resolvedConstraints.find(
+        (constraint): boolean =>
+          constraint.reason === "system-edge" &&
+          constraint.fromColumn === terminalGap.fromColumn &&
+          constraint.toColumn === terminalGap.toColumn,
+      );
+
+    // The preferred terminal cell remains VexFlow's ordinary end padding.
+    // Any extra clearance required by the slash chord is a direct local
+    // constraint, not its overhang divided by the final rhythmic fraction.
+    expect(terminalGap.baseTerminalPaddingPx).to.be.at.least(-0.001);
+    expect(terminalGap.baseTerminalPaddingPx).to.be.at.most(
+      VF.Stave.rightPadding + 0.001,
+    );
+    expect(terminalGap.residualAddedWidthPx).to.be.closeTo(0, 0.001);
+    expect(terminalConstraint).to.not.equal(undefined);
+    expect(terminalConstraint.finalDistance).to.be.at.least(
+      terminalConstraint.minimumDistance - 0.001,
+    );
+  });
+
   it("keeps an ordinary full-measure rest on the original centering path", async (): Promise<void> => {
     const osmd: OpenSheetMusicDisplay = createOsmd();
     await osmd.load(wholeMeasureRestScore());
@@ -1029,6 +1060,34 @@ function terminalLyricScore(): string {
           <text>uncompromisingly-extraordinary</text>
         </lyric>
       </note>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+function wideTerminalHarmonyScore(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Harmony</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>6</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <harmony>
+        <root><root-step>D</root-step><root-alter>-1</root-alter></root>
+        <kind>major-seventh</kind>
+        <bass><bass-step>A</bass-step><bass-alter>-1</bass-alter></bass>
+      </harmony>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
     </measure>
   </part>
 </score-partwise>`;

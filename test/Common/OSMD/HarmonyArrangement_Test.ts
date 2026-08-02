@@ -187,6 +187,28 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
     osmd.render();
     expect(harmonyGeometry(osmd)).to.deep.equal(firstGeometry);
   });
+
+  it("records harmony in staff-line-relative skyline coordinates on an indented first system", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = await loadHarmonyScore();
+    const firstSystem: any = osmd.GraphicSheet.MusicPages[0].MusicSystems[0];
+    const staffLine: any = firstSystem.StaffLines[0];
+    const chord: GraphicalChordSymbolContainer = staffLine.Measures
+      .flatMap((measure: any) => measure.staffEntries)
+      .flatMap((entry: any) => entry.graphicalChordContainers)[0];
+    const chordBox: any = chord.PositionAndShape;
+
+    expect(staffLine.PositionAndShape.RelativePosition.x).to.be.greaterThan(0);
+    chordBox.calculateAbsolutePosition();
+    staffLine.PositionAndShape.calculateAbsolutePosition();
+    const localAnchorX: number =
+      chordBox.AbsolutePosition.x - staffLine.PositionAndShape.AbsolutePosition.x;
+    const start: number = localAnchorX + chordBox.BorderMarginLeft;
+    const end: number = localAnchorX + chordBox.BorderMarginRight;
+    const chordTop: number = chordBox.RelativePosition.y + chordBox.BorderMarginTop;
+    const skylineTop: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(start, end);
+
+    expect(skylineTop).to.be.at.most(chordTop + 0.001);
+  });
 });
 
 function expectCanonicalPolychord(chord: GraphicalChordSymbolContainer): void {
