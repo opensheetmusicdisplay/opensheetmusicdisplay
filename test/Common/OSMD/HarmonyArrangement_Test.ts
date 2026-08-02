@@ -99,10 +99,10 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
     );
     expect(firstSlashGlyph).to.not.equal(undefined);
     expect(abbreviatedSlashGlyph).to.not.equal(undefined);
-    const abbreviatedVisibleCenter: number = (
-      abbreviatedSlash.PositionAndShape.BorderLeft + abbreviatedSlash.PositionAndShape.BorderRight
-    ) / 2;
-    expect(abbreviatedVisibleCenter).to.be.closeTo(0, 0.001);
+    expect(abbreviatedSlash.PositionAndShape.BorderLeft).to.be.closeTo(
+      osmd.EngravingRules.ChordSymbolRelativeXOffset,
+      0.001,
+    );
 
     const customSeparator: GraphicalChordSymbolContainer = firstSystem[5];
     expect(customSeparator.GraphicalSeparators).to.have.length(0);
@@ -110,10 +110,16 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
 
     for (const chord of firstSystem) {
       for (const separator of chord.GraphicalSeparators) {
-        expect(separator.Line.Start.x).to.be.at.least(chord.PositionAndShape.BorderLeft - 0.001);
-        expect(separator.Line.End.x).to.be.at.most(chord.PositionAndShape.BorderRight + 0.001);
-        expect(separator.Line.Start.y).to.be.at.least(chord.PositionAndShape.BorderTop - 0.001);
-        expect(separator.Line.End.y).to.be.at.most(chord.PositionAndShape.BorderBottom + 0.001);
+        const separatorX: number = separator.PositionAndShape.RelativePosition.x;
+        const separatorY: number = separator.PositionAndShape.RelativePosition.y;
+        expect(separatorX + separator.Line.Start.x)
+          .to.be.at.least(chord.PositionAndShape.BorderLeft - 0.001);
+        expect(separatorX + separator.Line.End.x)
+          .to.be.at.most(chord.PositionAndShape.BorderRight + 0.001);
+        expect(separatorY + separator.Line.Start.y)
+          .to.be.at.least(chord.PositionAndShape.BorderTop - 0.001);
+        expect(separatorY + separator.Line.End.y)
+          .to.be.at.most(chord.PositionAndShape.BorderBottom + 0.001);
       }
     }
 
@@ -153,6 +159,13 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
     expect(referenceProfileRight).to.be.lessThan(referenceUpper.PositionAndShape.BorderRight);
     const referencePolychord: GraphicalChordSymbolContainer = systems[4][1];
     expectCanonicalPolychord(referencePolychord);
+
+    for (const chord of systems.flat()) {
+      expect(chord.PositionAndShape.BorderLeft).to.be.closeTo(
+        osmd.EngravingRules.ChordSymbolRelativeXOffset,
+        0.001,
+      );
+    }
   });
 
   it("routes chord-quality symbols through explicit Bravura Text glyphs and remains rebuild-stable", async (): Promise<void> => {
@@ -236,19 +249,20 @@ function expectCanonicalPolychord(chord: GraphicalChordSymbolContainer): void {
     (label.PositionAndShape.BorderLeft + label.PositionAndShape.BorderRight) / 2,
   );
   expect(labelCenters[0]).to.be.closeTo(labelCenters[1], 0.001);
-  expect(separator.Start.x).to.be.lessThan(Math.min(...chord.GraphicalLabels.map((label) =>
+  const separatorOffsetX: number = chord.GraphicalSeparators[0].PositionAndShape.RelativePosition.x;
+  expect(separatorOffsetX + separator.Start.x).to.be.lessThan(Math.min(...chord.GraphicalLabels.map((label) =>
     label.PositionAndShape.RelativePosition.x + label.PositionAndShape.BorderLeft,
   )));
-  expect(separator.End.x).to.be.greaterThan(Math.max(...chord.GraphicalLabels.map((label) =>
+  expect(separatorOffsetX + separator.End.x).to.be.greaterThan(Math.max(...chord.GraphicalLabels.map((label) =>
     label.PositionAndShape.RelativePosition.x + label.PositionAndShape.BorderRight,
   )));
-  expect((separator.Start.x + separator.End.x) / 2).to.be.closeTo(0, 0.001);
+  expect(chord.PositionAndShape.BorderLeft).to.be.closeTo(-1, 0.001);
 }
 
 function expectCanonicalSlashChord(
   chord: GraphicalChordSymbolContainer,
   abbreviated: boolean = false,
-  expectedAnchorX: number = 0,
+  expectedLeft: number = -1,
 ): void {
   expect(chord.GraphicalSeparators).to.have.length(0);
   expect(chord.GraphicalLabels).to.have.length(abbreviated ? 2 : 3);
@@ -272,8 +286,7 @@ function expectCanonicalSlashChord(
   const bassVerticalSeparation: number = bassTop - slashCenterY;
   expect(bassHorizontalSeparation).to.be.closeTo(bassVerticalSeparation, 0.001);
   if (abbreviated) {
-    expect((chord.PositionAndShape.BorderLeft + chord.PositionAndShape.BorderRight) / 2)
-      .to.be.closeTo(expectedAnchorX, 0.001);
+    expect(chord.PositionAndShape.BorderLeft).to.be.closeTo(expectedLeft, 0.001);
     return;
   }
   const upper: GraphicalLabel = chord.GraphicalLabels[0];
@@ -286,14 +299,13 @@ function expectCanonicalSlashChord(
   const upperBottom: number = upper.PositionAndShape.RelativePosition.y + upper.PositionAndShape.BorderBottom;
   const upperHorizontalSeparation: number = slashCenterX - upperRight;
   const upperVerticalSeparation: number = slashCenterY - upperBottom;
-  expect((chord.PositionAndShape.BorderLeft + chord.PositionAndShape.BorderRight) / 2)
-    .to.be.closeTo(expectedAnchorX, 0.001);
   expect(upperHorizontalSeparation).to.be.closeTo(bassHorizontalSeparation, 0.001);
   expect(upperVerticalSeparation).to.be.closeTo(bassVerticalSeparation, 0.001);
   expect(upperHorizontalSeparation).to.be.closeTo(upperVerticalSeparation, 0.001);
   expect(upperHorizontalSeparation).to.be.lessThan(upper.Label.fontHeight * 0.03);
   expect(slash.PositionAndShape.RelativePosition.x + slash.PositionAndShape.BorderLeft)
     .to.be.lessThan(upperRight);
+  expect(chord.PositionAndShape.BorderLeft).to.be.closeTo(expectedLeft, 0.001);
 }
 
 async function loadHarmonyScore(): Promise<OpenSheetMusicDisplay> {

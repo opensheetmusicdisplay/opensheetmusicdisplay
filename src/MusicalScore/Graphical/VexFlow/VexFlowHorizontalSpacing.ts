@@ -69,6 +69,7 @@ interface CandidateLyric {
 interface CandidateHarmony {
   columnIndex: number;
   leftOffsetPx: number;
+  measureEndColumnIndex: number;
   placement: number;
   rightOffsetPx: number;
   staff: Staff;
@@ -505,7 +506,7 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     const constraints: HorizontalSpacingConstraint[] = [
       ...collectSystemNotationConstraints(nodes),
       ...collectSystemLyricConstraints(measures, contextToColumn, nodes.length - 1, this.rules),
-      ...collectSystemHarmonyConstraints(measures, contextToColumn, nodes.length - 1, this.rules),
+      ...collectSystemHarmonyConstraints(measures, contextToColumn, nodes, this.rules),
     ];
     const basePositions: number[] = nodes.map((node: CandidateNode): number => node.basePositionPx);
     const gapWeights: number[] = nodes
@@ -1275,7 +1276,7 @@ function collectSystemLyricConstraints(
 function collectSystemHarmonyConstraints(
   measures: SystemMeasureSpacingInput[],
   contextToColumn: Map<VF.TickContext, number>,
-  endColumnIndex: number,
+  nodes: CandidateNode[],
   rules: EngravingRules,
 ): HorizontalSpacingConstraint[] {
   if (!rules.RenderChordSymbols) {
@@ -1284,7 +1285,13 @@ function collectSystemHarmonyConstraints(
 
   const harmonyByStaffAndPlacement: Map<Staff, Map<number, CandidateHarmony[]>> =
     new Map<Staff, Map<number, CandidateHarmony[]>>();
-  for (const input of measures) {
+  for (let inputIndex: number = 0; inputIndex < measures.length; inputIndex++) {
+    const input: SystemMeasureSpacingInput = measures[inputIndex];
+    const measureEndColumnIndex: number = nodes.findIndex(
+      (node: CandidateNode): boolean =>
+        node.boundaryInputIndex === inputIndex + 1 &&
+        (node.kind === "measure-boundary" || node.kind === "system-end"),
+    );
     for (const measure of input.graphicalMeasures) {
       if (!measure?.isVisible()) {
         continue;
@@ -1316,6 +1323,7 @@ function collectSystemHarmonyConstraints(
             leftOffsetPx:
               anchorOffsetPx +
               container.PositionAndShape.BorderMarginLeft * unitInPixels,
+            measureEndColumnIndex,
             placement: container.GetChordSymbolContainer.Placement,
             rightOffsetPx:
               anchorOffsetPx +
@@ -1358,7 +1366,14 @@ function collectSystemHarmonyConstraints(
             fromColumn: columnIndex,
             minimumDistance: Math.max(0, rightOffsetPx),
             reason: "system-edge",
-            toColumn: endColumnIndex,
+            // A barline is a hard edge for its own harmony skyline. Constrain
+            // the complete composite chord footprint to this measure boundary,
+            // not merely to the end of the containing system.
+            toColumn: Math.min(
+              ...group.map((harmony: CandidateHarmony): number =>
+                harmony.measureEndColumnIndex,
+              ),
+            ),
           });
         }
         for (let groupIndex: number = 1; groupIndex < columnGroups.length; groupIndex++) {

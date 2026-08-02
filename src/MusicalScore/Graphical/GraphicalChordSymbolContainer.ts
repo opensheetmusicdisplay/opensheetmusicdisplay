@@ -120,6 +120,7 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
             this.layoutSimpleChord(components[0]);
         }
         this.PositionAndShape.calculateBoundingBox();
+        this.leftAlignConstructionOnRhythmicAnchor();
     }
 
     private layoutSimpleChord(component: HarmonyChordComponent): void {
@@ -229,7 +230,7 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
             cellSeparation,
             cellSeparation * 2,
         );
-        this.centerLabelsOnRhythmicAnchor([separatorLabel, bassLabel]);
+        this.centerLabelsWithinConstruction([separatorLabel, bassLabel]);
     }
 
     private positionSlashChordGrid(
@@ -258,14 +259,14 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         upperLabel.PositionAndShape.RelativePosition.x = separatorX - cellSeparation - upperProfileRight;
         lowerLabel.PositionAndShape.RelativePosition.x = separatorX + cellSeparation;
         lowerLabel.PositionAndShape.RelativePosition.y = cellSeparation * 2;
-        this.centerLabelsOnRhythmicAnchor([upperLabel, separatorLabel, lowerLabel]);
+        this.centerLabelsWithinConstruction([upperLabel, separatorLabel, lowerLabel]);
     }
 
     private slashChordCellSeparation(): number {
         return this.textHeight * GraphicalChordSymbolContainer.SLASH_CHORD_GRID_CELL_SEPARATION_FACTOR;
     }
 
-    private centerLabelsOnRhythmicAnchor(labels: GraphicalLabel[]): void {
+    private centerLabelsWithinConstruction(labels: GraphicalLabel[]): void {
         const visibleLeft: number = Math.min(...labels.map((label: GraphicalLabel): number =>
             label.PositionAndShape.RelativePosition.x + label.PositionAndShape.BorderLeft,
         ));
@@ -276,6 +277,25 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         for (const label of labels) {
             label.PositionAndShape.RelativePosition.x += shift;
         }
+    }
+
+    /**
+     * Place the complete visible construction just left of its associated
+     * rhythmic anchor. Internal polychord and slash-chord geometry remains
+     * centred around its own separator, but wide constructions now grow to
+     * the right instead of extending equally into the preceding rhythm. The
+     * existing short-chord optical shift is applied later by the symbol
+     * factory at the container level.
+     */
+    private leftAlignConstructionOnRhythmicAnchor(): void {
+        const shift: number = this.rules.ChordSymbolRelativeXOffset - this.PositionAndShape.BorderLeft;
+        if (Math.abs(shift) < 0.0001) {
+            return;
+        }
+        for (const child of this.PositionAndShape.ChildElements) {
+            child.RelativePosition.x += shift;
+        }
+        this.PositionAndShape.calculateBoundingBox();
     }
 
     private createLabel(text: string, alignment: TextAlignmentEnum, x: number, y: number): GraphicalLabel {
