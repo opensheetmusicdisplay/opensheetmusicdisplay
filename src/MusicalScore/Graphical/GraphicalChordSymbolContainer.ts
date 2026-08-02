@@ -246,8 +246,16 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
             separatorX,
             cellSeparation,
         );
-        upperLabel.PositionAndShape.RelativePosition.x = separatorX - cellSeparation;
         upperLabel.PositionAndShape.RelativePosition.y = 0;
+        const separatorTopRelativeToUpper: number = separatorLabel.PositionAndShape.RelativePosition.y +
+            separatorLabel.PositionAndShape.BorderTop - upperLabel.PositionAndShape.RelativePosition.y;
+        const separatorBottomRelativeToUpper: number = separatorLabel.PositionAndShape.RelativePosition.y +
+            separatorLabel.PositionAndShape.BorderBottom - upperLabel.PositionAndShape.RelativePosition.y;
+        const upperProfileRight: number = upperLabel.getRightProfileForVerticalBand(
+            separatorTopRelativeToUpper,
+            separatorBottomRelativeToUpper,
+        );
+        upperLabel.PositionAndShape.RelativePosition.x = separatorX - cellSeparation - upperProfileRight;
         lowerLabel.PositionAndShape.RelativePosition.x = separatorX + cellSeparation;
         lowerLabel.PositionAndShape.RelativePosition.y = cellSeparation * 2;
         this.centerLabelsOnRhythmicAnchor([upperLabel, separatorLabel, lowerLabel]);

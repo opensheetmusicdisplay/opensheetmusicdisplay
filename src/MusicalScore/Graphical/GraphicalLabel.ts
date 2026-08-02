@@ -60,6 +60,50 @@ export class GraphicalLabel extends Clickable {
     }
 
     /**
+     * Returns the right edge of the shaped runs intersecting a label-relative
+     * vertical band. This lets composite notation tuck beneath a superscript
+     * without ignoring baseline text that would actually collide with it.
+     */
+    public getRightProfileForVerticalBand(top: number, bottom: number): number {
+        if (this.TextLines?.length !== 1 || !this.TextLines[0].runs?.length) {
+            return this.PositionAndShape.BorderRight;
+        }
+        const line: GraphicalLabelLine = this.TextLines[0];
+        const lineTop: number = line.top ?? -this.Label.fontHeight;
+        const lineBottom: number = line.bottom ?? 0;
+        let verticalAlignmentOffset: number = 0;
+        switch (this.Label.textAlignment) {
+            case TextAlignmentEnum.LeftCenter:
+            case TextAlignmentEnum.CenterCenter:
+            case TextAlignmentEnum.RightCenter:
+                verticalAlignmentOffset = -(lineTop + lineBottom) / 2;
+                break;
+            case TextAlignmentEnum.LeftTop:
+            case TextAlignmentEnum.CenterTop:
+            case TextAlignmentEnum.RightTop:
+                verticalAlignmentOffset = -lineTop;
+                break;
+            default:
+                break;
+        }
+
+        let runLeft: number = this.PositionAndShape.BorderLeft + line.xOffset;
+        let profileRight: number = Number.NEGATIVE_INFINITY;
+        for (const run of line.runs) {
+            const fontScale: number = run.fontScale ?? 1;
+            const baselineShift: number = run.baselineShift ?? 0;
+            const runBottom: number = verticalAlignmentOffset +
+                (baselineShift + fontScale - 1) * this.Label.fontHeight;
+            const runTop: number = runBottom - this.Label.fontHeight * fontScale;
+            if (runTop < bottom && runBottom > top) {
+                profileRight = Math.max(profileRight, runLeft + run.width);
+            }
+            runLeft += run.width;
+        }
+        return isFinite(profileRight) ? profileRight : this.PositionAndShape.BorderRight;
+    }
+
+    /**
      * Calculate GraphicalLabel's Borders according to its Alignment
      * Create also the text-lines and their offsets here
      */

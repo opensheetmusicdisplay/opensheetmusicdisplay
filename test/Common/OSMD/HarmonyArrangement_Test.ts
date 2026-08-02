@@ -138,6 +138,19 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
     const referenceSlash: GraphicalChordSymbolContainer = systems[4][0];
     expectCanonicalSlashChord(referenceSlash);
     expect(referenceSlash.GraphicalLabels[0].Label.text).to.include(SMUFL_CHORD_MAJOR_SEVENTH_GLYPH);
+    const referenceUpper: GraphicalLabel = referenceSlash.GraphicalLabels[0];
+    const referenceSeparator: GraphicalLabel = referenceSlash.GraphicalLabels.find((label) =>
+      label.Label.text === SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+    );
+    const referenceProfileRight: number = referenceUpper.getRightProfileForVerticalBand(
+      referenceSeparator.PositionAndShape.RelativePosition.y + referenceSeparator.PositionAndShape.BorderTop -
+        referenceUpper.PositionAndShape.RelativePosition.y,
+      referenceSeparator.PositionAndShape.RelativePosition.y + referenceSeparator.PositionAndShape.BorderBottom -
+        referenceUpper.PositionAndShape.RelativePosition.y,
+    );
+    // The raised major-seventh run may overhang the slash. Only the D-flat
+    // body intersects the slash band and should determine its compact spacing.
+    expect(referenceProfileRight).to.be.lessThan(referenceUpper.PositionAndShape.BorderRight);
     const referencePolychord: GraphicalChordSymbolContainer = systems[4][1];
     expectCanonicalPolychord(referencePolychord);
   });
@@ -242,7 +255,12 @@ function expectCanonicalSlashChord(
     return;
   }
   const upper: GraphicalLabel = chord.GraphicalLabels[0];
-  const upperRight: number = upper.PositionAndShape.RelativePosition.x + upper.PositionAndShape.BorderRight;
+  const slashTopRelativeToUpper: number = slash.PositionAndShape.RelativePosition.y +
+    slash.PositionAndShape.BorderTop - upper.PositionAndShape.RelativePosition.y;
+  const slashBottomRelativeToUpper: number = slash.PositionAndShape.RelativePosition.y +
+    slash.PositionAndShape.BorderBottom - upper.PositionAndShape.RelativePosition.y;
+  const upperRight: number = upper.PositionAndShape.RelativePosition.x +
+    upper.getRightProfileForVerticalBand(slashTopRelativeToUpper, slashBottomRelativeToUpper);
   const upperBottom: number = upper.PositionAndShape.RelativePosition.y + upper.PositionAndShape.BorderBottom;
   const upperHorizontalSeparation: number = slashCenterX - upperRight;
   const upperVerticalSeparation: number = slashCenterY - upperBottom;
