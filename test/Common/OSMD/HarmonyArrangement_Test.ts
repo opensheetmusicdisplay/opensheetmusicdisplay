@@ -22,6 +22,8 @@ import {KeyInstruction} from "../../../src/MusicalScore/VoiceData/Instructions/K
 import {OpenSheetMusicDisplay} from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import {TransposeCalculator} from "../../../src/Plugins/Transpose/TransposeCalculator";
 import {TestUtils} from "../../Util/TestUtils";
+import {VexFlowStaffEntry} from
+  "../../../src/MusicalScore/Graphical/VexFlow/VexFlowStaffEntry";
 
 describe("Dorico-style MusicXML harmony arrangements", (): void => {
   it("preserves ordered components, degree ownership, arrangements, and separators", async (): Promise<void> => {
@@ -222,6 +224,46 @@ describe("Dorico-style MusicXML harmony arrangements", (): void => {
 
     expect(skylineTop).to.be.at.most(chordTop + 0.001);
   });
+
+  it("anchors short chord symbols consistently to rendered notehead left edges", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = await loadShortChordScore();
+    const assertAnchors: () => string[] = (): string[] => {
+      const anchoredChords: Array<{text: string, delta: number}> = osmd.GraphicSheet.MusicPages
+        .flatMap((page) => page.MusicSystems)
+        .flatMap((system) => system.StaffLines[0].Measures)
+        .flatMap((measure) => measure.staffEntries)
+        .flatMap((entry) => {
+          const anchorOffset: number | undefined =
+            (entry as VexFlowStaffEntry).getNoteheadLeftAnchorOffset();
+          if (anchorOffset === undefined) {
+            return [];
+          }
+          return entry.graphicalChordContainers
+            .filter((chord) => chord.PositionAndShape.Parent === entry.PositionAndShape)
+            .map((chord) => ({
+              text: chord.GraphicalLabel.Label.text,
+              delta: chord.PositionAndShape.RelativePosition.x +
+                chord.PositionAndShape.BorderLeft - anchorOffset,
+            }));
+        });
+
+      expect(anchoredChords.map((chord) => chord.text)).to.deep.equal(["C", "F", "G", "F", "C", "F"]);
+      for (const chord of anchoredChords) {
+        expect(chord.delta, chord.text).to.be.closeTo(
+          osmd.EngravingRules.ChordSymbolRelativeXOffset,
+          0.001,
+        );
+      }
+      expect(Math.max(...anchoredChords.map((chord) => chord.delta)) -
+        Math.min(...anchoredChords.map((chord) => chord.delta))).to.be.lessThan(0.001);
+      return anchoredChords.map((chord) => `${chord.text}|${chord.delta.toFixed(4)}`);
+    };
+
+    const firstGeometry: string[] = assertAnchors();
+    osmd.updateGraphic();
+    osmd.render();
+    expect(assertAnchors()).to.deep.equal(firstGeometry);
+  });
 });
 
 function expectCanonicalPolychord(chord: GraphicalChordSymbolContainer): void {
@@ -256,13 +298,13 @@ function expectCanonicalPolychord(chord: GraphicalChordSymbolContainer): void {
   expect(separatorOffsetX + separator.End.x).to.be.greaterThan(Math.max(...chord.GraphicalLabels.map((label) =>
     label.PositionAndShape.RelativePosition.x + label.PositionAndShape.BorderRight,
   )));
-  expect(chord.PositionAndShape.BorderLeft).to.be.closeTo(-1, 0.001);
+  expect(chord.PositionAndShape.BorderLeft).to.be.closeTo(0, 0.001);
 }
 
 function expectCanonicalSlashChord(
   chord: GraphicalChordSymbolContainer,
   abbreviated: boolean = false,
-  expectedLeft: number = -1,
+  expectedLeft: number = 0,
 ): void {
   expect(chord.GraphicalSeparators).to.have.length(0);
   expect(chord.GraphicalLabels).to.have.length(abbreviated ? 2 : 3);
@@ -314,6 +356,14 @@ async function loadHarmonyScore(): Promise<OpenSheetMusicDisplay> {
   osmd.TransposeCalculator = new TransposeCalculator();
   await osmd.load(TestUtils.getScore("test_harmony_dorico_arrangements.musicxml"));
   osmd.setOptions({newSystemFromXML: true});
+  osmd.render();
+  return osmd;
+}
+
+async function loadShortChordScore(): Promise<OpenSheetMusicDisplay> {
+  const container: HTMLElement = TestUtils.getDivElement(document);
+  const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+  await osmd.load(TestUtils.getScore("test_chord_symbol_centering_short_symbols.musicxml"));
   osmd.render();
   return osmd;
 }

@@ -33,6 +33,14 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     private textHeight: number;
     private keyInstruction: KeyInstruction;
     private transposeHalftones: number;
+    /**
+     * Horizontal displacement of this construction from its rhythmic anchor.
+     *
+     * This is kept separately from BoundingBox.RelativePosition so a renderer
+     * can re-anchor the construction to final notehead geometry without
+     * accumulating offsets across repeated layout passes.
+     */
+    private rhythmicAnchorOffsetX: number = 0;
     private abbreviateUpperChord: boolean = false;
     private upperHarmonySignature: string;
     private bassSignature: string;
@@ -91,6 +99,27 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
 
     public get IsUpperChordAbbreviated(): boolean {
         return this.abbreviateUpperChord;
+    }
+
+    public set RhythmicAnchorOffsetX(value: number) {
+        this.rhythmicAnchorOffsetX = value;
+        this.PositionAndShape.RelativePosition.x = value;
+    }
+
+    public get RhythmicAnchorOffsetX(): number {
+        return this.rhythmicAnchorOffsetX;
+    }
+
+    /**
+     * Re-anchor this chord to a final rendered glyph position. The stored
+     * construction offset preserves multiple harmony events at one rhythmic
+     * position, while the absolute assignment keeps the operation idempotent.
+     */
+    public alignToRhythmicAnchor(anchorOffsetX: number): void {
+        if (!Number.isFinite(anchorOffsetX)) {
+            return;
+        }
+        this.PositionAndShape.RelativePosition.x = anchorOffsetX + this.rhythmicAnchorOffsetX;
     }
 
     public abbreviateRepeatedUpperChord(): void {
@@ -284,8 +313,7 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
      * rhythmic anchor. Internal polychord and slash-chord geometry remains
      * centred around its own separator, but wide constructions now grow to
      * the right instead of extending equally into the preceding rhythm. The
-     * existing short-chord optical shift is applied later by the symbol
-     * factory at the container level.
+     * optical offset is measured from the final notehead-left anchor.
      */
     private leftAlignConstructionOnRhythmicAnchor(): void {
         const shift: number = this.rules.ChordSymbolRelativeXOffset - this.PositionAndShape.BorderLeft;

@@ -6,6 +6,7 @@ import { GraphicalMusicSheet } from "../GraphicalMusicSheet";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { GraphicalChordSymbolContainer } from "../GraphicalChordSymbolContainer";
+import { SystemLinesEnum } from "../SystemLinesEnum";
 import {
   HorizontalSystemSpacingCandidate,
   HorizontalSystemSpacingLayout,
@@ -13,6 +14,7 @@ import {
   SystemMeasureSpacingInput,
 } from "../HorizontalSystemSpacing";
 import { Staff } from "../../VoiceData/Staff";
+import { Note as SourceNote } from "../../VoiceData/Note";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import {
@@ -33,7 +35,10 @@ interface MeasureProfile {
   intrinsicHardWidthPx: number;
   leadingRhythmicWeight: number;
   minimumRequiredWidthPx: number;
+  preferredTerminalRhythmicWidthPx?: number;
   rhythmicWeight: number;
+  terminalHasVisibleRest: boolean;
+  terminalRestOpticalTailPx: number;
 }
 
 interface ProfileColumn {
@@ -42,6 +47,10 @@ interface ProfileColumn {
   intrinsicHardWidthPx: number;
   notationLeftExtentPx: number;
   notationRightExtentPx: number;
+  hasVisibleRest: boolean;
+  preferredTerminalOpticalTailPx?: number;
+  preferredTerminalRhythmicWidthPx?: number;
+  terminalBarlineInwardExtentPx?: number;
   rhythmicWeight: number;
   timestamp: number;
 }
@@ -129,6 +138,8 @@ export interface VexFlowHorizontalSpacingSystemDiagnostics {
   resolvedConstraints: HorizontalSpacingConstraintResult["resolvedConstraints"];
   selectedHardWidthPx: number;
   systemIndex: number;
+  terminalPreferenceScale: number;
+  targetVariableWidthPx: number;
 }
 
 export interface VexFlowHorizontalSpacingColumnDiagnostics {
@@ -159,8 +170,12 @@ export interface VexFlowHorizontalSpacingGapDiagnostics {
   measureIndex?: number;
   measureNumber?: number;
   notationRightExtentPx?: number;
+  preferredTerminalOpticalTailPx?: number;
+  preferredTerminalRhythmicWidthPx?: number;
   residualAddedWidthPx: number;
   residualWeight: number;
+  terminalBarlineInwardExtentPx?: number;
+  terminalHasVisibleRest?: boolean;
   toColumn: number;
 }
 
@@ -227,7 +242,22 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     availableVariableWidth: number,
     maximumSoftScalingFactor?: number,
   ): HorizontalSystemSpacingLayout {
-    const solution: CandidateSolution = this.solveCandidate(measures, true);
+    const availableVariableWidthPx: number = Math.max(0, availableVariableWidth * unitInPixels);
+    const baselineSolution: CandidateSolution = this.solveCandidate(measures, true, 0);
+    const targetVariableWidthPx: number = selectedTargetVariableWidth(
+      baselineSolution,
+      availableVariableWidthPx,
+      maximumSoftScalingFactor,
+    );
+    const selectedPreference: {
+      scale: number;
+      solution: CandidateSolution;
+    } = this.solveSelectedTerminalPreference(
+      measures,
+      baselineSolution,
+      targetVariableWidthPx,
+    );
+    const solution: CandidateSolution = selectedPreference.solution;
     const intrinsicHardTotalPx: number = sum(solution.intrinsicHardWidthsPx);
     const selectedHardWidthsPx: number[] = solution.baseHardWidthsPx.map(
       (width: number, index: number): number => width + solution.addedWidthByMeasurePx[index],
@@ -238,15 +268,10 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         Math.max(0, width - solution.baseHardWidthsPx[index]),
     );
     const softTotalPx: number = sum(softWidthsPx);
-    const availableVariableWidthPx: number = Math.max(0, availableVariableWidth * unitInPixels);
-    const availableSoftWidthPx: number = Math.max(
+    const targetSoftWidthPx: number = Math.max(
       softTotalPx,
-      availableVariableWidthPx - selectedHardTotalPx,
+      targetVariableWidthPx - selectedHardTotalPx,
     );
-    const targetSoftWidthPx: number =
-      maximumSoftScalingFactor === undefined
-        ? availableSoftWidthPx
-        : Math.min(availableSoftWidthPx, softTotalPx * maximumSoftScalingFactor);
     const residualWidthPx: number = Math.max(0, targetSoftWidthPx - softTotalPx);
     const totalGapWeight: number = Math.max(
       FIXED_GAP_WEIGHT,
@@ -378,8 +403,24 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
                 ? measures[measureIndex].graphicalMeasures[0]?.MeasureNumber
                 : undefined,
             notationRightExtentPx,
+            preferredTerminalOpticalTailPx:
+              kind === "measure-terminal"
+                ? leftNode.column?.preferredTerminalOpticalTailPx
+                : undefined,
+            preferredTerminalRhythmicWidthPx:
+              kind === "measure-terminal"
+                ? leftNode.column?.preferredTerminalRhythmicWidthPx
+                : undefined,
             residualAddedWidthPx: residualAddedGaps[gapIndex],
             residualWeight: solution.residualGapWeights[gapIndex],
+            terminalBarlineInwardExtentPx:
+              kind === "measure-terminal"
+                ? leftNode.column?.terminalBarlineInwardExtentPx
+                : undefined,
+            terminalHasVisibleRest:
+              kind === "measure-terminal"
+                ? leftNode.column?.hasVisibleRest === true
+                : undefined,
             toColumn: gapIndex + 1,
           };
         },
@@ -390,6 +431,8 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
       resolvedConstraints: [...solution.constraintResult.resolvedConstraints],
       selectedHardWidthPx: selectedHardTotalPx,
       systemIndex: this.diagnostics.selectedSystems.length,
+      terminalPreferenceScale: selectedPreference.scale,
+      targetVariableWidthPx,
     });
     this.diagnostics.selectedSystemCount++;
     setDiagnostics(this.graphicalMusicSheet, this.diagnostics);
@@ -428,9 +471,55 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
     setDiagnostics(this.graphicalMusicSheet, this.diagnostics);
   }
 
+  /**
+   * Terminal rhythm and optical preferences are soft: consume the system's
+   * existing justification budget, but never make a selected system wider
+   * than the layout chosen without those preferences.
+   */
+  private solveSelectedTerminalPreference(
+    measures: SystemMeasureSpacingInput[],
+    baselineSolution: CandidateSolution,
+    targetVariableWidthPx: number,
+  ): { scale: number, solution: CandidateSolution } {
+    const fullSolution: CandidateSolution = this.solveCandidate(measures, true, 1);
+    if (fullSolution.minimumVariableWidthPx <= targetVariableWidthPx + 0.001) {
+      return { scale: 1, solution: fullSolution };
+    }
+
+    const availablePreferencePx: number = Math.max(
+      0,
+      targetVariableWidthPx - baselineSolution.minimumVariableWidthPx,
+    );
+    const requestedPreferencePx: number = Math.max(
+      0,
+      fullSolution.minimumVariableWidthPx - baselineSolution.minimumVariableWidthPx,
+    );
+    if (availablePreferencePx <= 0.001 || requestedPreferencePx <= 0.001) {
+      return { scale: 0, solution: baselineSolution };
+    }
+
+    let scale: number = Math.min(1, availablePreferencePx / requestedPreferencePx);
+    let solution: CandidateSolution = this.solveCandidate(measures, true, scale);
+    for (let attempt: number = 0;
+      attempt < 3 && solution.minimumVariableWidthPx > targetVariableWidthPx + 0.001;
+      attempt++) {
+      const achievedPreferencePx: number = Math.max(
+        0.001,
+        solution.minimumVariableWidthPx - baselineSolution.minimumVariableWidthPx,
+      );
+      scale *= Math.min(1, availablePreferencePx / achievedPreferencePx) * 0.999;
+      solution = this.solveCandidate(measures, true, scale);
+    }
+    if (solution.minimumVariableWidthPx > targetVariableWidthPx + 0.001) {
+      return { scale: 0, solution: baselineSolution };
+    }
+    return { scale, solution };
+  }
+
   private solveCandidate(
     measures: SystemMeasureSpacingInput[],
     compactPreferredTerminals: boolean,
+    terminalPreferenceScale: number = 1,
   ): CandidateSolution {
     if (measures.length === 0) {
       return emptySolution();
@@ -464,7 +553,11 @@ export class VexFlowSystemSpacingPlanner implements IHorizontalSystemSpacingPlan
         intrinsicBaseFloorPx,
       );
       const baseVariableWidthPx: number = compactPreferredTerminals
-        ? capPreferredTerminalWidth(uncappedBaseVariableWidthPx, profile)
+        ? capPreferredTerminalWidth(
+          uncappedBaseVariableWidthPx,
+          profile,
+          terminalPreferenceScale,
+        )
         : uncappedBaseVariableWidthPx;
       baseVariableWidthsPx.push(baseVariableWidthPx);
       baseHardWidthsPx.push(Math.min(baseVariableWidthPx, intrinsicHardWidthPx));
@@ -662,7 +755,7 @@ function residualWeightBetweenNodes(
   rightNode: CandidateNode,
   profilesByInput: MeasureProfile[],
 ): number {
-  if (isCompactTerminalGap(leftNode, rightNode, profilesByInput)) {
+  if (isCompactPickupTerminalGap(leftNode, rightNode, profilesByInput)) {
     return 0;
   }
   const weight: number = rhythmicWeightBetweenNodes(
@@ -675,6 +768,17 @@ function residualWeightBetweenNodes(
   return weight <= FIXED_GAP_WEIGHT ? 0 : weight;
 }
 
+function isCompactPickupTerminalGap(
+  leftNode: CandidateNode,
+  rightNode: CandidateNode,
+  profilesByInput: MeasureProfile[],
+): boolean {
+  if (!isCompactTerminalGap(leftNode, rightNode, profilesByInput)) {
+    return false;
+  }
+  return profilesByInput[leftNode.column.inputIndex]?.compactPickup === true;
+}
+
 function isCompactTerminalGap(
   leftNode: CandidateNode,
   rightNode: CandidateNode,
@@ -684,7 +788,8 @@ function isCompactTerminalGap(
     return false;
   }
   const inputIndex: number = leftNode.column.inputIndex;
-  return profilesByInput[inputIndex]?.compactTerminal === true &&
+  const profile: MeasureProfile = profilesByInput[inputIndex];
+  return profile?.compactTerminal === true &&
     rightNode.boundaryInputIndex === inputIndex + 1;
 }
 
@@ -734,9 +839,37 @@ function measureRhythmicWeight(sourceMeasure: SourceMeasure): number {
   return Math.max(FIXED_GAP_WEIGHT, Math.min(1, duration / meter));
 }
 
+function selectedTargetVariableWidth(
+  solution: CandidateSolution,
+  availableVariableWidthPx: number,
+  maximumSoftScalingFactor?: number,
+): number {
+  const selectedHardTotalPx: number = sum(
+    solution.baseHardWidthsPx.map(
+      (width: number, index: number): number =>
+        width + solution.addedWidthByMeasurePx[index],
+    ),
+  );
+  const softTotalPx: number = sum(
+    solution.baseVariableWidthsPx.map(
+      (width: number, index: number): number =>
+        Math.max(0, width - solution.baseHardWidthsPx[index]),
+    ),
+  );
+  const availableSoftWidthPx: number = Math.max(
+    softTotalPx,
+    availableVariableWidthPx - selectedHardTotalPx,
+  );
+  const targetSoftWidthPx: number = maximumSoftScalingFactor === undefined
+    ? availableSoftWidthPx
+    : Math.min(availableSoftWidthPx, softTotalPx * maximumSoftScalingFactor);
+  return selectedHardTotalPx + targetSoftWidthPx;
+}
+
 function capPreferredTerminalWidth(
   baseVariableWidthPx: number,
   profile?: MeasureProfile,
+  terminalPreferenceScale: number = 1,
 ): number {
   if (!profile?.compactTerminal) {
     return baseVariableWidthPx;
@@ -751,10 +884,84 @@ function capPreferredTerminalWidth(
       : 0;
   const maximumPreferredWidthPx: number =
     profile.minimumRequiredWidthPx + maximumPaddingPx;
-  return Math.max(
+  const lastColumn: ProfileColumn = profile.columns[profile.columns.length - 1];
+  const rhythmicPreferredWidthPx: number =
+    lastColumn?.preferredTerminalRhythmicWidthPx ?? 0;
+  const rhythmicPreferredMeasureWidthPx: number = lastColumn
+    ? lastColumn.basePositionPx + rhythmicPreferredWidthPx
+    : 0;
+  const terminalRestPreferredMeasureWidthPx: number = lastColumn
+    ? lastColumn.basePositionPx +
+      lastColumn.notationRightExtentPx +
+      maximumPaddingPx +
+      profile.terminalRestOpticalTailPx
+    : 0;
+  const cappedPreferredWidthPx: number = Math.max(
     profile.minimumRequiredWidthPx,
     Math.min(baseVariableWidthPx, maximumPreferredWidthPx),
   );
+  const fullPreferredWidthPx: number = Math.max(
+    cappedPreferredWidthPx,
+    rhythmicPreferredMeasureWidthPx,
+    terminalRestPreferredMeasureWidthPx,
+  );
+  const safePreferenceScale: number = Math.max(
+    0,
+    Math.min(1, terminalPreferenceScale),
+  );
+  return cappedPreferredWidthPx +
+    (fullPreferredWidthPx - cappedPreferredWidthPx) * safePreferenceScale;
+}
+
+/**
+ * Preserve a terminal onset's rhythmic cell without restoring VexFlow's
+ * occasionally oversized end padding. The closest preceding duration is the
+ * best local statement of the measure's spacing curve. When the terminal
+ * glyph reaches farther right than that reference note, retain the same
+ * usable optical space after the glyph as well as the rhythmic proportion.
+ */
+function preferredTerminalRhythmicWidth(
+  columns: ProfileColumn[],
+  endTimestamp: number,
+): number | undefined {
+  if (columns.length < 2) {
+    return undefined;
+  }
+  const lastColumn: ProfileColumn = columns[columns.length - 1];
+  const terminalSpan: number = endTimestamp - lastColumn.timestamp;
+  const terminalWeight: number = lastColumn.rhythmicWeight;
+  if (terminalSpan <= 0 || terminalWeight <= FIXED_GAP_WEIGHT) {
+    return undefined;
+  }
+
+  let referenceIndex: number = -1;
+  let closestDurationDifference: number = Number.POSITIVE_INFINITY;
+  for (let index: number = columns.length - 2; index >= 0; index--) {
+    const span: number = columns[index + 1].timestamp - columns[index].timestamp;
+    const widthPx: number = columns[index + 1].basePositionPx - columns[index].basePositionPx;
+    if (span <= 0 || widthPx <= 0 || columns[index].rhythmicWeight <= FIXED_GAP_WEIGHT) {
+      continue;
+    }
+    const durationDifference: number = Math.abs(Math.log(span / terminalSpan));
+    if (durationDifference < closestDurationDifference) {
+      referenceIndex = index;
+      closestDurationDifference = durationDifference;
+    }
+  }
+  if (referenceIndex < 0) {
+    return undefined;
+  }
+
+  const referenceColumn: ProfileColumn = columns[referenceIndex];
+  const nextColumn: ProfileColumn = columns[referenceIndex + 1];
+  const referenceWidthPx: number = nextColumn.basePositionPx - referenceColumn.basePositionPx;
+  const scaledReferenceWidthPx: number =
+    referenceWidthPx * terminalWeight / referenceColumn.rhythmicWeight;
+  const opticalRightDifferencePx: number = Math.max(
+    0,
+    lastColumn.notationRightExtentPx - referenceColumn.notationRightExtentPx,
+  );
+  return scaledReferenceWidthPx + opticalRightDifferencePx;
 }
 
 function isShortImplicitMeasure(sourceMeasure: SourceMeasure): boolean {
@@ -852,7 +1059,12 @@ function collectMeasureProfiles(
     const sourceMeasure: SourceMeasure = graphicalMeasures[0].parentSourceMeasure;
     const contextTimestamps: Map<VF.TickContext, number> =
       collectContextTimestamps(graphicalMeasures);
-    const columns: ProfileColumn[] = groupContextsByTick(contextTimestamps);
+    const visibleRestContexts: Set<VF.TickContext> =
+      collectVisibleRestContexts(graphicalMeasures);
+    const columns: ProfileColumn[] = groupContextsByTick(
+      contextTimestamps,
+      visibleRestContexts,
+    );
     const rhythmicEndTimestamp: number = measureEndTimestamp(
       sourceMeasure,
       columns[columns.length - 1]?.timestamp,
@@ -864,6 +1076,12 @@ function collectMeasureProfiles(
       rhythmicWeight,
       rules.SoftmaxFactorVexFlow,
     );
+    const preferredTerminalRhythmicWidthPx: number | undefined =
+      preferredTerminalRhythmicWidth(columns, rhythmicEndTimestamp);
+    if (columns.length > 0 && preferredTerminalRhythmicWidthPx !== undefined) {
+      columns[columns.length - 1].preferredTerminalRhythmicWidthPx =
+        preferredTerminalRhythmicWidthPx;
+    }
     const intrinsicHardWidthPx: number = sum(
       columns.map((column: ProfileColumn): number => column.intrinsicHardWidthPx),
     );
@@ -875,6 +1093,19 @@ function collectMeasureProfiles(
       notationMinimumRequiredWidthPx,
       unanchoredHarmonyMinimumWidthPx(graphicalMeasures, rhythmicEndTimestamp, rules),
     );
+    const terminalHasVisibleRest: boolean = lastColumn?.hasVisibleRest === true;
+    const terminalBarlineInwardExtentPx: number = terminalHasVisibleRest
+      ? endBarlineInwardExtentPx(sourceMeasure.endingBarStyleEnum)
+      : 0;
+    const terminalRestOpticalTailPx: number = terminalHasVisibleRest &&
+      !isShortImplicitMeasure(sourceMeasure)
+      ? Math.max(0, rules.QuarterRestRightClearance * unitInPixels) +
+        terminalBarlineInwardExtentPx
+      : 0;
+    if (lastColumn && terminalRestOpticalTailPx > 0) {
+      lastColumn.preferredTerminalOpticalTailPx = terminalRestOpticalTailPx;
+      lastColumn.terminalBarlineInwardExtentPx = terminalBarlineInwardExtentPx;
+    }
     const profile: MeasureProfile = {
       compactPickup: isShortImplicitMeasure(sourceMeasure),
       compactTerminal: isShortImplicitMeasure(sourceMeasure) || columns.length > 1,
@@ -883,13 +1114,44 @@ function collectMeasureProfiles(
       intrinsicHardWidthPx,
       leadingRhythmicWeight,
       minimumRequiredWidthPx,
+      preferredTerminalRhythmicWidthPx,
       rhythmicWeight,
+      terminalHasVisibleRest,
+      terminalRestOpticalTailPx,
     };
     for (const graphicalMeasure of graphicalMeasures) {
       profiles.set(graphicalMeasure, profile);
     }
   }
   return profiles;
+}
+
+/**
+ * VexFlow gives each end barline a nominal five-pixel instruction width, but
+ * double, final, and repeat barlines draw additional ink to the left of their
+ * anchor. Include that inward ink in a terminal rest's optical preference so
+ * its visible clearance is the same as it would be before a regular barline.
+ */
+function endBarlineInwardExtentPx(line: SystemLinesEnum): number {
+  let type: number;
+  switch (line) {
+    case SystemLinesEnum.DoubleThin:
+      type = VF.Barline.type.DOUBLE;
+      break;
+    case SystemLinesEnum.ThinBold:
+      type = VF.Barline.type.END;
+      break;
+    case SystemLinesEnum.DotsThinBold:
+      type = VF.Barline.type.REPEAT_END;
+      break;
+    case SystemLinesEnum.DotsBoldBoldDots:
+      type = VF.Barline.type.REPEAT_BOTH;
+      break;
+    default:
+      return 0;
+  }
+  const metrics: VF.LayoutMetrics | undefined = new VF.Barline(type).getLayoutMetrics();
+  return Math.max(0, -(metrics?.xMin ?? 0));
 }
 
 /**
@@ -944,6 +1206,31 @@ function unanchoredHarmonyMinimumWidthPx(
             container.PositionAndShape.RelativePosition.x +
             container.PositionAndShape.BorderMarginRight
           ) * unitInPixels;
+        if (normalizedTimestamp < 1) {
+          // Direction-only harmony is positioned proportionally between the
+          // first rhythmic entry and the end instruction area after final
+          // formatting. Model that same interpolation here. The previous
+          // origin-based estimate could leave a late slash-bass contour almost
+          // touching the barline (and a number centred on it).
+          const beginInstructionsWidth: number = measure.beginInstructionsWidth ?? 0;
+          const endInstructionsWidth: number = measure.endInstructionsWidth ?? 0;
+          const firstEntryX: number = measure.staffEntries[0]?.PositionAndShape.RelativePosition.x ??
+            beginInstructionsWidth;
+          const requiredTotalWidth: number = firstEntryX +
+            (
+              container.PositionAndShape.BorderMarginRight +
+              harmonyBarlineClearance(rules) -
+              endInstructionsWidth * normalizedTimestamp
+            ) /
+            (1 - normalizedTimestamp);
+          minimumWidthPx = Math.max(
+            minimumWidthPx,
+            Math.max(
+              0,
+              requiredTotalWidth - beginInstructionsWidth - endInstructionsWidth,
+            ) * unitInPixels,
+          );
+        }
         track.set(normalizedTimestamp, {
           leftOffsetPx: current
             ? Math.min(current.leftOffsetPx, leftOffsetPx)
@@ -1002,6 +1289,7 @@ function unanchoredHarmonyMinimumWidthPx(
 
 function groupContextsByTick(
   contextTimestamps: Map<VF.TickContext, number>,
+  visibleRestContexts: Set<VF.TickContext>,
 ): ProfileColumn[] {
   const contextsByTick: Map<number, VF.TickContext[]> = new Map<number, VF.TickContext[]>();
   contextTimestamps.forEach((_timestamp: number, context: VF.TickContext): void => {
@@ -1018,6 +1306,9 @@ function groupContextsByTick(
       return {
         basePositionPx: Math.min(...group.map((context: VF.TickContext): number => context.getX())),
         contexts: group,
+        hasVisibleRest: group.some(
+          (context: VF.TickContext): boolean => visibleRestContexts.has(context),
+        ),
         intrinsicHardWidthPx: Math.max(
           ...group.map((context: VF.TickContext): number => context.getWidth()),
         ),
@@ -1364,7 +1655,10 @@ function collectSystemHarmonyConstraints(
           });
           constraints.push({
             fromColumn: columnIndex,
-            minimumDistance: Math.max(0, rightOffsetPx),
+            minimumDistance: Math.max(
+              0,
+              rightOffsetPx + harmonyBarlineClearance(rules) * unitInPixels,
+            ),
             reason: "system-edge",
             // A barline is a hard edge for its own harmony skyline. Constrain
             // the complete composite chord footprint to this measure boundary,
@@ -1401,6 +1695,19 @@ function collectSystemHarmonyConstraints(
     },
   );
   return constraints;
+}
+
+/**
+ * Leave enough room for a measure number centred on the barline, plus a small
+ * optical gap. ChordSymbolXSpacing is normally wider than half a single-digit
+ * measure number and therefore provides the desired one-staff-space clearance
+ * without making every terminal cell conspicuously loose.
+ */
+function harmonyBarlineClearance(rules: EngravingRules): number {
+  const measureNumberOverhang: number = rules.RenderMeasureNumbers
+    ? rules.MeasureNumberLabelHeight / 2
+    : 0;
+  return Math.max(rules.ChordSymbolXSpacing, measureNumberOverhang);
 }
 
 function groupHarmonyByColumn(harmonies: CandidateHarmony[]): CandidateHarmony[][] {
@@ -1583,6 +1890,35 @@ function collectContextTimestamps(
     }
   }
   return contextTimestamps;
+}
+
+function collectVisibleRestContexts(
+  graphicalMeasures: GraphicalMeasure[],
+): Set<VF.TickContext> {
+  const contexts: Set<VF.TickContext> = new Set<VF.TickContext>();
+  for (const measure of graphicalMeasures) {
+    for (const staffEntry of measure.staffEntries) {
+      for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+        const sourceNote: SourceNote = voiceEntry.notes?.[0]?.sourceNote;
+        if (
+          !sourceNote?.PrintObject ||
+          !sourceNote.isRest?.()
+        ) {
+          continue;
+        }
+        const note: VF.Note = (
+          voiceEntry as GraphicalVoiceEntry & {
+            vfStaveNote?: VF.Note;
+          }
+        ).vfStaveNote;
+        const context: VF.TickContext = note?.getTickContext?.();
+        if (context) {
+          contexts.add(context);
+        }
+      }
+    }
+  }
+  return contexts;
 }
 
 function findOwningVoiceEntry(

@@ -1321,9 +1321,6 @@ export abstract class MusicSheetCalculator {
                         let firstNoteStartX: number = 0;
                         if (measure.staffEntries[0].relInMeasureTimestamp.RealValue === 0) {
                             firstNoteStartX = measure.staffEntries[0].PositionAndShape.RelativePosition.x;
-                            if (measure.MeasureNumber === 1) {
-                                firstNoteStartX += this.rules.ChordSymbolWholeMeasureRestXOffsetMeasure1;
-                            }
                         }
                         const measureEndX: number = measure.PositionAndShape.Size.width - measure.endInstructionsWidth;
                         const proportionInMeasure: number = staffEntry.relInMeasureTimestamp.RealValue /

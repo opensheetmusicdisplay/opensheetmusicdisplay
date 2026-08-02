@@ -593,7 +593,16 @@ export class MusicSystemBuilder {
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
         }
         VF.Stave.formatBegModifiers(staves); // x-align notes / beginning modifiers like time signatures, e.g. for transposing instruments
-        return totalBeginInstructionLengthX;
+        const formattedModifierWidth: number = Math.max(
+            0,
+            ...measures.map((measure: GraphicalMeasure): number =>
+                measure?.getFormattedBeginInstructionsWidth() ?? 0,
+            ),
+        );
+        // VexFlow's final note-start position already includes the padding on
+        // the right of the last beginning modifier. Adding RhythmRightMargin
+        // again enlarged the opening bar without moving its rhythmic origin.
+        return totalBeginInstructionLengthX > 0 ? formattedModifierWidth : 0;
     }
 
     /**

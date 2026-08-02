@@ -198,7 +198,7 @@ describe("Horizontal system spacing", (): void => {
     ).to.equal(true);
   });
 
-  it("caps preferred multi-onset terminal padding and redirects discretionary width", async (): Promise<void> => {
+  it("preserves a duration-matched terminal cell through proportional justification", async (): Promise<void> => {
     const osmd: OpenSheetMusicDisplay = createOsmd();
     await osmd.load(quarterRestScore());
     osmd.render();
@@ -235,19 +235,87 @@ describe("Horizontal system spacing", (): void => {
       baseTerminalPaddingPx,
       0.001,
     );
-    expect(baseTerminalPaddingPx).to.be.at.least(-0.001);
-    expect(baseTerminalPaddingPx).to.be.at.most(
-      VF.Stave.rightPadding + 0.001,
+    expect(terminalGap.preferredTerminalRhythmicWidthPx).to.be.greaterThan(0);
+    expect(
+      terminalGap.baseWidthPx - terminalGap.endInstructionsWidthPx,
+    ).to.be.closeTo(
+      expectedScaledTerminalVariableWidth(system, terminalGap),
+      0.001,
     );
     expect(terminalGap.hardWeight).to.equal(0);
-    expect(terminalGap.residualWeight).to.equal(0);
-    expect(terminalGap.residualAddedWidthPx).to.be.closeTo(0, 0.001);
+    expect(terminalGap.residualWeight).to.be.greaterThan(0);
+    expect(terminalGap.terminalHasVisibleRest).to.equal(false);
+    expect(system.terminalPreferenceScale).to.be.within(0, 1);
+    expect(system.minimumVariableWidth * 10).to.be.at.most(
+      system.targetVariableWidthPx + 0.001,
+    );
+  });
+
+  it("gives a visible terminal rest a duration-matched justified cell", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(terminalRestScore());
+    osmd.render();
+
+    const system: VexFlowHorizontalSpacingSystemDiagnostics =
+      getDiagnostics(osmd).selectedSystems[0];
+    const terminalGap: VexFlowHorizontalSpacingGapDiagnostics =
+      getTerminalGap(system, 0);
+    const precedingGap: VexFlowHorizontalSpacingGapDiagnostics = system.gaps.find(
+      (gap): boolean =>
+        gap.kind === "rhythmic" &&
+        gap.toColumn === terminalGap.fromColumn,
+    );
+
+    expect(terminalGap.terminalHasVisibleRest).to.equal(true);
+    expect(terminalGap.preferredTerminalOpticalTailPx).to.be.closeTo(
+      0.45 * 10,
+      0.001,
+    );
+    expect(terminalGap.terminalBarlineInwardExtentPx).to.be.closeTo(0, 0.001);
+    expect(terminalGap.hardWeight).to.equal(0);
+    expect(terminalGap.residualWeight).to.be.greaterThan(0);
+    expect(precedingGap).to.not.equal(undefined);
+    expect(terminalGap.preferredTerminalRhythmicWidthPx).to.be.at.least(
+      precedingGap.baseWidthPx - 0.001,
+    );
     expect(
-      system.gaps.some(
-        (gap): boolean =>
-          gap.kind === "rhythmic" && gap.residualAddedWidthPx > 0.001,
-      ),
-    ).to.equal(true);
+      terminalGap.baseWidthPx - terminalGap.endInstructionsWidthPx,
+    ).to.be.closeTo(
+      expectedScaledTerminalVariableWidth(system, terminalGap),
+      0.001,
+    );
+    expect(terminalGap.residualWeight).to.be.closeTo(
+      precedingGap.residualWeight,
+      0.000001,
+    );
+    expect(terminalGap.residualAddedWidthPx).to.be.closeTo(
+      precedingGap.residualAddedWidthPx,
+      0.001,
+    );
+  });
+
+  it("keeps a terminal rest equally clear of a final barline's inward ink", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(terminalRestScore(true));
+    osmd.render();
+
+    const system: VexFlowHorizontalSpacingSystemDiagnostics =
+      getDiagnostics(osmd).selectedSystems[0];
+    const terminalGap: VexFlowHorizontalSpacingGapDiagnostics =
+      getTerminalGap(system, 0);
+
+    expect(terminalGap.terminalHasVisibleRest).to.equal(true);
+    expect(terminalGap.terminalBarlineInwardExtentPx).to.be.closeTo(5, 0.001);
+    expect(terminalGap.preferredTerminalOpticalTailPx).to.be.closeTo(
+      0.45 * 10 + 5,
+      0.001,
+    );
+    expect(
+      terminalGap.baseWidthPx - terminalGap.endInstructionsWidthPx,
+    ).to.be.closeTo(
+      expectedScaledTerminalVariableWidth(system, terminalGap),
+      0.001,
+    );
   });
 
   it("allows a direct terminal hard constraint to exceed the preferred cap", async (): Promise<void> => {
@@ -269,12 +337,13 @@ describe("Horizontal system spacing", (): void => {
       );
 
     expect(terminalGap.hardWeight).to.equal(0);
-    expect(terminalGap.residualWeight).to.equal(0);
+    expect(terminalGap.residualWeight).to.be.greaterThan(0);
     expect(terminalGap.hardAddedWidthPx).to.be.greaterThan(0);
-    expect(terminalGap.residualAddedWidthPx).to.be.closeTo(0, 0.001);
     expect(terminalGap.directConstraintReasons).to.include("system-edge");
     expect(terminalGap.finalWidthPx).to.be.closeTo(
-      terminalGap.baseWidthPx + terminalGap.hardAddedWidthPx,
+      terminalGap.baseWidthPx +
+      terminalGap.hardAddedWidthPx +
+      terminalGap.residualAddedWidthPx,
       0.001,
     );
     expect(terminalConstraint).to.not.equal(undefined);
@@ -300,14 +369,17 @@ describe("Horizontal system spacing", (): void => {
           constraint.toColumn === terminalGap.toColumn,
       );
 
-    // The preferred terminal cell remains VexFlow's ordinary end padding.
-    // Any extra clearance required by the slash chord is a direct local
+    // The preferred terminal cell follows the local rhythmic spacing. Any
+    // extra clearance required by the slash chord is a direct local
     // constraint, not its overhang divided by the final rhythmic fraction.
-    expect(terminalGap.baseTerminalPaddingPx).to.be.at.least(-0.001);
-    expect(terminalGap.baseTerminalPaddingPx).to.be.at.most(
-      VF.Stave.rightPadding + 0.001,
+    expect(terminalGap.preferredTerminalRhythmicWidthPx).to.be.greaterThan(0);
+    expect(
+      terminalGap.baseWidthPx - terminalGap.endInstructionsWidthPx,
+    ).to.be.closeTo(
+      expectedScaledTerminalVariableWidth(system, terminalGap),
+      0.001,
     );
-    expect(terminalGap.residualAddedWidthPx).to.be.closeTo(0, 0.001);
+    expect(terminalGap.residualWeight).to.be.greaterThan(0);
     expect(terminalConstraint).to.not.equal(undefined);
     expect(terminalConstraint.finalDistance).to.be.at.least(
       terminalConstraint.minimumDistance - 0.001,
@@ -431,11 +503,14 @@ describe("Horizontal system spacing", (): void => {
       );
 
       expect(terminalGap.hardWeight).to.equal(0);
-      expect(terminalGap.residualWeight).to.equal(0);
+      expect(terminalGap.residualWeight).to.be.greaterThan(0);
       expect(terminalGap.endInstructionsWidthPx).to.be.greaterThan(0);
-      expect(terminalGap.baseTerminalPaddingPx).to.be.at.least(-0.001);
-      expect(terminalGap.baseTerminalPaddingPx).to.be.at.most(
-        VF.Stave.rightPadding + 0.001,
+      expect(terminalGap.preferredTerminalRhythmicWidthPx).to.be.greaterThan(0);
+      expect(
+        terminalGap.baseWidthPx - terminalGap.endInstructionsWidthPx,
+      ).to.be.closeTo(
+        expectedScaledTerminalVariableWidth(system, terminalGap),
+        0.001,
       );
       expect(terminalGap.finalWidthPx).to.be.closeTo(
         terminalGap.baseWidthPx +
@@ -753,6 +828,21 @@ function getTerminalGap(
   return gap;
 }
 
+function expectedScaledTerminalVariableWidth(
+  system: VexFlowHorizontalSpacingSystemDiagnostics,
+  gap: VexFlowHorizontalSpacingGapDiagnostics,
+): number {
+  const compactWidthPx: number =
+    gap.notationRightExtentPx + VF.Stave.rightPadding;
+  const fullPreferredWidthPx: number = Math.max(
+    compactWidthPx,
+    gap.preferredTerminalRhythmicWidthPx ?? 0,
+    compactWidthPx + (gap.preferredTerminalOpticalTailPx ?? 0),
+  );
+  return compactWidthPx +
+    (fullPreferredWidthPx - compactWidthPx) * system.terminalPreferenceScale;
+}
+
 function notePaddings(osmd: OpenSheetMusicDisplay): { leftPx: number, rightPx: number }[] {
   return osmd.GraphicSheet.MeasureList.flatMap((verticalMeasures): unknown[] => verticalMeasures)
     .flatMap((measure: any): unknown[] => measure?.staffEntries ?? [])
@@ -1031,6 +1121,29 @@ function quarterRestScore(): string {
         <pitch><step>D</step><octave>4</octave></pitch>
         <duration>1</duration><type>quarter</type>
       </note>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+function terminalRestScore(finalBarline: boolean = false): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>2</duration><type>half</type>
+      </note>
+      <note><rest/><duration>2</duration><type>half</type></note>
+      ${finalBarline ? "<barline location=\"right\"><bar-style>light-heavy</bar-style></barline>" : ""}
     </measure>
   </part>
 </score-partwise>`;

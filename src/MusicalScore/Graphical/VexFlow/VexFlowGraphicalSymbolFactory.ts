@@ -220,11 +220,11 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                 graphicalChordSymbolContainer.PositionAndShape.RelativePosition.y = -rules.ChordSymbolYOffset;
             }
             graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
-            let extraXShiftForShortChordSymbols: number = 0;
-            if (graphicalChordSymbolContainer.PositionAndShape.Size.width < rules.ChordSymbolExtraXShiftWidthThreshold) {
-                extraXShiftForShortChordSymbols = rules.ChordSymbolExtraXShiftForShortChordSymbols;
-            }
-            graphicalChordSymbolContainer.PositionAndShape.RelativePosition.x += xShift + extraXShiftForShortChordSymbols;
+            // Left-aligned harmony uses one optical offset from the rendered
+            // notehead. The old width-dependent short-symbol shift made C, F,
+            // and G acquire different anchors and is intentionally not part of
+            // this path.
+            graphicalChordSymbolContainer.RhythmicAnchorOffsetX = xShift;
             // TODO check for available space until next staffEntry or chord symbol? (x direction)
             graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
             graphicalStaffEntry.graphicalChordContainers.push(graphicalChordSymbolContainer);

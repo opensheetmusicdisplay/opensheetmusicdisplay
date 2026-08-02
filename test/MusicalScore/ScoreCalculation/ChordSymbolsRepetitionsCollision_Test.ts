@@ -115,11 +115,17 @@ function expectNoOverlaps(rects: LabelRect[]): void {
 
 /**
  * Expects every harmony construction to finish before its owning measure's
- * right barline. This checks the complete composite footprint, including slash
- * basses and polychord separators, rather than only the upper label.
+ * right barline with enough room for a measure number centred on that boundary.
+ * This checks the complete composite footprint, including slash basses and
+ * polychord separators, rather than only the upper label.
  * @param graphicalSheet the calculated score to inspect
  */
 function expectChordFootprintsBeforeBarlines(graphicalSheet: GraphicalMusicSheet): void {
+    const rules: EngravingRules = new EngravingRules();
+    const minimumClearance: number = Math.max(
+        rules.ChordSymbolXSpacing,
+        rules.MeasureNumberLabelHeight / 2,
+    );
     for (const measuresOfAllStaves of graphicalSheet.MeasureList) {
         for (const measure of measuresOfAllStaves as VexFlowMeasure[]) {
             const chordRects: LabelRect[] = collectMeasureChordLabelRects(measure);
@@ -128,8 +134,10 @@ function expectChordFootprintsBeforeBarlines(graphicalSheet: GraphicalMusicSheet
             }
             const measurePosition: {x: number, y: number} = absolutePosition(measure.PositionAndShape);
             const measureRight: number = measurePosition.x + measure.PositionAndShape.Size.width;
-            expect(Math.max(...chordRects.map((rect: LabelRect): number => rect.right)),
-                `measure ${measure.MeasureNumber} chord footprint`).to.be.at.most(measureRight + 0.01);
+            const chordRight: number = Math.max(...chordRects.map((rect: LabelRect): number => rect.right));
+            expect(measureRight - chordRight,
+                `measure ${measure.MeasureNumber} chord-to-barline clearance`).to.be.at.least(
+                    minimumClearance - 0.01);
         }
     }
 }
@@ -185,6 +193,38 @@ describe("Chord symbol and repetition instruction collision avoidance", () => {
                 expect(chordRects).to.have.length(2);
             }
             expectChordFootprintsBeforeBarlines(graphicalSheet);
+        });
+
+        it("does not give the opening bar extra rhythmic width beyond its instructions", () => {
+            const measures: VexFlowMeasure[] = graphicalSheet.MeasureList.map(
+                (verticalMeasures: VexFlowMeasure[]): VexFlowMeasure => verticalMeasures[0],
+            );
+            const variableWidths: number[] = measures.map((measure: VexFlowMeasure): number =>
+                measure.PositionAndShape.Size.width -
+                measure.beginInstructionsWidth -
+                measure.endInstructionsWidth,
+            );
+            expect(measures[0].beginInstructionsWidth).to.be.greaterThan(measures[1].beginInstructionsWidth);
+            expect(variableWidths[0]).to.be.at.most(Math.max(...variableWidths.slice(1)) + 0.01);
+            const chordClearances: number[] = measures.map((measure: VexFlowMeasure): number => {
+                const measurePosition: {x: number, y: number} = absolutePosition(measure.PositionAndShape);
+                const measureRight: number = measurePosition.x + measure.PositionAndShape.Size.width;
+                const chordRight: number = Math.max(...collectMeasureChordLabelRects(measure).map(
+                    (rect: LabelRect): number => rect.right,
+                ));
+                return measureRight - chordRight;
+            });
+            const diagnostics: object[] = measures.slice(0, 2).map((measure: VexFlowMeasure, index: number): object => ({
+                measure: measure.MeasureNumber,
+                width: measure.PositionAndShape.Size.width,
+                begin: measure.beginInstructionsWidth,
+                end: measure.endInstructionsWidth,
+                firstEntryX: measure.staffEntries[0].PositionAndShape.RelativePosition.x,
+                minimumStaffEntriesWidth: measure.minimumStaffEntriesWidth,
+                variableWidth: variableWidths[index],
+                chordClearance: chordClearances[index],
+            }));
+            expect(chordClearances[0], JSON.stringify(diagnostics)).to.be.closeTo(chordClearances[1], 0.01);
         });
     });
 

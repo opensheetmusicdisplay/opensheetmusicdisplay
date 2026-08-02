@@ -77,6 +77,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         }
         this.PositionAndShape.RelativePosition.x -= lastBorderLeft;
         this.synchronizeLyricAnchorOffsets(stave);
+        this.synchronizeChordSymbolAnchorOffsets(stave);
         // TODO sometimes subtracting lastBorderLeft fixes the x-position for lyrics spacing, sometimes it makes it wrong
         //   e.g. wrong for Beethoven Geliebte measure 1 ("auf - dem", distance < width of "auf"), correct for measure 3 ("spä - hend")
         //   this leads to a (lyrics) measure elongation of ~1.3 for measure 1, though it doesn't need any elongation (should be factor 1)
@@ -122,6 +123,49 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             const anchorWithinMeasure: number = (lyricAnchorX - stave.getX()) / unitInPixels;
             lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x =
                 anchorWithinMeasure - this.PositionAndShape.RelativePosition.x;
+        }
+    }
+
+    /**
+     * Return the left edge of the rendered pitched noteheads relative to this
+     * staff entry. Harmony belongs to the rhythmic column rather than a voice,
+     * so a multi-voice entry uses the leftmost pitched head in that column.
+     */
+    public getNoteheadLeftAnchorOffset(
+        stave: VF.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave(),
+    ): number | undefined {
+        const noteheadBeginXs: number[] = (this.graphicalVoiceEntries as VexFlowVoiceEntry[])
+            .map((voiceEntry: VexFlowVoiceEntry): any => voiceEntry.vfStaveNote)
+            .filter((staveNote: any): boolean => Boolean(staveNote) && !staveNote.isRest?.())
+            .map((staveNote: any): number => staveNote.getNoteHeadBeginX?.())
+            .filter((x: number): boolean => Number.isFinite(x));
+        if (noteheadBeginXs.length === 0) {
+            return undefined;
+        }
+        const anchorWithinMeasure: number =
+            (Math.min(...noteheadBeginXs) - stave.getX()) / unitInPixels;
+        return anchorWithinMeasure - this.PositionAndShape.RelativePosition.x;
+    }
+
+    /**
+     * Synchronize harmony after VexFlow formatting (and once more after its
+     * draw-time note correction). Staff-entry bounds include stems, flags,
+     * and modifiers, so they are not a stable optical anchor for harmony.
+     */
+    public synchronizeChordSymbolAnchorOffsets(
+        stave: VF.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave(),
+    ): void {
+        const anchorOffsetX: number | undefined = this.getNoteheadLeftAnchorOffset(stave);
+        if (anchorOffsetX === undefined || !Number.isFinite(anchorOffsetX)) {
+            return;
+        }
+        for (const chordContainer of this.graphicalChordContainers) {
+            // Whole-rest harmony is deliberately parented to the measure, and
+            // direction-only harmony is positioned by interpolation later.
+            if (chordContainer.PositionAndShape.Parent !== this.PositionAndShape) {
+                continue;
+            }
+            chordContainer.alignToRhythmicAnchor(anchorOffsetX);
         }
     }
 

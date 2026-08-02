@@ -769,8 +769,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
         super.setWidth(width);
         // Set the width of the VF.Stave
         this.stave.setWidth(width * unitInPixels);
-        // Force the width of the Begin Instructions
-        //this.stave.setNoteStartX(this.beginInstructionsWidth * UnitInPixels);
+        // Keep VexFlow's rhythmic origin identical to the fixed-width origin
+        // used by the system spacing solver. Otherwise its default stave
+        // padding shifts internal bars differently from an opening bar with
+        // clef/key/time modifiers.
+        this.stave.setNoteStartX(this.beginInstructionsWidth * unitInPixels);
     }
 
     /**
@@ -871,6 +874,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.correctNotePositions();
         for (const staffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             staffEntry.synchronizeLyricAnchorOffsets(this.stave);
+            staffEntry.synchronizeChordSymbolAnchorOffsets(this.stave);
         }
     }
 
@@ -2017,6 +2021,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
      */
     public getVFStave(): VF.Stave {
         return this.stave;
+    }
+
+    /**
+     * Return the compacted clef/key/time width after VexFlow has aligned the
+     * beginning modifiers across the system's staves.
+     */
+    public getFormattedBeginInstructionsWidth(): number {
+        return Math.max(0, (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels);
     }
 
     /**

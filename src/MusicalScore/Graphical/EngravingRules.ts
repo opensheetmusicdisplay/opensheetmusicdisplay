@@ -785,7 +785,9 @@ export class EngravingRules {
         this.ChordSymbolTextAlignmentTop = TextAlignmentEnum.LeftBottom;
         this.ChordSymbolTextAlignmentBottom = TextAlignmentEnum.LeftTop;
         this.ChordSymbolBottomMargin = 0.6;
-        this.ChordSymbolRelativeXOffset = -1.0;
+        // Left-align harmony exactly on the rendered notehead rather than the
+        // variable staff-entry bounds that also contain stems and flags.
+        this.ChordSymbolRelativeXOffset = 0;
         this.ChordSymbolExtraXShiftForShortChordSymbols = 0.3; // also see LyricsExtraXShiftForShortLyrics, same principle
         this.ChordSymbolExtraXShiftWidthThreshold = 2.0;
         this.ChordSymbolXSpacing = 1.0;
