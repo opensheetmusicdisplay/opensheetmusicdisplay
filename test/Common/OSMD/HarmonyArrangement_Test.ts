@@ -245,7 +245,7 @@ function expectCanonicalSlashChord(
     .to.be.closeTo(expectedAnchorX, 0.001);
   expect(slashCenterX - upperRight).to.be.closeTo(bassLeft - slashCenterX, 0.001);
   expect(slashCenterY - upperBottom).to.be.closeTo(bassTop - slashCenterY, 0.001);
-  expect(slashCenterX - upperRight).to.be.lessThan(slash.PositionAndShape.Size.width * 0.4);
+  expect(slashCenterX - upperRight).to.be.lessThan(slash.PositionAndShape.Size.width * 0.1);
   expect(slashCenterY - upperBottom).to.be.lessThan(upper.Label.fontHeight * 0.25);
   expect(slash.PositionAndShape.RelativePosition.x + slash.PositionAndShape.BorderLeft)
     .to.be.lessThan(upperRight);

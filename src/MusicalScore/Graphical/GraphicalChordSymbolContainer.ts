@@ -23,10 +23,11 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     private static readonly POLYCHORD_RULE_UPPER_CLEARANCE_FACTOR: number = 0.22;
     private static readonly POLYCHORD_RULE_LOWER_CLEARANCE_FACTOR: number = 0.4;
     /** Slash chords occupy the top-left, centre, and bottom-right cells of a
-     * conceptual 3x3 grid. The slash deliberately crosses each cell boundary
-     * slightly so the three cells still read as one construction. */
+     * conceptual 3x3 grid. The slash glyph has substantial transparent side
+     * bearings, so its nominal box crosses deeply into both adjacent cells to
+     * make the visible diagonal meet the two chord components optically. */
     private static readonly SLASH_CHORD_GRID_ROW_FACTOR: number = 0.2;
-    private static readonly SLASH_CHORD_GRID_OVERFLOW_FACTOR: number = 0.16;
+    private static readonly SLASH_CHORD_GRID_OVERFLOW_FACTOR: number = 0.45;
     private chordSymbolContainer: ChordSymbolContainer;
     private graphicalLabels: GraphicalLabel[] = [];
     private graphicalSeparators: GraphicalHarmonySeparator[] = [];
