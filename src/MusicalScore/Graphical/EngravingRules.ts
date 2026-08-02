@@ -1201,7 +1201,9 @@ export class EngravingRules {
         chordtexts.setValue(ChordSymbolEnum.minorseventh, "m7");
         chordtexts.setValue(ChordSymbolEnum.diminishedseventh, `${diminishedSymbol}7`);
         chordtexts.setValue(ChordSymbolEnum.augmentedseventh, `${augmentedSymbol}7`);
-        chordtexts.setValue(ChordSymbolEnum.halfdiminished, `${halfDiminishedSymbol}7`);
+        // The half-diminished sign already denotes the seventh chord. Keep
+        // higher extensions explicit, but do not redundantly append "7".
+        chordtexts.setValue(ChordSymbolEnum.halfdiminished, halfDiminishedSymbol);
         chordtexts.setValue(ChordSymbolEnum.majorminor, `m${majorSeventhSymbol}`);
         chordtexts.setValue(ChordSymbolEnum.majorsixth, "6");
         chordtexts.setValue(ChordSymbolEnum.minorsixth, "m6");

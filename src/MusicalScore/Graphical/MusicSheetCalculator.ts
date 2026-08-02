@@ -1176,6 +1176,7 @@ export abstract class MusicSheetCalculator {
             for (const staffLine of musicSystem.StaffLines) {
                 const skybottomcalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
                 this.applyHarmonyAbbreviations(staffLine);
+                this.positionChordSymbolsWithoutNotes(staffLine);
                 let minimumOffset: number = Number.MAX_SAFE_INTEGER; // only calculated if option set
                 let maximumOffset: number = Number.MIN_SAFE_INTEGER;
                 if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "staffline") {
@@ -1188,7 +1189,6 @@ export abstract class MusicSheetCalculator {
                     minimumOffset = minOffset;
                     maximumOffset = maxOffset;
                 }
-                let previousChordContainer: GraphicalChordSymbolContainer;
                 for (let measureStafflineIndex: number = 0; measureStafflineIndex < staffLine.Measures.length; measureStafflineIndex++) {
                     const measure: GraphicalMeasure = staffLine.Measures[measureStafflineIndex];
                     if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "measure") {
@@ -1202,37 +1202,6 @@ export abstract class MusicSheetCalculator {
                         }
                         for (let i: number = 0; i < staffEntry.graphicalChordContainers.length; i++) {
                             const graphicalChordContainer: GraphicalChordSymbolContainer = staffEntry.graphicalChordContainers[i];
-                            // check for chord not over a note
-                            if (staffEntry.graphicalVoiceEntries.length === 0 && staffEntry.relInMeasureTimestamp.RealValue > 0) {
-                                // re-position (second chord symbol on whole measure rest)
-                                let firstNoteStartX: number = 0;
-                                if (measure.staffEntries[0].relInMeasureTimestamp.RealValue === 0) {
-                                    firstNoteStartX = measure.staffEntries[0].PositionAndShape.RelativePosition.x;
-                                    if (measure.MeasureNumber === 1) {
-                                        firstNoteStartX += this.rules.ChordSymbolWholeMeasureRestXOffsetMeasure1;
-                                        // shift second chord same way as first chord
-                                    }
-                                }
-                                const measureEndX: number = measure.PositionAndShape.Size.width - measure.endInstructionsWidth;
-                                const proportionInMeasure: number = staffEntry.relInMeasureTimestamp.RealValue / measure.parentSourceMeasure.Duration.RealValue;
-                                let newStartX: number = firstNoteStartX + (measureEndX - firstNoteStartX) * proportionInMeasure +
-                                    graphicalChordContainer.PositionAndShape.BorderMarginLeft; // negative -> shift a bit left to where it starts visually
-                                if (previousChordContainer) {
-                                    // prevent overlap to previous chord symbol
-                                    newStartX = Math.max(newStartX, previousChordContainer.PositionAndShape.RelativePosition.x +
-                                        previousChordContainer.PositionAndShape.Size.width +
-                                        this.rules.ChordSymbolXSpacing);
-                                }
-                                graphicalChordContainer.PositionAndShape.RelativePosition.x = newStartX;
-                                graphicalChordContainer.PositionAndShape.Parent = measure.staffEntries[0].PositionAndShape.Parent;
-                                // TODO it would be more clean to set the staffEntry relative position instead of the container's,
-                                //   so that the staff entry also gets a valid position (and not relative 0),
-                                //   but this is tricky with elongationFactor, skyline etc, would need some adjustments
-                                // // graphicalChordContainer.PositionAndShape.Parent = measure.staffEntries[0].PositionAndShape.Parent; // not here
-                                // //   don't switch parent from StaffEntry if setting staffEntry.x
-                                // staffEntry.PositionAndShape.RelativePosition.x = newStartX;
-                                // staffEntry.PositionAndShape.calculateAbsolutePosition();
-                            }
                             const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
                             const parentBbox: BoundingBox = gps.Parent; // usually the staffEntry (bbox), but sometimes measure (for whole measure rests)
                             if (parentBbox.DataObject instanceof GraphicalMeasure) {
@@ -1263,17 +1232,21 @@ export abstract class MusicSheetCalculator {
                                     }
                                 }
                             }
-                            const start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
-                            const end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
+                            // Reparented between-note harmony boxes do not yet
+                            // have a recursively refreshed cached absolute x.
+                            gps.calculateAbsolutePosition();
+                            const start: number = gps.BorderMarginLeft + gps.AbsolutePosition.x;
+                            const end: number = gps.BorderMarginRight + gps.AbsolutePosition.x;
                             const placement: PlacementEnum = graphicalChordContainer.GetChordSymbolContainer.Placement;
                             if (placement === PlacementEnum.Below) {
                                 if (!this.rules.ChordSymbolYAlignment || maximumOffset < 0) {
-                                    maximumOffset = skybottomcalculator.getBottomLineMaxInRange(start, end);
+                                    maximumOffset = skybottomcalculator.getBottomLineMaxInRange(start, end) -
+                                        gps.BorderMarginTop;
                                 }
                             } else if (placement === PlacementEnum.Above) {
                                 if (!this.rules.ChordSymbolYAlignment || minimumOffset > 0) {
-                                    //minimumOffset = this.calculateAlignedChordSymbolsOffset([staffEntry], skybottomcalculator);
-                                    minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end); // same as above, less code executed
+                                    minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end) -
+                                        gps.BorderMarginBottom;
                                 }
                             }
                             // even with y-aligned chord symbols (ChordSymbolYAlignment), don't overlap chord symbols
@@ -1285,14 +1258,18 @@ export abstract class MusicSheetCalculator {
                             if (this.rules.ChordSymbolYAlignment) {
                                 // check the collision only for the label without its margins (BorderLeft instead of BorderMarginLeft),
                                 //   so that chord symbols whose (visible) labels don't collide stay on the aligned position
-                                const collisionStart: number = gps.BorderLeft + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
-                                const collisionEnd: number = gps.BorderRight + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
+                                const collisionStart: number = gps.BorderLeft + gps.AbsolutePosition.x;
+                                const collisionEnd: number = gps.BorderRight + gps.AbsolutePosition.x;
                                 if (placement === PlacementEnum.Below) {
                                     chordMaximumOffset = Math.max(chordMaximumOffset,
-                                                                  skybottomcalculator.getBottomLineMaxInRange(collisionStart, collisionEnd));
+                                                                  skybottomcalculator.getBottomLineMaxInRange(
+                                                                      collisionStart, collisionEnd,
+                                                                  ) - gps.BorderMarginTop);
                                 } else {
                                     chordMinimumOffset = Math.min(chordMinimumOffset,
-                                                                  skybottomcalculator.getSkyLineMinInRange(collisionStart, collisionEnd));
+                                                                  skybottomcalculator.getSkyLineMinInRange(
+                                                                      collisionStart, collisionEnd,
+                                                                  ) - gps.BorderMarginBottom);
                                 }
                             }
                             let yShift: number = 0;
@@ -1318,9 +1295,52 @@ export abstract class MusicSheetCalculator {
                                     gps.RelativePosition.y + gps.BorderMarginTop,
                                 );
                             }
-                            previousChordContainer = graphicalChordContainer;
                         }
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * Position harmony events that have no note-bearing staff entry before the
+     * common chord-line skyline is calculated. Otherwise their temporary x=0
+     * range produces a shallow vertical anchor, and the final rhythmic range
+     * subsequently lifts a deep slash chord onto a separate row.
+     */
+    private positionChordSymbolsWithoutNotes(staffLine: StaffLine): void {
+        let previousChordContainer: GraphicalChordSymbolContainer;
+        for (const measure of staffLine.Measures) {
+            for (const staffEntry of measure.staffEntries) {
+                for (const graphicalChordContainer of staffEntry.graphicalChordContainers ?? []) {
+                    const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
+                    if (staffEntry.graphicalVoiceEntries.length === 0 && staffEntry.relInMeasureTimestamp.RealValue > 0) {
+                        let firstNoteStartX: number = 0;
+                        if (measure.staffEntries[0].relInMeasureTimestamp.RealValue === 0) {
+                            firstNoteStartX = measure.staffEntries[0].PositionAndShape.RelativePosition.x;
+                            if (measure.MeasureNumber === 1) {
+                                firstNoteStartX += this.rules.ChordSymbolWholeMeasureRestXOffsetMeasure1;
+                            }
+                        }
+                        const measureEndX: number = measure.PositionAndShape.Size.width - measure.endInstructionsWidth;
+                        const proportionInMeasure: number = staffEntry.relInMeasureTimestamp.RealValue /
+                            measure.parentSourceMeasure.Duration.RealValue;
+                        let newStartX: number = firstNoteStartX +
+                            (measureEndX - firstNoteStartX) * proportionInMeasure;
+                        const newParent: BoundingBox = measure.staffEntries[0].PositionAndShape.Parent;
+                        gps.Parent = newParent;
+                        if (previousChordContainer) {
+                            const previousBounds: BoundingBox = previousChordContainer.PositionAndShape;
+                            previousBounds.calculateAbsolutePosition();
+                            newParent.calculateAbsolutePosition();
+                            const minimumAnchorX: number = previousBounds.AbsolutePosition.x +
+                                previousBounds.BorderMarginRight + this.rules.ChordSymbolXSpacing -
+                                newParent.AbsolutePosition.x - gps.BorderMarginLeft;
+                            newStartX = Math.max(newStartX, minimumAnchorX);
+                        }
+                        gps.RelativePosition.x = newStartX;
+                    }
+                    previousChordContainer = graphicalChordContainer;
                 }
             }
         }
@@ -1353,21 +1373,26 @@ export abstract class MusicSheetCalculator {
         for (const staffEntry of staffEntries) {
             for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
                 const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
-                const parentBbox: BoundingBox = gps.Parent; // usually the staffEntry (bbox), but sometimes measure (for whole measure rests)
-                let start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x;
-                let end: number = gps.BorderMarginRight + parentBbox.AbsolutePosition.x;
-                if (parentBbox.DataObject instanceof GraphicalMeasure) {
-                    start += (parentBbox.DataObject as GraphicalMeasure).beginInstructionsWidth;
-                    end += (parentBbox.DataObject as GraphicalMeasure).beginInstructionsWidth;
-                }
+                gps.calculateAbsolutePosition();
+                const start: number = gps.BorderMarginLeft + gps.AbsolutePosition.x;
+                const end: number = gps.BorderMarginRight + gps.AbsolutePosition.x;
                 const placement: PlacementEnum = graphicalChordContainer.GetChordSymbolContainer.Placement;
                 if (placement === PlacementEnum.Above) {
-                    minOffset = Math.min(minOffset, sbc.getSkyLineMinInRange(start, end));
+                    minOffset = Math.min(
+                        minOffset,
+                        sbc.getSkyLineMinInRange(start, end) - gps.BorderMarginBottom,
+                    );
                 } else if (placement === PlacementEnum.Below) {
-                    maxOffset = Math.max(maxOffset, sbc.getBottomLineMaxInRange(start, end));
+                    maxOffset = Math.max(
+                        maxOffset,
+                        sbc.getBottomLineMaxInRange(start, end) - gps.BorderMarginTop,
+                    );
                 }
             }
         }
+        // Use the most restrictive complete-shape anchor as the shared chord
+        // line. Pairing a skyline from one range with a shape from another can
+        // leave a later multi-cell chord to be lifted independently.
         return {minOffset, maxOffset};
     }
 

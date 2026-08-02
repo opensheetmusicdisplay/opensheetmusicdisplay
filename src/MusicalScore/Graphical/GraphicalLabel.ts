@@ -95,7 +95,13 @@ export class GraphicalLabel extends Clickable {
                 const runWidth: number = this.Label.fontHeight * widthToHeightRatio * fontScale;
                 lineText += sourceRun.text;
                 currWidth += runWidth;
-                const runBottom: number = baselineShift * this.Label.fontHeight;
+                // renderText positions each scaled run from the label's common
+                // top edge. Its baseline therefore moves by both the explicit
+                // baseline shift and the reduction in font height. Keeping the
+                // same calculation here makes mixed-run bounds (especially
+                // chord superscripts) match the SVG that is actually drawn.
+                const runBottom: number =
+                    (baselineShift + fontScale - 1) * this.Label.fontHeight;
                 const runTop: number = runBottom - this.Label.fontHeight * fontScale;
                 lineTop = Math.min(lineTop, runTop);
                 lineBottom = Math.max(lineBottom, runBottom);

@@ -8,7 +8,6 @@ import { VexFlowTextMeasurer } from "../../../src/MusicalScore/Graphical/VexFlow
 import { VexFlowMeasure } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import { GraphicalMusicSheet } from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { EngravingRules } from "../../../src/MusicalScore/Graphical/EngravingRules";
-import { GraphicalLabel } from "../../../src/MusicalScore/Graphical/GraphicalLabel";
 import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
 import { MusicSystem } from "../../../src/MusicalScore/Graphical/MusicSystem";
 import { BoundingBox } from "../../../src/MusicalScore/Graphical/BoundingBox";
@@ -17,6 +16,8 @@ import * as VF from "vexflow/core";
 
 interface LabelRect {
     baseline: number;
+    parentY: number;
+    relativeY: number;
     left: number;
     right: number;
     top: number;
@@ -58,24 +59,29 @@ function absolutePosition(bbox: BoundingBox): { x: number, y: number } {
 }
 
 /**
- * Collects the absolute label rectangles (without margins) of all chord symbols in a staff line.
- * @param staffLine the staff line to collect chord symbol labels from
- * @returns the label rectangles
+ * Collects the absolute aggregate rectangles (without margins) of all chord
+ * symbols in a staff line. A slash chord contains independently aligned labels,
+ * so its first label is not a reliable proxy for the construction.
+ * @param staffLine the staff line to collect chord symbol rectangles from
+ * @returns the chord symbol rectangles
  */
 function collectChordLabelRects(staffLine: StaffLine): LabelRect[] {
     const rects: LabelRect[] = [];
     for (const measure of staffLine.Measures) {
         for (const staffEntry of measure.staffEntries) {
             for (const chordContainer of staffEntry.graphicalChordContainers) {
-                const label: GraphicalLabel = chordContainer.GraphicalLabel;
-                const pos: { x: number, y: number } = absolutePosition(label.PositionAndShape);
+                const bbox: BoundingBox = chordContainer.PositionAndShape;
+                const pos: { x: number, y: number } = absolutePosition(bbox);
+                const parentPos: { x: number, y: number } = absolutePosition(bbox.Parent);
                 rects.push({
                     baseline: pos.y,
-                    left: pos.x + label.PositionAndShape.BorderLeft,
-                    right: pos.x + label.PositionAndShape.BorderRight,
-                    top: pos.y + label.PositionAndShape.BorderTop,
-                    bottom: pos.y + label.PositionAndShape.BorderBottom,
-                    text: label.Label.text
+                    parentY: parentPos.y,
+                    relativeY: bbox.RelativePosition.y,
+                    left: pos.x + bbox.BorderLeft,
+                    right: pos.x + bbox.BorderRight,
+                    top: pos.y + bbox.BorderTop,
+                    bottom: pos.y + bbox.BorderBottom,
+                    text: chordContainer.GraphicalLabels.map((label) => label.Label.text).join("|")
                 });
             }
         }
@@ -138,8 +144,11 @@ describe("Chord symbol and repetition instruction collision avoidance", () => {
                         stackedPairFound = true;
                     }
                 }
+                expect(stackedPairFound, `chord symbols should reserve horizontal space: ${rects.map((rect) =>
+                    `${rect.text}@x${rect.left.toFixed(2)}-${rect.right.toFixed(2)},y${rect.baseline.toFixed(2)}` +
+                    `(parent ${rect.parentY.toFixed(2)} + local ${rect.relativeY.toFixed(2)})`,
+                ).join("; ")}`).to.equal(false);
             }
-            expect(stackedPairFound, "chord symbols should reserve horizontal space").to.equal(false);
         });
     });
 

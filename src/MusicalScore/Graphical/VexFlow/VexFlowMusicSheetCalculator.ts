@@ -540,7 +540,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let currentContainerIndex: number = 0;
 
     for (const container of containers) {
-      const alignment: TextAlignmentEnum = container.GraphicalLabel.Label.textAlignment;
       let minSpacing: number = oldMinSpacing;
 
       let overlapAllowedIntoNextMeasure: number = nextMeasureOverlap;
@@ -575,6 +574,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const vexStaffEntry: VexFlowStaffEntry = staffEntry as VexFlowStaffEntry;
       const staffEntryXPosition: number = vexStaffEntry.PositionAndShape.RelativePosition.x;
       if (container instanceof GraphicalLyricEntry) {
+        const alignment: TextAlignmentEnum = container.GraphicalLabel.Label.textAlignment;
         const footprint: LyricFootprint = container.getFootprint(staffEntryXPosition);
 
         if (previousEntry?.extend) {
@@ -678,24 +678,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         currentSpacingToLastContainer = xPosition - previousEntry.xPosition;
       }
 
-      let currentSpacingToMeasureEnd: number;
-      let spacingNeededToMeasureEnd: number;
       const maxXInMeasure: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
 
-      if (TextAlignment.IsCenterAligned(alignment)) {
-        overlapAllowedIntoNextMeasure /= 4;
-        currentSpacingToMeasureEnd = maxXInMeasure - xPosition;
-        spacingNeededToMeasureEnd = (labelWidth / 2) - overlapAllowedIntoNextMeasure;
-        if (previousEntry) {
-          spacingNeededToLastContainer =
-            previousEntry.labelWidth / 2 + labelWidth / 2 + minSpacing;
-        }
-      } else {
-        currentSpacingToMeasureEnd = maxXInMeasure - xPosition;
-        spacingNeededToMeasureEnd = labelWidth - overlapAllowedIntoNextMeasure;
-        if (previousEntry) {
-          spacingNeededToLastContainer = previousEntry.labelWidth + minSpacing;
-        }
+      // Chord containers can contain independently aligned grid cells. Their
+      // aggregate bounding box is already the exact left/right footprint, so
+      // applying the first label's alignment a second time under-reserves
+      // centred or right-anchored slash constructions.
+      const currentSpacingToMeasureEnd: number = maxXInMeasure - xPosition;
+      const spacingNeededToMeasureEnd: number = labelWidth - overlapAllowedIntoNextMeasure;
+      if (previousEntry) {
+        spacingNeededToLastContainer = previousEntry.labelWidth + minSpacing;
       }
 
       let elongationFactorNeededForMeasureEnd: number;

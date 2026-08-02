@@ -18,6 +18,15 @@ import {
 } from "../../Common/DataObjects/ChordSymbolGlyphs";
 
 export class GraphicalChordSymbolContainer extends GraphicalObject {
+    /** Calibrated optical clearances around a polychord fraction rule. These
+     * are measured from complete shaped run bounds, including raised suffixes. */
+    private static readonly POLYCHORD_RULE_UPPER_CLEARANCE_FACTOR: number = 0.22;
+    private static readonly POLYCHORD_RULE_LOWER_CLEARANCE_FACTOR: number = 0.4;
+    /** Slash chords occupy the top-left, centre, and bottom-right cells of a
+     * conceptual 3x3 grid. The slash deliberately crosses each cell boundary
+     * slightly so the three cells still read as one construction. */
+    private static readonly SLASH_CHORD_GRID_ROW_FACTOR: number = 0.2;
+    private static readonly SLASH_CHORD_GRID_OVERFLOW_FACTOR: number = 0.16;
     private chordSymbolContainer: ChordSymbolContainer;
     private graphicalLabels: GraphicalLabel[] = [];
     private graphicalSeparators: GraphicalHarmonySeparator[] = [];
@@ -139,43 +148,67 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         const width: number = Math.max(...labels.map((label: GraphicalLabel): number =>
             label.PositionAndShape.Size.width,
         ));
-        const lineGap: number = this.textHeight * 0.28;
+        // GraphicalLabel's font box has more unused space below an upper run
+        // than above a lower superscript run. Different geometric clearances
+        // compensate for that so the visible ink-to-rule gaps are balanced.
+        const upperRuleClearance: number =
+            this.textHeight * GraphicalChordSymbolContainer.POLYCHORD_RULE_UPPER_CLEARANCE_FACTOR;
+        const lowerRuleClearance: number =
+            this.textHeight * GraphicalChordSymbolContainer.POLYCHORD_RULE_LOWER_CLEARANCE_FACTOR;
         const ruleOverhang: number = this.textHeight * 0.08;
+        const arrangementLeft: number = -width / 2;
+        const separatorYs: number[] = [];
         labels.forEach((label: GraphicalLabel, index: number): void => {
             label.PositionAndShape.RelativePosition.x =
-                this.rules.ChordSymbolRelativeXOffset + (width - label.PositionAndShape.Size.width) / 2;
-            label.PositionAndShape.RelativePosition.y =
-                index * (this.textHeight + lineGap) - (components.length - 1) * (this.textHeight + lineGap) / 2;
+                arrangementLeft + (width - label.PositionAndShape.Size.width) / 2;
+            if (index === 0) {
+                // Keep the upper component on the normal chord-symbol baseline.
+                label.PositionAndShape.RelativePosition.y = 0;
+                return;
+            }
+            const previousLabel: GraphicalLabel = labels[index - 1];
+            const previousBottom: number = previousLabel.PositionAndShape.RelativePosition.y +
+                previousLabel.PositionAndShape.BorderBottom;
+            // BorderTop includes the top of every raised run (7, 9, 13, etc.).
+            // Place the rule between two explicit optical clearances so it can
+            // never pass through a lower component's superscript alteration.
+            const separatorY: number = previousBottom + upperRuleClearance;
+            label.PositionAndShape.RelativePosition.y = separatorY + lowerRuleClearance -
+                label.PositionAndShape.BorderTop;
+            separatorYs.push(separatorY);
         });
         for (let index: number = 0; index < labels.length - 1; index++) {
-            // The rule occupies the actual gap between the upper baseline and the
-            // following label's top, rather than crossing the lower chord text.
-            const y: number = labels[index].PositionAndShape.RelativePosition.y + lineGap / 2;
             this.createSeparator(
-                new PointF2D(this.rules.ChordSymbolRelativeXOffset - ruleOverhang, y),
-                new PointF2D(this.rules.ChordSymbolRelativeXOffset + width + ruleOverhang, y),
+                new PointF2D(arrangementLeft - ruleOverhang, separatorYs[index]),
+                new PointF2D(
+                    arrangementLeft + width + ruleOverhang,
+                    separatorYs[index],
+                ),
             );
         }
     }
 
     private layoutSlashChord(component: HarmonyChordComponent): void {
+        if (this.abbreviateUpperChord) {
+            this.layoutAbbreviatedSlashChord(component);
+            return;
+        }
         const upperText: string = this.chordSymbolContainer.calculateUpperHarmonyText(
             component, this.transposeHalftones, this.keyInstruction,
         );
         const upperLabel: GraphicalLabel = this.createLabel(
             upperText,
-            TextAlignmentEnum.LeftBottom,
-            this.rules.ChordSymbolRelativeXOffset,
-            -this.textHeight * 0.15,
-            !this.abbreviateUpperChord,
+            TextAlignmentEnum.RightBottom,
+            0,
+            0,
         );
         const bassLabel: GraphicalLabel = this.createLabel(
             this.chordSymbolContainer.calculateBassText(component, this.transposeHalftones, this.keyInstruction),
-            TextAlignmentEnum.LeftBottom,
+            TextAlignmentEnum.LeftTop,
             0,
-            this.textHeight * 0.85,
+            0,
         );
-        this.positionDiagonalLowerLabel(
+        this.positionSlashChordGrid(
             upperLabel,
             bassLabel,
             component.BassSeparator?.text,
@@ -183,38 +216,68 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         );
     }
 
-    private positionDiagonalLowerLabel(
+    private layoutAbbreviatedSlashChord(component: HarmonyChordComponent): void {
+        const separatorY: number = this.textHeight * GraphicalChordSymbolContainer.SLASH_CHORD_GRID_ROW_FACTOR;
+        const separatorLabel: GraphicalLabel = this.createLabel(
+            component.BassSeparator?.text ?? SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+            TextAlignmentEnum.CenterCenter,
+            0,
+            separatorY,
+        );
+        const middleCellHalfWidth: number = this.slashChordMiddleCellHalfWidth(separatorLabel);
+        const bassLabel: GraphicalLabel = this.createLabel(
+            this.chordSymbolContainer.calculateBassText(component, this.transposeHalftones, this.keyInstruction),
+            TextAlignmentEnum.LeftTop,
+            middleCellHalfWidth,
+            separatorY * 2,
+        );
+        this.centerLabelsOnRhythmicAnchor([separatorLabel, bassLabel]);
+    }
+
+    private positionSlashChordGrid(
         upperLabel: GraphicalLabel,
         lowerLabel: GraphicalLabel,
         explicitSeparator?: string,
         slashGlyph: string = SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
     ): void {
-        const horizontalGap: number = this.textHeight * 0.02;
-        const separatorX: number =
-            upperLabel.PositionAndShape.RelativePosition.x +
-            upperLabel.PositionAndShape.BorderRight +
-            horizontalGap;
-        const separatorY: number =
-            (upperLabel.PositionAndShape.RelativePosition.y +
-                lowerLabel.PositionAndShape.RelativePosition.y) / 2;
+        const separatorX: number = 0;
+        const separatorY: number = this.textHeight * GraphicalChordSymbolContainer.SLASH_CHORD_GRID_ROW_FACTOR;
         const separatorLabel: GraphicalLabel = this.createLabel(
             explicitSeparator ?? slashGlyph,
-            TextAlignmentEnum.LeftCenter,
+            TextAlignmentEnum.CenterCenter,
             separatorX,
             separatorY,
         );
-        lowerLabel.PositionAndShape.RelativePosition.x =
-            separatorLabel.PositionAndShape.RelativePosition.x +
-            separatorLabel.PositionAndShape.BorderRight +
-            horizontalGap;
+        const middleCellHalfWidth: number = this.slashChordMiddleCellHalfWidth(separatorLabel);
+        upperLabel.PositionAndShape.RelativePosition.x = separatorX - middleCellHalfWidth;
+        upperLabel.PositionAndShape.RelativePosition.y = 0;
+        lowerLabel.PositionAndShape.RelativePosition.x = separatorX + middleCellHalfWidth;
+        lowerLabel.PositionAndShape.RelativePosition.y = separatorY * 2;
+        this.centerLabelsOnRhythmicAnchor([upperLabel, separatorLabel, lowerLabel]);
     }
 
-    private createLabel(text: string, alignment: TextAlignmentEnum, x: number, y: number,
-                        render: boolean = true): GraphicalLabel {
+    private slashChordMiddleCellHalfWidth(separatorLabel: GraphicalLabel): number {
+        return separatorLabel.PositionAndShape.Size.width *
+            (0.5 - GraphicalChordSymbolContainer.SLASH_CHORD_GRID_OVERFLOW_FACTOR);
+    }
+
+    private centerLabelsOnRhythmicAnchor(labels: GraphicalLabel[]): void {
+        const visibleLeft: number = Math.min(...labels.map((label: GraphicalLabel): number =>
+            label.PositionAndShape.RelativePosition.x + label.PositionAndShape.BorderLeft,
+        ));
+        const visibleRight: number = Math.max(...labels.map((label: GraphicalLabel): number =>
+            label.PositionAndShape.RelativePosition.x + label.PositionAndShape.BorderRight,
+        ));
+        const shift: number = -(visibleLeft + visibleRight) / 2;
+        for (const label of labels) {
+            label.PositionAndShape.RelativePosition.x += shift;
+        }
+    }
+
+    private createLabel(text: string, alignment: TextAlignmentEnum, x: number, y: number): GraphicalLabel {
         const label: Label = new Label(text);
         label.fontFamily = getDoricoDefaultTextFontFamily(this.rules);
         label.textLines = buildDoricoChordSymbolTextLines(text, this.rules);
-        label.print = render;
         const graphicalLabel: GraphicalLabel = new GraphicalLabel(
             label,
             this.textHeight,
@@ -225,10 +288,6 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(x, y);
         graphicalLabel.Label.colorDefault = this.rules.DefaultColorChordSymbol;
         graphicalLabel.setLabelPositionAndShapeBorders();
-        if (!render) {
-            // Retain the upper-left cell in aggregate geometry while omitting only its glyphs.
-            label.print = false;
-        }
         this.graphicalLabels.push(graphicalLabel);
         return graphicalLabel;
     }
