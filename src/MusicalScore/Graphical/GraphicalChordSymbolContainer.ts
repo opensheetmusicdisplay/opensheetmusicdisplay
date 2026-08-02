@@ -23,11 +23,9 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     private static readonly POLYCHORD_RULE_UPPER_CLEARANCE_FACTOR: number = 0.22;
     private static readonly POLYCHORD_RULE_LOWER_CLEARANCE_FACTOR: number = 0.4;
     /** Slash chords occupy the top-left, centre, and bottom-right cells of a
-     * conceptual 3x3 grid. The slash glyph has substantial transparent side
-     * bearings, so its nominal box crosses deeply into both adjacent cells to
-     * make the visible diagonal meet the two chord components optically. */
-    private static readonly SLASH_CHORD_GRID_ROW_FACTOR: number = 0.2;
-    private static readonly SLASH_CHORD_GRID_OVERFLOW_FACTOR: number = 0.45;
+     * conceptual square 3x3 grid. A single separation controls both axes so
+     * every chord/slash and slash/bass corner has identical geometry. */
+    private static readonly SLASH_CHORD_GRID_CELL_SEPARATION_FACTOR: number = 0.025;
     private chordSymbolContainer: ChordSymbolContainer;
     private graphicalLabels: GraphicalLabel[] = [];
     private graphicalSeparators: GraphicalHarmonySeparator[] = [];
@@ -218,19 +216,18 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     }
 
     private layoutAbbreviatedSlashChord(component: HarmonyChordComponent): void {
-        const separatorY: number = this.textHeight * GraphicalChordSymbolContainer.SLASH_CHORD_GRID_ROW_FACTOR;
+        const cellSeparation: number = this.slashChordCellSeparation();
         const separatorLabel: GraphicalLabel = this.createLabel(
             component.BassSeparator?.text ?? SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
             TextAlignmentEnum.CenterCenter,
             0,
-            separatorY,
+            cellSeparation,
         );
-        const middleCellHalfWidth: number = this.slashChordMiddleCellHalfWidth(separatorLabel);
         const bassLabel: GraphicalLabel = this.createLabel(
             this.chordSymbolContainer.calculateBassText(component, this.transposeHalftones, this.keyInstruction),
             TextAlignmentEnum.LeftTop,
-            middleCellHalfWidth,
-            separatorY * 2,
+            cellSeparation,
+            cellSeparation * 2,
         );
         this.centerLabelsOnRhythmicAnchor([separatorLabel, bassLabel]);
     }
@@ -242,24 +239,22 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         slashGlyph: string = SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
     ): void {
         const separatorX: number = 0;
-        const separatorY: number = this.textHeight * GraphicalChordSymbolContainer.SLASH_CHORD_GRID_ROW_FACTOR;
+        const cellSeparation: number = this.slashChordCellSeparation();
         const separatorLabel: GraphicalLabel = this.createLabel(
             explicitSeparator ?? slashGlyph,
             TextAlignmentEnum.CenterCenter,
             separatorX,
-            separatorY,
+            cellSeparation,
         );
-        const middleCellHalfWidth: number = this.slashChordMiddleCellHalfWidth(separatorLabel);
-        upperLabel.PositionAndShape.RelativePosition.x = separatorX - middleCellHalfWidth;
+        upperLabel.PositionAndShape.RelativePosition.x = separatorX - cellSeparation;
         upperLabel.PositionAndShape.RelativePosition.y = 0;
-        lowerLabel.PositionAndShape.RelativePosition.x = separatorX + middleCellHalfWidth;
-        lowerLabel.PositionAndShape.RelativePosition.y = separatorY * 2;
+        lowerLabel.PositionAndShape.RelativePosition.x = separatorX + cellSeparation;
+        lowerLabel.PositionAndShape.RelativePosition.y = cellSeparation * 2;
         this.centerLabelsOnRhythmicAnchor([upperLabel, separatorLabel, lowerLabel]);
     }
 
-    private slashChordMiddleCellHalfWidth(separatorLabel: GraphicalLabel): number {
-        return separatorLabel.PositionAndShape.Size.width *
-            (0.5 - GraphicalChordSymbolContainer.SLASH_CHORD_GRID_OVERFLOW_FACTOR);
+    private slashChordCellSeparation(): number {
+        return this.textHeight * GraphicalChordSymbolContainer.SLASH_CHORD_GRID_CELL_SEPARATION_FACTOR;
     }
 
     private centerLabelsOnRhythmicAnchor(labels: GraphicalLabel[]): void {

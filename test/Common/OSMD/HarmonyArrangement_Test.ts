@@ -233,6 +233,9 @@ function expectCanonicalSlashChord(
   expect(bassTop).to.be.greaterThan(slashCenterY);
   expect(slash.PositionAndShape.RelativePosition.x + slash.PositionAndShape.BorderRight)
     .to.be.greaterThan(bassLeft);
+  const bassHorizontalSeparation: number = bassLeft - slashCenterX;
+  const bassVerticalSeparation: number = bassTop - slashCenterY;
+  expect(bassHorizontalSeparation).to.be.closeTo(bassVerticalSeparation, 0.001);
   if (abbreviated) {
     expect((chord.PositionAndShape.BorderLeft + chord.PositionAndShape.BorderRight) / 2)
       .to.be.closeTo(expectedAnchorX, 0.001);
@@ -241,12 +244,14 @@ function expectCanonicalSlashChord(
   const upper: GraphicalLabel = chord.GraphicalLabels[0];
   const upperRight: number = upper.PositionAndShape.RelativePosition.x + upper.PositionAndShape.BorderRight;
   const upperBottom: number = upper.PositionAndShape.RelativePosition.y + upper.PositionAndShape.BorderBottom;
+  const upperHorizontalSeparation: number = slashCenterX - upperRight;
+  const upperVerticalSeparation: number = slashCenterY - upperBottom;
   expect((chord.PositionAndShape.BorderLeft + chord.PositionAndShape.BorderRight) / 2)
     .to.be.closeTo(expectedAnchorX, 0.001);
-  expect(slashCenterX - upperRight).to.be.closeTo(bassLeft - slashCenterX, 0.001);
-  expect(slashCenterY - upperBottom).to.be.closeTo(bassTop - slashCenterY, 0.001);
-  expect(slashCenterX - upperRight).to.be.lessThan(slash.PositionAndShape.Size.width * 0.1);
-  expect(slashCenterY - upperBottom).to.be.lessThan(upper.Label.fontHeight * 0.25);
+  expect(upperHorizontalSeparation).to.be.closeTo(bassHorizontalSeparation, 0.001);
+  expect(upperVerticalSeparation).to.be.closeTo(bassVerticalSeparation, 0.001);
+  expect(upperHorizontalSeparation).to.be.closeTo(upperVerticalSeparation, 0.001);
+  expect(upperHorizontalSeparation).to.be.lessThan(upper.Label.fontHeight * 0.03);
   expect(slash.PositionAndShape.RelativePosition.x + slash.PositionAndShape.BorderLeft)
     .to.be.lessThan(upperRight);
 }
