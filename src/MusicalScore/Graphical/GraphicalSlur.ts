@@ -25,8 +25,10 @@ import {
     SlurEndpointAttachment,
     SlurEndpointContext,
     SlurLayoutContext,
+    SlurLayoutFault,
     SlurLayoutMode,
     SlurLayoutResult,
+    SlurLinkedLayoutDiagnostics,
     SlurObstacle,
 } from "./SlurLayout/SlurLayoutTypes";
 import { calculateCandidateSlurLayout } from "./SlurLayout/SlurCandidateLayoutEngine";
@@ -73,6 +75,10 @@ export interface GraphicalSlurDiagnostics {
     selectedCandidateId?: string;
     candidateCount?: number;
     faults?: string[];
+    structuredFaults?: SlurLayoutFault[];
+    linkedGroupId?: string;
+    continuationClearance?: number;
+    linkedTangentMismatch?: number;
 }
 
 interface RenderedSlurEndpointGeometry {
@@ -116,6 +122,7 @@ export class GraphicalSlur extends GraphicalCurve {
     public SVGElement: Node;
     public layoutContext?: SlurLayoutContext;
     public layoutResult?: SlurLayoutResult;
+    private candidateSeed?: SlurCurveGeometry;
     private candidateArticulationBindings: Map<string, CandidateArticulationBinding> = new Map();
     public diagnostics: GraphicalSlurDiagnostics = {
         segmentIndex: 0,
@@ -150,15 +157,28 @@ export class GraphicalSlur extends GraphicalCurve {
         return 0;
     }
 
-    public setLinkedSegment(index: number, count: number, placement: PlacementEnum): void {
+    public setLinkedSegment(index: number, count: number, placement: PlacementEnum, groupId?: string): void {
         this.diagnostics.segmentIndex = index;
         this.diagnostics.segmentCount = count;
         this.diagnostics.placement = placement;
+        this.diagnostics.linkedGroupId = groupId;
         this.placement = placement;
     }
 
     public markUnsupportedCrossStaffSystemBreak(): void {
         this.diagnostics.unsupportedRouting = "cross-staff-cross-system";
+        this.diagnostics.structuredFaults = [{
+            code: "unsupported-cross-staff-cross-system",
+            message: "Cross-staff slurs spanning a system break cannot yet be represented safely.",
+            segmentIndexes: [this.diagnostics.segmentIndex],
+        }];
+    }
+
+    public setLinkedLayoutDiagnostics(diagnostics: SlurLinkedLayoutDiagnostics): void {
+        this.diagnostics.linkedGroupId = diagnostics.groupId;
+        this.diagnostics.continuationClearance = diagnostics.continuationClearance;
+        this.diagnostics.linkedTangentMismatch = diagnostics.tangentMismatch;
+        this.diagnostics.structuredFaults = [...diagnostics.faults];
     }
 
     public determinePlacement(): PlacementEnum {
@@ -406,7 +426,7 @@ export class GraphicalSlur extends GraphicalCurve {
      *
      * @param rules
      */
-    public calculateCurve(rules: EngravingRules): void {
+    public calculateCurve(rules: EngravingRules, deferCandidateLayout: boolean = false): void {
 
         this.candidateArticulationBindings.clear();
         if (rules.SlurLayoutMode === "candidate") {
@@ -456,7 +476,7 @@ export class GraphicalSlur extends GraphicalCurve {
             this.bezierStartControlPt = new PointF2D(startX, startY);
             this.bezierEndControlPt = new PointF2D(endX, endY);
             this.bezierEndPt = new PointF2D(endX, endY);
-            this.finalizeLayout(rules, staffLine);
+            this.finalizeLayout(rules, staffLine, deferCandidateLayout);
             return;
         }
 
@@ -750,7 +770,7 @@ export class GraphicalSlur extends GraphicalCurve {
                 }
             }
         }
-        this.finalizeLayout(rules, staffLine);
+        this.finalizeLayout(rules, staffLine, deferCandidateLayout);
     }
 
     private createLayoutContext(
@@ -772,7 +792,7 @@ export class GraphicalSlur extends GraphicalCurve {
             notehead: GraphicalSlurBoundsDiagnostics,
         ) => SlurEndpointContext = (side, note, x, y, attachment, notehead): SlurEndpointContext => {
             const rendered: RenderedSlurEndpointGeometry = note
-                ? this.renderedEndpointGeometry(note, staffLine)
+                ? this.renderedOuterChordGeometry(note, staffLine)
                 : undefined;
             const vexflowNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
             return {
@@ -788,6 +808,9 @@ export class GraphicalSlur extends GraphicalCurve {
                     top: Math.min(...polygon.map((point): number => point.y)),
                     bottom: Math.max(...polygon.map((point): number => point.y)),
                 })),
+                accidentals: (rendered?.accidentals ?? []).map(
+                    (bounds): SlurBounds => ({...bounds}),
+                ),
                 articulations: (rendered?.articulations ?? []).map((articulation, index) => {
                     const id: string = `${side}-articulation-${index}`;
                     this.candidateArticulationBindings.set(id, {
@@ -850,6 +873,7 @@ export class GraphicalSlur extends GraphicalCurve {
             isCrossStaff: this.slur.isCrossed(),
             isCrossSystem: this.diagnostics.segmentCount > 1,
             isNested: this.slur.startNoteHasMoreStartingSlurs() || this.slur.endNoteHasMoreEndingSlurs(),
+            linkedGroupId: this.diagnostics.linkedGroupId,
         };
     }
 
@@ -989,10 +1013,10 @@ export class GraphicalSlur extends GraphicalCurve {
                         geometry.notehead, `${prefix}-head`, endpoint);
                     if (geometry.stem) {addBounds("stem", geometry.stem, `${prefix}-stem`, endpoint);}
                     geometry.accidentals.forEach((bounds, accidentalIndex): void => {
-                        addBounds("accidental", bounds, `${prefix}-accidental-${accidentalIndex}`);
+                        addBounds("accidental", bounds, `${prefix}-accidental-${accidentalIndex}`, endpoint);
                     });
                     geometry.tuplets.forEach((bounds, tupletIndex): void => {
-                        addBounds("tuplet", bounds, `${prefix}-tuplet-${tupletIndex}`);
+                        addBounds("tuplet", bounds, `${prefix}-tuplet-${tupletIndex}`, endpoint);
                     });
                     geometry.beamPolygons.forEach((polygon, beamIndex): void => {
                         const xs: number[] = polygon.map((point): number => point.x);
@@ -1002,7 +1026,7 @@ export class GraphicalSlur extends GraphicalCurve {
                             right: Math.max(...xs),
                             top: Math.min(...ys),
                             bottom: Math.max(...ys),
-                        }, `${prefix}-beam-${beamIndex}`, undefined, undefined, polygon);
+                        }, `${prefix}-beam-${beamIndex}`, endpoint, undefined, polygon);
                     });
                     geometry.articulations.forEach((articulation, articulationIndex): void => {
                         const classification: SlurArticulationClass = this.classifyArticulation(
@@ -1021,6 +1045,7 @@ export class GraphicalSlur extends GraphicalCurve {
         }
         for (const selectedSlur of staffLine.GraphicalSlurs) {
             const geometry: SlurCurveGeometry = selectedSlur === this
+                || selectedSlur.placement !== this.placement
                 ? undefined
                 : selectedSlur.layoutResult?.geometry;
             if (!geometry) {
@@ -1042,24 +1067,67 @@ export class GraphicalSlur extends GraphicalCurve {
         return obstacles;
     }
 
-    private finalizeLayout(rules: EngravingRules, staffLine: StaffLine): void {
+    private finalizeLayout(
+        rules: EngravingRules,
+        staffLine: StaffLine,
+        deferCandidateLayout: boolean = false,
+    ): void {
         if (rules.SlurLayoutMode === "legacy" || !this.layoutContext) {
             this.captureLayoutResult(rules.SlurLayoutMode, "normal");
             return;
         }
-        const seed: SlurCurveGeometry = {
+        this.candidateSeed = {
             p0: new PointF2D(this.bezierStartPt.x, this.bezierStartPt.y),
             p1: new PointF2D(this.bezierStartControlPt.x, this.bezierStartControlPt.y),
             p2: new PointF2D(this.bezierEndControlPt.x, this.bezierEndControlPt.y),
             p3: new PointF2D(this.bezierEndPt.x, this.bezierEndPt.y),
         };
-        this.layoutResult = calculateCandidateSlurLayout(this.layoutContext, seed, {
+        if (deferCandidateLayout) {
+            this.layoutResult = undefined;
+            return;
+        }
+        const result: SlurLayoutResult = calculateCandidateSlurLayout(this.layoutContext, this.candidateSeed, {
             candidateLimit: rules.SlurCandidateLimit,
             diagnosticsLevel: rules.SlurDiagnosticsLevel,
             maximumPreferredClearance: rules.SlurMaximumPreferredClearance,
             obstacleClearance: rules.SlurObstacleClearance,
             scoreWeights: rules.SlurCandidateScoreWeights,
         });
+        this.applyCandidateLayoutResult(result, staffLine);
+    }
+
+    public refreshCandidateLayoutContext(staffLine: StaffLine): void {
+        if (!this.layoutContext) {
+            return;
+        }
+        const previous: SlurLayoutContext = this.layoutContext;
+        const {startNote, endNote} = this.resolveEndpointNotes();
+        this.layoutContext = this.createLayoutContext(
+            startNote,
+            endNote,
+            staffLine,
+            previous.start.legacyAnchor.x,
+            previous.start.legacyAnchor.y,
+            previous.end.legacyAnchor.x,
+            previous.end.legacyAnchor.y,
+            previous.mode,
+        );
+        this.layoutContext.linkedGroupId = previous.linkedGroupId;
+    }
+
+    public getCandidateSeed(): SlurCurveGeometry {
+        return this.candidateSeed
+            ? {
+                p0: cloneSlurPoint(this.candidateSeed.p0),
+                p1: cloneSlurPoint(this.candidateSeed.p1),
+                p2: cloneSlurPoint(this.candidateSeed.p2),
+                p3: cloneSlurPoint(this.candidateSeed.p3),
+            }
+            : undefined;
+    }
+
+    public applyCandidateLayoutResult(result: SlurLayoutResult, staffLine: StaffLine): void {
+        this.layoutResult = result;
         this.applyCandidateArticulationAdjustments();
         const geometry: SlurCurveGeometry = this.layoutResult.geometry;
         this.bezierStartPt = cloneSlurPoint(geometry.p0);
@@ -1084,6 +1152,16 @@ export class GraphicalSlur extends GraphicalCurve {
         this.diagnostics.faults = selected?.rejected
             ? [`no-valid-candidate:${selected.rejectionReason ?? "unknown"}`]
             : [];
+        if (selected?.rejected) {
+            this.diagnostics.structuredFaults = [
+                ...(this.diagnostics.structuredFaults ?? []),
+                {
+                    code: "no-valid-candidate",
+                    message: `No valid candidate: ${selected.rejectionReason ?? "unknown"}.`,
+                    segmentIndexes: [this.diagnostics.segmentIndex],
+                },
+            ];
+        }
         this.diagnostics.startAttachment = selected?.startAnchor?.type
             ?? this.diagnostics.startAttachment;
         this.diagnostics.endAttachment = selected?.endAnchor?.type
@@ -1361,6 +1439,7 @@ export class GraphicalSlur extends GraphicalCurve {
                 top: Math.min(...polygon.map((candidate): number => candidate.y)),
                 bottom: Math.max(...polygon.map((candidate): number => candidate.y)),
             })),
+            accidentals: (geometry?.accidentals ?? []).map((bounds): SlurBounds => ({...bounds})),
             articulations: (geometry?.articulations ?? []).map((articulation, index) => {
                 const id: string = `${side}-articulation-${index}`;
                 this.candidateArticulationBindings.set(id, {

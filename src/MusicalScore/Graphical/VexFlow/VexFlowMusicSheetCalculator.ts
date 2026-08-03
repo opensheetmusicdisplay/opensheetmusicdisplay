@@ -62,7 +62,7 @@ import { GraphicalChordSymbolContainer } from "../GraphicalChordSymbolContainer"
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 import { SystemLinesEnum } from "../SystemLinesEnum";
 import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
-import { VexFlowPedal } from "./VexFlowPedal";
+import { VexFlowPedal, VexFlowPedalStyles } from "./VexFlowPedal";
 import { MusicSymbol } from "../MusicSymbol";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { CollectionUtil } from "../../../Util/CollectionUtil";
@@ -74,6 +74,9 @@ import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { Staff } from "../../VoiceData/Staff";
 import { getDoricoDefaultTextFontFamily } from "../DoricoTextFontRouting";
 import { VexFlowSystemSpacingPlanner } from "./VexFlowHorizontalSpacing";
+import { calculateLinkedSlurLayouts } from "../SlurLayout/SlurLinkedLayoutEngine";
+import { SlurLinkedLayoutInput, SlurLinkedLayoutOutput } from "../SlurLayout/SlurLinkedLayoutEngine";
+import { SlurCurveGeometry, SlurLayoutContext } from "../SlurLayout/SlurLayoutTypes";
 
 interface ContainerEntryInfo {
   anchorX?: number;
@@ -356,6 +359,24 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const staffEntryFactor: number = 0.3;
 
     if (allVoices.length > 0) {
+      // A collapsed multi-rest in one part can leave its vertically aligned VexFlow voice with
+      // a nominal duration of zero while another staff still contains the complete measure.
+      // VexFlow 5 rejects such mixed nominal totals even for SOFT voices. Align the formatter's
+      // nominal duration to the longest voice; the voice tickables and their ticksUsed remain
+      // unchanged, so this only restores the common rhythmic coordinate range for the system.
+      const formatterTotalTicks: VF.Fraction = allVoices.reduce(
+        (longest: VF.Fraction, voice: VF.Voice): VF.Fraction => {
+          const total: VF.Fraction = voice.getTotalTicks();
+          return !longest || total.value() > longest.value() ? total : longest;
+        },
+        undefined,
+      );
+      for (const voice of allVoices) {
+        const voiceTotalTicks: VF.Fraction = voice.getTotalTicks();
+        if (!voiceTotalTicks.equals(formatterTotalTicks)) {
+          voiceTotalTicks.copy(formatterTotalTicks);
+        }
+      }
       const formatterMinimumWidthPx: number = formatter.preCalculateMinTotalWidth(allVoices);
       const hardNotationWidth: number =
         formatter.getMinTotalWidth() / unitInPixels;
@@ -1910,13 +1931,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         endBbox = vfPedal.endMeasure.PositionAndShape;
       }
       //Just for shorthand. Easier readability below
-      const PEDAL_STYLES_ENUM: any = (VF.PedalMarking as any).Styles;
+      const PEDAL_STYLES_ENUM: typeof VexFlowPedalStyles = VexFlowPedalStyles;
       const pedalMarking: any = vfPedal.getPedalMarking();
+      const pedalRenderOptions: any = pedalMarking.renderOptions ?? pedalMarking.render_options;
       //VF adds 3 lines to whatever the pedal line is set to.
       //VF also measures from the bottom line, whereas our bottom line is from the top staff line
       const yLineForPedalMarking: number = (pedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
       //VF Uses a margin offset for rendering. Take this into account
-      const pedalMarkingMarginXOffset: number = pedalMarking.render_options.text_margin_right / 10;
+      const pedalMarkingMarginXOffset: number =
+        (pedalRenderOptions.textMarginRight ?? pedalRenderOptions.text_margin_right) / 10;
       //TODO: Most of this should be in the bounding box calculation
       let startX: number = startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - pedalMarkingMarginXOffset;
 
@@ -1937,7 +1960,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       //We have the two seperate symbols, with two bounding boxes
       if (vfPedal.EndSymbolPositionAndShape) {
-        const symbolHalfHeight: number = pedalMarking.render_options.glyph_point_size / 20;
+        const symbolHalfHeight: number =
+          (pedalMarking.getFontInfo?.().size ?? pedalRenderOptions.glyph_point_size ?? 40) / 20;
         //Width of the Ped. symbol
         stopX = startX + 3.4;
         const startX2: number = endBbox.AbsolutePosition.x - pedalMarkingMarginXOffset;
@@ -1955,7 +1979,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + symbolHalfHeight);
         parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX2, stopX2, footroom + symbolHalfHeight);
       } else {
-        const bracketHeight: number = pedalMarking.render_options.bracket_height / 10;
+        const bracketHeight: number =
+          (pedalRenderOptions.bracketHeight ?? pedalRenderOptions.bracket_height) / 10;
 
         if(pedalMarking.EndsStave){
           if(endVfVoiceEntry){
@@ -2006,7 +2031,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const yLineForOtherPedalMarking: number = (otherPedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
         //Only do these changes if current footroom is higher
         if(footroom > yLineForOtherPedalMarking) {
-          const otherPedalMarkingMarginXOffset: number = otherPedalMarking.render_options.text_margin_right / 10;
+          const otherRenderOptions: any =
+            otherPedalMarking.renderOptions ?? otherPedalMarking.render_options;
+          const otherPedalMarkingMarginXOffset: number =
+            (otherRenderOptions.textMarginRight ?? otherRenderOptions.text_margin_right) / 10;
           let otherPedalStartX: number = vfOtherPedal.startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
           let otherPedalStopX: number = undefined;
           vfOtherPedal.setLine(footroom - 3 - (parentStaffline.StaffLines.length - 1));
@@ -2015,7 +2043,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             otherPedalEndBBox = vfOtherPedal.endMeasure.PositionAndShape;
           }
           if (vfOtherPedal.EndSymbolPositionAndShape) {
-            const otherSymbolHalfHeight: number = pedalMarking.render_options.glyph_point_size / 20;
+            const otherSymbolHalfHeight: number =
+              (otherPedalMarking.getFontInfo?.().size ?? otherRenderOptions.glyph_point_size ?? 40) / 20;
             //Width of the Ped. symbol
             otherPedalStopX = otherPedalStartX + 3.4;
             const otherPedalStartX2: number = otherPedalEndBBox.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
@@ -2024,7 +2053,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX, otherPedalStopX, footroom + otherSymbolHalfHeight);
             parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX2, otherPedalStopX2, footroom + otherSymbolHalfHeight);
           } else {
-            const otherPedalBracketHeight: number = otherPedalMarking.render_options.bracket_height / 10;
+            const otherPedalBracketHeight: number =
+              (otherRenderOptions.bracketHeight ?? otherRenderOptions.bracket_height) / 10;
 
             if(otherPedalMarking.EndsStave){
                 otherPedalStopX = otherPedalEndBBox.AbsolutePosition.x + otherPedalEndBBox.Size.width - otherPedalMarkingMarginXOffset;
@@ -2695,7 +2725,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
 
+    let linkedGroupIndex: number = 0;
     for (const [sourceSlur, linkedSegments] of segmentsBySource) {
+      const linkedGroupId: string = `source-slur-${linkedGroupIndex++}`;
+      for (let index: number = 0; index < linkedSegments.length; index++) {
+        linkedSegments[index].segment.setLinkedSegment(
+          index,
+          linkedSegments.length,
+          linkedSegments[index].segment.placement,
+          linkedGroupId,
+        );
+      }
       if (sourceSlur.isCrossed()) {
         const startNote: GraphicalNote = this.rules.GNote(sourceSlur.StartNote);
         const endNote: GraphicalNote = this.rules.GNote(sourceSlur.EndNote);
@@ -2724,7 +2764,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       for (let index: number = 0; index < linkedSegments.length; index++) {
         const {segment, staffLine} = linkedSegments[index];
-        segment.setLinkedSegment(index, linkedSegments.length, placement);
+        segment.setLinkedSegment(index, linkedSegments.length, placement, linkedGroupId);
         if (this.rules.SlurLayoutMode === "legacy" && segment.prepareEndpointArticulationClearance()) {
           for (const shift of segment.diagnostics.articulationShifts) {
             if (placement === PlacementEnum.Above) {
@@ -2746,14 +2786,76 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     // Calculate curves only after final notehead, beam, articulation, and skyline geometry exists.
+    if (this.rules.SlurLayoutMode === "legacy") {
+      for (const musicSystem of this.musicSystems) {
+        for (const staffLine of musicSystem.StaffLines) {
+          const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
+          for (const gSlur of sortedGSlurs) {
+            if (!gSlur.slur.isCrossed()) {
+              gSlur.calculateCurve(this.rules);
+            }
+          }
+        }
+      }
+      return;
+    }
+
+    // Candidate geometry is prepared without mutating the skyline. Source slurs are then
+    // solved inner/shorter first, so every selected inner curve becomes a typed obstacle
+    // when the next outer route refreshes its immutable context.
     for (const musicSystem of this.musicSystems) {
       for (const staffLine of musicSystem.StaffLines) {
         const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
         for (const gSlur of sortedGSlurs) {
           if (!gSlur.slur.isCrossed()) {
-            gSlur.calculateCurve(this.rules);
+            gSlur.calculateCurve(this.rules, true);
           }
         }
+      }
+    }
+    const orderedGroups: [Slur, {segment: GraphicalSlur, staffLine: StaffLine}[]][] =
+      [...segmentsBySource.entries()]
+        .filter(([sourceSlur]): boolean => !sourceSlur.isCrossed())
+        .sort(([left], [right]): number => {
+          const leftDuration: number = Fraction.minus(
+            left.EndNote.getAbsoluteTimestamp(),
+            left.StartNote.getAbsoluteTimestamp(),
+          ).RealValue;
+          const rightDuration: number = Fraction.minus(
+            right.EndNote.getAbsoluteTimestamp(),
+            right.StartNote.getAbsoluteTimestamp(),
+          ).RealValue;
+          return leftDuration - rightDuration
+            || left.StartNote.getAbsoluteTimestamp().RealValue - right.StartNote.getAbsoluteTimestamp().RealValue
+            || left.EndNote.getAbsoluteTimestamp().RealValue - right.EndNote.getAbsoluteTimestamp().RealValue;
+        });
+    for (const [, linkedSegments] of orderedGroups) {
+      const sortedSegments: {segment: GraphicalSlur, staffLine: StaffLine}[] = [...linkedSegments].sort(
+        (left, right): number => left.segment.diagnostics.segmentIndex - right.segment.diagnostics.segmentIndex,
+      );
+      const inputs: SlurLinkedLayoutInput[] = [];
+      for (const {segment, staffLine} of sortedSegments) {
+        segment.refreshCandidateLayoutContext(staffLine);
+        const context: SlurLayoutContext = segment.layoutContext;
+        const seed: SlurCurveGeometry = segment.getCandidateSeed();
+        if (context && seed) {
+          inputs.push({context, seed});
+        }
+      }
+      if (inputs.length !== sortedSegments.length) {
+        continue;
+      }
+      const linkedOutput: SlurLinkedLayoutOutput = calculateLinkedSlurLayouts(inputs, {
+        candidateLimit: this.rules.SlurCandidateLimit,
+        diagnosticsLevel: this.rules.SlurDiagnosticsLevel,
+        maximumPreferredClearance: this.rules.SlurMaximumPreferredClearance,
+        obstacleClearance: this.rules.SlurObstacleClearance,
+        scoreWeights: this.rules.SlurCandidateScoreWeights,
+      });
+      for (let index: number = 0; index < sortedSegments.length; index++) {
+        const {segment, staffLine} = sortedSegments[index];
+        segment.setLinkedLayoutDiagnostics(linkedOutput.diagnostics);
+        segment.applyCandidateLayoutResult(linkedOutput.results[index], staffLine);
       }
     }
   }

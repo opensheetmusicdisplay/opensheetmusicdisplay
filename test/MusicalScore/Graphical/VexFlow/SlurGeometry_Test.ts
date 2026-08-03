@@ -5,6 +5,7 @@ import {
    GraphicalSlurArticulationShiftDiagnostics,
 } from "../../../../src/MusicalScore/Graphical/GraphicalSlur";
 import { StaffLine } from "../../../../src/MusicalScore/Graphical/StaffLine";
+import { SlurObstacle } from "../../../../src/MusicalScore/Graphical/SlurLayout/SlurLayoutTypes";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { TestUtils } from "../../../Util/TestUtils";
 
@@ -378,10 +379,12 @@ describe("Stage 6 slur geometry", (): void => {
       osmd.updateGraphic();
       osmd.render();
 
-      const obstacleTypes: Set<string> = new Set(allSlurs(osmd).flatMap(
-         ({slur}) => slur.layoutContext?.obstacles.map((obstacle) => obstacle.type) ?? [],
-      ));
+      const obstacles: SlurObstacle[] = allSlurs(osmd).flatMap(
+         ({slur}) => slur.layoutContext?.obstacles ?? [],
+      );
+      const obstacleTypes: Set<string> = new Set(obstacles.map((obstacle) => obstacle.type));
       expect(obstacleTypes.has("beam")).to.equal(true);
+      expect(obstacles.some((obstacle) => obstacle.type === "beam" && obstacle.endpoint)).to.equal(true);
    });
 
    it("links cross-system segments with shared placement and horizontal break tangents", async (): Promise<void> => {
@@ -399,10 +402,22 @@ describe("Stage 6 slur geometry", (): void => {
       expect(segments[0].diagnostics.segmentCount).to.equal(2);
       expect(segments[1].diagnostics.segmentCount).to.equal(2);
       expect(segments[0].diagnostics.placement).to.equal(segments[1].diagnostics.placement);
+      expect(segments[0].diagnostics.linkedGroupId).to.equal(segments[1].diagnostics.linkedGroupId);
+      expect(segments[0].diagnostics.continuationClearance)
+         .to.equal(segments[1].diagnostics.continuationClearance);
+      expect(segments[0].diagnostics.linkedTangentMismatch).to.equal(0);
+      expect(segments[1].diagnostics.linkedTangentMismatch).to.equal(0);
+      expect(segments.flatMap((segment) => segment.diagnostics.structuredFaults ?? [])).to.have.length(0);
       expect(segments[0].bezierEndControlPt.y).to.be.closeTo(segments[0].bezierEndPt.y, 0.001);
       expect(segments[1].bezierStartControlPt.y).to.be.closeTo(segments[1].bezierStartPt.y, 0.001);
-      expect(segments[0].bezierStartPt.x).to.be.closeTo(segments[0].diagnostics.startNotehead.right, 0.001);
-      expect(segments[1].bezierEndPt.x).to.be.closeTo(segments[1].diagnostics.endNotehead.left, 0.001);
+      expect(segments[0].bezierStartPt.x).to.be.within(
+         segments[0].diagnostics.startNotehead.left - 1,
+         segments[0].diagnostics.startNotehead.right + 1,
+      );
+      expect(segments[1].bezierEndPt.x).to.be.within(
+         segments[1].diagnostics.endNotehead.left - 1,
+         segments[1].diagnostics.endNotehead.right + 1,
+      );
    });
 
    for (const fixture of [

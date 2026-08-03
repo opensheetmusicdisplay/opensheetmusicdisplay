@@ -4,6 +4,7 @@ import {
   SlurAnchorCandidate,
   SlurArticulationAdjustment,
   SlurArticulationContext,
+  SlurBounds,
   SlurCandidateScore,
   SlurCandidateScoreWeights,
   SlurCurveCandidate,
@@ -31,6 +32,7 @@ interface EvaluatedGeometry {
   nearCollisionCount: number;
   obstacleIntersections: number;
   forbiddenObstacleIntersections: number;
+  forbiddenObstacleIds: readonly string[];
   excessiveClearance: number;
   staffLineInteraction: number;
 }
@@ -138,8 +140,11 @@ export function generateSlurAnchors(
       const direction: number = context.direction === PlacementEnum.Above ? -1 : 1;
       const x: number =
         side === "start" ? endpoint.notehead.right + 0.08 : endpoint.notehead.left - 0.08;
+      const sameSideBounds: SlurBounds[] = [endpoint.notehead, ...endpoint.accidentals];
       const y: number =
-        (direction < 0 ? endpoint.notehead.top : endpoint.notehead.bottom) +
+        (direction < 0
+          ? Math.min(...sameSideBounds.map((bounds): number => bounds.top))
+          : Math.max(...sameSideBounds.map((bounds): number => bounds.bottom))) +
         direction * endpointGap;
       const displacement: number = Math.hypot(x - seedPoint.x, y - seedPoint.y);
       result[side].push(
@@ -153,25 +158,30 @@ export function generateSlurAnchors(
           displacement * 0.45,
         ),
       );
-      const noteheadWidth: number = endpoint.notehead.right - endpoint.notehead.left;
-      const inset: number = Math.min(0.45, noteheadWidth * 0.42);
-      const outerHeadX: number =
-        side === "start" ? endpoint.notehead.right - inset : endpoint.notehead.left + inset;
-      const outerHeadDisplacement: number = Math.hypot(
-        outerHeadX - seedPoint.x,
-        y - seedPoint.y,
-      );
-      result[side].push(
-        makeAnchor(
-          context,
-          side,
-          outerHeadX,
-          y,
-          "outer-head",
-          generationIndex++,
-          outerHeadDisplacement * 0.35,
-        ),
-      );
+      // Chord endpoint geometry has already selected the placement-side outer
+      // head. An additional inset anchor would pull opposing double slurs back
+      // into the chord, so reserve it for single-note endpoints.
+      if (endpoint.chordSize <= 1) {
+        const noteheadWidth: number = endpoint.notehead.right - endpoint.notehead.left;
+        const inset: number = Math.min(0.45, noteheadWidth * 0.42);
+        const outerHeadX: number =
+          side === "start" ? endpoint.notehead.right - inset : endpoint.notehead.left + inset;
+        const outerHeadDisplacement: number = Math.hypot(
+          outerHeadX - seedPoint.x,
+          y - seedPoint.y,
+        );
+        result[side].push(
+          makeAnchor(
+            context,
+            side,
+            outerHeadX,
+            y,
+            "outer-head",
+            generationIndex++,
+            outerHeadDisplacement * 0.35,
+          ),
+        );
+      }
     }
     if (endpoint.beams.length > 0) {
       const direction: number = context.direction === PlacementEnum.Above ? -1 : 1;
@@ -245,6 +255,33 @@ function lineY(start: { x: number, y: number }, end: { x: number, y: number }, x
   return start.y + (end.y - start.y) * ((x - start.x) / width);
 }
 
+function requiredObstacleBow(
+  context: SlurLayoutContext,
+  start: SlurAnchorCandidate,
+  end: SlurAnchorCandidate,
+): number {
+  let required: number = 0;
+  for (const obstacle of context.obstacles) {
+    if ((obstacle.endpoint && obstacle.type !== "accidental") || !isForbiddenObstacle(obstacle)) {
+      continue;
+    }
+    const left: number = Math.max(start.x, obstacle.bounds.left);
+    const right: number = Math.min(end.x, obstacle.bounds.right);
+    if (right <= left) {
+      continue;
+    }
+    const x: number = (left + right) / 2;
+    const baseline: number = lineY(start, end, x);
+    const neededAtX: number = context.direction === PlacementEnum.Above
+      ? baseline - (obstacle.bounds.top - obstacle.clearance)
+      : obstacle.bounds.bottom + obstacle.clearance - baseline;
+    const t: number = (x - start.x) / Math.max(0.001, end.x - start.x);
+    const cubicControlInfluence: number = Math.max(0.04, 3 * t * (1 - t));
+    required = Math.max(required, neededAtX / cubicControlInfluence);
+  }
+  return Math.max(0, required);
+}
+
 function familyGeometry(
   seed: SlurCurveGeometry,
   start: SlurAnchorCandidate,
@@ -256,6 +293,33 @@ function familyGeometry(
     return cloneGeometry(seed);
   }
   const width: number = end.x - start.x;
+  if (family === "system-continuation") {
+    const p0: PointF2D = new PointF2D(start.x, start.y);
+    const p3: PointF2D = new PointF2D(end.x, end.y);
+    if (context.start.systemBoundary && context.end.systemBoundary) {
+      return {
+        p0,
+        p1: new PointF2D(start.x + width / 3, start.y),
+        p2: new PointF2D(start.x + width * 2 / 3, end.y),
+        p3,
+      };
+    }
+    const control: PointF2D = context.start.systemBoundary
+      ? new PointF2D(start.x + width * 0.35, start.y)
+      : new PointF2D(start.x + width * 0.65, end.y);
+    return {
+      p0,
+      p1: new PointF2D(
+        start.x + (control.x - start.x) * 2 / 3,
+        start.y + (control.y - start.y) * 2 / 3,
+      ),
+      p2: new PointF2D(
+        end.x + (control.x - end.x) * 2 / 3,
+        end.y + (control.y - end.y) * 2 / 3,
+      ),
+      p3,
+    };
+  }
   const seedWidth: number = Math.max(0.001, seed.p3.x - seed.p0.x);
   let firstRatio: number = Math.min(0.42, Math.max(0.18, (seed.p1.x - seed.p0.x) / seedWidth));
   let secondRatio: number = Math.min(0.82, Math.max(0.58, (seed.p2.x - seed.p0.x) / seedWidth));
@@ -265,7 +329,7 @@ function familyGeometry(
       heightFactor = 0.78;
       break;
     case "high":
-      heightFactor = 1.22;
+      heightFactor = 2;
       break;
     case "flattened-long":
       heightFactor = width > 14 ? 0.72 : 0.92;
@@ -280,9 +344,6 @@ function familyGeometry(
       secondRatio = 0.96;
       heightFactor = 1.22;
       break;
-    case "system-continuation":
-      heightFactor = 0.92;
-      break;
     default:
       break;
   }
@@ -291,7 +352,17 @@ function familyGeometry(
   const seedP1Line: number = lineY(seed.p0, seed.p3, seed.p1.x);
   const seedP2Line: number = lineY(seed.p0, seed.p3, seed.p2.x);
   const direction: number = context.direction === PlacementEnum.Above ? -1 : 1;
-  const minimumBow: number = Math.min(3.2, Math.max(0.65, Math.abs(width) * 0.055));
+  let minimumBow: number = Math.min(3.2, Math.max(0.65, Math.abs(width) * 0.055));
+  if (family === "high") {
+    // The ordinary skyline seed can remain inside a dense beam, tuplet, grace
+    // cluster, or an already-selected inner slur. Reserve the high family as a
+    // deterministic obstacle-routed alternative rather than merely scaling the
+    // same insufficient bow by a fixed percentage.
+    minimumBow = Math.max(
+      minimumBow,
+      requiredObstacleBow(context, start, end) * 1.08 / heightFactor,
+    );
+  }
   const commonBow: number =
     Math.max(
       minimumBow,
@@ -300,10 +371,10 @@ function familyGeometry(
     ) * direction;
   const p1: PointF2D = new PointF2D(p1x, lineY(start, end, p1x) + commonBow * heightFactor);
   const p2: PointF2D = new PointF2D(p2x, lineY(start, end, p2x) + commonBow * heightFactor);
-  if (family === "system-continuation" || context.start.systemBoundary) {
+  if (context.start.systemBoundary) {
     p1.y = start.y;
   }
-  if (family === "system-continuation" || context.end.systemBoundary) {
+  if (context.end.systemBoundary) {
     p2.y = end.y;
   }
   return {
@@ -337,6 +408,8 @@ function isForbiddenObstacle(obstacle: SlurObstacle): boolean {
     case "beam":
     case "accidental":
     case "tie":
+    case "tuplet":
+    case "grace-note":
     case "slur":
       return true;
     case "stem":
@@ -358,6 +431,7 @@ function evaluateGeometry(
   let nearCollisionCount: number = 0;
   let obstacleIntersections: number = 0;
   let forbiddenObstacleIntersections: number = 0;
+  const forbiddenObstacleIds: Set<string> = new Set<string>();
   let staffLineInteraction: number = 0;
   for (let index: number = 1; index < count; index++) {
     const t: number = index / count;
@@ -393,10 +467,19 @@ function evaluateGeometry(
     }
     for (const obstacle of context.obstacles) {
       const endpointClearance: number = Math.max(obstacle.clearance, 0.08);
-      if (obstacle.endpoint === "start" && point.x <= obstacle.bounds.right + endpointClearance) {
+      const belongsToAttachment: boolean = obstacle.type !== "accidental";
+      if (
+        belongsToAttachment &&
+        obstacle.endpoint === "start" &&
+        point.x <= obstacle.bounds.right + endpointClearance
+      ) {
         continue;
       }
-      if (obstacle.endpoint === "end" && point.x >= obstacle.bounds.left - endpointClearance) {
+      if (
+        belongsToAttachment &&
+        obstacle.endpoint === "end" &&
+        point.x >= obstacle.bounds.left - endpointClearance
+      ) {
         continue;
       }
       if (obstacle.curve) {
@@ -415,14 +498,20 @@ function evaluateGeometry(
             Math.max(obstacle.clearance, 0.12)
           ) {
             obstacleIntersections += 1;
-            forbiddenObstacleIntersections += Number(isForbiddenObstacle(obstacle));
+            if (isForbiddenObstacle(obstacle)) {
+              forbiddenObstacleIntersections += 1;
+              forbiddenObstacleIds.add(obstacle.id);
+            }
           }
         }
         continue;
       }
       if (boundsContain(obstacle.bounds, point, Math.max(obstacle.clearance, 0.08))) {
         obstacleIntersections += 1;
-        forbiddenObstacleIntersections += Number(isForbiddenObstacle(obstacle));
+        if (isForbiddenObstacle(obstacle)) {
+          forbiddenObstacleIntersections += 1;
+          forbiddenObstacleIds.add(obstacle.id);
+        }
       }
     }
   }
@@ -434,6 +523,7 @@ function evaluateGeometry(
     nearCollisionCount,
     obstacleIntersections,
     forbiddenObstacleIntersections,
+    forbiddenObstacleIds: [...forbiddenObstacleIds],
     excessiveClearance,
     staffLineInteraction,
   };
@@ -514,7 +604,10 @@ function scoreCandidate(
   return score;
 }
 
-function rejectionReason(candidate: SlurCurveCandidate): string | undefined {
+function rejectionReason(
+  candidate: SlurCurveCandidate,
+  context: SlurLayoutContext,
+): string | undefined {
   const { p0, p1, p2, p3 } = candidate.geometry;
   if (![p0, p1, p2, p3].every(finitePoint)) {
     return "non-finite";
@@ -548,7 +641,12 @@ function rejectionReason(candidate: SlurCurveCandidate): string | undefined {
   }
   const startSlope: number = Math.abs((p1.y - p0.y) / Math.max(0.001, p1.x - p0.x));
   const endSlope: number = Math.abs((p3.y - p2.y) / Math.max(0.001, p3.x - p2.x));
-  if (startSlope > 5.6713 || endSlope > 5.6713) {
+  const maximumSlope: number = context.start.systemBoundary
+    || context.end.systemBoundary
+    || candidate.family === "high"
+    ? 12
+    : 5.6713;
+  if (startSlope > maximumSlope || endSlope > maximumSlope) {
     return "excessively-steep";
   }
   return undefined;
@@ -668,12 +766,13 @@ export function calculateCandidateSlurLayout(
           generationIndex,
           articulationAdjustments: [],
         };
-        candidate.rejectionReason = rejectionReason(candidate);
-        if (
-          !candidate.rejectionReason &&
-          evaluateGeometry(context, candidate.geometry, options).forbiddenObstacleIntersections > 0
-        ) {
-          candidate.rejectionReason = "obstacle-intersection";
+        candidate.rejectionReason = rejectionReason(candidate, context);
+        if (!candidate.rejectionReason) {
+          const evaluation: EvaluatedGeometry = evaluateGeometry(context, candidate.geometry, options);
+          if (evaluation.forbiddenObstacleIntersections > 0) {
+            candidate.rejectionReason = "obstacle-intersection";
+            candidate.rejectionObstacleIds = evaluation.forbiddenObstacleIds;
+          }
         }
         candidate.rejected = Boolean(candidate.rejectionReason);
         if (!candidate.rejected) {

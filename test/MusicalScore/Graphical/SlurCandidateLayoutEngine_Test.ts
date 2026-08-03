@@ -3,9 +3,11 @@ import { PointF2D } from "../../../src/Common/DataObjects/PointF2D";
 import { PlacementEnum } from "../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 import {
   calculateCandidateSlurLayout,
+  generateSlurAnchors,
   SlurCandidateLayoutOptions,
 } from "../../../src/MusicalScore/Graphical/SlurLayout/SlurCandidateLayoutEngine";
 import {
+  SlurAnchorCandidate,
   SlurCurveGeometry,
   SlurCurveCandidate,
   SlurEndpointContext,
@@ -21,6 +23,7 @@ const endpoint: (side: "start" | "end", x: number) => SlurEndpointContext = (
   present: true,
   notehead: { left: x - 0.5, right: x + 0.5, top: 1.5, bottom: 2.5 },
   beams: [],
+  accidentals: [],
   articulations: [],
   legacyAnchor: new PointF2D(x, 1.2),
   legacyAttachment: "notehead",
@@ -130,10 +133,32 @@ describe("candidate slur layout engine", (): void => {
     expect(
       result.candidates.some((candidate) => candidate.rejectionReason === "obstacle-intersection"),
     ).to.equal(true);
+    expect(
+      result.candidates.some((candidate) => candidate.rejectionObstacleIds?.includes("middle-head")),
+    ).to.equal(true);
     const selected: SlurCurveCandidate = result.candidates.find(
       (candidate) => candidate.id === result.selectedCandidateId,
     );
     expect(selected?.rejected).to.equal(false);
+  });
+
+  it("places a chord endpoint shoulder outside its selected accidental", (): void => {
+    const accidentalStart: SlurEndpointContext = {
+      ...endpoint("start", 2),
+      notehead: {left: 1.5, right: 2.5, top: 1.5, bottom: 2.5},
+      accidentals: [{left: 0.4, right: 1.3, top: -0.25, bottom: 2.8}],
+      chordSize: 2,
+    };
+    const anchors: {start: SlurAnchorCandidate[], end: SlurAnchorCandidate[]} = generateSlurAnchors(
+      context({start: accidentalStart}),
+      seed,
+      options.obstacleClearance,
+    );
+    const shoulder: SlurAnchorCandidate = anchors.start.find(
+      (anchor) => anchor.type === "notehead-shoulder",
+    );
+
+    expect(shoulder.y).to.equal(-0.25 - options.obstacleClearance);
   });
 
   it("scores movable articulations as soft obstacles", (): void => {
@@ -248,6 +273,75 @@ describe("candidate slur layout engine", (): void => {
     );
 
     expect(result.candidates[0].rejectionReason).to.equal("looping");
+    expect(result.candidates.some((candidate) => !candidate.rejected)).to.equal(true);
+  });
+
+  it("treats selected inner slurs as hard obstacles for an outer route", (): void => {
+    const inner: SlurCurveGeometry = {
+      p0: new PointF2D(5, 0.4),
+      p1: new PointF2D(8, -1.8),
+      p2: new PointF2D(12, -1.8),
+      p3: new PointF2D(15, 0.4),
+    };
+    const result: SlurLayoutResult = calculateCandidateSlurLayout(
+      context({
+        isNested: true,
+        obstacles: [{
+          id: "selected-inner-slur",
+          type: "slur",
+          bounds: {left: 5, right: 15, top: -1.8, bottom: 0.4},
+          clearance: 0.2,
+          curve: inner,
+        }],
+      }),
+      seed,
+      options,
+    );
+    const selected: SlurCurveCandidate = result.candidates.find(
+      (candidate) => candidate.id === result.selectedCandidateId,
+    );
+
+    expect(result.candidates.some((candidate) => candidate.rejectionReason === "obstacle-intersection"))
+      .to.equal(true);
+    expect(selected?.rejected).to.equal(false);
+  });
+
+  it("routes around grace-note, tuplet, and neighbouring-tie geometry", (): void => {
+    const result: SlurLayoutResult = calculateCandidateSlurLayout(
+      context({
+        obstacles: [
+          {
+            id: "grace-head",
+            type: "grace-note",
+            bounds: {left: 5, right: 6, top: -1.4, bottom: 0.4},
+            clearance: 0.12,
+          },
+          {
+            id: "tuplet-number",
+            type: "tuplet",
+            bounds: {left: 9, right: 11, top: -2.2, bottom: -1.2},
+            clearance: 0.12,
+          },
+          {
+            id: "neighbouring-tie",
+            type: "tie",
+            bounds: {left: 13, right: 16, top: -1.1, bottom: 0.5},
+            clearance: 0.12,
+            curve: {
+              p0: new PointF2D(13, 0.2),
+              p1: new PointF2D(14, -0.8),
+              p2: new PointF2D(15, -0.8),
+              p3: new PointF2D(16, 0.2),
+            },
+          },
+        ],
+      }),
+      seed,
+      options,
+    );
+
+    expect(result.candidates.some((candidate) => candidate.rejectionReason === "obstacle-intersection"))
+      .to.equal(true);
     expect(result.candidates.some((candidate) => !candidate.rejected)).to.equal(true);
   });
 });

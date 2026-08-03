@@ -28,6 +28,24 @@ import { AccidentalEnum } from "../../../../src/Common/DataObjects/Pitch";
 
 describe("VexFlow Measure", () => {
 
+   it("renders pedal markings through the modern VexFlow adapter", async (): Promise<void> => {
+      const container: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+      await osmd.load(TestUtils.getScore("test_pedal_signs.musicxml"));
+
+      expect(() => osmd.render()).to.not.throw();
+      expect(container.querySelector("svg")).to.not.equal(null);
+   });
+
+   it("renders x-shaped tablature notes through VexFlow 5 render options", async (): Promise<void> => {
+      const container: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+      await osmd.load(TestUtils.getScore("test_slide_glissando.musicxml"));
+
+      expect(() => osmd.render()).to.not.throw();
+      expect(container.querySelector("svg")).to.not.equal(null);
+   });
+
    it("Can create GraphicalMusicSheet", (done: Mocha.Done) => {
       const path: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
       const score: Document = TestUtils.getScore(path);

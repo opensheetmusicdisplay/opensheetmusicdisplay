@@ -63,6 +63,7 @@ export interface SlurEndpointContext {
     notehead?: SlurBounds;
     stem?: SlurBounds;
     beams: readonly SlurBounds[];
+    accidentals: readonly SlurBounds[];
     articulations: SlurArticulationContext[];
     legacyAnchor: PointF2D;
     legacyAttachment: SlurEndpointAttachment;
@@ -116,6 +117,28 @@ export interface SlurLayoutContext {
     isCrossStaff: boolean;
     isCrossSystem: boolean;
     isNested: boolean;
+    linkedGroupId?: string;
+}
+
+export type SlurLayoutFaultCode =
+    | "incompatible-linked-placement"
+    | "invalid-linked-segment-order"
+    | "unsupported-cross-staff-cross-system"
+    | "no-valid-candidate";
+
+export interface SlurLayoutFault {
+    code: SlurLayoutFaultCode;
+    message: string;
+    segmentIndexes: readonly number[];
+}
+
+export interface SlurLinkedLayoutDiagnostics {
+    groupId: string;
+    continuationClearance: number;
+    segmentIndexes: readonly number[];
+    totalScore: number;
+    tangentMismatch: number;
+    faults: readonly SlurLayoutFault[];
 }
 
 export interface SlurAnchorPenalties {
@@ -176,6 +199,7 @@ export interface SlurCurveCandidate {
     score?: SlurCandidateScore;
     rejected: boolean;
     rejectionReason?: string;
+    rejectionObstacleIds?: readonly string[];
     generationIndex: number;
     articulationAdjustments: SlurArticulationAdjustment[];
 }

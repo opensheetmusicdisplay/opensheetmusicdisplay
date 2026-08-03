@@ -962,10 +962,14 @@ export class VexFlowConverter {
             positions: tabPositions,
         });
         if (isXNotehead) {
-            // (vfnote as any).render_options.fretScale = rules.TabXNoteheadScale; // doesn't work, is overwritten later
-            (vfnote as any).render_options.scale = rules.TabXNoteheadScale;
-            (vfnote as any).render_options.TabUseXNoteheadAlternativeGlyph =
-                rules.TabUseXNoteheadAlternativeGlyph;
+            const tabNoteCompat: any = vfnote as any;
+            const renderOptions: any = tabNoteCompat.renderOptions ?? tabNoteCompat.render_options ?? {};
+            // Keep the legacy alias for the OSMD tab-note extensions while using VexFlow 5's
+            // camel-cased renderOptions object as the source of truth.
+            tabNoteCompat.renderOptions = renderOptions;
+            tabNoteCompat.render_options = renderOptions;
+            renderOptions.scale = rules.TabXNoteheadScale;
+            renderOptions.TabUseXNoteheadAlternativeGlyph = rules.TabUseXNoteheadAlternativeGlyph;
             vfnote.updateWidth(); // use .scale, update glyph
         }
         if (rules.UsePageBackgroundColorForTabNotes) {
