@@ -26,6 +26,17 @@ interface SlurSnapshot {
    startHeadRight?: number;
 }
 
+interface RhythmicMeasureSnapshot {
+   measureX: number;
+   staffEntryXs: number[];
+   width: number;
+}
+
+interface SlurModeSnapshot {
+   rhythm: RhythmicMeasureSnapshot[];
+   slurs: SlurSnapshot[];
+}
+
 function geometryHintScore(offset: number): string {
    return `<?xml version="1.0" encoding="UTF-8"?>
       <score-partwise version="4.0">
@@ -189,9 +200,17 @@ function snapshot(osmd: OpenSheetMusicDisplay): SlurSnapshot[] {
    }));
 }
 
+function rhythmicSnapshot(osmd: OpenSheetMusicDisplay): RhythmicMeasureSnapshot[] {
+   return osmd.GraphicSheet.MeasureList.flatMap((measureRow) => measureRow.map((measure) => ({
+      measureX: measure.PositionAndShape.RelativePosition.x,
+      staffEntryXs: measure.staffEntries.map((entry) => entry.PositionAndShape.RelativePosition.x),
+      width: measure.PositionAndShape.Size.width,
+   })));
+}
+
 describe("Stage 6 slur geometry", (): void => {
    it("selects both internal engines without changing the rhythmic layout", async (): Promise<void> => {
-      const renderMode: (mode: "legacy" | "candidate") => Promise<SlurSnapshot[]> = async (mode) => {
+      const renderMode: (mode: "legacy" | "candidate") => Promise<SlurModeSnapshot> = async (mode) => {
          const osmd: OpenSheetMusicDisplay =
             TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
          await osmd.load(TestUtils.getScore("test_slur_double.musicxml"));
@@ -199,18 +218,20 @@ describe("Stage 6 slur geometry", (): void => {
          osmd.EngravingRules.SlurDiagnosticsLevel = "candidates";
          osmd.updateGraphic();
          osmd.render();
-         return snapshot(osmd);
+         return {
+            rhythm: rhythmicSnapshot(osmd),
+            slurs: snapshot(osmd),
+         };
       };
 
-      const legacy: SlurSnapshot[] = await renderMode("legacy");
-      const candidate: SlurSnapshot[] = await renderMode("candidate");
-      expect(candidate).to.have.length(legacy.length);
-      for (let index: number = 0; index < legacy.length; index++) {
-         expect(candidate[index].mode).to.equal("candidate");
-         expect(legacy[index].mode).to.equal("legacy");
-         expect(candidate[index].candidateCount).to.be.greaterThan(1);
-         expect(candidate[index].start.x).to.be.closeTo(legacy[index].start.x, 2);
-         expect(candidate[index].end.x).to.be.closeTo(legacy[index].end.x, 2);
+      const legacy: SlurModeSnapshot = await renderMode("legacy");
+      const candidate: SlurModeSnapshot = await renderMode("candidate");
+      expect(candidate.rhythm).to.deep.equal(legacy.rhythm);
+      expect(candidate.slurs).to.have.length(legacy.slurs.length);
+      for (let index: number = 0; index < legacy.slurs.length; index++) {
+         expect(candidate.slurs[index].mode).to.equal("candidate");
+         expect(legacy.slurs[index].mode).to.equal("legacy");
+         expect(candidate.slurs[index].candidateCount).to.be.greaterThan(1);
       }
    });
 
@@ -347,10 +368,10 @@ describe("Stage 6 slur geometry", (): void => {
       expect(slurs).to.have.length(2);
       const above: GraphicalSlur = slurs.find((slur) => slur.placement === PlacementEnum.Above);
       const below: GraphicalSlur = slurs.find((slur) => slur.placement === PlacementEnum.Below);
-      expect(above.diagnostics.startAttachment).to.equal("notehead");
-      expect(above.diagnostics.endAttachment).to.equal("notehead");
-      expect(below.diagnostics.startAttachment).to.equal("notehead");
-      expect(below.diagnostics.endAttachment).to.equal("notehead");
+      expect(above.diagnostics.startAttachment, "above start attachment").to.equal("notehead");
+      expect(above.diagnostics.endAttachment, "above end attachment").to.equal("notehead");
+      expect(below.diagnostics.startAttachment, "below start attachment").to.equal("notehead");
+      expect(below.diagnostics.endAttachment, "below end attachment").to.equal("notehead");
       expect(above.bezierStartPt.x).to.be.closeTo(above.diagnostics.startNotehead.right, 0.001);
       expect(above.bezierEndPt.x).to.be.closeTo(above.diagnostics.endNotehead.left, 0.001);
       expect(below.bezierStartPt.x).to.be.closeTo(below.diagnostics.startNotehead.right, 0.001);
@@ -436,6 +457,16 @@ describe("Stage 6 slur geometry", (): void => {
          expect(crossed).to.have.length(1);
          expect(crossed[0].diagnostics.unsupportedRouting).to.equal(undefined);
          expect(crossed[0].placement).to.equal(PlacementEnum.Above);
+         expect(crossed[0].diagnostics.startNotehead).to.not.equal(undefined);
+         expect(crossed[0].diagnostics.endNotehead).to.not.equal(undefined);
+         expect(crossed[0].bezierStartPt.x).to.be.closeTo(
+            (crossed[0].diagnostics.startNotehead.left + crossed[0].diagnostics.startNotehead.right) / 2,
+            0.001,
+         );
+         expect(crossed[0].bezierEndPt.x).to.be.closeTo(
+            (crossed[0].diagnostics.endNotehead.left + crossed[0].diagnostics.endNotehead.right) / 2,
+            0.001,
+         );
          const startQuarterLineY: number =
             crossed[0].bezierStartPt.y +
             (crossed[0].bezierEndPt.y - crossed[0].bezierStartPt.y) * 0.25;
@@ -444,6 +475,8 @@ describe("Stage 6 slur geometry", (): void => {
             (crossed[0].bezierEndPt.y - crossed[0].bezierStartPt.y) * 0.75;
          expect(crossed[0].bezierStartControlPt.y).to.be.lessThan(startQuarterLineY);
          expect(crossed[0].bezierEndControlPt.y).to.be.lessThan(endQuarterLineY);
+         expect(startQuarterLineY - crossed[0].bezierStartControlPt.y).to.be.greaterThan(2.5);
+         expect(endQuarterLineY - crossed[0].bezierEndControlPt.y).to.be.greaterThan(2.5);
          for (const point of [
             crossed[0].bezierStartPt,
             crossed[0].bezierStartControlPt,

@@ -9,6 +9,7 @@ export type SlurEndpointSide = "start" | "end";
 
 export type SlurEndpointAttachment =
     | "notehead"
+    | "notehead-center"
     | "notehead-shoulder"
     | "outer-head"
     | "stem"
@@ -59,6 +60,8 @@ export interface SlurEndpointContext {
     sourceNoteId?: string;
     pitchHalfTone?: number;
     stemDirection?: number;
+    /** True when the slur lies on the rendered stem side of this endpoint. */
+    stemSide: boolean;
     voiceId?: number;
     notehead?: SlurBounds;
     stem?: SlurBounds;

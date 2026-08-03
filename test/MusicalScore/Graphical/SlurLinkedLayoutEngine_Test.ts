@@ -40,6 +40,7 @@ function endpoint(side: "start" | "end", x: number, boundary: boolean): SlurEndp
     side,
     present: !boundary,
     notehead: boundary ? undefined : {left: x - 0.5, right: x + 0.5, top: 1.5, bottom: 2.5},
+    stemSide: false,
     beams: [],
     accidentals: [],
     articulations: [],

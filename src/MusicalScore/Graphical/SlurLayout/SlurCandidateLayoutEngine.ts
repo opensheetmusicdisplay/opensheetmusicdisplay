@@ -88,6 +88,12 @@ function makeAnchor(
   displacement: number,
 ): SlurAnchorCandidate {
   const endpoint: SlurEndpointContext = side === "start" ? context.start : context.end;
+  const expectedArticulationPosition: number = context.direction === PlacementEnum.Above ? 3 : 4;
+  const insideDurationArticulations: number = endpoint.articulations.filter(
+    (articulation) =>
+      articulation.position === expectedArticulationPosition &&
+      articulation.classification === "duration",
+  ).length;
   return {
     id: `${context.id}-${side}-${type}-${generationIndex}`,
     x,
@@ -98,8 +104,11 @@ function makeAnchor(
     penalties: {
       displacement,
       articulationRelationship:
-        type === "outside-articulation" ? 0 : endpoint.articulations.length * 0.08,
-      stemRelationship: type === "stem-tip" || type === "beam-side" ? 0 : 0.02,
+        type === "outside-articulation" ? 0 : insideDurationArticulations * 0.24,
+      stemRelationship:
+        type === "stem" || type === "stem-tip" || type === "beam-side"
+          ? endpoint.stemSide ? 0 : 0.45
+          : endpoint.stemSide ? 0.3 : 0,
             tieConflict: endpoint.tiedEndpoint && type !== endpoint.legacyAttachment ? 2 : 0,
     },
     generationIndex,
@@ -119,6 +128,23 @@ export function generateSlurAnchors(
     const endpoint: SlurEndpointContext = side === "start" ? context.start : context.end;
     const seedPoint: PointF2D = side === "start" ? seed.p0 : seed.p3;
     let generationIndex: number = 0;
+    const direction: number = context.direction === PlacementEnum.Above ? -1 : 1;
+    const noteheadCenterX: number | undefined = endpoint.notehead
+      ? (endpoint.notehead.left + endpoint.notehead.right) / 2
+      : undefined;
+    const noteheadSideY: number | undefined = endpoint.notehead
+      ? (direction < 0 ? endpoint.notehead.top : endpoint.notehead.bottom) + direction * endpointGap
+      : undefined;
+    const stemTipX: number | undefined = endpoint.stem
+      ? (endpoint.stem.left + endpoint.stem.right) / 2 + (side === "start" ? 0.08 : -0.08)
+      : undefined;
+    const stemTipY: number | undefined = endpoint.stem
+      ? (direction < 0 ? endpoint.stem.top : endpoint.stem.bottom) + direction * endpointGap
+      : undefined;
+    let legacyDisplacement: number = endpoint.legacyAttachment === "voice-entry" ? 0.12 : 0.04;
+    if (endpoint.legacyAttachment === "stem" && stemTipX !== undefined && stemTipY !== undefined) {
+      legacyDisplacement += Math.hypot(seedPoint.x - stemTipX, seedPoint.y - stemTipY) * 0.42;
+    }
     result[side].push(
       makeAnchor(
         context,
@@ -127,7 +153,7 @@ export function generateSlurAnchors(
         seedPoint.y,
         endpoint.legacyAttachment,
         generationIndex++,
-        endpoint.legacyAttachment === "voice-entry" ? 0.12 : 0.04,
+        legacyDisplacement,
       ),
     );
     if (endpoint.systemBoundary) {
@@ -137,7 +163,24 @@ export function generateSlurAnchors(
       continue;
     }
     if (endpoint.notehead) {
-      const direction: number = context.direction === PlacementEnum.Above ? -1 : 1;
+      const centerDisplacement: number = Math.hypot(
+        noteheadCenterX - seedPoint.x,
+        noteheadSideY - seedPoint.y,
+      );
+      result[side].push(
+        makeAnchor(
+          context,
+          side,
+          noteheadCenterX,
+          noteheadSideY,
+          "notehead-center",
+          generationIndex++,
+          // The crown is a useful Dorico-style option, not a universal rule.
+          // Leave an ordinary, exact legacy shoulder slightly cheaper unless
+          // the crown produces materially better curve geometry.
+          centerDisplacement * 0.1,
+        ),
+      );
       const x: number =
         side === "start" ? endpoint.notehead.right + 0.08 : endpoint.notehead.left - 0.08;
       const sameSideBounds: SlurBounds[] = [endpoint.notehead, ...endpoint.accidentals];
@@ -184,7 +227,6 @@ export function generateSlurAnchors(
       }
     }
     if (endpoint.beams.length > 0) {
-      const direction: number = context.direction === PlacementEnum.Above ? -1 : 1;
       const x: number = endpoint.stem
         ? (endpoint.stem.left + endpoint.stem.right) / 2 + (side === "start" ? 0.08 : -0.08)
         : seedPoint.x;
@@ -195,15 +237,53 @@ export function generateSlurAnchors(
       const y: number = beamEdge + direction * endpointGap;
       const displacement: number = Math.hypot(x - seedPoint.x, y - seedPoint.y);
       result[side].push(
-        makeAnchor(context, side, x, y, "beam-side", generationIndex++, displacement * 0.45),
+        makeAnchor(context, side, x, y, "beam-side", generationIndex++, displacement * 0.12),
       );
     }
-    if (endpoint.stem && endpoint.chordSize <= 1) {
-      const direction: number = context.direction === PlacementEnum.Above ? -1 : 1;
-      const x: number =
-        (endpoint.stem.left + endpoint.stem.right) / 2 + (side === "start" ? 0.08 : -0.08);
-      const y: number =
-        (direction < 0 ? endpoint.stem.top : endpoint.stem.bottom) + direction * endpointGap;
+    if (endpoint.stem && (endpoint.chordSize <= 1 || endpoint.stemSide)) {
+      const displacement: number = Math.hypot(
+        stemTipX - seedPoint.x,
+        stemTipY - seedPoint.y,
+      );
+      const compactChordEndpoint: boolean =
+        endpoint.chordSize > 1 && Math.abs(seed.p3.x - seed.p0.x) < 10;
+      result[side].push(
+        makeAnchor(
+          context,
+          side,
+          stemTipX,
+          stemTipY,
+          "stem-tip",
+          generationIndex++,
+          displacement * (endpoint.stemSide && endpoint.chordSize > 1
+            ? compactChordEndpoint ? 1 : 0.04
+            : 0.16) +
+            // Keep this geometrically valid fallback available if every head
+            // route collides, but do not let a short chord-to-chord slur leap
+            // to remote stem tips merely to gain cheap clearance. The fixed
+            // semantic cost is needed when the legacy seed is already at the
+            // stem tip, making its geometric displacement misleadingly zero.
+            (compactChordEndpoint ? 0.85 : 0) +
+            (endpoint.stemSide ? 0 : 0.15),
+        ),
+      );
+    }
+    const sameSideArticulations: SlurArticulationContext[] = endpoint.articulations.filter(
+      (articulation) =>
+        articulation.classification === "duration" &&
+        (context.direction === PlacementEnum.Above
+          ? articulation.position === 3
+          : articulation.position === 4),
+    );
+    if (sameSideArticulations.length > 0) {
+      const extreme: number =
+        direction < 0
+          ? Math.min(...sameSideArticulations.map((articulation) => articulation.bounds.top))
+          : Math.max(...sameSideArticulations.map((articulation) => articulation.bounds.bottom));
+      const y: number = extreme + direction * endpointGap;
+      const x: number = endpoint.stemSide && stemTipX !== undefined
+        ? stemTipX
+        : noteheadCenterX ?? seedPoint.x;
       const displacement: number = Math.hypot(x - seedPoint.x, y - seedPoint.y);
       result[side].push(
         makeAnchor(
@@ -211,35 +291,9 @@ export function generateSlurAnchors(
           side,
           x,
           y,
-          "stem-tip",
-          generationIndex++,
-          displacement * 0.55 + (endpoint.chordSize > 1 ? 2 : 0.08),
-        ),
-      );
-    }
-    const sameSideArticulations: SlurArticulationContext[] = endpoint.articulations.filter(
-      (articulation) =>
-        context.direction === PlacementEnum.Above
-          ? articulation.position === 3
-          : articulation.position === 4,
-    );
-    if (sameSideArticulations.length > 0) {
-      const direction: number = context.direction === PlacementEnum.Above ? -1 : 1;
-      const extreme: number =
-        direction < 0
-          ? Math.min(...sameSideArticulations.map((articulation) => articulation.bounds.top))
-          : Math.max(...sameSideArticulations.map((articulation) => articulation.bounds.bottom));
-      const y: number = extreme + direction * endpointGap;
-      const displacement: number = Math.abs(y - seedPoint.y);
-      result[side].push(
-        makeAnchor(
-          context,
-          side,
-          seedPoint.x,
-          y,
           "outside-articulation",
           generationIndex++,
-          displacement * 0.4,
+          displacement * 0.14,
         ),
       );
     }
@@ -261,6 +315,17 @@ function requiredObstacleBow(
   end: SlurAnchorCandidate,
 ): number {
   let required: number = 0;
+  const middleX: number = (start.x + end.x) / 2;
+  const middleBaseline: number = lineY(start, end, middleX);
+  const staffEdgeClearance: number = 0.12;
+  const staffEdgeBow: number = context.direction === PlacementEnum.Above
+    ? middleBaseline - (context.envelope.topLineOffset - staffEdgeClearance)
+    : context.envelope.bottomLineOffset + staffEdgeClearance - middleBaseline;
+  // At t=0.5, equal cubic controls contribute 0.75 of their bow. This gives
+  // the high family a genuine route outside the staff while retaining its
+  // notehead attachments, instead of making remote stem tips the only way to
+  // avoid a staff-line penalty.
+  required = Math.max(required, staffEdgeBow / 0.75);
   for (const obstacle of context.obstacles) {
     if ((obstacle.endpoint && obstacle.type !== "accidental") || !isForbiddenObstacle(obstacle)) {
       continue;
@@ -289,7 +354,12 @@ function familyGeometry(
   family: SlurCurveFamily,
   context: SlurLayoutContext,
 ): SlurCurveGeometry {
-  if (family === "normal" && start.generationIndex === 0 && end.generationIndex === 0) {
+  if (
+    family === "normal" &&
+    start.generationIndex === 0 &&
+    end.generationIndex === 0 &&
+    !context.isCrossStaff
+  ) {
     return cloneGeometry(seed);
   }
   const width: number = end.x - start.x;
@@ -326,10 +396,13 @@ function familyGeometry(
   let heightFactor: number = 1;
   switch (family) {
     case "shallow":
-      heightFactor = 0.78;
+      // Short and cross-staff slurs need a readable arch. Flattening these
+      // small gestures makes their endpoints look disconnected even when the
+      // curve is technically collision-free.
+      heightFactor = Math.abs(width) < 10 || context.isCrossStaff ? 1 : 0.78;
       break;
     case "high":
-      heightFactor = 2;
+      heightFactor = 1;
       break;
     case "flattened-long":
       heightFactor = width > 14 ? 0.72 : 0.92;
@@ -353,6 +426,14 @@ function familyGeometry(
   const seedP2Line: number = lineY(seed.p0, seed.p3, seed.p2.x);
   const direction: number = context.direction === PlacementEnum.Above ? -1 : 1;
   let minimumBow: number = Math.min(3.2, Math.max(0.65, Math.abs(width) * 0.055));
+  if (context.isCrossStaff) {
+    // A steep cross-staff route needs enough independent bow to read as a
+    // slur rather than a loose diagonal joining two different staves.
+    minimumBow = Math.max(
+      minimumBow,
+      Math.min(2, 0.9 + Math.abs(end.y - start.y) * 0.12),
+    );
+  }
   if (family === "high") {
     // The ordinary skyline seed can remain inside a dense beam, tuplet, grace
     // cluster, or an already-selected inner slur. Reserve the high family as a
@@ -360,15 +441,28 @@ function familyGeometry(
     // same insufficient bow by a fixed percentage.
     minimumBow = Math.max(
       minimumBow,
-      requiredObstacleBow(context, start, end) * 1.08 / heightFactor,
+      requiredObstacleBow(context, start, end) * 1.08,
     );
   }
-  const commonBow: number =
+  let commonBow: number =
     Math.max(
       minimumBow,
       Math.abs(seed.p1.y - seedP1Line),
       Math.abs(seed.p2.y - seedP2Line),
     ) * direction;
+  if (context.isCrossStaff) {
+    // `commonBow` is applied on the screen's y axis. For a steep cross-staff
+    // phrase that represents only a fraction of the visible, perpendicular
+    // curvature and makes the result read as a nearly straight diagonal.
+    // Preserve a stable x progression while converting the intended bow to
+    // its vertical projection. The cap prevents almost-vertical gestures from
+    // producing an unreasonably high arch.
+    const perpendicularProjection: number = Math.min(
+      1.75,
+      Math.hypot(width, end.y - start.y) / Math.max(0.001, Math.abs(width)),
+    );
+    commonBow *= perpendicularProjection;
+  }
   const p1: PointF2D = new PointF2D(p1x, lineY(start, end, p1x) + commonBow * heightFactor);
   const p2: PointF2D = new PointF2D(p2x, lineY(start, end, p2x) + commonBow * heightFactor);
   if (context.start.systemBoundary) {
@@ -433,6 +527,7 @@ function evaluateGeometry(
   let forbiddenObstacleIntersections: number = 0;
   const forbiddenObstacleIds: Set<string> = new Set<string>();
   let staffLineInteraction: number = 0;
+  const endpointEnvelopeFraction: number = Math.abs(geometry.p3.x - geometry.p0.x) < 10 ? 0.28 : 0.16;
   for (let index: number = 1; index < count; index++) {
     const t: number = index / count;
     const point: PointF2D = pointOnSlurCurve(geometry, t);
@@ -447,7 +542,21 @@ function evaluateGeometry(
       context.direction === PlacementEnum.Above
         ? context.envelope.skyline[envelopeIndex]
         : context.envelope.bottomline[envelopeIndex];
-    if (Number.isFinite(envelopeValue) && t > 0.08 && t < 0.92) {
+    const insideStartAttachment: boolean = context.start.notehead
+      ? point.x <= context.start.notehead.right + options.obstacleClearance
+      : false;
+    const insideEndAttachment: boolean = context.end.notehead
+      ? point.x >= context.end.notehead.left - options.obstacleClearance
+      : false;
+    const interiorSample: boolean =
+      t > endpointEnvelopeFraction &&
+      t < 1 - endpointEnvelopeFraction &&
+      !insideStartAttachment &&
+      !insideEndAttachment;
+    if (
+      Number.isFinite(envelopeValue) &&
+      interiorSample
+    ) {
       const clearance: number =
         context.direction === PlacementEnum.Above
           ? envelopeValue - point.y
@@ -459,11 +568,13 @@ function evaluateGeometry(
       }
       excessiveClearance += Math.max(0, clearance - options.maximumPreferredClearance) / count;
     }
-    if (context.direction === PlacementEnum.Above) {
-      staffLineInteraction += Math.max(0, point.y - context.envelope.topLineOffset + 0.1) / count;
-    } else {
-      staffLineInteraction +=
-        Math.max(0, context.envelope.bottomLineOffset - point.y + 0.1) / count;
+    if (interiorSample) {
+      if (context.direction === PlacementEnum.Above) {
+        staffLineInteraction += Math.max(0, point.y - context.envelope.topLineOffset + 0.1) / count;
+      } else {
+        staffLineInteraction +=
+          Math.max(0, context.envelope.bottomLineOffset - point.y + 0.1) / count;
+      }
     }
     for (const obstacle of context.obstacles) {
       const endpointClearance: number = Math.max(obstacle.clearance, 0.08);
@@ -547,8 +658,36 @@ function scoreCandidate(
   const baselineMidpoint: number = (candidate.geometry.p0.y + candidate.geometry.p3.y) / 2;
   const expectedDirection: number = context.direction === PlacementEnum.Above ? -1 : 1;
   const contour: number = Math.max(0, -(midpoint.y - baselineMidpoint) * expectedDirection);
+  const phraseSlope: number = Math.abs(
+    (candidate.geometry.p3.y - candidate.geometry.p0.y) /
+      Math.max(0.001, candidate.geometry.p3.x - candidate.geometry.p0.x),
+  );
+  const acuteNoteheadPenalty: (anchor: SlurAnchorCandidate) => number =
+    (anchor): number => {
+      if (anchor.type === "notehead-center") {
+        // A shallow phrase normally leaves a chord more cleanly from its
+        // shoulder. Reserve the crown preference for an acute approach, where
+        // a lateral attachment otherwise looks as though it lands in space.
+        return phraseSlope < 0.65 ? 0.5 : 0;
+      }
+      if (phraseSlope <= 0.65) {
+        return 0;
+      }
+      if (!["notehead", "notehead-shoulder", "outer-head"].includes(anchor.type)) {
+        return 0;
+      }
+      // A steep tangent reads more cleanly at the notehead crown than at a
+      // lateral shoulder. This remains a small preference: exact stems,
+      // beams, articulations, and collision clearance still dominate.
+      return Math.min(0.18, (phraseSlope - 0.65) * 0.12);
+    };
   const anchorDisplacement: number =
-    candidate.startAnchor.penalties.displacement + candidate.endAnchor.penalties.displacement;
+    candidate.startAnchor.penalties.displacement +
+    candidate.endAnchor.penalties.displacement +
+    candidate.startAnchor.penalties.stemRelationship +
+    candidate.endAnchor.penalties.stemRelationship +
+    acuteNoteheadPenalty(candidate.startAnchor) +
+    acuteNoteheadPenalty(candidate.endAnchor);
   const articulation: number =
     candidate.startAnchor.penalties.articulationRelationship +
     candidate.endAnchor.penalties.articulationRelationship;
@@ -734,18 +873,34 @@ export function calculateCandidateSlurLayout(
   const anchorPairs: {start: SlurAnchorCandidate, end: SlurAnchorCandidate}[] =
     anchors.start.flatMap((start): {start: SlurAnchorCandidate, end: SlurAnchorCandidate}[] =>
       anchors.end.map((end): {start: SlurAnchorCandidate, end: SlurAnchorCandidate} => ({start, end})),
-    ).sort((left, right): number =>
-      left.start.generationIndex + left.end.generationIndex
-        - right.start.generationIndex - right.end.generationIndex
+    ).sort((left, right): number => {
+      const penalty: (pair: {start: SlurAnchorCandidate, end: SlurAnchorCandidate}) => number =
+        (pair): number =>
+          pair.start.penalties.displacement + pair.end.penalties.displacement +
+          pair.start.penalties.stemRelationship + pair.end.penalties.stemRelationship +
+          pair.start.penalties.articulationRelationship * 2 +
+          pair.end.penalties.articulationRelationship * 2 +
+          pair.start.penalties.tieConflict * 2 + pair.end.penalties.tieConflict * 2;
+      return penalty(left) - penalty(right)
       || Math.min(left.start.generationIndex, left.end.generationIndex)
         - Math.min(right.start.generationIndex, right.end.generationIndex)
       || left.start.generationIndex - right.start.generationIndex
-      || left.end.generationIndex - right.end.generationIndex,
-    );
+      || left.end.generationIndex - right.end.generationIndex;
+    });
   outer: for (const pair of anchorPairs) {
     const startAnchor: SlurAnchorCandidate = pair.start;
     const endAnchor: SlurAnchorCandidate = pair.end;
       for (const family of curveFamilies) {
+        const anchorWidth: number = Math.abs(endAnchor.x - startAnchor.x);
+        if (
+          (family === "shallow" && anchorWidth < 10) ||
+          (family === "flattened-long" && anchorWidth < 14)
+        ) {
+          // These families are optical reductions for genuinely broad
+          // phrases. On compact and cross-staff gestures they make the slur
+          // read as a loose diagonal or an under-curved tie.
+          continue;
+        }
         if (
           family === "system-continuation" &&
           !context.start.systemBoundary &&

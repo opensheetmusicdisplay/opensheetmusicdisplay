@@ -76,7 +76,7 @@ import { getDoricoDefaultTextFontFamily } from "../DoricoTextFontRouting";
 import { VexFlowSystemSpacingPlanner } from "./VexFlowHorizontalSpacing";
 import { calculateLinkedSlurLayouts } from "../SlurLayout/SlurLinkedLayoutEngine";
 import { SlurLinkedLayoutInput, SlurLinkedLayoutOutput } from "../SlurLayout/SlurLinkedLayoutEngine";
-import { SlurCurveGeometry, SlurLayoutContext } from "../SlurLayout/SlurLayoutTypes";
+import { SlurCurveCandidate, SlurCurveGeometry, SlurLayoutContext } from "../SlurLayout/SlurLayoutTypes";
 
 interface ContainerEntryInfo {
   anchorX?: number;
@@ -2833,25 +2833,68 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const sortedSegments: {segment: GraphicalSlur, staffLine: StaffLine}[] = [...linkedSegments].sort(
         (left, right): number => left.segment.diagnostics.segmentIndex - right.segment.diagnostics.segmentIndex,
       );
-      const inputs: SlurLinkedLayoutInput[] = [];
-      for (const {segment, staffLine} of sortedSegments) {
-        segment.refreshCandidateLayoutContext(staffLine);
-        const context: SlurLayoutContext = segment.layoutContext;
-        const seed: SlurCurveGeometry = segment.getCandidateSeed();
-        if (context && seed) {
-          inputs.push({context, seed});
+      const linkedGroupId: string = sortedSegments[0].segment.diagnostics.linkedGroupId;
+      const calculatePlacementRoute: (placement: PlacementEnum) => SlurLinkedLayoutOutput | undefined =
+        (placement: PlacementEnum): SlurLinkedLayoutOutput | undefined => {
+          const inputs: SlurLinkedLayoutInput[] = [];
+          for (let index: number = 0; index < sortedSegments.length; index++) {
+            const {segment, staffLine} = sortedSegments[index];
+            segment.setLinkedSegment(index, sortedSegments.length, placement, linkedGroupId);
+            segment.calculateCurve(this.rules, true);
+            segment.refreshCandidateLayoutContext(staffLine);
+            const context: SlurLayoutContext = segment.layoutContext;
+            const seed: SlurCurveGeometry = segment.getCandidateSeed();
+            if (context && seed) {
+              inputs.push({context, seed});
+            }
+          }
+          if (inputs.length !== sortedSegments.length) {
+            return undefined;
+          }
+          return calculateLinkedSlurLayouts(inputs, {
+            candidateLimit: this.rules.SlurCandidateLimit,
+            diagnosticsLevel: this.rules.SlurDiagnosticsLevel,
+            maximumPreferredClearance: this.rules.SlurMaximumPreferredClearance,
+            obstacleClearance: this.rules.SlurObstacleClearance,
+            scoreWeights: this.rules.SlurCandidateScoreWeights,
+          });
+        };
+      const routeScore: (output: SlurLinkedLayoutOutput | undefined) => number =
+        (output: SlurLinkedLayoutOutput | undefined): number => {
+          if (!output) {
+            return Number.POSITIVE_INFINITY;
+          }
+          const rejectedCount: number = output.results.filter((result): boolean => {
+            const selected: SlurCurveCandidate = result.candidates.find(
+              (candidate): boolean => candidate.id === result.selectedCandidateId,
+            );
+            return selected?.rejected ?? true;
+          }).length;
+          return output.diagnostics.totalScore + rejectedCount * 1_000_000;
+        };
+
+      const legacyPlacement: PlacementEnum = sortedSegments[0].segment.placement;
+      let selectedPlacement: PlacementEnum = legacyPlacement;
+      if (sortedSegments[0].segment.canCompareAutomaticPlacements()) {
+        const aboveOutput: SlurLinkedLayoutOutput = calculatePlacementRoute(PlacementEnum.Above);
+        const belowOutput: SlurLinkedLayoutOutput = calculatePlacementRoute(PlacementEnum.Below);
+        const aboveScore: number = routeScore(aboveOutput);
+        const belowScore: number = routeScore(belowOutput);
+        selectedPlacement = aboveScore < belowScore
+          ? PlacementEnum.Above
+          : belowScore < aboveScore
+            ? PlacementEnum.Below
+            : legacyPlacement;
+        for (const {segment} of sortedSegments) {
+          segment.setPlacementCandidateScores(aboveScore, belowScore);
         }
       }
-      if (inputs.length !== sortedSegments.length) {
+      // Recalculate the selected side so endpoint bindings, typed obstacles,
+      // and immutable contexts all describe the geometry that will be applied.
+      const linkedOutput: SlurLinkedLayoutOutput = calculatePlacementRoute(selectedPlacement);
+      if (!linkedOutput) {
         continue;
       }
-      const linkedOutput: SlurLinkedLayoutOutput = calculateLinkedSlurLayouts(inputs, {
-        candidateLimit: this.rules.SlurCandidateLimit,
-        diagnosticsLevel: this.rules.SlurDiagnosticsLevel,
-        maximumPreferredClearance: this.rules.SlurMaximumPreferredClearance,
-        obstacleClearance: this.rules.SlurObstacleClearance,
-        scoreWeights: this.rules.SlurCandidateScoreWeights,
-      });
       for (let index: number = 0; index < sortedSegments.length; index++) {
         const {segment, staffLine} = sortedSegments[index];
         segment.setLinkedLayoutDiagnostics(linkedOutput.diagnostics);

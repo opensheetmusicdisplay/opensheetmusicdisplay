@@ -76,6 +76,7 @@ export interface GraphicalSlurDiagnostics {
     candidateCount?: number;
     faults?: string[];
     structuredFaults?: SlurLayoutFault[];
+    placementCandidateScores?: Partial<Record<"above" | "below", number>>;
     linkedGroupId?: string;
     continuationClearance?: number;
     linkedTangentMismatch?: number;
@@ -189,6 +190,36 @@ export class GraphicalSlur extends GraphicalCurve {
         this.calculatePlacement(staffLine.SkyBottomLineCalculator, staffLine);
         this.diagnostics.placement = this.placement;
         return this.placement;
+    }
+
+    /**
+     * Candidate mode may compare both sides only when placement is genuinely
+     * unspecified and the legacy decision is the ambiguous mixed-stem case.
+     * Explicit MusicXML placement, lyrics, and polyphonic voice-side policy
+     * remain authoritative.
+     */
+    public canCompareAutomaticPlacements(): boolean {
+        if (this.slur.PlacementXml !== PlacementEnum.NotYetDefined) {
+            return false;
+        }
+        for (const staffEntry of this.staffEntries) {
+            if (staffEntry.parentMeasure.hasMultipleVoices() || staffEntry.LyricsEntries.length > 0) {
+                return false;
+            }
+        }
+        const startEntry: GraphicalStaffEntry = this.staffEntries[0];
+        const endEntry: GraphicalStaffEntry = this.staffEntries[this.staffEntries.length - 1];
+        const startDirection: StemDirectionType =
+            startEntry?.graphicalVoiceEntries[0]?.parentVoiceEntry?.StemDirection;
+        const endDirection: StemDirectionType =
+            endEntry?.graphicalVoiceEntries[0]?.parentVoiceEntry?.StemDirection;
+        return startDirection !== undefined
+            && endDirection !== undefined
+            && startDirection !== endDirection;
+    }
+
+    public setPlacementCandidateScores(above: number, below: number): void {
+        this.diagnostics.placementCandidateScores = {above, below};
     }
 
     /**
@@ -800,6 +831,11 @@ export class GraphicalSlur extends GraphicalCurve {
                 present: Boolean(note),
                 sourceNoteId: vexflowNote?.getSVGId?.(),
                 stemDirection: note?.parentVoiceEntry?.parentVoiceEntry?.StemDirection,
+                stemSide: Boolean(note) &&
+                    ((note.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up
+                        && this.placement === PlacementEnum.Above)
+                    || (note.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Down
+                        && this.placement === PlacementEnum.Below)),
                 notehead,
                 stem: rendered?.stem,
                 beams: (rendered?.beamPolygons ?? []).map((polygon): SlurBounds => ({
@@ -1306,26 +1342,60 @@ export class GraphicalSlur extends GraphicalCurve {
         }
         const systemBox: BoundingBox = startStaffLine.ParentMusicSystem.PositionAndShape;
 
-        // notehead positions of both notes, relative to the common MusicSystem
+        // GraphicalNote positions are only a compatibility fallback. Their x
+        // coordinate describes the note container rather than the finalized
+        // VexFlow head and can sit beyond a displaced head. Cross-staff slurs
+        // therefore start from the exact rendered head crowns below.
         const startPos: PointF2D = this.positionRelativeToBox(slurStartNote.PositionAndShape, systemBox);
         const endPos: PointF2D = this.positionRelativeToBox(slurEndNote.PositionAndShape, systemBox);
 
         // Express everything relative to the start note's staffline, since drawSlur() adds that staffline's
         // absolute position to the bezier points.
         const staffLineOffset: PointF2D = startStaffLine.PositionAndShape.RelativePosition;
-        const startX: number = startPos.x - staffLineOffset.x;
-        const endX: number = endPos.x - staffLineOffset.x;
-        const startNoteY: number = startPos.y - staffLineOffset.y;
-        const endNoteY: number = endPos.y - staffLineOffset.y;
+        const fallbackStartX: number = startPos.x - staffLineOffset.x;
+        const fallbackEndX: number = endPos.x - staffLineOffset.x;
+        const fallbackStartY: number = startPos.y - staffLineOffset.y;
+        const fallbackEndY: number = endPos.y - staffLineOffset.y;
 
-        const noteHeadHalfHeight: number = 0.5;
+        const startGeometry: RenderedSlurEndpointGeometry =
+            this.renderedEndpointGeometry(slurStartNote, startStaffLine);
+        const rawEndGeometry: RenderedSlurEndpointGeometry =
+            this.renderedEndpointGeometry(slurEndNote, endStaffLine);
+        const endStaffOffsetY: number = endStaffLine.PositionAndShape.RelativePosition.y
+            - startStaffLine.PositionAndShape.RelativePosition.y;
+        const startHead: GraphicalSlurBoundsDiagnostics = startGeometry?.notehead;
+        const endHead: GraphicalSlurBoundsDiagnostics = rawEndGeometry?.notehead
+            ? {
+                left: rawEndGeometry.notehead.left,
+                right: rawEndGeometry.notehead.right,
+                top: rawEndGeometry.notehead.top + endStaffOffsetY,
+                bottom: rawEndGeometry.notehead.bottom + endStaffOffsetY,
+            }
+            : undefined;
+
+        const useFinalizedHeadAnchors: boolean = rules.SlurLayoutMode === "candidate";
+        const startX: number = useFinalizedHeadAnchors && startHead
+            ? (startHead.left + startHead.right) / 2
+            : fallbackStartX;
+        const endX: number = useFinalizedHeadAnchors && endHead
+            ? (endHead.left + endHead.right) / 2
+            : fallbackEndX;
+        const startNoteY: number = useFinalizedHeadAnchors && startHead
+            ? startHead.top
+            : fallbackStartY - 0.5;
+        const endNoteY: number = useFinalizedHeadAnchors && endHead
+            ? endHead.top
+            : fallbackEndY - 0.5;
+
         const yGap: number = rules.SlurNoteHeadYOffset; // gap between notehead and slur tip
         // Piano cross-staff gestures conventionally remain one upward-bowing
         // phrase. Approaching either endpoint from below makes one end look
         // inverted and attaches it beneath the destination notehead.
-        const startY: number = startNoteY - noteHeadHalfHeight - yGap;
-        const endY: number = endNoteY - noteHeadHalfHeight - yGap;
+        const startY: number = startNoteY - yGap;
+        const endY: number = endNoteY - yGap;
         this.placement = PlacementEnum.Above;
+        this.diagnostics.startNotehead = startHead;
+        this.diagnostics.endNotehead = endHead;
 
         // The curve bows out (vertically) from the line connecting the two notes.
         const dx: number = endX - startX;
@@ -1431,6 +1501,9 @@ export class GraphicalSlur extends GraphicalCurve {
             present: true,
             sourceNoteId: (note as VexFlowGraphicalNote)?.getSVGId?.(),
             stemDirection: note?.parentVoiceEntry?.parentVoiceEntry?.StemDirection,
+            // Cross-staff phrase slurs use the notehead crown on both staves;
+            // the local stem direction must not pull one endpoint away from it.
+            stemSide: false,
             notehead: geometry?.notehead,
             stem: geometry?.stem,
             beams: (geometry?.beamPolygons ?? []).map((polygon): SlurBounds => ({
