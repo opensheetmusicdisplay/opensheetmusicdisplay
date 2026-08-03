@@ -2725,7 +2725,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       for (let index: number = 0; index < linkedSegments.length; index++) {
         const {segment, staffLine} = linkedSegments[index];
         segment.setLinkedSegment(index, linkedSegments.length, placement);
-        if (segment.prepareEndpointArticulationClearance()) {
+        if (this.rules.SlurLayoutMode === "legacy" && segment.prepareEndpointArticulationClearance()) {
           for (const shift of segment.diagnostics.articulationShifts) {
             if (placement === PlacementEnum.Above) {
               staffLine.SkyBottomLineCalculator.updateSkyLineInRange(
@@ -2752,6 +2752,22 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         for (const gSlur of sortedGSlurs) {
           if (!gSlur.slur.isCrossed()) {
             gSlur.calculateCurve(this.rules);
+          }
+        }
+      }
+    }
+  }
+
+  /** Calculate cross-staff slurs after the system builder has fixed both staves' y positions. */
+  protected calculateCrossStaffSlursAfterSystemYLayout(): void {
+    if (!this.rules.RenderSlursAcrossStaves) {
+      return;
+    }
+    for (const musicSystem of this.musicSystems) {
+      for (const staffLine of musicSystem.StaffLines) {
+        for (const graphicalSlur of staffLine.GraphicalSlurs) {
+          if (graphicalSlur.slur.isCrossed()) {
+            graphicalSlur.calculateCurveCrossStaff(this.rules);
           }
         }
       }

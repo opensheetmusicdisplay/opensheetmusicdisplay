@@ -17,6 +17,11 @@ import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/Vo
 import { GeometricSkyBottomLineCaches } from "./GeometricSkyBottomLineContext";
 import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
+import {
+    SlurCandidateScoreWeights,
+    SlurDiagnosticsLevel,
+    SlurLayoutMode,
+} from "./SlurLayout/SlurLayoutTypes";
 
 /** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
  *  Not all of these options are meant to be modified by users of the library,
@@ -312,6 +317,18 @@ export class EngravingRules {
     public SlurPlacementFromXML: boolean;
     public SlurPlacementAtStems: boolean;
     public SlurPlacementUseSkyBottomLine: boolean;
+    /** Selects the preserved single-solution implementation or the candidate-based slur solver. */
+    public SlurLayoutMode: SlurLayoutMode;
+    /** Controls retained candidate diagnostics. Rendering is unaffected. */
+    public SlurDiagnosticsLevel: SlurDiagnosticsLevel;
+    /** Relative weights used by the deterministic candidate scorer. */
+    public SlurCandidateScoreWeights: SlurCandidateScoreWeights;
+    /** Desired minimum clearance between a slur centreline and an obstacle, in staff spaces. */
+    public SlurObstacleClearance: number;
+    /** Desired maximum visual clearance before a candidate starts to look detached, in staff spaces. */
+    public SlurMaximumPreferredClearance: number;
+    /** Maximum number of endpoint/curve combinations evaluated for one slur segment. */
+    public SlurCandidateLimit: number;
     public BezierCurveStepSize: number;
     public TPower3: number[];
     public OneMinusTPower3: number[];
@@ -851,6 +868,25 @@ export class EngravingRules {
         this.SlurPlacementFromXML = true;
         this.SlurPlacementAtStems = false;
         this.SlurPlacementUseSkyBottomLine = false;
+        this.SlurLayoutMode = "candidate";
+        this.SlurDiagnosticsLevel = "off";
+        this.SlurCandidateScoreWeights = {
+            clearance: 40,
+            excessiveClearance: 4,
+            anchorDisplacement: 12,
+            tangent: 10,
+            slope: 8,
+            curvature: 8,
+            contour: 2,
+            articulation: 24,
+            tieInteraction: 24,
+            staffLineInteraction: 12,
+            nesting: 30,
+            systemContinuity: 20,
+        };
+        this.SlurObstacleClearance = 0.35;
+        this.SlurMaximumPreferredClearance = 2.5;
+        this.SlurCandidateLimit = 96;
         this.BezierCurveStepSize = 1000;
         this.calculateCurveParametersArrays();
         this.TieGhostObjectWidth = 0.75;

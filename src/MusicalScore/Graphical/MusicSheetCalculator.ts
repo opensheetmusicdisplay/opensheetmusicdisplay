@@ -1095,6 +1095,9 @@ export abstract class MusicSheetCalculator {
 
         // calculate Y-spacing -> MusicPages are created here
         musicSystemBuilder.calculateSystemYLayout();
+        // Cross-staff slurs need the final relative positions of both staves, but their
+        // geometry is still a layout decision and must be complete before drawing.
+        this.calculateCrossStaffSlursAfterSystemYLayout();
         // calculate Comments for each Staffline
         this.calculateComments();
         // calculate marked Areas for Systems
@@ -1163,6 +1166,11 @@ export abstract class MusicSheetCalculator {
 
     protected calculateMarkedAreas(): void {
         //log.debug("calculateMarkedAreas not implemented");
+        return;
+    }
+
+    /** Backend hook for slur routes that depend on final inter-staff positions. */
+    protected calculateCrossStaffSlursAfterSystemYLayout(): void {
         return;
     }
 

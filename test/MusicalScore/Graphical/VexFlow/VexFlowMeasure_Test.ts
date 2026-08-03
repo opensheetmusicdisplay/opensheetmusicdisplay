@@ -455,6 +455,8 @@ describe("VexFlow Measure", () => {
 
       const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmdOff.EngravingRules.SlurLayoutMode = "legacy";
+      osmdOn.EngravingRules.SlurLayoutMode = "legacy";
 
       osmdOff.load(xml).then(() => {
          osmdOff.EngravingRules.SlurFlattenToObstacle = false;
@@ -519,6 +521,8 @@ describe("VexFlow Measure", () => {
 
       const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmdOff.EngravingRules.SlurLayoutMode = "legacy";
+      osmdOn.EngravingRules.SlurLayoutMode = "legacy";
 
       osmdOff.load(xml).then(() => {
          osmdOff.EngravingRules.SlurFlattenToObstacle = false;

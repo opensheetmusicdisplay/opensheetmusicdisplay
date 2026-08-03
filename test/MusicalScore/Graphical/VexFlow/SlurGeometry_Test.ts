@@ -1,6 +1,9 @@
 import { expect } from "chai";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
-import { GraphicalSlur } from "../../../../src/MusicalScore/Graphical/GraphicalSlur";
+import {
+   GraphicalSlur,
+   GraphicalSlurArticulationShiftDiagnostics,
+} from "../../../../src/MusicalScore/Graphical/GraphicalSlur";
 import { StaffLine } from "../../../../src/MusicalScore/Graphical/StaffLine";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { TestUtils } from "../../../Util/TestUtils";
@@ -12,12 +15,31 @@ interface SlurSnapshot {
    endControl: {x: number, y: number};
    endHeadLeft?: number;
    placement: number;
+   mode?: string;
+   candidateCount?: number;
    segmentCount: number;
    segmentIndex: number;
    startAttachment?: string;
    start: {x: number, y: number};
    startControl: {x: number, y: number};
    startHeadRight?: number;
+}
+
+function geometryHintScore(offset: number): string {
+   return `<?xml version="1.0" encoding="UTF-8"?>
+      <score-partwise version="4.0">
+         <part-list><score-part id="P1"><part-name>Geometry hint</part-name></score-part></part-list>
+         <part id="P1"><measure number="1">
+            <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+               <clef><sign>G</sign><line>2</line></clef></attributes>
+            <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><type>half</type>
+               <notations><slur number="1" type="start" placement="above"
+                  default-x="${offset}" default-y="${offset}" relative-x="${offset}"
+                  relative-y="${offset}" bezier-x="${offset}" bezier-y="${offset}"/></notations></note>
+            <note><pitch><step>G</step><octave>5</octave></pitch><duration>2</duration><type>half</type>
+               <notations><slur number="1" type="stop" bezier-x="${-offset}" bezier-y="${-offset}"/></notations></note>
+         </measure></part>
+      </score-partwise>`;
 }
 
 function articulationScore(): string {
@@ -155,6 +177,8 @@ function snapshot(osmd: OpenSheetMusicDisplay): SlurSnapshot[] {
       endControl: {x: slur.bezierEndControlPt.x, y: slur.bezierEndControlPt.y},
       endHeadLeft: slur.diagnostics.endNotehead?.left,
       placement: slur.diagnostics.placement,
+      mode: slur.diagnostics.mode,
+      candidateCount: slur.diagnostics.candidateCount,
       segmentCount: slur.diagnostics.segmentCount,
       segmentIndex: slur.diagnostics.segmentIndex,
       startAttachment: slur.diagnostics.startAttachment,
@@ -165,10 +189,50 @@ function snapshot(osmd: OpenSheetMusicDisplay): SlurSnapshot[] {
 }
 
 describe("Stage 6 slur geometry", (): void => {
+   it("selects both internal engines without changing the rhythmic layout", async (): Promise<void> => {
+      const renderMode: (mode: "legacy" | "candidate") => Promise<SlurSnapshot[]> = async (mode) => {
+         const osmd: OpenSheetMusicDisplay =
+            TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+         await osmd.load(TestUtils.getScore("test_slur_double.musicxml"));
+         osmd.EngravingRules.SlurLayoutMode = mode;
+         osmd.EngravingRules.SlurDiagnosticsLevel = "candidates";
+         osmd.updateGraphic();
+         osmd.render();
+         return snapshot(osmd);
+      };
+
+      const legacy: SlurSnapshot[] = await renderMode("legacy");
+      const candidate: SlurSnapshot[] = await renderMode("candidate");
+      expect(candidate).to.have.length(legacy.length);
+      for (let index: number = 0; index < legacy.length; index++) {
+         expect(candidate[index].mode).to.equal("candidate");
+         expect(legacy[index].mode).to.equal("legacy");
+         expect(candidate[index].candidateCount).to.be.greaterThan(1);
+         expect(candidate[index].start.x).to.be.closeTo(legacy[index].start.x, 2);
+         expect(candidate[index].end.x).to.be.closeTo(legacy[index].end.x, 2);
+      }
+   });
+
+   it("deliberately ignores imported MusicXML slur geometry hints", async (): Promise<void> => {
+      const render: (offset: number) => Promise<SlurSnapshot[]> = async (offset) => {
+         const osmd: OpenSheetMusicDisplay =
+            TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+         await osmd.load(geometryHintScore(offset));
+         osmd.EngravingRules.SlurLayoutMode = "candidate";
+         osmd.updateGraphic();
+         osmd.render();
+         return snapshot(osmd);
+      };
+
+      expect(await render(400)).to.deep.equal(await render(-275));
+   });
+
    it("anchors to selected chord heads and clears endpoint articulations in the final skyline", async (): Promise<void> => {
       const container: HTMLElement = TestUtils.getDivElement(document);
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
       await osmd.load(articulationScore());
+      osmd.EngravingRules.SlurLayoutMode = "legacy";
+      osmd.updateGraphic();
       osmd.render();
 
       const slurs: {slur: GraphicalSlur, staffLine: StaffLine}[] = allSlurs(osmd);
@@ -236,10 +300,25 @@ describe("Stage 6 slur geometry", (): void => {
       }
    });
 
+   it("keeps duration articulations inside and moves endpoint force marks outside", async (): Promise<void> => {
+      const osmd: OpenSheetMusicDisplay =
+         TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      await osmd.load(articulationScore());
+      osmd.EngravingRules.SlurLayoutMode = "candidate";
+      osmd.updateGraphic();
+      osmd.render();
+
+      const shifts: GraphicalSlurArticulationShiftDiagnostics[] =
+         allSlurs(osmd).flatMap(({slur}) => slur.diagnostics.articulationShifts);
+      expect(shifts.map((shift) => shift.type).sort()).to.deep.equal(["a>", "a^"]);
+      expect(shifts.every((shift) => shift.finalShiftPx >= shift.previousShiftPx)).to.equal(true);
+   });
+
    it("refreshes articulation coordinates after a stave moves to a later system", async (): Promise<void> => {
       const container: HTMLElement = TestUtils.getDivElement(document);
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
       await osmd.load(multiSystemArticulationScore());
+      osmd.EngravingRules.SlurLayoutMode = "legacy";
       osmd.Sheet.Rules.NewSystemAtXMLNewSystemAttribute = true;
       osmd.updateGraphic();
       osmd.render();
@@ -289,6 +368,20 @@ describe("Stage 6 slur geometry", (): void => {
       expect(slurs).to.have.length(1);
       expect(slurs[0].diagnostics.startAttachment).to.equal("stem");
       expect(slurs[0].diagnostics.endAttachment).to.equal("notehead");
+   });
+
+   it("collects finalized beam geometry as a typed obstacle", async (): Promise<void> => {
+      const osmd: OpenSheetMusicDisplay =
+         TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      await osmd.load(TestUtils.getScore("test_slur_SlurPlacementFromXML_undefined_in_XML.musicxml"));
+      osmd.EngravingRules.SlurLayoutMode = "candidate";
+      osmd.updateGraphic();
+      osmd.render();
+
+      const obstacleTypes: Set<string> = new Set(allSlurs(osmd).flatMap(
+         ({slur}) => slur.layoutContext?.obstacles.map((obstacle) => obstacle.type) ?? [],
+      ));
+      expect(obstacleTypes.has("beam")).to.equal(true);
    });
 
    it("links cross-system segments with shared placement and horizontal break tangents", async (): Promise<void> => {
