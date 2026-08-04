@@ -7,6 +7,9 @@ import {NoteHeadShape} from "../../../src/MusicalScore/VoiceData/Notehead";
 import {Note, TremoloInfo} from "../../../src/MusicalScore/VoiceData/Note";
 import {VoiceEntry} from "../../../src/MusicalScore/VoiceData/VoiceEntry";
 import {SourceMeasure} from "../../../src/MusicalScore/VoiceData/SourceMeasure";
+import {Voice} from "../../../src/MusicalScore/VoiceData/Voice";
+import {LyricsEntry} from "../../../src/MusicalScore/VoiceData/Lyrics/LyricsEntry";
+import {EngravingRules} from "../../../src/MusicalScore/Graphical/EngravingRules";
 
 describe("Music Sheet Reader", () => {
     const path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
@@ -313,6 +316,67 @@ describe("Music Sheet Reader", () => {
             const sheet1: MusicSheet = readSheet("test_triplet_playback_musescore_encoded_from_musx2mxl_encoded.musicxml");
             const notes: Note[] = measureNonRestNotes(sheet1.SourceMeasures[0]);
             expectTripletThenTwoEighths(notes, "MuseScore measure 1");
+            done();
+        });
+    });
+
+    describe("Lyric words split across voices", () => {
+        // Verse: "The ri-sing glo-ry" — voice 1 holds a whole note on "The" while
+        // voice 2 carries "ri" (begin); "sing" (end) is carried by the next
+        // voice-1 note. "glo-ry" stays within voice 1 as a control word.
+        const crossVoicePath: string = "test/data/test_lyrics_syllables_across_voices.musicxml";
+
+        function readCrossVoiceSheet(rules?: EngravingRules): MusicSheet {
+            const doc: Document = getSheet(crossVoicePath);
+            expect(doc).to.not.be.undefined;
+            const crossVoiceScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            const crossVoiceReader: MusicSheetReader = new MusicSheetReader(undefined, rules);
+            return crossVoiceReader.createMusicSheet(crossVoiceScore, crossVoicePath);
+        }
+
+        function lyricsOfVoice(sourceSheet: MusicSheet, voiceId: number): LyricsEntry[] {
+            return sourceSheet.Instruments[0].Voices
+                .find((voice: Voice): boolean => voice.VoiceId === voiceId).VoiceEntries
+                .map((voiceEntry: VoiceEntry): LyricsEntry => voiceEntry.LyricsEntries.getValue("1"))
+                .filter((entry: LyricsEntry): boolean => entry !== undefined);
+        }
+
+        it("re-links a word whose syllables alternate between voices", (done: Mocha.Done) => {
+            const crossVoiceSheet: MusicSheet = readCrossVoiceSheet();
+            const voice1Lyrics: LyricsEntry[] = lyricsOfVoice(crossVoiceSheet, 1);
+            const voice2Lyrics: LyricsEntry[] = lyricsOfVoice(crossVoiceSheet, 2);
+            expect(voice1Lyrics.map((entry: LyricsEntry): string => entry.Text)).to.deep.equal(["The", "sing", "glo", "ry"]);
+            expect(voice2Lyrics.map((entry: LyricsEntry): string => entry.Text)).to.deep.equal(["ri"]);
+            const riEntry: LyricsEntry = voice2Lyrics[0];
+            const singEntry: LyricsEntry = voice1Lyrics[1];
+            expect(riEntry.Word).to.not.be.undefined;
+            expect(singEntry.Word).to.equal(riEntry.Word);
+            expect(riEntry.Word.Syllables.map((syllable: LyricsEntry): string => syllable.Text)).to.deep.equal(["ri", "sing"]);
+            expect(riEntry.SyllableIndex).to.equal(0);
+            expect(singEntry.SyllableIndex).to.equal(1);
+            expect(voice1Lyrics[0].Word).to.be.undefined; // single syllable stays wordless
+            done();
+        });
+
+        it("keeps a well-formed same-voice word intact after re-linking", (done: Mocha.Done) => {
+            const crossVoiceSheet: MusicSheet = readCrossVoiceSheet();
+            const voice1Lyrics: LyricsEntry[] = lyricsOfVoice(crossVoiceSheet, 1);
+            const gloEntry: LyricsEntry = voice1Lyrics[2];
+            const ryEntry: LyricsEntry = voice1Lyrics[3];
+            expect(gloEntry.Word).to.not.be.undefined;
+            expect(gloEntry.Word).to.equal(ryEntry.Word);
+            expect(gloEntry.Word.Syllables.map((syllable: LyricsEntry): string => syllable.Text)).to.deep.equal(["glo", "ry"]);
+            done();
+        });
+
+        it("leaves chains untouched when RelinkLyricWordsAcrossVoices is disabled", (done: Mocha.Done) => {
+            const rules: EngravingRules = new EngravingRules();
+            rules.RelinkLyricWordsAcrossVoices = false;
+            const crossVoiceSheet: MusicSheet = readCrossVoiceSheet(rules);
+            const singEntry: LyricsEntry = lyricsOfVoice(crossVoiceSheet, 1)[1];
+            const riEntry: LyricsEntry = lyricsOfVoice(crossVoiceSheet, 2)[0];
+            expect(singEntry.Word).to.be.undefined; // "end" arrived with no open word in its voice
+            expect(riEntry.Word.Syllables.length).to.equal(1); // dangling "begin"
             done();
         });
     });

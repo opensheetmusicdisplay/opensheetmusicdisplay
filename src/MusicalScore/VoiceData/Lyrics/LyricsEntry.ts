@@ -18,6 +18,9 @@ export class LyricsEntry {
     private verseNumber: string;
     private syllableIndex: number;
     public extend: boolean;
+    /** The syllabic value read from the XML (single/begin/middle/end).
+     *  Kept to allow re-linking word chains across voices after reading. */
+    public syllabic: string = "single";
 
     public get Text(): string {
         return this.text;
@@ -27,6 +30,9 @@ export class LyricsEntry {
     }
     public get Word(): LyricWord {
         return this.word;
+    }
+    public set Word(value: LyricWord) {
+        this.word = value;
     }
     public get Parent(): VoiceEntry {
         return this.parent;
@@ -41,6 +47,9 @@ export class LyricsEntry {
 
     public get SyllableIndex(): number {
         return this.syllableIndex;
+    }
+    public set SyllableIndex(value: number) {
+        this.syllableIndex = value;
     }
 
     public get IsTranslation(): boolean {
