@@ -250,18 +250,26 @@ describe("Stage 6 slur geometry", (): void => {
       expect(beamed).to.not.equal(undefined);
       expect(beamed.getSlur().getNotes().firstNote).to.equal(beamed.getGraceNotes()[0]);
       expect(beamed.getSlurLayout().startAttachment).to.equal("stem-tip");
-      expect(beamed.getSlurLayout().endAttachment).to.equal("notehead");
+      expect(beamed.getSlurLayout().endAttachment).to.equal("notehead-center");
       expect(beamed.getRenderedSlurCurves()[0].start.x).to.be.closeTo(
          beamed.getGraceNotes()[0].getStemX(),
          0.001,
       );
       const beamedCurve: any = beamed.getRenderedSlurCurves()[0];
+      const mainNotehead: any = beamed.getSlur().getNotes().lastNote.getSelectedNoteHeadBounds(0);
+      expect(beamedCurve.end.x).to.be.closeTo(mainNotehead.centerX, 0.001);
       expect(beamedCurve.start.x).to.be.lessThan(beamed.getGraceNotes()[1].getStemX());
       expect(beamedCurve.end.x).to.be.greaterThan(beamed.getGraceNotes()[1].getStemX());
+      const secondGrace: any = beamed.getGraceNotes()[1];
+      const secondGraceT: number = (secondGrace.getStemX() - beamedCurve.start.x) /
+         (beamedCurve.end.x - beamedCurve.start.x);
+      const secondGraceCurveY: number = (1 - secondGraceT) ** 2 * beamedCurve.start.y +
+         2 * (1 - secondGraceT) * secondGraceT * beamedCurve.topControl.y +
+         secondGraceT ** 2 * beamedCurve.end.y;
       expect(
-         beamedCurve.topControl.y,
+         secondGraceCurveY,
          `grace slur curve ${JSON.stringify(beamedCurve)}`,
-      ).to.be.lessThan(beamedCurve.start.y - 5);
+      ).to.be.lessThan(secondGrace.getStemExtents().topY - 3);
    });
 
    it("selects both internal engines without changing the rhythmic layout", async (): Promise<void> => {
