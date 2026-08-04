@@ -16,6 +16,10 @@ import {
 import { Staff } from "../../VoiceData/Staff";
 import { Note as SourceNote } from "../../VoiceData/Note";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
+import {
+  LyricAlignmentMode,
+  LyricExtendType,
+} from "../../VoiceData/Lyrics/LyricsEntry";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import {
   HorizontalSpacingConstraint,
@@ -69,6 +73,7 @@ interface CandidateNode {
 interface CandidateLyric {
   anchorOffsetPx: number;
   columnIndex: number;
+  connectorTerminalOffsetPx?: number;
   entry: GraphicalLyricEntry;
   renderedRow: number;
   staff: Staff;
@@ -1399,7 +1404,7 @@ function collectSystemLyricConstraints(
       const staffLyrics: GraphicalLyricEntry[] = lyricsByStaff.get(measure.ParentStaff) ?? [];
       for (const staffEntry of measure.staffEntries) {
         for (const lyricEntry of staffEntry.LyricsEntries) {
-          if (!isVisibleLyric(lyricEntry)) {
+          if (!participatesInLyricSpacing(lyricEntry)) {
             continue;
           }
           staffLyrics.push(lyricEntry);
@@ -1418,7 +1423,7 @@ function collectSystemLyricConstraints(
       }
       for (const staffEntry of measure.staffEntries) {
         for (const lyricEntry of staffEntry.LyricsEntries) {
-          if (!isVisibleLyric(lyricEntry)) {
+          if (!participatesInLyricSpacing(lyricEntry)) {
             continue;
           }
           const owningVoiceEntry: GraphicalVoiceEntry = findOwningVoiceEntry(
@@ -1437,11 +1442,27 @@ function collectSystemLyricConstraints(
           }
           const voiceId: number = owningVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId;
           const row: number = renderedRowsByEntry.get(lyricEntry) ?? 0;
+          const anchorOffsetPx: number = finalizedLyricAnchorOffsetPx(
+            lyricEntry,
+            staffEntry,
+            note,
+            context,
+            measure,
+          );
+          const extendType: LyricExtendType = lyricEntry.LyricsEntry.ExtendType;
           lyrics.push({
-            anchorOffsetPx:
-              lyricEntry.getAnchorX(staffEntry.PositionAndShape.RelativePosition.x) * unitInPixels -
-              context.getX(),
+            anchorOffsetPx,
             columnIndex,
+            connectorTerminalOffsetPx:
+              extendType === LyricExtendType.Continue || extendType === LyricExtendType.Stop
+                ? finalizedLyricConnectorTerminalOffsetPx(
+                  staffEntry,
+                  note,
+                  context,
+                  measure,
+                  rules,
+                )
+                : undefined,
             entry: lyricEntry,
             renderedRow: row,
             staff: measure.ParentStaff,
@@ -1477,10 +1498,10 @@ function collectSystemLyricConstraints(
     staffRows.set(lyric.renderedRow, physicalRow);
     physicalRowsByStaff.set(lyric.staff, staffRows);
 
-    const footprint: LyricFootprint = lyric.entry.getFootprint();
+    const footprint: LyricFootprint = lyricSpacingFootprint(lyric);
     constraints.push({
       fromColumn: 0,
-      minimumDistance: Math.max(0, footprint.leftExtent * unitInPixels - lyric.anchorOffsetPx),
+      minimumDistance: Math.max(0, -lyricLeftOffsetPx(lyric, footprint)),
       reason: "system-edge",
       toColumn: lyric.columnIndex,
     });
@@ -1491,7 +1512,7 @@ function collectSystemLyricConstraints(
       fromColumn: lyric.columnIndex,
       minimumDistance: Math.max(
         0,
-        (footprint.rightExtent + terminalConnectorWidth) * unitInPixels + lyric.anchorOffsetPx,
+        lyricRightOffsetPx(lyric, footprint) + terminalConnectorWidth * unitInPixels,
       ),
       reason: "system-edge",
       toColumn: endColumnIndex,
@@ -1510,12 +1531,16 @@ function collectSystemLyricConstraints(
         if (current.columnIndex <= previous.columnIndex) {
           continue;
         }
-        const previousFootprint: LyricFootprint = previous.entry.getFootprint();
-        const currentFootprint: LyricFootprint = current.entry.getFootprint();
+        const previousFootprint: LyricFootprint = lyricSpacingFootprint(previous);
+        const currentFootprint: LyricFootprint = lyricSpacingFootprint(current);
         const hasDash: boolean = previous.entry.hasDashFromLyricWord();
-        const isExtender: boolean = previous.entry.LyricsEntry.extend;
+        const isExtender: boolean =
+          previous.entry.LyricsEntry.ExtendType !== LyricExtendType.None;
+        const endsExtender: boolean = previous.connectorTerminalOffsetPx !== undefined;
         const connectorClearance: number = hasDash
           ? previous.entry.getDashWidth() + rules.BetweenSyllableMinimumDistance
+          : endsExtender
+            ? rules.BetweenSyllableMinimumDistance
           : rules.HorizontalBetweenLyricsDistance;
         constraints.push(
           lyricPairConstraint(
@@ -1550,8 +1575,8 @@ function collectSystemLyricConstraints(
               lyricPairConstraint(
                 previous,
                 current,
-                previous.entry.getFootprint(),
-                current.entry.getFootprint(),
+                lyricSpacingFootprint(previous),
+                lyricSpacingFootprint(current),
                 rules.HorizontalBetweenLyricsDistance,
                 "lyric",
               ),
@@ -1774,14 +1799,85 @@ function lyricPairConstraint(
     fromColumn: previous.columnIndex,
     minimumDistance: Math.max(
       0,
-      (previousFootprint.rightExtent + connectorClearance + currentFootprint.leftExtent) *
-        unitInPixels +
-        previous.anchorOffsetPx -
-        current.anchorOffsetPx,
+      lyricRightOffsetPx(previous, previousFootprint) +
+        connectorClearance * unitInPixels -
+        lyricLeftOffsetPx(current, currentFootprint),
     ),
     reason,
     toColumn: current.columnIndex,
   };
+}
+
+function lyricSpacingFootprint(lyric: CandidateLyric): LyricFootprint {
+  return lyric.entry.getFootprint();
+}
+
+function lyricLeftOffsetPx(lyric: CandidateLyric, footprint: LyricFootprint): number {
+  return lyric.anchorOffsetPx - footprint.leftExtent * unitInPixels;
+}
+
+function lyricRightOffsetPx(lyric: CandidateLyric, footprint: LyricFootprint): number {
+  return Math.max(
+    lyric.anchorOffsetPx + footprint.rightExtent * unitInPixels,
+    lyric.connectorTerminalOffsetPx ?? Number.NEGATIVE_INFINITY,
+  );
+}
+
+function finalizedLyricAnchorOffsetPx(
+  lyricEntry: GraphicalLyricEntry,
+  staffEntry: GraphicalStaffEntry,
+  note: VF.Note,
+  context: VF.TickContext,
+  measure: GraphicalMeasure,
+): number {
+  const staveNote: VF.Note & {
+    getNoteHeadBeginX?: () => number;
+    getNoteHeadEndX?: () => number;
+  } = note;
+  const noteheadBeginX: number = staveNote.getNoteHeadBeginX?.();
+  const noteheadEndX: number = staveNote.getNoteHeadEndX?.();
+  const staveX: number = (measure as VexFlowMeasure).getVFStave()?.getX?.();
+  if (
+    Number.isFinite(noteheadBeginX) &&
+    Number.isFinite(noteheadEndX) &&
+    Number.isFinite(staveX)
+  ) {
+    const anchorX: number =
+      lyricEntry.LyricsEntry.AlignmentMode === LyricAlignmentMode.MelismaLeft
+        ? noteheadBeginX
+        : (noteheadBeginX + noteheadEndX) / 2;
+    return anchorX - staveX - context.getX();
+  }
+  return lyricEntry.getAnchorX(staffEntry.PositionAndShape.RelativePosition.x) * unitInPixels -
+    context.getX();
+}
+
+function finalizedLyricConnectorTerminalOffsetPx(
+  staffEntry: GraphicalStaffEntry,
+  note: VF.Note,
+  context: VF.TickContext,
+  measure: GraphicalMeasure,
+  rules: EngravingRules,
+): number {
+  const graphicalEndpointOffsetPx: number =
+    staffEntry.PositionAndShape.RelativePosition.x * unitInPixels +
+    staffEntry.PositionAndShape.BorderMarginRight * unitInPixels -
+    context.getX();
+  const staveNote: VF.Note & { getNoteHeadEndX?: () => number } = note;
+  const noteheadEndX: number = staveNote.getNoteHeadEndX?.();
+  const staveX: number = (measure as VexFlowMeasure).getVFStave()?.getX?.();
+  if (!Number.isFinite(noteheadEndX) || !Number.isFinite(staveX)) {
+    return graphicalEndpointOffsetPx;
+  }
+  // The graphical staff-entry origin used by calculateLyricExtend can move
+  // after system formatting (especially for an accidental at a system start).
+  // Reserve through the finalized notehead's right edge plus one clearance
+  // unit. This never shortens the extender; it moves the following word clear
+  // of the latest plausible rendered endpoint.
+  const finalizedEndpointOffsetPx: number =
+    noteheadEndX - staveX - context.getX() +
+    rules.HorizontalBetweenLyricsDistance * unitInPixels;
+  return Math.max(graphicalEndpointOffsetPx, finalizedEndpointOffsetPx);
 }
 
 function calculateRenderedLyricRows(
@@ -1938,6 +2034,12 @@ function findOwningVoiceEntry(
 
 function isVisibleLyric(entry: GraphicalLyricEntry): boolean {
   return !!(entry.LyricsEntry.LyricText?.trim() || entry.LyricsEntry.StanzaNumberPrefix?.trim());
+}
+
+function participatesInLyricSpacing(entry: GraphicalLyricEntry): boolean {
+  return isVisibleLyric(entry) ||
+    entry.LyricsEntry.ExtendType === LyricExtendType.Continue ||
+    entry.LyricsEntry.ExtendType === LyricExtendType.Stop;
 }
 
 function setDiagnostics(

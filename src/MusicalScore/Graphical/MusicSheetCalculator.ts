@@ -647,6 +647,11 @@ export abstract class MusicSheetCalculator {
      * @param lyricVersesNumber
      */
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: string[]): GraphicalStaffEntry[] {
+        // This staff line can survive an updateGraphic() rebuild. Its lyric
+        // connectors are derived output, so start each lyric-layout pass from
+        // an empty set instead of accumulating duplicate SVG lines and dashes.
+        staffLine.LyricLines = [];
+        staffLine.LyricsDashes = [];
         let numberOfVerses: number = 0;
         let lyricsStartYPosition: number = this.rules.StaffHeight; // Add offset to prevent collision
         const relevantVerseNumbers: Map<string, boolean> = new Map<string, boolean>();
@@ -2321,6 +2326,11 @@ export abstract class MusicSheetCalculator {
                             graphicalMeasure.endInstructionsWidth = 0.0;
                         }
                     }
+                    // Staff lines can be reused by an updateGraphic() rebuild.
+                    // Extenders and dashes are recalculated below, so retaining
+                    // them here duplicates every connector on the second pass.
+                    staffLine.LyricLines = [];
+                    staffLine.LyricsDashes = [];
                     staffLine.Measures = [];
                     staffLine.PositionAndShape.ChildElements = [];
                 }
@@ -3639,7 +3649,6 @@ export abstract class MusicSheetCalculator {
                 const lyricsStaffEntries: GraphicalStaffEntry[] =
                     this.calculateSingleStaffLineLyricsPosition(staffLine, staffLine.ParentStaff.ParentInstrument.LyricVersesNumbers);
                 lyricStaffEntriesDict.setValue(staffLine, lyricsStaffEntries);
-                this.calculateLyricsExtendsAndDashes(lyricStaffEntriesDict.getValue(staffLine));
             }
         }
         // then fill in the lyric word dashes and lyrics extends/underscores
@@ -3903,6 +3912,16 @@ export abstract class MusicSheetCalculator {
     private calculateSingleLyricWordWithUnderscore(staffLine: StaffLine, startX: number, endX: number, y: number): void {
         const lineStart: PointF2D = new PointF2D(startX, y);
         const lineEnd: PointF2D = new PointF2D(endX, y);
+        const alreadyPresent: boolean = staffLine.LyricLines.some(
+            (line: GraphicalLine): boolean =>
+                Math.abs(line.Start.x - lineStart.x) < 0.0001 &&
+                Math.abs(line.Start.y - lineStart.y) < 0.0001 &&
+                Math.abs(line.End.x - lineEnd.x) < 0.0001 &&
+                Math.abs(line.End.y - lineEnd.y) < 0.0001,
+        );
+        if (alreadyPresent) {
+            return;
+        }
         const graphicalLine: GraphicalLine = new GraphicalLine(lineStart, lineEnd, this.rules.LyricUnderscoreLineWidth);
         graphicalLine.colorHex = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         staffLine.LyricLines.push(graphicalLine);

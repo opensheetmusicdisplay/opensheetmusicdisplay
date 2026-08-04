@@ -109,7 +109,17 @@ function makeAnchor(
         type === "stem" || type === "stem-tip" || type === "beam-side"
           ? endpoint.stemSide ? 0 : 0.45
           : endpoint.stemSide ? 0.3 : 0,
-            tieConflict: endpoint.tiedEndpoint && type !== endpoint.legacyAttachment ? 2 : 0,
+      // A tie at the same notehead does not make the finalized stem tip an
+      // invalid slur attachment. The old blanket penalty made a stale
+      // notehead anchor win even when the slur sat on the rendered stem side.
+      // Retain a small warning only when changing between notehead variants,
+      // where the tie and slur can genuinely compete for the same shoulder.
+      tieConflict:
+        endpoint.tiedEndpoint &&
+        type !== endpoint.legacyAttachment &&
+        ["notehead", "notehead-center", "notehead-shoulder", "outer-head"].includes(type)
+          ? 0.5
+          : 0,
     },
     generationIndex,
   };
@@ -145,17 +155,29 @@ export function generateSlurAnchors(
     if (endpoint.legacyAttachment === "stem" && stemTipX !== undefined && stemTipY !== undefined) {
       legacyDisplacement += Math.hypot(seedPoint.x - stemTipX, seedPoint.y - stemTipY) * 0.42;
     }
-    result[side].push(
-      makeAnchor(
-        context,
-        side,
-        seedPoint.x,
-        seedPoint.y,
-        endpoint.legacyAttachment,
-        generationIndex++,
-        legacyDisplacement,
-      ),
-    );
+    const legacyStemHasFinalGeometry: boolean =
+      endpoint.legacyAttachment === "stem" && Boolean(endpoint.stem);
+    const legacyContainerHasFinalGeometry: boolean =
+      endpoint.legacyAttachment === "voice-entry" && Boolean(endpoint.notehead || endpoint.stem);
+    const unreliableLegacyStem: boolean =
+      endpoint.legacyAttachment === "stem" && !endpoint.stem && Boolean(endpoint.notehead);
+    if (
+      !legacyStemHasFinalGeometry &&
+      !legacyContainerHasFinalGeometry &&
+      !unreliableLegacyStem
+    ) {
+      result[side].push(
+        makeAnchor(
+          context,
+          side,
+          seedPoint.x,
+          seedPoint.y,
+          endpoint.legacyAttachment,
+          generationIndex++,
+          legacyDisplacement,
+        ),
+      );
+    }
     if (endpoint.systemBoundary) {
       result[side].push(
         makeAnchor(context, side, seedPoint.x, seedPoint.y, "system-edge", generationIndex++, 0),
@@ -255,7 +277,7 @@ export function generateSlurAnchors(
           stemTipY,
           "stem-tip",
           generationIndex++,
-          displacement * (endpoint.stemSide && endpoint.chordSize > 1
+          displacement * (endpoint.stemSide
             ? compactChordEndpoint ? 1 : 0.04
             : 0.16) +
             // Keep this geometrically valid fallback available if every head
@@ -299,6 +321,79 @@ export function generateSlurAnchors(
     }
   }
   return result;
+}
+
+function contourPressureRatio(
+  context: SlurLayoutContext,
+  start: {x: number, y: number},
+  end: {x: number, y: number},
+): number {
+  const width: number = end.x - start.x;
+  if (width <= 0.001) {
+    return 0.5;
+  }
+  const samples: {ratio: number, pressure: number}[] = [];
+  for (let sample: number = 0; sample <= 32; sample++) {
+    const ratio: number = 0.12 + (sample / 32) * 0.76;
+    const x: number = start.x + width * ratio;
+    const envelopeIndex: number = Math.max(
+      0,
+      Math.min(
+        context.envelope.skyline.length - 1,
+        Math.round(x * context.envelope.samplingUnit),
+      ),
+    );
+    const envelopeValue: number = context.direction === PlacementEnum.Above
+      ? context.envelope.skyline[envelopeIndex]
+      : context.envelope.bottomline[envelopeIndex];
+    if (!Number.isFinite(envelopeValue)) {
+      continue;
+    }
+    const baseline: number = lineY(start, end, x);
+    const pressure: number = context.direction === PlacementEnum.Above
+      ? baseline - envelopeValue
+      : envelopeValue - baseline;
+    samples.push({ratio, pressure});
+  }
+  if (samples.length === 0) {
+    return 0.5;
+  }
+  const floor: number = Math.min(...samples.map((sample): number => sample.pressure));
+  let totalWeight: number = 0;
+  let weightedRatio: number = 0;
+  for (const sample of samples) {
+    // Subtract the uniform staff contour so an otherwise clear phrase remains
+    // symmetrical. The small residual weight averages several nearby peaks
+    // instead of snapping the crown to one skyline sample.
+    const weight: number = Math.max(0, sample.pressure - floor);
+    totalWeight += weight;
+    weightedRatio += sample.ratio * weight;
+  }
+  if (totalWeight <= 0.001) {
+    return 0.5;
+  }
+  const pressureRatio: number = weightedRatio / totalWeight;
+  return Math.max(0.3, Math.min(0.7, 0.5 + (pressureRatio - 0.5) * 0.65));
+}
+
+function curveApexRatio(context: SlurLayoutContext, geometry: SlurCurveGeometry): number {
+  let apexRatio: number = 0.5;
+  let apexY: number = context.direction === PlacementEnum.Above
+    ? Number.POSITIVE_INFINITY
+    : Number.NEGATIVE_INFINITY;
+  for (let sample: number = 0; sample <= 64; sample++) {
+    const ratio: number = sample / 64;
+    const point: PointF2D = pointOnSlurCurve(geometry, ratio);
+    const isNewApex: boolean = context.direction === PlacementEnum.Above
+      ? point.y < apexY
+      : point.y > apexY;
+    if (isNewApex) {
+      apexY = point.y;
+      apexRatio = (point.x - geometry.p0.x) /
+        Math.max(0.001, geometry.p3.x - geometry.p0.x);
+    }
+  }
+  return apexRatio;
 }
 
 function lineY(start: { x: number, y: number }, end: { x: number, y: number }, x: number): number {
@@ -356,8 +451,12 @@ function familyGeometry(
 ): SlurCurveGeometry {
   if (
     family === "normal" &&
-    start.generationIndex === 0 &&
-    end.generationIndex === 0 &&
+    start.type === context.start.legacyAttachment &&
+    end.type === context.end.legacyAttachment &&
+    Math.abs(start.x - seed.p0.x) < 0.0001 &&
+    Math.abs(start.y - seed.p0.y) < 0.0001 &&
+    Math.abs(end.x - seed.p3.x) < 0.0001 &&
+    Math.abs(end.y - seed.p3.y) < 0.0001 &&
     !context.isCrossStaff
   ) {
     return cloneGeometry(seed);
@@ -390,9 +489,9 @@ function familyGeometry(
       p3,
     };
   }
-  const seedWidth: number = Math.max(0.001, seed.p3.x - seed.p0.x);
-  let firstRatio: number = Math.min(0.42, Math.max(0.18, (seed.p1.x - seed.p0.x) / seedWidth));
-  let secondRatio: number = Math.min(0.82, Math.max(0.58, (seed.p2.x - seed.p0.x) / seedWidth));
+  const pressureRatio: number = contourPressureRatio(context, start, end);
+  let firstRatio: number = Math.max(0.18, Math.min(0.42, pressureRatio - 0.24));
+  let secondRatio: number = Math.max(0.58, Math.min(0.82, pressureRatio + 0.24));
   let heightFactor: number = 1;
   switch (family) {
     case "shallow":
@@ -657,7 +756,17 @@ function scoreCandidate(
   const midpoint: PointF2D = pointOnSlurCurve(candidate.geometry, 0.5);
   const baselineMidpoint: number = (candidate.geometry.p0.y + candidate.geometry.p3.y) / 2;
   const expectedDirection: number = context.direction === PlacementEnum.Above ? -1 : 1;
-  const contour: number = Math.max(0, -(midpoint.y - baselineMidpoint) * expectedDirection);
+  const wrongDirectionContour: number = Math.max(
+    0,
+    -(midpoint.y - baselineMidpoint) * expectedDirection,
+  );
+  const targetApexRatio: number = contourPressureRatio(
+    context,
+    candidate.geometry.p0,
+    candidate.geometry.p3,
+  );
+  const contour: number = wrongDirectionContour +
+    Math.abs(curveApexRatio(context, candidate.geometry) - targetApexRatio) * 4;
   const phraseSlope: number = Math.abs(
     (candidate.geometry.p3.y - candidate.geometry.p0.y) /
       Math.max(0.001, candidate.geometry.p3.x - candidate.geometry.p0.x),

@@ -733,6 +733,54 @@ describe("Horizontal system spacing", (): void => {
     );
   });
 
+  it("includes an extender's terminal note before the following lyric", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = createOsmd();
+    await osmd.load(extenderFollowerScore());
+    osmd.Sheet.MeasureWidthFactor = 0.2;
+    osmd.render();
+
+    const extenderConstraints: ResolvedHorizontalSpacingConstraint[] =
+      getDiagnostics(osmd).resolvedConstraints.filter(
+        (constraint): boolean => constraint.reason === "extender",
+      );
+
+    // The first constraint reaches the continuation-only stop note. The
+    // second starts there and reserves the following word's left footprint.
+    // Previously that invisible stop node was omitted from the lyric track.
+    expect(extenderConstraints).to.have.length(2);
+    expect(extenderConstraints[1].fromColumn).to.equal(extenderConstraints[0].toColumn);
+    expect(extenderConstraints[1].minimumDistance).to.be.greaterThan(
+      osmd.Sheet.Rules.HorizontalBetweenLyricsDistance * 10,
+    );
+    expect(
+      extenderConstraints.every(
+        (constraint): boolean =>
+          constraint.finalDistance >= constraint.minimumDistance - 0.001,
+      ),
+    ).to.equal(true);
+    const staffLine: any = osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
+    expect(staffLine.LyricLines).to.have.length(1);
+    const followingEntry: any = osmd.GraphicSheet.MeasureList[0][0].staffEntries
+      .flatMap((staffEntry: any): any[] => staffEntry.LyricsEntries)
+      .find((entry: any): boolean => entry.LyricsEntry.Text === "through");
+    const followingFootprint: LyricFootprint = followingEntry.getBodyFootprint(
+      followingEntry.StaffEntryParent.PositionAndShape.RelativePosition.x,
+    );
+    const followingMeasureX: number =
+      followingEntry.StaffEntryParent.parentMeasure.PositionAndShape.AbsolutePosition.x;
+    expect(
+      followingMeasureX + followingFootprint.leftEdgeX - staffLine.LyricLines[0].End.x,
+    ).to.be.at.least(
+      osmd.Sheet.Rules.BetweenSyllableMinimumDistance - 0.001,
+    );
+
+    osmd.updateGraphic();
+    osmd.render();
+    const rebuiltStaffLine: any =
+      osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
+    expect(rebuiltStaffLine.LyricLines).to.have.length(1);
+  });
+
   it("anchors lyrics to notehead geometry without including a flag", async (): Promise<void> => {
     const osmd: OpenSheetMusicDisplay = createOsmd();
     await osmd.load(flaggedLyricScore());
@@ -1420,6 +1468,43 @@ function flaggedLyricScore(): string {
         <lyric number="1"><syllabic>single</syllabic><text>last</text></lyric>
       </note>
       <note><rest/><duration>12</duration><type>half</type><dot/></note>
+    </measure>
+  </part>
+</score-partwise>`;
+}
+
+function extenderFollowerScore(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric number="1"><syllabic>single</syllabic><text>flew</text><extend type="start"/></lyric>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric number="1"><extend type="stop"/></lyric>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric number="1"><syllabic>single</syllabic><text>through</text></lyric>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>1</duration><type>eighth</type>
+        <lyric number="1"><syllabic>single</syllabic><text>air</text></lyric>
+      </note>
     </measure>
   </part>
 </score-partwise>`;

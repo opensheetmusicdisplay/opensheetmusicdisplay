@@ -208,12 +208,56 @@ describe("candidate slur layout engine", (): void => {
       driftedSeed,
       options,
     );
+    const anchors: {start: SlurAnchorCandidate[], end: SlurAnchorCandidate[]} =
+      generateSlurAnchors(context({start: driftedStart}), driftedSeed, options.obstacleClearance);
     const selected: SlurCurveCandidate = result.candidates.find(
       (candidate) => candidate.id === result.selectedCandidateId,
     );
 
+    expect(anchors.start.some((anchor) => anchor.type === "stem")).to.equal(false);
     expect(selected.startAnchor.type).to.equal("stem-tip");
     expect(selected.geometry.p0.x).to.be.closeTo(2.08, 0.001);
+  });
+
+  it("does not penalize a finalized stem-tip merely because its note is tied", (): void => {
+    const tiedEnd: SlurEndpointContext = {
+      ...endpoint("end", 18),
+      stem: {left: 17.95, right: 18.05, top: -0.5, bottom: 2.5},
+      stemSide: true,
+      tiedEndpoint: true,
+      legacyAttachment: "notehead",
+    };
+    const anchors: {start: SlurAnchorCandidate[], end: SlurAnchorCandidate[]} = generateSlurAnchors(
+      context({end: tiedEnd}),
+      seed,
+      options.obstacleClearance,
+    );
+    const stemTip: SlurAnchorCandidate = anchors.end.find(
+      (anchor) => anchor.type === "stem-tip",
+    );
+
+    expect(stemTip).not.to.equal(undefined);
+    expect(stemTip.penalties.tieConflict).to.equal(0);
+  });
+
+  it("favours a balanced crown on a flat obstacle profile", (): void => {
+    const asymmetricSeed: SlurCurveGeometry = {
+      p0: new PointF2D(2, 1.2),
+      p1: new PointF2D(2.8, -2.2),
+      p2: new PointF2D(10, -2.2),
+      p3: new PointF2D(18, 1.2),
+    };
+    const result: SlurLayoutResult = calculateCandidateSlurLayout(
+      context(),
+      asymmetricSeed,
+      options,
+    );
+    const selected: SlurCurveCandidate = result.candidates.find(
+      (candidate) => candidate.id === result.selectedCandidateId,
+    );
+    const crownX: number = (selected.geometry.p1.x + selected.geometry.p2.x) / 2;
+
+    expect(crownX).to.be.closeTo(10, 0.75);
   });
 
   it("offers a finalized stem-tip anchor for a chord on the slur side", (): void => {

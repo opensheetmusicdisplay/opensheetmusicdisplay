@@ -451,8 +451,8 @@ describe("Stage 6 slur geometry", (): void => {
 
       const slurs: GraphicalSlur[] = allSlurs(osmd).map(({slur}) => slur);
       expect(slurs).to.have.length(1);
-      expect(slurs[0].diagnostics.startAttachment).to.equal("stem");
-      expect(slurs[0].diagnostics.endAttachment).to.equal("notehead");
+      expect(slurs[0].diagnostics.startAttachment).to.equal("stem-tip");
+      expect(slurs[0].diagnostics.endAttachment).to.equal("notehead-center");
    });
 
    it("collects finalized beam geometry as a typed obstacle", async (): Promise<void> => {
