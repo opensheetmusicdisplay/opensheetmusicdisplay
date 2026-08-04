@@ -208,7 +208,62 @@ function rhythmicSnapshot(osmd: OpenSheetMusicDisplay): RhythmicMeasureSnapshot[
    })));
 }
 
+function graceSlurGroups(osmd: OpenSheetMusicDisplay): {group: any, measureNumber: number}[] {
+   return osmd.GraphicSheet.MusicPages.flatMap((page) =>
+      page.MusicSystems.flatMap((system) =>
+         system.StaffLines.flatMap((staffLine) =>
+            staffLine.Measures.flatMap((measure) =>
+               measure.staffEntries.flatMap((staffEntry) =>
+                  staffEntry.graphicalVoiceEntries.flatMap((voiceEntry) => {
+                     const modifiers: any[] = (voiceEntry as any).vfStaveNote?.getModifiers?.() ?? [];
+                     return modifiers
+                        .filter((modifier): boolean => modifier?.getCategory?.() === "GraceNoteGroup")
+                        .map((group): {group: any, measureNumber: number} => ({
+                           group,
+                           measureNumber: measure.MeasureNumber,
+                        }));
+                  })
+               )
+            )
+         )
+      )
+   );
+}
+
 describe("Stage 6 slur geometry", (): void => {
+   it("uses stem-side attachments and clears a multi-grace beam", async (): Promise<void> => {
+      const osmd: OpenSheetMusicDisplay =
+         TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      await osmd.load(TestUtils.getScore("OSMD_function_test_GraceNotes.xml"));
+      osmd.render();
+
+      const groups: {group: any, measureNumber: number}[] = graceSlurGroups(osmd)
+         .filter(({group}) => Boolean(group.getSlurLayout?.()));
+      const opening: any = groups.find(({measureNumber}) => measureNumber === 1)?.group;
+      expect(opening).to.not.equal(undefined);
+      expect(opening.getSlurLayout().startAttachment).to.equal("stem-tip");
+      expect(opening.getSlurLayout().endAttachment).to.equal("stem-tip");
+
+      const beamed: any = groups.find(
+         ({group, measureNumber}) => measureNumber === 3 && group.getGraceNotes().length === 2,
+      )?.group;
+      expect(beamed).to.not.equal(undefined);
+      expect(beamed.getSlur().getNotes().firstNote).to.equal(beamed.getGraceNotes()[0]);
+      expect(beamed.getSlurLayout().startAttachment).to.equal("stem-tip");
+      expect(beamed.getSlurLayout().endAttachment).to.equal("notehead");
+      expect(beamed.getRenderedSlurCurves()[0].start.x).to.be.closeTo(
+         beamed.getGraceNotes()[0].getStemX(),
+         0.001,
+      );
+      const beamedCurve: any = beamed.getRenderedSlurCurves()[0];
+      expect(beamedCurve.start.x).to.be.lessThan(beamed.getGraceNotes()[1].getStemX());
+      expect(beamedCurve.end.x).to.be.greaterThan(beamed.getGraceNotes()[1].getStemX());
+      expect(
+         beamedCurve.topControl.y,
+         `grace slur curve ${JSON.stringify(beamedCurve)}`,
+      ).to.be.lessThan(beamedCurve.start.y - 5);
+   });
+
    it("selects both internal engines without changing the rhythmic layout", async (): Promise<void> => {
       const renderMode: (mode: "legacy" | "candidate") => Promise<SlurModeSnapshot> = async (mode) => {
          const osmd: OpenSheetMusicDisplay =

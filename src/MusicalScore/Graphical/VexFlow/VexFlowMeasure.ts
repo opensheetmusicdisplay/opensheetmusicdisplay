@@ -1547,10 +1547,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     public graphicalMeasureCreatedCalculations(): void {
         let graceSlur: boolean;
+        let graceSlurStartIndex: number;
         let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
         const graveGVoiceEntriesAdded: GraphicalVoiceEntry[] = [];
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             graceSlur = false;
+            graceSlurStartIndex = undefined;
             graceGVoiceEntriesBefore = [];
             // create vex flow Stave Notes:
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
@@ -1560,6 +1562,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     graveGVoiceEntriesAdded.push(gve);
                     if (!graceSlur) {
                         graceSlur = gve.parentVoiceEntry.GraceSlur;
+                        if (graceSlur) {
+                            graceSlurStartIndex = graceGVoiceEntriesBefore.length - 1;
+                        }
                     }
                     continue;
                 }
@@ -1589,7 +1594,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     gveGrace.vfStaveNote = vfStaveNote;
                     graceNotes.push(vfStaveNote);
                     }
-                    const graceNoteGroup: VF.GraceNoteGroup = new VF.GraceNoteGroup(graceNotes, graceSlur);
+                    const graceNoteGroup: VF.GraceNoteGroup = new VF.GraceNoteGroup(
+                        graceNotes,
+                        graceSlur,
+                        graceSlurStartIndex,
+                    );
                     let xMargin: number = this.rules.GraceNoteGroupXMargin;
                     if (graceNotes.length > 1) {
                         xMargin /= 3; // prevent overlap. multiple grace notes end up closer to the main note.
