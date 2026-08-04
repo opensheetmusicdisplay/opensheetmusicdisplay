@@ -13,6 +13,7 @@ import {
   SlurEndpointContext,
   SlurLayoutContext,
   SlurLayoutResult,
+  SlurObstacle,
 } from "../../../src/MusicalScore/Graphical/SlurLayout/SlurLayoutTypes";
 
 const endpoint: (side: "start" | "end", x: number) => SlurEndpointContext = (
@@ -238,6 +239,17 @@ describe("candidate slur layout engine", (): void => {
 
     expect(stemTip).not.to.equal(undefined);
     expect(stemTip.penalties.tieConflict).to.equal(0);
+
+    const originalShoulder: SlurAnchorCandidate = anchors.end.find(
+      (anchor) => anchor.type === "notehead-shoulder",
+    );
+    const alternateShoulder: SlurAnchorCandidate = generateSlurAnchors(
+      context({end: {...tiedEnd, legacyAttachment: "stem"}}),
+      seed,
+      options.obstacleClearance,
+    ).end.find((anchor) => anchor.type === "notehead-shoulder");
+    expect(originalShoulder.penalties.tieConflict).to.equal(0.5);
+    expect(alternateShoulder.penalties.tieConflict).to.equal(0.5);
   });
 
   it("favours a balanced crown on a flat obstacle profile", (): void => {
@@ -413,6 +425,72 @@ describe("candidate slur layout engine", (): void => {
       result.candidates.some(
         (candidate) =>
           candidate.startAnchor.type === "beam-side" || candidate.endAnchor.type === "beam-side",
+      ),
+    ).to.equal(true);
+  });
+
+  it("does not exempt a spanning endpoint beam outside the attachment zone", (): void => {
+    const spanningBeam: SlurObstacle = {
+      id: "endpoint-spanning-beam",
+      type: "beam" as const,
+      bounds: {left: 1.8, right: 18.2, top: -3.1, bottom: 0.1},
+      endpoint: "both" as const,
+      clearance: 0.1,
+    };
+    const result: SlurLayoutResult = calculateCandidateSlurLayout(
+      context({
+        start: {
+          ...endpoint("start", 2),
+          stem: {left: 1.95, right: 2.05, top: -3.1, bottom: 2.5},
+          stemSide: true,
+          beams: [spanningBeam.bounds],
+        },
+        end: {
+          ...endpoint("end", 18),
+          stem: {left: 17.95, right: 18.05, top: -3.1, bottom: 2.5},
+          stemSide: true,
+          beams: [spanningBeam.bounds],
+        },
+        obstacles: [spanningBeam],
+      }),
+      seed,
+      options,
+    );
+    const selected: SlurCurveCandidate = result.candidates.find(
+      (candidate) => candidate.id === result.selectedCandidateId,
+    );
+
+    expect(
+      result.candidates.some(
+        (candidate) => candidate.rejectionObstacleIds?.includes(spanningBeam.id),
+      ),
+    ).to.equal(true);
+    expect(selected?.rejected).to.equal(false);
+  });
+
+  it("does not exempt an outgoing endpoint tie outside the attachment zone", (): void => {
+    const outgoingTie: SlurObstacle = {
+      id: "outgoing-endpoint-tie",
+      type: "tie" as const,
+      bounds: {left: 2, right: 12, top: -2.4, bottom: 1.3},
+      endpoint: "start" as const,
+      clearance: 0.1,
+      curve: {
+        p0: new PointF2D(2, 1.1),
+        p1: new PointF2D(5, -2),
+        p2: new PointF2D(9, -2),
+        p3: new PointF2D(12, 1.1),
+      },
+    };
+    const result: SlurLayoutResult = calculateCandidateSlurLayout(
+      context({obstacles: [outgoingTie]}),
+      seed,
+      options,
+    );
+
+    expect(
+      result.candidates.some(
+        (candidate) => candidate.rejectionObstacleIds?.includes(outgoingTie.id),
       ),
     ).to.equal(true);
   });

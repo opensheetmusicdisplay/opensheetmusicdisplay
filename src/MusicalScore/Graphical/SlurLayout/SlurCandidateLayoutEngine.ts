@@ -112,12 +112,12 @@ function makeAnchor(
       // A tie at the same notehead does not make the finalized stem tip an
       // invalid slur attachment. The old blanket penalty made a stale
       // notehead anchor win even when the slur sat on the rendered stem side.
-      // Retain a small warning only when changing between notehead variants,
-      // where the tie and slur can genuinely compete for the same shoulder.
+      // Retain a small warning for lateral notehead anchors, where the tie and
+      // slur can genuinely compete for the same shoulder. This is semantic:
+      // it must not depend on whichever attachment the comparison engine chose.
       tieConflict:
         endpoint.tiedEndpoint &&
-        type !== endpoint.legacyAttachment &&
-        ["notehead", "notehead-center", "notehead-shoulder", "outer-head"].includes(type)
+        ["notehead", "notehead-shoulder", "outer-head"].includes(type)
           ? 0.5
           : 0,
     },
@@ -422,7 +422,22 @@ function requiredObstacleBow(
   // avoid a staff-line penalty.
   required = Math.max(required, staffEdgeBow / 0.75);
   for (const obstacle of context.obstacles) {
-    if ((obstacle.endpoint && obstacle.type !== "accidental") || !isForbiddenObstacle(obstacle)) {
+    if (!isForbiddenObstacle(obstacle)) {
+      continue;
+    }
+    const localStartObstacle: boolean = obstacle.type !== "accidental" &&
+      (obstacle.endpoint === "start" || obstacle.endpoint === "both") &&
+      obstacle.bounds.right <= Math.max(
+        start.x,
+        context.start.notehead?.right ?? start.x,
+      ) + obstacle.clearance;
+    const localEndObstacle: boolean = obstacle.type !== "accidental" &&
+      (obstacle.endpoint === "end" || obstacle.endpoint === "both") &&
+      obstacle.bounds.left >= Math.min(
+        end.x,
+        context.end.notehead?.left ?? end.x,
+      ) - obstacle.clearance;
+    if (localStartObstacle || localEndObstacle) {
       continue;
     }
     const left: number = Math.max(start.x, obstacle.bounds.left);
@@ -612,6 +627,39 @@ function isForbiddenObstacle(obstacle: SlurObstacle): boolean {
   }
 }
 
+function isInsideEndpointAttachmentZone(
+  context: SlurLayoutContext,
+  geometry: SlurCurveGeometry,
+  obstacle: SlurObstacle,
+  point: PointF2D,
+  clearance: number,
+): boolean {
+  if (obstacle.type === "accidental") {
+    return false;
+  }
+  if (obstacle.endpoint === "start" || obstacle.endpoint === "both") {
+    // Only exempt the small region in which the curve actually leaves the
+    // selected endpoint. Using obstacle.bounds.right here accidentally
+    // exempted an entire beamed group or outgoing tie when its bounding box
+    // extended across the phrase.
+    const attachmentRight: number = Math.max(
+      geometry.p0.x,
+      context.start.notehead?.right ?? geometry.p0.x,
+    );
+    if (point.x <= attachmentRight + clearance) {
+      return true;
+    }
+  }
+  if (obstacle.endpoint === "end" || obstacle.endpoint === "both") {
+    const attachmentLeft: number = Math.min(
+      geometry.p3.x,
+      context.end.notehead?.left ?? geometry.p3.x,
+    );
+    return point.x >= attachmentLeft - clearance;
+  }
+  return false;
+}
+
 function evaluateGeometry(
   context: SlurLayoutContext,
   geometry: SlurCurveGeometry,
@@ -677,19 +725,13 @@ function evaluateGeometry(
     }
     for (const obstacle of context.obstacles) {
       const endpointClearance: number = Math.max(obstacle.clearance, 0.08);
-      const belongsToAttachment: boolean = obstacle.type !== "accidental";
-      if (
-        belongsToAttachment &&
-        obstacle.endpoint === "start" &&
-        point.x <= obstacle.bounds.right + endpointClearance
-      ) {
-        continue;
-      }
-      if (
-        belongsToAttachment &&
-        obstacle.endpoint === "end" &&
-        point.x >= obstacle.bounds.left - endpointClearance
-      ) {
+      if (isInsideEndpointAttachmentZone(
+        context,
+        geometry,
+        obstacle,
+        point,
+        endpointClearance,
+      )) {
         continue;
       }
       if (obstacle.curve) {

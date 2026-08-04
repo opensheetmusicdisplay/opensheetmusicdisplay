@@ -5,7 +5,12 @@ import {
    GraphicalSlurArticulationShiftDiagnostics,
 } from "../../../../src/MusicalScore/Graphical/GraphicalSlur";
 import { StaffLine } from "../../../../src/MusicalScore/Graphical/StaffLine";
-import { SlurObstacle } from "../../../../src/MusicalScore/Graphical/SlurLayout/SlurLayoutTypes";
+import { pointOnSlurCurve } from "../../../../src/MusicalScore/Graphical/SlurLayout/SlurCandidateLayoutEngine";
+import {
+   SlurArticulationContext,
+   SlurCurveCandidate,
+   SlurObstacle,
+} from "../../../../src/MusicalScore/Graphical/SlurLayout/SlurLayoutTypes";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { TestUtils } from "../../../Util/TestUtils";
 
@@ -312,7 +317,7 @@ describe("Stage 6 slur geometry", (): void => {
       expect(await render(400)).to.deep.equal(await render(-275));
    });
 
-   it("anchors to selected chord heads and clears endpoint articulations in the final skyline", async (): Promise<void> => {
+   it("preserves selected chord heads and fixed articulation clearance in legacy comparison mode", async (): Promise<void> => {
       const container: HTMLElement = TestUtils.getDivElement(document);
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
       await osmd.load(articulationScore());
@@ -393,24 +398,82 @@ describe("Stage 6 slur geometry", (): void => {
       osmd.updateGraphic();
       osmd.render();
 
+      const slurs: {slur: GraphicalSlur, staffLine: StaffLine}[] = allSlurs(osmd);
       const shifts: GraphicalSlurArticulationShiftDiagnostics[] =
-         allSlurs(osmd).flatMap(({slur}) => slur.diagnostics.articulationShifts);
+         slurs.flatMap(({slur}) => slur.diagnostics.articulationShifts);
       expect(shifts.map((shift) => shift.type).sort()).to.deep.equal(["a>", "a^"]);
       expect(shifts.every((shift) => shift.finalShiftPx >= shift.previousShiftPx)).to.equal(true);
+      for (const {slur, staffLine} of slurs) {
+         expect(slur.layoutResult?.mode).to.equal("candidate");
+         const selected: SlurCurveCandidate = slur.layoutResult?.candidates.find(
+            (candidate): boolean => candidate.id === slur.layoutResult.selectedCandidateId,
+         );
+         expect(selected?.rejected).to.equal(false);
+         const durationArticulations: SlurArticulationContext[] =
+            slur.layoutContext?.start.articulations.filter(
+            (articulation): boolean => articulation.classification === "duration",
+         ) ?? [];
+         if (durationArticulations.length > 0) {
+            expect(slur.diagnostics.articulationShifts).to.have.length(0);
+            const curvePoint: {x: number, y: number} =
+               pointOnSlurCurve(slur.layoutResult.geometry, 0.045);
+            for (const articulation of durationArticulations) {
+               if (slur.placement === PlacementEnum.Above) {
+                  expect(curvePoint.y).to.be.at.most(
+                     articulation.bounds.top - osmd.EngravingRules.SlurArticulationClearance,
+                  );
+               } else {
+                  expect(curvePoint.y).to.be.at.least(
+                     articulation.bounds.bottom + osmd.EngravingRules.SlurArticulationClearance,
+                  );
+               }
+            }
+         }
+         for (const shift of slur.diagnostics.articulationShifts) {
+            const t: number = shift.endpoint === "start" ? 0.045 : 0.955;
+            const curvePoint: {x: number, y: number} =
+               pointOnSlurCurve(slur.layoutResult.geometry, t);
+            if (slur.placement === PlacementEnum.Above) {
+               expect(shift.bounds.bottom).to.be.at.most(
+                  curvePoint.y - osmd.EngravingRules.SlurArticulationClearance + 0.001,
+               );
+               expect(
+                  staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(
+                     shift.bounds.left,
+                     shift.bounds.right,
+                  ),
+               ).to.be.at.most(shift.bounds.top + 0.05);
+            } else {
+               expect(shift.bounds.top).to.be.at.least(
+                  curvePoint.y + osmd.EngravingRules.SlurArticulationClearance - 0.001,
+               );
+               expect(
+                  staffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(
+                     shift.bounds.left,
+                     shift.bounds.right,
+                  ),
+               ).to.be.at.least(shift.bounds.bottom - 0.05);
+            }
+         }
+      }
    });
 
-   it("refreshes articulation coordinates after a stave moves to a later system", async (): Promise<void> => {
+   it("refreshes candidate articulation coordinates after a stave moves to a later system", async (): Promise<void> => {
       const container: HTMLElement = TestUtils.getDivElement(document);
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
       await osmd.load(multiSystemArticulationScore());
-      osmd.EngravingRules.SlurLayoutMode = "legacy";
+      osmd.EngravingRules.SlurLayoutMode = "candidate";
       osmd.Sheet.Rules.NewSystemAtXMLNewSystemAttribute = true;
       osmd.updateGraphic();
       osmd.render();
 
-      const glyph: string = allSlurs(osmd)
-         .flatMap(({slur}) => slur.diagnostics.articulationShifts)
-         .find((shift) => shift.type === "a.")?.glyph;
+      const glyph: string = osmd.GraphicSheet.MeasureList
+         .flatMap((measureRow) => measureRow)
+         .flatMap((measure) => measure.staffEntries)
+         .flatMap((staffEntry) => staffEntry.graphicalVoiceEntries)
+         .flatMap((voiceEntry: any): any[] => voiceEntry.vfStaveNote?.getModifiers?.() ?? [])
+         .find((modifier: any): boolean => modifier.type === "a.")
+         ?.getText?.();
       expect(glyph).to.not.equal(undefined);
       const renderedY: number[] = Array.from(container.querySelectorAll("text"))
          .filter((text): boolean => text.textContent === glyph)
@@ -419,6 +482,9 @@ describe("Stage 6 slur geometry", (): void => {
          .sort((left, right): number => left - right);
       expect(renderedY).to.have.length(2);
       expect(renderedY[1] - renderedY[0]).to.be.greaterThan(20);
+      expect(
+         allSlurs(osmd).every(({slur}) => slur.layoutContext?.start.articulations.length === 1),
+      ).to.equal(true);
    });
 
    it("uses the outer chord heads for opposing double slurs", async (): Promise<void> => {
@@ -431,14 +497,21 @@ describe("Stage 6 slur geometry", (): void => {
       expect(slurs).to.have.length(2);
       const above: GraphicalSlur = slurs.find((slur) => slur.placement === PlacementEnum.Above);
       const below: GraphicalSlur = slurs.find((slur) => slur.placement === PlacementEnum.Below);
-      expect(above.diagnostics.startAttachment, "above start attachment").to.equal("notehead");
-      expect(above.diagnostics.endAttachment, "above end attachment").to.equal("notehead");
-      expect(below.diagnostics.startAttachment, "below start attachment").to.equal("notehead");
-      expect(below.diagnostics.endAttachment, "below end attachment").to.equal("notehead");
-      expect(above.bezierStartPt.x).to.be.closeTo(above.diagnostics.startNotehead.right, 0.001);
-      expect(above.bezierEndPt.x).to.be.closeTo(above.diagnostics.endNotehead.left, 0.001);
-      expect(below.bezierStartPt.x).to.be.closeTo(below.diagnostics.startNotehead.right, 0.001);
-      expect(below.bezierEndPt.x).to.be.closeTo(below.diagnostics.endNotehead.left, 0.001);
+      for (const slur of [above, below]) {
+         expect(slur.layoutResult?.mode).to.equal("candidate");
+         const selected: SlurCurveCandidate = slur.layoutResult?.candidates.find(
+            (candidate): boolean => candidate.id === slur.layoutResult.selectedCandidateId,
+         );
+         expect(selected?.rejected).to.equal(false);
+         expect(slur.bezierStartPt.x).to.be.within(
+            (slur.diagnostics.startNotehead.left + slur.diagnostics.startNotehead.right) / 2,
+            slur.diagnostics.startNotehead.right + 0.1,
+         );
+         expect(slur.bezierEndPt.x).to.be.within(
+            slur.diagnostics.endNotehead.left - 0.1,
+            (slur.diagnostics.endNotehead.left + slur.diagnostics.endNotehead.right) / 2,
+         );
+      }
       expect(above.diagnostics.startNotehead.top).to.be.lessThan(below.diagnostics.startNotehead.top);
       expect(above.diagnostics.endNotehead.top).to.be.lessThan(below.diagnostics.endNotehead.top);
    });

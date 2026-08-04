@@ -23,6 +23,8 @@ export interface SlurLinkedLayoutOutput {
   diagnostics: SlurLinkedLayoutDiagnostics;
 }
 
+const rejectedCandidateScore: number = 1_000_000;
+
 const clonePoint: (point: PointF2D) => PointF2D = (point: PointF2D): PointF2D =>
   new PointF2D(point.x, point.y);
 
@@ -201,7 +203,9 @@ export function calculateLinkedSlurLayouts(
     const selected: SlurCurveCandidate = result.candidates.find(
       (candidate): boolean => candidate.id === result.selectedCandidateId,
     );
-    return sum + (selected?.score?.total ?? 0);
+    return sum + (selected?.rejected || !selected?.score
+      ? rejectedCandidateScore
+      : selected.score.total);
   }, tangentMismatch * options.scoreWeights.systemContinuity);
   return {
     results,

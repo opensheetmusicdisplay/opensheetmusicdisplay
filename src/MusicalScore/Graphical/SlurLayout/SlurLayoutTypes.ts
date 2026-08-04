@@ -91,7 +91,7 @@ export interface SlurObstacle {
     type: SlurObstacleType;
     bounds: SlurBounds;
     sourceNoteId?: string;
-    endpoint?: SlurEndpointSide;
+    endpoint?: SlurEndpointSide | "both";
     articulationClass?: SlurArticulationClass;
     clearance: number;
     polygon?: PointF2D[];
@@ -126,6 +126,7 @@ export interface SlurLayoutContext {
 export type SlurLayoutFaultCode =
     | "incompatible-linked-placement"
     | "invalid-linked-segment-order"
+    | "missing-candidate-layout-context"
     | "unsupported-cross-staff-cross-system"
     | "no-valid-candidate";
 

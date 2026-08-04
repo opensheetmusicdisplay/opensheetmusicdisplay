@@ -9,6 +9,7 @@ import {
   SlurLinkedLayoutOutput,
 } from "../../../src/MusicalScore/Graphical/SlurLayout/SlurLinkedLayoutEngine";
 import {
+  SlurCurveCandidate,
   SlurCurveGeometry,
   SlurEndpointContext,
   SlurLayoutContext,
@@ -135,5 +136,23 @@ describe("linked slur layout engine", (): void => {
     expect(output.diagnostics.faults.map((fault) => fault.code)).to.include(
       "incompatible-linked-placement",
     );
+  });
+
+  it("includes rejected selections in the linked route score", (): void => {
+    const reversed: SlurLinkedLayoutInput = input(0, false, false);
+    reversed.context.start.notehead = {left: 17.5, right: 18.5, top: 1.5, bottom: 2.5};
+    reversed.context.end.notehead = {left: 1.5, right: 2.5, top: 1.5, bottom: 2.5};
+    reversed.context.start.legacyAnchor = new PointF2D(18, 1.2);
+    reversed.context.end.legacyAnchor = new PointF2D(2, 1.2);
+    reversed.seed.p0 = new PointF2D(18, 1.2);
+    reversed.seed.p3 = new PointF2D(2, 1.2);
+
+    const output: SlurLinkedLayoutOutput = calculateLinkedSlurLayouts([reversed], options);
+    const selected: SlurCurveCandidate = output.results[0].candidates.find(
+      (candidate): boolean => candidate.id === output.results[0].selectedCandidateId,
+    );
+
+    expect(selected?.rejected).to.equal(true);
+    expect(output.diagnostics.totalScore).to.be.at.least(1_000_000);
   });
 });

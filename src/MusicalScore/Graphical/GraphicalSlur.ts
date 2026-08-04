@@ -944,24 +944,41 @@ export class GraphicalSlur extends GraphicalCurve {
         endX: number,
     ): SlurObstacle[] {
         const obstacles: SlurObstacle[] = [];
-        const seen: Set<string> = new Set();
+        const seen: Map<string, SlurObstacle> = new Map();
         const addBounds: (
             type: SlurObstacle["type"],
             bounds: GraphicalSlurBoundsDiagnostics,
             id: string,
-            endpoint?: "start" | "end",
+            endpoint?: SlurObstacle["endpoint"],
             articulationClass?: SlurArticulationClass,
             polygon?: PointF2D[],
-        ) => void = (type, bounds, id, endpoint, articulationClass, polygon): void => {
+        ) => SlurObstacle | undefined = (
+            type,
+            bounds,
+            id,
+            endpoint,
+            articulationClass,
+            polygon,
+        ): SlurObstacle | undefined => {
             if (!bounds
                 || ![bounds.left, bounds.right, bounds.top, bounds.bottom].every(Number.isFinite)
                 || bounds.right < startX - 1
-                || bounds.left > endX + 1) {return;}
+                || bounds.left > endX + 1) {return undefined;}
             const key: string = `${type}:${bounds.left.toFixed(3)}:${bounds.top.toFixed(3)}:`
                 + `${bounds.right.toFixed(3)}:${bounds.bottom.toFixed(3)}`;
-            if (seen.has(key)) {return;}
-            seen.add(key);
-            obstacles.push({
+            const existing: SlurObstacle = seen.get(key);
+            if (existing) {
+                if (endpoint && existing.endpoint && endpoint !== existing.endpoint) {
+                    existing.endpoint = "both";
+                } else if (endpoint && !existing.endpoint) {
+                    existing.endpoint = endpoint;
+                }
+                if (polygon && !existing.polygon) {
+                    existing.polygon = polygon;
+                }
+                return existing;
+            }
+            const obstacle: SlurObstacle = {
                 id,
                 type,
                 bounds: {...bounds},
@@ -969,7 +986,10 @@ export class GraphicalSlur extends GraphicalCurve {
                 articulationClass,
                 clearance: this.rules.SlurObstacleClearance,
                 polygon,
-            });
+            };
+            seen.set(key, obstacle);
+            obstacles.push(obstacle);
+            return obstacle;
         };
         let noteIndex: number = 0;
         for (const staffEntry of this.staffEntries) {
@@ -1014,19 +1034,19 @@ export class GraphicalSlur extends GraphicalCurve {
                     };
                     const xs: number[] = [start.x, end.x, topControl.x, bottomControl.x];
                     const ys: number[] = [start.y, end.y, topControl.y, bottomControl.y];
-                    const endpoint: "start" | "end" | undefined =
-                        graphicalTie.StartNote === startNote || graphicalTie.EndNote === startNote
-                            ? "start"
-                            : graphicalTie.StartNote === endNote || graphicalTie.EndNote === endNote
-                                ? "end"
-                                : undefined;
-                    addBounds("tie", {
+                    const touchesStart: boolean =
+                        graphicalTie.StartNote === startNote || graphicalTie.EndNote === startNote;
+                    const touchesEnd: boolean =
+                        graphicalTie.StartNote === endNote || graphicalTie.EndNote === endNote;
+                    const endpoint: SlurObstacle["endpoint"] = touchesStart && touchesEnd
+                        ? "both"
+                        : touchesStart ? "start" : touchesEnd ? "end" : undefined;
+                    const obstacle: SlurObstacle = addBounds("tie", {
                         left: Math.min(...xs),
                         right: Math.max(...xs),
                         top: Math.min(...ys),
                         bottom: Math.max(...ys),
                     }, `tie-${noteIndex}-${tieIndex}`, endpoint);
-                    const obstacle: SlurObstacle = obstacles[obstacles.length - 1];
                     if (obstacle?.type === "tie") {
                         obstacle.curve = curve;
                     }
@@ -1089,13 +1109,12 @@ export class GraphicalSlur extends GraphicalCurve {
             }
             const xs: number[] = [geometry.p0.x, geometry.p1.x, geometry.p2.x, geometry.p3.x];
             const ys: number[] = [geometry.p0.y, geometry.p1.y, geometry.p2.y, geometry.p3.y];
-            addBounds("slur", {
+            const obstacle: SlurObstacle = addBounds("slur", {
                 left: Math.min(...xs),
                 right: Math.max(...xs),
                 top: Math.min(...ys),
                 bottom: Math.max(...ys),
             }, `selected-slur-${obstacles.length}`);
-            const obstacle: SlurObstacle = obstacles[obstacles.length - 1];
             if (obstacle?.type === "slur") {
                 obstacle.curve = geometry;
             }
@@ -1108,8 +1127,27 @@ export class GraphicalSlur extends GraphicalCurve {
         staffLine: StaffLine,
         deferCandidateLayout: boolean = false,
     ): void {
-        if (rules.SlurLayoutMode === "legacy" || !this.layoutContext) {
-            this.captureLayoutResult(rules.SlurLayoutMode, "normal");
+        if (rules.SlurLayoutMode === "legacy") {
+            this.captureLayoutResult("legacy", "normal");
+            return;
+        }
+        if (!this.layoutContext) {
+            // Keep a finite compatibility curve, but never disguise this as a
+            // successfully solved candidate. The structured fault makes the
+            // exceptional path visible to tests and corpus diagnostics.
+            this.captureLayoutResult("candidate", "normal");
+            this.diagnostics.faults = ["missing-candidate-layout-context"];
+            this.diagnostics.structuredFaults = [
+                ...(this.diagnostics.structuredFaults ?? []).filter(
+                    (fault): boolean => fault.code !== "missing-candidate-layout-context"
+                        && fault.code !== "no-valid-candidate",
+                ),
+                {
+                    code: "missing-candidate-layout-context",
+                    message: "Candidate slur layout context was unavailable.",
+                    segmentIndexes: [this.diagnostics.segmentIndex],
+                },
+            ];
             return;
         }
         this.candidateSeed = {
@@ -1185,23 +1223,32 @@ export class GraphicalSlur extends GraphicalCurve {
         const selected: SlurCurveCandidate = this.layoutResult.candidates.find(
             (candidate): boolean => candidate.id === this.layoutResult.selectedCandidateId,
         );
-        this.diagnostics.faults = selected?.rejected
-            ? [`no-valid-candidate:${selected.rejectionReason ?? "unknown"}`]
-            : [];
-        if (selected?.rejected) {
-            this.diagnostics.structuredFaults = [
-                ...(this.diagnostics.structuredFaults ?? []),
-                {
-                    code: "no-valid-candidate",
-                    message: `No valid candidate: ${selected.rejectionReason ?? "unknown"}.`,
-                    segmentIndexes: [this.diagnostics.segmentIndex],
-                },
-            ];
-        }
+        this.updateCandidateSelectionFault(selected);
         this.diagnostics.startAttachment = selected?.startAnchor?.type
             ?? this.diagnostics.startAttachment;
         this.diagnostics.endAttachment = selected?.endAnchor?.type
             ?? this.diagnostics.endAttachment;
+    }
+
+    private updateCandidateSelectionFault(selected?: SlurCurveCandidate): void {
+        const reason: string | undefined = selected?.rejected
+            ? selected.rejectionReason ?? "unknown"
+            : selected ? undefined : "no-candidates";
+        this.diagnostics.faults = reason ? [`no-valid-candidate:${reason}`] : [];
+        const retainedFaults: SlurLayoutFault[] = (this.diagnostics.structuredFaults ?? []).filter(
+            (fault): boolean => fault.code !== "no-valid-candidate"
+                && fault.code !== "missing-candidate-layout-context",
+        );
+        this.diagnostics.structuredFaults = reason
+            ? [
+                ...retainedFaults,
+                {
+                    code: "no-valid-candidate",
+                    message: `No valid candidate: ${reason}.`,
+                    segmentIndexes: [this.diagnostics.segmentIndex],
+                },
+            ]
+            : retainedFaults;
     }
 
     private applyCandidateArticulationAdjustments(): void {
@@ -1257,7 +1304,7 @@ export class GraphicalSlur extends GraphicalCurve {
         };
         const makeAnchor: (side: "start" | "end", point: PointF2D) => SlurAnchorCandidate =
             (side, point): SlurAnchorCandidate => ({
-                id: `${this.layoutContext?.id ?? "slur"}-${side}-legacy`,
+                id: `${this.layoutContext?.id ?? "slur"}-${side}-${mode}-fallback`,
                 x: point.x,
                 y: point.y,
                 type: side === "start"
@@ -1276,7 +1323,7 @@ export class GraphicalSlur extends GraphicalCurve {
         const startAnchor: SlurAnchorCandidate = makeAnchor("start", geometry.p0);
         const endAnchor: SlurAnchorCandidate = makeAnchor("end", geometry.p3);
         const candidate: SlurCurveCandidate = {
-            id: `${this.layoutContext?.id ?? "slur"}-legacy-normal`,
+            id: `${this.layoutContext?.id ?? "slur"}-${mode}-${family}-fallback`,
             startAnchor,
             endAnchor,
             geometry,
@@ -1297,6 +1344,12 @@ export class GraphicalSlur extends GraphicalCurve {
         };
         this.diagnostics.selectedCandidateId = candidate.id;
         this.diagnostics.candidateCount = 1;
+        this.diagnostics.mode = mode;
+        this.diagnostics.faults = [];
+        this.diagnostics.structuredFaults = (this.diagnostics.structuredFaults ?? []).filter(
+            (fault): boolean => fault.code !== "missing-candidate-layout-context"
+                && fault.code !== "no-valid-candidate",
+        );
     }
 
     private applySystemBreakTangents(hasStartNote: boolean, hasEndNote: boolean): void {
@@ -1413,6 +1466,8 @@ export class GraphicalSlur extends GraphicalCurve {
         this.diagnostics.startAttachment = "notehead";
         this.diagnostics.endAttachment = "notehead";
         if (rules.SlurLayoutMode === "candidate") {
+            this.diagnostics.faults = [];
+            this.diagnostics.structuredFaults = [];
             this.layoutContext = this.createCrossStaffLayoutContext(
                 slurStartNote,
                 slurEndNote,
@@ -1442,9 +1497,7 @@ export class GraphicalSlur extends GraphicalCurve {
             const selected: SlurCurveCandidate = this.layoutResult.candidates.find(
                 (candidate): boolean => candidate.id === this.layoutResult.selectedCandidateId,
             );
-            this.diagnostics.faults = selected?.rejected
-                ? [`no-valid-candidate:${selected.rejectionReason ?? "unknown"}`]
-                : [];
+            this.updateCandidateSelectionFault(selected);
             this.diagnostics.startAttachment = selected?.startAnchor.type ?? "notehead";
             this.diagnostics.endAttachment = selected?.endAnchor.type ?? "notehead";
         } else {

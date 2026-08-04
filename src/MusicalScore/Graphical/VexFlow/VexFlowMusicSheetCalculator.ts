@@ -76,7 +76,7 @@ import { getDoricoDefaultTextFontFamily } from "../DoricoTextFontRouting";
 import { VexFlowSystemSpacingPlanner } from "./VexFlowHorizontalSpacing";
 import { calculateLinkedSlurLayouts } from "../SlurLayout/SlurLinkedLayoutEngine";
 import { SlurLinkedLayoutInput, SlurLinkedLayoutOutput } from "../SlurLayout/SlurLinkedLayoutEngine";
-import { SlurCurveCandidate, SlurCurveGeometry, SlurLayoutContext } from "../SlurLayout/SlurLayoutTypes";
+import { SlurCurveGeometry, SlurLayoutContext } from "../SlurLayout/SlurLayoutTypes";
 
 interface ContainerEntryInfo {
   anchorX?: number;
@@ -2864,17 +2864,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           if (!output) {
             return Number.POSITIVE_INFINITY;
           }
-          const rejectedCount: number = output.results.filter((result): boolean => {
-            const selected: SlurCurveCandidate = result.candidates.find(
-              (candidate): boolean => candidate.id === result.selectedCandidateId,
-            );
-            return selected?.rejected ?? true;
-          }).length;
-          return output.diagnostics.totalScore + rejectedCount * 1_000_000;
+          return output.diagnostics.totalScore;
         };
 
-      const legacyPlacement: PlacementEnum = sortedSegments[0].segment.placement;
-      let selectedPlacement: PlacementEnum = legacyPlacement;
+      const automaticPlacement: PlacementEnum = sortedSegments[0].segment.placement;
+      let selectedPlacement: PlacementEnum = automaticPlacement;
       if (sortedSegments[0].segment.canCompareAutomaticPlacements()) {
         const aboveOutput: SlurLinkedLayoutOutput = calculatePlacementRoute(PlacementEnum.Above);
         const belowOutput: SlurLinkedLayoutOutput = calculatePlacementRoute(PlacementEnum.Below);
@@ -2884,7 +2878,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           ? PlacementEnum.Above
           : belowScore < aboveScore
             ? PlacementEnum.Below
-            : legacyPlacement;
+            : automaticPlacement;
         for (const {segment} of sortedSegments) {
           segment.setPlacementCandidateScores(aboveScore, belowScore);
         }
