@@ -1278,37 +1278,66 @@ export class InstrumentReader {
   }
 
   /**
-   * In case of a [[Tuplet]], read NoteDuration from type.
+   * Compute a tuplet note's real (sounding) duration.
+   *
+   * Per the MusicXML spec a note's <duration> already reflects the tuplet ratio, so we normally take it
+   * verbatim. Doing so also preserves an exporter's rounding when the divisions value can't encode the
+   * exact tuplet fraction (e.g. a triplet eighth when divisions isn't divisible by 3).
+   *
+   * Some exporters (observed: musx2mxl 0.2.9) instead write the *un-reduced* type duration for tuplet
+   * notes — a triplet eighth carries the <duration> of a full eighth — which overflows the measure and
+   * makes OSMD play and space the notes as if they weren't a tuplet. We detect that (the written
+   * duration equals the note's dotted type duration instead of the smaller reduced value) and apply the
+   * time-modification ratio (normal-notes / actual-notes) ourselves. When this heuristic would misfire
+   * on an already-correct note the ratio is necessarily ~1, so the correction is then a no-op.
    * @param xmlNode
    * @returns {Fraction}
    */
   private getNoteDurationForTuplet(xmlNode: IXmlElement): Fraction {
     const durationNode: IXmlElement = xmlNode.element("duration");
     const durationValue: number = Number.parseInt(durationNode.value, 10);
-    return new Fraction(durationValue, this.divisions * 4);
-    // old method: calculate duration from type, tuplet normal notes etc. this was way more complex and inaccurate
-    // let duration: Fraction = new Fraction(0, 1);
-    // const typeDuration: Fraction = this.getNoteDurationFromTypeNode(xmlNode);
-    // // ^ TODO we need to respect dots for typeDuration. This is much more complicated than just taking duration from XML.
-    // if (xmlNode.element("time-modification")) {
-    //   const time: IXmlElement = xmlNode.element("time-modification");
-    //   if (time) {
-    //     if (time.element("actual-notes") !== undefined && time.element("normal-notes")) {
-    //       const actualNotes: IXmlElement = time.element("actual-notes");
-    //       const normalNotes: IXmlElement = time.element("normal-notes");
-    //       const normalDot: boolean = time.element("normal-dot") ? true : false;
-    //       if (actualNotes !== undefined && normalNotes) {
-    //         const actual: number = parseInt(actualNotes.value, 10);
-    //         let normal: number = parseInt(normalNotes.value, 10);
-    //         if (normalDot) {
-    //           normal *= 1.5;
-    //         }
-    //         duration = new Fraction(normal * typeDuration.Numerator + typeDuration.WholeValue, actual * typeDuration.Denominator);
-    //       }
-    //     }
-    //   }
-    // }
-    // return duration;
+    const xmlDuration: Fraction = new Fraction(durationValue, this.divisions * 4);
+
+    const timeModNode: IXmlElement = xmlNode.element("time-modification");
+    const actualNotesNode: IXmlElement = timeModNode?.element("actual-notes");
+    const normalNotesNode: IXmlElement = timeModNode?.element("normal-notes");
+    if (actualNotesNode && normalNotesNode) {
+      const actualNotes: number = parseInt(actualNotesNode.value, 10);
+      const normalNotes: number = parseInt(normalNotesNode.value, 10);
+      const typeDuration: Fraction = this.getDottedNoteDurationFromTypeNode(xmlNode);
+      // A correctly encoded tuplet note is shorter (or, for augmentation tuplets, longer) than its
+      // written type; only an un-reduced <duration> equals the note's dotted type duration exactly.
+      if (actualNotes > 0 && normalNotes > 0 && actualNotes !== normalNotes && typeDuration.RealValue > 0 &&
+          Math.abs(xmlDuration.RealValue - typeDuration.RealValue) < 1e-6) {
+        let ratioNumerator: number = normalNotes;
+        let ratioDenominator: number = actualNotes;
+        // a dotted normal-note reference occupies 1.5x the time; keep the ratio integer (x3 / x2 per dot)
+        const normalDots: number = timeModNode.elements("normal-dot").length;
+        for (let i: number = 0; i < normalDots; i++) {
+          ratioNumerator *= 3;
+          ratioDenominator *= 2;
+        }
+        return Fraction.multiply(xmlDuration, new Fraction(ratioNumerator, ratioDenominator));
+      }
+    }
+    return xmlDuration;
+  }
+
+  /**
+   * The note's duration derived from its <type>, including augmentation <dot>s (e.g. a dotted eighth
+   * yields 3/16). Returns a zero Fraction when no <type> is given.
+   * @param xmlNode
+   * @returns {Fraction}
+   */
+  private getDottedNoteDurationFromTypeNode(xmlNode: IXmlElement): Fraction {
+    const typeDuration: Fraction = this.getNoteDurationFromTypeNode(xmlNode);
+    const dots: number = xmlNode.elements("dot").length;
+    let addition: Fraction = typeDuration.clone();
+    for (let i: number = 0; i < dots; i++) {
+      addition = new Fraction(addition.Numerator, addition.Denominator * 2);
+      typeDuration.Add(addition);
+    }
+    return typeDuration;
   }
 
   private readExpressionStaffNumber(xmlNode: IXmlElement): number {
