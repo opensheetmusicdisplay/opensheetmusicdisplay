@@ -176,12 +176,37 @@ export class Glyph extends Element {
       this.code,
       this.options.cache
     );
-    this.bbox = Glyph.getOutlineBoundingBox(
-      this.metrics.outline,
-      this.scale,
-      0,
-      0
-    );
+    // The origin is fixed at 0,0, so the box depends only on the outline and the
+    // scale: every glyph with the same code and point size walks the same curves
+    // again. Cache the four numbers on the font, next to cached_outline, and hand
+    // out a fresh BoundingBox because callers keep a reference to it.
+    if (this.options.cache) {
+      const key = this.code + '/' + this.scale;
+      let cache = this.options.font.cached_bboxes;
+      if (!cache) {
+        cache = Object.create(null);
+        this.options.font.cached_bboxes = cache;
+      }
+      let box = cache[key];
+      if (!box) {
+        const computed = Glyph.getOutlineBoundingBox(
+          this.metrics.outline,
+          this.scale,
+          0,
+          0
+        );
+        box = [computed.getX(), computed.getY(), computed.getW(), computed.getH()];
+        cache[key] = box;
+      }
+      this.bbox = new BoundingBox(box[0], box[1], box[2], box[3]);
+    } else {
+      this.bbox = Glyph.getOutlineBoundingBox(
+        this.metrics.outline,
+        this.scale,
+        0,
+        0
+      );
+    }
   }
 
   getMetrics() {
