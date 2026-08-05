@@ -9,7 +9,7 @@
 | Finalized notation geometry | [VexFlow #325](https://github.com/vexflow/vexflow/pull/325) | Exact notehead, stem, beam, and articulation bounds |
 | Tuplet rerender stability | [VexFlow #326](https://github.com/vexflow/vexflow/pull/326) | Idempotent second render |
 | Grace-note slur geometry | [VexFlow #327](https://github.com/vexflow/vexflow/pull/327) | Beam-aware grace slur routing |
-| Immutable draft integration | `86bb9864fcbf020bf5a92bbdd7c615ea7bd383c5` | The combined temporary CI dependency; not a substitute for the review units above |
+| Immutable draft integration | `e9ae567e1e25d75075d8c4fae4fd8119cd6b0b08` | The combined, clean-install-verified temporary CI dependency; not a substitute for the review units above |
 
 ## Original draft branch
 
