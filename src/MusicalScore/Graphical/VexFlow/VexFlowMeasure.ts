@@ -722,7 +722,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const prevStaveModifiers: VF.StaveModifier[] = prevMeasure.stave.getModifiers();
                 for (let i: number = 0; i < prevStaveModifiers.length; i++) {
                     const nextStaveModifier: VF.StaveModifier = prevStaveModifiers[i];
-                    if (nextStaveModifier.hasOwnProperty("volta")) {
+                    const modifierCategory: string = nextStaveModifier.getCategory?.();
+                    if (modifierCategory === "voltas" || modifierCategory === "Volta") {
                         const prevskyBottomLineCalculator: SkyBottomLineCalculator = prevMeasure.ParentStaffLine.SkyBottomLineCalculator;
                         const prevStart: number = prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginLeft + 0.4;
                         const prevEnd: number = Math.max(
@@ -860,6 +861,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             if (tie instanceof VF.TabSlide) {
                 continue; // rendered later in VexFlowMusicSheetDrawer.drawGlissandi(), when all staffline measures are rendered
             }
+            this.applyOpticalTieEndpointShifts(tie);
             tie.setContext(ctx);
             tie.draw();
         }
@@ -969,6 +971,70 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 vexNote.setCenterXShift?.(vexNote.getCenterXShift() + delta);
                 positionNoteHeads();
             }
+        }
+    }
+
+    /**
+     * Refine only the two optically open tie cases that VexFlow's aggregate
+     * chord/modifier bounds cannot distinguish. The shifts are recalculated
+     * absolutely after final formatting so repeated renders remain stable.
+     */
+    private applyOpticalTieEndpointShifts(tie: VF.StaveTie): void {
+        tie.renderOptions.firstXShift = 0;
+        tie.renderOptions.lastXShift = 0;
+        const notes: VF.TieNotes = tie.getNotes();
+        const firstNote: any = notes.firstNote;
+        const lastNote: any = notes.lastNote;
+        const firstIndex: number = notes.firstIndexes?.[0];
+        const lastIndex: number = notes.lastIndexes?.[0];
+        const direction: number = tie.getDirection();
+        if (direction !== 1) {
+            return;
+        }
+
+        const selectedBounds: (note: any, index: number) => any = (note: any, index: number): any => {
+            if (!note || !Number.isInteger(index) || typeof note.getSelectedNoteHeadBounds !== "function") {
+                return undefined;
+            }
+            try {
+                return note.getSelectedNoteHeadBounds(index);
+            } catch {
+                return undefined;
+            }
+        };
+        const allBounds: (note: any) => any[] = (note: any): any[] => {
+            const count: number = note?.getYs?.().length ?? 0;
+            const bounds: any[] = [];
+            for (let index: number = 0; index < count; index++) {
+                const headBounds: any = selectedBounds(note, index);
+                if (headBounds) {
+                    bounds.push(headBounds);
+                }
+            }
+            return bounds;
+        };
+
+        const firstHead: any = selectedBounds(firstNote, firstIndex);
+        const firstHeads: any[] = allBounds(firstNote);
+        const firstIsOutermostBelow: boolean = firstHead && firstHeads.length > 0 &&
+            firstHead.centerY >= Math.max(...firstHeads.map((bounds: any): number => bounds.centerY)) - 0.01;
+        if (firstIsOutermostBelow && firstNote.getStemDirection?.() === -1) {
+            const desiredStartX: number = firstHead.right + this.rules.TieOpenNoteheadXClearance * unitInPixels;
+            tie.renderOptions.firstXShift = Math.min(0, desiredStartX - tie.getFirstX());
+        }
+
+        const lastHead: any = selectedBounds(lastNote, lastIndex);
+        const lastHeads: any[] = allBounds(lastNote);
+        const lastIsOutermostBelow: boolean = lastHead && lastHeads.length > 0 &&
+            lastHead.centerY >= Math.max(...lastHeads.map((bounds: any): number => bounds.centerY)) - 0.01;
+        const tieSpan: number = Math.abs(tie.getLastX() - tie.getFirstX()) / unitInPixels;
+        if (lastHead && lastHeads.length > 1 && !lastIsOutermostBelow &&
+            tieSpan <= this.rules.TieShortChordEndpointMaximumSpan) {
+            const desiredEndX: number = Math.min(
+                lastHead.left,
+                ...lastHeads.map((bounds: any): number => bounds.left),
+            ) - this.rules.TieShortChordEndpointXClearance * unitInPixels;
+            tie.renderOptions.lastXShift = Math.min(0, desiredEndX - tie.getLastX());
         }
     }
 

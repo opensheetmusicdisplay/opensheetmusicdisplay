@@ -724,6 +724,20 @@ function sampleCount(geometry: SlurCurveGeometry): number {
   return Math.max(24, Math.min(256, Math.ceil(Math.abs(geometry.p3.x - geometry.p0.x) / 0.2)));
 }
 
+function curveParameterAtX(geometry: SlurCurveGeometry, x: number): number {
+  let lower: number = 0;
+  let upper: number = 1;
+  for (let iteration: number = 0; iteration < 32; iteration++) {
+    const middle: number = (lower + upper) / 2;
+    if (pointOnSlurCurve(geometry, middle).x < x) {
+      lower = middle;
+    } else {
+      upper = middle;
+    }
+  }
+  return (lower + upper) / 2;
+}
+
 function isForbiddenObstacle(obstacle: SlurObstacle): boolean {
   switch (obstacle.type) {
     case "notehead":
@@ -733,9 +747,8 @@ function isForbiddenObstacle(obstacle: SlurObstacle): boolean {
     case "tuplet":
     case "grace-note":
     case "slur":
-      return true;
     case "stem":
-      return obstacle.endpoint !== undefined;
+      return true;
     default:
       return false;
   }
@@ -883,6 +896,36 @@ function evaluateGeometry(
           forbiddenObstacleIds.add(obstacle.id);
         }
       }
+    }
+  }
+  // Uniform samples are intentionally bounded for performance, but a stem can
+  // be much narrower than the resulting interval. Probe every hard obstacle at
+  // its own horizontal edges and centre so a curve cannot pass through a thin
+  // internal stem between two otherwise clear samples.
+  for (const obstacle of context.obstacles) {
+    if (!isForbiddenObstacle(obstacle) || obstacle.curve || forbiddenObstacleIds.has(obstacle.id)) {
+      continue;
+    }
+    const obstacleClearance: number = Math.max(obstacle.clearance, 0.08);
+    const left: number = Math.max(geometry.p0.x, obstacle.bounds.left - obstacleClearance);
+    const right: number = Math.min(geometry.p3.x, obstacle.bounds.right + obstacleClearance);
+    if (right <= left) {
+      continue;
+    }
+    const probeXs: number[] = [left, (left + right) / 2, right];
+    const intersectsObstacle: boolean = probeXs.some((x: number): boolean => {
+      const point: PointF2D = pointOnSlurCurve(geometry, curveParameterAtX(geometry, x));
+      if (isInsideEndpointAttachmentZone(context, geometry, obstacle, point, obstacleClearance)) {
+        return false;
+      }
+      return obstacle.polygon
+        ? polygonContainsWithClearance(obstacle.polygon, point, obstacleClearance)
+        : boundsContain(obstacle.bounds, point, obstacleClearance);
+    });
+    if (intersectsObstacle) {
+      obstacleIntersections += 1;
+      forbiddenObstacleIntersections += 1;
+      forbiddenObstacleIds.add(obstacle.id);
     }
   }
   return {

@@ -103,6 +103,113 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   it("aligns adjacent volta lines to the highest required lane", async (): Promise<void> => {
+      const source: Document = TestUtils.getScore("test_repeat_volta_1_2_3.musicxml");
+      const score: Document = source.cloneNode(true) as Document;
+      const firstEndingOctave: Element = score.querySelector('measure[number="2"] pitch octave');
+      firstEndingOctave.textContent = "7";
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+         TestUtils.getDivElement(document),
+      );
+      await osmd.load(score);
+      osmd.render();
+
+      const voltaYShift: (measureIndex: number) => number = (measureIndex: number): number => {
+         const measure: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(measureIndex, 0);
+         const volta: any = (measure as any).stave.getModifiers().find((modifier: any): boolean => {
+            const category: string = modifier.getCategory?.();
+            return category === "voltas" || category === "Volta";
+         });
+         expect(volta, `measure ${measureIndex + 1} volta`).to.not.equal(undefined);
+         return volta.getYShift();
+      };
+      const endingYShifts: number[] = [1, 2, 3].map(voltaYShift);
+
+      expect(Math.max(...endingYShifts) - Math.min(...endingYShifts)).to.be.lessThan(0.001);
+   });
+
+   it("uses the open lower notehead edge for a stem-down chord tie", async (): Promise<void> => {
+      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+<part id="P1"><measure number="1"><attributes><divisions>1</divisions>
+<time><beats>6</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+<note><pitch><step>F</step><octave>4</octave></pitch><duration>3</duration><tie type="start"/>
+<voice>1</voice><type>half</type><dot/><stem>down</stem><notations><tied type="start" orientation="under"/></notations></note>
+<note><chord/><pitch><step>C</step><octave>4</octave></pitch><duration>3</duration><tie type="start"/>
+<voice>1</voice><type>half</type><dot/><stem>down</stem><notations><tied type="start" orientation="under"/></notations></note>
+<note><pitch><step>F</step><octave>4</octave></pitch><duration>2</duration><tie type="stop"/>
+<voice>1</voice><type>half</type><stem>down</stem><notations><tied type="stop" orientation="under"/></notations></note>
+<note><chord/><pitch><step>C</step><octave>4</octave></pitch><duration>2</duration><tie type="stop"/>
+<voice>1</voice><type>half</type><stem>down</stem><notations><tied type="stop" orientation="under"/></notations></note>
+<note><rest/><duration>1</duration><voice>1</voice><type>quarter</type></note>
+</measure></part></score-partwise>`;
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+         TestUtils.getDivElement(document),
+      );
+      await osmd.load(xml);
+      osmd.render();
+
+      const measure: any = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+      const ties: any[] = measure.vfTies.filter((tie: any): boolean => tie.getNotes().firstNote);
+      expect(ties).to.have.length(2);
+      const tiesByHeight: any[] = ties.slice().sort((left: any, right: any): number => {
+         const leftNotes: any = left.getNotes();
+         const rightNotes: any = right.getNotes();
+         return leftNotes.firstNote.getSelectedNoteHeadBounds(leftNotes.firstIndexes[0]).centerY -
+            rightNotes.firstNote.getSelectedNoteHeadBounds(rightNotes.firstIndexes[0]).centerY;
+      });
+      const upperTie: any = tiesByHeight[0];
+      const lowerTie: any = tiesByHeight[1];
+      const lowerNotes: any = lowerTie.getNotes();
+      const lowerHead: any = lowerNotes.firstNote.getSelectedNoteHeadBounds(lowerNotes.firstIndexes[0]);
+      const lowerStartX: number = lowerTie.getRenderedTieCurves()[0].start.x;
+      const upperNotes: any = upperTie.getNotes();
+      const upperHead: any = upperNotes.firstNote.getSelectedNoteHeadBounds(upperNotes.firstIndexes[0]);
+      const upperStartX: number = upperTie.getRenderedTieCurves()[0].start.x;
+
+      expect(lowerStartX - lowerHead.right).to.be.closeTo(1.5, 0.01);
+      expect(upperStartX - upperHead.right).to.be.greaterThan(lowerStartX - lowerHead.right + 1);
+
+      osmd.render();
+      expect(lowerTie.getRenderedTieCurves()[0].start.x).to.be.closeTo(lowerStartX, 0.01);
+   });
+
+   it("leaves clearance before a short tie enters an inner chord note", async (): Promise<void> => {
+      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+<part id="P1"><measure number="1"><attributes><divisions>1</divisions>
+<time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>F</sign><line>4</line></clef></attributes>
+<note><pitch><step>F</step><octave>3</octave></pitch><duration>1</duration><tie type="start"/>
+<voice>1</voice><type>quarter</type><stem>down</stem><notations><tied type="start" orientation="under"/></notations></note>
+<note><pitch><step>A</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+<note><chord/><pitch><step>F</step><octave>3</octave></pitch><duration>1</duration><tie type="stop"/>
+<voice>1</voice><type>quarter</type><stem>down</stem><notations><tied type="stop" orientation="under"/></notations></note>
+<note><chord/><pitch><step>D</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+<note><rest/><duration>2</duration><voice>1</voice><type>half</type></note>
+</measure></part></score-partwise>`;
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+         TestUtils.getDivElement(document),
+      );
+      await osmd.load(xml);
+      osmd.render();
+
+      const measure: any = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+      const tie: any = measure.vfTies.find((candidate: any): boolean => {
+         const candidateNotes: any = candidate.getNotes();
+         return candidateNotes.lastNote?.getYs?.().length === 3;
+      });
+      expect(tie).to.not.equal(undefined);
+      const notes: any = tie.getNotes();
+      const heads: any[] = notes.lastNote.getYs().map((_: number, index: number): any =>
+         notes.lastNote.getSelectedNoteHeadBounds(index));
+      const chordLeft: number = Math.min(...heads.map((head: any): number => head.left));
+      const endX: number = tie.getRenderedTieCurves()[0].end.x;
+      expect(chordLeft - endX).to.be.closeTo(2, 0.01);
+
+      osmd.render();
+      expect(tie.getRenderedTieCurves()[0].end.x).to.be.closeTo(endX, 0.01);
+   });
+
    it("Renders a tie between enharmonic spellings", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_tie_enharmonic_spelling_1694.musicxml");
       const div: HTMLElement = TestUtils.getDivElement(document);

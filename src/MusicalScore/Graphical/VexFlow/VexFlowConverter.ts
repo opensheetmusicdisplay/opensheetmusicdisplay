@@ -297,7 +297,6 @@ export class VexFlowConverter {
                 if (note.sourceNote.Pitch) {
                     const restVfPitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
                     keys = [restVfPitch[0]];
-                    break;
                 } else {
                     keys = ["b/4"]; // default placement
 
@@ -351,7 +350,12 @@ export class VexFlowConverter {
                     xShift = 0;
                 }
                 //If we have more than one visible voice entry, shift the rests so no collision occurs
-                if (note.sourceNote.ParentStaff.Voices.length > 1) {
+                // A MusicXML display-step/display-octave pair is an explicit
+                // rest-placement instruction. Do not replace it with the
+                // heuristic multi-voice pitch (or add another line shift),
+                // which can move a correctly placed upper-voice rest outside
+                // the staff. Implicit rests still use collision avoidance.
+                if (note.sourceNote.ParentStaff.Voices.length > 1 && !note.sourceNote.Pitch) {
                     const staffGves: GraphicalVoiceEntry[] = note.parentVoiceEntry.parentStaffEntry.graphicalVoiceEntries;
                     //Find all visible voice entries (don't want invisible rests/notes causing visible shift)
                     const restVoiceId: number = note.parentVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId;
@@ -365,7 +369,17 @@ export class VexFlowConverter {
                             // unfortunately, we don't have functional note bounding boxes at this point,
                             //   so we have to infer the note positions and sizes manually.
                             const wantedStemDirection: StemDirectionType = gveNote.parentVoiceEntry.parentVoiceEntry.WantedStemDirection;
-                            const isUpperVoiceRest: boolean = restVoiceId === 1 || restVoiceId === 5;
+                            const restStemDirection: StemDirectionType =
+                                note.sourceNote.ParentVoiceEntry.WantedStemDirection;
+                            // Voice numbers are score-global in many MusicXML
+                            // exports (for example 1/3 on the upper piano staff
+                            // and 2/4 on the lower). Prefer the voice's semantic
+                            // stem direction so an upper lower-staff rest is not
+                            // mistaken for the lower voice and pushed far below
+                            // the system. Keep the historic ids as a fallback for
+                            // sources without an explicit/inferred direction.
+                            const isUpperVoiceRest: boolean = restStemDirection === StemDirectionType.Up ||
+                                (restStemDirection !== StemDirectionType.Down && (restVoiceId === 1 || restVoiceId === 5));
                             const lineShiftDirection: number = isUpperVoiceRest ? 1 : -1; // voice 1: put rest above (-y). other voices: below
                             const gveNotePitch: Pitch = gveNote.sourceNote.Pitch;
                             const noteHalftone: number = gveNotePitch.getHalfTone();

@@ -49,7 +49,6 @@ import { Staff } from "../VoiceData/Staff";
 import { OctaveShift } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { NoteHeadShape } from "../VoiceData/Notehead";
 import log from "loglevel";
-import { Dictionary } from "typescript-collections";
 import { GraphicalLyricEntry } from "./GraphicalLyricEntry";
 import { GraphicalLyricWord } from "./GraphicalLyricWord";
 import { GraphicalLine } from "./GraphicalLine";
@@ -3633,7 +3632,12 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateLyricsPosition(): void {
-        const lyricStaffEntriesDict: Dictionary<StaffLine, GraphicalStaffEntry[]> = new Dictionary<StaffLine, GraphicalStaffEntry[]>();
+        // StaffLine is an object identity, not a stable string key. The generic
+        // collections Dictionary stringifies object keys, making every staff
+        // line collide as "[object Object]" and allowing a later piano staff
+        // to erase the vocal staff's dash/extender inputs.
+        const lyricStaffEntriesByLine: Map<StaffLine, GraphicalStaffEntry[]> =
+            new Map<StaffLine, GraphicalStaffEntry[]>();
         // sort the lyriceVerseNumbers for every Instrument that has Lyrics
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.ParentMusicSheet.Instruments.length; idx < len; ++idx) {
             const instrument: Instrument = this.graphicalMusicSheet.ParentMusicSheet.Instruments[idx];
@@ -3648,7 +3652,7 @@ export abstract class MusicSheetCalculator {
                 const staffLine: StaffLine = musicSystem.StaffLines[idx3];
                 const lyricsStaffEntries: GraphicalStaffEntry[] =
                     this.calculateSingleStaffLineLyricsPosition(staffLine, staffLine.ParentStaff.ParentInstrument.LyricVersesNumbers);
-                lyricStaffEntriesDict.setValue(staffLine, lyricsStaffEntries);
+                lyricStaffEntriesByLine.set(staffLine, lyricsStaffEntries);
             }
         }
         // then fill in the lyric word dashes and lyrics extends/underscores
@@ -3656,7 +3660,7 @@ export abstract class MusicSheetCalculator {
             const musicSystem: MusicSystem = this.musicSystems[idx2];
             for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
                 const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                this.calculateLyricsExtendsAndDashes(lyricStaffEntriesDict.getValue(staffLine));
+                this.calculateLyricsExtendsAndDashes(lyricStaffEntriesByLine.get(staffLine) ?? []);
             }
         }
     }
@@ -3829,7 +3833,12 @@ export abstract class MusicSheetCalculator {
             if (!gse) {
                 continue;
             }
-            if (gse.hasOnlyRests()) {
+            const sameVoiceEntry: GraphicalVoiceEntry = gse.graphicalVoiceEntries.find(
+                (entry: GraphicalVoiceEntry): boolean => entry.parentVoiceEntry?.ParentVoice === lyricVoice,
+            );
+            if (sameVoiceEntry?.notes.length > 0 && sameVoiceEntry.notes.every(
+                (note: GraphicalNote): boolean => note.sourceNote.isRest(),
+            )) {
                 break;
             }
             const nextLineEntry: GraphicalLyricEntry = gse.LyricsEntries.find(

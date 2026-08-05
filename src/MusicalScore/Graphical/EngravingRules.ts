@@ -341,6 +341,12 @@ export class EngravingRules {
     public TieHeightMaximum: number;
     public TieHeightInterpolationK: number;
     public TieHeightInterpolationD: number;
+    /** Horizontal gap between an open outer notehead and a tie endpoint, in staff spaces. */
+    public TieOpenNoteheadXClearance: number;
+    /** Extra clearance before a short tie enters a non-outer chord note, in staff spaces. */
+    public TieShortChordEndpointXClearance: number;
+    /** Long ties retain their established chord-entry geometry, in staff spaces. */
+    public TieShortChordEndpointMaximumSpan: number;
     public SlurNoteHeadYOffset: number;
     public SlurEndArticulationYOffset: number;
     public SlurStartArticulationYOffsetOfArticulation: number;
@@ -896,6 +902,9 @@ export class EngravingRules {
         this.TieHeightMaximum = 1.2;
         this.TieHeightInterpolationK = 0.0288;
         this.TieHeightInterpolationD = 0.136;
+        this.TieOpenNoteheadXClearance = 0.15;
+        this.TieShortChordEndpointXClearance = 0.2;
+        this.TieShortChordEndpointMaximumSpan = 8;
         this.SlurNoteHeadYOffset = 0.5;
         this.SlurEndArticulationYOffset = 0.8;
         this.SlurStartArticulationYOffsetOfArticulation = 0.5;

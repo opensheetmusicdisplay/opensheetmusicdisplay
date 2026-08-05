@@ -354,7 +354,9 @@ export abstract class MusicSheetDrawer {
             this.drawStaffLine(staffLine);
 
             if (this.rules.RenderLyrics) {
-                // draw lyric dashes
+                // Lyric labels and connectors are staff-line children, but
+                // clipped/system backends only have their final rendering
+                // context after the measure pass has completed.
                 if (staffLine.LyricsDashes.length > 0) {
                     this.drawDashes(staffLine.LyricsDashes);
                 }
@@ -431,11 +433,6 @@ export abstract class MusicSheetDrawer {
             }
         }
 
-        if (this.rules.RenderLyrics) {
-            if (staffLine.LyricsDashes.length > 0) {
-                this.drawDashes(staffLine.LyricsDashes);
-            }
-        }
         this.drawOctaveShifts(staffLine);
 
         this.drawPedals(staffLine);
@@ -454,15 +451,21 @@ export abstract class MusicSheetDrawer {
     }
 
     protected drawLyricLines(lyricLines: GraphicalLine[], staffLine: StaffLine): void {
-        staffLine.LyricLines.forEach(lyricLine => {
+        lyricLines.forEach(lyricLine => {
             // TODO maybe we should put this in the calculation (MusicSheetCalculator.calculateLyricExtend)
             // then we can also remove staffLine argument
             // but same addition doesn't work in calculateLyricExtend, because y-spacing happens after lyrics positioning
-            lyricLine.Start.y += staffLine.PositionAndShape.AbsolutePosition.y;
-            lyricLine.End.y += staffLine.PositionAndShape.AbsolutePosition.y;
-            lyricLine.Start.x += staffLine.PositionAndShape.AbsolutePosition.x;
-            lyricLine.End.x += staffLine.PositionAndShape.AbsolutePosition.x;
-            this.drawGraphicalLine(lyricLine, this.rules.LyricUnderscoreLineWidth, lyricLine.colorHex);
+            // Keep the calculated line staff-relative. Mutating it into page
+            // coordinates here made every render/updateGraphic cycle apply the
+            // staff offset again until the extender left the visible page.
+            const staffPosition: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
+            const absoluteLine: GraphicalLine = new GraphicalLine(
+                new PointF2D(lyricLine.Start.x + staffPosition.x, lyricLine.Start.y + staffPosition.y),
+                new PointF2D(lyricLine.End.x + staffPosition.x, lyricLine.End.y + staffPosition.y),
+                lyricLine.Width,
+            );
+            absoluteLine.colorHex = lyricLine.colorHex;
+            this.drawGraphicalLine(absoluteLine, this.rules.LyricUnderscoreLineWidth, lyricLine.colorHex);
         });
     }
 

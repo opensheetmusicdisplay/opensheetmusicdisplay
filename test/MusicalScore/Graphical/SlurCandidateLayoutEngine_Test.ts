@@ -144,6 +144,29 @@ describe("candidate slur layout engine", (): void => {
     expect(selected?.rejected).to.equal(false);
   });
 
+  it("hard-rejects a thin internal stem between regular curve samples", (): void => {
+    const thinStem: SlurObstacle = {
+      id: "thin-middle-stem",
+      type: "stem",
+      bounds: {left: 9.087, right: 9.107, top: -1.7, bottom: 0.4},
+      clearance: 0.08,
+    };
+    const result: SlurLayoutResult = calculateCandidateSlurLayout(
+      context({obstacles: [thinStem]}),
+      seed,
+      options,
+    );
+
+    expect(result.candidates.some(
+      (candidate): boolean => candidate.rejectionObstacleIds?.includes(thinStem.id),
+    )).to.equal(true);
+    const selected: SlurCurveCandidate = result.candidates.find(
+      (candidate): boolean => candidate.id === result.selectedCandidateId,
+    );
+    expect(selected?.rejected).to.equal(false);
+    expect(selected?.rejectionObstacleIds ?? []).not.to.include(thinStem.id);
+  });
+
   it("does not let an endpoint-local polyphonic head inflate the high route", (): void => {
     const localHead: SlurObstacle = {
       id: "endpoint-local-polyphonic-head",
