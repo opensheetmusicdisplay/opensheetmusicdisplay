@@ -754,13 +754,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
     // correct position / bounding box (note.setIndex() needs to have been called)
     public correctNotePositions(): void {
         if (this.isTabMeasure) {
-            for (const voice of this.getVoicesWithinMeasure()) {
-                for (const ve of voice.VoiceEntries) {
-                    for (const note of ve.Notes) {
-                        const tabNote: TabNote = note as TabNote;
-                        const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
+            // Measure-scoped, same reasoning as the non-tab branch below: iterating
+            // Voice.VoiceEntries would walk every entry that voice has in the whole
+            // score, from a method that runs once per measure (quadratic in measure count).
+            for (const gse of this.staffEntries) {
+                for (const gve of gse.graphicalVoiceEntries) {
+                    for (const graphicalNote of gve.notes) {
+                        const tabNote: TabNote = graphicalNote.sourceNote as TabNote;
                         if (tabNote.StringNumberTab >= 0) {
-                            gNote.parentVoiceEntry.PositionAndShape.RelativePosition.y =
+                            gve.PositionAndShape.RelativePosition.y =
                                 (tabNote.StringNumberTab - 1) * this.rules.TabStaffInterlineHeightForBboxes;
                         }
                     }
@@ -795,7 +797,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         continue;
                     }
                     const vfnote: VF.StemmableNote = gNote.vfnote[0];
-                    // TODO grace notes are not included here, need to be fixed as well. (and a few triple beamed notes in Bach Air)
+                    // Note: grace notes are now included here (reached via the measure's graphical
+                    // staff entries), unlike the old Voice.VoiceEntries walk that skipped them.
                     let relPosY: number = 0;
                     if (gNote.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up && vfnote.getDuration() !== "w") {
                         relPosY += 3.5; // about 3.5 lines too high. this seems to be related to the default stem height, not actual stem height.

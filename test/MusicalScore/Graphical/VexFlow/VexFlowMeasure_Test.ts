@@ -22,6 +22,7 @@ import { GraphicalLabel } from "../../../../src/MusicalScore/Graphical/Graphical
 import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
+import { TabNote } from "../../../../src/MusicalScore/VoiceData/TabNote";
 import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
 import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
 import { AccidentalEnum } from "../../../../src/Common/DataObjects/Pitch";
@@ -541,6 +542,74 @@ describe("VexFlow Measure", () => {
             }
          }
          expect(slursChecked, "sanity check: the sample's slurs were iterated").to.be.greaterThan(50);
+         done();
+      }).catch(done);
+   });
+
+   // Non-regression test for correctNotePositions() on a part carrying BOTH a standard staff and a
+   // tablature staff (<staves>2</staves>), covering both branches of the measure-scoped rewrite
+   // (PR #1703 for the standard branch, plus the tab-branch follow-up). The tab staff's voice entries
+   // must be positioned by their string number, and the standard staff's notes must still receive their
+   // vertical bounding-box correction. The score has 3 measures, so correct output here also confirms the
+   // positioning is measure-local: it does not depend on the voice's entries in other measures.
+   it("Positions notes on a combined standard + tablature staff (correctNotePositions, both branches)", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_tab_plus_treble_staff_correctNotePositions_pr1703.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render(); // correctNotePositions() runs at the end of draw(); this must not throw
+         const interlineHeight: number = osmd.EngravingRules.TabStaffInterlineHeightForBboxes;
+
+         const measureCount: number = osmd.GraphicSheet.MeasureList.length;
+         expect(measureCount, "sample has 3 measures").to.equal(3);
+
+         let tabEntriesChecked: number = 0;
+         let standardNotesCorrected: number = 0;
+         for (let m: number = 0; m < measureCount; m++) {
+            const standardMeasure: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(m, 0);
+            const tabMeasure: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(m, 1);
+            expect(standardMeasure.isTabMeasure, `measure ${m}, staff 0 is a standard staff`).to.equal(false);
+            expect(tabMeasure.isTabMeasure, `measure ${m}, staff 1 is a tablature staff`).to.equal(true);
+
+            // Tab branch: each voice entry sits at (string - 1) * interline height of its (last) string note.
+            for (const se of tabMeasure.staffEntries) {
+               for (const gve of se.graphicalVoiceEntries) {
+                  let stringNumber: number = -1;
+                  for (const note of gve.notes) {
+                     const noteString: number = (note.sourceNote as TabNote).StringNumberTab;
+                     if (noteString >= 0) {
+                        stringNumber = noteString; // last string note wins, mirroring correctNotePositions()
+                     }
+                  }
+                  if (stringNumber < 0) {
+                     continue; // rest-only entry
+                  }
+                  expect(gve.PositionAndShape.RelativePosition.y,
+                     `tab entry on string ${stringNumber} is offset by (string - 1) * interline height`)
+                     .to.be.closeTo((stringNumber - 1) * interlineHeight, 1e-9);
+                  tabEntriesChecked++;
+               }
+            }
+
+            // Standard (non-tab) branch: notes receive a vertical correction, they are not left at y = 0.
+            for (const se of standardMeasure.staffEntries) {
+               for (const gve of se.graphicalVoiceEntries) {
+                  for (const note of gve.notes) {
+                     if (!note.sourceNote.isRest() && note.PositionAndShape.RelativePosition.y !== 0) {
+                        standardNotesCorrected++;
+                     }
+                  }
+               }
+            }
+         }
+
+         expect(tabEntriesChecked, "tab voice entries were positioned by string number").to.be.greaterThan(0);
+         expect(standardNotesCorrected, "standard-staff notes received a vertical correction").to.be.greaterThan(0);
          done();
       }).catch(done);
    });
