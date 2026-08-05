@@ -510,11 +510,22 @@ export class VexFlowConverter {
         if (notes.length > 1) {
             // for a single note, we can use duration += "s" (see above).
             //   If we use the below solution for a single note as well, the notehead sometimes goes over the stem.
+            let rebuildNoteHeads: boolean = false;
+            const keyProps: any[] = vfnote.getKeyProps();
+            const slashGlyph: string = VF.Note.getGlyphProps(vfnote.getDuration(), "s")?.codeHead;
             for (let n: number = 0; n < notes.length; n++) {
                 const note: VexFlowGraphicalNote = notes[n] as VexFlowGraphicalNote;
-                if (note.sourceNote.Notehead?.Shape === NoteHeadShape.SLASH) {
-                    (vfnote as any).note_heads[n].note_type = "s"; // slash notehead
+                if (note.sourceNote.Notehead?.Shape === NoteHeadShape.SLASH && keyProps[n] && slashGlyph) {
+                    // VexFlow 5 exposes noteheads through a read-only array and
+                    // rebuilds them from key properties when the note resets.
+                    // Store the per-head glyph in those source properties so a
+                    // mixed slash/normal chord survives later layout resets.
+                    keyProps[n].code = slashGlyph;
+                    rebuildNoteHeads = true;
                 }
+            }
+            if (rebuildNoteHeads) {
+                vfnote.reset();
             }
         }
 
@@ -675,6 +686,9 @@ export class VexFlowConverter {
         const modifierIndex: number = vexFlowGraphicalNote.vfnoteIndex ?? 0;
 
         for (const articulation of articulations) {
+            let modifierTarget: VF.StemmableNote = vfnote;
+            let modifierTargetGraphicalNote: GraphicalNote = gNote;
+            let modifierTargetIndex: number = modifierIndex;
             let vfArtPosition: number = VF.Modifier.Position.ABOVE;
 
             if (vfnote.getStemDirection() === VF.Stem.UP) {
@@ -739,14 +753,12 @@ export class VexFlowConverter {
                     vfArt = new VF.Articulation("am");
                     if (articulation.placement === undefined) { // downbow/upbow should be above by default
                         vfArtPosition = VF.Modifier.Position.ABOVE;
-                        articulation.placement = PlacementEnum.Above;
                     }
                     break;
                 }
                 case ArticulationEnum.fermata: {
                     vfArt = new VF.Articulation("a@a");
                     vfArtPosition = VF.Modifier.Position.ABOVE;
-                    articulation.placement = PlacementEnum.Above;
                     break;
                 }
                 case ArticulationEnum.marcatodown: {
@@ -771,18 +783,28 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.invertedfermata: {
                     const pve: VoiceEntry = gNote.sourceNote.ParentVoiceEntry;
-                    // find inverted fermata, push it to last voice entry in staffentry list,
-                    //   so that it doesn't overlap notes (gets displayed right below higher note)
-                    //   TODO this could maybe be moved elsewhere or done more elegantly,
-                    //     but on the other hand here it only gets checked if we have an inverted fermata anyways, seems efficient.
-                    if (pve !== sourceNote.ParentVoiceEntry.ParentSourceStaffEntry.VoiceEntries.last()) {
-                        pve.Articulations = pve.Articulations.slice(pve.Articulations.indexOf(articulation));
-                        pve.ParentSourceStaffEntry.VoiceEntries.last().Articulations.push(articulation);
-                        continue;
+                    const targetVoiceEntry: VoiceEntry = pve.ParentSourceStaffEntry.VoiceEntries.last();
+                    // Place an inverted fermata below the lowest voice without
+                    // moving it between source-model arrays. Mutating those
+                    // arrays made each updateGraphic()/render() pass append the
+                    // same articulation again and changed the second layout.
+                    if (pve !== targetVoiceEntry) {
+                        const targetGraphicalVoiceEntry: GraphicalVoiceEntry =
+                            gNote.parentVoiceEntry.parentStaffEntry.graphicalVoiceEntries.find(
+                                (entry: GraphicalVoiceEntry): boolean => entry.parentVoiceEntry === targetVoiceEntry,
+                            );
+                        const targetGraphicalNote: VexFlowGraphicalNote =
+                            targetGraphicalVoiceEntry?.notes?.[0] as VexFlowGraphicalNote;
+                        const targetStaveNote: VF.StemmableNote = targetGraphicalNote?.vfnote?.[0];
+                        if (!targetStaveNote) {
+                            continue;
+                        }
+                        modifierTarget = targetStaveNote;
+                        modifierTargetGraphicalNote = targetGraphicalNote;
+                        modifierTargetIndex = targetGraphicalNote.vfnoteIndex ?? 0;
                     }
                     vfArt = new VF.Articulation("a@u");
                     vfArtPosition = VF.Modifier.Position.BELOW;
-                    articulation.placement = PlacementEnum.Below;
                     break;
                 }
                 case ArticulationEnum.lefthandpizzicato: {
@@ -813,7 +835,6 @@ export class VexFlowConverter {
                     vfArt = new VF.Articulation("a|");
                     if (articulation.placement === undefined) { // downbow/upbow should be above by default
                         vfArtPosition = VF.Modifier.Position.ABOVE;
-                        articulation.placement = PlacementEnum.Above;
                     }
                     break;
                 }
@@ -829,8 +850,8 @@ export class VexFlowConverter {
                 vfArt.setPosition(vfArtPosition);
                 (vfArt as any).osmdArticulationEnum = articulationEnum;
                 (vfArt as any).osmdSourceArticulation = articulation;
-                (vfArt as any).osmdGraphicalNote = gNote;
-                (vfnote as StaveNote).addModifier(vfArt, modifierIndex);
+                (vfArt as any).osmdGraphicalNote = modifierTargetGraphicalNote;
+                (modifierTarget as StaveNote).addModifier(vfArt, modifierTargetIndex);
             }
         }
     }

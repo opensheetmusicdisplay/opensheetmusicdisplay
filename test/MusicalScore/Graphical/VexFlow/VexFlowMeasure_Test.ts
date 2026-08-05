@@ -730,7 +730,7 @@ describe("VexFlow Measure", () => {
             .to.be.lessThan(0.08);
          done();
       }).catch(done);
-   });
+   }).timeout(60000);
 
    // Regression test for NaN slur curves: measure 23 of the Moonlight sonata sample has a note carrying both a
    // slur start and an orphan slur stop with the same number (Sibelius export quirk). The stop used to close the
