@@ -2763,43 +2763,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const placement: PlacementEnum = placementSegment.determinePlacement();
 
       for (let index: number = 0; index < linkedSegments.length; index++) {
-        const {segment, staffLine} = linkedSegments[index];
+        const {segment} = linkedSegments[index];
         segment.setLinkedSegment(index, linkedSegments.length, placement, linkedGroupId);
-        if (this.rules.SlurLayoutMode === "legacy" && segment.prepareEndpointArticulationClearance()) {
-          for (const shift of segment.diagnostics.articulationShifts) {
-            if (placement === PlacementEnum.Above) {
-              staffLine.SkyBottomLineCalculator.updateSkyLineInRange(
-                shift.bounds.left,
-                shift.bounds.right,
-                shift.bounds.top,
-              );
-            } else {
-              staffLine.SkyBottomLineCalculator.updateBottomLineInRange(
-                shift.bounds.left,
-                shift.bounds.right,
-                shift.bounds.bottom,
-              );
-            }
-          }
-        }
       }
     }
 
     // Calculate curves only after final notehead, beam, articulation, and skyline geometry exists.
-    if (this.rules.SlurLayoutMode === "legacy") {
-      for (const musicSystem of this.musicSystems) {
-        for (const staffLine of musicSystem.StaffLines) {
-          const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
-          for (const gSlur of sortedGSlurs) {
-            if (!gSlur.slur.isCrossed()) {
-              gSlur.calculateCurve(this.rules);
-            }
-          }
-        }
-      }
-      return;
-    }
-
     // Candidate geometry is prepared without mutating the skyline. Source slurs are then
     // solved inner/shorter first, so every selected inner curve becomes a typed obstacle
     // when the next outer route refreshes its immutable context.

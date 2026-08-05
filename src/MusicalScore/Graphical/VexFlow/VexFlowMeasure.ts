@@ -975,9 +975,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     /**
-     * Refine only the two optically open tie cases that VexFlow's aggregate
-     * chord/modifier bounds cannot distinguish. The shifts are recalculated
-     * absolutely after final formatting so repeated renders remain stable.
+     * Bring a tie towards the selected outer notehead when its approach side
+     * is optically open. VexFlow's aggregate tie bounds intentionally clear the
+     * whole chord and its modifiers; that is too remote for an outer head whose
+     * facing side contains no intervening geometry. Shifts are recalculated
+     * absolutely from finalized bounds so repeated renders remain stable.
      */
     private applyOpticalTieEndpointShifts(tie: VF.StaveTie): void {
         tie.renderOptions.firstXShift = 0;
@@ -988,7 +990,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const firstIndex: number = notes.firstIndexes?.[0];
         const lastIndex: number = notes.lastIndexes?.[0];
         const direction: number = tie.getDirection();
-        if (direction !== 1) {
+        if (direction !== -1 && direction !== 1) {
             return;
         }
 
@@ -1013,22 +1015,115 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
             return bounds;
         };
+        const isOutermost: (head: any, heads: any[]) => boolean = (head, heads): boolean =>
+            Boolean(head) && heads.length > 0 && (direction === -1
+                ? head.centerY <= Math.min(...heads.map((bounds: any): number => bounds.centerY)) + 0.01
+                : head.centerY >= Math.max(...heads.map((bounds: any): number => bounds.centerY)) - 0.01);
+        const routeIsClear: (
+            note: any,
+            selectedIndex: number,
+            head: any,
+            fromX: number,
+            toX: number,
+            endpoint: "start" | "end",
+        ) => boolean = (note, selectedIndex, head, fromX, toX, endpoint): boolean => {
+            const left: number = Math.min(fromX, toX);
+            const right: number = Math.max(fromX, toX);
+            if (right - left < 0.001) {
+                return true;
+            }
+            const yShift: number = (tie.renderOptions.yShift ?? 0) * direction +
+                (endpoint === "start"
+                    ? tie.renderOptions.firstYShift ?? 0
+                    : tie.renderOptions.lastYShift ?? 0);
+            const routeY: number = (note.getYs?.()[selectedIndex] ?? head.centerY) + yShift;
+            const intersectsRoute: (bounds: any) => boolean = (bounds): boolean => Boolean(bounds) &&
+                bounds.right > left + 0.01 && bounds.left < right - 0.01 &&
+                routeY >= bounds.top - 0.5 && routeY <= bounds.bottom + 0.5;
+
+            // A right-hand start approach is closed by an up-stem; a left-hand
+            // end approach is closed by a down-stem. Keep this conservative
+            // even where the tie's vertical offset narrowly misses the stem's
+            // rectangular bounds: drawing through the stem-side corner still
+            // reads as a collision.
+            const stemDirection: number = note.getStemDirection?.();
+            if ((endpoint === "start" && stemDirection === 1) ||
+                (endpoint === "end" && stemDirection === -1)) {
+                return false;
+            }
+
+            const otherHeadBlocks: boolean = allBounds(note).some((bounds: any): boolean =>
+                bounds.index !== selectedIndex && intersectsRoute(bounds));
+            if (otherHeadBlocks) {
+                return false;
+            }
+
+            const stemExtents: any = note.getStemExtents?.();
+            const stemX: number = note.getStemX?.();
+            if (stemExtents && isFinite(stemX)) {
+                const halfStemWidth: number = (VF.Stem.WIDTH ?? 1) / 2;
+                const stemBounds: any = {
+                    left: stemX - halfStemWidth,
+                    right: stemX + halfStemWidth,
+                    top: Math.min(stemExtents.topY, stemExtents.baseY),
+                    bottom: Math.max(stemExtents.topY, stemExtents.baseY),
+                };
+                if (intersectsRoute(stemBounds)) {
+                    return false;
+                }
+            }
+
+            return !(note.getModifiers?.() ?? []).some((modifier: any): boolean => {
+                const modifierIndex: number = modifier.getIndex?.();
+                if (Number.isInteger(modifierIndex) && modifierIndex !== selectedIndex) {
+                    return false;
+                }
+                let boundingBox: any;
+                try {
+                    boundingBox = modifier.getBoundingBox?.();
+                } catch {
+                    return false;
+                }
+                if (!boundingBox) {
+                    return false;
+                }
+                return intersectsRoute({
+                    left: boundingBox.getX(),
+                    right: boundingBox.getX() + boundingBox.getW(),
+                    top: boundingBox.getY(),
+                    bottom: boundingBox.getY() + boundingBox.getH(),
+                });
+            });
+        };
 
         const firstHead: any = selectedBounds(firstNote, firstIndex);
         const firstHeads: any[] = allBounds(firstNote);
-        const firstIsOutermostBelow: boolean = firstHead && firstHeads.length > 0 &&
-            firstHead.centerY >= Math.max(...firstHeads.map((bounds: any): number => bounds.centerY)) - 0.01;
-        if (firstIsOutermostBelow && firstNote.getStemDirection?.() === -1) {
+        if (isOutermost(firstHead, firstHeads)) {
             const desiredStartX: number = firstHead.right + this.rules.TieOpenNoteheadXClearance * unitInPixels;
-            tie.renderOptions.firstXShift = Math.min(0, desiredStartX - tie.getFirstX());
+            const baseStartX: number = tie.getFirstX();
+            const endX: number = tie.getLastX();
+            if (desiredStartX < endX - 0.5 * unitInPixels &&
+                routeIsClear(firstNote, firstIndex, firstHead, desiredStartX, baseStartX, "start")) {
+                tie.renderOptions.firstXShift = desiredStartX - baseStartX;
+            }
         }
 
         const lastHead: any = selectedBounds(lastNote, lastIndex);
         const lastHeads: any[] = allBounds(lastNote);
-        const lastIsOutermostBelow: boolean = lastHead && lastHeads.length > 0 &&
-            lastHead.centerY >= Math.max(...lastHeads.map((bounds: any): number => bounds.centerY)) - 0.01;
+        const lastIsOutermost: boolean = isOutermost(lastHead, lastHeads);
+        if (lastIsOutermost) {
+            const desiredEndX: number = lastHead.left - this.rules.TieOpenNoteheadXClearance * unitInPixels;
+            const baseEndX: number = tie.getLastX();
+            const startX: number = tie.getFirstX() + tie.renderOptions.firstXShift;
+            if (desiredEndX > startX + 0.5 * unitInPixels &&
+                routeIsClear(lastNote, lastIndex, lastHead, baseEndX, desiredEndX, "end")) {
+                tie.renderOptions.lastXShift = desiredEndX - baseEndX;
+            }
+        }
+
         const tieSpan: number = Math.abs(tie.getLastX() - tie.getFirstX()) / unitInPixels;
-        if (lastHead && lastHeads.length > 1 && !lastIsOutermostBelow &&
+        if (tie.renderOptions.lastXShift === 0 && direction === 1 &&
+            lastHead && lastHeads.length > 1 && !lastIsOutermost &&
             tieSpan <= this.rules.TieShortChordEndpointMaximumSpan) {
             const desiredEndX: number = Math.min(
                 lastHead.left,

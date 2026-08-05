@@ -1,8 +1,6 @@
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 
-export type SlurLayoutMode = "legacy" | "candidate";
-
 export type SlurDiagnosticsLevel = "off" | "selected" | "candidates";
 
 export type SlurEndpointSide = "start" | "end";
@@ -68,8 +66,9 @@ export interface SlurEndpointContext {
     beams: readonly SlurBounds[];
     accidentals: readonly SlurBounds[];
     articulations: SlurArticulationContext[];
-    legacyAnchor: PointF2D;
-    legacyAttachment: SlurEndpointAttachment;
+    /** Geometry-derived starting point retained as one scored candidate. */
+    seedAnchor: PointF2D;
+    seedAttachment: SlurEndpointAttachment;
     tiedEndpoint: boolean;
     chordSize: number;
     grace: boolean;
@@ -109,7 +108,6 @@ export interface SlurEnvelopeContext {
 
 export interface SlurLayoutContext {
     id: string;
-    mode: SlurLayoutMode;
     direction: PlacementEnum;
     start: SlurEndpointContext;
     end: SlurEndpointContext;
@@ -214,7 +212,6 @@ export interface SlurSkylineUpdate {
 }
 
 export interface SlurLayoutResult {
-    mode: SlurLayoutMode;
     geometry: SlurCurveGeometry;
     selectedCandidateId: string;
     family: SlurCurveFamily;

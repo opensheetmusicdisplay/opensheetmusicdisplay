@@ -45,8 +45,8 @@ function endpoint(side: "start" | "end", x: number, boundary: boolean): SlurEndp
     beams: [],
     accidentals: [],
     articulations: [],
-    legacyAnchor: new PointF2D(x, boundary ? -1 : 1.2),
-    legacyAttachment: boundary ? "system-edge" : "notehead",
+    seedAnchor: new PointF2D(x, boundary ? -1 : 1.2),
+    seedAttachment: boundary ? "system-edge" : "notehead",
     tiedEndpoint: false,
     chordSize: boundary ? 0 : 1,
     grace: false,
@@ -65,7 +65,6 @@ function input(
   const context: SlurLayoutContext = {
     id: `linked-${segmentIndex}`,
     linkedGroupId: "linked-unit",
-    mode: "candidate",
     direction,
     start,
     end,
@@ -87,10 +86,10 @@ function input(
   return {
     context,
     seed: {
-      p0: new PointF2D(start.legacyAnchor.x, start.legacyAnchor.y),
+      p0: new PointF2D(start.seedAnchor.x, start.seedAnchor.y),
       p1: new PointF2D(6, -2.5),
       p2: new PointF2D(14, -2.5),
-      p3: new PointF2D(end.legacyAnchor.x, end.legacyAnchor.y),
+      p3: new PointF2D(end.seedAnchor.x, end.seedAnchor.y),
     },
   };
 }
@@ -142,8 +141,8 @@ describe("linked slur layout engine", (): void => {
     const reversed: SlurLinkedLayoutInput = input(0, false, false);
     reversed.context.start.notehead = {left: 17.5, right: 18.5, top: 1.5, bottom: 2.5};
     reversed.context.end.notehead = {left: 1.5, right: 2.5, top: 1.5, bottom: 2.5};
-    reversed.context.start.legacyAnchor = new PointF2D(18, 1.2);
-    reversed.context.end.legacyAnchor = new PointF2D(2, 1.2);
+    reversed.context.start.seedAnchor = new PointF2D(18, 1.2);
+    reversed.context.end.seedAnchor = new PointF2D(2, 1.2);
     reversed.seed.p0 = new PointF2D(18, 1.2);
     reversed.seed.p3 = new PointF2D(2, 1.2);
 

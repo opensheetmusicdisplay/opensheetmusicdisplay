@@ -174,6 +174,78 @@ describe("VexFlow Measure", () => {
       expect(lowerTie.getRenderedTieCurves()[0].start.x).to.be.closeTo(lowerStartX, 0.01);
    });
 
+   it("uses the selected outer notehead edges for above and below ties", async (): Promise<void> => {
+      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+<part id="P1"><measure number="1"><attributes><divisions>1</divisions>
+<time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+<note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><tie type="start"/>
+<voice>1</voice><type>half</type><stem>down</stem><notations><tied type="start" orientation="under"/></notations></note>
+<note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><tie type="start"/>
+<voice>1</voice><type>half</type><stem>down</stem><notations><tied type="start" orientation="over"/></notations></note>
+<note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><tie type="stop"/>
+<voice>1</voice><type>half</type><stem>up</stem><notations><tied type="stop" orientation="under"/></notations></note>
+<note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><tie type="stop"/>
+<voice>1</voice><type>half</type><stem>up</stem><notations><tied type="stop" orientation="over"/></notations></note>
+</measure></part></score-partwise>`;
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+         TestUtils.getDivElement(document),
+      );
+      await osmd.load(xml);
+      osmd.render();
+
+      const measure: any = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+      const ties: any[] = measure.vfTies.filter((tie: any): boolean =>
+         Boolean(tie.getNotes().firstNote && tie.getNotes().lastNote));
+      expect(ties).to.have.length(2);
+      for (const tie of ties) {
+         const notes: any = tie.getNotes();
+         const firstHead: any = notes.firstNote.getSelectedNoteHeadBounds(notes.firstIndexes[0]);
+         const lastHead: any = notes.lastNote.getSelectedNoteHeadBounds(notes.lastIndexes[0]);
+         const curve: any = tie.getRenderedTieCurves()[0];
+         expect(curve.start.x - firstHead.right).to.be.closeTo(1.5, 0.01);
+         expect(lastHead.left - curve.end.x).to.be.closeTo(1.5, 0.01);
+      }
+
+      const firstRender: {start: number, end: number}[] = ties.map((tie: any) => ({
+         start: tie.getRenderedTieCurves()[0].start.x,
+         end: tie.getRenderedTieCurves()[0].end.x,
+      }));
+      osmd.render();
+      ties.forEach((tie: any, index: number): void => {
+         expect(tie.getRenderedTieCurves()[0].start.x).to.be.closeTo(firstRender[index].start, 0.01);
+         expect(tie.getRenderedTieCurves()[0].end.x).to.be.closeTo(firstRender[index].end, 0.01);
+      });
+   });
+
+   it("does not shorten an outer tie endpoint through a facing stem", async (): Promise<void> => {
+      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+<part id="P1"><measure number="1"><attributes><divisions>1</divisions>
+<time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+<note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+<note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><tie type="start"/>
+<voice>1</voice><type>half</type><stem>up</stem><notations><tied type="start" orientation="over"/></notations></note>
+<note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><stem>down</stem></note>
+<note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><tie type="stop"/>
+<voice>1</voice><type>half</type><stem>down</stem><notations><tied type="stop" orientation="over"/></notations></note>
+</measure></part></score-partwise>`;
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+         TestUtils.getDivElement(document),
+      );
+      await osmd.load(xml);
+      osmd.render();
+
+      const measure: any = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+      const tie: any = measure.vfTies.find((candidate: any): boolean =>
+         Boolean(candidate.getNotes().firstNote && candidate.getNotes().lastNote));
+      expect(tie).to.not.equal(undefined);
+      expect(tie.renderOptions.firstXShift).to.equal(0);
+      expect(tie.renderOptions.lastXShift).to.equal(0);
+      expect(tie.getRenderedTieCurves()[0].start.x).to.be.closeTo(tie.getFirstX(), 0.01);
+      expect(tie.getRenderedTieCurves()[0].end.x).to.be.closeTo(tie.getLastX(), 0.01);
+   });
+
    it("leaves clearance before a short tie enters an inner chord note", async (): Promise<void> => {
       const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
@@ -580,9 +652,6 @@ describe("VexFlow Measure", () => {
 
       const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-      osmdOff.EngravingRules.SlurLayoutMode = "legacy";
-      osmdOn.EngravingRules.SlurLayoutMode = "legacy";
-
       osmdOff.load(xml).then(() => {
          osmdOff.EngravingRules.SlurFlattenToObstacle = false;
          osmdOff.render();
@@ -646,9 +715,6 @@ describe("VexFlow Measure", () => {
 
       const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-      osmdOff.EngravingRules.SlurLayoutMode = "legacy";
-      osmdOn.EngravingRules.SlurLayoutMode = "legacy";
-
       osmdOff.load(xml).then(() => {
          osmdOff.EngravingRules.SlurFlattenToObstacle = false;
          osmdOff.render();

@@ -20,7 +20,6 @@ import { Note } from "../VoiceData/Note";
 import {
     SlurCandidateScoreWeights,
     SlurDiagnosticsLevel,
-    SlurLayoutMode,
 } from "./SlurLayout/SlurLayoutTypes";
 
 /** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
@@ -317,8 +316,6 @@ export class EngravingRules {
     public SlurPlacementFromXML: boolean;
     public SlurPlacementAtStems: boolean;
     public SlurPlacementUseSkyBottomLine: boolean;
-    /** Selects the preserved single-solution implementation or the candidate-based slur solver. */
-    public SlurLayoutMode: SlurLayoutMode;
     /** Controls retained candidate diagnostics. Rendering is unaffected. */
     public SlurDiagnosticsLevel: SlurDiagnosticsLevel;
     /** Relative weights used by the deterministic candidate scorer. */
@@ -874,7 +871,6 @@ export class EngravingRules {
         this.SlurPlacementFromXML = true;
         this.SlurPlacementAtStems = false;
         this.SlurPlacementUseSkyBottomLine = false;
-        this.SlurLayoutMode = "candidate";
         this.SlurDiagnosticsLevel = "off";
         this.SlurCandidateScoreWeights = {
             clearance: 40,

@@ -151,20 +151,20 @@ export function generateSlurAnchors(
     const stemTipY: number | undefined = endpoint.stem
       ? (direction < 0 ? endpoint.stem.top : endpoint.stem.bottom) + direction * endpointGap
       : undefined;
-    let legacyDisplacement: number = endpoint.legacyAttachment === "voice-entry" ? 0.12 : 0.04;
-    if (endpoint.legacyAttachment === "stem" && stemTipX !== undefined && stemTipY !== undefined) {
-      legacyDisplacement += Math.hypot(seedPoint.x - stemTipX, seedPoint.y - stemTipY) * 0.42;
+    let seedDisplacement: number = endpoint.seedAttachment === "voice-entry" ? 0.12 : 0.04;
+    if (endpoint.seedAttachment === "stem" && stemTipX !== undefined && stemTipY !== undefined) {
+      seedDisplacement += Math.hypot(seedPoint.x - stemTipX, seedPoint.y - stemTipY) * 0.42;
     }
-    const legacyStemHasFinalGeometry: boolean =
-      endpoint.legacyAttachment === "stem" && Boolean(endpoint.stem);
-    const legacyContainerHasFinalGeometry: boolean =
-      endpoint.legacyAttachment === "voice-entry" && Boolean(endpoint.notehead || endpoint.stem);
-    const unreliableLegacyStem: boolean =
-      endpoint.legacyAttachment === "stem" && !endpoint.stem && Boolean(endpoint.notehead);
+    const seedStemHasFinalGeometry: boolean =
+      endpoint.seedAttachment === "stem" && Boolean(endpoint.stem);
+    const seedContainerHasFinalGeometry: boolean =
+      endpoint.seedAttachment === "voice-entry" && Boolean(endpoint.notehead || endpoint.stem);
+    const unreliableSeedStem: boolean =
+      endpoint.seedAttachment === "stem" && !endpoint.stem && Boolean(endpoint.notehead);
     if (
-      !legacyStemHasFinalGeometry &&
-      !legacyContainerHasFinalGeometry &&
-      !unreliableLegacyStem
+      !seedStemHasFinalGeometry &&
+      !seedContainerHasFinalGeometry &&
+      !unreliableSeedStem
     ) {
       result[side].push(
         makeAnchor(
@@ -172,9 +172,9 @@ export function generateSlurAnchors(
           side,
           seedPoint.x,
           seedPoint.y,
-          endpoint.legacyAttachment,
+          endpoint.seedAttachment,
           generationIndex++,
-          legacyDisplacement,
+          seedDisplacement,
         ),
       );
     }
@@ -197,8 +197,8 @@ export function generateSlurAnchors(
           noteheadSideY,
           "notehead-center",
           generationIndex++,
-          // The crown is a useful Dorico-style option, not a universal rule.
-          // Leave an ordinary, exact legacy shoulder slightly cheaper unless
+          // The crown is a useful engraving option, not a universal rule.
+          // Leave an ordinary, exact seed shoulder slightly cheaper unless
           // the crown produces materially better curve geometry.
           centerDisplacement * 0.1,
         ),
@@ -485,8 +485,8 @@ function familyGeometry(
 ): SlurCurveGeometry {
   if (
     family === "normal" &&
-    start.type === context.start.legacyAttachment &&
-    end.type === context.end.legacyAttachment &&
+    start.type === context.start.seedAttachment &&
+    end.type === context.end.seedAttachment &&
     Math.abs(start.x - seed.p0.x) < 0.0001 &&
     Math.abs(start.y - seed.p0.y) < 0.0001 &&
     Math.abs(end.x - seed.p3.x) < 0.0001 &&
@@ -601,7 +601,7 @@ function familyGeometry(
       requiredObstacleBow(context, start, end) * 1.08,
     );
   }
-  // The exact comparison seed is retained above as one candidate. Regenerated
+  // The exact geometry seed is retained above as one candidate. Regenerated
   // semantic endpoint routes derive their bow from the selected anchors and
   // typed obstacles instead of reproducing a remote notehead route.
   let commonBow: number = minimumBow * direction;
@@ -1310,7 +1310,6 @@ export function calculateCandidateSlurLayout(
   const retainedCandidates: readonly SlurCurveCandidate[] =
     options.diagnosticsLevel === "candidates" ? candidates : selected ? [selected] : [];
   return {
-    mode: "candidate",
     geometry,
     selectedCandidateId: selected?.id ?? `${context.id}-seed`,
     family: selected?.family ?? "normal",

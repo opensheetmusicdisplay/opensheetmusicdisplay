@@ -73,7 +73,7 @@ function continuationTarget(context: SlurLayoutContext, clearance: number): numb
 /**
  * Rebuild a system-break segment as a quadratic expressed in cubic form. This
  * guarantees a single curvature sign while giving the break endpoint a true
- * horizontal tangent. Independent legacy cubics can otherwise overshoot the
+ * horizontal tangent. Independently seeded cubics can otherwise overshoot the
  * system edge and become inflected when their endpoint heights differ.
  */
 function normalizeContinuationGeometry(

@@ -27,8 +27,8 @@ const endpoint: (side: "start" | "end", x: number) => SlurEndpointContext = (
   beams: [],
   accidentals: [],
   articulations: [],
-  legacyAnchor: new PointF2D(x, 1.2),
-  legacyAttachment: "notehead",
+  seedAnchor: new PointF2D(x, 1.2),
+  seedAttachment: "notehead",
   tiedEndpoint: false,
   chordSize: 1,
   grace: false,
@@ -59,7 +59,6 @@ const options: SlurCandidateLayoutOptions = {
 function context(overrides: Partial<SlurLayoutContext> = {}): SlurLayoutContext {
   return {
     id: "unit-slur",
-    mode: "candidate",
     direction: PlacementEnum.Above,
     start: endpoint("start", 2),
     end: endpoint("end", 18),
@@ -225,7 +224,7 @@ describe("candidate slur layout engine", (): void => {
     expect(routedBow).to.be.lessThan(seedBow * 1.5);
   });
 
-  it("offers a notehead crown while retaining the legacy attachment candidate", (): void => {
+  it("offers a notehead crown while retaining the geometry-seed attachment candidate", (): void => {
     const anchors: {start: SlurAnchorCandidate[], end: SlurAnchorCandidate[]} = generateSlurAnchors(
       context(),
       seed,
@@ -246,8 +245,8 @@ describe("candidate slur layout engine", (): void => {
       ...endpoint("start", 2),
       stem: {left: 1.95, right: 2.05, top: 0, bottom: 3},
       stemSide: true,
-      legacyAnchor: new PointF2D(5, 1.2),
-      legacyAttachment: "stem",
+      seedAnchor: new PointF2D(5, 1.2),
+      seedAttachment: "stem",
     };
     const driftedSeed: SlurCurveGeometry = {
       p0: new PointF2D(5, 1.2),
@@ -281,7 +280,7 @@ describe("candidate slur layout engine", (): void => {
       stem: {left: 17.95, right: 18.05, top: -0.5, bottom: 2.5},
       stemSide: true,
       tiedEndpoint: true,
-      legacyAttachment: "notehead",
+      seedAttachment: "notehead",
     };
     const anchors: {start: SlurAnchorCandidate[], end: SlurAnchorCandidate[]} = generateSlurAnchors(
       context({end: tiedEnd}),
@@ -299,7 +298,7 @@ describe("candidate slur layout engine", (): void => {
       (anchor) => anchor.type === "notehead-shoulder",
     );
     const alternateShoulder: SlurAnchorCandidate = generateSlurAnchors(
-      context({end: {...tiedEnd, legacyAttachment: "stem"}}),
+      context({end: {...tiedEnd, seedAttachment: "stem"}}),
       seed,
       options.obstacleClearance,
     ).end.find((anchor) => anchor.type === "notehead-shoulder");
@@ -414,7 +413,7 @@ describe("candidate slur layout engine", (): void => {
       // the real endpoint overlap this rule must reject.
       stem: {left: 17.95, right: 18.05, top: 1.2, bottom: 3},
       stemSide: true,
-      legacyAttachment: "stem",
+      seedAttachment: "stem",
       articulations: [{
         id: "staccato",
         glyphType: "a.",
@@ -678,7 +677,7 @@ describe("candidate slur layout engine", (): void => {
     ).to.equal(true);
   });
 
-  it("generates non-inflected alternatives when legacy controls overshoot a diagonal endpoint", (): void => {
+  it("generates non-inflected alternatives when seed controls overshoot a diagonal endpoint", (): void => {
     const overshootingSeed: SlurCurveGeometry = {
       p0: new PointF2D(2, 4),
       p1: new PointF2D(6, 4.3),
@@ -687,20 +686,20 @@ describe("candidate slur layout engine", (): void => {
     };
     const result: SlurLayoutResult = calculateCandidateSlurLayout(
       context({
-        start: { ...endpoint("start", 2), legacyAnchor: overshootingSeed.p0 },
-        end: { ...endpoint("end", 18), legacyAnchor: overshootingSeed.p3 },
+        start: { ...endpoint("start", 2), seedAnchor: overshootingSeed.p0 },
+        end: { ...endpoint("end", 18), seedAnchor: overshootingSeed.p3 },
       }),
       overshootingSeed,
       options,
     );
 
-    const retainedLegacy: SlurCurveCandidate = result.candidates.find(
+    const retainedSeed: SlurCurveCandidate = result.candidates.find(
       (candidate) =>
         candidate.family === "normal" &&
         candidate.startAnchor.generationIndex === 0 &&
         candidate.endAnchor.generationIndex === 0,
     );
-    expect(retainedLegacy.rejectionReason).to.equal("looping");
+    expect(retainedSeed.rejectionReason).to.equal("looping");
     expect(result.candidates.some((candidate) => !candidate.rejected)).to.equal(true);
   });
 
