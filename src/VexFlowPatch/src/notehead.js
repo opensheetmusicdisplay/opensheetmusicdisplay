@@ -241,7 +241,12 @@ export class NoteHead extends Note {
       const staveSpace = this.stave.getSpacingBetweenLines();
       drawSlashNoteHead(ctx, this.duration, head_x, y, stem_direction, staveSpace);
     } else {
-      Glyph.renderGlyph(ctx, head_x, y, glyph_font_scale, this.glyph_code, this.id);
+      // Don't pass a 6th argument here: it is Glyph.renderGlyph's `nocache` flag, and a truthy
+      // value disables the glyph outline cache and deletes the shared cached_outline, so the
+      // outline string is re-split on every notehead draw (and the note width path, which caches
+      // with the same key, keeps re-splitting too). The notehead's SVG id comes from openGroup,
+      // not from this call, so omitting it does not change the rendered output.
+      Glyph.renderGlyph(ctx, head_x, y, glyph_font_scale, this.glyph_code);
     }
 
     if (this.style) {
