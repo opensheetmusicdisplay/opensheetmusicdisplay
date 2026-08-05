@@ -12,6 +12,8 @@
     "test": "karma start --single-run --no-auto-watch",
     "test:watch": "karma start --no-single-run --auto-watch --browsers ChromeNoSecurity",
     "test:font-bundles": "node scripts/check-font-bundles.mjs",
+    "test:layout-corpus": "node --test scripts/render-layout-corpus.test.mjs",
+    "render:layout-corpus": "node scripts/render-layout-corpus.mjs --input test/data --renderer current=build/opensheetmusicdisplay.min.js --output build/layout-corpus --widths 1200 --annotations stage6 --title \"OSMD full annotated layout corpus\" --gallery paged --workers 2",
     "prepare": "npm run husky && npm run build",
     "build": "npm run lint && npm run build:webpack",
     "build:webpack": "webpack --progress --config webpack.prod.js",
@@ -79,6 +81,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.1",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/chai": "^5.2.3",
     "@types/mocha": "^9.1.1",

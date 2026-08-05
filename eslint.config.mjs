@@ -210,6 +210,16 @@ export default defineConfig(
         },
     },
     {
+        // Node-based browser renderer; callbacks passed to page.evaluate use browser globals.
+        files: ["scripts/render-layout-corpus*.mjs"],
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node,
+            },
+        },
+    },
+    {
         files: ["test/Util/*.js", "test/Util/*.mjs", "test/performance/*.mjs"],
         languageOptions: {
             globals: {
