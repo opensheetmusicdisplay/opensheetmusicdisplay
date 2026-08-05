@@ -102,6 +102,32 @@ function articulationScore(): string {
       </score-partwise>`;
 }
 
+function siblingChordArticulationScore(): string {
+   return `<?xml version="1.0" encoding="UTF-8"?>
+      <score-partwise version="4.0">
+         <part-list><score-part id="P1"><part-name>Chord articulation</part-name></score-part></part-list>
+         <part id="P1"><measure number="1">
+            <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+               <clef><sign>G</sign><line>2</line></clef></attributes>
+            <note>
+               <pitch><step>C</step><octave>5</octave></pitch>
+               <duration>2</duration><voice>1</voice><type>half</type><stem>down</stem>
+               <notations><articulations><staccato placement="above"/></articulations></notations>
+            </note>
+            <note>
+               <chord/><pitch><step>E</step><octave>5</octave></pitch>
+               <duration>2</duration><voice>1</voice><type>half</type><stem>down</stem>
+               <notations><slur number="1" type="start" placement="above"/></notations>
+            </note>
+            <note>
+               <pitch><step>G</step><octave>5</octave></pitch>
+               <duration>2</duration><voice>1</voice><type>half</type><stem>down</stem>
+               <notations><slur number="1" type="stop"/></notations>
+            </note>
+         </measure></part>
+      </score-partwise>`;
+}
+
 function systemBreakScore(): string {
    return `<?xml version="1.0" encoding="UTF-8"?>
       <score-partwise version="4.0">
@@ -456,6 +482,28 @@ describe("Stage 6 slur geometry", (): void => {
             }
          }
       }
+   });
+
+   it("includes a sibling chord note's articulation in endpoint routing", async (): Promise<void> => {
+      const osmd: OpenSheetMusicDisplay =
+         TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      await osmd.load(siblingChordArticulationScore());
+      osmd.EngravingRules.SlurLayoutMode = "candidate";
+      osmd.updateGraphic();
+      osmd.render();
+
+      const slur: GraphicalSlur = allSlurs(osmd)[0].slur;
+      const selected: SlurCurveCandidate = slur.layoutResult.candidates.find(
+         (candidate): boolean => candidate.id === slur.layoutResult.selectedCandidateId,
+      );
+
+      expect(slur.layoutContext.start.articulations).to.have.length(1);
+      expect(slur.layoutContext.start.articulations[0].classification).to.equal("duration");
+      expect(selected.startAnchor.type).to.equal("outside-articulation");
+      expect(selected.geometry.p0.y).to.be.at.most(
+         slur.layoutContext.start.articulations[0].bounds.top -
+         osmd.EngravingRules.SlurObstacleClearance,
+      );
    });
 
    it("refreshes candidate articulation coordinates after a stave moves to a later system", async (): Promise<void> => {

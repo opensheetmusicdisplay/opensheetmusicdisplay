@@ -267,8 +267,19 @@ export function generateSlurAnchors(
         stemTipX - seedPoint.x,
         stemTipY - seedPoint.y,
       );
-      const compactChordEndpoint: boolean =
-        endpoint.chordSize > 1 && Math.abs(seed.p3.x - seed.p0.x) < 10;
+      // Remote stem tips are undesirable for opposing/nested chord slurs, but
+      // a single compact phrase on the stem side should be allowed to join the
+      // finalized stems. Applying this guard to every chord caused polyphonic
+      // phrases to cross both stems on their way to notehead anchors.
+      const avoidRemoteCompactStem: boolean =
+        endpoint.chordSize > 1 &&
+        Math.abs(seed.p3.x - seed.p0.x) < 10 &&
+        context.isNested;
+      const displacementPenalty: number = endpoint.stemSide
+        ? avoidRemoteCompactStem
+          ? displacement + 0.85
+          : Math.min(displacement * 0.04, 0.12)
+        : displacement * 0.16 + 0.15;
       result[side].push(
         makeAnchor(
           context,
@@ -277,16 +288,7 @@ export function generateSlurAnchors(
           stemTipY,
           "stem-tip",
           generationIndex++,
-          displacement * (endpoint.stemSide
-            ? compactChordEndpoint ? 1 : 0.04
-            : 0.16) +
-            // Keep this geometrically valid fallback available if every head
-            // route collides, but do not let a short chord-to-chord slur leap
-            // to remote stem tips merely to gain cheap clearance. The fixed
-            // semantic cost is needed when the legacy seed is already at the
-            // stem tip, making its geometric displacement misleadingly zero.
-            (compactChordEndpoint ? 0.85 : 0) +
-            (endpoint.stemSide ? 0 : 0.15),
+          displacementPenalty,
         ),
       );
     }
@@ -425,14 +427,17 @@ function requiredObstacleBow(
     if (!isForbiddenObstacle(obstacle)) {
       continue;
     }
+    // Do not make the high-family generator dive around an object contained
+    // wholly inside an endpoint attachment zone, including a neighbouring
+    // polyphonic head without endpoint metadata. The exact evaluator still
+    // rejects a curve that actually crosses it; this only prevents a local
+    // object from demanding an implausibly steep phrase-wide bow.
     const localStartObstacle: boolean = obstacle.type !== "accidental" &&
-      (obstacle.endpoint === "start" || obstacle.endpoint === "both") &&
       obstacle.bounds.right <= Math.max(
         start.x,
         context.start.notehead?.right ?? start.x,
       ) + obstacle.clearance;
     const localEndObstacle: boolean = obstacle.type !== "accidental" &&
-      (obstacle.endpoint === "end" || obstacle.endpoint === "both") &&
       obstacle.bounds.left >= Math.min(
         end.x,
         context.end.notehead?.left ?? end.x,
@@ -445,14 +450,28 @@ function requiredObstacleBow(
     if (right <= left) {
       continue;
     }
-    const x: number = (left + right) / 2;
-    const baseline: number = lineY(start, end, x);
-    const neededAtX: number = context.direction === PlacementEnum.Above
-      ? baseline - (obstacle.bounds.top - obstacle.clearance)
-      : obstacle.bounds.bottom + obstacle.clearance - baseline;
-    const t: number = (x - start.x) / Math.max(0.001, end.x - start.x);
-    const cubicControlInfluence: number = Math.max(0.04, 3 * t * (1 - t));
-    required = Math.max(required, neededAtX / cubicControlInfluence);
+    // A sloped beam or a compact tuplet can be most restrictive away from its
+    // bounding-box centre. Sample the complete overlap so the routed family
+    // clears the real obstacle with the least sufficient bow instead of either
+    // missing an edge or falling back to an excessively deep source curve.
+    for (let sample: number = 0; sample <= 8; sample++) {
+      const x: number = left + (right - left) * (sample / 8);
+      const t: number = (x - start.x) / Math.max(0.001, end.x - start.x);
+      if (t <= 0.001 || t >= 0.999) {
+        continue;
+      }
+      const baseline: number = lineY(start, end, x);
+      const polygonRange: {top: number, bottom: number} | undefined = obstacle.polygon
+        ? polygonYRangeAtX(obstacle.polygon, x)
+        : undefined;
+      const obstacleTop: number = polygonRange?.top ?? obstacle.bounds.top;
+      const obstacleBottom: number = polygonRange?.bottom ?? obstacle.bounds.bottom;
+      const neededAtX: number = context.direction === PlacementEnum.Above
+        ? baseline - (obstacleTop - obstacle.clearance)
+        : obstacleBottom + obstacle.clearance - baseline;
+      const cubicControlInfluence: number = Math.max(0.04, 3 * t * (1 - t));
+      required = Math.max(required, neededAtX / cubicControlInfluence);
+    }
   }
   return Math.max(0, required);
 }
@@ -536,10 +555,34 @@ function familyGeometry(
   }
   const p1x: number = start.x + width * firstRatio;
   const p2x: number = start.x + width * secondRatio;
-  const seedP1Line: number = lineY(seed.p0, seed.p3, seed.p1.x);
-  const seedP2Line: number = lineY(seed.p0, seed.p3, seed.p2.x);
   const direction: number = context.direction === PlacementEnum.Above ? -1 : 1;
   let minimumBow: number = Math.min(3.2, Math.max(0.65, Math.abs(width) * 0.055));
+  const derivesBowFromSemanticAnchors: boolean = [start.type, end.type].some(
+    (type: SlurAnchorCandidate["type"]): boolean =>
+      type === "stem-tip" || type === "outside-articulation",
+  );
+  const seedP1Line: number = lineY(seed.p0, seed.p3, seed.p1.x);
+  const seedP2Line: number = lineY(seed.p0, seed.p3, seed.p2.x);
+  const seedBow: number = Math.max(
+    Math.abs(seed.p1.y - seedP1Line),
+    Math.abs(seed.p2.y - seedP2Line),
+  );
+  if (derivesBowFromSemanticAnchors) {
+    // Retain enough of the source contour to leave the staff cleanly, but cap
+    // it relative to the newly selected span. A moved local endpoint must not
+    // inherit the full depth of a remote notehead route. Dense notation is
+    // handled by the high family's sampled obstacle clearance below.
+    minimumBow = Math.max(minimumBow, Math.min(seedBow, minimumBow * 2.2));
+  } else {
+    // Ordinary head routes retain the established curve's obstacle-clearing
+    // bow as a floor. Semantic endpoint moves deliberately opt out: carrying
+    // a notehead route's bow over to a stem or articulation anchor produces a
+    // detached, needlessly deep curve around otherwise local geometry.
+    minimumBow = Math.max(
+      minimumBow,
+      seedBow,
+    );
+  }
   if (context.isCrossStaff) {
     // A steep cross-staff route needs enough independent bow to read as a
     // slur rather than a loose diagonal joining two different staves.
@@ -558,12 +601,10 @@ function familyGeometry(
       requiredObstacleBow(context, start, end) * 1.08,
     );
   }
-  let commonBow: number =
-    Math.max(
-      minimumBow,
-      Math.abs(seed.p1.y - seedP1Line),
-      Math.abs(seed.p2.y - seedP2Line),
-    ) * direction;
+  // The exact comparison seed is retained above as one candidate. Regenerated
+  // semantic endpoint routes derive their bow from the selected anchors and
+  // typed obstacles instead of reproducing a remote notehead route.
+  let commonBow: number = minimumBow * direction;
   if (context.isCrossStaff) {
     // `commonBow` is applied on the screen's y axis. For a steep cross-staff
     // phrase that represents only a fraction of the visible, perpendicular
@@ -604,6 +645,79 @@ function boundsContain(
     point.y >= bounds.top - clearance &&
     point.y <= bounds.bottom + clearance
   );
+}
+
+function distanceToSegment(point: PointF2D, start: PointF2D, end: PointF2D): number {
+  const dx: number = end.x - start.x;
+  const dy: number = end.y - start.y;
+  const lengthSquared: number = dx * dx + dy * dy;
+  if (lengthSquared <= 0.000001) {
+    return Math.hypot(point.x - start.x, point.y - start.y);
+  }
+  const ratio: number = Math.max(
+    0,
+    Math.min(1, ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared),
+  );
+  return Math.hypot(point.x - (start.x + ratio * dx), point.y - (start.y + ratio * dy));
+}
+
+function polygonContainsWithClearance(
+  polygon: readonly PointF2D[],
+  point: PointF2D,
+  clearance: number,
+): boolean {
+  if (polygon.length < 3) {
+    return false;
+  }
+  let inside: boolean = false;
+  for (let index: number = 0, previous: number = polygon.length - 1;
+    index < polygon.length;
+    previous = index++) {
+    const currentPoint: PointF2D = polygon[index];
+    const previousPoint: PointF2D = polygon[previous];
+    if (distanceToSegment(point, previousPoint, currentPoint) <= clearance) {
+      return true;
+    }
+    const crossesRay: boolean =
+      (currentPoint.y > point.y) !== (previousPoint.y > point.y) &&
+      point.x <
+        ((previousPoint.x - currentPoint.x) * (point.y - currentPoint.y)) /
+          (previousPoint.y - currentPoint.y) +
+        currentPoint.x;
+    if (crossesRay) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function polygonYRangeAtX(
+  polygon: readonly PointF2D[],
+  x: number,
+): {top: number, bottom: number} | undefined {
+  const intersections: number[] = [];
+  for (let index: number = 0; index < polygon.length; index++) {
+    const start: PointF2D = polygon[index];
+    const end: PointF2D = polygon[(index + 1) % polygon.length];
+    const minimumX: number = Math.min(start.x, end.x);
+    const maximumX: number = Math.max(start.x, end.x);
+    if (x < minimumX || x > maximumX) {
+      continue;
+    }
+    if (Math.abs(end.x - start.x) <= 0.000001) {
+      intersections.push(start.y, end.y);
+      continue;
+    }
+    const ratio: number = (x - start.x) / (end.x - start.x);
+    intersections.push(start.y + (end.y - start.y) * ratio);
+  }
+  if (intersections.length === 0) {
+    return undefined;
+  }
+  return {
+    top: Math.min(...intersections),
+    bottom: Math.max(...intersections),
+  };
 }
 
 function sampleCount(geometry: SlurCurveGeometry): number {
@@ -758,7 +872,11 @@ function evaluateGeometry(
         }
         continue;
       }
-      if (boundsContain(obstacle.bounds, point, Math.max(obstacle.clearance, 0.08))) {
+      const obstacleClearance: number = Math.max(obstacle.clearance, 0.08);
+      const intersectsObstacle: boolean = obstacle.polygon
+        ? polygonContainsWithClearance(obstacle.polygon, point, obstacleClearance)
+        : boundsContain(obstacle.bounds, point, obstacleClearance);
+      if (intersectsObstacle) {
         obstacleIntersections += 1;
         if (isForbiddenObstacle(obstacle)) {
           forbiddenObstacleIntersections += 1;
@@ -894,9 +1012,40 @@ function scoreCandidate(
   return score;
 }
 
+function keepsDurationArticulationsInside(
+  candidate: SlurCurveCandidate,
+  context: SlurLayoutContext,
+  clearance: number,
+): boolean {
+  const expectedPosition: number = context.direction === PlacementEnum.Above ? 3 : 4;
+  for (const endpoint of [context.start, context.end]) {
+    const articulations: SlurArticulationContext[] = endpoint.articulations.filter(
+      (articulation): boolean =>
+        articulation.classification === "duration" &&
+        articulation.position === expectedPosition,
+    );
+    if (articulations.length === 0) {
+      continue;
+    }
+    const point: PointF2D = endpoint.side === "start"
+      ? candidate.geometry.p0
+      : candidate.geometry.p3;
+    const clearsArticulations: boolean = context.direction === PlacementEnum.Above
+      ? point.y <= Math.min(...articulations.map((articulation): number => articulation.bounds.top))
+        - clearance
+      : point.y >= Math.max(...articulations.map((articulation): number => articulation.bounds.bottom))
+        + clearance;
+    if (!clearsArticulations) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function rejectionReason(
   candidate: SlurCurveCandidate,
   context: SlurLayoutContext,
+  options: SlurCandidateLayoutOptions,
 ): string | undefined {
   const { p0, p1, p2, p3 } = candidate.geometry;
   if (![p0, p1, p2, p3].every(finitePoint)) {
@@ -938,6 +1087,9 @@ function rejectionReason(
     : 5.6713;
   if (startSlope > maximumSlope || endSlope > maximumSlope) {
     return "excessively-steep";
+  }
+  if (!keepsDurationArticulationsInside(candidate, context, options.obstacleClearance)) {
+    return "duration-articulation-outside-slur";
   }
   return undefined;
 }
@@ -1072,7 +1224,7 @@ export function calculateCandidateSlurLayout(
           generationIndex,
           articulationAdjustments: [],
         };
-        candidate.rejectionReason = rejectionReason(candidate, context);
+        candidate.rejectionReason = rejectionReason(candidate, context, options);
         if (!candidate.rejectionReason) {
           const evaluation: EvaluatedGeometry = evaluateGeometry(context, candidate.geometry, options);
           if (evaluation.forbiddenObstacleIntersections > 0) {

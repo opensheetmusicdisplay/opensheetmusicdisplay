@@ -88,6 +88,7 @@ interface RenderedSlurEndpointGeometry {
     articulations: {
         baseline: PointF2D;
         modifier: any;
+        note: GraphicalNote;
         type: string;
         position: number;
         bounds: GraphicalSlurBoundsDiagnostics;
@@ -349,6 +350,7 @@ export class GraphicalSlur extends GraphicalCurve {
                     layout?.y ?? modifier.getY?.() ?? modifier.y,
                 ),
                 modifier,
+                note,
                 type: modifier.type ?? modifier.getText?.() ?? "unknown",
                 position: modifier.getPosition?.() ?? modifier.position,
                 bounds: toStaffLineBounds(boundingBox),
@@ -381,11 +383,19 @@ export class GraphicalSlur extends GraphicalCurve {
     ): RenderedSlurEndpointGeometry {
         const chordNotes: GraphicalNote[] = note.parentVoiceEntry.notes;
         let selected: RenderedSlurEndpointGeometry;
+        const articulations: RenderedSlurEndpointGeometry["articulations"] = [];
+        const seenArticulations: Set<any> = new Set<any>();
         for (const chordNote of chordNotes) {
             const candidate: RenderedSlurEndpointGeometry =
                 this.renderedEndpointGeometry(chordNote, staffLine);
             if (!candidate) {
                 continue;
+            }
+            for (const articulation of candidate.articulations) {
+                if (!seenArticulations.has(articulation.modifier)) {
+                    seenArticulations.add(articulation.modifier);
+                    articulations.push(articulation);
+                }
             }
             if (!selected
                 || (this.placement === PlacementEnum.Above
@@ -394,7 +404,7 @@ export class GraphicalSlur extends GraphicalCurve {
                 selected = candidate;
             }
         }
-        return selected;
+        return selected ? {...selected, articulations} : undefined;
     }
 
     private displaceEndpointArticulations(
@@ -851,7 +861,7 @@ export class GraphicalSlur extends GraphicalCurve {
                     const id: string = `${side}-articulation-${index}`;
                     this.candidateArticulationBindings.set(id, {
                         modifier: articulation.modifier,
-                        note,
+                        note: articulation.note ?? note,
                         staffLine,
                         endpoint: side,
                         type: articulation.type,
@@ -1570,7 +1580,7 @@ export class GraphicalSlur extends GraphicalCurve {
                 const id: string = `${side}-articulation-${index}`;
                 this.candidateArticulationBindings.set(id, {
                     modifier: articulation.modifier,
-                    note,
+                    note: articulation.note ?? note,
                     staffLine: side === "start" ? startStaffLine : endStaffLine,
                     endpoint: side,
                     type: articulation.type,

@@ -144,6 +144,34 @@ describe("candidate slur layout engine", (): void => {
     expect(selected?.rejected).to.equal(false);
   });
 
+  it("does not let an endpoint-local polyphonic head inflate the high route", (): void => {
+    const localHead: SlurObstacle = {
+      id: "endpoint-local-polyphonic-head",
+      type: "notehead",
+      bounds: {left: 1.6, right: 2.4, top: 2.8, bottom: 5.8},
+      clearance: 0.1,
+    };
+    const belowSeed: SlurCurveGeometry = {
+      p0: new PointF2D(2, 2.8),
+      p1: new PointF2D(6, 6),
+      p2: new PointF2D(14, 6),
+      p3: new PointF2D(18, 2.8),
+    };
+    const result: SlurLayoutResult = calculateCandidateSlurLayout(
+      context({direction: PlacementEnum.Below, obstacles: [localHead]}),
+      belowSeed,
+      options,
+    );
+    const high: SlurCurveCandidate = result.candidates.find(
+      (candidate): boolean => candidate.family === "high",
+    );
+
+    expect(high.geometry.p1.y).to.be.lessThan(10);
+    expect(result.candidates.some(
+      (candidate): boolean => candidate.rejectionObstacleIds?.includes(localHead.id),
+    )).to.equal(true);
+  });
+
   it("raises obstacle-routed curves only as far as their clearance requires", (): void => {
     const nearlyClearedSeed: SlurCurveGeometry = {
       p0: new PointF2D(2, 1.2),
@@ -190,7 +218,7 @@ describe("candidate slur layout engine", (): void => {
     expect(anchors.end.some((anchor) => anchor.type === "notehead")).to.equal(true);
   });
 
-  it("prefers finalized stem geometry to a drifted staff-entry stem anchor", (): void => {
+  it("does not reuse a drifted staff-entry stem anchor", (): void => {
     const driftedStart: SlurEndpointContext = {
       ...endpoint("start", 2),
       stem: {left: 1.95, right: 2.05, top: 0, bottom: 3},
@@ -214,10 +242,14 @@ describe("candidate slur layout engine", (): void => {
     const selected: SlurCurveCandidate = result.candidates.find(
       (candidate) => candidate.id === result.selectedCandidateId,
     );
+    const finalizedStem: SlurAnchorCandidate = anchors.start.find(
+      (anchor): boolean => anchor.type === "stem-tip",
+    );
 
     expect(anchors.start.some((anchor) => anchor.type === "stem")).to.equal(false);
-    expect(selected.startAnchor.type).to.equal("stem-tip");
-    expect(selected.geometry.p0.x).to.be.closeTo(2.08, 0.001);
+    expect(finalizedStem.x).to.be.closeTo(2.08, 0.001);
+    expect(selected.startAnchor.type).not.to.equal("stem");
+    expect(selected.geometry.p0.x).not.to.be.closeTo(driftedSeed.p0.x, 0.001);
   });
 
   it("does not penalize a finalized stem-tip merely because its note is tied", (): void => {
@@ -288,7 +320,7 @@ describe("candidate slur layout engine", (): void => {
     expect(anchors.start.some((anchor) => anchor.type === "stem-tip")).to.equal(true);
   });
 
-  it("keeps a compact chord stem tip as a fallback behind the outer head", (): void => {
+  it("keeps a nested compact chord stem tip as a fallback behind the outer head", (): void => {
     const compactSeed: SlurCurveGeometry = {
       p0: new PointF2D(2, 1.2),
       p1: new PointF2D(3.5, -0.8),
@@ -302,7 +334,7 @@ describe("candidate slur layout engine", (): void => {
       stemSide: true,
     };
     const anchors: {start: SlurAnchorCandidate[], end: SlurAnchorCandidate[]} = generateSlurAnchors(
-      context({start: chordStart, end: endpoint("end", 8)}),
+      context({start: chordStart, end: endpoint("end", 8), isNested: true}),
       compactSeed,
       options.obstacleClearance,
     );
@@ -315,10 +347,49 @@ describe("candidate slur layout engine", (): void => {
     expect(penalty(stemTip)).to.be.greaterThan(penalty(notehead));
   });
 
+  it("lets a single compact chord phrase use finalized stem tips", (): void => {
+    const compactSeed: SlurCurveGeometry = {
+      p0: new PointF2D(2, 1.2),
+      p1: new PointF2D(3.5, -4.8),
+      p2: new PointF2D(6.5, -4.8),
+      p3: new PointF2D(8, 1.2),
+    };
+    const chordEndpoint: (side: "start" | "end", x: number) => SlurEndpointContext =
+      (side, x): SlurEndpointContext => ({
+        ...endpoint(side, x),
+        chordSize: 3,
+        stem: {left: x - 0.05, right: x + 0.05, top: -2, bottom: 3},
+        stemSide: true,
+      });
+    const layoutContext: SlurLayoutContext = context({
+      start: chordEndpoint("start", 2),
+      end: chordEndpoint("end", 8),
+    });
+    const result: SlurLayoutResult = calculateCandidateSlurLayout(
+      layoutContext,
+      compactSeed,
+      options,
+    );
+    const selected: SlurCurveCandidate = result.candidates.find(
+      (candidate): boolean => candidate.id === result.selectedCandidateId,
+    );
+    const selectedBow: number = Math.abs(
+      selected.geometry.p1.y -
+      (selected.geometry.p0.y + selected.geometry.p3.y) / 2,
+    );
+    const seedBow: number = Math.abs(compactSeed.p1.y - compactSeed.p0.y);
+
+    expect(selected.startAnchor.type).to.equal("stem-tip");
+    expect(selected.endAnchor.type).to.equal("stem-tip");
+    expect(selectedBow).to.be.lessThan(seedBow / 2);
+  });
+
   it("keeps a duration articulation inside the selected slur", (): void => {
     const articulatedEnd: SlurEndpointContext = {
       ...endpoint("end", 18),
-      stem: {left: 17.95, right: 18.05, top: 0, bottom: 3},
+      // The finalized stem stops on the note-side of the staccato, reproducing
+      // the real endpoint overlap this rule must reject.
+      stem: {left: 17.95, right: 18.05, top: 1.2, bottom: 3},
       stemSide: true,
       legacyAttachment: "stem",
       articulations: [{
@@ -341,6 +412,11 @@ describe("candidate slur layout engine", (): void => {
 
     expect(selected.endAnchor.type).to.equal("outside-articulation");
     expect(selected.geometry.p3.y).to.be.lessThan(articulatedEnd.articulations[0].bounds.top);
+    expect(result.candidates.some(
+      (candidate): boolean =>
+        candidate.endAnchor.type === "stem-tip" &&
+        candidate.rejectionReason === "duration-articulation-outside-slur",
+    )).to.equal(true);
   });
 
   it("does not offer shallow or flattened-long families for compact phrase slurs", (): void => {
@@ -434,6 +510,12 @@ describe("candidate slur layout engine", (): void => {
       id: "endpoint-spanning-beam",
       type: "beam" as const,
       bounds: {left: 1.8, right: 18.2, top: -3.1, bottom: 0.1},
+      polygon: [
+        new PointF2D(1.8, -3.1),
+        new PointF2D(18.2, -3.1),
+        new PointF2D(18.2, 0.1),
+        new PointF2D(1.8, 0.1),
+      ],
       endpoint: "both" as const,
       clearance: 0.1,
     };
@@ -466,6 +548,36 @@ describe("candidate slur layout engine", (): void => {
       ),
     ).to.equal(true);
     expect(selected?.rejected).to.equal(false);
+  });
+
+  it("uses the finalized beam polygon instead of its loose bounding box", (): void => {
+    const slopedBeam: SlurObstacle = {
+      id: "sloped-beam",
+      type: "beam",
+      bounds: {left: 6, right: 14, top: -4, bottom: -1.6},
+      polygon: [
+        new PointF2D(6, -4),
+        new PointF2D(6.2, -4),
+        new PointF2D(14, -1.8),
+        new PointF2D(13.8, -1.6),
+      ],
+      clearance: 0.1,
+    };
+    const result: SlurLayoutResult = calculateCandidateSlurLayout(
+      context({obstacles: [slopedBeam]}),
+      seed,
+      options,
+    );
+    const exactSeed: SlurCurveCandidate = result.candidates.find(
+      (candidate): boolean =>
+        candidate.family === "normal" &&
+        candidate.geometry.p0.x === seed.p0.x &&
+        candidate.geometry.p0.y === seed.p0.y &&
+        candidate.geometry.p3.x === seed.p3.x &&
+        candidate.geometry.p3.y === seed.p3.y,
+    );
+
+    expect(exactSeed.rejectionObstacleIds?.includes(slopedBeam.id) ?? false).to.equal(false);
   });
 
   it("does not exempt an outgoing endpoint tie outside the attachment zone", (): void => {
