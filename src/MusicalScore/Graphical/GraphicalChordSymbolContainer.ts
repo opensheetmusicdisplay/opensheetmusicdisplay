@@ -11,7 +11,7 @@ import {EngravingRules} from "./EngravingRules";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {PlacementEnum} from "../VoiceData/Expressions";
 import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
-import {buildDoricoChordSymbolTextLines, getDoricoDefaultTextFontFamily} from "./DoricoTextFontRouting";
+import {buildChordSymbolTextLines, getDefaultTextFontFamily} from "./ScoreTextFontRouting";
 import {GraphicalLine} from "./GraphicalLine";
 import {
     SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
@@ -328,8 +328,8 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
 
     private createLabel(text: string, alignment: TextAlignmentEnum, x: number, y: number): GraphicalLabel {
         const label: Label = new Label(text);
-        label.fontFamily = getDoricoDefaultTextFontFamily(this.rules);
-        label.textLines = buildDoricoChordSymbolTextLines(text, this.rules);
+        label.fontFamily = getDefaultTextFontFamily(this.rules);
+        label.textLines = buildChordSymbolTextLines(text, this.rules);
         const graphicalLabel: GraphicalLabel = new GraphicalLabel(
             label,
             this.textHeight,

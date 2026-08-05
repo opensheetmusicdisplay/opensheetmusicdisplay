@@ -1,4 +1,4 @@
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlowAdapter";
 import {ColoringOptions, GraphicalNote, VisibilityOptions} from "../GraphicalNote";
 import {Note} from "../../VoiceData/Note";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";

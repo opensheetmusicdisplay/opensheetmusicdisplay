@@ -15,7 +15,7 @@ import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { Fraction } from "../../Common/DataObjects/Fraction";
 import { ArticulationEnum, StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlow/VexFlowAdapter";
 import {
     SlurAnchorCandidate,
     SlurArticulationClass,

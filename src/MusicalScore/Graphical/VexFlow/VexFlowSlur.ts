@@ -1,4 +1,4 @@
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlowAdapter";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 
 export interface ICurveOptions {

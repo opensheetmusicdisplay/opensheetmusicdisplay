@@ -1,4 +1,4 @@
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlowAdapter";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowMeasure } from "./VexFlowMeasure";

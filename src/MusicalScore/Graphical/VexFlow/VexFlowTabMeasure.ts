@@ -1,4 +1,4 @@
-import VexFlow, * as VF from "vexflow/core";
+import VexFlow, * as VF from "./VexFlowAdapter";
 import { Staff } from "../../VoiceData/Staff";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";

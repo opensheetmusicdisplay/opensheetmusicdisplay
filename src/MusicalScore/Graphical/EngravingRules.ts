@@ -522,6 +522,10 @@ export class EngravingRules {
     public DefaultColorTitle: string;
     public DefaultColorCursor: string;
     public DefaultFontFamily: string;
+    /** Notation glyph family selected by the active OSMD font profile. */
+    public DefaultNotationFontFamily: string;
+    /** SMuFL music-text family selected by the active OSMD font profile. */
+    public DefaultMusicTextFontFamily: string;
     public DefaultFontStyle: FontStyles;
     /** Legacy compatibility field. The modern VexFlow runtime in this fork uses its own
      * notation-font stack directly, so this no longer switches the active notation font. */
@@ -1069,6 +1073,8 @@ export class EngravingRules {
         this.applyDefaultColorMusic("#000000"); // black. undefined is only black if a note's color hasn't been changed before.
         this.DefaultColorCursor = "#33e02f"; // green
         this.DefaultFontFamily = "Academico"; // default score text family
+        this.DefaultNotationFontFamily = "Bravura";
+        this.DefaultMusicTextFontFamily = "Bravura Text";
         this.DefaultFontStyle = FontStyles.Regular;
         this.DefaultVexFlowNoteFont = "Bravura"; // legacy no-op compatibility value on the modern VexFlow path
         this.MaxMeasureToDrawIndex = Number.MAX_VALUE;

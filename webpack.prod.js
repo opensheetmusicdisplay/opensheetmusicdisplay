@@ -1,9 +1,10 @@
 const { merge } = require('webpack-merge');
 var path = require('path')
-var common = require('./webpack.common.js')
+var createCommonConfig = require('./webpack.common.js')
 var Visualizer = require('webpack-visualizer-plugin2')
+var webpack = require('webpack')
 
-module.exports = merge(common, {
+const production = {
     output: {
         filename: '[name].min.js',
         path: path.resolve(__dirname, 'build'),
@@ -23,6 +24,10 @@ module.exports = merge(common, {
         //     name: false
         // }
     },
+}
+
+const bundled = merge(createCommonConfig(), production, {
+    name: 'bundled',
     plugins: [
         new Visualizer({
             path: path.resolve(__dirname, 'build'),
@@ -30,3 +35,22 @@ module.exports = merge(common, {
         })
     ]
 })
+
+const core = merge(createCommonConfig({
+    includeDemo: false,
+    libraryEntryName: 'opensheetmusicdisplay-core'
+}), production, {
+    name: 'core',
+    dependencies: ['bundled'],
+    output: {
+        clean: false
+    },
+    plugins: [
+        new webpack.NormalModuleReplacementPlugin(
+            /FontProfileActive$/,
+            path.resolve(__dirname, 'src/OpenSheetMusicDisplay/FontProfileExternal.ts')
+        )
+    ]
+})
+
+module.exports = [bundled, core]

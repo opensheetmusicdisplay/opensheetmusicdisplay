@@ -1,6 +1,6 @@
 import {Tie} from "../VoiceData/Tie";
 import {GraphicalNote} from "./GraphicalNote";
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlow/VexFlowAdapter";
 
 /**
  * The graphical counterpart of a [[Tie]].

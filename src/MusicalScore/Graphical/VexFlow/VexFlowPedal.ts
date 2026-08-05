@@ -1,4 +1,4 @@
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlowAdapter";
 import { BoundingBox } from "../BoundingBox";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
@@ -8,7 +8,7 @@ import { MusicSymbol } from "../MusicSymbol";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { Fraction } from "../../../Common/DataObjects/Fraction";
-import { DORICO_DEFAULT_TEXT_FONT_FAMILY } from "../DoricoTextFontRouting";
+import { OSMD_DEFAULT_TEXT_FONT_FAMILY } from "../ScoreTextFontRouting";
 
 /**
  * OSMD distinguishes open-ended pedal segments while modern VexFlow exposes
@@ -171,7 +171,7 @@ export class VexFlowPedal extends GraphicalPedal {
         pedalMarking.setType(vexFlowPedalType(this.vfStyle));
         (pedalMarking as any).style = this.vfStyle;
         pedalMarking.setLine(this.line);
-        (pedalMarking as any).setFont?.({ family: DORICO_DEFAULT_TEXT_FONT_FAMILY });
+        (pedalMarking as any).setFont?.({ family: OSMD_DEFAULT_TEXT_FONT_FAMILY });
         pedalMarking.setCustomText(this.DepressText, this.ReleaseText);
         //If our end note is at the end of a stave, set that value
         if(!this.endVfVoiceEntry ||

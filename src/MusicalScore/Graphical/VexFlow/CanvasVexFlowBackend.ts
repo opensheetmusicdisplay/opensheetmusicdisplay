@@ -1,4 +1,4 @@
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlowAdapter";
 
 import {VexFlowBackend} from "./VexFlowBackend";
 import {FontStyles} from "../../../Common/Enums/FontStyles";

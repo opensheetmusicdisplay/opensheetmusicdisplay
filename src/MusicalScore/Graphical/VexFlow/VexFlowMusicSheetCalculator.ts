@@ -24,7 +24,7 @@ import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlowAdapter";
 import log from "loglevel";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
@@ -72,7 +72,7 @@ import { VexFlowGlissando } from "./VexFlowGlissando";
 import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { Staff } from "../../VoiceData/Staff";
-import { getDoricoDefaultTextFontFamily } from "../DoricoTextFontRouting";
+import { getDefaultTextFontFamily } from "../ScoreTextFontRouting";
 import { VexFlowSystemSpacingPlanner } from "./VexFlowHorizontalSpacing";
 import { calculateLinkedSlurLayouts } from "../SlurLayout/SlurLinkedLayoutEngine";
 import { SlurLinkedLayoutInput, SlurLinkedLayoutOutput } from "../SlurLayout/SlurLinkedLayoutEngine";
@@ -1290,7 +1290,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // x-footprint of the rehearsal mark box at the measure start (absolute units, as the skyline is
         //   indexed). xOffset/fontSize are in px; the label width is a conservative estimate.
         let start: number = gMeasure.PositionAndShape.AbsolutePosition.x;
-        const rehearsalTextFontFamily: string = getDoricoDefaultTextFontFamily(this.rules);
+        const rehearsalTextFontFamily: string = getDefaultTextFontFamily(this.rules);
         const rehearsalTextWidthUnits: number = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
           rehearsalExpression.label,
           Fonts.TimesNewRoman,
@@ -1330,7 +1330,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         xOffset,
         fontSize,
         minBottomY,
-        getDoricoDefaultTextFontFamily(this.rules),
+        getDefaultTextFontFamily(this.rules),
       );
       return; // only draw one rehearsal mark at top (visible) instrument
     }
@@ -2246,13 +2246,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const fontHeightUnits: number = 1.6; // staverepetition.js draws the text with a 12pt (16px) font
     let textWidthUnits: number = 0;
     if (text.length > 0) {
-      // measure with the same Dorico-style text font path that staverepetition.js now draws with,
+      // measure with the same score text font path that staverepetition.js now draws with,
       //   so that the measured width matches the drawn width even if the browser synthesizes bold italic
       textWidthUnits = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
         text,
         Fonts.TimesNewRoman,
         FontStyles.BoldItalic,
-        getDoricoDefaultTextFontFamily(this.rules),
+        getDefaultTextFontFamily(this.rules),
       ) * fontHeightUnits;
     }
     const glyphWidthUnits: number = 2.4; // coda/segno glyph width (plus the 12px gap after the text for symbol_x)

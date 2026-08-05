@@ -11,11 +11,11 @@ import {
     SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
 } from "../../Common/DataObjects/ChordSymbolGlyphs";
 
-type DoricoDeferredTextFontAudit = {
+type DeferredTextFontAudit = {
     tempo: string;
 };
 
-type DoricoTextFontAudit = {
+type ScoreTextFontAudit = {
     defaultScoreText: string;
     musicText: string;
     dynamics: string;
@@ -29,7 +29,7 @@ type DoricoTextFontAudit = {
     sectionText: string;
     octaveShiftText: string;
     pedalText: string;
-    deferred: DoricoDeferredTextFontAudit;
+    deferred: DeferredTextFontAudit;
 };
 
 type ChordMusicTextToken = {
@@ -37,53 +37,57 @@ type ChordMusicTextToken = {
     display: string;
 };
 
-export const DORICO_DEFAULT_TEXT_FONT_FAMILY: string = "Academico";
-export const DORICO_NOTATION_FONT_FAMILY: string = "Bravura";
-export const DORICO_MUSIC_TEXT_FONT_FAMILY: string = "Bravura Text";
-export const DORICO_CHORD_DIMINISHED_SYMBOL: string = "o";
-export const DORICO_CHORD_HALFDIMINISHED_SYMBOL: string = "ø";
-export const DORICO_CHORD_AUGMENTED_SYMBOL: string = "+";
-export const DORICO_CHORD_MAJOR_SEVENTH_SYMBOL: string = "△";
+export const OSMD_DEFAULT_TEXT_FONT_FAMILY: string = "Academico";
+export const OSMD_NOTATION_FONT_FAMILY: string = "Bravura";
+export const OSMD_MUSIC_TEXT_FONT_FAMILY: string = "Bravura Text";
+export const OSMD_CHORD_DIMINISHED_SYMBOL: string = "o";
+export const OSMD_CHORD_HALFDIMINISHED_SYMBOL: string = "ø";
+export const OSMD_CHORD_AUGMENTED_SYMBOL: string = "+";
+export const OSMD_CHORD_MAJOR_SEVENTH_SYMBOL: string = "△";
 
 const CHORD_SUPERSCRIPT_FONT_SCALE: number = 0.72;
 const CHORD_SUPERSCRIPT_BASELINE_SHIFT: number = -0.35;
 
-export const DORICO_TEXT_FONT_AUDIT: DoricoTextFontAudit = Object.freeze({
-    defaultScoreText: DORICO_DEFAULT_TEXT_FONT_FAMILY,
-    musicText: DORICO_MUSIC_TEXT_FONT_FAMILY,
-    dynamics: DORICO_NOTATION_FONT_FAMILY,
-    literalDynamics: DORICO_DEFAULT_TEXT_FONT_FAMILY,
-    chordText: DORICO_DEFAULT_TEXT_FONT_FAMILY,
-    chordMusicText: DORICO_MUSIC_TEXT_FONT_FAMILY,
-    measureNumbers: DORICO_DEFAULT_TEXT_FONT_FAMILY,
-    voltaText: DORICO_DEFAULT_TEXT_FONT_FAMILY,
-    repetitionText: DORICO_DEFAULT_TEXT_FONT_FAMILY,
-    rehearsalText: DORICO_DEFAULT_TEXT_FONT_FAMILY,
-    sectionText: DORICO_DEFAULT_TEXT_FONT_FAMILY,
-    octaveShiftText: DORICO_DEFAULT_TEXT_FONT_FAMILY,
-    pedalText: DORICO_DEFAULT_TEXT_FONT_FAMILY,
+export const SCORE_TEXT_FONT_AUDIT: ScoreTextFontAudit = Object.freeze({
+    defaultScoreText: OSMD_DEFAULT_TEXT_FONT_FAMILY,
+    musicText: OSMD_MUSIC_TEXT_FONT_FAMILY,
+    dynamics: OSMD_NOTATION_FONT_FAMILY,
+    literalDynamics: OSMD_DEFAULT_TEXT_FONT_FAMILY,
+    chordText: OSMD_DEFAULT_TEXT_FONT_FAMILY,
+    chordMusicText: OSMD_MUSIC_TEXT_FONT_FAMILY,
+    measureNumbers: OSMD_DEFAULT_TEXT_FONT_FAMILY,
+    voltaText: OSMD_DEFAULT_TEXT_FONT_FAMILY,
+    repetitionText: OSMD_DEFAULT_TEXT_FONT_FAMILY,
+    rehearsalText: OSMD_DEFAULT_TEXT_FONT_FAMILY,
+    sectionText: OSMD_DEFAULT_TEXT_FONT_FAMILY,
+    octaveShiftText: OSMD_DEFAULT_TEXT_FONT_FAMILY,
+    pedalText: OSMD_DEFAULT_TEXT_FONT_FAMILY,
     deferred: Object.freeze({
         tempo: "times",
     }),
 });
 
-export function getDoricoDefaultTextFontFamily(rules?: EngravingRules): string {
-    return rules?.DefaultFontFamily || DORICO_DEFAULT_TEXT_FONT_FAMILY;
+export function getDefaultTextFontFamily(rules?: EngravingRules): string {
+    return rules?.DefaultFontFamily || OSMD_DEFAULT_TEXT_FONT_FAMILY;
 }
 
-export function getDoricoMusicTextFontFamily(): string {
-    return DORICO_MUSIC_TEXT_FONT_FAMILY;
+export function getNotationFontFamily(rules?: EngravingRules): string {
+    return rules?.DefaultNotationFontFamily || OSMD_NOTATION_FONT_FAMILY;
 }
 
-export function buildDoricoChordSymbolTextLines(text: string, rules?: EngravingRules): LabelTextLine[] {
+export function getMusicTextFontFamily(rules?: EngravingRules): string {
+    return rules?.DefaultMusicTextFontFamily || OSMD_MUSIC_TEXT_FONT_FAMILY;
+}
+
+export function buildChordSymbolTextLines(text: string, rules?: EngravingRules): LabelTextLine[] {
     const musicTextTokens: ChordMusicTextToken[] = collectChordMusicTextTokens(rules);
     return [
         {
             runs: splitChordSymbolRuns(
                 splitChordSymbolSegments(text),
                 musicTextTokens,
-                getDoricoDefaultTextFontFamily(rules),
-                getDoricoMusicTextFontFamily(),
+                getDefaultTextFontFamily(rules),
+                getMusicTextFontFamily(rules),
             ),
         },
     ];
@@ -98,8 +102,8 @@ function collectChordMusicTextTokens(rules?: EngravingRules): ChordMusicTextToke
     addChordMusicTextToken(tokenMap, "𝄫", "𝄫");
     addChordMusicTextToken(tokenMap, "△", "△");
     addChordMusicTextToken(tokenMap, "ø", "ø");
-    addChordMusicTextToken(tokenMap, DORICO_CHORD_MAJOR_SEVENTH_SYMBOL, DORICO_CHORD_MAJOR_SEVENTH_SYMBOL);
-    addChordMusicTextToken(tokenMap, DORICO_CHORD_HALFDIMINISHED_SYMBOL, DORICO_CHORD_HALFDIMINISHED_SYMBOL);
+    addChordMusicTextToken(tokenMap, OSMD_CHORD_MAJOR_SEVENTH_SYMBOL, OSMD_CHORD_MAJOR_SEVENTH_SYMBOL);
+    addChordMusicTextToken(tokenMap, OSMD_CHORD_HALFDIMINISHED_SYMBOL, OSMD_CHORD_HALFDIMINISHED_SYMBOL);
     addChordMusicTextToken(tokenMap, "\uE870", "\uE870");
     addChordMusicTextToken(tokenMap, "\uE871", "\uE871");
     addChordMusicTextToken(tokenMap, "\uE872", "\uE872");

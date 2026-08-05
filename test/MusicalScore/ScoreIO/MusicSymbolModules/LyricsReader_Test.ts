@@ -222,6 +222,7 @@ describe("LyricsReader semantics", () => {
                         parentVerticalContainer: { Index: index },
                         PositionAndShape: positionAndShape,
                         LyricsEntries: [],
+                        graphicalVoiceEntries: [],
                         hasOnlyRests: (): boolean => false,
                     };
                     staffEntry.LyricsEntries.push(new GraphicalLyricEntry(

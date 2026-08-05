@@ -1,6 +1,7 @@
 import { ColoringModes } from "../Common/Enums/ColoringModes";
 import { FontStyles } from "../Common/Enums/FontStyles";
 import { DrawingParametersEnum } from "../Common/Enums/DrawingParametersEnum";
+import { IOSMDFontProfile } from "./FontProfile";
 
 export enum CursorType {
     Standard = 0,
@@ -74,6 +75,13 @@ export interface IOSMDOptions {
      * e.g. Academico, Times New Roman, Helvetica.
      */
     defaultFontFamily?: string;
+    /**
+     * Complete notation, music-text, and score-text font contract. The default
+     * bundle embeds its profile; the core bundle expects the host to supply it.
+     */
+    fontProfile?: IOSMDFontProfile;
+    /** Embed every font source from the active profile in standalone SVG exports. Default true. */
+    embedFontProfileInSvg?: boolean;
     /** Default font style, e.g. FontStyles.Bold (1). Default Regular (0). */
     defaultFontStyle?: FontStyles;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */

@@ -1,4 +1,4 @@
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlowAdapter";
 import { GraphicalObject } from "../GraphicalObject";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { BoundingBox } from "../BoundingBox";

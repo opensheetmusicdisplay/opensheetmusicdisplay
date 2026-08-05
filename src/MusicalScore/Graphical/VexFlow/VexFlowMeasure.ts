@@ -1,4 +1,4 @@
-import VexFlow, * as VF from "vexflow/core";
+import VexFlow, * as VF from "./VexFlowAdapter";
 import {GraphicalMeasure} from "../GraphicalMeasure";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
@@ -37,7 +37,7 @@ import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { GraphicalTie } from "../GraphicalTie";
 import { Note } from "../../VoiceData/Note";
 import { TabNote } from "../../VoiceData/TabNote";
-import { getDoricoDefaultTextFontFamily } from "../DoricoTextFontRouting";
+import { getDefaultTextFontFamily } from "../ScoreTextFontRouting";
 
 const DOUBLE_HEAVY_BARLINE_TYPE: number = 8;
 
@@ -224,7 +224,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             spaceBelowStaffLn: 0
         });
         this.stave.setStyle({ fillStyle: this.rules.StaffLineColor, strokeStyle: this.rules.StaffLineColor });
-        (this.stave as any).setFont?.({ family: getDoricoDefaultTextFontFamily(this.rules) });
+        (this.stave as any).setFont?.({ family: getDefaultTextFontFamily(this.rules) });
         if (this.InitiallyActiveClef) {
             (this.stave as any).clef = VexFlowConverter.Clef(this.InitiallyActiveClef).type;
             // Vexflow sets stave.clef to treble by default. It needs this info e.g. for key signature accidentals on new key sig
@@ -626,7 +626,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (instruction) {
             const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
             installRepetitionCompatibilityAliases(repetition);
-            (repetition as any).setFont?.({ family: getDoricoDefaultTextFontFamily(this.rules) });
+            (repetition as any).setFont?.({ family: getDefaultTextFontFamily(this.rules) });
             const stafflineMeasures: GraphicalMeasure[] = this.ParentStaffLine?.Measures;
             if (!stafflineMeasures || stafflineMeasures[stafflineMeasures.length - 1] === this) {
                 // only shift end instructions like Fine to the right in the last measure of the staffline,
@@ -757,7 +757,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     return category === "voltas" || category === "Volta";
                 });
             (voltaModifier as any).number = voltaLabel;
-            voltaModifier?.setFont?.({ family: getDoricoDefaultTextFontFamily(this.rules) });
+            voltaModifier?.setFont?.({ family: getDefaultTextFontFamily(this.rules) });
             skyBottomLineCalculator.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
         }
     }

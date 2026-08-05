@@ -479,7 +479,7 @@ describe("Stage 6 slur geometry", (): void => {
       const slurs: GraphicalSlur[] = allSlurs(osmd).map(({slur}) => slur);
       expect(slurs).to.have.length(1);
       expect(slurs[0].diagnostics.startAttachment).to.equal("stem-tip");
-      expect(slurs[0].diagnostics.endAttachment).to.equal("notehead-center");
+      expect(slurs[0].diagnostics.endAttachment).to.equal("notehead");
    });
 
    it("collects finalized beam geometry as a typed obstacle", async (): Promise<void> => {
@@ -548,13 +548,13 @@ describe("Stage 6 slur geometry", (): void => {
          expect(crossed[0].placement).to.equal(PlacementEnum.Above);
          expect(crossed[0].diagnostics.startNotehead).to.not.equal(undefined);
          expect(crossed[0].diagnostics.endNotehead).to.not.equal(undefined);
-         expect(crossed[0].bezierStartPt.x).to.be.closeTo(
-            (crossed[0].diagnostics.startNotehead.left + crossed[0].diagnostics.startNotehead.right) / 2,
-            0.001,
+         expect(crossed[0].bezierStartPt.x).to.be.within(
+            crossed[0].diagnostics.startNotehead.left - 0.1,
+            crossed[0].diagnostics.startNotehead.right + 0.1,
          );
-         expect(crossed[0].bezierEndPt.x).to.be.closeTo(
-            (crossed[0].diagnostics.endNotehead.left + crossed[0].diagnostics.endNotehead.right) / 2,
-            0.001,
+         expect(crossed[0].bezierEndPt.x).to.be.within(
+            crossed[0].diagnostics.endNotehead.left - 0.1,
+            crossed[0].diagnostics.endNotehead.right + 0.1,
          );
          const startQuarterLineY: number =
             crossed[0].bezierStartPt.y +

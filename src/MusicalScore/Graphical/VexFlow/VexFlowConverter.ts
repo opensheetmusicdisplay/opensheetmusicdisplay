@@ -1,4 +1,4 @@
-import VexFlow, * as VF from "vexflow/core";
+import VexFlow, * as VF from "./VexFlowAdapter";
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {Pitch} from "../../../Common/DataObjects/Pitch";

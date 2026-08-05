@@ -1,4 +1,4 @@
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlowAdapter";
 import {IGraphicalSymbolFactory} from "../../Interfaces/IGraphicalSymbolFactory";
 import {MusicSystem} from "../MusicSystem";
 import {VexFlowMusicSystem} from "./VexFlowMusicSystem";

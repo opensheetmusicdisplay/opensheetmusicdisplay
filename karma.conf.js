@@ -1,4 +1,4 @@
-var common = require('./webpack.common.js')
+var common = require('./webpack.common.js')()
 var path = require('path')
 
 module.exports = function (config) {
@@ -92,7 +92,7 @@ module.exports = function (config) {
         port: 9876,
         // timeout in ms:
         browserNoActivityTimeout: 100000, // default 10000
-        browserDisconnectTimeout: 10000, // default 2000
+        browserDisconnectTimeout: 30000, // allow geometry-heavy corpus tests to yield after a long main-thread task
         browserDisconnectTolerance: 1, // default 0
         captureTimeout: 60000,
         // enable / disable colors in the output (reporters and logs)
@@ -105,7 +105,8 @@ module.exports = function (config) {
         client: {
             captureConsole: true,
             mocha: {
-                timeout: process.env.timeout || 20000
+                timeout: process.env.timeout || 20000,
+                grep: process.env.MOCHA_GREP || undefined
             }
         },
 

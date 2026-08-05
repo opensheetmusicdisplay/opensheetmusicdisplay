@@ -1,10 +1,10 @@
 import { expect } from "chai";
-import { TextDynamics } from "vexflow/core";
+import { TextDynamics } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowAdapter";
 import { FontStyles } from "../../../src/Common/Enums/FontStyles";
 import {
-  DORICO_DEFAULT_TEXT_FONT_FAMILY,
-  DORICO_NOTATION_FONT_FAMILY,
-} from "../../../src/MusicalScore/Graphical/DoricoTextFontRouting";
+  OSMD_DEFAULT_TEXT_FONT_FAMILY,
+  OSMD_NOTATION_FONT_FAMILY,
+} from "../../../src/MusicalScore/Graphical/ScoreTextFontRouting";
 import { VexFlowInstantaneousDynamicExpression } from
   "../../../src/MusicalScore/Graphical/VexFlow/VexFlowInstantaneousDynamicExpression";
 import {
@@ -55,24 +55,24 @@ describe("MusicXML dynamics font routing", (): void => {
       .map((letter: string): string => TextDynamics.GLYPHS[letter])
       .join("");
     expect(graphicalExpressions[0].Label.Label.textLines[0].runs).to.deep.equal([
-      { text: glyphs("pp"), fontFamily: DORICO_NOTATION_FONT_FAMILY },
+      { text: glyphs("pp"), fontFamily: OSMD_NOTATION_FONT_FAMILY },
     ]);
     expect(graphicalExpressions[3].Label.Label.textLines[0].runs).to.deep.equal([
-      { text: glyphs("sf"), fontFamily: DORICO_NOTATION_FONT_FAMILY },
-      { text: glyphs("mp"), fontFamily: DORICO_NOTATION_FONT_FAMILY },
+      { text: glyphs("sf"), fontFamily: OSMD_NOTATION_FONT_FAMILY },
+      { text: glyphs("mp"), fontFamily: OSMD_NOTATION_FONT_FAMILY },
     ]);
     expect(graphicalExpressions[4].Label.Label.textLines[0].runs).to.deep.equal([
-      { text: "subito dolce", fontFamily: DORICO_DEFAULT_TEXT_FONT_FAMILY },
+      { text: "subito dolce", fontFamily: OSMD_DEFAULT_TEXT_FONT_FAMILY },
     ]);
 
     const textNodes: SVGTextElement[] = Array.from(container.querySelectorAll("text"));
     for (const expected of ["pp", "mf", "sfz", "sf", "mp"].map(glyphs)) {
       const node: SVGTextElement = textNodes.find((candidate) => candidate.textContent === expected);
       expect(node, `missing rendered glyph run ${expected}`).to.not.equal(undefined);
-      expect(node.getAttribute("font-family")).to.equal(DORICO_NOTATION_FONT_FAMILY);
+      expect(node.getAttribute("font-family")).to.equal(OSMD_NOTATION_FONT_FAMILY);
     }
     const literal: SVGTextElement = textNodes.find((candidate) => candidate.textContent === "subito dolce");
     expect(literal).to.not.equal(undefined);
-    expect(literal.getAttribute("font-family")).to.equal(DORICO_DEFAULT_TEXT_FONT_FAMILY);
+    expect(literal.getAttribute("font-family")).to.equal(OSMD_DEFAULT_TEXT_FONT_FAMILY);
   });
 });

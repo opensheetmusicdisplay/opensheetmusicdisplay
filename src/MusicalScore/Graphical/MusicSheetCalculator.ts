@@ -57,7 +57,7 @@ import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceStaffEntryContainer";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-import { getDoricoDefaultTextFontFamily } from "./DoricoTextFontRouting";
+import { getDefaultTextFontFamily } from "./ScoreTextFontRouting";
 import { AbstractGraphicalInstruction } from "./AbstractGraphicalInstruction";
 import { GraphicalInstantaneousTempoExpression } from "./GraphicalInstantaneousTempoExpression";
 import { InstantaneousTempoExpression, TempoType } from "../VoiceData/Expressions/InstantaneousTempoExpression";
@@ -562,7 +562,7 @@ export abstract class MusicSheetCalculator {
                                                   labelOffsetX: number = 0): void {
         const labelNumber: string = measure.parentSourceMeasure.getPrintedMeasureNumber().toString();
         const label: Label = new Label(labelNumber);
-        label.fontFamily = getDoricoDefaultTextFontFamily(this.rules);
+        label.fontFamily = getDefaultTextFontFamily(this.rules);
         // maybe give rules as argument instead of just setting fontStyle and maybe other settings manually afterwards
         const graphicalLabel: GraphicalLabel = new GraphicalLabel(label, this.rules.MeasureNumberLabelHeight,
                                                                   TextAlignmentEnum.LeftBottom, this.rules);

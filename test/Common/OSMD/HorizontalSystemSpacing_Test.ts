@@ -12,7 +12,7 @@ import { VexFlowVoiceEntry } from "../../../src/MusicalScore/Graphical/VexFlow/V
 import { ResolvedHorizontalSpacingConstraint } from
   "../../../src/MusicalScore/Graphical/VexFlow/HorizontalSpacingConstraintSolver";
 import { TestUtils } from "../../Util/TestUtils";
-import * as VF from "vexflow/core";
+import * as VF from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowAdapter";
 
 describe("Horizontal system spacing", (): void => {
   it("does not publish constraints across a selected XML system break", async (): Promise<void> => {

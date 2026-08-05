@@ -1,4 +1,4 @@
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlow/VexFlowAdapter";
 import { EngravingRules } from "./EngravingRules";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";

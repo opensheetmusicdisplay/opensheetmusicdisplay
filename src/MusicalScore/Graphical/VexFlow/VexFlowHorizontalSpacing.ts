@@ -1,4 +1,4 @@
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlowAdapter";
 import { EngravingRules } from "../EngravingRules";
 import { GraphicalLyricEntry, LyricFootprint } from "../GraphicalLyricEntry";
 import { GraphicalMeasure } from "../GraphicalMeasure";

@@ -10,11 +10,11 @@ import { TextAlignmentEnum } from "../../../Common/Enums/TextAlignment";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { StaffLine } from "../StaffLine";
 import { GraphicalMeasure } from "../GraphicalMeasure";
-import { TextDynamics } from "vexflow/core";
+import { TextDynamics } from "./VexFlowAdapter";
 import {
-    DORICO_NOTATION_FONT_FAMILY,
-    getDoricoDefaultTextFontFamily,
-} from "../DoricoTextFontRouting";
+    getDefaultTextFontFamily,
+    getNotationFontFamily,
+} from "../ScoreTextFontRouting";
 
 export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneousDynamicExpression {
     constructor(instantaneousDynamicExpression: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
@@ -28,8 +28,8 @@ export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneou
                         ? this.toSmuflGlyphs(component.text)
                         : component.text,
                     fontFamily: component.type === InstantaneousDynamicComponentType.Standard
-                        ? DORICO_NOTATION_FONT_FAMILY
-                        : getDoricoDefaultTextFontFamily(this.rules),
+                        ? getNotationFontFamily(this.rules)
+                        : getDefaultTextFontFamily(this.rules),
                 }),
             ),
         }];

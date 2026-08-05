@@ -21,7 +21,7 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SystemLinePosition} from "./SystemLinePosition";
 import { MusicSheet } from "../MusicSheet";
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlow/VexFlowAdapter";
 import {
     HorizontalSystemSpacingCandidate,
     HorizontalSystemSpacingLayout,

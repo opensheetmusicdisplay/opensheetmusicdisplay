@@ -25,7 +25,7 @@ import {TestUtils} from "../../Util/TestUtils";
 import {VexFlowStaffEntry} from
   "../../../src/MusicalScore/Graphical/VexFlow/VexFlowStaffEntry";
 
-describe("Dorico-style MusicXML harmony arrangements", (): void => {
+describe("MusicXML harmony arrangements", (): void => {
   it("preserves ordered components, degree ownership, arrangements, and separators", async (): Promise<void> => {
     const osmd: OpenSheetMusicDisplay = await loadHarmonyScore();
     const sourceChords: ChordSymbolContainer[] = osmd.Sheet.SourceMeasures.flatMap((measure) =>
@@ -354,7 +354,7 @@ async function loadHarmonyScore(): Promise<OpenSheetMusicDisplay> {
   const container: HTMLElement = TestUtils.getDivElement(document);
   const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
   osmd.TransposeCalculator = new TransposeCalculator();
-  await osmd.load(TestUtils.getScore("test_harmony_dorico_arrangements.musicxml"));
+  await osmd.load(TestUtils.getScore("test_harmony_arrangements.musicxml"));
   osmd.setOptions({newSystemFromXML: true});
   osmd.render();
   return osmd;

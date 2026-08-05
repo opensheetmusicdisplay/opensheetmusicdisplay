@@ -1,4 +1,4 @@
-import * as VF from "vexflow/core";
+import * as VF from "./VexFlowAdapter";
 
 import {VexFlowBackend} from "./VexFlowBackend";
 import {VexFlowConverter} from "./VexFlowConverter";
@@ -10,15 +10,24 @@ import {BackendType} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {EngravingRules} from "../EngravingRules";
 import log from "loglevel";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
+import { fontProfileToCss, IOSMDFontProfile } from "../../../OpenSheetMusicDisplay/FontProfile";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
     private ctx: VF.SVGContext;
+    private fontProfile?: IOSMDFontProfile;
+    private embedFontProfileInSvg: boolean;
     public zoom: number; // currently unused
 
-    constructor(rules: EngravingRules) {
+    constructor(
+        rules: EngravingRules,
+        fontProfile?: IOSMDFontProfile,
+        embedFontProfileInSvg: boolean = true,
+    ) {
         super();
         this.rules = rules;
+        this.fontProfile = fontProfile;
+        this.embedFontProfileInSvg = embedFontProfileInSvg;
     }
 
     public getVexflowBackendType(): number {
@@ -252,11 +261,36 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         return node;
     }
 
-    public export(): void {
+    public export(): string {
         // See: https://stackoverflow.com/questions/38477972/javascript-save-svg-element-to-file-on-disk
+
+        const svgData: string = this.exportToString();
+
+        const a: HTMLAnchorElement = document.createElement("a");
+        a.href = "data:image/svg+xml; charset=utf8, " + encodeURIComponent(svgData.replace(/></g, ">\n\r<"));
+        a.download = "opensheetmusicdisplay_download.svg";
+        a.innerHTML = window.location.href + "/download";
+        document.body.appendChild(a);
+        return svgData;
+    }
+
+    /** Serialize a standalone SVG, embedding the active font profile by default. */
+    public exportToString(): string {
 
         // first create a clone of our svg node so we don't mess the original one
         const clone: SVGElement = (this.ctx.svg.cloneNode(true) as SVGElement);
+        if (this.embedFontProfileInSvg && this.fontProfile) {
+            const fontCss: string = fontProfileToCss(this.fontProfile);
+            if (fontCss) {
+                const defs: SVGDefsElement = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+                const style: SVGStyleElement = document.createElementNS("http://www.w3.org/2000/svg", "style");
+                style.setAttribute("type", "text/css");
+                style.setAttribute("data-osmd-font-profile", this.fontProfile.name);
+                style.textContent = fontCss;
+                defs.appendChild(style);
+                clone.insertBefore(defs, clone.firstChild);
+            }
+        }
 
         // create a doctype that is SVG
         const svgDocType: DocumentType = document.implementation.createDocumentType(
@@ -270,20 +304,6 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         svgDoc.replaceChild(clone, svgDoc.documentElement);
 
         // get the data
-        const svgData: string = (new XMLSerializer()).serializeToString(svgDoc);
-
-        // now you've got your svg data, the following will depend on how you want to download it
-        // e.g yo could make a Blob of it for FileSaver.js
-        /*
-        var blob = new Blob([svgData.replace(/></g, '>\n\r<')]);
-        saveAs(blob, 'myAwesomeSVG.svg');
-        */
-        // here I'll just make a simple a with download attribute
-
-        const a: HTMLAnchorElement = document.createElement("a");
-        a.href = "data:image/svg+xml; charset=utf8, " + encodeURIComponent(svgData.replace(/></g, ">\n\r<"));
-        a.download = "opensheetmusicdisplay_download.svg";
-        a.innerHTML = window.location.href + "/download";
-        document.body.appendChild(a);
-      }
+        return (new XMLSerializer()).serializeToString(svgDoc);
+    }
 }

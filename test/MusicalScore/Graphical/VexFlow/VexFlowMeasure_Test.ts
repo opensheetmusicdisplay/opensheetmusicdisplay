@@ -667,23 +667,28 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
-   // Non-regression test for the WIDTH-DRIVEN case of SlurFlattenToObstacle (issue #1466): a wide slur over a
-   // (near-)flat passage must not balloon. The minimum-arc floor grows with sqrt(width) rather than linearly, so
-   // wide slurs stay proportionally flat. Chopin Étude Op. 10 No. 4 has several system-spanning slurs that would
-   // otherwise arc very high; this checks the widest slur on the sheet is flattened substantially.
-   it("Keeps a wide slur over a flat passage from ballooning (SlurFlattenToObstacle, width-driven)", (done: Mocha.Done) => {
+   // Candidate-layout non-regression for issue #1466: the widest slur on this near-flat passage must retain a
+   // conservative arc. Comparing an enabled/disabled pre-candidate seed rule is no longer meaningful because the
+   // candidate solver owns the selected curve; assert the selected geometry itself instead.
+   it("Keeps a wide slur over a flat passage proportionally shallow", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_dynamics_attribute_Chopin_Etudes_op_10_4_Duepree02.musicxml");
       if (!score) {
          done(new Error("Score file not found"));
          return;
       }
       const xml: string = new XMLSerializer().serializeToString(score);
+      type WidestSlurGeometry = {
+         width: number;
+         arc: number;
+         selected: boolean;
+      };
 
-      // arc height (max distance from the straight start-end chord) of the WIDEST slur on the sheet
-      function widestSlurArcHeight(osmd: OpenSheetMusicDisplay): number {
+      // Width and arc height (maximum distance from the start-end chord) of the widest selected slur.
+      function widestSlurGeometry(renderer: OpenSheetMusicDisplay): WidestSlurGeometry {
          let widestWidth: number = 0;
          let arcOfWidest: number = 0;
-         for (const page of osmd.GraphicSheet.MusicPages) {
+         let selected: boolean = false;
+         for (const page of renderer.GraphicSheet.MusicPages) {
             for (const system of page.MusicSystems) {
                for (const staffLine of system.StaffLines) {
                   for (const gSlur of staffLine.GraphicalSlurs) {
@@ -706,30 +711,24 @@ describe("VexFlow Measure", () => {
                      }
                      widestWidth = width;
                      arcOfWidest = arc;
+                     selected = Boolean(gSlur.diagnostics.selectedCandidateId);
                   }
                }
             }
          }
-         return arcOfWidest;
+         return {width: widestWidth, arc: arcOfWidest, selected};
       }
 
-      const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-      const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-      osmdOff.load(xml).then(() => {
-         osmdOff.EngravingRules.SlurFlattenToObstacle = false;
-         osmdOff.render();
-         const arcWithout: number = widestSlurArcHeight(osmdOff);
-
-         return osmdOn.load(xml).then(() => {
-            osmdOn.render(); // SlurFlattenToObstacle is true by default
-            const arcWith: number = widestSlurArcHeight(osmdOn);
-            // The widest slur spans a (near-)flat passage, so flattening should still cut its arc
-            // materially below the unflattened version. Do not lock this to the exact legacy VexFlow
-            // proportion: modern note spacing/layout can land on a slightly taller but still reasonable result.
-            expect(arcWith, `widest slur's flattened arc (${arcWith.toFixed(1)}) should be far below unflattened (${arcWithout.toFixed(1)})`)
-               .to.be.lessThan(arcWithout * 0.7);
-            done();
-         });
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmd.load(xml).then(() => {
+         osmd.render();
+         const geometry: WidestSlurGeometry = widestSlurGeometry(osmd);
+         expect(geometry.selected, "the widest slur should come from the candidate solver").to.equal(true);
+         expect(geometry.width, "fixture must still exercise a genuinely wide slur").to.be.greaterThan(16);
+         expect(Number.isFinite(geometry.arc / geometry.width), "arc ratio should be finite").to.equal(true);
+         expect(geometry.arc / geometry.width, "wide slur should remain proportionally shallow")
+            .to.be.lessThan(0.08);
+         done();
       }).catch(done);
    });
 
