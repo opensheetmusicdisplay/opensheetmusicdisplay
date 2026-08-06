@@ -129,6 +129,27 @@ export class Glyph extends Element {
     );
   }
 
+  // VexFlowPatch: the note-width tables query glyph widths constantly during formatting
+  // (the same few dozen (code, point) pairs, tens of thousands of times per render), each
+  // time constructing a throwaway Glyph just to read getMetrics().width. That width is a
+  // pure function of (code, point) — it is the cached bbox width — so memoize it on the font,
+  // next to cached_outline / cached_bboxes.
+  static cachedWidth(code, point) {
+    const font = Font;
+    let cache = font.cached_widths;
+    if (!cache) {
+      cache = Object.create(null);
+      font.cached_widths = cache;
+    }
+    const key = code + '/' + point;
+    let width = cache[key];
+    if (width === undefined) {
+      width = new Glyph(code, point).getMetrics().width;
+      cache[key] = width;
+    }
+    return width;
+  }
+
   /**
    * @constructor
    */
