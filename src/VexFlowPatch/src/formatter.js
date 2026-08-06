@@ -556,9 +556,14 @@ export class Formatter {
 
     this.voices.forEach(voice => {
       voice.getTickables().forEach((note, i, notes) => {
+        // VexFlowPatch: the duration key (getTicks().clone().simplify().toString()) is a pure
+        // function of the note but was recomputed in the deviation loop below - a Fraction clone +
+        // simplify + string per note, twice. Compute it once and stash it on the (persistent,
+        // per-Tickable) formatter metrics so the second loop can reuse it instead of recomputing.
         const duration = note.getTicks().clone().simplify().toString();
         const metrics = note.getMetrics();
         const formatterMetrics = note.getFormatterMetrics();
+        formatterMetrics.duration = duration;
         const leftNoteEdge = note.getX() + metrics.noteWidth +
           metrics.modRightPx + metrics.extraRightPx;
         let space = 0;
@@ -587,11 +592,10 @@ export class Formatter {
     let totalDeviation = 0;
     this.voices.forEach(voice => {
       voice.getTickables().forEach((note) => {
-        const duration = note.getTicks().clone().simplify().toString();
         const metrics = note.getFormatterMetrics();
+        const duration = metrics.duration; // VexFlowPatch: reuse the key computed in the mean-spacing loop above
         metrics.iterations += 1;
         metrics.space.deviation = metrics.space.used - durationStats[duration].mean;
-        metrics.duration = duration;
         metrics.space.mean = durationStats[duration].mean;
 
         totalDeviation += Math.pow(durationStats[duration].mean, 2);
