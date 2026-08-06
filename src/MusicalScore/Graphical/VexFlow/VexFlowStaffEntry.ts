@@ -148,6 +148,41 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
     }
 
     /**
+     * Return the visual centre of the rendered note or rest column relative
+     * to this staff entry. Cursor placement should follow the glyph rather
+     * than the complete VexFlow bounding box, which can include accidentals,
+     * flags, stems, and modifiers.
+     */
+    public getNoteheadCenterAnchorOffset(
+        stave: VF.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave(),
+    ): number | undefined {
+        const centres: number[] = [];
+        for (const voiceEntry of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
+            const staveNote: any = voiceEntry.vfStaveNote;
+            if (!staveNote) {
+                continue;
+            }
+            const noteheadBeginX: number = staveNote.getNoteHeadBeginX?.();
+            const noteheadEndX: number = staveNote.getNoteHeadEndX?.();
+            if (Number.isFinite(noteheadBeginX) && Number.isFinite(noteheadEndX)) {
+                centres.push((noteheadBeginX + noteheadEndX) / 2);
+                continue;
+            }
+            const boundingBox: any = staveNote.getBoundingBox?.();
+            const boundingBoxX: number = boundingBox?.getX?.() ?? boundingBox?.x;
+            const boundingBoxWidth: number = boundingBox?.getW?.() ?? boundingBox?.w;
+            if (Number.isFinite(boundingBoxX) && Number.isFinite(boundingBoxWidth)) {
+                centres.push(boundingBoxX + boundingBoxWidth / 2);
+            }
+        }
+        if (centres.length === 0) {
+            return undefined;
+        }
+        const anchorWithinMeasure: number = (Math.min(...centres) - stave.getX()) / unitInPixels;
+        return anchorWithinMeasure - this.PositionAndShape.RelativePosition.x;
+    }
+
+    /**
      * Synchronize harmony after VexFlow formatting (and once more after its
      * draw-time note correction). Staff-entry bounds include stems, flags,
      * and modifiers, so they are not a stable optical anchor for harmony.

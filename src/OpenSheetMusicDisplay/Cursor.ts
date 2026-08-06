@@ -196,6 +196,10 @@ export class Cursor {
             gseArr.sort((a, b) => a?.PositionAndShape?.AbsolutePosition?.x <= b?.PositionAndShape?.AbsolutePosition?.x ? -1 : 1 )[0];
       if (gse) {
         x = gse.PositionAndShape.AbsolutePosition.x;
+        const noteheadCenterOffset: number = gse.getNoteheadCenterAnchorOffset?.();
+        if (Number.isFinite(noteheadCenterOffset)) {
+          x += noteheadCenterOffset;
+        }
         musicSystem = gse.parentMeasure.ParentMusicSystem;
       }
 
