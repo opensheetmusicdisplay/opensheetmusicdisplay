@@ -38,6 +38,36 @@ function processOutline(outline, originX, originY, scaleX, scaleY, outlineFns) {
   }
 }
 
+// VexFlowPatch: cache of a glyph outline's scaled, origin-relative path segments, keyed by the
+// outline array (already cached per glyph code) and scale. Glyph.renderOutline replays these with
+// just an add per point, instead of re-walking and re-coercing the outline string array (the
+// outline is stored as strings) on every draw. WeakMap so entries vanish if the outline is GC'd.
+const glyphSegmentCache = new WeakMap();
+
+function getScaledGlyphSegments(outline, scale) {
+  let byScale = glyphSegmentCache.get(outline);
+  if (!byScale) {
+    byScale = new Map();
+    glyphSegmentCache.set(outline, byScale);
+  }
+  let segments = byScale.get(scale);
+  if (!segments) {
+    segments = [];
+    // Record with origin 0,0 so the captured coordinates are purely scale*point (matching what
+    // renderOutline's per-point `x_pos + ...` / `y_pos + ...` would add the position to). Same
+    // scaleX/scaleY (scale, -scale) and consumption order as the original processOutline walk,
+    // so replaying produces byte-identical absolute coordinates.
+    processOutline(outline, 0, 0, scale, -scale, {
+      m: (x, y) => segments.push(['m', x, y]),
+      l: (x, y) => segments.push(['l', x, y]),
+      q: (x1, y1, x, y) => segments.push(['q', x1, y1, x, y]),
+      b: (x1, y1, x2, y2, x, y) => segments.push(['b', x1, y1, x2, y2, x, y]),
+    });
+    byScale.set(scale, segments);
+  }
+  return segments;
+}
+
 export class Glyph extends Element {
   /* Static methods used to implement loading / unloading of glyphs */
   static loadMetrics(font, code, cache) {
@@ -102,12 +132,19 @@ export class Glyph extends Element {
     }
     ctx.beginPath();
     ctx.moveTo(x_pos, y_pos);
-    processOutline(outline, x_pos, y_pos, scale, -scale, {
-      m: ctx.moveTo.bind(ctx),
-      l: ctx.lineTo.bind(ctx),
-      q: ctx.quadraticCurveTo.bind(ctx),
-      b: ctx.bezierCurveTo.bind(ctx),
-    });
+    // VexFlowPatch: replay cached scaled segments (position added per point) instead of re-walking
+    // and re-coercing the outline string array on every draw. Produces byte-identical coordinates.
+    const segments = getScaledGlyphSegments(outline, scale);
+    for (let i = 0; i < segments.length; i++) {
+      const s = segments[i];
+      switch (s[0]) {
+        case 'm': ctx.moveTo(x_pos + s[1], y_pos + s[2]); break;
+        case 'l': ctx.lineTo(x_pos + s[1], y_pos + s[2]); break;
+        case 'q': ctx.quadraticCurveTo(x_pos + s[1], y_pos + s[2], x_pos + s[3], y_pos + s[4]); break;
+        case 'b': ctx.bezierCurveTo(x_pos + s[1], y_pos + s[2], x_pos + s[3], y_pos + s[4], x_pos + s[5], y_pos + s[6]); break;
+        default: break;
+      }
+    }
     ctx.fill();
   }
 
