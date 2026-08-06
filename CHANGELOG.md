@@ -1,3 +1,26 @@
+## [2.1.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/2.1.1...2.1.2) (2026-08-06)
+
+
+### Bug Fixes
+
+* **Playback:** Fix wrong tuplet playback duration from export errors like musx2mxl. Read tuplet note length from time-modification when <duration> is un-reduced ([5497e15](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5497e15c4299d083321619443e67e66c00cefe91))
+
+
+### Performance Improvements
+
+* **40% median total performance improvement**: Compared to OSMD 2.1.1, normal scores render median 40% faster now, 47% even for large scores, where this is the most useful. This aggregates improvements below. [See Issue 1716 for more info and graphics](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1716).
+* **Formatter:** Dedupe the duration key computation in evaluate() (PR [#1715](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1715), minor performance gain) ([16b5020](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/16b5020e3ed17c7bf4f67c0c8093f13a7f730e82))
+* **Glyph:** Cache outline bounding boxes. Median ~20% performance gain (PR [#1704](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1704)) ([e9cb6b0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e9cb6b0aef1c96eb349cd53cfa82b5fb75249a86))
+* **Glyph:** Cache scaled glyph outline segments for drawing. Median 2.5% speedup, 9% for largest score (PR [#1713](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1713)) ([926fc1d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/926fc1d816762e8496301a342a7676ccd3cdc43e)), closes [1704/#1712](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1712)
+* **Glyph:** Memoize glyph width lookups during formatting. Median 5% speedup (PR [#1712](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1712)) ([27cff40](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/27cff40e9e209f73296d1ca533f69a53a34ab512)), closes [#1704](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1704) [#1704](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1704)
+* **NoteHead:** Re-enable glyph outline caching for noteheads. Median 2% speedup (PR [#1711](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1711)) ([b5fc7eb](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b5fc7ebb543228a065a5d48411c6106d1030dce0))
+* **SkyBottomLineCalculator:** Remove per-render allocations in updateLines (2-3% speedup in dense scores, PR [#1714](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1714)) ([6077f8f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6077f8fc7f60d8c1ddaeb0e51c688fd48928ce6b))
+* **VexFlowMeasure:** Scope correctNotePositions to its own measure (PR [#1703](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1703)). Improves performance especially for long pieces by 7% to over 40%. ([c663e0d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c663e0d3f61aa2ee1b6ca4d0f360a60e42cc8b28))
+* **VexFlowMeasure:** Scope correctNotePositions tab code branch to its own measure ([#1703](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1703)) ([ba53f63](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ba53f63bc953eef1e2254e035f219c350012e951))
+* **Visual Regression Tests:** Speed up visual regression tests to single seconds (from minutes), make cross-platform (PR [#1709](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1709), [#676](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/676)) ([1a2f910](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1a2f910a28302c98478cbbda68a360e785656272)), closes [#ff0000](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/ff0000)
+
+
+
 ## [2.1.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/2.1.0...2.1.1) (2026-07-29)
 
 
