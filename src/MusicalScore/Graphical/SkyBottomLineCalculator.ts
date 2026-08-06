@@ -52,39 +52,62 @@ export class SkyBottomLineCalculator {
         }
 
         const arrayLength: number = Math.max(Math.ceil(this.StaffLineParent.PositionAndShape.Size.width * this.SamplingUnit), 1);
-        this.mSkyLine = [];
-        this.mBottomLine = [];
 
+        // Concatenate the per-measure sky/bottom line arrays (device-pixel resolution) into one array
+        // per line for the whole staffline. Preallocate and index-fill instead of push(...skyLine):
+        // the spread turns each measure's array into individual call arguments (allocating and, for
+        // wide measures, risking a call-stack overflow), and this runs for every staffline every render.
+        let concatLength: number = 0;
+        for (const { skyLine } of calculationResults) {
+            concatLength += skyLine.length;
+        }
+        const skyLineConcat: number[] = new Array(concatLength);
+        const bottomLineConcat: number[] = new Array(concatLength);
+        let writeIndex: number = 0;
         for (const { skyLine, bottomLine } of calculationResults) {
-            this.mSkyLine.push(...skyLine);
-            this.mBottomLine.push(...bottomLine);
+            for (let i: number = 0; i < skyLine.length; i++) {
+                skyLineConcat[writeIndex] = skyLine[i];
+                bottomLineConcat[writeIndex] = bottomLine[i];
+                writeIndex++;
+            }
         }
 
         // Subsampling:
         // The pixel width is bigger than the measure size in units. So we split the array into
-        // chunks with the size of MeasurePixelWidth/measureUnitWidth and reduce the value to its
-        // average
-        const arrayChunkSize: number = this.mSkyLine.length / arrayLength;
-
+        // chunks with the size of MeasurePixelWidth/measureUnitWidth and reduce each chunk to its
+        // extreme (min for the skyline, max for the bottom line).
+        // The reduction is an in-place scan instead of slice(chunk) + Math.min(...chunk): the old form
+        // allocated a small array and spread it into a call for every one of the (tens of thousands of)
+        // chunks per render. The scanned column range is identical to the old slice(chunkIndex, endIndex + 1)
+        // range - Array.slice truncates its float bounds toward zero, which Math.trunc reproduces - so the
+        // subsampled values are unchanged (min/max are order- and duplicate-independent).
+        const arrayChunkSize: number = concatLength / arrayLength;
         const subSampledSkyLine: number[] = [];
         const subSampledBottomLine: number[] = [];
-        for (let chunkIndex: number = 0; chunkIndex < this.mSkyLine.length; chunkIndex += arrayChunkSize) {
+        for (let chunkIndex: number = 0; chunkIndex < concatLength; chunkIndex += arrayChunkSize) {
             if (subSampledSkyLine.length === arrayLength) {
                 break; // TODO find out why skyline.length becomes arrayLength + 1. see log.debug below
             }
 
-            const endIndex: number = Math.min(this.mSkyLine.length, chunkIndex + arrayChunkSize);
-            let chunk: number[] = this.mSkyLine.slice(chunkIndex, endIndex + 1); // slice does not include end index
-            // TODO chunkIndex + arrayChunkSize is sometimes bigger than this.mSkyLine.length -> out of bounds
-            // TODO chunkIndex + arrayChunkSize is often a non-rounded float as well. is that ok to use with slice?
-            /*const diff: number = this.mSkyLine.length - (chunkIndex + arrayChunkSize);
-            if (diff < 0) { // out of bounds
-                console.log("length - slice end index: " + diff);
-            }*/
+            const endIndex: number = Math.min(concatLength, chunkIndex + arrayChunkSize);
+            const startColumn: number = Math.trunc(chunkIndex); // slice(chunkIndex, ...) truncates the start toward zero
+            let endColumn: number = Math.trunc(endIndex + 1); // slice's end is exclusive; "+ 1" mirrors the old endIndex + 1
+            if (endColumn > concatLength) {
+                endColumn = concatLength;
+            }
 
-            subSampledSkyLine.push(Math.min(...chunk));
-            chunk = this.mBottomLine.slice(chunkIndex, endIndex + 1); // slice does not include end index
-            subSampledBottomLine.push(Math.max(...chunk));
+            let skyLineMin: number = Number.POSITIVE_INFINITY;
+            let bottomLineMax: number = Number.NEGATIVE_INFINITY;
+            for (let column: number = startColumn; column < endColumn; column++) {
+                if (skyLineConcat[column] < skyLineMin) {
+                    skyLineMin = skyLineConcat[column];
+                }
+                if (bottomLineConcat[column] > bottomLineMax) {
+                    bottomLineMax = bottomLineConcat[column];
+                }
+            }
+            subSampledSkyLine.push(skyLineMin);
+            subSampledBottomLine.push(bottomLineMax);
         }
 
         this.mSkyLine = subSampledSkyLine;
@@ -93,12 +116,29 @@ export class SkyBottomLineCalculator {
             log.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength})`);
         }
 
-        // Remap the values from 0 to +/- height in units
-        const lowestSkyLine: number = Math.max(...this.mSkyLine);
-        this.mSkyLine = this.mSkyLine.map(v => (v - lowestSkyLine) / unitInPixels + this.StaffLineParent.TopLineOffset);
+        // Remap the values from 0 to +/- height in units. The extremes are found with a scan instead of
+        // Math.max(...array) (which spreads the whole array into a call), and the remap is done in place.
+        let lowestSkyLine: number = Number.NEGATIVE_INFINITY;
+        for (let i: number = 0; i < subSampledSkyLine.length; i++) {
+            if (subSampledSkyLine[i] > lowestSkyLine) {
+                lowestSkyLine = subSampledSkyLine[i];
+            }
+        }
+        const topLineOffset: number = this.StaffLineParent.TopLineOffset;
+        for (let i: number = 0; i < subSampledSkyLine.length; i++) {
+            subSampledSkyLine[i] = (subSampledSkyLine[i] - lowestSkyLine) / unitInPixels + topLineOffset;
+        }
 
-        const highestBottomLine: number = Math.min(...this.mBottomLine);
-        this.mBottomLine = this.mBottomLine.map(v => (v - highestBottomLine) / unitInPixels + this.StaffLineParent.BottomLineOffset);
+        let highestBottomLine: number = Number.POSITIVE_INFINITY;
+        for (let i: number = 0; i < subSampledBottomLine.length; i++) {
+            if (subSampledBottomLine[i] < highestBottomLine) {
+                highestBottomLine = subSampledBottomLine[i];
+            }
+        }
+        const bottomLineOffset: number = this.StaffLineParent.BottomLineOffset;
+        for (let i: number = 0; i < subSampledBottomLine.length; i++) {
+            subSampledBottomLine[i] = (subSampledBottomLine[i] - highestBottomLine) / unitInPixels + bottomLineOffset;
+        }
     }
 
     /**
