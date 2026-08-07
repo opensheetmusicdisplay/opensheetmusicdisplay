@@ -37,7 +37,7 @@ import { DEFAULT_OSMD_FONT_PROFILE } from "./FontProfileActive";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "2.1.1-dev"; // getter: this.Version
+    protected version: string = "2.1.2-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
