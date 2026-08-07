@@ -27,4 +27,4 @@ The exact files, hashes, subset range, and SIL OFL texts are published under [`f
 
 ## Temporary VexFlow pin
 
-While the prerequisite VexFlow changes are under review, the draft uses immutable integration commit `f74cba89b6a0c5a27a46ed25d610e5d987fc4b02`. That integration-only commit adds a package `prepare` hook so a Git install produces the CommonJS and declaration outputs VexFlow's package exports promise, including when npm prepares a source snapshot without `.git` metadata. The OSMD dependency must move to an official released VexFlow version before merge.
+While the prerequisite VexFlow changes are under review, the draft uses immutable integration commit `6b1bc4440335948850b1e285319769f178e3ebd9`. That integration-only commit adds a package `prepare` hook so a Git install produces the CommonJS and declaration outputs VexFlow's package exports promise, including when npm prepares a source snapshot without `.git` metadata. The OSMD dependency must move to an official released VexFlow version before merge.
