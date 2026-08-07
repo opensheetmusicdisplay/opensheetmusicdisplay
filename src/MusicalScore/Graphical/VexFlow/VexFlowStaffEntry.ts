@@ -162,6 +162,13 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             if (!staveNote) {
                 continue;
             }
+            // Cursor initialization can run immediately after updateGraphic(),
+            // before VexFlow has formatted the new notes. The optical helpers
+            // require a TickContext, so leave this voice entry to the caller's
+            // pre-format positional fallback until rendering has assigned one.
+            if (!staveNote.tickContext) {
+                continue;
+            }
             const noteheadBeginX: number = staveNote.getNoteHeadBeginX?.();
             const noteheadEndX: number = staveNote.getNoteHeadEndX?.();
             if (Number.isFinite(noteheadBeginX) && Number.isFinite(noteheadEndX)) {
