@@ -1117,6 +1117,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         continue;
       }
       let yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
+      if ((gMeasure as VexFlowMeasure).hasMetronomeMark) {
+        yOffset += this.rules.RehearsalMarkYOffsetWithMetronome;
+      }
       if (gMeasure.parentSourceMeasure.isReducedToMultiRest) {
         // we could add other conditions here where we want more offset to avoid collisions
         yOffset += this.rules.RehearsalMarkYOffsetAddedForRehearsalMarks;
@@ -2674,4 +2677,3 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 }
-
