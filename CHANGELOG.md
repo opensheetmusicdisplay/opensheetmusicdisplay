@@ -3,7 +3,7 @@
 
 ### Bug Fixes
 
-* **Playback:** Fix wrong tuplet playback duration from export errors like musx2mxl. Read tuplet note length from time-modification when <duration> is un-reduced ([5497e15](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5497e15c4299d083321619443e67e66c00cefe91))
+* **Playback:** Fix wrong tuplet playback duration from export errors like musx2mxl. Read tuplet note length from time-modification when `<duration>` is un-reduced ([5497e15](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5497e15c4299d083321619443e67e66c00cefe91))
 
 
 ### Performance Improvements
