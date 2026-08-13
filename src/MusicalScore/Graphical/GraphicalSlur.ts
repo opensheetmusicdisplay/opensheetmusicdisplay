@@ -99,6 +99,18 @@ export class GraphicalSlur extends GraphicalCurve {
         const endX: number = startEndPoints.endX;
         let startY: number = startEndPoints.startY;
         let endY: number = startEndPoints.endY;
+
+        // Degenerate case: start and end point (nearly) coincide, e.g. for a zero-length slur from a malformed
+        // file. The curve calculation below would divide 0 by 0 (start-end angle, tangent slopes) and produce
+        // NaN control points, ending up as an invalid SVG path - use a collapsed (invisible) curve instead.
+        if (Math.abs(endX - startX) < 0.0001 && Math.abs(endY - startY) < 0.0001) {
+            this.bezierStartPt = new PointF2D(startX, startY);
+            this.bezierStartControlPt = new PointF2D(startX, startY);
+            this.bezierEndControlPt = new PointF2D(endX, endY);
+            this.bezierEndPt = new PointF2D(endX, endY);
+            return;
+        }
+
         const minAngle: number = rules.SlurTangentMinAngle;
         const maxAngle: number = rules.SlurTangentMaxAngle;
         let points: PointF2D[];
@@ -905,11 +917,17 @@ export class GraphicalSlur extends GraphicalCurve {
             if (Math.abs(points[i].y - Number.MAX_VALUE) < 0.0001 || Math.abs(points[i].y - (-Number.MAX_VALUE)) < 0.0001) {
                 continue;
             }
-            slope = Math.max(slope, (points[i].y - y) / (points[i].x - x));
+            const pointSlope: number = (points[i].y - y) / (points[i].x - x);
+            if (!Number.isNaN(pointSlope)) { // NaN if a point coincides with the start point (0/0)
+                slope = Math.max(slope, pointSlope);
+            }
         }
 
         // in case all Points don't have a meaningful value or the slope between Start- and EndPoint is just bigger
-        slope = Math.max(slope, Math.abs(end.y - y) / (end.x - x));
+        const startEndSlope: number = Math.abs(end.y - y) / (end.x - x);
+        if (!Number.isNaN(startEndSlope)) { // NaN if start and end point coincide (0/0)
+            slope = Math.max(slope, startEndSlope);
+        }
         //limit to 80 degrees
         slope = Math.min(slope, 5.6713);
 
@@ -931,11 +949,17 @@ export class GraphicalSlur extends GraphicalCurve {
             if (Math.abs(points[i].y - Number.MAX_VALUE) < 0.0001 || Math.abs(points[i].y - (-Number.MAX_VALUE)) < 0.0001) {
                 continue;
             }
-            slope = Math.min(slope, (y - points[i].y) / (x - points[i].x));
+            const pointSlope: number = (y - points[i].y) / (x - points[i].x);
+            if (!Number.isNaN(pointSlope)) { // NaN if a point coincides with the end point (0/0)
+                slope = Math.min(slope, pointSlope);
+            }
         }
 
         // in case no Point has a meaningful value or the slope between Start- and EndPoint is just smaller
-        slope = Math.min(slope, (y - start.y) / (x - start.x));
+        const startEndSlope: number = (y - start.y) / (x - start.x);
+        if (!Number.isNaN(startEndSlope)) { // NaN if start and end point coincide (0/0)
+            slope = Math.min(slope, startEndSlope);
+        }
         //limit to 80 degrees
         slope = Math.max(slope, -5.6713);
 
@@ -1070,6 +1094,31 @@ export class GraphicalSlur extends GraphicalCurve {
         const endControlPoint: PointF2D = new PointF2D();
         endControlPoint.x = endX - (endX * factorEnd * Math.cos(endAngle * GraphicalSlur.degreesToRadiansFactor));
         endControlPoint.y = -(endX * factorEnd * Math.sin(endAngle * GraphicalSlur.degreesToRadiansFactor));
+        // Flatten long/steep slurs so they don't arc far higher than the notes/objects they actually span
+        // (issue #1466). The cubic bezier's apex (its highest point above the start-end line) is determined by the
+        // control point heights; cap it to a small margin above the highest spanned object, keeping the start/end
+        // angles (so the slur still leaves the notes at the same steep angle, but flattens quickly after).
+        if (this.rules.SlurFlattenToObstacle) {
+            const requiredHeight: number = Math.max(0, this.getPointListMaxY(points)); // highest object above the start-end line
+            // graceful minimum arc so slurs over flat passages aren't flattened into near-straight lines.
+            // Grows with sqrt(width) (not linearly) so that WIDE slurs stay proportionally flat instead of
+            // ballooning: a linear floor let e.g. a system-spanning slur over flat notes arc ~8 units high.
+            const minArc: number = Math.min(this.rules.SlurFlattenMaxMinArcHeight, this.rules.SlurFlattenMinArcWidthFactor * Math.sqrt(endX));
+            const targetApex: number = Math.max(requiredHeight + this.rules.SlurFlattenToObstacleMargin, minArc);
+            let apex: number = 0;
+            // the bezier's y at parameter t only depends on the control points' y (start/end points are on the x-axis here)
+            for (let t: number = 0.1; t <= 0.9; t += 0.1) {
+                const mt: number = 1 - t;
+                apex = Math.max(apex, 3 * mt * mt * t * startControlPoint.y + 3 * mt * t * t * endControlPoint.y);
+            }
+            if (apex > targetApex && apex > 0.0001) {
+                const scale: number = targetApex / apex; // apex scales linearly with the control point heights
+                startControlPoint.x *= scale;
+                startControlPoint.y *= scale;
+                endControlPoint.x = endX - (endX - endControlPoint.x) * scale;
+                endControlPoint.y *= scale;
+            }
+        }
         //Soften the slur in a "brute-force" way
         let controlPointYDiff: number = startControlPoint.y - endControlPoint.y;
         while (this.rules.SlurMaximumYControlPointDistance &&

@@ -107,10 +107,32 @@ select {
 }
 
 #last-adv-setting{
+  order:1;
+}
+
+/* Music Braille options (optional, niche feature): collapsed-by-default <details> section.
+   order:2 keeps it at the very bottom of the panel -- below #last-adv-setting (order:1) -- in both
+   the portrait and desktop flex layouts, so it takes over the panel-terminating bottom border that
+   used to sit on #last-adv-setting (portrait only; on desktop the #advancedSettings border remains
+   the visual end of the panel, see the border-width:0 override in the desktop media query). */
+#brailleOptionsColumn{
+  order: 2;
   padding-bottom: 5px;
   border-bottom: 2px solid var(--theme-color-dark);
-  border-radius: 0px 0px 5px 5px;  
-  order:1;
+  border-radius: 0px 0px 5px 5px;
+}
+#brailleOptionsSummary{
+  cursor: pointer;
+  color: var(--theme-color-dark); /* also colors the disclosure triangle (::marker inherits) */
+  margin-top: 8px;
+}
+#brailleOptionsSummary h3.ui.header{
+  display: inline-block; /* keep the heading on one line with the disclosure triangle */
+  vertical-align: middle;
+  margin: 0;
+  font-size: var(--port-collapsible-fontsize);
+  font-weight: 550;
+  color: var(--theme-color-dark);
 }
 
 .advanced-setting{
@@ -151,10 +173,19 @@ select {
   display:block;
   margin:auto;
   margin-bottom: 0.7em;
+  max-width: 95%; /* the base width is a fixed 320px -- don't let it overflow very narrow screens */
   color: var(--theme-color-dark);
   background-color: white;
   border: 1px solid var(--theme-color-dark);
   order:1;
+}
+/* "Open file..." button: picks a local MusicXML file via the native file dialog -- the
+   keyboard/screen-reader accessible alternative to drag&drop onto the page. */
+#open-file-btn{
+  display: block; /* a block button keeps its fit-content width, so margin:auto centers it like #selectSample */
+  margin: auto;
+  margin-bottom: 0.7em;
+  order: 2; /* desktop flex row only: after #selectSample (order:1); no effect in this block layout */
 }
 
 #zoomControlsButtons{
@@ -377,6 +408,18 @@ select {
     margin-left: var(--desktop-divControls-width);
   }
 
+  /* same reservation for the braille output (a body-level sibling below the score), so the solid
+     sidebar doesn't cover it. Unlike the score this needs no JS/re-render -- the braille is plain
+     text -- so the collapsed override is pure CSS. The transition keeps it in sync with the 0.4s
+     sidebar slide. */
+  #brailleContainer{
+    margin-left: var(--desktop-divControls-width);
+    transition: margin-left 0.4s ease;
+  }
+  body.controls-collapsed #brailleContainer{
+    margin-left: 0;
+  }
+
   /* minimized: slide the sidebar (and its toggle button) off to the left. index.js then frees the
      reserved width and re-renders once, when the slide finishes (collapse) / right away (expand). */
   body.controls-collapsed #divControls{
@@ -411,41 +454,49 @@ select {
   #selectSampleContainer{
     position: relative;
     margin-top: 0px;
-    width: 50%;
+    margin-bottom: 0;
+    /* compact pill sized to its content -- the old fixed width:50% + min-width:70% on the select
+       over-constrained the row, squishing the title onto three lines and pushing the button through
+       the border. Centered (margin:auto from the base rule) inside #topBar, which reserves the
+       sidebar width on the left, so the pill centers over the score area. On narrow windows the
+       row wraps inside the border instead of overflowing it. */
+    width: fit-content;
+    max-width: 95%;
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    gap: 6px 12px;
+    padding: 8px 16px;
     border-radius: 5px;
     border-width: var(--thick-border-size);
-    margin-bottom: 0;
-    /* centered (margin:auto from the base rule) inside #topBar, which reserves the sidebar width on the
-       left -- so the box centers over the score area and can no longer be cut off by the sidebar. */
   }
   #selectSampleTitle{
-    height:100%;
-    font-size: 20px;
-    margin-left: 0%;
-    margin-top: 0 !important;
-    padding-bottom: 15px;
-    border-radius: 5px 0px 0px 5px;
-    padding-left: 5px;
-    padding-right: 5px;
-    padding-top: 20px !important;
-    padding-bottom:20px;
-
-    flex-grow: 1;
+    /* plain inline label on the pill background: the portrait header-bar background would show up
+       as a misaligned block inside the flex row, so it is removed here */
+    margin: 0;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    white-space: nowrap;
+    font-size: 1.3em;
+    flex-grow: 0;
   }
   #selectSample{
-    width: 100% !important;
+    width: auto !important;
+    min-width: 0; /* allow shrinking below content width (the base/semantic min-widths would force overflow) */
+    max-width: 480px;
+    flex: 1 1 320px;
     min-height: 3em;
-    margin-top: 0px;
-    margin-bottom: 0;
-    min-width: 70%;
-    margin-left:20px;
-    margin-right: 20px;
-    flex-grow: 2;
+    margin: 0; /* cancel the portrait auto margins; spacing comes from the container gap */
     border-width: var(--thick-border-size);
     overflow: visible;
+  }
+  #open-file-btn{
+    margin: 0; /* cancel the portrait auto margins (they would swallow the flex row's free space) */
+    flex: none;
+    white-space: nowrap;
+    font-size: 1em; /* match the select's text size instead of the sidebar's vh-based button size */
   }
   #advancedSettings{
     background-color: var(--theme-color-light);
@@ -502,6 +553,12 @@ select {
 
   #last-adv-setting{
     border-width: 0px;
+  }
+  #brailleOptionsColumn{
+    border-width: 0px; /* like #last-adv-setting: on desktop the #advancedSettings border closes the panel */
+  }
+  #brailleOptionsSummary h3.ui.header{
+    font-size: var(--desktop-font-size); /* match the other section headers (the base rule uses the portrait size) */
   }
 
   h3.ui.header{
@@ -591,3 +648,13 @@ table {
 
 /* (the old slide-left / slide-right keyframes were replaced by a CSS transform transition on
    #divControls + #slideControlsButton, toggled via the body.controls-collapsed class; see index.js) */
+
+/* "Show classical score (above braille)" (Music Braille options) unchecked: hide the printed score and
+   show only the braille. visibility:hidden + height:0 instead of display:none, so the container
+   keeps its width -- OSMD can still render into it (hidden render for braille facsimile mode)
+   without width:0 layout problems. Toggled via body class in index.js. */
+body.classical-score-hidden #osmdCanvasDiv {
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+}

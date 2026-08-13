@@ -16,10 +16,13 @@
 <div id="topBar" style="display: flex; flex-direction: column;">
     <div class="column" id="selectSampleContainer">
         <h3 class="ui header" id="selectSampleTitle">Select a sample:</h3>
-        <select class="ui selection dropdown" id="selectSample" style="visibility: hidden"></select>
+        <select class="ui selection dropdown" id="selectSample" style="visibility: hidden" aria-label="Select a sample"></select>
+        <button type="button" class="ui button" id="open-file-btn" style="visibility: hidden"
+                aria-label="Open file: load your own MusicXML file (.xml, .musicxml or .mxl)">Open file...</button>
+        <input type="file" id="open-file-input" accept=".xml,.musicxml,.mxl" style="display: none"/>
     </div>
     <h1 class="ui centered header fixed" id="header" style="opacity: 0.0">
-        <img src="./favicon.ico?" class="ui image">
+        <img src="./favicon.ico?" class="ui image" aria-label="OSMD Logo">
         <%= htmlWebpackPlugin.options.title %>
     </h1>
     <div class="version-div centered" id="versionDiv">OSMD Version: </div><!-- set dynamically at runtime-->
@@ -31,62 +34,62 @@
     <div class="ui fixed" id="divControls" style="visibility: hidden; display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
         <div class="column" id="zoomControls">
             <div class="ui buttons" id="zoomControlsButtons">
-                <div class="ui button" id="zoom-in-btn">
+                <button type="button" class="ui button" id="zoom-in-btn" aria-label="Zoom in">
                     <i class="search plus icon" style="margin: 0px"></i>
-                </div>
-                <div class="ui button" id="zoom-out-btn">
+                </button>
+                <button type="button" class="ui button" id="zoom-out-btn" aria-label="Zoom out">
                     <i class="search minus icon" style="margin: 0px"></i>
-                </div>
+                </button>
                 <div class="ui" id="zoom-str-portrait">???</div>
             </div>
         </div>
         <div class="ui" id="advancedSettings" style="display: flex; flex-wrap: wrap; position: relative; max-width: 100%">
-            <button type="button" class="show-on-portrait" id="advanced-settings-btn" ><img src="resources/list-settings-fill.png"></button>
+            <button type="button" class="show-on-portrait" id="advanced-settings-btn" aria-label="Advanced settings"><img src="resources/list-settings-fill.png" alt=""></button>
 
             <div class="column advanced-setting" id="cursorControls">
                 <h3 class="ui header hide-on-portrait">Cursor controls:</h3>
-                <button type="button show-on-portrait" class ="portraitCollapsible">Cursor controls</button>
+                <button type="button" class="portraitCollapsible show-on-portrait">Cursor controls</button>
                 <div class="collapsibleContent">
                     <div class="ui vertical buttons">
-                        <div class="ui animated fade button" id="show-cursor-btn">
+                        <button type="button" class="ui animated fade button" id="show-cursor-btn">
                             <div class="visible content">Show</div>
                             <div class="hidden content">
                                 <i class="eye icon"></i>
                             </div>
-                        </div>
-                        <div class="ui animated fade button" id="hide-cursor-btn">
+                        </button>
+                        <button type="button" class="ui animated fade button" id="hide-cursor-btn">
                             <div class="visible content">Hide</div>
                             <div class="hidden content">
                                 <i class="eye slash icon"></i>
                             </div>
-                        </div>
+                        </button>
                     </div>
                     <div class="ui vertical buttons">
-                        <div class="ui animated fade button" id="previous-cursor-btn">
+                        <button type="button" class="ui animated fade button" id="previous-cursor-btn">
                             <div class="visible content">Previous</div>
                             <div class="hidden content">
                                 <i class="arrow left icon"></i>
                             </div>
-                        </div>
-                        <div class="ui animated fade button" id="next-cursor-btn">
+                        </button>
+                        <button type="button" class="ui animated fade button" id="next-cursor-btn">
                             <div class="visible content">Next</div>
                             <div class="hidden content">
                                 <i class="arrow right icon"></i>
                             </div>
-                        </div>
+                        </button>
                     </div>
                     <div class="ui vertical buttons">
-                        <div class="ui animated fade button" id="reset-cursor-btn">
+                        <button type="button" class="ui animated fade button" id="reset-cursor-btn">
                             <div class="visible content">Reset</div>
                             <div class="hidden content">
                                 <i class="undo icon"></i>
                             </div>
-                        </div>
+                        </button>
                     </div>
                     <div class="item" style="margin-top: 5px;">
                         <div class="ui toggle checkbox">
                             <input type="checkbox" name="public" id="follow-cursor-checkbox">
-                            <label>Follow Cursor</label>
+                            <label for="follow-cursor-checkbox">Follow Cursor</label>
                         </div>
                     </div>
                     <div class="item" style="margin-top: 5px;">
@@ -104,7 +107,7 @@
                     <div class="item" style="margin-top: 5px;">
                         <div class="ui toggle checkbox">
                             <input type="checkbox" name="public" id="incremental-checkbox">
-                            <label>Incremental rendering (load on scroll)</label>
+                            <label for="incremental-checkbox">Incremental rendering (load on scroll)</label>
                         </div>
                     </div>
                 </div>
@@ -114,7 +117,7 @@
             <div class="column advanced-setting" id="selectBoundingDiv">
                 <h3 class="ui header hide-on-portrait">Show bounding box for:</h3>
                 <button type="button" class ="portraitCollapsible show-on-portrait">Show bounding box for</button>
-                <select class="ui selection dropdown collapsibleContent" id="selectBounding" style="visibility: hidden;">
+                <select class="ui selection dropdown collapsibleContent" id="selectBounding" style="visibility: hidden;" aria-label="Show bounding box for">
                     <option value="none">None</option>
                     <option value="all">All</option>
                     <option value="VexFlowMeasure">Measures</option>
@@ -135,13 +138,13 @@
                     <div class="item">
                         <div class="ui toggle checkbox">
                             <input type="checkbox" name="public" id="skylineDebug">
-                            <label>Skyline</label>
+                            <label for="skylineDebug">Skyline</label>
                         </div>
                     </div>
                     <div class="item">
                         <div class="ui toggle checkbox">
                             <input type="checkbox" name="public" id="bottomlineDebug">
-                            <label>Bottomline</label>
+                            <label for="bottomlineDebug">Bottomline</label>
                         </div>
                     </div>
                 </div>
@@ -151,18 +154,17 @@
                 <button type="button" class ="portraitCollapsible show-on-portrait">Debug controls</button>
                 <div>
                     <div class="ui vertical buttons collapsibleContent">
-                        <div class="ui button" id="debug-re-render-btn">Re-render</div>
-
+                        <button type="button" class="ui button" id="debug-re-render-btn">Re-render</button>
                     </div>
                     <div class="ui vertical buttons">
-                        <div class="ui button" id="debug-clear-btn">Clear</div>
+                        <button type="button" class="ui button" id="debug-clear-btn">Clear</button>
                     </div>
                 </div>
             </div>
             <div class="column advanced-setting" id="last-adv-setting">
                 <h3 class="ui header hide-on-portrait">Page size:</h3>
                 <button type="button" class ="portraitCollapsible show-on-portrait">Page size</button>
-                <select class="ui selection dropdown collapsibleContent" id="selectPageSize"  style="visibility: hidden;">
+                <select class="ui selection dropdown collapsibleContent" id="selectPageSize"  style="visibility: hidden;" aria-label="Page size">
                     <option value="endless">endless</option>
                     <option value="A3 P">A3 Portrait</option>
                     <option value="A3 L">A3 Landscape</option>
@@ -173,10 +175,10 @@
                     <option value="Letter P">Letter Portrait</option>
                     <option value="Letter L">Letter Landscape</option>
                 </select>
-                <div class="ui button" id="print-pdf-btn">Create PDF</div>
-                <div class="ui button" id="export-midi-btn">Export MIDI</div>
-                <div class="ui button" id="play-midi-btn">Play MIDI</div>
-                <div class="ui button" id="dark-mode-btn">Dark mode</div>
+                <button type="button" class="ui button" id="print-pdf-btn">Create PDF</button>
+                <button type="button" class="ui button" id="export-midi-btn">Export MIDI</button>
+                <button type="button" class="ui button" id="play-midi-btn">Play MIDI</button>
+                <button type="button" class="ui button" id="dark-mode-btn">Dark mode</button>
             </div>
             <div class="column advanced-setting">
                 <h3 class="ui header hide-on-portrait">Measure Range:</h3>
@@ -210,8 +212,8 @@
                 <h3 class="ui header hide-on-portrait">Transpose by Semitone(s):</h3>
                 <button type="button" class ="portraitCollapsible show-on-portrait">Transpose by Semitone(s)</button>
                 <div class="ui action input collapsibleContent" id="transposeInput">
-                    <input type="number" id="transpose" value="0"/>
-                    <button class="ui button" id="transpose-btn">Transpose</button>
+                    <input type="number" id="transpose" value="0" aria-label="Semitones to transpose"/>
+                    <button type="button" class="ui button" id="transpose-btn">Transpose</button>
                 </div>
             </div>
             <div class="column advanced-setting">
@@ -272,9 +274,57 @@
                     </div>
                 </div>
             </div>
+            <!-- Music Braille (optional, niche feature): a native <details> section, collapsed by default and
+                 kept at the very bottom of the panel (flex order: 2 in demo.css, below #last-adv-setting's order: 1).
+                 The <summary> is keyboard- and screen-reader-operable in both desktop and portrait mode, so this
+                 section does not use the hide-on-portrait/portraitCollapsible mechanism of the sections above.
+                 All logic is in the "Music Braille" section at the bottom of demo/index.js. -->
+            <div class="column advanced-setting" id="brailleOptionsColumn">
+                <details id="brailleOptionsDetails">
+                    <summary id="brailleOptionsSummary"><h3 class="ui header">Music Braille options</h3></summary>
+                    <div class="ui relaxed list">
+                        <div class="item">
+                            <div class="ui toggle checkbox">
+                                <input type="checkbox" name="public" id="braille-show-checkbox">
+                                <label for="braille-show-checkbox">Show Music Braille score (below classical)</label>
+                            </div>
+                        </div>
+                        <div class="item">
+                            <div class="ui toggle checkbox">
+                                <input type="checkbox" name="public" id="braille-show-classical-checkbox" checked>
+                                <label for="braille-show-classical-checkbox">Show classical score (above braille)</label>
+                            </div>
+                        </div>
+                        <div class="item">
+                            <div class="ui toggle checkbox">
+                                <input type="checkbox" name="public" id="braille-lyrics-checkbox">
+                                <label for="braille-lyrics-checkbox">Enable braille lyrics</label>
+                            </div>
+                        </div>
+                        <div class="item">
+                            <div class="ui toggle checkbox">
+                                <input type="checkbox" name="public" id="braille-facsimile-checkbox">
+                                <label for="braille-facsimile-checkbox">Enable facsimile mode</label>
+                            </div>
+                        </div>
+                        <div class="item">
+                            <div class="ui toggle checkbox">
+                                <input type="checkbox" name="public" id="braille-bar-over-bar-checkbox">
+                                <label for="braille-bar-over-bar-checkbox">Bar-over-bar (keyboard)</label>
+                            </div>
+                        </div>
+                        <div class="item">
+                            <div class="ui toggle checkbox">
+                                <input type="checkbox" name="public" id="braille-ensemble-checkbox">
+                                <label for="braille-ensemble-checkbox">Ensemble (instrument abbreviations)</label>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </div>
         </div>
     </div>
-    <button class="hide-on-portrait fixed" id="slideControlsButton"></button>
+    <button type="button" class="hide-on-portrait fixed" id="slideControlsButton" aria-label="Toggle controls"></button>
 </div>
 
 
@@ -285,17 +335,17 @@
     <div class="ui three column grid container" style="padding: 10px; margin-right: auto; margin-left: auto" id="optionalControlsColumnContainer">
         <div class="column" id="zoomControlsButtons-optional-column" style="min-width: 30%; opacity: 0.0">
             <div class="ui buttons" id="zoomControlsButtons-optional">
-                <div class="ui button" id="zoom-in-btn-optional">
+                <button type="button" class="ui button" id="zoom-in-btn-optional" aria-label="Zoom in">
                     <i class="search plus icon"></i>
-                </div>
-                <div class="ui button" id="zoom-out-btn-optional">
+                </button>
+                <button type="button" class="ui button" id="zoom-out-btn-optional" aria-label="Zoom out">
                     <i class="search minus icon"></i>
-                </div>
+                </button>
             </div>
             <h4 id="zoom-str-optional">???</h4>
         </div>
         <div class="column" id="print-pdf-btn-optional-column" style="opacity: 0.0; max-width: 25%;">
-            <div class="ui button" id="print-pdf-btn-optional">Create PDF</div>
+            <button type="button" class="ui button" id="print-pdf-btn-optional">Create PDF</button>
         </div>
         <div class="column" id="selectPageSize-optional-column" style="opacity: 0.0; min-width: 35%">
             <div class="ui two column grid container">
@@ -303,7 +353,7 @@
             <h3>Format:</h3>
             </div>
             <div class="column">
-            <select class="ui selection dropdown" id="selectPageSize-optional">
+            <select class="ui selection dropdown" id="selectPageSize-optional" aria-label="Page size">
                 <option value="endless">endless</option>
                 <option value="A3 P">A3 Portrait</option>
                 <option value="A3 L">A3 Landscape</option>

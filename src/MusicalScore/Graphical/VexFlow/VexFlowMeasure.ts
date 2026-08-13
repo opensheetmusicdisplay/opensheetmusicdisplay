@@ -121,6 +121,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         (this.stave as any).MeasureNumber = this.MeasureNumber; // for debug info. vexflow automatically uses stave.measure for rendering measure numbers
         // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
         this.hasMetronomeMark = false;
+        this.vfRepetitionWords = []; // the modifiers were discarded with the old stave above, so don't keep stale entries
 
         if (this.ParentStaff) {
             this.setLineNumber(this.ParentStaff.StafflineCount);
@@ -456,7 +457,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
           });
     }
 
-    public addWordRepetition(repetitionInstruction: RepetitionInstruction): void {
+    /**
+     * Adds a repetition instruction (e.g. Segno, D.S. al Fine) as a VexFlow StaveRepetition to the measure's stave
+     * (or as a Volta for endings).
+     * @param repetitionInstruction the instruction to add
+     * @returns the created VF.Repetition, or undefined if a volta (ending) was added instead
+     */
+    public addWordRepetition(repetitionInstruction: RepetitionInstruction): VF.Repetition {
         let instruction: number | undefined;
         let position: number = VF.StaveModifier.Position.END;
         const xShift: number = this.beginInstructionsWidth;
@@ -500,12 +507,20 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         if (instruction) {
             const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
-            (repetition as any).xShiftAsPercentOfStaveWidth = this.rules.RepetitionEndInstructionXShiftAsPercentOfStaveWidth;
+            const stafflineMeasures: GraphicalMeasure[] = this.ParentStaffLine?.Measures;
+            if (!stafflineMeasures || stafflineMeasures[stafflineMeasures.length - 1] === this) {
+                // only shift end instructions like Fine to the right in the last measure of the staffline,
+                //   where the shifted text ends in free space. In earlier measures it would be shifted
+                //   into the next measure, where it can collide e.g. with that measure's end instruction (#1689).
+                (repetition as any).xShiftAsPercentOfStaveWidth = this.rules.RepetitionEndInstructionXShiftAsPercentOfStaveWidth;
+            }
             this.stave.addModifier(repetition, position);
-            return;
+            this.vfRepetitionWords.push(repetition);
+            return repetition;
         }
 
         this.addVolta(repetitionInstruction);
+        return undefined;
     }
 
     protected addVolta(repetitionInstruction: RepetitionInstruction): void {
@@ -739,13 +754,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
     // correct position / bounding box (note.setIndex() needs to have been called)
     public correctNotePositions(): void {
         if (this.isTabMeasure) {
-            for (const voice of this.getVoicesWithinMeasure()) {
-                for (const ve of voice.VoiceEntries) {
-                    for (const note of ve.Notes) {
-                        const tabNote: TabNote = note as TabNote;
-                        const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
+            // Measure-scoped, same reasoning as the non-tab branch below: iterating
+            // Voice.VoiceEntries would walk every entry that voice has in the whole
+            // score, from a method that runs once per measure (quadratic in measure count).
+            for (const gse of this.staffEntries) {
+                for (const gve of gse.graphicalVoiceEntries) {
+                    for (const graphicalNote of gve.notes) {
+                        const tabNote: TabNote = graphicalNote.sourceNote as TabNote;
                         if (tabNote.StringNumberTab >= 0) {
-                            gNote.parentVoiceEntry.PositionAndShape.RelativePosition.y =
+                            gve.PositionAndShape.RelativePosition.y =
                                 (tabNote.StringNumberTab - 1) * this.rules.TabStaffInterlineHeightForBboxes;
                         }
                     }
@@ -753,27 +770,40 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
             return; // don't do the below y position adaptations meant for non-tab notes
         }
-        for (const voice of this.getVoicesWithinMeasure()) {
-            for (const ve of voice.VoiceEntries) {
-                for (const note of ve.Notes) {
-                    if (note.isRest()) {
+        // Iterate this measure's own staff entries. Going through
+        // Voice.VoiceEntries instead would walk every entry that voice has in
+        // the whole score, from a method that runs once per measure, so each
+        // measure would re-position every note in the piece (quadratic in
+        // measure count, and every pass after the first writes the same value).
+        for (const gse of this.staffEntries) {
+            for (const gve of gse.graphicalVoiceEntries) {
+                const notes: GraphicalNote[] = gve.notes;
+                if (notes.length === 0) {
+                    continue;
+                }
+                const lastNote: VexFlowGraphicalNote = notes[notes.length - 1] as VexFlowGraphicalNote;
+                if (!lastNote.vfnote) { // notehead() below reads its vfnote[0] with no argument
+                    continue;
+                }
+                for (const graphicalNote of notes) {
+                    const gNote: VexFlowGraphicalNote = graphicalNote as VexFlowGraphicalNote;
+                    if (gNote.sourceNote.isRest()) {
                         continue;
                         // rest positions are already fine.
                         // Doing the below for rests messes up the y-position calculation / bbox for non-rest note for some reason.
                         //   they were not in the voice's voice entries until #1612, so it didn't matter.
                     }
-                    const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
-                    if (!gNote?.vfnote) { // can happen were invisible, then multi rest measure. TODO fix multi rest measure not removed
-                        return;
+                    if (!gNote.vfnote) { // can happen were invisible, then multi rest measure. TODO fix multi rest measure not removed
+                        continue;
                     }
                     const vfnote: VF.StemmableNote = gNote.vfnote[0];
-                    // if (note.isRest()) // TODO somehow there are never rest notes in ve.Notes
-                    // TODO also, grace notes are not included here, need to be fixed as well. (and a few triple beamed notes in Bach Air)
+                    // Note: grace notes are now included here (reached via the measure's graphical
+                    // staff entries), unlike the old Voice.VoiceEntries walk that skipped them.
                     let relPosY: number = 0;
-                    if (gNote.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up && gNote.vfnote[0].getDuration() !== "w") {
+                    if (gNote.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up && vfnote.getDuration() !== "w") {
                         relPosY += 3.5; // about 3.5 lines too high. this seems to be related to the default stem height, not actual stem height.
                         // alternate calculation using actual stem height: somehow wildly varying.
-                        // if (ve.Notes.length > 1) {
+                        // if (notes.length > 1) {
                         //     const stemHeight: number = vfnote.getStem().getHeight();
                         //     // relPosY += shortFactor * stemHeight / unitInPixels - 3.5;
                         //     relPosY += stemHeight / unitInPixels - 3.5; // for some reason this varies in its correctness between similar notes
@@ -784,7 +814,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         relPosY += 0.5; // center-align bbox
                     }
                     const line: number = -gNote.notehead(vfnote).line; // vexflow y direction is opposite of osmd's
-                    relPosY += line + (gNote.parentVoiceEntry.notes.last() as VexFlowGraphicalNote).notehead().line; // don't move for first note: - (-vexline)
+                    relPosY += line + lastNote.notehead().line; // don't move for first note: - (-vexline)
                     gNote.PositionAndShape.RelativePosition.y = relPosY;
                 }
             }
@@ -1424,15 +1454,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // different voices use different normal-type values in their tuplets, the calculated
                 // ticks can differ even for notes at the same timestamp. We use graphicalNoteLength
                 // (which represents the actual musical duration) to calculate correct tick values.
+                // The same correction is applied when the XML <type> (+<dot>s) disagrees with the
+                // actual <duration> (e.g. an invisible rest with type half + dot, but a duration of
+                // only 2.5 quarters): otherwise the vexflow tick counting of the voice goes out of
+                // sync and all following notes of the voice are misaligned with the other voices.
                 if (voiceEntry.notes.length > 0 && voiceEntry.notes[0].sourceNote) {
                     const sourceNote: Note = voiceEntry.notes[0].sourceNote;
-                    if (sourceNote.NoteTuplet) {
-                        const graphicalLength: Fraction = voiceEntry.notes[0].graphicalNoteLength;
+                    const graphicalLength: Fraction = voiceEntry.notes[0].graphicalNoteLength;
+                    const vfTicks: VF.Fraction = vexFlowVoiceEntry.vfStaveNote.getTicks();
+                    // whole measure rests keep their vexflow "w" ticks: nothing follows them
+                    //   in the voice, and correcting them would change spacing unnecessarily.
+                    const isWholeMeasureRest: boolean = sourceNote.IsWholeMeasureRest ||
+                        graphicalLength.RealValue === this.parentSourceMeasure.ActiveTimeSignature.RealValue;
+                    const ticksMismatch: boolean =
+                        Math.abs(vfTicks.value() - graphicalLength.RealValue * VF.RESOLUTION) > 0.001;
+                    if (sourceNote.NoteTuplet ||
+                        (ticksMismatch && !isWholeMeasureRest && !voiceEntry.parentVoiceEntry?.IsGrace)) {
                         // Calculate ticks using VexFlow Fraction to preserve precision.
                         // graphicalLength.RealValue is the note length as a fraction of a whole note.
                         // VF.RESOLUTION (e.g., 16384) is the number of ticks for a whole note.
                         // We use Fraction arithmetic to avoid floating-point precision issues.
-                        const vfTicks: VF.Fraction = vexFlowVoiceEntry.vfStaveNote.getTicks();
                         vfTicks.numerator = graphicalLength.Numerator * VF.RESOLUTION;
                         vfTicks.denominator = graphicalLength.Denominator;
                         // Simplify the fraction to reduce large numbers

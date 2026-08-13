@@ -193,6 +193,25 @@ export default defineConfig(
         },
     },
     {
+        // the braille module composes braille cells from dot bit patterns (e.g. DOT_1 | DOT_2),
+        //   so bitwise operators are legitimate there (and only there)
+        files: ["src/Plugins/Braille/**/*.ts", "test/Plugins/Braille/**/*.ts"],
+        rules: {
+            "no-bitwise": "off",
+        },
+    },
+    {
+        // maintainer CLI tools, run with plain node (no build step)
+        files: ["bin/**/*.mjs"],
+        languageOptions: {
+            globals: {
+                ...globals.node,
+                fetch: "readonly",
+                WebSocket: "readonly",
+            },
+        },
+    },
+    {
         files: ["test/Util/*.js", "test/Util/*.mjs", "test/performance/*.mjs"],
         languageOptions: {
             globals: {

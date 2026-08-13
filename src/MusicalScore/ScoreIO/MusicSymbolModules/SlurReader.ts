@@ -20,7 +20,21 @@ export class SlurReader {
     public addSlur(slurNodes: IXmlElement[], currentNote: Note): void {
         try {
             if (slurNodes) {
+                // Process stops before starts within one notations node: a slur can't start and stop on the
+                // same note, so a stop always refers to an earlier slur. If the start were read first, a stop
+                // with the same slur number would wrongly close the slur just opened on this very note as a
+                // zero-length slur (e.g. Sibelius can export a start followed by an orphan stop on one note,
+                // see test_slurs_long_steep_arc_moonlight_sonata_issue1466.musicxml measure 23).
+                const stopNodes: IXmlElement[] = [];
+                const otherNodes: IXmlElement[] = [];
                 for (const slurNode of slurNodes) {
+                    if (slurNode.attribute("type")?.value === "stop") {
+                        stopNodes.push(slurNode);
+                    } else {
+                        otherNodes.push(slurNode);
+                    }
+                }
+                for (const slurNode of stopNodes.concat(otherNodes)) {
                     if (slurNode.attributes().length > 0) {
                         const type: string = slurNode.attribute("type").value;
                         let slurNumber: number = 1;
@@ -81,7 +95,7 @@ export class SlurReader {
                                 //   though we might want to separate the code a bit, at least use its own openGlissDict instead of openSlurDict.
                                 //   also see variable glissElements later on
                                 const slur: Slur = this.openSlurDict[slurNumber];
-                                if (slur) {
+                                if (slur && slur.StartNote !== currentNote) {
                                     const startNote: Note = slur.StartNote;
                                     const newGlissando: Glissando = new Glissando(startNote);
                                     newGlissando.AddNote(currentNote);
@@ -92,12 +106,12 @@ export class SlurReader {
                                 }
                             } else {
                                 const slur: Slur = this.openSlurDict[slurNumber];
-                                if (slur) {
+                                if (slur && slur.StartNote !== currentNote) {
                                     // normal case: the matching start of this number was read first
                                     slur.EndNote = currentNote;
                                     this.linkSlurToNotes(slur);
                                     delete this.openSlurDict[slurNumber];
-                                } else {
+                                } else if (!slur) {
                                     // No open start with this number. Either a cross-staff slur whose start is
                                     // written after the stop (completed in the start branch above), or an orphan
                                     // stop with no start (e.g. a slur started on a grace note, whose start is
@@ -106,6 +120,12 @@ export class SlurReader {
                                     const deferredStop: Slur = new Slur();
                                     deferredStop.EndNote = currentNote;
                                     this.openStopBeforeStartDict[slurNumber] = deferredStop;
+                                } else {
+                                    // The only open slur with this number started on this very note (its stop, if
+                                    // any, comes later): this stop can't close it - a slur can't start and stop on
+                                    // the same note. Ignore the stop and keep the start open.
+                                    log.debug("SlurReader: ignoring slur stop on the same note as its start, measure " +
+                                        currentNote.SourceMeasure?.MeasureNumber);
                                 }
                             }
                         }

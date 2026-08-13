@@ -659,7 +659,7 @@ Flow.getGlyphProps.duration_codes = {
   '1/2': {
     common: {
       getWidth(scale = Flow.DEFAULT_NOTATION_FONT_SCALE) {
-        return new Glyph(this.code_head || 'v53', scale).getMetrics().width;
+        return Glyph.cachedWidth(this.code_head || 'v53', scale);
       },
       stem: false,
       stem_offset: 0,
@@ -699,7 +699,7 @@ Flow.getGlyphProps.duration_codes = {
   '1': {
     common: {
       getWidth(scale = Flow.DEFAULT_NOTATION_FONT_SCALE) {
-        return new Glyph(this.code_head || 'v1d', scale).getMetrics().width;
+        return Glyph.cachedWidth(this.code_head || 'v1d', scale);
       },
       stem: false,
       stem_offset: 0,
@@ -739,7 +739,7 @@ Flow.getGlyphProps.duration_codes = {
   '2': {
     common: {
       getWidth(scale = Flow.DEFAULT_NOTATION_FONT_SCALE) {
-        return new Glyph(this.code_head || 'v81', scale).getMetrics().width;
+        return Glyph.cachedWidth(this.code_head || 'v81', scale);
       },
       stem: true,
       stem_offset: 0,
@@ -780,7 +780,7 @@ Flow.getGlyphProps.duration_codes = {
   '4': {
     common: {
       getWidth(scale = Flow.DEFAULT_NOTATION_FONT_SCALE) {
-        return new Glyph(this.code_head || 'vb', scale).getMetrics().width;
+        return Glyph.cachedWidth(this.code_head || 'vb', scale);
       },
       stem: true,
       stem_offset: 0,
@@ -823,7 +823,7 @@ Flow.getGlyphProps.duration_codes = {
   '8': {
     common: {
       getWidth(scale = Flow.DEFAULT_NOTATION_FONT_SCALE) {
-        return new Glyph(this.code_head || 'vb', scale).getMetrics().width;
+        return Glyph.cachedWidth(this.code_head || 'vb', scale);
       },
       stem: true,
       stem_offset: 0,
@@ -870,7 +870,7 @@ Flow.getGlyphProps.duration_codes = {
     common: {
       beam_count: 2,
       getWidth(scale = Flow.DEFAULT_NOTATION_FONT_SCALE) {
-        return new Glyph(this.code_head || 'vb', scale).getMetrics().width;
+        return Glyph.cachedWidth(this.code_head || 'vb', scale);
       },
       stem: true,
       stem_offset: 0,
@@ -916,7 +916,7 @@ Flow.getGlyphProps.duration_codes = {
     common: {
       beam_count: 3,
       getWidth(scale = Flow.DEFAULT_NOTATION_FONT_SCALE) {
-        return new Glyph(this.code_head || 'vb', scale).getMetrics().width;
+        return Glyph.cachedWidth(this.code_head || 'vb', scale);
       },
       stem: true,
       stem_offset: 0,
@@ -962,7 +962,7 @@ Flow.getGlyphProps.duration_codes = {
     common: {
       beam_count: 4,
       getWidth(scale = Flow.DEFAULT_NOTATION_FONT_SCALE) {
-        return new Glyph(this.code_head || 'vb', scale).getMetrics().width;
+        return Glyph.cachedWidth(this.code_head || 'vb', scale);
       },
       stem: true,
       stem_offset: 0,
@@ -1008,7 +1008,7 @@ Flow.getGlyphProps.duration_codes = {
     common: {
       beam_count: 5,
       getWidth(scale = Flow.DEFAULT_NOTATION_FONT_SCALE) {
-        return new Glyph(this.code_head || 'vb', scale).getMetrics().width;
+        return Glyph.cachedWidth(this.code_head || 'vb', scale);
       },
       stem: true,
       stem_offset: 0,

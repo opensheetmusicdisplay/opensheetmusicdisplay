@@ -1,6 +1,6 @@
 {
   "name": "opensheetmusicdisplay",
-  "version": "2.0.3",
+  "version": "2.1.2",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
   "main": "build/opensheetmusicdisplay.min.js",
   "types": "build/dist/src/index.d.ts",
@@ -11,7 +11,7 @@
     "lint": "npm run eslint",
     "test": "karma start --single-run --no-auto-watch",
     "test:watch": "karma start --no-single-run --auto-watch --browsers ChromeNoSecurity",
-    "prebuild": "npm-run-all prebuildVexflow",
+    "prebuild": "npm run prebuildVexflow",
     "prebuildVexflow": "ncp src/VexFlowPatch/src/ node_modules/vexflow/src/",
     "prepare": "npm-run-all husky-safe build",
     "build": "npm-run-all lint build:webpack build:package",
@@ -42,11 +42,14 @@
     "generate:current:debug": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 allSmall --debugosmdtesting",
     "generate:current:singletest": "node test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 ^Beethoven --osmdtestingsingle",
     "generate:blessed": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/blessed png 0 0 allSmall --osmdtesting",
-    "test:visual": "bash ./test/Util/visual_regression.sh ./visual_regression",
-    "test:visual:build": "npm-run-all prebuild build:webpack generate:current test:visual",
-    "test:visual:build:batch": "npm-run-all prebuild build:webpack generate:current:batch test:visual",
-    "test:visual:build:webgl": "npm-run-all prebuild build:webpack generate:current:webgl test:visual",
-    "test:visual:singletest": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven"
+    "test:visual": "node ./test/Util/visualRegression.mjs ./visual_regression",
+    "test:visual:old": "bash ./test/Util/visual_regression.sh ./visual_regression",
+    "test:visual:build": "npm run prebuild && npm run build:webpack && npm run generate:current && npm run test:visual",
+    "test:visual:build:old": "npm run prebuild && npm run build:webpack && npm run generate:current && npm run test:visual:old",
+    "test:visual:build:batch": "npm run prebuild && npm run build:webpack && npm run generate:current:batch && npm run test:visual",
+    "test:visual:build:webgl": "npm run prebuild && npm run build:webpack && npm run generate:current:webgl && npm run test:visual",
+    "test:visual:singletest": "node ./test/Util/visualRegression.mjs ./visual_regression Beethoven",
+    "test:visual:singletest:old": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven"
   },
   "pre-commit": [
     "lint"
@@ -106,7 +109,7 @@
     "karma-mocha": "^2.0.1",
     "karma-mocha-reporter": "^2.2.5",
     "karma-webpack": "^5.0.1",
-    "karma-xml2js-preprocessor": "^0.1.0",
+    "karma-xml2js-preprocessor": "^0.2.0",
     "mocha": "^11.7.5",
     "ncp": "^2.0.0",
     "npm-run-all": "^4.1.5",

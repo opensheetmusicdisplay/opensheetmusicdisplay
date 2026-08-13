@@ -18,9 +18,14 @@ import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/Graphic
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
+import { GraphicalLabel } from "../../../../src/MusicalScore/Graphical/GraphicalLabel";
 import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
+import { TabNote } from "../../../../src/MusicalScore/VoiceData/TabNote";
+import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
+import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
+import { AccidentalEnum } from "../../../../src/Common/DataObjects/Pitch";
 
 describe("VexFlow Measure", () => {
 
@@ -52,6 +57,55 @@ describe("VexFlow Measure", () => {
       expect(gms.MeasureList[0].length).to.equal(1);
       expect(gms.MeasureList[0][0].staffEntries.length).to.equal(0);
       done();
+   });
+
+   it("Renders a tie between enharmonic spellings", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_tie_enharmonic_spelling_1694.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const graphicalTies: GraphicalTie[] = osmd.GraphicSheet.MeasureList
+            .flatMap((measureList: GraphicalMeasure[]): GraphicalMeasure[] => measureList)
+            .flatMap((measure: GraphicalMeasure): GraphicalStaffEntry[] => measure.staffEntries)
+            .flatMap((staffEntry: GraphicalStaffEntry): GraphicalTie[] => staffEntry.GraphicalTies);
+
+         expect(graphicalTies.length).to.equal(1);
+         const tieStartNote: VexFlowGraphicalNote = graphicalTies[0].StartNote as VexFlowGraphicalNote;
+         expect(tieStartNote.getTieSVGs().length, "tie curve is present in the rendered SVG").to.be.greaterThan(0);
+         // The tie is enharmonic (F#–Gb), so unlike a same-spelling tie the continued note keeps its
+         // own accidental: the second note must still draw its flat, not read as a plain G (#1694).
+         const tieEndNote: VexFlowGraphicalNote = graphicalTies[0].EndNote as VexFlowGraphicalNote;
+         expect(tieEndNote.DrawnAccidental, "continued enharmonic tie note keeps its accidental")
+            .to.equal(AccidentalEnum.FLAT);
+         done();
+      }).catch(done);
+   });
+
+   // Regression guard for #1695: the enharmonic-accidental fix must not make a same-letter tie
+   // re-draw its accidental. In this sample (Bb key) a B-natural at the end of m.9 is tied to a
+   // B in m.10; the continued note is the same written note held on, so no natural should be
+   // drawn on it (it was not drawn before the fix). More generally, no continued tie note here
+   // should introduce a natural.
+   it("Does not draw a natural on the continued note of a same-letter tie", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const graphicalTies: GraphicalTie[] = osmd.GraphicSheet.MeasureList
+            .flatMap((measureList: GraphicalMeasure[]): GraphicalMeasure[] => measureList)
+            .flatMap((measure: GraphicalMeasure): GraphicalStaffEntry[] => measure.staffEntries)
+            .flatMap((staffEntry: GraphicalStaffEntry): GraphicalTie[] => staffEntry.GraphicalTies);
+
+         expect(graphicalTies.length, "sample contains tied notes").to.be.greaterThan(0);
+         const continuedNaturals: GraphicalTie[] = graphicalTies.filter(
+            (t: GraphicalTie) => t.EndNote && (t.EndNote as VexFlowGraphicalNote).DrawnAccidental === AccidentalEnum.NATURAL);
+         expect(continuedNaturals.length, "no continued tie note re-draws a natural").to.equal(0);
+         done();
+      }).catch(done);
    });
 
    // Non-regression test for grace note fingering positioning
@@ -258,6 +312,42 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // Non-regression test for the stacking order of fingerings collected from multiple voices.
+   // Before fix: fingerings were stacked in voice order, so the second voice's fingering ended up
+   // at the outer end of the stack even when its note was the lowest of the beat (e.g. Beethoven
+   // Pathetique 2nd mvt m24: a two-note chord in voice 1 over the beat's lowest note in voice 2).
+   // Fix: fingerings are sorted by their note's pitch so the stack mirrors the chord.
+   it("Stacks fingerings from multiple voices in the pitch order of their notes", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_fingering_two_voices_pitch_order.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+
+         function fingeringTextsTopToBottom(staffIndex: number, entryIndex: number): string[] {
+            const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, staffIndex);
+            const labels: GraphicalLabel[] = gm.staffEntries[entryIndex].FingeringEntries;
+            return labels
+               .slice()
+               .sort((a: GraphicalLabel, b: GraphicalLabel) => a.PositionAndShape.RelativePosition.y - b.PositionAndShape.RelativePosition.y)
+               .map((label: GraphicalLabel) => label.Label.text);
+         }
+
+         // treble staff (Above placement): lowest note's fingering closest to the staff, i.e. at the bottom of the stack
+         expect(fingeringTextsTopToBottom(0, 0), "treble staff, beat 1").to.deep.equal(["5", "3", "1"]);
+         expect(fingeringTextsTopToBottom(0, 1), "treble staff, beat 3").to.deep.equal(["4", "2", "1"]);
+         // bass staff (Below placement): highest note's fingering closest to the staff, i.e. at the top of the stack
+         expect(fingeringTextsTopToBottom(1, 0), "bass staff, beat 1").to.deep.equal(["1", "3", "5"]);
+         expect(fingeringTextsTopToBottom(1, 1), "bass staff, beat 3").to.deep.equal(["2", "4", "5"]);
+         done();
+      }).catch(done);
+   });
+
    // Non-regression test for nested tuplets (issue #1583). The measure has an outer 3:2 tuplet spanning all 5 notes
    // and an inner 9:4 tuplet over the last 3 (beamed) eighth notes that displays "3" (its <tuplet-actual> number).
    // Before the fix the outer tuplet only covered its first two notes and the inner showed "9".
@@ -293,6 +383,233 @@ describe("VexFlow Measure", () => {
          expect(outer.TupletLabelNumber, "outer tuplet number").to.equal(3);
          // the inner number comes from <tuplet-actual><tuplet-number>3, not the time-modification actual-notes (9)
          expect(inner.TupletLabelNumber, "inner tuplet number from tuplet-actual").to.equal(3);
+         done();
+      }).catch(done);
+   });
+
+   // Non-regression test for EngravingRules.SlurFlattenToObstacle (issue #1466). Long/steep slurs otherwise arc far
+   // above the notes they span; the apex is capped to a small margin above the highest spanned object. This checks
+   // that the highest slur arc is meaningfully lower with the flattening on than off.
+   it("Flattens a bloated slur's arc height when SlurFlattenToObstacle is enabled", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_grace_note_fingerings_and_strings_Ysaye_excerpt.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const xml: string = new XMLSerializer().serializeToString(score);
+
+      function maxSlurArcHeight(osmd: OpenSheetMusicDisplay): number {
+         let maxArc: number = 0;
+         for (const page of osmd.GraphicSheet.MusicPages) {
+            for (const system of page.MusicSystems) {
+               for (const staffLine of system.StaffLines) {
+                  for (const gSlur of staffLine.GraphicalSlurs) {
+                     const s: PointF2D = gSlur.bezierStartPt; const c1: PointF2D = gSlur.bezierStartControlPt;
+                     const c2: PointF2D = gSlur.bezierEndControlPt; const e: PointF2D = gSlur.bezierEndPt;
+                     if (!s || !e || !c1 || !c2 || e.x === s.x) {
+                        continue;
+                     }
+                     // sample the bezier and track its largest distance from the straight start-end chord (the arc height)
+                     for (let t: number = 0.1; t <= 0.9; t += 0.1) {
+                        const mt: number = 1 - t;
+                        const x: number = mt*mt*mt*s.x + 3*mt*mt*t*c1.x + 3*mt*t*t*c2.x + t*t*t*e.x;
+                        const y: number = mt*mt*mt*s.y + 3*mt*mt*t*c1.y + 3*mt*t*t*c2.y + t*t*t*e.y;
+                        const chordY: number = s.y + (x - s.x) / (e.x - s.x) * (e.y - s.y);
+                        maxArc = Math.max(maxArc, Math.abs(y - chordY));
+                     }
+                  }
+               }
+            }
+         }
+         return maxArc;
+      }
+
+      const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmdOff.load(xml).then(() => {
+         osmdOff.EngravingRules.SlurFlattenToObstacle = false;
+         osmdOff.render();
+         const arcWithout: number = maxSlurArcHeight(osmdOff);
+
+         return osmdOn.load(xml).then(() => {
+            osmdOn.render(); // SlurFlattenToObstacle is true by default
+            const arcWith: number = maxSlurArcHeight(osmdOn);
+            expect(arcWith, `flattened arc (${arcWith.toFixed(1)}) should be well below unflattened (${arcWithout.toFixed(1)})`)
+               .to.be.lessThan(arcWithout * 0.9);
+            done();
+         });
+      }).catch(done);
+   });
+
+   // Non-regression test for the WIDTH-DRIVEN case of SlurFlattenToObstacle (issue #1466): a wide slur over a
+   // (near-)flat passage must not balloon. The minimum-arc floor grows with sqrt(width) rather than linearly, so
+   // wide slurs stay proportionally flat. Chopin Étude Op. 10 No. 4 has several system-spanning slurs that would
+   // otherwise arc very high; this checks the widest slur on the sheet is flattened substantially.
+   it("Keeps a wide slur over a flat passage from ballooning (SlurFlattenToObstacle, width-driven)", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_dynamics_attribute_Chopin_Etudes_op_10_4_Duepree02.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const xml: string = new XMLSerializer().serializeToString(score);
+
+      // arc height (max distance from the straight start-end chord) of the WIDEST slur on the sheet
+      function widestSlurArcHeight(osmd: OpenSheetMusicDisplay): number {
+         let widestWidth: number = 0;
+         let arcOfWidest: number = 0;
+         for (const page of osmd.GraphicSheet.MusicPages) {
+            for (const system of page.MusicSystems) {
+               for (const staffLine of system.StaffLines) {
+                  for (const gSlur of staffLine.GraphicalSlurs) {
+                     const s: PointF2D = gSlur.bezierStartPt; const c1: PointF2D = gSlur.bezierStartControlPt;
+                     const c2: PointF2D = gSlur.bezierEndControlPt; const e: PointF2D = gSlur.bezierEndPt;
+                     if (!s || !e || !c1 || !c2 || e.x === s.x) {
+                        continue;
+                     }
+                     const width: number = Math.abs(e.x - s.x);
+                     if (width <= widestWidth) {
+                        continue;
+                     }
+                     let arc: number = 0;
+                     for (let t: number = 0.1; t <= 0.9; t += 0.1) {
+                        const mt: number = 1 - t;
+                        const x: number = mt*mt*mt*s.x + 3*mt*mt*t*c1.x + 3*mt*t*t*c2.x + t*t*t*e.x;
+                        const y: number = mt*mt*mt*s.y + 3*mt*mt*t*c1.y + 3*mt*t*t*c2.y + t*t*t*e.y;
+                        const chordY: number = s.y + (x - s.x) / (e.x - s.x) * (e.y - s.y);
+                        arc = Math.max(arc, Math.abs(y - chordY));
+                     }
+                     widestWidth = width;
+                     arcOfWidest = arc;
+                  }
+               }
+            }
+         }
+         return arcOfWidest;
+      }
+
+      const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmdOff.load(xml).then(() => {
+         osmdOff.EngravingRules.SlurFlattenToObstacle = false;
+         osmdOff.render();
+         const arcWithout: number = widestSlurArcHeight(osmdOff);
+
+         return osmdOn.load(xml).then(() => {
+            osmdOn.render(); // SlurFlattenToObstacle is true by default
+            const arcWith: number = widestSlurArcHeight(osmdOn);
+            // the widest slur spans a (near-)flat passage, so flattening should cut its arc well below half
+            expect(arcWith, `widest slur's flattened arc (${arcWith.toFixed(1)}) should be far below unflattened (${arcWithout.toFixed(1)})`)
+               .to.be.lessThan(arcWithout * 0.65);
+            done();
+         });
+      }).catch(done);
+   });
+
+   // Regression test for NaN slur curves: measure 23 of the Moonlight sonata sample has a note carrying both a
+   // slur start and an orphan slur stop with the same number (Sibelius export quirk). The stop used to close the
+   // start on its very own note, creating a zero-length slur whose curve calculation divided 0 by 0, ending up
+   // as an invalid SVG path (<path d="... CNaN NaN ...">). Now the stop is ignored and no self-slur is created.
+   it("Creates no zero-length (NaN-curve) slur for a note with both a slur start and an orphan stop", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_slurs_long_steep_arc_moonlight_sonata_issue1466.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const xml: string = new XMLSerializer().serializeToString(score);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmd.load(xml).then(() => {
+         osmd.render();
+         let slursChecked: number = 0;
+         for (const page of osmd.GraphicSheet.MusicPages) {
+            for (const system of page.MusicSystems) {
+               for (const staffLine of system.StaffLines) {
+                  for (const gSlur of staffLine.GraphicalSlurs) {
+                     const measureNumber: number = gSlur.staffEntries[0]?.parentMeasure?.MeasureNumber;
+                     expect(gSlur.slur.StartNote, `slur in measure ${measureNumber} should not start and end on the same note`)
+                        .to.not.equal(gSlur.slur.EndNote);
+                     for (const p of [gSlur.bezierStartPt, gSlur.bezierStartControlPt, gSlur.bezierEndControlPt, gSlur.bezierEndPt]) {
+                        if (!p) { // cross-staff slurs can remain uncalculated (skipped at draw time)
+                           continue;
+                        }
+                        expect(Number.isFinite(p.x) && Number.isFinite(p.y),
+                           `slur bezier points in measure ${measureNumber} should be finite (got ${p.x}, ${p.y})`).to.equal(true);
+                     }
+                     slursChecked++;
+                  }
+               }
+            }
+         }
+         expect(slursChecked, "sanity check: the sample's slurs were iterated").to.be.greaterThan(50);
+         done();
+      }).catch(done);
+   });
+
+   // Non-regression test for correctNotePositions() on a part carrying BOTH a standard staff and a
+   // tablature staff (<staves>2</staves>), covering both branches of the measure-scoped rewrite
+   // (PR #1703 for the standard branch, plus the tab-branch follow-up). The tab staff's voice entries
+   // must be positioned by their string number, and the standard staff's notes must still receive their
+   // vertical bounding-box correction. The score has 3 measures, so correct output here also confirms the
+   // positioning is measure-local: it does not depend on the voice's entries in other measures.
+   it("Positions notes on a combined standard + tablature staff (correctNotePositions, both branches)", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_tab_plus_treble_staff_correctNotePositions_pr1703.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render(); // correctNotePositions() runs at the end of draw(); this must not throw
+         const interlineHeight: number = osmd.EngravingRules.TabStaffInterlineHeightForBboxes;
+
+         const measureCount: number = osmd.GraphicSheet.MeasureList.length;
+         expect(measureCount, "sample has 3 measures").to.equal(3);
+
+         let tabEntriesChecked: number = 0;
+         let standardNotesCorrected: number = 0;
+         for (let m: number = 0; m < measureCount; m++) {
+            const standardMeasure: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(m, 0);
+            const tabMeasure: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(m, 1);
+            expect(standardMeasure.isTabMeasure, `measure ${m}, staff 0 is a standard staff`).to.equal(false);
+            expect(tabMeasure.isTabMeasure, `measure ${m}, staff 1 is a tablature staff`).to.equal(true);
+
+            // Tab branch: each voice entry sits at (string - 1) * interline height of its (last) string note.
+            for (const se of tabMeasure.staffEntries) {
+               for (const gve of se.graphicalVoiceEntries) {
+                  let stringNumber: number = -1;
+                  for (const note of gve.notes) {
+                     const noteString: number = (note.sourceNote as TabNote).StringNumberTab;
+                     if (noteString >= 0) {
+                        stringNumber = noteString; // last string note wins, mirroring correctNotePositions()
+                     }
+                  }
+                  if (stringNumber < 0) {
+                     continue; // rest-only entry
+                  }
+                  expect(gve.PositionAndShape.RelativePosition.y,
+                     `tab entry on string ${stringNumber} is offset by (string - 1) * interline height`)
+                     .to.be.closeTo((stringNumber - 1) * interlineHeight, 1e-9);
+                  tabEntriesChecked++;
+               }
+            }
+
+            // Standard (non-tab) branch: notes receive a vertical correction, they are not left at y = 0.
+            for (const se of standardMeasure.staffEntries) {
+               for (const gve of se.graphicalVoiceEntries) {
+                  for (const note of gve.notes) {
+                     if (!note.sourceNote.isRest() && note.PositionAndShape.RelativePosition.y !== 0) {
+                        standardNotesCorrected++;
+                     }
+                  }
+               }
+            }
+         }
+
+         expect(tabEntriesChecked, "tab voice entries were positioned by string number").to.be.greaterThan(0);
+         expect(standardNotesCorrected, "standard-staff notes received a vertical correction").to.be.greaterThan(0);
          done();
       }).catch(done);
    });

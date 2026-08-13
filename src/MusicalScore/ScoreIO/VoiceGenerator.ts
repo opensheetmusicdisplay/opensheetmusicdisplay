@@ -1204,7 +1204,8 @@ export class VoiceGenerator {
   }
 
   /**
-   * Search the tieDictionary for the corresponding candidateNote to the currentNote (same FundamentalNote && Octave).
+   * Search the tieDictionary for the corresponding candidateNote to the currentNote.
+   * Prefer the existing spelling/string match, then fall back to sounding pitch for enharmonic ties.
    * @param candidateNote
    * @returns {number}
    */
@@ -1221,6 +1222,14 @@ export class VoiceGenerator {
           if (tieTabNote.StringNumberTab === tieCandidateNote.StringNumberTab) {
             return parseInt(key, 10);
           }
+        }
+      }
+    }
+    for (const key in openTieDict) {
+      if (openTieDict.hasOwnProperty(key)) {
+        const tie: Tie = openTieDict[key];
+        if (tie.Pitch.getHalfTone() === candidateNote.Pitch.getHalfTone()) {
+          return parseInt(key, 10);
         }
       }
     }

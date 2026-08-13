@@ -3,6 +3,9 @@ import { VexFlowGraphicalSymbolFactory } from "./VexFlowGraphicalSymbolFactory";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { StaffLine } from "../StaffLine";
 import { SkyBottomLineBatchCalculator } from "../SkyBottomLineBatchCalculator";
+import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
+import { Fonts } from "../../../Common/Enums/Fonts";
+import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -1229,9 +1232,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // Lift the rehearsal mark above whatever rises above the staff under it (high notes, an Above chord
       //   symbol, ...) so it doesn't overlap them, and reserve skyline space for the lifted mark (otherwise
       //   it can collide with the system above). The mark is a fixed-offset VexFlow StaveSection that isn't
-      //   part of the skyline, so without this it can sit right on top of tall notes (e.g. the high cymbal
-      //   notes of a drum stave). Only the Above chord symbol was previously considered here; now the notes
-      //   under the mark are too.
+      //   part of the skyline, so without this it can sit right on top of tall notes -- which happens in
+      //   normal rendering (e.g. high drum-stave notes) and in lazy/incremental rendering (the mark's measure can be
+      //   drawn at a slightly different x, over taller notes, than a normal render). Only the Above chord
+      //   symbol was previously considered here; now the notes under the mark are too.
       let minBottomY: number; // undefined -> no clamping in StaveSection.draw (VexFlowPatch)
       const staffLine: StaffLine = gMeasure.ParentStaffLine;
       if (staffLine) {
@@ -1389,7 +1393,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         startStaffEntry = startMeasure.staffEntries[0];
       }
       let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
-      if (!endStaffEntry) {
+      if (!endStaffEntry && endTimeStamp) {
+        // endTimeStamp can be undefined for an unterminated octave-shift (start without stop,
+        //   e.g. from OMR-generated MusicXML), see #1439 / #1376 for similar cases.
         // No exact match (e.g. pending stop with computed inclusive end).
         // Find the latest staff entry at or before the end timestamp.
         for (let i: number = endMeasure.staffEntries.length - 1; i >= 0; i--) {
@@ -2100,7 +2106,156 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // now create corresponding graphical symbol or Text in VexFlow:
     // use top measure and staffline for positioning.
     if (uppermostMeasure) {
-      uppermostMeasure.addWordRepetition(repetitionInstruction);
+      const repetition: VF.Repetition = uppermostMeasure.addWordRepetition(repetitionInstruction);
+      this.placeWordRepetitionInSkyline(uppermostMeasure, repetition);
+    }
+  }
+
+  /** The repetition instruction boxes already placed per staff line, for their mutual collision checks.
+   *  (a WeakMap, so that the entries of a previous render's staff lines don't linger) */
+  private placedWordRepetitionBoxes: WeakMap<StaffLine, {startX: number, endX: number, top: number}[]> = new WeakMap();
+
+  /**
+   * Shifts a repetition instruction (VF.Repetition, e.g. Coda sign or "D.S. al Fine" text) above
+   * other objects in its range, e.g. chord symbols, which are calculated before the repetition
+   * instructions, or previously placed repetition instructions (see #1689).
+   * Shifted instructions reserve their space in the skyline, so that the staffline borders account for them.
+   * The horizontal and default vertical position replicate the drawing code
+   * in VexFlowPatch/src/staverepetition.js (drawSymbolText() etc).
+   * @param measure the (uppermost) measure the repetition instruction was added to
+   * @param repetition the VexFlow repetition (stave modifier) to place, created by addWordRepetition()
+   */
+  protected placeWordRepetitionInSkyline(measure: VexFlowMeasure, repetition: VF.Repetition): void {
+    const staffLine: StaffLine = measure.ParentStaffLine;
+    if (!repetition || !staffLine) {
+      return;
+    }
+    const type: number = (repetition as any).symbol_type;
+    const repetitionTypes: {[key: string]: number} = VF.Repetition.type as any;
+    let text: string; // the texts drawn by staverepetition.js drawSymbolText()
+    let hasCodaGlyphAfterText: boolean = false; // types that draw a coda glyph after the text
+    switch (type) {
+      case repetitionTypes.CODA_LEFT:
+        text = "Coda";
+        hasCodaGlyphAfterText = true;
+        break;
+      case repetitionTypes.TO_CODA:
+        text = "To";
+        hasCodaGlyphAfterText = true;
+        break;
+      case repetitionTypes.DC_AL_CODA:
+        text = "D.C. al";
+        hasCodaGlyphAfterText = true;
+        break;
+      case repetitionTypes.DS_AL_CODA:
+        text = "D.S. al";
+        hasCodaGlyphAfterText = true;
+        break;
+      case repetitionTypes.DC:
+        text = "D.C.";
+        break;
+      case repetitionTypes.DC_AL_FINE:
+        text = "D.C. al Fine";
+        break;
+      case repetitionTypes.DS:
+        text = "D.S.";
+        break;
+      case repetitionTypes.DS_AL_FINE:
+        text = "D.S. al Fine";
+        break;
+      case repetitionTypes.FINE:
+        text = "Fine";
+        break;
+      default:
+        text = ""; // segno/coda glyphs without text
+        break;
+    }
+    const fontHeightUnits: number = 1.6; // staverepetition.js draws the text with a 12pt (16px) font
+    let textWidthUnits: number = 0;
+    if (text.length > 0) {
+      // measure with the same font family string ("times") that staverepetition.js draws with,
+      //   so that the measured width matches the drawn width even if the font falls back to another one
+      textWidthUnits = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
+        text, Fonts.TimesNewRoman, FontStyles.BoldItalic, "times") * fontHeightUnits;
+    }
+    const glyphWidthUnits: number = 2.4; // coda/segno glyph width (plus the 12px gap after the text for symbol_x)
+    const measureStartX: number = measure.PositionAndShape.RelativePosition.x;
+    const measureWidth: number = measure.PositionAndShape.Size.width;
+    let startX: number;
+    let endX: number;
+    if (type === repetitionTypes.SEGNO_LEFT) {
+      // drawSignoFixed() draws the glyph after the measure's begin instructions (clef, key, time signature):
+      //   its x anchor additionally gets the stave's modifier x shift, which is the begin instructions width
+      //   at draw time - and that can still change (e.g. shrink by alignment) after this calculation.
+      //   So reserve a tolerant range around the begin instructions width.
+      startX = measureStartX + measure.beginInstructionsWidth * 0.7;
+      endX = measureStartX + measure.beginInstructionsWidth * 1.2 +
+        measure.beginInstructionsWidth / unitInPixels + glyphWidthUnits;
+    } else if (type === repetitionTypes.CODA_LEFT) {
+      // drawn at the start of the measure (plus beginInstructionsWidth, which drawSymbolText uses as pixels)
+      startX = measureStartX + measure.beginInstructionsWidth / unitInPixels;
+      endX = startX + textWidthUnits + glyphWidthUnits;
+    } else {
+      // texts at the end of the measure, drawn right-aligned to the measure end
+      //   (drawSymbolText: x_shift = -(text width + 12 + vertical_bar_width + 12), text_x = x + x_shift + vertical_bar_width,
+      //   and the anchor x is the stave end minus the end barline width/padding, so roughly half a unit before the measure end)
+      startX = measureStartX + measureWidth - 0.5 - textWidthUnits - 2.4;
+      if (type === repetitionTypes.DC || type === repetitionTypes.DC_AL_FINE || type === repetitionTypes.DS ||
+          type === repetitionTypes.DS_AL_FINE || type === repetitionTypes.FINE) {
+        // these are additionally shifted to the right (only in the staffline's last measure, see addWordRepetition()),
+        //   see xShiftAsPercentOfStaveWidth in staverepetition.js
+        startX += measureWidth * ((repetition as any).xShiftAsPercentOfStaveWidth ?? 0);
+      }
+      endX = startX + textWidthUnits;
+      if (hasCodaGlyphAfterText) {
+        endX += glyphWidthUnits;
+      }
+    }
+    // don't add a safety margin to the range: it would unnecessarily stack repetition marks
+    //   that have a small gap between them. (the skyline sampling reads slightly beyond the range anyways)
+    // clamp to the staffline (e.g. an end instruction of the last measure can be shifted beyond the staffline end)
+    startX = Math.max(0, startX);
+    endX = Math.min(staffLine.PositionAndShape.Size.width, endX);
+    if (!(endX > startX)) {
+      return;
+    }
+    // default drawing band of staverepetition.js, relative to the top staff line:
+    //   the text baseline is at getYForTopText(5) + 25 + 5 = 3 units above the top staff line (plus y_shift),
+    //   glyphs are anchored similarly, so the drawn objects roughly span [-4.5, -2.5] units
+    const yShiftUnits: number = ((repetition as any).y_shift ?? 0) / unitInPixels; // -RepetitionSymbolsYOffset, see addWordRepetition
+    const defaultTop: number = -4.5 + yShiftUnits;
+    const defaultBottom: number = -2.5 + yShiftUnits;
+    const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+    let collisionMin: number = skyBottomLineCalculator.getSkyLineMinInRange(startX, endX);
+    if (collisionMin === -Infinity || collisionMin === Infinity) {
+      collisionMin = 0;
+    }
+    // repetition instructions in their default position don't reserve skyline space (see below),
+    //   so also check against the already placed repetition instructions of this staff line:
+    let placedBoxes: {startX: number, endX: number, top: number}[] = this.placedWordRepetitionBoxes.get(staffLine);
+    if (!placedBoxes) {
+      placedBoxes = [];
+      this.placedWordRepetitionBoxes.set(staffLine, placedBoxes);
+    }
+    for (const box of placedBoxes) {
+      if (box.endX > startX && box.startX < endX) {
+        collisionMin = Math.min(collisionMin, box.top);
+      }
+    }
+    let collisionShiftUnits: number = 0;
+    if (collisionMin < defaultBottom) {
+      // something (e.g. a chord symbol or another repetition instruction) protrudes
+      //   into the default position -> shift the repetition above it
+      collisionShiftUnits = collisionMin - defaultBottom;
+      repetition.setShiftY((repetition as any).y_shift + collisionShiftUnits * unitInPixels);
+    }
+    placedBoxes.push({ startX: startX, endX: endX, top: defaultTop + collisionShiftUnits });
+    if (collisionShiftUnits < 0) {
+      // only instructions that were shifted upwards reserve their space in the skyline, so that the
+      //   staffline borders (and thus the system spacing) account for them. Unshifted instructions stay
+      //   in their default band close above the staff, which shouldn't increase the system spacing
+      //   (as it also didn't before repetition instructions were placed via the skyline).
+      skyBottomLineCalculator.updateSkyLineInRange(startX, endX, defaultTop + collisionShiftUnits);
     }
   }
 

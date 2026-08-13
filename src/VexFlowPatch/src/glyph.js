@@ -38,6 +38,36 @@ function processOutline(outline, originX, originY, scaleX, scaleY, outlineFns) {
   }
 }
 
+// VexFlowPatch: cache of a glyph outline's scaled, origin-relative path segments, keyed by the
+// outline array (already cached per glyph code) and scale. Glyph.renderOutline replays these with
+// just an add per point, instead of re-walking and re-coercing the outline string array (the
+// outline is stored as strings) on every draw. WeakMap so entries vanish if the outline is GC'd.
+const glyphSegmentCache = new WeakMap();
+
+function getScaledGlyphSegments(outline, scale) {
+  let byScale = glyphSegmentCache.get(outline);
+  if (!byScale) {
+    byScale = new Map();
+    glyphSegmentCache.set(outline, byScale);
+  }
+  let segments = byScale.get(scale);
+  if (!segments) {
+    segments = [];
+    // Record with origin 0,0 so the captured coordinates are purely scale*point (matching what
+    // renderOutline's per-point `x_pos + ...` / `y_pos + ...` would add the position to). Same
+    // scaleX/scaleY (scale, -scale) and consumption order as the original processOutline walk,
+    // so replaying produces byte-identical absolute coordinates.
+    processOutline(outline, 0, 0, scale, -scale, {
+      m: (x, y) => segments.push(['m', x, y]),
+      l: (x, y) => segments.push(['l', x, y]),
+      q: (x1, y1, x, y) => segments.push(['q', x1, y1, x, y]),
+      b: (x1, y1, x2, y2, x, y) => segments.push(['b', x1, y1, x2, y2, x, y]),
+    });
+    byScale.set(scale, segments);
+  }
+  return segments;
+}
+
 export class Glyph extends Element {
   /* Static methods used to implement loading / unloading of glyphs */
   static loadMetrics(font, code, cache) {
@@ -102,12 +132,19 @@ export class Glyph extends Element {
     }
     ctx.beginPath();
     ctx.moveTo(x_pos, y_pos);
-    processOutline(outline, x_pos, y_pos, scale, -scale, {
-      m: ctx.moveTo.bind(ctx),
-      l: ctx.lineTo.bind(ctx),
-      q: ctx.quadraticCurveTo.bind(ctx),
-      b: ctx.bezierCurveTo.bind(ctx),
-    });
+    // VexFlowPatch: replay cached scaled segments (position added per point) instead of re-walking
+    // and re-coercing the outline string array on every draw. Produces byte-identical coordinates.
+    const segments = getScaledGlyphSegments(outline, scale);
+    for (let i = 0; i < segments.length; i++) {
+      const s = segments[i];
+      switch (s[0]) {
+        case 'm': ctx.moveTo(x_pos + s[1], y_pos + s[2]); break;
+        case 'l': ctx.lineTo(x_pos + s[1], y_pos + s[2]); break;
+        case 'q': ctx.quadraticCurveTo(x_pos + s[1], y_pos + s[2], x_pos + s[3], y_pos + s[4]); break;
+        case 'b': ctx.bezierCurveTo(x_pos + s[1], y_pos + s[2], x_pos + s[3], y_pos + s[4], x_pos + s[5], y_pos + s[6]); break;
+        default: break;
+      }
+    }
     ctx.fill();
   }
 
@@ -127,6 +164,27 @@ export class Glyph extends Element {
       bboxComp.width(),
       bboxComp.height()
     );
+  }
+
+  // VexFlowPatch: the note-width tables query glyph widths constantly during formatting
+  // (the same few dozen (code, point) pairs, tens of thousands of times per render), each
+  // time constructing a throwaway Glyph just to read getMetrics().width. That width is a
+  // pure function of (code, point) — it is the cached bbox width — so memoize it on the font,
+  // next to cached_outline / cached_bboxes.
+  static cachedWidth(code, point) {
+    const font = Font;
+    let cache = font.cached_widths;
+    if (!cache) {
+      cache = Object.create(null);
+      font.cached_widths = cache;
+    }
+    const key = code + '/' + point;
+    let width = cache[key];
+    if (width === undefined) {
+      width = new Glyph(code, point).getMetrics().width;
+      cache[key] = width;
+    }
+    return width;
   }
 
   /**
@@ -176,12 +234,37 @@ export class Glyph extends Element {
       this.code,
       this.options.cache
     );
-    this.bbox = Glyph.getOutlineBoundingBox(
-      this.metrics.outline,
-      this.scale,
-      0,
-      0
-    );
+    // The origin is fixed at 0,0, so the box depends only on the outline and the
+    // scale: every glyph with the same code and point size walks the same curves
+    // again. Cache the four numbers on the font, next to cached_outline, and hand
+    // out a fresh BoundingBox because callers keep a reference to it.
+    if (this.options.cache) {
+      const key = this.code + '/' + this.scale;
+      let cache = this.options.font.cached_bboxes;
+      if (!cache) {
+        cache = Object.create(null);
+        this.options.font.cached_bboxes = cache;
+      }
+      let box = cache[key];
+      if (!box) {
+        const computed = Glyph.getOutlineBoundingBox(
+          this.metrics.outline,
+          this.scale,
+          0,
+          0
+        );
+        box = [computed.getX(), computed.getY(), computed.getW(), computed.getH()];
+        cache[key] = box;
+      }
+      this.bbox = new BoundingBox(box[0], box[1], box[2], box[3]);
+    } else {
+      this.bbox = Glyph.getOutlineBoundingBox(
+        this.metrics.outline,
+        this.scale,
+        0,
+        0
+      );
+    }
   }
 
   getMetrics() {

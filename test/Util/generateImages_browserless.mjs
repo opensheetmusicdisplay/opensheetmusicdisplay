@@ -292,6 +292,29 @@ async function init () {
     debug("done, exiting.");
 }
 
+/**
+ * Decode a MusicXML file buffer to a string, detecting a byte order mark (BOM).
+ * Some music programs (e.g. Finale, Sibelius) export MusicXML as UTF-16, which a plain
+ * buffer.toString() would garble, because it defaults to UTF-8. Decode according to the BOM
+ * and strip it, so the returned string starts cleanly with "<?xml". Falls back to UTF-8.
+ * @param {Buffer} buffer Raw bytes of a MusicXML file, as returned by FS.readFileSync.
+ * @returns {string} The decoded XML string, with any BOM removed.
+ */
+function decodeXmlBuffer (buffer) {
+    if (buffer.length >= 2 && buffer[0] === 0xFF && buffer[1] === 0xFE) {
+        return buffer.toString("utf16le", 2); // UTF-16 little endian (common, e.g. Finale/Sibelius exports)
+    }
+    if (buffer.length >= 2 && buffer[0] === 0xFE && buffer[1] === 0xFF) {
+        // UTF-16 big endian: Node has no utf16be decoder, so swap the byte pairs and read as little endian
+        const swapped = buffer.length % 2 === 0 ? Buffer.from(buffer).swap16() : Buffer.from(buffer);
+        return swapped.toString("utf16le", 2);
+    }
+    if (buffer.length >= 3 && buffer[0] === 0xEF && buffer[1] === 0xBB && buffer[2] === 0xBF) {
+        return buffer.toString("utf8", 3); // UTF-8 with BOM
+    }
+    return buffer.toString(); // default UTF-8 (no BOM)
+}
+
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
 async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestMode,
     options = {}, DEBUG = false) {
@@ -302,7 +325,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     if (sampleFilename.endsWith(".mxl")) {
         loadParameter = await OSMD.MXLHelper.MXLtoXMLstring(loadParameter);
     } else {
-        loadParameter = loadParameter.toString();
+        loadParameter = decodeXmlBuffer(loadParameter);
     }
     // debug('loadParameter: ' + loadParameter)
     // debug('typeof loadParameter: ' + typeof loadParameter)

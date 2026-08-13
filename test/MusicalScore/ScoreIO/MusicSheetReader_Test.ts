@@ -6,6 +6,7 @@ import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 import {NoteHeadShape} from "../../../src/MusicalScore/VoiceData/Notehead";
 import {Note, TremoloInfo} from "../../../src/MusicalScore/VoiceData/Note";
 import {VoiceEntry} from "../../../src/MusicalScore/VoiceData/VoiceEntry";
+import {SourceMeasure} from "../../../src/MusicalScore/VoiceData/SourceMeasure";
 
 describe("Music Sheet Reader", () => {
     const path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
@@ -217,6 +218,101 @@ describe("Music Sheet Reader", () => {
             expect(noTypeNote.TremoloInfo.tremoloBetweenNotesStart).to.be.undefined;
             expect(noTypeNote.TremoloInfo.tremoloBetweenNotesStop).to.be.undefined;
             expect(noTypeNote.TremoloInfo.tremoloStrokes).to.equal(singleTypeNote.TremoloInfo.tremoloStrokes);
+            done();
+        });
+    });
+
+    describe("Enharmonic ties", () => {
+        const enharmonicTiePath: string = "test/data/test_tie_enharmonic_spelling_1694.musicxml";
+        let enharmonicTieSheet: MusicSheet;
+        let tiedNotes: Note[];
+
+        before((): void => {
+            const doc: Document = getSheet(enharmonicTiePath);
+            expect(doc).to.not.be.undefined;
+            const enharmonicTieScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            enharmonicTieSheet = reader.createMusicSheet(enharmonicTieScore, enharmonicTiePath);
+            tiedNotes = enharmonicTieSheet.Instruments[0].Voices[0].VoiceEntries
+                .flatMap((voiceEntry: VoiceEntry): Note[] => voiceEntry.Notes)
+                .filter((note: Note): boolean => !note.isRest());
+        });
+
+        it("links tie notes with enharmonic spellings", (done: Mocha.Done) => {
+            expect(tiedNotes.length).to.equal(2);
+            expect(tiedNotes[0].Pitch.getHalfTone()).to.equal(tiedNotes[1].Pitch.getHalfTone());
+            expect(tiedNotes[0].Pitch.FundamentalNote).to.not.equal(tiedNotes[1].Pitch.FundamentalNote);
+            expect(tiedNotes[0].NoteTie).to.not.be.undefined;
+            expect(tiedNotes[1].NoteTie).to.equal(tiedNotes[0].NoteTie);
+            expect(tiedNotes[0].NoteTie.Notes).to.deep.equal(tiedNotes);
+            expect(Object.keys(enharmonicTieSheet.Staves[0].openTieDict)).to.be.empty;
+            done();
+        });
+    });
+
+    describe("Tuplet note duration with un-reduced <duration> (musx2mxl export bug)", () => {
+        // Some exporters (musx2mxl 0.2.9) write the *un-reduced* type duration for tuplet notes:
+        //   a triplet eighth carries <duration> equal to a full eighth (e.g. 8 at divisions=16)
+        //   instead of a third of a quarter. OSMD used to take <duration> verbatim, so the triplet
+        //   played/spaced as three normal eighths and the measure overflowed. The reader now detects
+        //   this and applies the time-modification ratio, so the triplet eighths sound as 1/12 each.
+        // The two samples encode the *same* music (a 3-eighth triplet + two eighths after a half rest):
+        //   the musx2mxl one un-reduced, the MuseScore re-export correctly reduced. Both must now read
+        //   identically. In the MuseScore extract the triplet is measure 1; in the musx2mxl file it is
+        //   measure 7.
+        const oneTwelfth: number = 1 / 12;
+        const oneEighth: number = 1 / 8;
+
+        function measureNonRestNotes(measure: SourceMeasure): Note[] {
+            const notes: Note[] = [];
+            for (const container of measure.VerticalSourceStaffEntryContainers) {
+                for (const staffEntry of container.StaffEntries) {
+                    for (const voiceEntry of staffEntry.VoiceEntries) {
+                        for (const note of voiceEntry.Notes) {
+                            if (!note.isRest()) {
+                                notes.push(note);
+                            }
+                        }
+                    }
+                }
+            }
+            return notes;
+        }
+
+        function readSheet(filename: string): MusicSheet {
+            const doc: Document = getSheet("test/data/" + filename);
+            expect(doc, filename + " should be preprocessed by karma").to.not.be.undefined;
+            const fileScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            return reader.createMusicSheet(fileScore, "test/data/" + filename);
+        }
+
+        function expectTripletThenTwoEighths(notes: Note[], label: string): void {
+            expect(notes.length, label + ": 3 triplet eighths + 2 eighths").to.equal(5);
+            // the three triplet eighths must each be a third of a quarter (1/12), not a full eighth
+            for (let i: number = 0; i < 3; i++) {
+                expect(notes[i].Length.RealValue, `${label}: triplet note ${i} is 1/12`).to.be.closeTo(oneTwelfth, 1e-8);
+                expect(notes[i].NoteTuplet, `${label}: triplet note ${i} belongs to a tuplet`).to.not.be.undefined;
+            }
+            // the two following eighths are unaffected and clearly longer than a triplet eighth
+            expect(notes[3].Length.RealValue, `${label}: first plain eighth is 1/8`).to.be.closeTo(oneEighth, 1e-8);
+            expect(notes[4].Length.RealValue, `${label}: second plain eighth is 1/8`).to.be.closeTo(oneEighth, 1e-8);
+        }
+
+        it("reads the un-reduced musx2mxl triplet (measure 7) as three 1/12 notes, not three eighths", (done: Mocha.Done) => {
+            const sheet7: MusicSheet = readSheet("test_triplet_playback_musx2mxl_encoded.musicxml");
+            const measure7: SourceMeasure = sheet7.SourceMeasures[6];
+            const notes: Note[] = measureNonRestNotes(measure7);
+            expectTripletThenTwoEighths(notes, "musx2mxl measure 7");
+            // the whole 4/4 measure adds up to 1 again (previously it overflowed to 9/8)
+            const measureSum: number =
+                measureNonRestNotes(measure7).reduce((sum: number, n: Note) => sum + n.Length.RealValue, 0.5); // + half rest
+            expect(measureSum, "measure 7 sums to a full 4/4 bar").to.be.closeTo(1, 1e-8);
+            done();
+        });
+
+        it("reads the correctly-reduced MuseScore re-export (measure 1) identically (regression guard)", (done: Mocha.Done) => {
+            const sheet1: MusicSheet = readSheet("test_triplet_playback_musescore_encoded_from_musx2mxl_encoded.musicxml");
+            const notes: Note[] = measureNonRestNotes(sheet1.SourceMeasures[0]);
+            expectTripletThenTwoEighths(notes, "MuseScore measure 1");
             done();
         });
     });
