@@ -24,8 +24,9 @@ export class GraphicalLabel extends Clickable {
     /** The note this label was created for, if any. Set for fingerings (GraphicalStaffEntry.FingeringEntries),
      *  which are stacked in the pitch order of their notes rather than the order they were read in,
      *  so that the note a fingering belongs to can be told without re-deriving that order.
+     *  Named like GraphicalNote.sourceNote, which holds the same kind of reference.
      */
-    public SourceNote: Note;
+    public sourceNote: Note;
 
     /**
      * Creates a new GraphicalLabel from a Label

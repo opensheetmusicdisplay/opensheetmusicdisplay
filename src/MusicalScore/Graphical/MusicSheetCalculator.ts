@@ -3390,7 +3390,7 @@ export abstract class MusicSheetCalculator {
                             gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX;
                             gLabel.setLabelPositionAndShapeBorders();
                             gLabel.PositionAndShape.calculateBoundingBox();
-                            gLabel.SourceNote = fingering.sourceNote;
+                            gLabel.sourceNote = fingering.sourceNote;
                             gse.FingeringEntries.push(gLabel);
                             const start: number = gLabel.PositionAndShape.RelativePosition.x + gLabel.PositionAndShape.BorderLeft;
                             //start -= line.PositionAndShape.RelativePosition.x;

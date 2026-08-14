@@ -350,9 +350,9 @@ describe("VexFlow Measure", () => {
 
    // A fingering label is stacked in the pitch order of its note, which is not the order the
    // fingerings were read in, so the label's index in FingeringEntries says nothing about which
-   // note it belongs to. GraphicalLabel.SourceNote carries that link, letting a consumer find the
+   // note it belongs to. GraphicalLabel.sourceNote carries that link, letting a consumer find the
    // note a rendered fingering was created for (e.g. to edit or re-position a single label).
-   it("Links each fingering label to the note it was created for (GraphicalLabel.SourceNote)", (done: Mocha.Done) => {
+   it("Links each fingering label to the note it was created for (GraphicalLabel.sourceNote)", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_fingering_two_voices_pitch_order.musicxml");
       if (!score) {
          done(new Error("Score file not found"));
@@ -368,7 +368,7 @@ describe("VexFlow Measure", () => {
             const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, staffIndex);
             return gm.staffEntries[entryIndex].FingeringEntries
                .map((label: GraphicalLabel) =>
-                  `${label.SourceNote.Pitch.ToStringShort(Pitch.OctaveXmlDifference)}=${label.Label.text}`);
+                  `${label.sourceNote.Pitch.ToStringShort(Pitch.OctaveXmlDifference)}=${label.Label.text}`);
          }
 
          // treble staff: chord G4/C5 in voice 1 (fingerings 3 and 5), lowest note in voice 2 (fingering 1),
