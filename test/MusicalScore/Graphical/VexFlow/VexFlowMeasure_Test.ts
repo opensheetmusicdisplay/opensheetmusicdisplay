@@ -25,7 +25,7 @@ import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
 import { TabNote } from "../../../../src/MusicalScore/VoiceData/TabNote";
 import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
 import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
-import { AccidentalEnum } from "../../../../src/Common/DataObjects/Pitch";
+import { AccidentalEnum, Pitch } from "../../../../src/Common/DataObjects/Pitch";
 
 describe("VexFlow Measure", () => {
 
@@ -344,6 +344,40 @@ describe("VexFlow Measure", () => {
          // bass staff (Below placement): highest note's fingering closest to the staff, i.e. at the top of the stack
          expect(fingeringTextsTopToBottom(1, 0), "bass staff, beat 1").to.deep.equal(["1", "3", "5"]);
          expect(fingeringTextsTopToBottom(1, 1), "bass staff, beat 3").to.deep.equal(["2", "4", "5"]);
+         done();
+      }).catch(done);
+   });
+
+   // A fingering label is stacked in the pitch order of its note, which is not the order the
+   // fingerings were read in, so the label's index in FingeringEntries says nothing about which
+   // note it belongs to. GraphicalLabel.SourceNote carries that link, letting a consumer find the
+   // note a rendered fingering was created for (e.g. to edit or re-position a single label).
+   it("Links each fingering label to the note it was created for (GraphicalLabel.SourceNote)", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_fingering_two_voices_pitch_order.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+
+         function fingeringsByNote(staffIndex: number, entryIndex: number): string[] {
+            const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, staffIndex);
+            return gm.staffEntries[entryIndex].FingeringEntries
+               .map((label: GraphicalLabel) =>
+                  `${label.SourceNote.Pitch.ToStringShort(Pitch.OctaveXmlDifference)}=${label.Label.text}`);
+         }
+
+         // treble staff: chord G4/C5 in voice 1 (fingerings 3 and 5), lowest note in voice 2 (fingering 1),
+         //   stacked E4, G4, C5 from the staff outwards
+         expect(fingeringsByNote(0, 0), "treble staff, beat 1").to.deep.equal(["E4=1", "G4=3", "C5=5"]);
+         expect(fingeringsByNote(0, 1), "treble staff, beat 3").to.deep.equal(["D4=1", "F4=2", "A4=4"]);
+         // bass staff (Below placement): the same stack, highest note first
+         expect(fingeringsByNote(1, 0), "bass staff, beat 1").to.deep.equal(["G3=1", "E3=3", "C3=5"]);
+         expect(fingeringsByNote(1, 1), "bass staff, beat 3").to.deep.equal(["A3=2", "F3=4", "C3=5"]);
          done();
       }).catch(done);
    });
