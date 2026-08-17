@@ -530,6 +530,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestDrawFromMeasureNumber9ClefChange = sampleFilename.includes("test_drawFromMeasureNumber_9_respect_earlier_clef_changes");
     const isTestOctaveShiftMultiline = sampleFilename.includes("test_octaveshift_multiline");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
+    const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
     if (isTestEndClefStaffEntryBboxes) {
         options.drawBoundingBoxString = "VexFlowStaffEntry";
@@ -623,6 +624,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     if (isTestCopyrightBelowLastSystem) {
         osmdInstance.EngravingRules.RenderCopyright = true; // default false. the copyright (<rights>) is drawn below the last system
         osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true; // the sample's system breaks -> 4 systems regardless of width
+    }
+    if (isTestOptimizeExtremeLedgerBeams) {
+        osmdInstance.EngravingRules.OptimizeExtremeLedgerBeams = true;
     }
     return options;
 }
