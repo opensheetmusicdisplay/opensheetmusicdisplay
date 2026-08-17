@@ -501,6 +501,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestTupletRatioed = sampleFilename.includes("test_tuplet_ratioed");
     const isTestDrawFromMeasureNumber9ClefChange = sampleFilename.includes("test_drawFromMeasureNumber_9_respect_earlier_clef_changes");
     const isTestOctaveShiftMultiline = sampleFilename.includes("test_octaveshift_multiline");
+    const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
     if (isTestEndClefStaffEntryBboxes) {
         options.drawBoundingBoxString = "VexFlowStaffEntry";
@@ -590,6 +591,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestOctaveShiftMultiline) {
         osmdInstance.EngravingRules.RenderXMeasuresPerLineAkaSystem = 1; // render 1 measure per "line" -> multiline
+    }
+    if (isTestOptimizeExtremeLedgerBeams) {
+        osmdInstance.EngravingRules.OptimizeExtremeLedgerBeams = true;
     }
     return options;
 }

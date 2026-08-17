@@ -38,6 +38,7 @@
     "generate:blessed": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/blessed png 0 0 allSmall --osmdtesting",
     "test:visual": "node ./test/Util/visualRegression.mjs ./visual_regression",
     "test:visual:old": "bash ./test/Util/visual_regression.sh ./visual_regression",
+    "compare:side_by_side": "node test/Util/generate_side_by_side.js",
     "test:visual:build": "npm run prebuild && npm run build:webpack && npm run generate:current && npm run test:visual",
     "test:visual:build:old": "npm run prebuild && npm run build:webpack && npm run generate:current && npm run test:visual:old",
     "test:visual:build:batch": "npm run prebuild && npm run build:webpack && npm run generate:current:batch && npm run test:visual",
