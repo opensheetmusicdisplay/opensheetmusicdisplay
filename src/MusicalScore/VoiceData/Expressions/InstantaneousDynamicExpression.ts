@@ -37,10 +37,11 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     }
 
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number,
-                measure: SourceMeasure) {
+                measure: SourceMeasure, dynamicEnum?: DynamicEnum) {
         super(placement);
         this.parentMeasure = measure;
-        this.dynamicEnum = DynamicEnum[dynamicExpression.toLowerCase()];
+        this.dynamicExpression = dynamicExpression;
+        this.dynamicEnum = dynamicEnum ?? DynamicEnum[dynamicExpression.toLowerCase()];
         this.soundDynamic = soundDynamics;
         this.staffNumber = staffNumber;
     }
@@ -48,6 +49,7 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     public static dynamicToRelativeVolumeDict: Dictionary<DynamicEnum, number> = new Dictionary<DynamicEnum, number>();
 
     private multiExpression: MultiExpression;
+    private dynamicExpression: string;
     private dynamicEnum: DynamicEnum;
     private soundDynamic: number;
     private staffNumber: number;
@@ -59,6 +61,9 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     }
     public set ParentMultiExpression(value: MultiExpression) {
         this.multiExpression = value;
+    }
+    public get DynamicExpression(): string {
+        return this.dynamicExpression;
     }
     public get DynEnum(): DynamicEnum {
         return this.dynamicEnum;

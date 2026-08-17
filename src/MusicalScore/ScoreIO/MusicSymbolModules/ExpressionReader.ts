@@ -639,24 +639,22 @@ export class ExpressionReader {
                 this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
             }
             const numberXml: number = this.readNumber(dynamicsNode); // probably never given, just to comply with createExpressionIfNeeded()
-            let expressionText: string = dynamicsNode.elements()[0]?.name; // elements can in rare cases still be empty even though hasElements=true, see #1269
-            if (expressionText === "other-dynamics") {
-                expressionText = dynamicsNode.elements()[0].value;
-            }
+            const dynamicsElements: IXmlElement[] = dynamicsNode.elements();
+            // A single <dynamics> element may contain multiple symbols, e.g. <sf/><mp/>.
+            const expressionText: string = dynamicsElements
+                .map((element: IXmlElement): string => element.name === "other-dynamics" ? element.value : element.name)
+                .join("");
             if (expressionText) {
+                // Keep the previous first-child enum behavior for playback while rendering the complete marking.
+                const firstDynamicText: string = dynamicsElements[0].name === "other-dynamics"
+                    ? dynamicsElements[0].value
+                    : dynamicsElements[0].name;
+                const dynamicEnum: DynamicEnum = DynamicEnum[firstDynamicText?.toLowerCase()];
                 // ToDo: make duplicate recognition an afterReadingModule, as we can't definitively check here if there is a repetition:
                 // Compare with the active dynamic expression and only add it if there is a change in dynamic
                 // Exception is when a repetition starts here, where the "repeated" dynamic might be desired.
                 // see PR #767 where this was removed
                 if (currentMeasure.Rules?.IgnoreRepeatedDynamics) {
-                    let dynamicEnum: DynamicEnum;
-                    try {
-                        dynamicEnum = DynamicEnum[expressionText];
-                    } catch (err) {
-                        const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DynamicError", "Error while reading dynamic.");
-                        this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                        return;
-                    }
                     if (this.activeInstantaneousDynamic?.DynEnum === dynamicEnum) {
                         // repeated dynamic
                         return;
@@ -674,7 +672,8 @@ export class ExpressionReader {
                         this.soundDynamic,
                         this.placement,
                         this.staffNumber,
-                        currentMeasure);
+                        currentMeasure,
+                        dynamicEnum);
                 instantaneousDynamicExpression.InMeasureTimestamp = inSourceMeasureCurrentFraction.clone();
                 this.getMultiExpression.addExpression(instantaneousDynamicExpression, "");
                 // addExpression unnecessary now?:
