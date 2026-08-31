@@ -53,6 +53,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private backends: VexFlowBackend[] = [];
     private zoom: number = 1.0;
     private pageIdx: number = 0; // this is a bad solution, should use MusicPage.PageNumber instead.
+    /** Stable system roots, including roots temporarily detached by viewport virtualization. */
+    public readonly SystemGroups: SVGGElement[] = [];
 
     constructor(drawingParameters: DrawingParameters = new DrawingParameters()) {
         super(new VexFlowTextMeasurer(drawingParameters.Rules), drawingParameters);
@@ -102,6 +104,56 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         this.pageIdx += 1;
     }
 
+    /** Keep each system in one stable subtree so consumers can detach/reattach it without redrawing. */
+    protected drawMusicSystem(system: MusicSystem): void {
+        const page: GraphicalMusicPage = this.backend.graphicalMusicPage;
+        const systemIndex: number = page?.MusicSystems?.indexOf(system) ?? -1;
+        const context: Vex.IRenderContext = this.backend.getContext();
+        const groupNode: Node = context.openGroup("osmd-system", `osmd-system-${page?.PageNumber ?? 0}-${systemIndex}`);
+        const group: SVGGElement = groupNode as SVGGElement;
+        if (group) {
+            const bounds: RectangleF2D = this.getSytemBoundingBoxInPixels(this.getSystemAbsBoundingRect(system));
+            group.classList.add("osmd-system");
+            group.setAttribute("data-osmd-system-key", `${page?.PageNumber ?? 0}:${systemIndex}`);
+            group.setAttribute("data-osmd-system-top", bounds.y.toString());
+            group.setAttribute("data-osmd-system-bottom", (bounds.y + bounds.height).toString());
+            this.SystemGroups.push(group);
+        }
+        try {
+            super.drawMusicSystem(system);
+            for (const staffLine of system.StaffLines) {
+                for (const measure of staffLine.Measures) {
+                    for (const staffEntry of measure?.staffEntries ?? []) {
+                        for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                            for (const note of voiceEntry.notes) {
+                                (note as VexFlowGraphicalNote).applyRetainedSVGState();
+                            }
+                        }
+                    }
+                }
+            }
+        } finally {
+            context.closeGroup();
+        }
+    }
+
+    /** Draw systems from the already-calculated full layout without recalculating or clearing the backend. */
+    public drawSystemIndexes(graphicalMusicSheet: GraphicalMusicSheet, pageIndex: number, systemIndexes: number[]): void {
+        const page: GraphicalMusicPage = graphicalMusicSheet.MusicPages[pageIndex];
+        if (!page || systemIndexes.length === 0) {
+            return;
+        }
+        this.graphicalMusicSheet = graphicalMusicSheet;
+        this.rules = graphicalMusicSheet.ParentMusicSheet.Rules;
+        this.backend = this.backends[pageIndex];
+        for (const systemIndex of systemIndexes) {
+            const system: MusicSystem = page.MusicSystems[systemIndex];
+            if (system) {
+                this.drawMusicSystem(system);
+            }
+        }
+    }
+
     public clear(): void {
         for (const backend of this.backends) {
             backend.clear();
@@ -119,6 +171,19 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     public calculatePixelDistance(unitDistance: number): number {
         return unitDistance * unitInPixels;
+    }
+
+    public drawLabel(graphicalLabel: GraphicalLabel, layer: number): Node {
+        const node: Node = super.drawLabel(graphicalLabel, layer);
+        if (node) {
+            graphicalLabel.SVGNode = node;
+            graphicalLabel.applySVGMaterializationHandlers();
+        }
+        return node;
+    }
+
+    public getSystemPixelBounds(system: MusicSystem): RectangleF2D {
+        return this.getSytemBoundingBoxInPixels(this.getSystemAbsBoundingRect(system));
     }
 
     protected drawStaffLine(staffLine: StaffLine): void {

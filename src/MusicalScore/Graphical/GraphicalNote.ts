@@ -127,6 +127,11 @@ export class GraphicalNote extends GraphicalObject {
     // implemented in VexFlowGraphicalNote
   }
 
+  /** Run once after this note's SVG is first materialized by a virtualized render. */
+  public addSVGMaterializationHandler(handler: () => void): void {
+    // implemented in VexFlowGraphicalNote
+  }
+
   public hasOrnaments(): boolean {
     return this.parentVoiceEntry?.parentVoiceEntry?.OrnamentContainer !== undefined;
   }

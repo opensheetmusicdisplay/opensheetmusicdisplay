@@ -40,6 +40,11 @@ describe("VexFlow GraphicalNote", () => {
                  expect(note3.getBeamSVGs().length).to.equal(0); // end of 16th beam
                  const note4: VexFlowGraphicalNote = (gm.staffEntries[3].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
                  expect(note4.getBeamSVGs().length).to.equal(2); // 16th beams start
+                 const systemRoot: SVGGElement = noteSVG.closest(".osmd-system");
+                 expect(systemRoot).to.not.be.undefined;
+                 systemRoot.remove();
+                 expect(note1.getStemSVG()).to.equal(stemSVG);
+                 expect(note1.getBeamSVGs()[0]).to.equal(beamSVGs[0]);
                  done();
             },
             done

@@ -38,6 +38,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public vfnoteIndex: number;
     // The current clef
     private clef: ClefInstruction;
+    private retainedColor: { color: string, options: ColoringOptions } | undefined;
+    private retainedVisibility: { visible: boolean, options: VisibilityOptions } | undefined;
+    private readonly svgMaterializationHandlers: (() => void)[] = [];
 
     /**
      * Update the pitch of this note. Necessary in order to display accidentals correctly.
@@ -120,6 +123,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * To get a GraphicalNote from a Note, use osmd.EngravingRules.GNote(note).
      */
     public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {}): void {
+        this.retainedVisibility = { visible, options: visibilityOptions };
         const applyToBeams: boolean = visibilityOptions.applyToBeams ?? true; // default option if not given
         const applyToLedgerLines: boolean = visibilityOptions.applyToLedgerLines ?? true;
         const applyToNotehead: boolean = visibilityOptions.applyToNotehead ?? true;
@@ -193,12 +197,12 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     private mouseLeaveHandler?: (event: MouseEvent) => void;
 
     public setHoverHandler(handler: (event: MouseEvent) => void): void {
+        this.removeHoverHandler();
+        this.hoverHandler = handler;
         const svgElement: SVGGElement = this.getSVGGElement();
         if (!svgElement) {
             return;
         }
-        this.removeHoverHandler();
-        this.hoverHandler = handler;
         svgElement.style.cursor = "pointer";
         svgElement.addEventListener("mouseenter", this.hoverHandler);
         svgElement.addEventListener("mousemove", this.hoverHandler);
@@ -210,45 +214,57 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 
     public removeHoverHandler(): void {
         const svgElement: SVGGElement = this.getSVGGElement();
-        if (!svgElement || !this.hoverHandler) {
+        if (!this.hoverHandler) {
             return;
         }
-        svgElement.removeEventListener("mouseenter", this.hoverHandler);
-        svgElement.removeEventListener("mousemove", this.hoverHandler);
-        if (this.mouseLeaveHandler) {
-            svgElement.removeEventListener("mouseleave", this.mouseLeaveHandler);
+        if (svgElement) {
+            svgElement.removeEventListener("mouseenter", this.hoverHandler);
+            svgElement.removeEventListener("mousemove", this.hoverHandler);
+            if (this.mouseLeaveHandler) {
+                svgElement.removeEventListener("mouseleave", this.mouseLeaveHandler);
+            }
+            svgElement.style.cursor = "";
         }
-        svgElement.style.cursor = "";
         this.hoverHandler = undefined;
         this.mouseLeaveHandler = undefined;
     }
 
     public setClickHandler(handler: (event: MouseEvent) => void): void {
+        this.removeClickHandler();
+        this.clickHandler = handler;
         const svgElement: SVGGElement = this.getSVGGElement();
         if (!svgElement) {
             return;
         }
-        this.removeClickHandler();
-        this.clickHandler = handler;
         svgElement.addEventListener("click", this.clickHandler);
         svgElement.style.cursor = "pointer";
     }
 
     public removeClickHandler(): void {
         const svgElement: SVGGElement = this.getSVGGElement();
-        if (!svgElement || !this.clickHandler) {
+        if (!this.clickHandler) {
             return;
         }
-        svgElement.removeEventListener("click", this.clickHandler);
-        if (!this.hoverHandler) {
-            svgElement.style.cursor = "";
+        if (svgElement) {
+            svgElement.removeEventListener("click", this.clickHandler);
+            if (!this.hoverHandler) {
+                svgElement.style.cursor = "";
+            }
         }
         this.clickHandler = undefined;
     }
 
+    public addSVGMaterializationHandler(handler: () => void): void {
+        if (this.getSVGGElement()) {
+            handler();
+            return;
+        }
+        this.svgMaterializationHandlers.push(handler);
+    }
+
     /** Gets the SVG path element of the note's stem. */
     public getStemSVG(): HTMLElement {
-        const groupOrPath: HTMLElement = document.getElementById("vf-" + this.getSVGId() + "-stem");
+        const groupOrPath: HTMLElement = this.getSVGElementById("vf-" + this.getSVGId() + "-stem");
         // whether we get the group node or path node depends on whether the note has a beam, for some reason (TODO)
         if (groupOrPath?.children.length > 0) {
             return groupOrPath.children[0] as HTMLElement;
@@ -263,7 +279,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public getBeamSVGs(): HTMLElement[] {
         const beamSVGs: HTMLElement[] = [];
         for (let i: number = 0;; i++) {
-            const newSVG: HTMLElement = document.getElementById(`vf-${this.getSVGId()}-beam${i}`);
+            const newSVG: HTMLElement = this.getSVGElementById(`vf-${this.getSVGId()}-beam${i}`);
             if (!newSVG) {
                 break;
             }
@@ -276,7 +292,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public getLedgerLineSVGs(): HTMLElement[] {
         const ledgerSVGs: HTMLElement[] = [];
         const idString: string = `vf-${this.getSVGId()}ledgers`;
-        const groupSVG: HTMLElement = document.getElementById(idString);
+        const groupSVG: HTMLElement = this.getSVGElementById(idString);
         if (!groupSVG) {
             return [];
         }
@@ -289,7 +305,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     /** Gets the SVG path elements of the note's tie curves. */
     public getTieSVGs(): HTMLElement[] {
         const tieSVGs: HTMLElement[] = [];
-        const ties: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${this.getSVGId()}-tie']`);
+        const ties: NodeListOf<HTMLElement> = this.getSVGLookupRoot()
+            .querySelectorAll<HTMLElement>(`[id='vf-${this.getSVGId()}-tie']`);
         // TODO multiple ties have the same id sometimes, DOM elements are not supposed to have the same id, this is invalid HTML. But it works.
         for (const tie of ties) {
             tieSVGs.push(tie);
@@ -300,12 +317,22 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     /** Gets the SVG path elements of the note's slur curve. */
     public getSlurSVGs(): HTMLElement[] {
         const slurSVGs: HTMLElement[] = [];
-        const slurs: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${this.getSVGId()}-slur']`);
+        const slurs: NodeListOf<HTMLElement> = this.getSVGLookupRoot()
+            .querySelectorAll<HTMLElement>(`[id='vf-${this.getSVGId()}-slur']`);
         // TODO multiple slurs have the same id sometimes, DOM elements are not supposed to have the same id, this is invalid HTML. But it works.
         for (const slur of slurs) {
             slurSVGs.push(slur);
         }
         return slurSVGs;
+    }
+
+    /** The nearest system remains queryable while virtualization has detached it from document. */
+    private getSVGLookupRoot(): ParentNode {
+        return this.getSVGGElement()?.closest(".osmd-system") ?? document;
+    }
+
+    private getSVGElementById(id: string): HTMLElement {
+        return this.getSVGLookupRoot().querySelector<HTMLElement>(`[id='${id}']`);
     }
 
     public getNoteheadSVGs(): HTMLElement[] {
@@ -367,6 +394,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * This requires the SVG backend (default, instead of canvas backend).
      */
     public setColor(color: string, coloringOptions: ColoringOptions = {}): void {
+        this.retainedColor = { color, options: coloringOptions };
         const applyToBeams: boolean = coloringOptions.applyToBeams ?? false; // default if option not given
         const applyToFlag: boolean = coloringOptions.applyToFlag ?? true;
         const applyToLedgerLines: boolean = coloringOptions.applyToLedgerLines ?? false;
@@ -581,6 +609,29 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             for (const path of tie.children) {
                 path.setAttribute("opacity", opacity.toString());
             }
+        }
+    }
+
+    /** Reapply application-owned SVG state when a lazily materialized system is drawn for the first time. */
+    public applyRetainedSVGState(): void {
+        if (this.retainedVisibility) {
+            this.setVisible(this.retainedVisibility.visible, this.retainedVisibility.options);
+        }
+        if (this.retainedColor) {
+            this.setColor(this.retainedColor.color, this.retainedColor.options);
+        }
+        if (this.opacity !== undefined) {
+            this.setOpacity(this.opacity);
+        }
+        if (this.hoverHandler) {
+            this.setHoverHandler(this.hoverHandler);
+        }
+        if (this.clickHandler) {
+            this.setClickHandler(this.clickHandler);
+        }
+        const handlers: (() => void)[] = this.svgMaterializationHandlers.splice(0);
+        for (const handler of handlers) {
+            handler();
         }
     }
 }

@@ -13,12 +13,8 @@ export class RangeSelectionElementCollector {
 
     public getTupletElements(drawer: VexFlowMusicSheetDrawer): SVGGraphicsElement[] {
         if (!this.dirty && this.cachedTupletElements.length > 0) {
-            const connectedCachedElements: SVGGraphicsElement[] =
-                this.cachedTupletElements.filter((element: SVGGraphicsElement): boolean => element?.isConnected);
-            if (connectedCachedElements.length > 0) {
-                this.cachedTupletElements = connectedCachedElements;
-                return connectedCachedElements;
-            }
+            // A virtualized system is intentionally disconnected but its retained SVG nodes are still valid.
+            return this.cachedTupletElements;
         }
         const elementSet: Set<SVGGraphicsElement> = new Set<SVGGraphicsElement>();
         const selectors: string[] = [
@@ -34,8 +30,7 @@ export class RangeSelectionElementCollector {
             "[id*='tuplet']",
             "[id*='triplet']"
         ];
-        for (const backend of drawer?.Backends ?? []) {
-            const renderRoot: HTMLElement = backend.getRenderElement();
+        for (const renderRoot of this.getRenderRoots(drawer)) {
             if (!renderRoot) {
                 continue;
             }
@@ -54,12 +49,8 @@ export class RangeSelectionElementCollector {
 
     public getStructuralElements(drawer: VexFlowMusicSheetDrawer): SVGGraphicsElement[] {
         if (!this.dirty && this.cachedStructuralElements.length > 0) {
-            const connectedCachedElements: SVGGraphicsElement[] =
-                this.cachedStructuralElements.filter((element: SVGGraphicsElement): boolean => element?.isConnected);
-            if (connectedCachedElements.length > 0) {
-                this.cachedStructuralElements = connectedCachedElements;
-                return connectedCachedElements;
-            }
+            // A virtualized system is intentionally disconnected but its retained SVG nodes are still valid.
+            return this.cachedStructuralElements;
         }
         const elementSet: Set<SVGGraphicsElement> = new Set<SVGGraphicsElement>();
         const selectors: string[] = [
@@ -101,8 +92,7 @@ export class RangeSelectionElementCollector {
             "[id*='-slur']",
             "[id*='-tie']"
         ];
-        for (const backend of drawer?.Backends ?? []) {
-            const renderRoot: HTMLElement = backend.getRenderElement();
+        for (const renderRoot of this.getRenderRoots(drawer)) {
             if (!renderRoot) {
                 continue;
             }
@@ -128,6 +118,22 @@ export class RangeSelectionElementCollector {
         this.cachedStructuralElements = elements;
         this.dirty = false;
         return elements;
+    }
+
+    private getRenderRoots(drawer: VexFlowMusicSheetDrawer): ParentNode[] {
+        const roots: Set<ParentNode> = new Set<ParentNode>();
+        for (const backend of drawer?.Backends ?? []) {
+            const renderRoot: HTMLElement = backend.getRenderElement();
+            if (renderRoot) {
+                roots.add(renderRoot);
+            }
+        }
+        for (const systemGroup of drawer?.SystemGroups ?? []) {
+            if (!systemGroup.isConnected) {
+                roots.add(systemGroup);
+            }
+        }
+        return Array.from(roots);
     }
 
     private shouldExcludeStructuralElement(element: SVGGraphicsElement): boolean {

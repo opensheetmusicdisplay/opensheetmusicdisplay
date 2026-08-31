@@ -49,6 +49,25 @@ export class GraphicalLabel extends Clickable {
     private hoverHandler?: (event: MouseEvent) => void;
     private clickHandler?: (event: MouseEvent) => void;
     private mouseLeaveHandler?: (event: MouseEvent) => void;
+    private readonly svgMaterializationHandlers: (() => void)[] = [];
+
+    public addSVGMaterializationHandler(handler: () => void): void {
+        if (this.SVGNode instanceof Element) {
+            handler();
+            return;
+        }
+        this.svgMaterializationHandlers.push(handler);
+    }
+
+    public applySVGMaterializationHandlers(): void {
+        if (!(this.SVGNode instanceof Element)) {
+            return;
+        }
+        const handlers: (() => void)[] = this.svgMaterializationHandlers.splice(0);
+        for (const handler of handlers) {
+            handler();
+        }
+    }
 
     public setHoverHandler(handler: (event: MouseEvent) => void): void {
         if (!this.SVGNode || !(this.SVGNode instanceof Element)) {

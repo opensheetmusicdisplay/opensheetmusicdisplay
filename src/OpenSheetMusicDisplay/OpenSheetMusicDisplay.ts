@@ -37,6 +37,7 @@ import { GraphicalLabel } from "../MusicalScore/Graphical/GraphicalLabel";
 import { MultiTempoExpression } from "../MusicalScore/VoiceData/Expressions/MultiTempoExpression";
 import { MidiExporter, MidiExportOptions } from "../MusicalScore/Export/MidiExporter";
 import { PointF2D } from "../Common/DataObjects/PointF2D";
+import { RectangleF2D } from "../Common/DataObjects/RectangleF2D";
 import { tempoLabelFromBpm } from "../Common/Tempo/TempoLabelFromBpm";
 import { GraphicalStaffEntry } from "../MusicalScore/Graphical/GraphicalStaffEntry";
 import { AbstractGraphicalExpression } from "../MusicalScore/Graphical/AbstractGraphicalExpression";
@@ -59,6 +60,12 @@ import { Note } from "../MusicalScore/VoiceData/Note";
 import { BoundingBox } from "../MusicalScore/Graphical/BoundingBox";
 import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
 import { SkyBottomLineCalculator } from "../MusicalScore/Graphical/SkyBottomLineCalculator";
+import {
+    ISystemVirtualizationOptions,
+    ISystemVirtualizationStats,
+    IVirtualSystemDescriptor,
+    SystemVirtualizationController
+} from "./SystemVirtualizationController";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -110,6 +117,7 @@ export class OpenSheetMusicDisplay {
         if (!this.container) {
             throw new Error("Please pass a valid div container to OpenSheetMusicDisplay");
         }
+        this.systemVirtualization = new SystemVirtualizationController(this.container);
 
         if (options.autoResize === undefined) {
             options.autoResize = true;
@@ -133,6 +141,8 @@ export class OpenSheetMusicDisplay {
     public loadUrlTimeout: number = 5000;
 
     protected container: HTMLElement;
+    private readonly systemVirtualization: SystemVirtualizationController;
+    private virtualizedInitialSystemCount: number | undefined;
     protected backendType: BackendType;
     protected needBackendUpdate: boolean;
     protected sheet: MusicSheet;
@@ -456,8 +466,24 @@ export class OpenSheetMusicDisplay {
         for (const measure of this.sheet.SourceMeasures) {
             measure.WasRendered = false;
         }
-        // Finally, draw
+        // Finally, draw. A virtualized first render keeps the complete graphical layout/data but only
+        // materializes the first few systems; the controller draws later systems from this same layout.
+        if (this.virtualizedInitialSystemCount !== undefined) {
+            this.drawer.LazyDrawSystemsFromIndex = 0;
+            this.drawer.LazyDrawSystemsToIndexExcl = this.virtualizedInitialSystemCount;
+        }
         this.drawer.drawSheet(this.graphic);
+        this.drawer.LazyDrawSystemsFromIndex = -1;
+        this.drawer.LazyDrawSystemsToIndexExcl = Number.POSITIVE_INFINITY;
+
+        if (this.virtualizedInitialSystemCount !== undefined) {
+            // The full graphical score exists and is safe for iterator/cursor/timing consumers even where
+            // SVG has not been materialized yet.
+            for (const measure of this.sheet.SourceMeasures) {
+                measure.WasRendered = true;
+            }
+            this.configureFullLayoutSystemVirtualization();
+        }
 
         this.enableOrDisableCursors(this.drawingParameters.drawCursors);
 
@@ -475,9 +501,74 @@ export class OpenSheetMusicDisplay {
         this.lastRangeOpacityKey = "";
         this.lastRangeOpacityDecorationsApplied = false;
         this.renderRangeSelection();
+        this.systemVirtualization.refresh();
         this.zoomUpdated = false;
         this.rules.RenderCount++;
         //console.log("[OSMD] render finished");
+    }
+
+    /**
+     * Calculate the complete graphical score, but initially draw only a few systems. This preserves access
+     * to every measure/note for timing and playback while avoiding full-score SVG creation at startup.
+     * Call {@link enableSystemVirtualization} before or after this method to materialize viewport systems.
+     */
+    public renderVirtualized(options?: { initialSystems?: number }): void {
+        if (this.backendType !== BackendType.SVG || this.rules.RenderSingleHorizontalStaffline) {
+            this.render();
+            return;
+        }
+        this.virtualizedInitialSystemCount = Math.max(1, Math.floor(options?.initialSystems ?? 3));
+        try {
+            this.render();
+        } finally {
+            this.virtualizedInitialSystemCount = undefined;
+        }
+    }
+
+    private configureFullLayoutSystemVirtualization(): void {
+        const descriptors: IVirtualSystemDescriptor[] = [];
+        for (let pageIndex: number = 0; pageIndex < this.graphic.MusicPages.length; pageIndex++) {
+            const page: GraphicalMusicPage = this.graphic.MusicPages[pageIndex];
+            const renderRoot: HTMLElement = this.drawer.Backends[pageIndex]?.getRenderElement();
+            const svg: SVGSVGElement = renderRoot?.querySelector<SVGSVGElement>("svg");
+            if (!svg) {
+                continue;
+            }
+            for (let systemIndex: number = 0; systemIndex < page.MusicSystems.length; systemIndex++) {
+                const bounds: RectangleF2D = this.drawer.getSystemPixelBounds(page.MusicSystems[systemIndex]);
+                descriptors.push({
+                    key: `${page.PageNumber}:${systemIndex}`,
+                    svg,
+                    top: bounds.y,
+                    bottom: bounds.y + bounds.height
+                });
+            }
+        }
+        this.systemVirtualization.configureExpectedSystems(descriptors, (keys: string[]): void => {
+            const indexesByPage: Map<number, number[]> = new Map<number, number[]>();
+            for (const key of keys) {
+                const [pageNumberString, systemIndexString] = key.split(":");
+                const pageIndex: number = Number.parseInt(pageNumberString, 10) - 1;
+                const systemIndex: number = Number.parseInt(systemIndexString, 10);
+                if (!Number.isFinite(pageIndex) || !Number.isFinite(systemIndex)) {
+                    continue;
+                }
+                const indexes: number[] = indexesByPage.get(pageIndex) ?? [];
+                indexes.push(systemIndex);
+                indexesByPage.set(pageIndex, indexes);
+            }
+            for (const [pageIndex, indexes] of indexesByPage) {
+                this.drawer.drawSystemIndexes(this.graphic, pageIndex, indexes.sort((a, b): number => a - b));
+            }
+            this.rangeSelectionElementCollector.invalidate();
+            this.reapplyStaffOpacityOverrides();
+            this.lastRangeOpacityKey = "";
+            this.lastRangeOpacityDecorationsApplied = false;
+            this.renderRangeSelection();
+            if (this.drawingParameters.drawCursors) {
+                this.cursors.forEach(cursor => cursor.update());
+            }
+        });
     }
 
     /** Internal range-based engine behind {@link renderNext} (the public incremental API). Lays out the
@@ -549,6 +640,7 @@ export class OpenSheetMusicDisplay {
             ? fromMeasureIndex
             : this.visualBatchEndIndex(fromMeasureIndex, batchMeasures);
         this.lazyNextSourceIndex = this.renderAppend(fromMeasureIndex, toMeasureIndex, begin, targetNewSystems);
+        this.systemVirtualization.refresh();
 
         const done: boolean = this.lazyNextSourceIndex > lastSheetMeasureIndex;
         const renderedMeasures: number = done ? totalMeasures : this.visualMeasureCount(0, this.lazyNextSourceIndex);
@@ -729,6 +821,28 @@ export class OpenSheetMusicDisplay {
         }
         this.lazyScrollHandler = undefined;
         this.lazyScrollTarget = undefined;
+    }
+
+    /**
+     * Keep only systems near the scroll viewport attached to the live SVG DOM. SVG backend only.
+     * Detached systems retain their exact nodes, including colors, opacity, and event listeners.
+     */
+    public enableSystemVirtualization(options?: ISystemVirtualizationOptions): void {
+        this.systemVirtualization.enable(options);
+    }
+
+    /** Stop viewport virtualization and, by default, put every rendered system back in the SVG. */
+    public disableSystemVirtualization(restore: boolean = true): void {
+        this.systemVirtualization.disable(restore);
+    }
+
+    /** Re-evaluate the active system window after an application-controlled scroll or layout change. */
+    public updateSystemVirtualization(): void {
+        this.systemVirtualization.refresh();
+    }
+
+    public get SystemVirtualizationStats(): ISystemVirtualizationStats {
+        return this.systemVirtualization.stats;
     }
 
     /** Start a fresh incremental session: save the draw-measure range the lazy layout mutates (restored on
@@ -1079,6 +1193,8 @@ export class OpenSheetMusicDisplay {
 
     protected createOrRefreshRenderBackend(): void {
         // console.log("[OSMD] createOrRefreshRenderBackend()");
+
+        this.systemVirtualization.invalidate();
 
         // Remove old backends
         if (this.drawer && this.drawer.Backends) {
@@ -1708,6 +1824,7 @@ export class OpenSheetMusicDisplay {
      * FIXME: Probably unnecessary
      */
     protected reset(): void {
+        this.systemVirtualization.invalidate();
         this.resetIncrementalRendering(); // abandon any incremental session + restore the rules it mutated
         if (this.drawingParameters.drawCursors) {
             this.cursors.forEach(cursor => {

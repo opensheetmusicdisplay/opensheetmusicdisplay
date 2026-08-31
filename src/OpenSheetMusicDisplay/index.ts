@@ -5,3 +5,4 @@ export * from "./Cursor";
 export * from "./OSMDOptions";
 export * from "./OpenSheetMusicDisplay";
 export * from "./RangeSelection";
+export * from "./SystemVirtualizationController";
