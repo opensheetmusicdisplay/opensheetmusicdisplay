@@ -107,6 +107,9 @@ export class SystemVirtualizationController {
         }
         this.discoverRenderedSystems();
         this.updateNow();
+        // Layout may not have settled yet right after this DOM mutation (see the null-CTM handling in
+        // updateNow()); schedule one more evaluation next frame to catch what couldn't be measured above.
+        this.scheduleUpdate();
     }
 
     private discoverRenderedSystems(): void {
@@ -162,19 +165,32 @@ export class SystemVirtualizationController {
             this.materializeSystems(missingVisibleKeys);
             this.discoverRenderedSystems();
         }
+        // Read every system's position before mutating any of them: getScreenCTM() forces a synchronous
+        // layout flush, so interleaving reads with attach()/detach() writes would thrash layout once per
+        // system instead of once total.
+        const toAttach: VirtualizedSystem[] = [];
+        const toDetach: VirtualizedSystem[] = [];
         for (const system of this.systems.values()) {
             const matrix: DOMMatrix = system.svg.getScreenCTM();
             if (!matrix) {
-                this.attach(system);
+                // Position not measurable right now (e.g. mid-backend-swap) - leave this system's DOM
+                // state as-is rather than guessing attached. The next refresh() (scroll/resize, or the
+                // follow-up frame scheduled in refresh()) will re-evaluate it once geometry is available.
                 continue;
             }
             const top: number = new DOMPoint(0, system.top).matrixTransform(matrix).y;
             const bottom: number = new DOMPoint(0, system.bottom).matrixTransform(matrix).y;
             if (bottom >= minY && top <= maxY) {
-                this.attach(system);
+                toAttach.push(system);
             } else {
-                this.detach(system);
+                toDetach.push(system);
             }
+        }
+        for (const system of toAttach) {
+            this.attach(system);
+        }
+        for (const system of toDetach) {
+            this.detach(system);
         }
     }
 
