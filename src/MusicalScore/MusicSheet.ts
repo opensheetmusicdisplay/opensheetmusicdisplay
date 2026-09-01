@@ -573,6 +573,13 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
      * @returns {SourceMeasure}
      */
     public getSourceMeasureFromTimeStamp(timeStamp: Fraction): SourceMeasure {
+        // Fast path: sourceMeasures are sorted/non-overlapping, so binary search finds the same measure
+        // as the exhaustive scan below (any exact vssec match is necessarily within its own measure's
+        // range too) - except for a degenerate zero/negative-duration measure, which falls through.
+        const rangeMatch: SourceMeasure = this.findSourceMeasureFromTimeStampBinarySearch(timeStamp);
+        if (rangeMatch) {
+            return rangeMatch;
+        }
         for (let idx: number = 0, len: number = this.sourceMeasures.length; idx < len; ++idx) {
             const sm: SourceMeasure = this.sourceMeasures[idx];
             for (let idx2: number = 0, len2: number = sm.VerticalSourceStaffEntryContainers.length; idx2 < len2; ++idx2) {
@@ -590,6 +597,23 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
                 return sm;
             }
         }
+    }
+    private findSourceMeasureFromTimeStampBinarySearch(timestamp: Fraction): SourceMeasure {
+        let low: number = 0;
+        let high: number = this.sourceMeasures.length - 1;
+        while (low <= high) {
+            const mid: number = Math.floor((low + high) / 2);
+            const sm: SourceMeasure = this.sourceMeasures[mid];
+            const end: Fraction = Fraction.plus(sm.AbsoluteTimestamp, sm.Duration);
+            if (timestamp.lt(sm.AbsoluteTimestamp)) {
+                high = mid - 1;
+            } else if (!timestamp.lt(end)) {
+                low = mid + 1;
+            } else {
+                return sm;
+            }
+        }
+        return undefined;
     }
 
     public getVisibleInstruments(): Instrument[] {
