@@ -71,10 +71,9 @@ Developers can also run a [local development demo (see Wiki)](https://github.com
 
 ## Limitations
 
-Not all MusicXML tags are (fully) supported:
+Not all MusicXML tags and attributes are (fully) supported:
 * Advanced Pedal marks (down/up brackets and lift wedge currently in early access for sponsors, "Ped." and "*" signs supported)
-* Tremolo between 2 notes (tremolo on a single note is supported)
-* Slurs across staves (e.g. from piano left hand to right hand)
+* Some attributes like special drums noteheads/glyphs
 
 Also, **OSMD is a renderer, not a full interactive sheet music editor.** Rendering takes some time for long scores, and you can't easily/quickly move notes, place new notes, etc.<br>
 There are however limited editing features like making notes invisible, coloring, hiding some instruments/staffs, not showing key or time signatures, and so on, see IOSMDOptions and EngravingRules<br>
