@@ -88,7 +88,10 @@ export class MusicPartManager /*implements ISelectionListener*/ {
                     curTimestampTransform.nextBackJump = iterator.CurrentEnrolledTimestamp;
                     curTimestampTransform.curRepetition = jumpRep;
                     curTimestampTransform.curRepetitionIteration = iterator.CurrentJumpResponsibleRepetitionIterationBeforeJump;
-                    for (let i: number = this.timestamps.length - 2; i >= 0; i--) {
+                    // note: must use the local timestamps array here - this.timestamps is only assigned
+                    //   at the end of this method, so it is undefined during the first init()
+                    //   (which crashed init() for any sheet with a backwards repetition jump)
+                    for (let i: number = timestamps.length - 2; i >= 0; i--) {
                         if (timestamps[i].to.lt(jumpRep.AbsoluteTimestamp) || timestamps[i].curRepetition) {
                             break;
                         }
