@@ -1,4 +1,6 @@
-// Cross-platform (Windows / macOS / Linux) visual regression test for OSMD sample PNGs.
+// visual regression test for OSMD sample PNGs, cross-platform (Windows / macOS / Linux)
+//
+// see https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Testing
 //
 // This is a drop-in replacement for test/Util/visual_regression.sh, which requires
 // bash + ImageMagick and therefore only runs on Linux/macOS (or a Linux VM on Windows).

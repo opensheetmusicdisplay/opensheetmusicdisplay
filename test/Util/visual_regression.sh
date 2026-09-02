@@ -1,6 +1,9 @@
 #!/bin/bash
 # This script runs a visual regression test on all the images
-# generated from OSMD samples (npm run generate:current and npm run generate:blessed)
+# generated from OSMD samples
+#
+# NOTE: THIS SCRIPT IS MADE OBSOLETE BY THE MUCH FASTER visualRegression.mjs
+# SEE https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Testing
 #
 #   inspired by and adapted from Vexflow's visual regression tests.
 #
