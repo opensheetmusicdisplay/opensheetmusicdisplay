@@ -849,15 +849,20 @@ export class GraphicalMusicSheet {
     /**
      * Get visible staffentry for the container given by the index.
      * @param index
+     * @param onlyReliableXAnchors Whether to skip entries whose x position doesn't reliably reflect
+     * their timestamp (see {@link isReliableCursorXAnchor}), for cursor positioning by timestamp.
      * @returns {GraphicalStaffEntry}
      */
-    public getStaffEntry(index: number): GraphicalStaffEntry {
+    public getStaffEntry(index: number, onlyReliableXAnchors: boolean = false): GraphicalStaffEntry {
         const container: VerticalGraphicalStaffEntryContainer = this.VerticalGraphicalStaffEntryContainers[index];
         let staffEntry: GraphicalStaffEntry = undefined;
         try {
             for (let idx: number = 0, len: number = container.StaffEntries.length; idx < len; ++idx) {
                 const entry: GraphicalStaffEntry = container.StaffEntries[idx];
                 if (!entry || !entry.sourceStaffEntry.ParentStaff.isVisible()) {
+                    continue;
+                }
+                if (onlyReliableXAnchors && !this.isReliableCursorXAnchor(entry)) {
                     continue;
                 }
                 if (!staffEntry) {
@@ -873,6 +878,41 @@ export class GraphicalMusicSheet {
         }
 
         return staffEntry;
+    }
+
+    /**
+     * Whether a staff entry's x position is a reliable anchor for mapping a timestamp to an
+     * x position (cursor positioning during playback, see {@link calculateXPositionFromTimestamp}).
+     * Two kinds of entries are excluded:
+     * - Entries without any graphical notes, e.g. staff entries only carrying a chord symbol
+     *   (MusicXML harmony). These are never positioned by the layout (their relative x stays at the
+     *   measure's left border regardless of their timestamp), so using them as anchors makes the
+     *   cursor jump backwards to the measure start (e.g. chord symbols above a centered whole rest).
+     * - Entries positioned outside their measure's horizontal bounds. These occur when a note was
+     *   never actually formatted/laid out (e.g. rests in some tablature edge cases) and carry
+     *   meaningless coordinates.
+     */
+    public isReliableCursorXAnchor(entry: GraphicalStaffEntry): boolean {
+        let hasGraphicalNotes: boolean = false;
+        for (const gve of entry.graphicalVoiceEntries) {
+            if (gve.notes.length > 0) {
+                hasGraphicalNotes = true;
+                break;
+            }
+        }
+        if (!hasGraphicalNotes) {
+            return false;
+        }
+        const relativeX: number = entry.PositionAndShape?.RelativePosition?.x;
+        if (relativeX === undefined) {
+            return false;
+        }
+        const measureWidth: number = entry.parentMeasure?.PositionAndShape?.Size?.width;
+        const positionMargin: number = 4; // units. generous margin for entries slightly outside the measure box
+        if (measureWidth > 0 && (relativeX < -positionMargin || relativeX > measureWidth + positionMargin)) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -913,12 +953,13 @@ export class GraphicalMusicSheet {
         return -1;
     }
 
-    public findClosestLeftStaffEntry(fractionalIndex: number, searchOnlyVisibleEntries: boolean): GraphicalStaffEntry {
+    public findClosestLeftStaffEntry(fractionalIndex: number, searchOnlyVisibleEntries: boolean,
+                                     onlyReliableXAnchors: boolean = false): GraphicalStaffEntry {
         let foundEntry: GraphicalStaffEntry = undefined;
         let leftIndex: number = Math.floor(fractionalIndex);
         leftIndex = Math.min(this.VerticalGraphicalStaffEntryContainers.length - 1, leftIndex);
         for (let i: number = leftIndex; i >= 0; i--) {
-            foundEntry = this.getStaffEntry(i);
+            foundEntry = this.getStaffEntry(i, onlyReliableXAnchors);
             if (foundEntry) {
                 if (searchOnlyVisibleEntries) {
                     if (foundEntry.sourceStaffEntry.ParentStaff.isVisible()) {
@@ -932,11 +973,12 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
-    public findClosestRightStaffEntry(fractionalIndex: number, returnOnlyVisibleEntries: boolean): GraphicalStaffEntry {
+    public findClosestRightStaffEntry(fractionalIndex: number, returnOnlyVisibleEntries: boolean,
+                                      onlyReliableXAnchors: boolean = false): GraphicalStaffEntry {
         let foundEntry: GraphicalStaffEntry = undefined;
         const rightIndex: number = Math.max(0, Math.ceil(fractionalIndex));
         for (let i: number = rightIndex; i < this.VerticalGraphicalStaffEntryContainers.length; i++) {
-            foundEntry = this.getStaffEntry(i);
+            foundEntry = this.getStaffEntry(i, onlyReliableXAnchors);
             if (foundEntry) {
                 if (returnOnlyVisibleEntries) {
                     if (foundEntry.sourceStaffEntry.ParentStaff.isVisible()) {
@@ -965,8 +1007,10 @@ export class GraphicalMusicSheet {
     public calculateXPositionFromTimestamp(timeStamp: Fraction): [number, MusicSystem] {
         let currentMusicSystem: MusicSystem = undefined;
         const fractionalIndex: number = this.GetInterpolatedIndexInVerticalContainers(timeStamp);
-        const previousStaffEntry: GraphicalStaffEntry = this.findClosestLeftStaffEntry(fractionalIndex, true);
-        const nextStaffEntry: GraphicalStaffEntry = this.findClosestRightStaffEntry(fractionalIndex, true);
+        // only use staff entries whose x position actually reflects their timestamp as interpolation
+        //   anchors (skips e.g. never-positioned chord-symbol-only entries), see isReliableCursorXAnchor
+        const previousStaffEntry: GraphicalStaffEntry = this.findClosestLeftStaffEntry(fractionalIndex, true, true);
+        const nextStaffEntry: GraphicalStaffEntry = this.findClosestRightStaffEntry(fractionalIndex, true, true);
         const currentTimeStamp: number = timeStamp.RealValue;
         if (!previousStaffEntry && !nextStaffEntry) {
             return [0, undefined];
@@ -1009,7 +1053,11 @@ export class GraphicalMusicSheet {
                 }
             }
             fraction = Math.min(1, Math.max(0, fraction));
-            const interpolatedXPosition: number = previousStaffEntryPositionX + fraction * (nextStaffEntryPositionX - previousStaffEntryPositionX);
+            let limitX: number = nextStaffEntryPositionX;
+            // never interpolate to the left of the anchor entry (would move the cursor backwards over
+            //   time), e.g. when the measure's right border ends up left of a centered whole rest
+            limitX = Math.max(limitX, previousStaffEntryPositionX);
+            const interpolatedXPosition: number = previousStaffEntryPositionX + fraction * (limitX - previousStaffEntryPositionX);
             return [interpolatedXPosition, currentMusicSystem];
         } else {
             const nextSystemLeftBorderTimeStamp: number = nextStaffEntry.parentMeasure.parentSourceMeasure.AbsoluteTimestamp.RealValue;
@@ -1024,7 +1072,10 @@ export class GraphicalMusicSheet {
                 // previous (rendered) system; clamps to its right border once the timestamp reaches the next system
                 currentMusicSystem = previousStaffEntryMusicSystem;
                 const previousStaffEntryPositionX: number = previousStaffEntry.PositionAndShape.AbsolutePosition.x;
-                const previousSystemRightBorderX: number = currentMusicSystem.GetRightBorderAbsoluteXPosition();
+                // never interpolate to the left of the anchor entry (would move the cursor backwards over
+                //   time), e.g. when a centered whole rest sits right of the system's computed right border
+                const previousSystemRightBorderX: number =
+                    Math.max(currentMusicSystem.GetRightBorderAbsoluteXPosition(), previousStaffEntryPositionX);
                 fraction = (currentTimeStamp - previousStaffEntry.getAbsoluteTimestamp().RealValue) /
                     (nextSystemLeftBorderTimeStamp - previousStaffEntry.getAbsoluteTimestamp().RealValue);
                 fraction = Math.min(1, Math.max(0, fraction));
@@ -1032,8 +1083,10 @@ export class GraphicalMusicSheet {
             } else if (nextStaffEntryMusicSystem.StaffLines[0]) {
                 // next (rendered) system
                 currentMusicSystem = nextStaffEntryMusicSystem;
-                const nextStaffEntryPositionX: number = nextStaffEntry.PositionAndShape.AbsolutePosition.x;
                 const nextSystemLeftBorderX: number = currentMusicSystem.GetLeftBorderAbsoluteXPosition();
+                // same anchor clamp as above, for interpolating from the system's left border
+                const nextStaffEntryPositionX: number =
+                    Math.max(nextStaffEntry.PositionAndShape.AbsolutePosition.x, nextSystemLeftBorderX);
                 fraction = (currentTimeStamp - nextSystemLeftBorderTimeStamp) /
                     (nextStaffEntry.getAbsoluteTimestamp().RealValue - nextSystemLeftBorderTimeStamp);
                 fraction = Math.min(1, Math.max(0, fraction));

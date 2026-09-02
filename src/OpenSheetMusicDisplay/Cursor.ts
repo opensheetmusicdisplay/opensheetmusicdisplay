@@ -191,12 +191,21 @@ export class Cursor {
     } else {
       // get all staff entries inside the current voice entry
       const gseArr: VexFlowStaffEntry[] = voiceEntries.map(ve => this.getStaffEntryFromVoiceEntry(ve));
+      // only use entries whose x position reliably reflects their timestamp: e.g. never-formatted
+      //   tablature rests carry garbage coordinates that would put the cursor far off-canvas
+      const reliableGseArr: VexFlowStaffEntry[] = gseArr.filter(entry => entry && this.graphic.isReliableCursorXAnchor(entry));
       // sort them by x position and take the leftmost entry
       const gse: VexFlowStaffEntry =
-            gseArr.sort((a, b) => a?.PositionAndShape?.AbsolutePosition?.x <= b?.PositionAndShape?.AbsolutePosition?.x ? -1 : 1 )[0];
+            reliableGseArr.sort((a, b) => a?.PositionAndShape?.AbsolutePosition?.x <= b?.PositionAndShape?.AbsolutePosition?.x ? -1 : 1 )[0];
       if (gse) {
         x = gse.PositionAndShape.AbsolutePosition.x;
         musicSystem = gse.parentMeasure.ParentMusicSystem;
+      } else if (gseArr.length > 0) {
+        // all entries at this position have unreliable positions: interpolate between the closest
+        //   reliable entries instead of jumping to a garbage x position
+        const [timestampX, timestampSystem] = this.graphic.calculateXPositionFromTimestamp(iterator.currentTimeStamp);
+        x = timestampX;
+        musicSystem = timestampSystem;
       }
 
       // debug: change color of notes under cursor (needs re-render)
