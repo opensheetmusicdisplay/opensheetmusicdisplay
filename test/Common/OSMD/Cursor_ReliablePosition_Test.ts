@@ -68,10 +68,10 @@ describe("Cursor reliable position", () => {
             let prevSystemIndex: number = undefined;
             for (let ts32: number = 0; ts32 < sheetEnd * 32; ts32++) {
                 const timestamp: Fraction = new Fraction(ts32, 32);
-                const values: [number, MusicSystem] =
-                    osmd.GraphicSheet.calculateXPositionFromTimestamp(timestamp);
-                const x: number = values[0];
-                const systemIndex: number = systemOrder.get(values[1]);
+                // destructured (no tuple annotation) so this compiles against both the public and the
+                //   osmd-extended return type of calculateXPositionFromTimestamp (2- vs 3-tuple)
+                const [x, system] = osmd.GraphicSheet.calculateXPositionFromTimestamp(timestamp);
+                const systemIndex: number = systemOrder.get(system);
                 if (systemIndex === undefined) {
                     continue;
                 }
