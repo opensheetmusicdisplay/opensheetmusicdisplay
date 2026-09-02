@@ -20,13 +20,15 @@ export class IXmlElement {
     /**
      * Wraps 'elem' Element in a IXmlElement
      * @param elem
+     * @param knownName the element's lower-cased node name, when the caller
+     * already matched on it - saves a DOM read and a toLowerCase() per wrapper
      */
-    constructor(elem: Element) {
+    constructor(elem: Element, knownName?: string) {
         if (!elem) {
             throw new Error("IXmlElement: expected Element, got undefined");
         }
         this.elem = elem;
-        this.name = elem.nodeName.toLowerCase();
+        this.name = knownName !== undefined ? knownName : elem.nodeName.toLowerCase();
 
         if (elem.hasAttributes()) {
             this.hasAttributes = true;
@@ -34,8 +36,9 @@ export class IXmlElement {
         }
         this.hasElements = elem.hasChildNodes();
         // Look for a value
-        if (elem.childNodes.length === 1 && elem.childNodes[0].nodeType === Node.TEXT_NODE) {
-            this.value = elem.childNodes[0].nodeValue;
+        const first: Node = elem.firstChild;
+        if (first && !first.nextSibling && first.nodeType === Node.TEXT_NODE) {
+            this.value = first.nodeValue;
         } else {
             this.value = "";
         }
@@ -47,7 +50,7 @@ export class IXmlElement {
      * @returns {Attr}
      */
     public attribute(attributeName: string): IXmlAttribute {
-        return this.elem.attributes.getNamedItem(attributeName);
+        return this.elem.getAttributeNode(attributeName);
     }
 
     /**
@@ -72,11 +75,11 @@ export class IXmlElement {
      * @returns {IXmlElement}
      */
     public element(elementName: string): IXmlElement {
-        const nodes: NodeList = this.elem.childNodes;
-        for (let i: number = 0, length: number = nodes.length; i < length; i += 1) {
-            const node: Node = nodes[i];
-            if (node.nodeType === Node.ELEMENT_NODE && node.nodeName.toLowerCase() === elementName) {
-                return new IXmlElement(node as Element);
+        for (let node: Element = this.elem.firstElementChild; node; node = node.nextElementSibling) {
+            if (node.nodeName.toLowerCase() === elementName) {
+                // A match means elementName IS the lower-cased node name, so it
+                // can stand in for the name the wrapper would recompute.
+                return new IXmlElement(node, elementName);
             }
         }
     }
@@ -87,18 +90,16 @@ export class IXmlElement {
      * @returns {IXmlElement[]}
      */
     public elements(nodeName?: string): IXmlElement[] {
-        const nodes: NodeList = this.elem.childNodes;
         const ret: IXmlElement[] = [];
         const nameUnset: boolean = !nodeName;
         if (!nameUnset) {
             nodeName = nodeName.toLowerCase();
         }
-        for (let i: number = 0; i < nodes.length; i += 1) {
-            const node: Node = nodes[i];
-            if (node.nodeType === Node.ELEMENT_NODE &&
-                (nameUnset || node.nodeName.toLowerCase() === nodeName)
-            ) {
-                ret.push(new IXmlElement(node as Element));
+        for (let node: Element = this.elem.firstElementChild; node; node = node.nextElementSibling) {
+            if (nameUnset) {
+                ret.push(new IXmlElement(node));
+            } else if (node.nodeName.toLowerCase() === nodeName) {
+                ret.push(new IXmlElement(node, nodeName));
             }
         }
         return ret;
@@ -112,26 +113,23 @@ export class IXmlElement {
      * @returns {IXmlElement}
      */
     public combinedElement(elementName: string): IXmlElement {
-        const nodes: NodeList = this.elem.childNodes;
-        if (nodes.length > 0) {
-            let firstNode: Node;
-            for (let i: number = 0, length: number = nodes.length; i < length; i += 1) {
-                const otherNode: Node = nodes[i];
-                if (otherNode.nodeType === Node.ELEMENT_NODE && otherNode.nodeName.toLowerCase() === elementName) {
-                    if (firstNode) {
-                        const childNodes: NodeList = otherNode.childNodes;
-                        for (let j: number = 0, numChildNodes: number = childNodes.length; j < numChildNodes; j += 1) {
-                            const childNode: Node = childNodes[j];
-                            firstNode.appendChild(childNode.cloneNode(true));
-                        }
-                    } else {
-                        firstNode = otherNode;
-                    }
-                }
+        let firstNode: Element;
+        for (let otherNode: Element = this.elem.firstElementChild; otherNode; otherNode = otherNode.nextElementSibling) {
+            if (otherNode.nodeName.toLowerCase() !== elementName) {
+                continue;
             }
-            if (firstNode) {
-                return new IXmlElement(firstNode as Element);
+            if (!firstNode) {
+                firstNode = otherNode;
+                continue;
             }
+            const childNodes: NodeList = otherNode.childNodes;
+            for (let j: number = 0, numChildNodes: number = childNodes.length; j < numChildNodes; j += 1) {
+                const childNode: Node = childNodes[j];
+                firstNode.appendChild(childNode.cloneNode(true));
+            }
+        }
+        if (firstNode) {
+            return new IXmlElement(firstNode, elementName);
         }
     }
 }
