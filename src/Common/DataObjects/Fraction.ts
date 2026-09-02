@@ -55,6 +55,13 @@ export class Fraction {
                               f1.denominator * f2.denominator);
     }
 
+  /**
+   * Greatest common divisor of two non-negative numbers (called by simplify() with the absolute
+   * numerator and denominator).
+   * @param a first number (non-negative; simplify() only calls this with a non-zero numerator)
+   * @param b second number (non-negative)
+   * @returns the GCD, at least 1 (never 0, which would produce NaNs downstream, see #1511)
+   */
   private static greatestCommonDenominator(a: number, b: number): number {
     if (a === 0) {
       return b;
@@ -64,6 +71,21 @@ export class Fraction {
       return 1;
     }
 
+    if (Number.isInteger(a) && Number.isInteger(b)) {
+      // Euclid by remainder for the (overwhelmingly common) integer case. Returns exactly what the
+      // subtraction loop below returns for integers - both compute gcd(a, b), incl. gcd(a, 0) = a -
+      // but in O(log) steps instead of O(a / b): gcd(1, 256) takes 2 remainder steps vs 255 subtractions.
+      // simplify() runs on every Fraction construction, so this is a hot path while reading a score.
+      while (b !== 0) {
+        const remainder: number = a % b;
+        a = b;
+        b = remainder;
+      }
+      return a; // >= 1: a starts >= 1 and the loop ends with a = gcd
+    }
+
+    // Non-integer inputs (rare, e.g. a = 2.666666666666667 from tuplet arithmetic, see #1478):
+    // keep the tolerant subtraction loop, whose behaviour for these cases is unchanged.
     while (Math.abs(b) >= 1 && Math.abs(a) >= 1) { // accounts for floating point inaccuracies. smallest GCD is 1.
       // if we don't check a > 1e-8, we infinite loop for e.g. a = 2.666666666666667, b = 4. See #1478 (rare)
       if (a > b) {
