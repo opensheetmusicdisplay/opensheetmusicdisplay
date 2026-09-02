@@ -12,6 +12,8 @@ import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {RhythmSymbolEnum} from "../VoiceData/Instructions/RhythmInstruction";
 import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {VoiceEntry} from "../VoiceData/VoiceEntry";
+import {LyricsEntry} from "../VoiceData/Lyrics/LyricsEntry";
+import {LyricWord} from "../VoiceData/Lyrics/LyricsWord";
 import {InstrumentalGroup} from "../InstrumentalGroup";
 import {SubInstrument} from "../SubInstrument";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
@@ -201,6 +203,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
         this.musicSheet.checkForInstrumentWithNoVoice();
         this.musicSheet.fillStaffList();
+        if (this.rules.RelinkLyricWordsAcrossVoices) {
+            this.relinkLyricWordsAcrossVoices(this.musicSheet);
+        }
         //this.musicSheet.DefaultStartTempoInBpm = this.musicSheet.SheetPlaybackSetting.BeatsPerMinute;
         for (let idx: number = 0, len: number = this.afterSheetReadingModules.length; idx < len; ++idx) {
          const afterSheetReadingModule: IAfterSheetReadingModule = this.afterSheetReadingModules[idx];
@@ -211,6 +216,121 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.musicSheet.userStartTempoInBPM = this.musicSheet.userStartTempoInBPM || this.musicSheet.DefaultStartTempoInBpm;
 
         return this.musicSheet;
+    }
+
+    /**
+     * Re-links lyric word chains whose syllables are split across voices of the same
+     * instrument (e.g. the soprano holds a note while the alto carries the next syllable
+     * of the word). Each voice is parsed by its own LyricsReader, so a "begin" syllable
+     * in one voice never meets its "end" in another and no dash is drawn between them.
+     * Only verses that contain broken chains are rebuilt (in timestamp order); verses
+     * with well-formed words — including voices carrying genuinely different lyrics —
+     * are left untouched.
+     */
+    private relinkLyricWordsAcrossVoices(musicSheet: MusicSheet): void {
+        interface ITimedLyricsEntry { timestamp: number, voiceId: number, entry: LyricsEntry }
+        const groups: Map<Instrument, Map<string, ITimedLyricsEntry[]>> = new Map();
+        for (const measure of musicSheet.SourceMeasures) {
+            for (const container of measure.VerticalSourceStaffEntryContainers) {
+                for (const staffEntry of container.StaffEntries) {
+                    if (!staffEntry) {
+                        continue;
+                    }
+                    const instrument: Instrument = staffEntry.ParentStaff.ParentInstrument;
+                    for (const voiceEntry of staffEntry.VoiceEntries) {
+                        voiceEntry.LyricsEntries.forEach((verseNumber: string, lyricsEntry: LyricsEntry) => {
+                            let verses: Map<string, ITimedLyricsEntry[]> = groups.get(instrument);
+                            if (!verses) {
+                                verses = new Map();
+                                groups.set(instrument, verses);
+                            }
+                            let list: ITimedLyricsEntry[] = verses.get(verseNumber);
+                            if (!list) {
+                                list = [];
+                                verses.set(verseNumber, list);
+                            }
+                            list.push({
+                                timestamp: staffEntry.AbsoluteTimestamp.RealValue,
+                                voiceId: voiceEntry.ParentVoice.VoiceId,
+                                entry: lyricsEntry
+                            });
+                        });
+                    }
+                }
+            }
+        }
+        groups.forEach((verses: Map<string, ITimedLyricsEntry[]>) => {
+            verses.forEach((list: ITimedLyricsEntry[]) => {
+                if (!this.hasBrokenLyricWordChains(list)) {
+                    return;
+                }
+                list.sort((a: ITimedLyricsEntry, b: ITimedLyricsEntry) =>
+                    (a.timestamp - b.timestamp) || (a.voiceId - b.voiceId));
+                let openWord: LyricWord = undefined;
+                let previousTimestamp: number = Number.NEGATIVE_INFINITY;
+                for (const timed of list) {
+                    const entry: LyricsEntry = timed.entry;
+                    if (timed.timestamp === previousTimestamp) {
+                        // simultaneous duplicate (same syllable carried by both voices):
+                        // keep it rendered, but out of any word chain
+                        entry.Word = undefined;
+                        continue;
+                    }
+                    previousTimestamp = timed.timestamp;
+                    switch (entry.syllabic) {
+                        case "begin":
+                            openWord = new LyricWord();
+                            entry.Word = openWord;
+                            entry.SyllableIndex = 0;
+                            openWord.Syllables.push(entry);
+                            break;
+                        case "middle":
+                        case "end":
+                            if (openWord) {
+                                entry.Word = openWord;
+                                entry.SyllableIndex = openWord.Syllables.length;
+                                openWord.Syllables.push(entry);
+                                if (entry.syllabic === "end") {
+                                    openWord = undefined;
+                                }
+                            } else {
+                                entry.Word = undefined;
+                            }
+                            break;
+                        default: // "single" or unknown
+                            entry.Word = undefined;
+                            openWord = undefined;
+                            break;
+                    }
+                }
+            });
+        });
+    }
+
+    /** A verse needs re-linking when a non-single syllable has no word (orphan)
+     *  or a word chain does not start with "begin" and finish with "end". */
+    private hasBrokenLyricWordChains(list: { entry: LyricsEntry }[]): boolean {
+        const words: Set<LyricWord> = new Set();
+        for (const timed of list) {
+            const entry: LyricsEntry = timed.entry;
+            if (!entry.Word) {
+                if (entry.syllabic === "begin" || entry.syllabic === "middle" || entry.syllabic === "end") {
+                    return true;
+                }
+            } else {
+                words.add(entry.Word);
+            }
+        }
+        let broken: boolean = false;
+        words.forEach((word: LyricWord) => {
+            const syllables: LyricsEntry[] = word.Syllables;
+            if (syllables.length < 2 ||
+                syllables[0].syllabic !== "begin" ||
+                syllables[syllables.length - 1].syllabic !== "end") {
+                broken = true;
+            }
+        });
+        return broken;
     }
 
     private initializeReading(partList: IXmlElement[], partInst: IXmlElement[], instrumentReaders: InstrumentReader[]): void {
