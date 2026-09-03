@@ -84,7 +84,10 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
         const staffIndex: number =
                 graphicalNote.parentVoiceEntry.parentStaffEntry.sourceStaffEntry.ParentStaff.idInMusicSheet;
 
-        if (!(graphicalNote instanceof VexFlowGraphicalNote) || graphicalNote.sourceNote.isRest()
+        // only reposition notes that are actually under a percussion clef, mirroring trackNote():
+        //   a percussion clef later in the part must not remap notes of earlier G/F clef measures (#1726)
+        if (!(graphicalNote instanceof VexFlowGraphicalNote) || graphicalNote.Clef().ClefType !== ClefEnum.percussion
+            || graphicalNote.sourceNote.isRest()
             || !this.staffPitchListMapping.containsKey(staffIndex)) {
             return graphicalNote;
         }
