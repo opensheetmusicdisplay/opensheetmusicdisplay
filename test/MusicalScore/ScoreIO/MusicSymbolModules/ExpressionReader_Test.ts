@@ -90,6 +90,21 @@ describe("ExpressionReader", () => {
         });
     });
 
+    describe("two dynamics at the same position on a staff", () => {
+        it("combines them into one marking instead of dropping the first (Norma fantasy m.24: ff + marcato)", () => {
+            // Finale writes "ff marcato" as <dynamics><ff/></dynamics> plus <dynamics><other-dynamics>marcato</other-dynamics></dynamics>
+            //   in two <direction>s at the same timestamp; the second one used to replace the first.
+            const dynamics: InstantaneousDynamicExpression[] =
+                collectDynamics(readSheet("test/data/test_clef_change_on_invisible_note_norma_fantasy_1605.musicxml"));
+            const texts: string[] = dynamics.map((dynamic: InstantaneousDynamicExpression): string => dynamic.DynamicExpression);
+            expect(texts, "ff and marcato form one marking").to.include("ff marcato");
+            expect(texts, "no lone marcato is left").to.not.include("marcato");
+            const combined: InstantaneousDynamicExpression =
+                dynamics.find((dynamic: InstantaneousDynamicExpression): boolean => dynamic.DynamicExpression === "ff marcato");
+            expect(combined.DynEnum, "the playback dynamic of the combined marking is the ff").to.equal(DynamicEnum.ff);
+        });
+    });
+
     describe("MusicXML 4.0 dynamics pf, sfzp and n", () => {
         let dynamics: InstantaneousDynamicExpression[];
 

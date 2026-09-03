@@ -667,14 +667,25 @@ export class ExpressionReader {
                     this.createNewMultiExpressionIfNeeded(currentMeasure, numberXml,
                         Fraction.createFromFraction(inSourceMeasureCurrentFraction));
                 }
+                // A second dynamic at the same position on the same staff, e.g. Finale's "ff marcato" written as <ff/> plus
+                //   <other-dynamics>marcato</other-dynamics> in two <direction>s: the MultiExpression holds only one
+                //   instantaneous dynamic, so combine both into one marking instead of losing the first one.
+                const existingDynamic: InstantaneousDynamicExpression = this.getMultiExpression.InstantaneousDynamic;
+                let markingText: string = expressionText;
+                let markingEnum: DynamicEnum = dynamicEnum;
+                if (existingDynamic && existingDynamic.StaffNumber === this.staffNumber &&
+                    existingDynamic.DynamicExpression.toLowerCase() !== expressionText.toLowerCase()) {
+                    markingText = existingDynamic.DynamicExpression + " " + expressionText;
+                    markingEnum = existingDynamic.DynEnum ?? dynamicEnum; // the playback dynamic of "ff marcato" is the ff
+                }
                 const instantaneousDynamicExpression: InstantaneousDynamicExpression =
                     new InstantaneousDynamicExpression(
-                        expressionText,
+                        markingText,
                         this.soundDynamic,
                         this.placement,
                         this.staffNumber,
                         currentMeasure,
-                        dynamicEnum);
+                        markingEnum);
                 instantaneousDynamicExpression.InMeasureTimestamp = inSourceMeasureCurrentFraction.clone();
                 this.getMultiExpression.addExpression(instantaneousDynamicExpression, "");
                 // addExpression unnecessary now?:
@@ -684,10 +695,11 @@ export class ExpressionReader {
                 //  initialize also resets this.placement to NotYetDefined, would be an issue for multiple direction-type nodes in one direction node.
                 if (this.activeInstantaneousDynamic) {
                     this.activeInstantaneousDynamic.DynEnum = instantaneousDynamicExpression.DynEnum;
-                    this.activeInstantaneousDynamic.DynamicExpression = expressionText;
+                    this.activeInstantaneousDynamic.DynamicExpression = instantaneousDynamicExpression.DynamicExpression;
                 } else {
-                    this.activeInstantaneousDynamic = new InstantaneousDynamicExpression(expressionText, 0, PlacementEnum.NotYetDefined, 1, currentMeasure,
-                                                                                         dynamicEnum);
+                    this.activeInstantaneousDynamic = new InstantaneousDynamicExpression(instantaneousDynamicExpression.DynamicExpression, 0,
+                                                                                         PlacementEnum.NotYetDefined, 1, currentMeasure,
+                                                                                         instantaneousDynamicExpression.DynEnum);
                 }
                 //}
             }
