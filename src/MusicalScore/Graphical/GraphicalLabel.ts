@@ -1,5 +1,6 @@
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { Label } from "../Label";
+import { Note } from "../VoiceData/Note";
 import { BoundingBox } from "./BoundingBox";
 import { Clickable } from "./Clickable";
 import { EngravingRules } from "./EngravingRules";
@@ -20,6 +21,12 @@ export class GraphicalLabel extends Clickable {
     /** Read-only informational variable only set once by lyrics centering algorithm. */
     public CenteringXShift: number = 0;
     public ColorXML: string;
+    /** The note this label was created for, if any. Set for fingerings (GraphicalStaffEntry.FingeringEntries),
+     *  which are stacked in the pitch order of their notes rather than the order they were read in,
+     *  so that the note a fingering belongs to can be told without re-deriving that order.
+     *  Named like GraphicalNote.sourceNote, which holds the same kind of reference.
+     */
+    public sourceNote: Note;
 
     /**
      * Creates a new GraphicalLabel from a Label
