@@ -646,11 +646,9 @@ export class ExpressionReader {
                 .join("")
                 .trim(); // e.g. Finale writes <other-dynamics> marcato</other-dynamics> with a leading space
             if (expressionText) {
-                // Keep the previous first-child enum behavior for playback while rendering the complete marking.
-                const firstDynamicText: string = dynamicsElements[0].name === "other-dynamics"
-                    ? dynamicsElements[0].value
-                    : dynamicsElements[0].name;
-                const dynamicEnum: DynamicEnum = DynamicEnum[firstDynamicText?.toLowerCase()];
+                // The playback dynamic of the marking: sf for <sf/><mp/> (sfmp) as well as for the same marking spelled
+                //   letter by letter, ff for <other-dynamics>ffz</other-dynamics>, f for "f con fuoco", none for "cresc.".
+                const dynamicEnum: DynamicEnum = InstantaneousDynamicExpression.dynamicEnumFromText(expressionText);
                 // ToDo: make duplicate recognition an afterReadingModule, as we can't definitively check here if there is a repetition:
                 // Compare with the active dynamic expression and only add it if there is a change in dynamic
                 // Exception is when a repetition starts here, where the "repeated" dynamic might be desired.

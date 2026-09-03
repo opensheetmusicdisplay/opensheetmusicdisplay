@@ -40,9 +40,33 @@ describe("ExpressionReader", () => {
                 .to.deep.equal(["sfmp", "sfmp", "ffz"]);
         });
 
-        it("retains the first child's dynamic enum for playback", () => {
-            expect(dynamics[0].DynEnum).to.equal(DynamicEnum.sf);
-            expect(dynamics[2].DynEnum).to.equal(DynamicEnum.ff);
+        it("derives the playback enum from the marking: sf for both spellings of sfmp, ff for ffz", () => {
+            expect(dynamics.map((dynamic: InstantaneousDynamicExpression): DynamicEnum => dynamic.DynEnum))
+                .to.deep.equal([DynamicEnum.sf, DynamicEnum.sf, DynamicEnum.ff]);
+        });
+    });
+
+    describe("playback dynamic (DynEnum) from <other-dynamics> texts", () => {
+        it("takes the dynamic the text starts with, as a whole symbol sequence or a separate word", () => {
+            const dynamics: InstantaneousDynamicExpression[] =
+                collectDynamics(readSheet("test/data/test_dynamics_other_dynamics_text_playback.musicxml"));
+            expect(dynamics.map((dynamic: InstantaneousDynamicExpression): string => dynamic.DynamicExpression))
+                .to.deep.equal(["ffz", "sffz", "f con fuoco", "cresc.", "più f"]);
+            expect(dynamics.map((dynamic: InstantaneousDynamicExpression): DynamicEnum => dynamic.DynEnum))
+                .to.deep.equal([DynamicEnum.ff, DynamicEnum.sffz, DynamicEnum.f, undefined, undefined]);
+        });
+
+        it("dynamicEnumFromText: known dynamics, symbol sequences and leading dynamic words", () => {
+            const cases: [string, DynamicEnum][] = [
+                ["sfmp", DynamicEnum.sf], ["ffz", DynamicEnum.ff], ["sffz", DynamicEnum.sffz], ["sfzp", DynamicEnum.sfzp],
+                ["pf", DynamicEnum.pf], ["n", DynamicEnum.n], ["MF", DynamicEnum.mf], [" p ", DynamicEnum.p],
+                ["f con fuoco", DynamicEnum.f], ["ff con più fuoco possibile", DynamicEnum.ff], ["p dolce", DynamicEnum.p],
+                ["fine", undefined], ["forte", undefined], ["pesante", undefined], ["cresc.", undefined], ["marcato", undefined],
+                ["più f", undefined], ["", undefined], [undefined, undefined],
+            ];
+            for (const testCase of cases) {
+                expect(InstantaneousDynamicExpression.dynamicEnumFromText(testCase[0]), `"${testCase[0]}"`).to.equal(testCase[1]);
+            }
         });
     });
 

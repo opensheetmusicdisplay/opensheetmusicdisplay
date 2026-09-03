@@ -44,7 +44,7 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         super(placement);
         this.parentMeasure = measure;
         this.dynamicExpression = dynamicExpression;
-        this.dynamicEnum = dynamicEnum ?? DynamicEnum[dynamicExpression.toLowerCase()];
+        this.dynamicEnum = dynamicEnum ?? InstantaneousDynamicExpression.dynamicEnumFromText(dynamicExpression);
         this.soundDynamic = soundDynamics;
         this.staffNumber = staffNumber;
     }
@@ -114,6 +114,42 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         if (!inputString) { return false; }
         return InstantaneousDynamicExpression.isStringInStringList(InstantaneousDynamicExpression.listInstantaneousDynamics, inputString);
     }
+
+    /**
+     * The playback dynamic (DynEnum) for the text of a marking, or undefined if the text doesn't denote one:
+     * - the whole text, if it is a known dynamic: "sfz", "MF", "pf"
+     * - for a plain sequence of dynamics letters, the longest known dynamic it starts with, i.e. the first symbol of a
+     *   combined marking: "sfmp" -> sf, "ffz" -> ff (also how Finale, Sibelius and MuseScore write these in <other-dynamics>)
+     * - for a text, its leading dynamic word: "f con fuoco" -> f, "p dolce" -> p. A dynamic letter that merely starts a
+     *   longer word doesn't count ("fine", "forte", "pesante"), nor does a text not starting with a dynamic ("cresc.", "più f").
+     */
+    public static dynamicEnumFromText(text: string): DynamicEnum {
+        const normalized: string = text?.trim().toLowerCase();
+        if (!normalized) {
+            return undefined;
+        }
+        if (!InstantaneousDynamicExpression.knownDynamicNames) {
+            // built lazily: DynamicEnum is declared after this class in the module, so it isn't available while the
+            //   class's statics are initialized (same reason staticConstructor() is called at the end of the module)
+            InstantaneousDynamicExpression.knownDynamicNames = Object.keys(DynamicEnum)
+                .filter((key: string): boolean => isNaN(Number(key)) && key !== "other")
+                .sort((a: string, b: string): number => b.length - a.length); // longest first: "sff" before "sf" before... ("s" is none)
+        }
+        const leadingDynamic: string = InstantaneousDynamicExpression.knownDynamicNames.find(
+            (name: string): boolean => normalized.startsWith(name));
+        if (!leadingDynamic) {
+            return undefined;
+        }
+        const rest: string = normalized.substring(leadingDynamic.length);
+        const isSymbolSequence: boolean = /^[pfmsrzn]+$/.test(normalized);
+        if (rest.length === 0 || isSymbolSequence || !/^[a-zà-ÿ]/.test(rest)) {
+            return DynamicEnum[leadingDynamic];
+        }
+        return undefined; // the dynamic letter(s) just start a longer word, e.g. "fine"
+    }
+
+    /** All known dynamics (the DynamicEnum names except "other"), longest first. See dynamicEnumFromText(). */
+    private static knownDynamicNames: string[];
 
     //private static weight: number;
     private static listInstantaneousDynamics: string[] =  [
