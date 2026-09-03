@@ -62,8 +62,12 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     public set ParentMultiExpression(value: MultiExpression) {
         this.multiExpression = value;
     }
+    /** The marking as written, e.g. "sfmp" for <sf/><mp/>, "ffz" or "cresc." from <other-dynamics>. This is what gets rendered. */
     public get DynamicExpression(): string {
         return this.dynamicExpression;
+    }
+    public set DynamicExpression(value: string) {
+        this.dynamicExpression = value;
     }
     public get DynEnum(): DynamicEnum {
         return this.dynamicEnum;

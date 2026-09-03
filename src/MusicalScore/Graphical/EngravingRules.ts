@@ -549,6 +549,7 @@ export class EngravingRules {
     public RenderWavyLines: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
+    /** Skip a dynamic marking that repeats the currently active one, i.e. has the same text (e.g. a second p in a row). Default false. */
     public IgnoreRepeatedDynamics: boolean;
     public ExpressionsUseXMLColor: boolean;
     public ArticulationPlacementFromXML: boolean;

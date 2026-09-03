@@ -643,7 +643,8 @@ export class ExpressionReader {
             // A single <dynamics> element may contain multiple symbols, e.g. <sf/><mp/>.
             const expressionText: string = dynamicsElements
                 .map((element: IXmlElement): string => element.name === "other-dynamics" ? element.value : element.name)
-                .join("");
+                .join("")
+                .trim(); // e.g. Finale writes <other-dynamics> marcato</other-dynamics> with a leading space
             if (expressionText) {
                 // Keep the previous first-child enum behavior for playback while rendering the complete marking.
                 const firstDynamicText: string = dynamicsElements[0].name === "other-dynamics"
@@ -655,7 +656,9 @@ export class ExpressionReader {
                 // Exception is when a repetition starts here, where the "repeated" dynamic might be desired.
                 // see PR #767 where this was removed
                 if (currentMeasure.Rules?.IgnoreRepeatedDynamics) {
-                    if (this.activeInstantaneousDynamic?.DynEnum === dynamicEnum) {
+                    // Compare the whole marking, not just its playback enum (the first symbol of a combined marking):
+                    //   <sf/><p/> right after <sf/><mp/> is a different marking, not a repeated sf.
+                    if (this.activeInstantaneousDynamic?.DynamicExpression?.toLowerCase() === expressionText.toLowerCase()) {
                         // repeated dynamic
                         return;
                     }
@@ -683,8 +686,10 @@ export class ExpressionReader {
                 //  initialize also resets this.placement to NotYetDefined, would be an issue for multiple direction-type nodes in one direction node.
                 if (this.activeInstantaneousDynamic) {
                     this.activeInstantaneousDynamic.DynEnum = instantaneousDynamicExpression.DynEnum;
+                    this.activeInstantaneousDynamic.DynamicExpression = expressionText;
                 } else {
-                    this.activeInstantaneousDynamic = new InstantaneousDynamicExpression(expressionText, 0, PlacementEnum.NotYetDefined, 1, currentMeasure);
+                    this.activeInstantaneousDynamic = new InstantaneousDynamicExpression(expressionText, 0, PlacementEnum.NotYetDefined, 1, currentMeasure,
+                                                                                         dynamicEnum);
                 }
                 //}
             }
