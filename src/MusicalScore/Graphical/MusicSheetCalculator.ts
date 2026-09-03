@@ -4083,8 +4083,13 @@ export abstract class MusicSheetCalculator {
             }
         } else {
             if (voiceEntry.ParentVoice instanceof LinkedVoice) {
-                // Linked voice: set stem down:
-                voiceEntry.WantedStemDirection = StemDirectionType.Down;
+                // Linked voice: set stem down, but only while another voice is present at
+                // the same staff entry (same clash guard as the main-voice branch below).
+                // A linked voice alone at its staff entry has no voice to avoid, so leave
+                // WantedStemDirection undefined and let pitch-based auto-stemming apply.
+                if (voiceEntry.ParentSourceStaffEntry.VoiceEntries.length > 1) {
+                    voiceEntry.WantedStemDirection = StemDirectionType.Down;
+                }
             } else {
                 // if this voiceEntry belongs to the mainVoice:
                 // check first that there are also more voices present:

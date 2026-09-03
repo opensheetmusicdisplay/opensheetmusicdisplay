@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for issue #1719: a secondary (linked) voice that is the only
+    voice active at a staff entry must not be forced stem-down.
+
+    Two consecutive measures hold the identical pitch and rhythm (F4 half note,
+    which sits below the treble middle line, so its automatic stem points up):
+      - Measure 1 uses voice 1 (the main voice).
+      - Measure 2 uses voice 7 (a distinct voice number, parsed as a LinkedVoice).
+    The voices never overlap, so each measure has exactly one voice entry per staff
+    entry. No <note> carries a <stem>, and the encoding declares that stems are not
+    comprehensively supplied, so automatic (pitch-based) stemming is the default.
+
+    Expected: both measures auto-stem identically (WantedStemDirection Undefined,
+    resolved upward by pitch). The bug forces measure 2 stem-down only because its
+    voice is a LinkedVoice.
+  -->
+  <identification>
+    <encoding>
+      <software>Test fixture for OSMD issue #1719</software>
+      <supports type="no" element="stem"/>
+    </encoding>
+  </identification>
+  <part-list>
+    <score-part id="P1"><part-name>Music</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <!-- Voice 1 (main voice) -->
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>half</type></note>
+    </measure>
+    <measure number="2">
+      <!-- Voice 7 (secondary / linked voice), alone at its staff entry, no <stem> -->
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>2</duration><voice>7</voice><type>half</type></note>
+    </measure>
+  </part>
+</score-partwise>
