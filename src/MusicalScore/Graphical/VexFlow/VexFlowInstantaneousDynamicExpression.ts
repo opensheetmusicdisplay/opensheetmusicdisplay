@@ -1,5 +1,5 @@
 import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneousDynamicExpression";
-import { InstantaneousDynamicExpression, DynamicEnum } from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
+import { InstantaneousDynamicExpression } from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
 import { GraphicalLabel } from "../GraphicalLabel";
 import { Label } from "../../Label";
 import { TextAlignmentEnum } from "../../../Common/Enums/TextAlignment";
@@ -28,6 +28,6 @@ export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneou
     }
 
     get Expression(): string {
-        return DynamicEnum[this.mInstantaneousDynamicExpression.DynEnum];
+        return this.mInstantaneousDynamicExpression.DynamicExpression;
     }
 }
