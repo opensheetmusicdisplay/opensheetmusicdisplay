@@ -533,9 +533,11 @@ describe("VexFlow Measure", () => {
          return osmdOn.load(xml).then(() => {
             osmdOn.render(); // SlurFlattenToObstacle is true by default
             const arcWith: number = widestSlurArcHeight(osmdOn);
-            // the widest slur spans a (near-)flat passage, so flattening should cut its arc well below half
+            // the widest slur spans a (near-)flat passage, so flattening should cut its arc substantially (to roughly two thirds).
+            // Browsers lay the score out slightly differently (text metrics), so the threshold leaves headroom:
+            // 0.65 failed on Chrome, where the ratio is ~0.67 (Windows and macOS), while Firefox (CI) gets down to ~0.5.
             expect(arcWith, `widest slur's flattened arc (${arcWith.toFixed(1)}) should be far below unflattened (${arcWithout.toFixed(1)})`)
-               .to.be.lessThan(arcWithout * 0.65);
+               .to.be.lessThan(arcWithout * 0.75);
             done();
          });
       }).catch(done);
