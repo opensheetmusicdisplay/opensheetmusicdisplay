@@ -10,13 +10,99 @@ import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { BoundingBox } from "./BoundingBox";
 import { Matrix2D } from "../../Common/DataObjects/Matrix2D";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
-import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
+import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { Fraction } from "../../Common/DataObjects/Fraction";
-import { StemDirectionType } from "../VoiceData/VoiceEntry";
+import { ArticulationEnum, StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "./VexFlow/VexFlowAdapter";
+import {
+    SlurAnchorCandidate,
+    SlurArticulationClass,
+    SlurBounds,
+    SlurCurveCandidate,
+    SlurCurveGeometry,
+    SlurEndpointAttachment,
+    SlurEndpointContext,
+    SlurLayoutContext,
+    SlurLayoutFault,
+    SlurLayoutResult,
+    SlurLinkedLayoutDiagnostics,
+    SlurObstacle,
+} from "./SlurLayout/SlurLayoutTypes";
+import { calculateCandidateSlurLayout } from "./SlurLayout/SlurCandidateLayoutEngine";
+
+const vexflowUnitInPixels: number = 10;
+const cloneSlurPoint: (point: PointF2D) => PointF2D =
+    (point: PointF2D): PointF2D => new PointF2D(point.x, point.y);
+const lineValueAtX: (start: PointF2D, end: PointF2D, x: number) => number =
+    (start: PointF2D, end: PointF2D, x: number): number => {
+        const width: number = end.x - start.x;
+        return Math.abs(width) < 0.0001
+            ? (start.y + end.y) / 2
+            : start.y + (end.y - start.y) * ((x - start.x) / width);
+    };
+
+export interface GraphicalSlurBoundsDiagnostics {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+}
+
+export interface GraphicalSlurArticulationShiftDiagnostics {
+    baseline: PointF2D;
+    endpoint: "start" | "end";
+    glyph: string;
+    type: string;
+    previousShiftPx: number;
+    finalShiftPx: number;
+    bounds: GraphicalSlurBoundsDiagnostics;
+}
+
+export interface GraphicalSlurDiagnostics {
+    segmentIndex: number;
+    segmentCount: number;
+    placement?: PlacementEnum;
+    startNotehead?: GraphicalSlurBoundsDiagnostics;
+    endNotehead?: GraphicalSlurBoundsDiagnostics;
+    startAttachment?: SlurEndpointAttachment;
+    endAttachment?: SlurEndpointAttachment;
+    articulationShifts: GraphicalSlurArticulationShiftDiagnostics[];
+    unsupportedRouting?: "cross-staff-cross-system";
+    selectedCandidateId?: string;
+    candidateCount?: number;
+    faults?: string[];
+    structuredFaults?: SlurLayoutFault[];
+    placementCandidateScores?: Partial<Record<"above" | "below", number>>;
+    linkedGroupId?: string;
+    continuationClearance?: number;
+    linkedTangentMismatch?: number;
+}
+
+interface RenderedSlurEndpointGeometry {
+    notehead: GraphicalSlurBoundsDiagnostics;
+    stem?: GraphicalSlurBoundsDiagnostics;
+    articulations: {
+        baseline: PointF2D;
+        modifier: any;
+        note: GraphicalNote;
+        type: string;
+        position: number;
+        bounds: GraphicalSlurBoundsDiagnostics;
+    }[];
+    beamPolygons: PointF2D[][];
+    accidentals: GraphicalSlurBoundsDiagnostics[];
+    tuplets: GraphicalSlurBoundsDiagnostics[];
+}
+
+interface CandidateArticulationBinding {
+    modifier: any;
+    note: GraphicalNote;
+    staffLine: StaffLine;
+    endpoint: "start" | "end";
+    type: string;
+}
 
 export class GraphicalSlur extends GraphicalCurve {
     // private intersection: PointF2D;
@@ -34,6 +120,15 @@ export class GraphicalSlur extends GraphicalCurve {
     public graceEnd: boolean;
     private rules: EngravingRules;
     public SVGElement: Node;
+    public layoutContext?: SlurLayoutContext;
+    public layoutResult?: SlurLayoutResult;
+    private candidateSeed?: SlurCurveGeometry;
+    private candidateArticulationBindings: Map<string, CandidateArticulationBinding> = new Map();
+    public diagnostics: GraphicalSlurDiagnostics = {
+        segmentIndex: 0,
+        segmentCount: 1,
+        articulationShifts: [],
+    };
 
     /**
      * Compares the timespan of two Graphical Slurs
@@ -62,43 +157,273 @@ export class GraphicalSlur extends GraphicalCurve {
         return 0;
     }
 
+    public setLinkedSegment(index: number, count: number, placement: PlacementEnum, groupId?: string): void {
+        this.diagnostics.segmentIndex = index;
+        this.diagnostics.segmentCount = count;
+        this.diagnostics.placement = placement;
+        this.diagnostics.linkedGroupId = groupId;
+        this.placement = placement;
+    }
+
+    public markUnsupportedCrossStaffSystemBreak(): void {
+        this.diagnostics.unsupportedRouting = "cross-staff-cross-system";
+        this.diagnostics.structuredFaults = [{
+            code: "unsupported-cross-staff-cross-system",
+            message: "Cross-staff slurs spanning a system break cannot yet be represented safely.",
+            segmentIndexes: [this.diagnostics.segmentIndex],
+        }];
+    }
+
+    public setLinkedLayoutDiagnostics(diagnostics: SlurLinkedLayoutDiagnostics): void {
+        this.diagnostics.linkedGroupId = diagnostics.groupId;
+        this.diagnostics.continuationClearance = diagnostics.continuationClearance;
+        this.diagnostics.linkedTangentMismatch = diagnostics.tangentMismatch;
+        this.diagnostics.structuredFaults = [...diagnostics.faults];
+    }
+
+    public determinePlacement(): PlacementEnum {
+        const staffLine: StaffLine = this.staffEntries[0]?.parentMeasure?.ParentStaffLine;
+        if (!staffLine) {
+            return this.placement;
+        }
+        this.calculatePlacement(staffLine.SkyBottomLineCalculator, staffLine);
+        this.diagnostics.placement = this.placement;
+        return this.placement;
+    }
+
+    /**
+     * Compare both sides only when placement is genuinely unspecified and the
+     * initial mixed-stem decision is ambiguous. Explicit MusicXML placement,
+     * lyrics, and polyphonic voice-side policy remain authoritative.
+     */
+    public canCompareAutomaticPlacements(): boolean {
+        if (this.slur.PlacementXml !== PlacementEnum.NotYetDefined) {
+            return false;
+        }
+        for (const staffEntry of this.staffEntries) {
+            if (staffEntry.parentMeasure.hasMultipleVoices() || staffEntry.LyricsEntries.length > 0) {
+                return false;
+            }
+        }
+        const startEntry: GraphicalStaffEntry = this.staffEntries[0];
+        const endEntry: GraphicalStaffEntry = this.staffEntries[this.staffEntries.length - 1];
+        const startDirection: StemDirectionType =
+            startEntry?.graphicalVoiceEntries[0]?.parentVoiceEntry?.StemDirection;
+        const endDirection: StemDirectionType =
+            endEntry?.graphicalVoiceEntries[0]?.parentVoiceEntry?.StemDirection;
+        return startDirection !== undefined
+            && endDirection !== undefined
+            && startDirection !== endDirection;
+    }
+
+    public setPlacementCandidateScores(above: number, below: number): void {
+        this.diagnostics.placementCandidateScores = {above, below};
+    }
+
+    private resolveEndpointNotes(): {startNote: GraphicalNote, endNote: GraphicalNote} {
+        const startStaffEntry: GraphicalStaffEntry = this.staffEntries[0];
+        const endStaffEntry: GraphicalStaffEntry = this.staffEntries[this.staffEntries.length - 1];
+        if (!startStaffEntry || !endStaffEntry) {
+            return {startNote: undefined, endNote: undefined};
+        }
+        let startNote: GraphicalNote = startStaffEntry.findGraphicalNoteFromNote(this.slur.StartNote);
+        if (!startNote && this.graceStart) {
+            startNote = startStaffEntry.findGraphicalNoteFromGraceNote(this.slur.StartNote);
+        }
+        if (!startNote) {
+            startNote = startStaffEntry.findEndTieGraphicalNoteFromNoteWithStartingSlur(this.slur.StartNote, this.slur);
+        }
+        let endNote: GraphicalNote = endStaffEntry.findGraphicalNoteFromNote(this.slur.EndNote);
+        if (!endNote && this.graceEnd) {
+            endNote = endStaffEntry.findGraphicalNoteFromGraceNote(this.slur.EndNote);
+        }
+        return {startNote, endNote};
+    }
+
+    private renderedEndpointGeometry(note: GraphicalNote, staffLine: StaffLine): RenderedSlurEndpointGeometry {
+        const vexflowNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
+        const vfNote: any = vexflowNote.vfnote?.[0] as any;
+        const noteIndex: number = vexflowNote.vfnote?.[1] ?? vexflowNote.vfnoteIndex ?? 0;
+        if (!vfNote) {
+            return undefined;
+        }
+        vfNote.layoutArticulations?.();
+        const stave: any = vfNote.getStave?.();
+        const measureX: number = note.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
+        const staveX: number = stave?.getX?.() ?? 0;
+        const staffTopY: number = stave?.getYForLine?.(0) ?? stave?.getY?.() ?? 0;
+        const selectedBounds: any = vfNote.getSelectedNoteHeadBounds?.(noteIndex);
+        let noteheadBoundingBox: any = selectedBounds?.boundingBox;
+        if (!noteheadBoundingBox) {
+            const noteheads: any[] = vfNote.noteHeads ?? vfNote.note_heads ?? [];
+            noteheadBoundingBox = noteheads[noteIndex]?.getBoundingBox?.();
+        }
+        if (!noteheadBoundingBox) {
+            return undefined;
+        }
+
+        const toStaffLineBounds: (boundingBox: any) => GraphicalSlurBoundsDiagnostics = (
+            boundingBox: any,
+        ): GraphicalSlurBoundsDiagnostics => {
+            const leftPx: number = boundingBox.getX?.() ?? boundingBox.x;
+            const topPx: number = boundingBox.getY?.() ?? boundingBox.y;
+            const widthPx: number = boundingBox.getW?.() ?? boundingBox.w;
+            const heightPx: number = boundingBox.getH?.() ?? boundingBox.h;
+            return {
+                left: measureX + (leftPx - staveX) / vexflowUnitInPixels,
+                right: measureX + (leftPx + widthPx - staveX) / vexflowUnitInPixels,
+                top: staffLine.TopLineOffset + (topPx - staffTopY) / vexflowUnitInPixels,
+                bottom: staffLine.TopLineOffset + (topPx + heightPx - staffTopY) / vexflowUnitInPixels,
+            };
+        };
+        const toStaffLinePoint: (x: number, y: number) => PointF2D = (
+            x: number,
+            y: number,
+        ): PointF2D => new PointF2D(
+            measureX + (x - staveX) / vexflowUnitInPixels,
+            staffLine.TopLineOffset + (y - staffTopY) / vexflowUnitInPixels,
+        );
+
+        const notehead: GraphicalSlurBoundsDiagnostics = toStaffLineBounds(noteheadBoundingBox);
+        let stem: GraphicalSlurBoundsDiagnostics;
+        if (vfNote.hasStem?.() && vfNote.getStemExtents && vfNote.getStemX) {
+            const extents: {topY: number, baseY: number} = vfNote.getStemExtents();
+            const stemX: number = measureX + (vfNote.getStemX() - staveX) / vexflowUnitInPixels;
+            const top: number = staffLine.TopLineOffset +
+                (Math.min(extents.topY, extents.baseY) - staffTopY) / vexflowUnitInPixels;
+            const bottom: number = staffLine.TopLineOffset +
+                (Math.max(extents.topY, extents.baseY) - staffTopY) / vexflowUnitInPixels;
+            stem = {
+                left: stemX - VF.Stem.WIDTH / vexflowUnitInPixels / 2,
+                right: stemX + VF.Stem.WIDTH / vexflowUnitInPixels / 2,
+                top,
+                bottom,
+            };
+        }
+
+        const articulations: RenderedSlurEndpointGeometry["articulations"] = [];
+        const accidentals: GraphicalSlurBoundsDiagnostics[] = [];
+        for (const modifier of vfNote.modifiers ?? []) {
+            if (modifier.getCategory?.() === VF.Accidental.CATEGORY
+                && (modifier.getIndex?.() ?? modifier.index) === noteIndex) {
+                const accidentalBounds: any = modifier.getBoundingBox?.();
+                if (accidentalBounds) {
+                    accidentals.push(toStaffLineBounds(accidentalBounds));
+                }
+            }
+            if (modifier.getCategory?.() !== VF.Articulation.CATEGORY ||
+                (modifier.getIndex?.() ?? modifier.index) !== noteIndex) {
+                continue;
+            }
+            const layout: any = modifier.layout?.();
+            const boundingBox: any = layout?.boundingBox ?? modifier.getBoundingBox?.();
+            if (!boundingBox) {
+                continue;
+            }
+            articulations.push({
+                baseline: toStaffLinePoint(
+                    layout?.x ?? modifier.getX?.() ?? modifier.x,
+                    layout?.y ?? modifier.getY?.() ?? modifier.y,
+                ),
+                modifier,
+                note,
+                type: modifier.type ?? modifier.getText?.() ?? "unknown",
+                position: modifier.getPosition?.() ?? modifier.position,
+                bounds: toStaffLineBounds(boundingBox),
+            });
+        }
+
+        const beamPolygons: PointF2D[][] = (vfNote.getBeam?.()?.getRenderedBeamPolygons?.() ?? [])
+            .map((polygon): PointF2D[] => polygon.points.map(
+                (point): PointF2D => toStaffLinePoint(point.x, point.y),
+            ));
+        const tuplets: GraphicalSlurBoundsDiagnostics[] = (vfNote.getTupletStack?.() ?? [])
+            .map((tuplet): GraphicalSlurBoundsDiagnostics => {
+                const boundingBox: any = tuplet.getBoundingBox?.();
+                return boundingBox ? toStaffLineBounds(boundingBox) : undefined;
+            })
+            .filter(Boolean);
+
+        return {notehead, stem, articulations, beamPolygons, accidentals, tuplets};
+    }
+
+    /**
+     * A slur attached to a chord uses the outer notehead on its placement
+     * side. MusicXML commonly associates both the upper and lower slur with
+     * the chord's first source note, so that source-note index alone cannot
+     * identify the visually correct head.
+     */
+    private renderedOuterChordGeometry(
+        note: GraphicalNote,
+        staffLine: StaffLine,
+    ): RenderedSlurEndpointGeometry {
+        const chordNotes: GraphicalNote[] = note.parentVoiceEntry.notes;
+        let selected: RenderedSlurEndpointGeometry;
+        const articulations: RenderedSlurEndpointGeometry["articulations"] = [];
+        const seenArticulations: Set<any> = new Set<any>();
+        for (const chordNote of chordNotes) {
+            const candidate: RenderedSlurEndpointGeometry =
+                this.renderedEndpointGeometry(chordNote, staffLine);
+            if (!candidate) {
+                continue;
+            }
+            for (const articulation of candidate.articulations) {
+                if (!seenArticulations.has(articulation.modifier)) {
+                    seenArticulations.add(articulation.modifier);
+                    articulations.push(articulation);
+                }
+            }
+            if (!selected
+                || (this.placement === PlacementEnum.Above
+                    ? candidate.notehead.top < selected.notehead.top
+                    : candidate.notehead.bottom > selected.notehead.bottom)) {
+                selected = candidate;
+            }
+        }
+        return selected ? {...selected, articulations} : undefined;
+    }
+
     /**
      *
      * @param rules
      */
-    public calculateCurve(rules: EngravingRules): void {
+    public calculateCurve(rules: EngravingRules, deferCandidateLayout: boolean = false): void {
+
+        this.candidateArticulationBindings.clear();
+        this.diagnostics.articulationShifts = [];
 
         // single GraphicalSlur means a single Curve, eg each GraphicalSlurObject is meant to be on the same StaffLine
         // a Slur can span more than one GraphicalSlurObjects
         const startStaffEntry: GraphicalStaffEntry = this.staffEntries[0];
-        const endStaffEntry: GraphicalStaffEntry = this.staffEntries[this.staffEntries.length - 1];
-
-        // where the Slur (not the graphicalObject) starts and ends (could belong to another StaffLine)
-        let slurStartNote: GraphicalNote = startStaffEntry.findGraphicalNoteFromNote(this.slur.StartNote);
-        if (!slurStartNote && this.graceStart) {
-            slurStartNote = startStaffEntry.findGraphicalNoteFromGraceNote(this.slur.StartNote);
-        }
-        if (!slurStartNote) {
-            slurStartNote = startStaffEntry.findEndTieGraphicalNoteFromNoteWithStartingSlur(this.slur.StartNote, this.slur);
-        }
-        let slurEndNote: GraphicalNote = endStaffEntry.findGraphicalNoteFromNote(this.slur.EndNote);
-        if (!slurEndNote && this.graceEnd) {
-            slurEndNote = endStaffEntry.findGraphicalNoteFromGraceNote(this.slur.EndNote);
-        }
+        const {startNote: slurStartNote, endNote: slurEndNote} = this.resolveEndpointNotes();
 
         const staffLine: StaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
-        this.calculatePlacement(skyBottomLineCalculator, staffLine);
+        if (this.placement !== PlacementEnum.Above && this.placement !== PlacementEnum.Below) {
+            this.calculatePlacement(skyBottomLineCalculator, staffLine);
+        }
 
         // the Start- and End Reference Points for the Sky-BottomLine
         const startEndPoints: {startX: number, startY: number, endX: number, endY: number} =
-            this.calculateStartAndEnd(slurStartNote, slurEndNote, staffLine, rules, skyBottomLineCalculator);
+            this.calculateStartAndEnd(slurStartNote, slurEndNote, staffLine, rules);
 
         const startX: number = startEndPoints.startX;
         const endX: number = startEndPoints.endX;
         let startY: number = startEndPoints.startY;
         let endY: number = startEndPoints.endY;
+        const endpointOffset: number = this.placement === PlacementEnum.Above
+            ? -rules.SlurNoteHeadYOffset
+            : rules.SlurNoteHeadYOffset;
+        this.layoutContext = this.createLayoutContext(
+            slurStartNote,
+            slurEndNote,
+            staffLine,
+            startX,
+            startY + endpointOffset,
+            endX,
+            endY + endpointOffset,
+        );
 
         // Degenerate case: start and end point (nearly) coincide, e.g. for a zero-length slur from a malformed
         // file. The curve calculation below would divide 0 by 0 (start-end angle, tangent slopes) and produce
@@ -108,6 +433,7 @@ export class GraphicalSlur extends GraphicalCurve {
             this.bezierStartControlPt = new PointF2D(startX, startY);
             this.bezierEndControlPt = new PointF2D(endX, endY);
             this.bezierEndPt = new PointF2D(endX, endY);
+            this.finalizeLayout(rules, staffLine, deferCandidateLayout);
             return;
         }
 
@@ -118,36 +444,8 @@ export class GraphicalSlur extends GraphicalCurve {
         if (this.placement === PlacementEnum.Above) {
             startY -= rules.SlurNoteHeadYOffset;
             endY -= rules.SlurNoteHeadYOffset;
-            const startUpperRight: PointF2D = new PointF2D(this.staffEntries[0].parentMeasure.PositionAndShape.RelativePosition.x
-                                                           + this.staffEntries[0].PositionAndShape.RelativePosition.x,
-                                                           startY);
-            if (slurStartNote) {
-                    startUpperRight.x += this.staffEntries[0].PositionAndShape.BorderRight;
-            } else  {
-                    // continuing Slur from previous StaffLine - must start after last Instruction of first Measure
-                    startUpperRight.x = this.staffEntries[0].parentMeasure.beginInstructionsWidth;
-            }
-
-            // must also add the GraceStaffEntry's ParentStaffEntry Position
-            if (this.graceStart) {
-                startUpperRight.x += endStaffEntry.PositionAndShape.RelativePosition.x;
-            }
-
-            const endUpperLeft: PointF2D = new PointF2D(this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
-                                                        + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
-                                                        endY);
-            if (slurEndNote) {
-                    endUpperLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
-            } else {
-                    // Slur continues to next StaffLine - must reach the end of current StaffLine
-                    endUpperLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
-                    + this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.Size.width;
-            }
-
-            // must also add the GraceStaffEntry's ParentStaffEntry Position
-            if (this.graceEnd) {
-                endUpperLeft.x += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-            }
+            const startUpperRight: PointF2D = new PointF2D(startX, startY);
+            const endUpperLeft: PointF2D = new PointF2D(endX, endY);
 
             // SkyLinePointsList between firstStaffEntry startUpperRightPoint and lastStaffentry endUpperLeftPoint
             points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
@@ -264,63 +562,15 @@ export class GraphicalSlur extends GraphicalCurve {
             this.bezierStartControlPt = new PointF2D(startControlPoint.x, startControlPoint.y - startYOffset);
             this.bezierEndControlPt = new PointF2D(endControlPoint.x, endControlPoint.y - endYOffset);
             this.bezierEndPt = new PointF2D(endX, endY - endYOffset);
+            this.applySystemBreakTangents(Boolean(slurStartNote), Boolean(slurEndNote));
 
-            // calculate slur Curvepoints and update Skyline
-            const length: number = staffLine.SkyLine.length;
-            const startIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierStartPt.x, length);
-            const endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierEndPt.x, length);
-            const distance: number = this.bezierEndPt.x - this.bezierStartPt.x;
-            const samplingUnit: number = skyBottomLineCalculator.SamplingUnit;
-            for (let i: number = startIndex; i < endIndex; i++) {
-                // get the right distance ratio and index on the curve
-                const diff: number = i / samplingUnit - this.bezierStartPt.x;
-                const curvePoint: PointF2D = this.calculateCurvePointAtIndex(Math.abs(diff) / distance);
-
-                // update left- and rightIndex for better accuracy
-                let index: number = skyBottomLineCalculator.getLeftIndexForPointX(curvePoint.x, length);
-                // update SkyLine with final slur curve:
-                if (index >= startIndex) {
-                    staffLine.SkyLine[index] = Math.min(staffLine.SkyLine[index], curvePoint.y);
-                }
-                index++;
-                if (index < length) {
-                    staffLine.SkyLine[index] = Math.min(staffLine.SkyLine[index], curvePoint.y);
-                }
-            }
         } else {
             startY += rules.SlurNoteHeadYOffset;
             endY += rules.SlurNoteHeadYOffset;
 
             // firstStaffEntry startLowerRightPoint and lastStaffentry endLowerLeftPoint
-            const startLowerRight: PointF2D = new PointF2D(this.staffEntries[0].parentMeasure.PositionAndShape.RelativePosition.x
-                                                           + this.staffEntries[0].PositionAndShape.RelativePosition.x,
-                                                           startY);
-            if (slurStartNote) {
-                startLowerRight.x += this.staffEntries[0].PositionAndShape.BorderRight;
-            } else {
-                // continuing Slur from previous StaffLine - must start after last Instruction of first Measure
-                startLowerRight.x = this.staffEntries[0].parentMeasure.beginInstructionsWidth;
-            }
-
-            // must also add the GraceStaffEntry's ParentStaffEntry Position
-            if (this.graceStart) {
-                startLowerRight.x += endStaffEntry.PositionAndShape.RelativePosition.x;
-            }
-            const endLowerLeft: PointF2D = new PointF2D(this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
-                                                        + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
-                                                        endY);
-            if (slurEndNote) {
-                endLowerLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
-            } else {
-                // Slur continues to next StaffLine - must reach the end of current StaffLine
-                endLowerLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
-                    + this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.Size.width;
-            }
-
-            // must also add the GraceStaffEntry's ParentStaffEntry Position
-            if (this.graceEnd) {
-                endLowerLeft.x += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-            }
+            const startLowerRight: PointF2D = new PointF2D(startX, startY);
+            const endLowerLeft: PointF2D = new PointF2D(endX, endY);
 
             // BottomLinePointsList between firstStaffEntry startLowerRightPoint and lastStaffentry endLowerLeftPoint
             points = this.calculateBottomPoints(startLowerRight, endLowerLeft, staffLine, skyBottomLineCalculator);
@@ -424,6 +674,7 @@ export class GraphicalSlur extends GraphicalCurve {
             this.bezierStartControlPt = new PointF2D(startControlPoint.x, startControlPoint.y + startYOffset);
             this.bezierEndControlPt = new PointF2D(endControlPoint.x, endControlPoint.y + endYOffset);
             this.bezierEndPt = new PointF2D(endX, endY + endYOffset);
+            this.applySystemBreakTangents(Boolean(slurStartNote), Boolean(slurEndNote));
 
             /* for DEBUG only */
             // this.intersection = transposeMatrix.vectorMultiplication(intersectionPoint);
@@ -431,28 +682,555 @@ export class GraphicalSlur extends GraphicalCurve {
             // this.intersection.y += startY;
             /* for DEBUG only */
 
-            // calculate CurvePoints
-            const length: number = staffLine.BottomLine.length;
-            const startIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierStartPt.x, length);
-            const endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierEndPt.x, length);
-            const distance: number = this.bezierEndPt.x - this.bezierStartPt.x;
-            const samplingUnit: number = skyBottomLineCalculator.SamplingUnit;
-            for (let i: number = startIndex; i < endIndex; i++) {
-                // get the right distance ratio and index on the curve
-                const diff: number = i / samplingUnit - this.bezierStartPt.x;
-                const curvePoint: PointF2D = this.calculateCurvePointAtIndex(Math.abs(diff) / distance);
+        }
+        this.finalizeLayout(rules, staffLine, deferCandidateLayout);
+    }
 
-                // update start- and endIndex for better accuracy
-                let index: number = skyBottomLineCalculator.getLeftIndexForPointX(curvePoint.x, length);
-                // update BottomLine with final slur curve:
-                if (index >= startIndex) {
-                    staffLine.BottomLine[index] = Math.max(staffLine.BottomLine[index], curvePoint.y);
+    private createLayoutContext(
+        startNote: GraphicalNote,
+        endNote: GraphicalNote,
+        staffLine: StaffLine,
+        startX: number,
+        startY: number,
+        endX: number,
+        endY: number,
+    ): SlurLayoutContext {
+        const endpoint: (
+            side: "start" | "end",
+            note: GraphicalNote,
+            x: number,
+            y: number,
+            attachment: SlurEndpointAttachment,
+            notehead: GraphicalSlurBoundsDiagnostics,
+        ) => SlurEndpointContext = (side, note, x, y, attachment, notehead): SlurEndpointContext => {
+            const rendered: RenderedSlurEndpointGeometry = note
+                ? this.renderedOuterChordGeometry(note, staffLine)
+                : undefined;
+            const vexflowNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
+            return {
+                side,
+                present: Boolean(note),
+                sourceNoteId: vexflowNote?.getSVGId?.(),
+                stemDirection: note?.parentVoiceEntry?.parentVoiceEntry?.StemDirection,
+                stemSide: Boolean(note) &&
+                    ((note.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up
+                        && this.placement === PlacementEnum.Above)
+                    || (note.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Down
+                        && this.placement === PlacementEnum.Below)),
+                notehead,
+                stem: rendered?.stem,
+                beams: (rendered?.beamPolygons ?? []).map((polygon): SlurBounds => ({
+                    left: Math.min(...polygon.map((point): number => point.x)),
+                    right: Math.max(...polygon.map((point): number => point.x)),
+                    top: Math.min(...polygon.map((point): number => point.y)),
+                    bottom: Math.max(...polygon.map((point): number => point.y)),
+                })),
+                accidentals: (rendered?.accidentals ?? []).map(
+                    (bounds): SlurBounds => ({...bounds}),
+                ),
+                articulations: (rendered?.articulations ?? []).map((articulation, index) => {
+                    const id: string = `${side}-articulation-${index}`;
+                    this.candidateArticulationBindings.set(id, {
+                        modifier: articulation.modifier,
+                        note: articulation.note ?? note,
+                        staffLine,
+                        endpoint: side,
+                        type: articulation.type,
+                    });
+                    return {
+                        id,
+                        sourceType: articulation.modifier?.osmdArticulationEnum,
+                        glyphType: articulation.type,
+                        classification: this.classifyArticulation(articulation.modifier?.osmdArticulationEnum),
+                        position: articulation.position,
+                        bounds: articulation.bounds,
+                        outwardShift: articulation.modifier?.getOutwardShift?.() ?? 0,
+                    };
+                }),
+                seedAnchor: new PointF2D(x, y),
+                seedAttachment: attachment,
+                tiedEndpoint: Boolean(note?.sourceNote?.NoteTie),
+                chordSize: note?.parentVoiceEntry?.notes?.length ?? 0,
+                grace: side === "start" ? Boolean(this.graceStart) : Boolean(this.graceEnd),
+                systemBoundary: !note,
+            };
+        };
+        const measureNumber: number = this.staffEntries[0]?.parentMeasure?.MeasureNumber;
+        return {
+            id: `slur-m${measureNumber ?? "unknown"}-s${this.diagnostics.segmentIndex}`,
+            direction: this.placement,
+            start: endpoint(
+                "start",
+                startNote,
+                startX,
+                startY,
+                this.diagnostics.startAttachment,
+                this.diagnostics.startNotehead,
+            ),
+            end: endpoint(
+                "end",
+                endNote,
+                endX,
+                endY,
+                this.diagnostics.endAttachment,
+                this.diagnostics.endNotehead,
+            ),
+            obstacles: this.collectObstacles(staffLine, startNote, endNote, startX, endX),
+            envelope: {
+                samplingUnit: staffLine.SkyBottomLineCalculator.SamplingUnit,
+                skyline: staffLine.SkyLine.slice(),
+                bottomline: staffLine.BottomLine.slice(),
+                topLineOffset: staffLine.TopLineOffset,
+                bottomLineOffset: staffLine.BottomLineOffset,
+                width: staffLine.PositionAndShape.Size.width,
+            },
+            segmentIndex: this.diagnostics.segmentIndex,
+            segmentCount: this.diagnostics.segmentCount,
+            isCrossStaff: this.slur.isCrossed(),
+            isCrossSystem: this.diagnostics.segmentCount > 1,
+            isNested: this.slur.startNoteHasMoreStartingSlurs() || this.slur.endNoteHasMoreEndingSlurs(),
+            linkedGroupId: this.diagnostics.linkedGroupId,
+        };
+    }
+
+    private classifyArticulation(sourceType: ArticulationEnum): SlurArticulationClass {
+        switch (sourceType) {
+            case ArticulationEnum.staccato:
+            case ArticulationEnum.staccatissimo:
+            case ArticulationEnum.spiccato:
+            case ArticulationEnum.tenuto:
+            case ArticulationEnum.detachedlegato:
+                return "duration";
+            case ArticulationEnum.accent:
+            case ArticulationEnum.softaccent:
+            case ArticulationEnum.strongaccent:
+            case ArticulationEnum.marcatoup:
+            case ArticulationEnum.marcatodown:
+            case ArticulationEnum.invertedstrongaccent:
+                return "force";
+            case ArticulationEnum.stress:
+            case ArticulationEnum.unstress:
+                return "stress";
+            default:
+                return "other";
+        }
+    }
+
+    private collectObstacles(
+        staffLine: StaffLine,
+        startNote: GraphicalNote,
+        endNote: GraphicalNote,
+        startX: number,
+        endX: number,
+    ): SlurObstacle[] {
+        const obstacles: SlurObstacle[] = [];
+        const seen: Map<string, SlurObstacle> = new Map();
+        const addBounds: (
+            type: SlurObstacle["type"],
+            bounds: GraphicalSlurBoundsDiagnostics,
+            id: string,
+            endpoint?: SlurObstacle["endpoint"],
+            articulationClass?: SlurArticulationClass,
+            polygon?: PointF2D[],
+        ) => SlurObstacle | undefined = (
+            type,
+            bounds,
+            id,
+            endpoint,
+            articulationClass,
+            polygon,
+        ): SlurObstacle | undefined => {
+            if (!bounds
+                || ![bounds.left, bounds.right, bounds.top, bounds.bottom].every(Number.isFinite)
+                || bounds.right < startX - 1
+                || bounds.left > endX + 1) {return undefined;}
+            const key: string = `${type}:${bounds.left.toFixed(3)}:${bounds.top.toFixed(3)}:`
+                + `${bounds.right.toFixed(3)}:${bounds.bottom.toFixed(3)}`;
+            const existing: SlurObstacle = seen.get(key);
+            if (existing) {
+                if (endpoint && existing.endpoint && endpoint !== existing.endpoint) {
+                    existing.endpoint = "both";
+                } else if (endpoint && !existing.endpoint) {
+                    existing.endpoint = endpoint;
                 }
-                index++;
-                if (index < length) {
-                    staffLine.BottomLine[index] = Math.max(staffLine.BottomLine[index], curvePoint.y);
+                if (polygon && !existing.polygon) {
+                    existing.polygon = polygon;
+                }
+                return existing;
+            }
+            const obstacle: SlurObstacle = {
+                id,
+                type,
+                bounds: {...bounds},
+                endpoint,
+                articulationClass,
+                clearance: this.rules.SlurObstacleClearance,
+                polygon,
+            };
+            seen.set(key, obstacle);
+            obstacles.push(obstacle);
+            return obstacle;
+        };
+        let noteIndex: number = 0;
+        for (const staffEntry of this.staffEntries) {
+            for (const graphicalTie of staffEntry.GraphicalTies) {
+                const referenceNote: VexFlowGraphicalNote =
+                    (graphicalTie.StartNote ?? graphicalTie.EndNote) as VexFlowGraphicalNote;
+                const vfNote: any = referenceNote?.vfnote?.[0];
+                const stave: any = vfNote?.getStave?.();
+                const curves: any[] = (graphicalTie.vfTie as any)?.getRenderedTieCurves?.() ?? [];
+                if (!stave || curves.length === 0) {
+                    continue;
+                }
+                const measureX: number = referenceNote.parentVoiceEntry.parentStaffEntry.parentMeasure
+                    .PositionAndShape.RelativePosition.x;
+                const staveX: number = stave.getX?.() ?? 0;
+                const staffTopY: number = stave.getYForLine?.(0) ?? stave.getY?.() ?? 0;
+                const convert: (point: {x: number, y: number}) => PointF2D =
+                    (point): PointF2D => new PointF2D(
+                        measureX + (point.x - staveX) / vexflowUnitInPixels,
+                        staffLine.TopLineOffset + (point.y - staffTopY) / vexflowUnitInPixels,
+                    );
+                curves.forEach((tieCurve, tieIndex): void => {
+                    const start: PointF2D = convert(tieCurve.start);
+                    const end: PointF2D = convert(tieCurve.end);
+                    const topControl: PointF2D = convert(tieCurve.topControl);
+                    const bottomControl: PointF2D = convert(tieCurve.bottomControl);
+                    const quadraticControl: PointF2D = new PointF2D(
+                        (topControl.x + bottomControl.x) / 2,
+                        (topControl.y + bottomControl.y) / 2,
+                    );
+                    const curve: SlurCurveGeometry = {
+                        p0: start,
+                        p1: new PointF2D(
+                            start.x + (quadraticControl.x - start.x) * 2 / 3,
+                            start.y + (quadraticControl.y - start.y) * 2 / 3,
+                        ),
+                        p2: new PointF2D(
+                            end.x + (quadraticControl.x - end.x) * 2 / 3,
+                            end.y + (quadraticControl.y - end.y) * 2 / 3,
+                        ),
+                        p3: end,
+                    };
+                    const xs: number[] = [start.x, end.x, topControl.x, bottomControl.x];
+                    const ys: number[] = [start.y, end.y, topControl.y, bottomControl.y];
+                    const touchesStart: boolean =
+                        graphicalTie.StartNote === startNote || graphicalTie.EndNote === startNote;
+                    const touchesEnd: boolean =
+                        graphicalTie.StartNote === endNote || graphicalTie.EndNote === endNote;
+                    const endpoint: SlurObstacle["endpoint"] = touchesStart && touchesEnd
+                        ? "both"
+                        : touchesStart ? "start" : touchesEnd ? "end" : undefined;
+                    const obstacle: SlurObstacle = addBounds("tie", {
+                        left: Math.min(...xs),
+                        right: Math.max(...xs),
+                        top: Math.min(...ys),
+                        bottom: Math.max(...ys),
+                    }, `tie-${noteIndex}-${tieIndex}`, endpoint);
+                    if (obstacle?.type === "tie") {
+                        obstacle.curve = curve;
+                    }
+                });
+            }
+            for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                for (const note of voiceEntry.notes) {
+                    const geometry: RenderedSlurEndpointGeometry = this.renderedEndpointGeometry(note, staffLine);
+                    if (!geometry) {continue;}
+                    // A chord endpoint can be laid out against an outer notehead
+                    // other than the source GraphicalNote. Treat the complete
+                    // chord as the endpoint group so that its selected outer head
+                    // is not immediately reintroduced as a forbidden obstacle.
+                    const endpoint: "start" | "end" | undefined =
+                        note?.parentVoiceEntry === startNote?.parentVoiceEntry
+                        ? "start"
+                        : note?.parentVoiceEntry === endNote?.parentVoiceEntry ? "end" : undefined;
+                    const prefix: string = `note-${noteIndex++}`;
+                    addBounds(note.sourceNote?.ParentVoiceEntry?.IsGrace ? "grace-note" : "notehead",
+                        geometry.notehead, `${prefix}-head`, endpoint);
+                    if (geometry.stem) {addBounds("stem", geometry.stem, `${prefix}-stem`, endpoint);}
+                    geometry.accidentals.forEach((bounds, accidentalIndex): void => {
+                        addBounds("accidental", bounds, `${prefix}-accidental-${accidentalIndex}`, endpoint);
+                    });
+                    geometry.tuplets.forEach((bounds, tupletIndex): void => {
+                        addBounds("tuplet", bounds, `${prefix}-tuplet-${tupletIndex}`, endpoint);
+                    });
+                    geometry.beamPolygons.forEach((polygon, beamIndex): void => {
+                        const xs: number[] = polygon.map((point): number => point.x);
+                        const ys: number[] = polygon.map((point): number => point.y);
+                        addBounds("beam", {
+                            left: Math.min(...xs),
+                            right: Math.max(...xs),
+                            top: Math.min(...ys),
+                            bottom: Math.max(...ys),
+                        }, `${prefix}-beam-${beamIndex}`, endpoint, undefined, polygon);
+                    });
+                    geometry.articulations.forEach((articulation, articulationIndex): void => {
+                        const classification: SlurArticulationClass = this.classifyArticulation(
+                            articulation.modifier?.osmdArticulationEnum,
+                        );
+                        addBounds(
+                            classification === "other" ? "other" : `${classification}-articulation`,
+                            articulation.bounds,
+                            `${prefix}-articulation-${articulationIndex}`,
+                            endpoint,
+                            classification,
+                        );
+                    });
                 }
             }
+        }
+        for (const selectedSlur of staffLine.GraphicalSlurs) {
+            const geometry: SlurCurveGeometry = selectedSlur === this
+                || selectedSlur.placement !== this.placement
+                ? undefined
+                : selectedSlur.layoutResult?.geometry;
+            if (!geometry) {
+                continue;
+            }
+            const xs: number[] = [geometry.p0.x, geometry.p1.x, geometry.p2.x, geometry.p3.x];
+            const ys: number[] = [geometry.p0.y, geometry.p1.y, geometry.p2.y, geometry.p3.y];
+            const obstacle: SlurObstacle = addBounds("slur", {
+                left: Math.min(...xs),
+                right: Math.max(...xs),
+                top: Math.min(...ys),
+                bottom: Math.max(...ys),
+            }, `selected-slur-${obstacles.length}`);
+            if (obstacle?.type === "slur") {
+                obstacle.curve = geometry;
+            }
+        }
+        return obstacles;
+    }
+
+    private finalizeLayout(
+        rules: EngravingRules,
+        staffLine: StaffLine,
+        deferCandidateLayout: boolean = false,
+    ): void {
+        if (!this.layoutContext) {
+            // Keep a finite compatibility curve, but never disguise this as a
+            // successfully solved candidate. The structured fault makes the
+            // exceptional path visible to tests and corpus diagnostics.
+            this.captureFallbackLayoutResult();
+            this.diagnostics.faults = ["missing-candidate-layout-context"];
+            this.diagnostics.structuredFaults = [
+                ...(this.diagnostics.structuredFaults ?? []).filter(
+                    (fault): boolean => fault.code !== "missing-candidate-layout-context"
+                        && fault.code !== "no-valid-candidate",
+                ),
+                {
+                    code: "missing-candidate-layout-context",
+                    message: "Candidate slur layout context was unavailable.",
+                    segmentIndexes: [this.diagnostics.segmentIndex],
+                },
+            ];
+            return;
+        }
+        this.candidateSeed = {
+            p0: new PointF2D(this.bezierStartPt.x, this.bezierStartPt.y),
+            p1: new PointF2D(this.bezierStartControlPt.x, this.bezierStartControlPt.y),
+            p2: new PointF2D(this.bezierEndControlPt.x, this.bezierEndControlPt.y),
+            p3: new PointF2D(this.bezierEndPt.x, this.bezierEndPt.y),
+        };
+        if (deferCandidateLayout) {
+            this.layoutResult = undefined;
+            return;
+        }
+        const result: SlurLayoutResult = calculateCandidateSlurLayout(this.layoutContext, this.candidateSeed, {
+            candidateLimit: rules.SlurCandidateLimit,
+            diagnosticsLevel: rules.SlurDiagnosticsLevel,
+            maximumPreferredClearance: rules.SlurMaximumPreferredClearance,
+            obstacleClearance: rules.SlurObstacleClearance,
+            scoreWeights: rules.SlurCandidateScoreWeights,
+        });
+        this.applyCandidateLayoutResult(result, staffLine);
+    }
+
+    public refreshCandidateLayoutContext(staffLine: StaffLine): void {
+        if (!this.layoutContext) {
+            return;
+        }
+        const previous: SlurLayoutContext = this.layoutContext;
+        const {startNote, endNote} = this.resolveEndpointNotes();
+        this.layoutContext = this.createLayoutContext(
+            startNote,
+            endNote,
+            staffLine,
+            previous.start.seedAnchor.x,
+            previous.start.seedAnchor.y,
+            previous.end.seedAnchor.x,
+            previous.end.seedAnchor.y,
+        );
+        this.layoutContext.linkedGroupId = previous.linkedGroupId;
+    }
+
+    public getCandidateSeed(): SlurCurveGeometry {
+        return this.candidateSeed
+            ? {
+                p0: cloneSlurPoint(this.candidateSeed.p0),
+                p1: cloneSlurPoint(this.candidateSeed.p1),
+                p2: cloneSlurPoint(this.candidateSeed.p2),
+                p3: cloneSlurPoint(this.candidateSeed.p3),
+            }
+            : undefined;
+    }
+
+    public applyCandidateLayoutResult(result: SlurLayoutResult, staffLine: StaffLine): void {
+        this.layoutResult = result;
+        this.applyCandidateArticulationAdjustments();
+        const geometry: SlurCurveGeometry = this.layoutResult.geometry;
+        this.bezierStartPt = cloneSlurPoint(geometry.p0);
+        this.bezierStartControlPt = cloneSlurPoint(geometry.p1);
+        this.bezierEndControlPt = cloneSlurPoint(geometry.p2);
+        this.bezierEndPt = cloneSlurPoint(geometry.p3);
+        for (const update of this.layoutResult.skylineUpdates) {
+            if (update.index >= 0 && update.index < staffLine.SkyLine.length) {
+                staffLine.SkyLine[update.index] = Math.min(staffLine.SkyLine[update.index], update.value);
+            }
+        }
+        for (const update of this.layoutResult.bottomlineUpdates) {
+            if (update.index >= 0 && update.index < staffLine.BottomLine.length) {
+                staffLine.BottomLine[update.index] = Math.max(staffLine.BottomLine[update.index], update.value);
+            }
+        }
+        this.diagnostics.selectedCandidateId = this.layoutResult.selectedCandidateId;
+        this.diagnostics.candidateCount = this.layoutResult.candidates.length;
+        const selected: SlurCurveCandidate = this.layoutResult.candidates.find(
+            (candidate): boolean => candidate.id === this.layoutResult.selectedCandidateId,
+        );
+        this.updateCandidateSelectionFault(selected);
+        this.diagnostics.startAttachment = selected?.startAnchor?.type
+            ?? this.diagnostics.startAttachment;
+        this.diagnostics.endAttachment = selected?.endAnchor?.type
+            ?? this.diagnostics.endAttachment;
+    }
+
+    private updateCandidateSelectionFault(selected?: SlurCurveCandidate): void {
+        const reason: string | undefined = selected?.rejected
+            ? selected.rejectionReason ?? "unknown"
+            : selected ? undefined : "no-candidates";
+        this.diagnostics.faults = reason ? [`no-valid-candidate:${reason}`] : [];
+        const retainedFaults: SlurLayoutFault[] = (this.diagnostics.structuredFaults ?? []).filter(
+            (fault): boolean => fault.code !== "no-valid-candidate"
+                && fault.code !== "missing-candidate-layout-context",
+        );
+        this.diagnostics.structuredFaults = reason
+            ? [
+                ...retainedFaults,
+                {
+                    code: "no-valid-candidate",
+                    message: `No valid candidate: ${reason}.`,
+                    segmentIndexes: [this.diagnostics.segmentIndex],
+                },
+            ]
+            : retainedFaults;
+    }
+
+    private applyCandidateArticulationAdjustments(): void {
+        for (const adjustment of this.layoutResult?.articulationAdjustments ?? []) {
+            const binding: CandidateArticulationBinding =
+                this.candidateArticulationBindings.get(adjustment.articulationId);
+            if (!binding) {
+                continue;
+            }
+            const previousShiftPx: number = binding.modifier.getOutwardShift?.() ?? 0;
+            binding.modifier.setOutwardShift?.(adjustment.outwardShift);
+            binding.modifier.layout?.();
+            const finalGeometry: RenderedSlurEndpointGeometry =
+                this.renderedEndpointGeometry(binding.note, binding.staffLine);
+            const finalArticulation: RenderedSlurEndpointGeometry["articulations"][number] =
+                finalGeometry?.articulations.find(
+                (candidate): boolean => candidate.modifier === binding.modifier,
+            );
+            if (!finalArticulation) {
+                continue;
+            }
+            if (this.placement === PlacementEnum.Above) {
+                binding.staffLine.SkyBottomLineCalculator.updateSkyLineInRange(
+                    finalArticulation.bounds.left,
+                    finalArticulation.bounds.right,
+                    finalArticulation.bounds.top,
+                );
+            } else {
+                binding.staffLine.SkyBottomLineCalculator.updateBottomLineInRange(
+                    finalArticulation.bounds.left,
+                    finalArticulation.bounds.right,
+                    finalArticulation.bounds.bottom,
+                );
+            }
+            this.diagnostics.articulationShifts.push({
+                baseline: finalArticulation.baseline,
+                endpoint: binding.endpoint,
+                glyph: String(binding.modifier.getText?.() ?? ""),
+                type: binding.type,
+                previousShiftPx,
+                finalShiftPx: adjustment.outwardShift,
+                bounds: finalArticulation.bounds,
+            });
+        }
+    }
+
+    private captureFallbackLayoutResult(): void {
+        const geometry: SlurCurveGeometry = {
+            p0: new PointF2D(this.bezierStartPt.x, this.bezierStartPt.y),
+            p1: new PointF2D(this.bezierStartControlPt.x, this.bezierStartControlPt.y),
+            p2: new PointF2D(this.bezierEndControlPt.x, this.bezierEndControlPt.y),
+            p3: new PointF2D(this.bezierEndPt.x, this.bezierEndPt.y),
+        };
+        const makeAnchor: (side: "start" | "end", point: PointF2D) => SlurAnchorCandidate =
+            (side, point): SlurAnchorCandidate => ({
+                id: `${this.layoutContext?.id ?? "slur"}-${side}-fallback`,
+                x: point.x,
+                y: point.y,
+                type: side === "start"
+                    ? this.diagnostics.startAttachment ?? "voice-entry"
+                    : this.diagnostics.endAttachment ?? "voice-entry",
+                side,
+                direction: this.placement,
+                penalties: {
+                    displacement: 0,
+                    articulationRelationship: 0,
+                    stemRelationship: 0,
+                    tieConflict: 0,
+                },
+                generationIndex: 0,
+            });
+        const startAnchor: SlurAnchorCandidate = makeAnchor("start", geometry.p0);
+        const endAnchor: SlurAnchorCandidate = makeAnchor("end", geometry.p3);
+        const candidate: SlurCurveCandidate = {
+            id: `${this.layoutContext?.id ?? "slur"}-normal-fallback`,
+            startAnchor,
+            endAnchor,
+            geometry,
+            family: "normal",
+            rejected: false,
+            generationIndex: 0,
+            articulationAdjustments: [],
+        };
+        this.layoutResult = {
+            geometry,
+            selectedCandidateId: candidate.id,
+            family: "normal",
+            candidates: [candidate],
+            articulationAdjustments: [],
+            skylineUpdates: [],
+            bottomlineUpdates: [],
+        };
+        this.diagnostics.selectedCandidateId = candidate.id;
+        this.diagnostics.candidateCount = 1;
+        this.diagnostics.faults = [];
+        this.diagnostics.structuredFaults = (this.diagnostics.structuredFaults ?? []).filter(
+            (fault): boolean => fault.code !== "missing-candidate-layout-context"
+                && fault.code !== "no-valid-candidate",
+        );
+    }
+
+    private applySystemBreakTangents(hasStartNote: boolean, hasEndNote: boolean): void {
+        if (!hasStartNote) {
+            this.bezierStartControlPt.y = this.bezierStartPt.y;
+        }
+        if (!hasEndNote) {
+            this.bezierEndControlPt.y = this.bezierEndPt.y;
         }
     }
 
@@ -460,8 +1238,8 @@ export class GraphicalSlur extends GraphicalCurve {
     /**
      * Calculates the bezier curve for a slur that crosses between two staves (e.g. left hand to right hand),
      * where the start and end notes lie on different stafflines that are stacked vertically within the same
-     * MusicSystem. Unlike [[calculateCurve]], this runs at draw time, because it needs the final vertical
-     * positions of both stafflines, which aren't fixed until the system Y-layout (after calculateSlurs()).
+     * MusicSystem. Unlike [[calculateCurve]], this runs from the post-system-layout calculator hook, because
+     * it needs the final vertical positions of both stafflines after calculateSlurs().
      *
      * The resulting bezier points are stored relative to the start note's staffline, so the regular drawSlur()
      * (which adds that staffline's absolute position) renders them at the correct absolute location.
@@ -469,6 +1247,8 @@ export class GraphicalSlur extends GraphicalCurve {
      * two staves are not in the same MusicSystem - a cross-staff plus cross-system slur is not supported).
      */
     public calculateCurveCrossStaff(rules: EngravingRules): boolean {
+        this.candidateArticulationBindings.clear();
+        this.diagnostics.articulationShifts = [];
         const slurStartNote: GraphicalNote = rules.GNote(this.slur.StartNote);
         const slurEndNote: GraphicalNote = rules.GNote(this.slur.EndNote);
         if (!slurStartNote || !slurEndNote) {
@@ -481,40 +1261,64 @@ export class GraphicalSlur extends GraphicalCurve {
         }
         // Only handle staves stacked within the same MusicSystem (the regular cross-staff case).
         if (startStaffLine.ParentMusicSystem !== endStaffLine.ParentMusicSystem) {
+            this.markUnsupportedCrossStaffSystemBreak();
             return false;
         }
         const systemBox: BoundingBox = startStaffLine.ParentMusicSystem.PositionAndShape;
 
-        // notehead positions of both notes, relative to the common MusicSystem
+        // GraphicalNote positions are only a compatibility fallback. Their x
+        // coordinate describes the note container rather than the finalized
+        // VexFlow head and can sit beyond a displaced head. Cross-staff slurs
+        // therefore start from the exact rendered head crowns below.
         const startPos: PointF2D = this.positionRelativeToBox(slurStartNote.PositionAndShape, systemBox);
         const endPos: PointF2D = this.positionRelativeToBox(slurEndNote.PositionAndShape, systemBox);
 
         // Express everything relative to the start note's staffline, since drawSlur() adds that staffline's
         // absolute position to the bezier points.
         const staffLineOffset: PointF2D = startStaffLine.PositionAndShape.RelativePosition;
-        const startX: number = startPos.x - staffLineOffset.x;
-        const endX: number = endPos.x - staffLineOffset.x;
-        const startNoteY: number = startPos.y - staffLineOffset.y;
-        const endNoteY: number = endPos.y - staffLineOffset.y;
+        const fallbackStartX: number = startPos.x - staffLineOffset.x;
+        const fallbackEndX: number = endPos.x - staffLineOffset.x;
+        const fallbackStartY: number = startPos.y - staffLineOffset.y;
+        const fallbackEndY: number = endPos.y - staffLineOffset.y;
 
-        // The staff higher up on the page has the smaller y value.
-        const endStaffAbove: boolean =
-            endStaffLine.PositionAndShape.RelativePosition.y < startStaffLine.PositionAndShape.RelativePosition.y;
+        const startGeometry: RenderedSlurEndpointGeometry =
+            this.renderedEndpointGeometry(slurStartNote, startStaffLine);
+        const rawEndGeometry: RenderedSlurEndpointGeometry =
+            this.renderedEndpointGeometry(slurEndNote, endStaffLine);
+        const endStaffOffsetY: number = endStaffLine.PositionAndShape.RelativePosition.y
+            - startStaffLine.PositionAndShape.RelativePosition.y;
+        const startHead: GraphicalSlurBoundsDiagnostics = startGeometry?.notehead;
+        const endHead: GraphicalSlurBoundsDiagnostics = rawEndGeometry?.notehead
+            ? {
+                left: rawEndGeometry.notehead.left,
+                right: rawEndGeometry.notehead.right,
+                top: rawEndGeometry.notehead.top + endStaffOffsetY,
+                bottom: rawEndGeometry.notehead.bottom + endStaffOffsetY,
+            }
+            : undefined;
 
-        const noteHeadHalfHeight: number = 0.5;
+        const startX: number = startHead
+            ? (startHead.left + startHead.right) / 2
+            : fallbackStartX;
+        const endX: number = endHead
+            ? (endHead.left + endHead.right) / 2
+            : fallbackEndX;
+        const startNoteY: number = startHead
+            ? startHead.top
+            : fallbackStartY - 0.5;
+        const endNoteY: number = endHead
+            ? endHead.top
+            : fallbackEndY - 0.5;
+
         const yGap: number = rules.SlurNoteHeadYOffset; // gap between notehead and slur tip
-        let startY: number;
-        let endY: number;
-        if (endStaffAbove) {
-            // slur leaves the lower (start) note upwards and reaches the higher (end) note from below
-            startY = startNoteY - noteHeadHalfHeight - yGap;
-            endY = endNoteY + noteHeadHalfHeight + yGap;
-            this.placement = PlacementEnum.Above;
-        } else {
-            startY = startNoteY + noteHeadHalfHeight + yGap;
-            endY = endNoteY - noteHeadHalfHeight - yGap;
-            this.placement = PlacementEnum.Below;
-        }
+        // Piano cross-staff gestures conventionally remain one upward-bowing
+        // phrase. Approaching either endpoint from below makes one end look
+        // inverted and attaches it beneath the destination notehead.
+        const startY: number = startNoteY - yGap;
+        const endY: number = endNoteY - yGap;
+        this.placement = PlacementEnum.Above;
+        this.diagnostics.startNotehead = startHead;
+        this.diagnostics.endNotehead = endHead;
 
         // The curve bows out (vertically) from the line connecting the two notes.
         const dx: number = endX - startX;
@@ -522,13 +1326,183 @@ export class GraphicalSlur extends GraphicalCurve {
         const distance: number = Math.sqrt(dx * dx + dy * dy);
         const bow: number = Math.max(rules.SlurCrossStaffMinBow,
                                      Math.min(rules.SlurCrossStaffMaxBow, distance * rules.SlurCrossStaffBowFactor));
-        const bowSign: number = this.placement === PlacementEnum.Above ? -1 : 1; // -1 = upwards (smaller y)
+        const bowSign: number = -1; // upwards (smaller y)
 
         this.bezierStartPt = new PointF2D(startX, startY);
         this.bezierStartControlPt = new PointF2D(startX + dx * 0.25, startY + dy * 0.25 + bowSign * bow);
         this.bezierEndControlPt = new PointF2D(startX + dx * 0.75, startY + dy * 0.75 + bowSign * bow);
         this.bezierEndPt = new PointF2D(endX, endY);
+        this.diagnostics.startAttachment = "notehead";
+        this.diagnostics.endAttachment = "notehead";
+        this.diagnostics.faults = [];
+        this.diagnostics.structuredFaults = [];
+        this.layoutContext = this.createCrossStaffLayoutContext(
+            slurStartNote,
+            slurEndNote,
+            startStaffLine,
+            endStaffLine,
+        );
+        const seed: SlurCurveGeometry = {
+            p0: cloneSlurPoint(this.bezierStartPt),
+            p1: cloneSlurPoint(this.bezierStartControlPt),
+            p2: cloneSlurPoint(this.bezierEndControlPt),
+            p3: cloneSlurPoint(this.bezierEndPt),
+        };
+        this.layoutResult = calculateCandidateSlurLayout(this.layoutContext, seed, {
+            candidateLimit: rules.SlurCandidateLimit,
+            diagnosticsLevel: rules.SlurDiagnosticsLevel,
+            maximumPreferredClearance: rules.SlurMaximumPreferredClearance,
+            obstacleClearance: rules.SlurObstacleClearance,
+            scoreWeights: rules.SlurCandidateScoreWeights,
+        });
+        this.applyCandidateArticulationAdjustments();
+        this.bezierStartPt = cloneSlurPoint(this.layoutResult.geometry.p0);
+        this.bezierStartControlPt = cloneSlurPoint(this.layoutResult.geometry.p1);
+        this.bezierEndControlPt = cloneSlurPoint(this.layoutResult.geometry.p2);
+        this.bezierEndPt = cloneSlurPoint(this.layoutResult.geometry.p3);
+        this.diagnostics.selectedCandidateId = this.layoutResult.selectedCandidateId;
+        this.diagnostics.candidateCount = this.layoutResult.candidates.length;
+        const selected: SlurCurveCandidate = this.layoutResult.candidates.find(
+            (candidate): boolean => candidate.id === this.layoutResult.selectedCandidateId,
+        );
+        this.updateCandidateSelectionFault(selected);
+        this.diagnostics.startAttachment = selected?.startAnchor.type ?? "notehead";
+        this.diagnostics.endAttachment = selected?.endAnchor.type ?? "notehead";
         return true;
+    }
+
+    private createCrossStaffLayoutContext(
+        startNote: GraphicalNote,
+        endNote: GraphicalNote,
+        startStaffLine: StaffLine,
+        endStaffLine: StaffLine,
+    ): SlurLayoutContext {
+        const startGeometry: RenderedSlurEndpointGeometry =
+            this.renderedEndpointGeometry(startNote, startStaffLine);
+        const rawEndGeometry: RenderedSlurEndpointGeometry =
+            this.renderedEndpointGeometry(endNote, endStaffLine);
+        const yOffset: number = endStaffLine.PositionAndShape.RelativePosition.y
+            - startStaffLine.PositionAndShape.RelativePosition.y;
+        const translateBounds: (
+            bounds: GraphicalSlurBoundsDiagnostics,
+            offset: number,
+        ) => GraphicalSlurBoundsDiagnostics = (bounds, offset): GraphicalSlurBoundsDiagnostics => bounds
+            ? {left: bounds.left, right: bounds.right, top: bounds.top + offset, bottom: bounds.bottom + offset}
+            : undefined;
+        const endGeometry: RenderedSlurEndpointGeometry = rawEndGeometry
+            ? {
+                notehead: translateBounds(rawEndGeometry.notehead, yOffset),
+                stem: translateBounds(rawEndGeometry.stem, yOffset),
+                articulations: rawEndGeometry.articulations.map((articulation) => ({
+                    ...articulation,
+                    baseline: new PointF2D(articulation.baseline.x, articulation.baseline.y + yOffset),
+                    bounds: translateBounds(articulation.bounds, yOffset),
+                })),
+                beamPolygons: rawEndGeometry.beamPolygons.map((polygon): PointF2D[] =>
+                    polygon.map((point): PointF2D => new PointF2D(point.x, point.y + yOffset)),
+                ),
+                accidentals: rawEndGeometry.accidentals.map(
+                    (bounds): GraphicalSlurBoundsDiagnostics => translateBounds(bounds, yOffset),
+                ),
+                tuplets: rawEndGeometry.tuplets.map(
+                    (bounds): GraphicalSlurBoundsDiagnostics => translateBounds(bounds, yOffset),
+                ),
+            }
+            : undefined;
+        const makeEndpoint: (
+            side: "start" | "end",
+            note: GraphicalNote,
+            geometry: RenderedSlurEndpointGeometry,
+            point: PointF2D,
+        ) => SlurEndpointContext = (side, note, geometry, point): SlurEndpointContext => ({
+            side,
+            present: true,
+            sourceNoteId: (note as VexFlowGraphicalNote)?.getSVGId?.(),
+            stemDirection: note?.parentVoiceEntry?.parentVoiceEntry?.StemDirection,
+            // Cross-staff phrase slurs use the notehead crown on both staves;
+            // the local stem direction must not pull one endpoint away from it.
+            stemSide: false,
+            notehead: geometry?.notehead,
+            stem: geometry?.stem,
+            beams: (geometry?.beamPolygons ?? []).map((polygon): SlurBounds => ({
+                left: Math.min(...polygon.map((candidate): number => candidate.x)),
+                right: Math.max(...polygon.map((candidate): number => candidate.x)),
+                top: Math.min(...polygon.map((candidate): number => candidate.y)),
+                bottom: Math.max(...polygon.map((candidate): number => candidate.y)),
+            })),
+            accidentals: (geometry?.accidentals ?? []).map((bounds): SlurBounds => ({...bounds})),
+            articulations: (geometry?.articulations ?? []).map((articulation, index) => {
+                const id: string = `${side}-articulation-${index}`;
+                this.candidateArticulationBindings.set(id, {
+                    modifier: articulation.modifier,
+                    note: articulation.note ?? note,
+                    staffLine: side === "start" ? startStaffLine : endStaffLine,
+                    endpoint: side,
+                    type: articulation.type,
+                });
+                return {
+                    id,
+                    sourceType: articulation.modifier?.osmdArticulationEnum,
+                    glyphType: articulation.type,
+                    classification: this.classifyArticulation(articulation.modifier?.osmdArticulationEnum),
+                    position: articulation.position,
+                    bounds: articulation.bounds,
+                    outwardShift: articulation.modifier?.getOutwardShift?.() ?? 0,
+                };
+            }),
+            seedAnchor: cloneSlurPoint(point),
+            seedAttachment: "notehead",
+            tiedEndpoint: Boolean(note?.sourceNote?.NoteTie),
+            chordSize: note?.parentVoiceEntry?.notes?.length ?? 0,
+            grace: side === "start" ? Boolean(this.graceStart) : Boolean(this.graceEnd),
+            systemBoundary: false,
+        });
+        const samplingUnit: number = startStaffLine.SkyBottomLineCalculator.SamplingUnit;
+        const width: number = startStaffLine.PositionAndShape.Size.width;
+        const sampleLength: number = Math.max(1, Math.ceil(width * samplingUnit));
+        const baseline: number[] = Array(sampleLength);
+        for (let index: number = 0; index < sampleLength; index++) {
+            baseline[index] = lineValueAtX(this.bezierStartPt, this.bezierEndPt, index / samplingUnit);
+        }
+        const obstacles: SlurObstacle[] = [];
+        if (startGeometry?.notehead) {
+            obstacles.push({
+                id: "cross-staff-start-head",
+                type: "notehead",
+                bounds: {...startGeometry.notehead},
+                endpoint: "start",
+                clearance: this.rules.SlurObstacleClearance,
+            });
+        }
+        if (endGeometry?.notehead) {
+            obstacles.push({
+                id: "cross-staff-end-head",
+                type: "notehead",
+                bounds: {...endGeometry.notehead},
+                endpoint: "end",
+                clearance: this.rules.SlurObstacleClearance,
+            });
+        }
+        return {
+            id: `slur-cross-staff-m${this.staffEntries[0]?.parentMeasure?.MeasureNumber ?? "unknown"}`,
+            direction: PlacementEnum.Above,
+            start: makeEndpoint("start", startNote, startGeometry, this.bezierStartPt),
+            end: makeEndpoint("end", endNote, endGeometry, this.bezierEndPt),
+            obstacles,
+            envelope: {
+                samplingUnit,
+                skyline: baseline,
+                bottomline: baseline,
+                topLineOffset: Math.max(this.bezierStartPt.y, this.bezierEndPt.y) + 100,
+                bottomLineOffset: Math.min(this.bezierStartPt.y, this.bezierEndPt.y) - 100,
+                width,
+            },
+            segmentIndex: this.diagnostics.segmentIndex,
+            segmentCount: this.diagnostics.segmentCount,
+            isCrossStaff: true,
+            isCrossSystem: false,
+            isNested: false,
+        };
     }
 
     /**
@@ -559,184 +1533,116 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param rules
      * @param skyBottomLineCalculator
      */
-    private calculateStartAndEnd(   slurStartNote: GraphicalNote,
-                                    slurEndNote: GraphicalNote,
-                                    staffLine: StaffLine,
-                                    rules: EngravingRules,
-                                    skyBottomLineCalculator: SkyBottomLineCalculator): {startX: number, startY: number, endX: number, endY: number} {
-        let startX: number = 0;
-        let startY: number = 0;
-        let endX: number = 0;
-        let endY: number = 0;
+    private calculateStartAndEnd(
+        slurStartNote: GraphicalNote,
+        slurEndNote: GraphicalNote,
+        staffLine: StaffLine,
+        rules: EngravingRules,
+    ): {startX: number, startY: number, endX: number, endY: number} {
+        const continuationY: number = this.placement === PlacementEnum.Above
+            ? staffLine.TopLineOffset - 1.5
+            : staffLine.BottomLineOffset + 1.5;
+        let startX: number = this.staffEntries[0].parentMeasure.beginInstructionsWidth;
+        let startY: number = continuationY;
+        let endX: number = staffLine.PositionAndShape.Size.width;
+        let endY: number = continuationY;
 
         if (slurStartNote) {
-            // must be relative to StaffLine
-            startX = slurStartNote.PositionAndShape.RelativePosition.x + slurStartNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
-                                            + slurStartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-
-            // If Slur starts on a Gracenote
+            const startVoiceEntry: GraphicalVoiceEntry = slurStartNote.parentVoiceEntry;
+            const startStaffEntry: GraphicalStaffEntry = startVoiceEntry.parentStaffEntry;
+            startX = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x
+                + startStaffEntry.PositionAndShape.RelativePosition.x
+                + slurStartNote.PositionAndShape.RelativePosition.x;
             if (this.graceStart) {
-                startX += slurStartNote.parentVoiceEntry.parentStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
+                startX += startStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
+            }
+            startY = startVoiceEntry.PositionAndShape.RelativePosition.y
+                + (this.placement === PlacementEnum.Above
+                    ? startVoiceEntry.PositionAndShape.BorderTop
+                    : startVoiceEntry.PositionAndShape.BorderBottom);
+            if (this.rules.SlurPlacementUseSkyBottomLine) {
+                startY = this.placement === PlacementEnum.Above
+                    ? Math.min(startY, startStaffEntry.getSkylineMin())
+                    : Math.max(startY, startStaffEntry.getBottomlineMax());
             }
 
-            //const first: GraphicalNote = slurStartNote.parentVoiceEntry.notes[0];
+            const chordEndpoint: boolean = startVoiceEntry.notes.length > 1;
+            const geometry: RenderedSlurEndpointGeometry = chordEndpoint
+                ? this.renderedOuterChordGeometry(slurStartNote, staffLine)
+                : this.renderedEndpointGeometry(slurStartNote, staffLine);
+            if (geometry) {
+                this.diagnostics.startNotehead = geometry.notehead;
+            }
 
-            // Determine Start/End Point coordinates with the VoiceEntry of the Start/EndNote of the slur
-            const slurStartVE: GraphicalVoiceEntry = slurStartNote.parentVoiceEntry;
-
-            if (this.placement === PlacementEnum.Above) {
-                startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    startY = Math.min(endY, slurStartVE.parentStaffEntry.getSkylineMin());
-                    // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
-                    //     if (articulation.placement === PlacementEnum.Above) {
-                    //         startY -= this.rules.SlurEndArticulationYOffset;
-                    //         break;
-                    //     }
-                    // }
-                }
+            const stemSide: boolean =
+                (startVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up
+                    && this.placement === PlacementEnum.Above)
+                || (startVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Down
+                    && this.placement === PlacementEnum.Below);
+            const tieFallback: boolean = slurStartNote.sourceNote !== this.slur.StartNote;
+            if (geometry && (chordEndpoint || !stemSide) && !tieFallback) {
+                startX = geometry.notehead.right;
+                startY = this.placement === PlacementEnum.Above
+                    ? geometry.notehead.top
+                    : geometry.notehead.bottom;
+                this.diagnostics.startAttachment = "notehead";
+            } else if (stemSide) {
+                startX += startVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up ? 0.5 : -0.5;
+                this.diagnostics.startAttachment = "stem";
             } else {
-                startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    startY = Math.max(endY, slurStartVE.parentStaffEntry.getBottomlineMax());
-                }
-                // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
-                //     if (articulation.placement === PlacementEnum.Below) {
-                //         startY += 1;
-                //         break;
-                //     }
-                // }
+                this.diagnostics.startAttachment = "voice-entry";
             }
-
-            // If the stem points towards the starting point of the slur, shift the slur by a small amount to start (approximately) at the x-position
-            // of the notehead. Note: an exact calculation using the position of the note is too complicate for the payoff
-            if ( slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Down && this.placement === PlacementEnum.Below ) {
-                startX -= 0.5;
-            }
-            if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Up && this.placement === PlacementEnum.Above) {
-                startX += 0.5;
-            }
-            // if (first.NoteStem && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
-            //     startX += first.NoteStem.PositionAndShape.RelativePosition.x;
-            //     startY = skyBottomLineCalculator.getSkyLineMinAtPoint(staffLine, startX);
-            // } else {
-            //     const last: GraphicalNote = <GraphicalNote>slurStartNote[slurEndNote.parentVoiceEntry.notes.length - 1];
-            //     if (last.NoteStem && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
-            //         startX += last.NoteStem.PositionAndShape.RelativePosition.x;
-            //         startY = skyBottomLineCalculator.getBottomLineMaxAtPoint(staffLine, startX);
-            //     } else {
-            //     }
-            // }
         } else {
-            startX = 0;
+            this.diagnostics.startAttachment = "system-edge";
         }
 
         if (slurEndNote) {
-            endX = slurEndNote.PositionAndShape.RelativePosition.x + slurEndNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
-                + slurEndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-
-            // If Slur ends in a Gracenote
+            const endVoiceEntry: GraphicalVoiceEntry = slurEndNote.parentVoiceEntry;
+            const endStaffEntry: GraphicalStaffEntry = endVoiceEntry.parentStaffEntry;
+            endX = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x
+                + endStaffEntry.PositionAndShape.RelativePosition.x
+                + slurEndNote.PositionAndShape.RelativePosition.x;
             if (this.graceEnd) {
-                endX += slurEndNote.parentVoiceEntry.parentStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
+                endX += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
+            }
+            endY = endVoiceEntry.PositionAndShape.RelativePosition.y
+                + (this.placement === PlacementEnum.Above
+                    ? endVoiceEntry.PositionAndShape.BorderTop
+                    : endVoiceEntry.PositionAndShape.BorderBottom);
+            if (this.rules.SlurPlacementUseSkyBottomLine) {
+                endY = this.placement === PlacementEnum.Above
+                    ? Math.min(endY, endStaffEntry.getSkylineMin())
+                    : Math.max(endY, endStaffEntry.getBottomlineMax());
             }
 
-            const slurEndVE: GraphicalVoiceEntry = slurEndNote.parentVoiceEntry;
-
-            // check for articulation -> shift end y (slur further outward)
-            //   this should not be necessary for the start note, and for accents (>) it's even counter productive there
-            //   TODO alternatively, we could fix the bounding box of the note to include the ornament, but that seems tricky
-            let articulationPlacement: PlacementEnum; // whether there's an articulation and where
-            for (const articulation of slurEndVE.parentVoiceEntry.Articulations) {
-                articulationPlacement = articulation.placement;
-                if (articulation.placement === PlacementEnum.NotYetDefined) {
-                    for (const modifier of ((slurEndNote as VexFlowGraphicalNote).vfnote[0] as any).modifiers) {
-                        if (modifier.getCategory() === VF.Articulation.CATEGORY) {
-                            if (modifier.position === VF.Modifier.Position.ABOVE) {
-                                articulation.placement = PlacementEnum.Above;
-                                articulationPlacement = PlacementEnum.Above;
-                            } else if (modifier.position === VF.Modifier.Position.BELOW) {
-                                articulation.placement = PlacementEnum.Below;
-                                articulationPlacement = PlacementEnum.Below;
-                            }
-                            break;
-                        }
-                    }
-                }
+            const chordEndpoint: boolean = endVoiceEntry.notes.length > 1;
+            const geometry: RenderedSlurEndpointGeometry = chordEndpoint
+                ? this.renderedOuterChordGeometry(slurEndNote, staffLine)
+                : this.renderedEndpointGeometry(slurEndNote, staffLine);
+            if (geometry) {
+                this.diagnostics.endNotehead = geometry.notehead;
             }
-            if (this.placement === PlacementEnum.Above) {
-                endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    endY = Math.min(endY, slurEndVE.parentStaffEntry.getSkylineMin());
-                }
-                if (articulationPlacement === PlacementEnum.Above) {
-                    endY -= this.rules.SlurEndArticulationYOffset;
-                }
+
+            const stemSide: boolean =
+                (endVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up
+                    && this.placement === PlacementEnum.Above)
+                || (endVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Down
+                    && this.placement === PlacementEnum.Below);
+            const tieFallback: boolean = slurEndNote.sourceNote !== this.slur.EndNote;
+            if (geometry && (chordEndpoint || !stemSide) && !tieFallback) {
+                endX = geometry.notehead.left;
+                endY = this.placement === PlacementEnum.Above
+                    ? geometry.notehead.top
+                    : geometry.notehead.bottom;
+                this.diagnostics.endAttachment = "notehead";
+            } else if (stemSide) {
+                endX += endVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up ? 0.5 : -0.5;
+                this.diagnostics.endAttachment = "stem";
             } else {
-                endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
-                if (this.rules.SlurPlacementUseSkyBottomLine) {
-                    endY = Math.max(endY, slurEndVE.parentStaffEntry.getBottomlineMax());
-                }
-                if (articulationPlacement === PlacementEnum.Below) {
-                    endY += this.rules.SlurEndArticulationYOffset;
-                }
+                this.diagnostics.endAttachment = "voice-entry";
             }
-
-            // If the stem points towards the endpoint of the slur, shift the slur by a small amount to start (approximately) at the x-position
-            // of the notehead. Note: an exact calculation using the position of the note is too complicate for the payoff
-            if ( slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down && this.placement === PlacementEnum.Below ) {
-                endX -= 0.5;
-            }
-            if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Up && this.placement === PlacementEnum.Above) {
-                endX += 0.5;
-            }
-            // const first: GraphicalNote = <GraphicalNote>slurEndNote.parentVoiceEntry.notes[0];
-            // if (first.NoteStem && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
-            //     endX += first.NoteStem.PositionAndShape.RelativePosition.x;
-            //     endY = skyBottomLineCalculator.getSkyLineMinAtPoint(staffLine, endX);
-            // } else {
-            //     const last: GraphicalNote = <GraphicalNote>slurEndNote.parentVoiceEntry.notes[slurEndNote.parentVoiceEntry.notes.length - 1];
-            //     if (last.NoteStem && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
-            //         endX += last.NoteStem.PositionAndShape.RelativePosition.x;
-            //         endY = skyBottomLineCalculator.getBottomLineMaxAtPoint(staffLine, endX);
-            //     } else {
-            //         if (this.placement === PlacementEnum.Above) {
-            //             const highestNote: GraphicalNote = last;
-            //             endY = highestNote.PositionAndShape.RelativePosition.y;
-            //             if (highestNote.NoteHead) {
-            //                 endY += highestNote.NoteHead.PositionAndShape.BorderMarginTop;
-            //             } else { endY += highestNote.PositionAndShape.BorderTop; }
-            //         } else {
-            //             const lowestNote: GraphicalNote = first;
-            //             endY = lowestNote.parentVoiceEntry
-            //             lowestNote.PositionAndShape.RelativePosition.y;
-            //             if (lowestNote.NoteHead) {
-            //                 endY += lowestNote.NoteHead.PositionAndShape.BorderMarginBottom;
-            //             } else { endY += lowestNote.PositionAndShape.BorderBottom; }
-            //         }
-            //     }
-            // }
         } else {
-            endX = staffLine.PositionAndShape.Size.width;
-        }
-
-        // if GraphicalSlur breaks over System, then the end/start of the curve is at the corresponding height with the known start/end
-        if (!slurStartNote && !slurEndNote) {
-            startY = -1.5;
-            endY = -1.5;
-        }
-        if (!slurStartNote) {
-            if (this.placement === PlacementEnum.Above) {
-                startY = endY - 1;
-            } else {
-                startY = endY + 1;
-            }
-        }
-        if (!slurEndNote) {
-            if (this.placement === PlacementEnum.Above) {
-                endY = startY - 1;
-            } else {
-                endY = startY + 1;
-            }
+            this.diagnostics.endAttachment = "system-edge";
         }
 
         // if two slurs start/end at the same GraphicalNote, then the second gets an offset
@@ -752,11 +1658,19 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         if (this.placement === PlacementEnum.Above) {
-            startY = Math.min(startY, 1.5);
-            endY = Math.min(endY, 1.5);
+            if (this.diagnostics.startAttachment !== "notehead") {
+                startY = Math.min(startY, 1.5);
+            }
+            if (this.diagnostics.endAttachment !== "notehead") {
+                endY = Math.min(endY, 1.5);
+            }
         } else {
-            startY = Math.max(startY, staffLine.StaffHeight - 1.5);
-            endY = Math.max(endY, staffLine.StaffHeight - 1.5);
+            if (this.diagnostics.startAttachment !== "notehead") {
+                startY = Math.max(startY, staffLine.StaffHeight - 1.5);
+            }
+            if (this.diagnostics.endAttachment !== "notehead") {
+                endY = Math.max(endY, staffLine.StaffHeight - 1.5);
+            }
         }
 
         return {startX, startY, endX, endY};

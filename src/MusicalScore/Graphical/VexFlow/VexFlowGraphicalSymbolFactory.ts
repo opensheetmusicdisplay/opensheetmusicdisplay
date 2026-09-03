@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "./VexFlowAdapter";
 import {IGraphicalSymbolFactory} from "../../Interfaces/IGraphicalSymbolFactory";
 import {MusicSystem} from "../MusicSystem";
 import {VexFlowMusicSystem} from "./VexFlowMusicSystem";
@@ -19,7 +18,6 @@ import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {GraphicalChordSymbolContainer} from "../GraphicalChordSymbolContainer";
-import {GraphicalLabel} from "../GraphicalLabel";
 import {EngravingRules} from "../EngravingRules";
 import { TechnicalInstruction } from "../../VoiceData/Instructions/TechnicalInstruction";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
@@ -215,24 +213,23 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                                                 rules
                                                 );
             const placement: PlacementEnum = graphicalChordSymbolContainer.GetChordSymbolContainer.Placement;
-            const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GraphicalLabel;
             if (placement === PlacementEnum.Below) {
-                graphicalLabel.PositionAndShape.RelativePosition.y = rules.StaffHeight + rules.ChordSymbolYOffset;
+                graphicalChordSymbolContainer.PositionAndShape.RelativePosition.y =
+                    rules.StaffHeight + rules.ChordSymbolYOffset;
             } else {
-                graphicalLabel.PositionAndShape.RelativePosition.y -= rules.ChordSymbolYOffset;
+                graphicalChordSymbolContainer.PositionAndShape.RelativePosition.y = -rules.ChordSymbolYOffset;
             }
-            graphicalLabel.setLabelPositionAndShapeBorders(); // to get Size.width
-            let extraXShiftForShortChordSymbols: number = 0;
-            if (graphicalLabel.PositionAndShape.Size.width < rules.ChordSymbolExtraXShiftWidthThreshold) {
-                extraXShiftForShortChordSymbols = rules.ChordSymbolExtraXShiftForShortChordSymbols;
-            }
-            graphicalLabel.PositionAndShape.RelativePosition.x += xShift + extraXShiftForShortChordSymbols;
-            graphicalLabel.setLabelPositionAndShapeBorders();
+            graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
+            // Left-aligned harmony uses one optical offset from the rendered
+            // notehead. The old width-dependent short-symbol shift made C, F,
+            // and G acquire different anchors and is intentionally not part of
+            // this path.
+            graphicalChordSymbolContainer.RhythmicAnchorOffsetX = xShift;
             // TODO check for available space until next staffEntry or chord symbol? (x direction)
             graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
             graphicalStaffEntry.graphicalChordContainers.push(graphicalChordSymbolContainer);
 
-            xShift += graphicalLabel.PositionAndShape.Size.width + chordSymbolSpacing;
+            xShift += graphicalChordSymbolContainer.PositionAndShape.Size.width + chordSymbolSpacing;
         }
     }
 

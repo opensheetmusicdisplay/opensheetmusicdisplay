@@ -1,5 +1,4 @@
-import Vex, { IRenderContext } from "vexflow";
-import VF = Vex.Flow;
+import VexFlow, * as VF from "./VexFlowAdapter";
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -35,7 +34,6 @@ import { VexFlowPedal } from "./VexFlowPedal";
 import { GraphicalGlissando } from "../GraphicalGlissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
-import { SvgVexFlowBackend } from "./SvgVexFlowBackend";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { TremoloBetweenNotes } from "../../VoiceData/Note";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
@@ -62,17 +60,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
-        // vexflow 3.x: change default font
-        if (this.rules.DefaultVexFlowNoteFont === "gonville") {
-            (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
-        } // else keep new vexflow default Bravura (more cursive, bold).
-
         // sizing defaults in Vexflow
-        (Vex.Flow as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
-        (Vex.Flow as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
+        VexFlow.STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
+        VexFlow.STEM_WIDTH = this.rules.StemWidth * unitInPixels;
         // sets scale/size of notes/rest notes:
-        (Vex.Flow as any).DEFAULT_NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
-        (Vex.Flow as any).DEFAULT_TAB_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
+        VexFlow.NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
+        VexFlow.TABLATURE_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
 
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
@@ -121,7 +114,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawStaffLine(staffLine: StaffLine): void {
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.RenderContext = this.backend.getContext();
         const stafflineNode: Node = ctx.openGroup();
         if (stafflineNode) {
             (stafflineNode as SVGGElement).classList.add("staffline");
@@ -153,11 +146,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 if (!this.rules.RenderSlursAcrossStaves) {
                     continue; // cross-staff slurs disabled (supplementary to RenderSlurs)
                 }
-                // A cross-staff slur spans two stafflines, so its curve is calculated here (at draw time, when
-                // both stafflines have their final positions) rather than in calculateSlurs(). It is attached
-                // to the start note's staffline, so absolutePos already refers to that staffline.
-                if (!graphicalSlur.calculateCurveCrossStaff(this.rules)) {
-                    continue; // couldn't be calculated (e.g. notes in different systems)
+                // Cross-staff geometry is finalized by the calculator after system y-layout.
+                // Drawing only consumes the selected layout result.
+                if (!graphicalSlur.layoutResult) {
+                    continue;
                 }
             }
             this.drawSlur(graphicalSlur, absolutePos);
@@ -210,7 +202,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         } else {
             const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;
             if (vfTie) {
-                const context: IRenderContext = this.backend.getContext();
+                const context: VF.RenderContext = this.backend.getContext();
                 vfTie.setContext(context);
                 vfTie.draw();
             }
@@ -277,6 +269,29 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.x * unitInPixels,
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
+        // Slur layout calculates articulation clearance while the measure stave
+        // still uses system-local coordinates. Once the stave is moved to its
+        // absolute page position, refresh the same idempotent geometry before
+        // VexFlow draws it. Otherwise draw() consumes a valid but translated
+        // layout and the glyph appears near the page/staff origin.
+        for (const staffEntry of measure.staffEntries) {
+            for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                const vfStaveNote: any = (voiceEntry as any).vfStaveNote;
+                const hasArticulation: boolean = vfStaveNote?.modifiers?.some(
+                    (modifier: any): boolean => modifier.getCategory?.() === VF.Articulation.CATEGORY,
+                );
+                if (!hasArticulation) {
+                    continue;
+                }
+                const stave: any = vfStaveNote?.getStave?.();
+                if (stave) {
+                    // Moving a VexFlow stave does not automatically refresh its
+                    // notes' cached notehead/stem Y coordinates.
+                    vfStaveNote.setStave(stave);
+                }
+                vfStaveNote?.layoutArticulations?.();
+            }
+        }
         try {
             measure.draw(this.backend.getContext());
             // Vexflow errors can happen here. If we don't catch errors, rendering will stop after this measure.
@@ -302,29 +317,18 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                     const baseHeight: number = 0.5;
 
                     const vfNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
-                    let stemTip: PointF2D;
-                    let stemHeight: number;
-                    const directionSign: number = vfNote.vfnote[0].getStemDirection(); // 1 or -1
-                    let stemElement: HTMLElement;
-                    if (this.backend instanceof SvgVexFlowBackend) {
-                        stemElement = vfNote.getStemSVG();
+                    const vfStaveNote: VF.StemmableNote = vfNote.vfnote?.[0];
+                    const stem: VF.Stem = vfStaveNote?.getStem?.();
+                    if (!vfStaveNote || !stem) {
+                        continue;
                     }
-                    const hasBbox: boolean = (stemElement as any)?.getBbox !== undefined;
-                    if (hasBbox) {
-                        // apparently sometimes the stemElement is null, in that case we need to use the canvas method.
-                        const rect: SVGRect = (stemElement as any).getBBox();
-                        stemTip = new PointF2D(rect.x / 10, rect.y / 10);
-                        stemHeight = rect.height / 10;
-                    } else { // if this.backend instanceof CanvasVexFlowBackend // also seems to work for SVG
-                        stemHeight = vfNote.vfnote[0].getStemLength() / 10;
-                        stemTip = new PointF2D(
-                            (vfNote.vfnote[0].getStem() as any).x_begin / 10,
-                            (vfNote.vfnote[0].getStem() as any).y_top / 10,
-                        );
-                        if (directionSign === 1) {
-                            stemTip.y -= stemHeight;
-                        }
-                    }
+                    const directionSign: number = vfStaveNote.getStemDirection(); // 1 or -1
+                    const stemExtents: { topY: number, baseY: number } = stem.getExtents();
+                    const stemTip: PointF2D = new PointF2D(
+                        vfStaveNote.getStemX() / unitInPixels,
+                        stemExtents.topY / unitInPixels,
+                    );
+                    const stemHeight: number = Math.abs(stem.getHeight()) / unitInPixels;
                     // this.DrawOverlayLine(stemTip, new PointF2D(stemTip.x + 5, stemTip.y), vfNote.ParentMusicPage); // debug
 
                     let startHeight: number = stemTip.y + stemHeight / 3;
@@ -693,8 +697,26 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // Draw ChordSymbols
         if (staffEntry.graphicalChordContainers !== undefined && staffEntry.graphicalChordContainers.length > 0) {
             for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
-                const label: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
-                label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
+                for (const label of graphicalChordContainer.GraphicalLabels) {
+                    label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
+                }
+                for (const separator of graphicalChordContainer.GraphicalSeparators) {
+                    const absolute: PointF2D = separator.PositionAndShape.AbsolutePosition;
+                    const start: PointF2D = new PointF2D(
+                        absolute.x + separator.Line.Start.x,
+                        absolute.y + separator.Line.Start.y,
+                    );
+                    const end: PointF2D = new PointF2D(
+                        absolute.x + separator.Line.End.x,
+                        absolute.y + separator.Line.End.y,
+                    );
+                    separator.Line.SVGElement = this.drawLine(
+                        start,
+                        end,
+                        this.rules.DefaultColorChordSymbol,
+                        separator.Line.Width,
+                    );
+                }
             }
         }
         if (this.rules.RenderLyrics) {
@@ -722,7 +744,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (!this.lazyDrawsLeftEdgeOnce()) {
             return; // lazy horizontal: the brace is a once-only left-edge element, drawn with the first batch
         }
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.RenderContext = this.backend.getContext();
         ctx.openGroup("brace");
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBrace = (brace as VexFlowInstrumentBrace);
@@ -734,7 +756,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (!this.lazyDrawsLeftEdgeOnce()) {
             return; // lazy horizontal: the group bracket is a once-only left-edge element (first batch only)
         }
-        const ctx: Vex.IRenderContext = this.backend.getContext();
+        const ctx: VF.RenderContext = this.backend.getContext();
         ctx.openGroup("bracket");
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBracket = (bracket as VexFlowInstrumentBracket);
@@ -763,10 +785,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                     continue; // lazy horizontal: span not yet fully in the frontier
                 }
                 const vexFlowOctaveShift: VexFlowOctaveShift = graphicalOctaveShift as VexFlowOctaveShift;
-                const ctx: Vex.IRenderContext = this.backend.getContext();
+                const ctx: VF.RenderContext = this.backend.getContext();
                 const textBracket: VF.TextBracket = vexFlowOctaveShift.getTextBracket();
                 if (this.rules.DefaultColorMusic) {
-                    (textBracket as any).render_options.color = this.rules.DefaultColorMusic;
+                    textBracket.renderOptions.color = this.rules.DefaultColorMusic;
                 }
                 textBracket.setContext(ctx);
                 try {
@@ -785,9 +807,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 if (!this.lazyDrawsSpanToMeasure(vexFlowPedal.endMeasure)) {
                     continue; // lazy horizontal: span not yet fully in the frontier
                 }
-                const ctx: Vex.IRenderContext = this.backend.getContext();
-                const pedalMarking: Vex.Flow.PedalMarking = vexFlowPedal.getPedalMarking();
-                (pedalMarking as any).render_options.color = this.rules.DefaultColorMusic;
+                const ctx: VF.RenderContext = this.backend.getContext();
+                const pedalMarking: VF.PedalMarking = vexFlowPedal.getPedalMarking();
+                pedalMarking.renderOptions.color = this.rules.DefaultColorMusic;
                 pedalMarking.setContext(ctx);
                 pedalMarking.draw();
             }
@@ -802,8 +824,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 if (!this.lazyDrawsSpanToMeasure(wavyEndMeasure)) {
                     continue; // lazy horizontal: span not yet fully in the frontier
                 }
-                const ctx: Vex.IRenderContext = this.backend.getContext();
-                const vfVibratoBracket: Vex.Flow.VibratoBracket = vexFlowVibratoBracket.getVibratoBracket();
+                const ctx: VF.RenderContext = this.backend.getContext();
+                const vfVibratoBracket: VF.VibratoBracket = vexFlowVibratoBracket.getVibratoBracket();
                 (vfVibratoBracket as any).setContext(ctx);
                 vfVibratoBracket.draw();
             }
@@ -869,6 +891,29 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
     }
 
+    private applySvgTextAnchor(node: Node, textAnchor: "start" | "middle" | "end"): void {
+        if (!textAnchor || !(node instanceof Element)) {
+            return;
+        }
+        const textNodes: Element[] = node.matches("text")
+            ? [node]
+            : Array.from(node.querySelectorAll("text"));
+        for (const textNode of textNodes) {
+            textNode.setAttribute("text-anchor", textAnchor);
+        }
+    }
+
+    private getSvgTextAnchorOffset(graphicalLabel: GraphicalLabel, lineWidth: number): number {
+        switch (graphicalLabel.SvgTextAnchor) {
+            case "middle":
+                return lineWidth / 2;
+            case "end":
+                return lineWidth;
+            default:
+                return 0;
+        }
+    }
+
     /**
      * Renders a Label to the screen (e.g. Title, composer..)
      * @param graphicalLabel holds the label string, the text height in units and the font parameters
@@ -896,7 +941,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             }
         }
         let { fontStyle, fontFamily } = graphicalLabel.Label;
-        if (!fontStyle) {
+        if (fontStyle === undefined || fontStyle === null) {
             fontStyle = this.rules.DefaultFontStyle;
         }
         if (!fontFamily) {
@@ -905,11 +950,67 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         let node: Node;
         for (let i: number = 0; i < graphicalLabel.TextLines?.length; i++) {
-            const currLine: {text: string, xOffset: number, width: number} = graphicalLabel.TextLines[i];
-            const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
-            const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
-            const newNode: Node =
-                this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
+            const currLine: {
+                text: string;
+                xOffset: number;
+                width: number;
+                runs?: {text: string, width: number, fontFamily?: string, fontScale?: number, baselineShift?: number}[];
+            } =
+                graphicalLabel.TextLines[i];
+            let newNode: Node;
+            if (currLine.runs?.length > 0) {
+                let lineNode: Node;
+                let runOffset: number = 0;
+                const lineAnchorOffsetInPixel: number = this.calculatePixelDistance(
+                    this.getSvgTextAnchorOffset(graphicalLabel, currLine.width),
+                );
+                for (const run of currLine.runs) {
+                    const runOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset + runOffset);
+                    const runFontScale: number = run.fontScale ?? 1;
+                    const runBaselineShift: number = run.baselineShift ?? 0;
+                    const runHeight: number = height * runFontScale;
+                    const runFontHeightInPixel: number = fontHeightInPixel * runFontScale;
+                    const linePosition: PointF2D = new PointF2D(
+                        screenPosition.x + runOffsetInPixel + lineAnchorOffsetInPixel,
+                        screenPosition.y + fontHeightInPixel * runBaselineShift,
+                    );
+                    const runNode: Node =
+                        this.backend.renderText(
+                            runHeight,
+                            fontStyle,
+                            font,
+                            run.text,
+                            runFontHeightInPixel,
+                            linePosition,
+                            color,
+                            run.fontFamily || fontFamily,
+                        );
+                    if (graphicalLabel.SvgTextAnchor && currLine.runs.length === 1) {
+                        this.applySvgTextAnchor(runNode, graphicalLabel.SvgTextAnchor);
+                    }
+                    if (!lineNode) {
+                        lineNode = runNode;
+                    } else {
+                        lineNode.appendChild(runNode);
+                    }
+                    runOffset += run.width;
+                }
+                newNode = lineNode;
+            } else {
+                const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
+                const lineAnchorOffsetInPixel: number = this.calculatePixelDistance(
+                    this.getSvgTextAnchorOffset(graphicalLabel, currLine.width),
+                );
+                const linePosition: PointF2D = new PointF2D(
+                    screenPosition.x + xOffsetInPixel + lineAnchorOffsetInPixel,
+                    screenPosition.y,
+                );
+                newNode =
+                    this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
+                if (graphicalLabel.SvgTextAnchor) {
+                    this.applySvgTextAnchor(newNode, graphicalLabel.SvgTextAnchor);
+                }
+            }
             if (!node) {
                 node = newNode;
             } else {

@@ -7,6 +7,7 @@ import {NoteHeadShape} from "../../../src/MusicalScore/VoiceData/Notehead";
 import {Note, TremoloInfo} from "../../../src/MusicalScore/VoiceData/Note";
 import {VoiceEntry} from "../../../src/MusicalScore/VoiceData/VoiceEntry";
 import {SourceMeasure} from "../../../src/MusicalScore/VoiceData/SourceMeasure";
+import {NoteEnum} from "../../../src/Common/DataObjects/Pitch";
 
 describe("Music Sheet Reader", () => {
     const path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
@@ -314,6 +315,47 @@ describe("Music Sheet Reader", () => {
             const notes: Note[] = measureNonRestNotes(sheet1.SourceMeasures[0]);
             expectTripletThenTwoEighths(notes, "MuseScore measure 1");
             done();
+        });
+    });
+
+    describe("Non-contiguous ties into chords", () => {
+        const tiePath: string = "test/data/test_tie_noncontiguous_chord.musicxml";
+        let tieSheet: MusicSheet;
+
+        before((): void => {
+            const doc: Document = getSheet(tiePath);
+            expect(doc).to.not.be.undefined;
+            const tieScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            tieSheet = reader.createMusicSheet(tieScore, tiePath);
+        });
+
+        it("links explicit stops after intervening notes and does not infer a missing stop", (): void => {
+            const notesByMeasure: Note[][] = tieSheet.Instruments[0].Voices[0].VoiceEntries.reduce(
+                (measures: Note[][], voiceEntry: VoiceEntry): Note[][] => {
+                    const measureIndex: number = voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure
+                        .MeasureNumber - 1;
+                    measures[measureIndex] ??= [];
+                    measures[measureIndex].push(...voiceEntry.Notes.filter((note: Note): boolean => !note.isRest()));
+                    return measures;
+                },
+                [],
+            );
+            const firstMeasureDNotes: Note[] = notesByMeasure[0].filter(
+                (note: Note): boolean => note.Pitch.FundamentalNote === NoteEnum.D,
+            );
+            const secondMeasureDNotes: Note[] = notesByMeasure[1].filter(
+                (note: Note): boolean => note.Pitch.FundamentalNote === NoteEnum.D,
+            );
+
+            expect(firstMeasureDNotes).to.have.length(2);
+            expect(firstMeasureDNotes[0].NoteTie).to.not.be.undefined;
+            expect(firstMeasureDNotes[1].NoteTie).to.equal(firstMeasureDNotes[0].NoteTie);
+            expect(firstMeasureDNotes[0].NoteTie.Notes).to.deep.equal(firstMeasureDNotes);
+
+            expect(secondMeasureDNotes).to.have.length(2);
+            expect(secondMeasureDNotes[0].NoteTie).to.not.be.undefined;
+            expect(secondMeasureDNotes[0].NoteTie.Notes).to.deep.equal([secondMeasureDNotes[0]]);
+            expect(secondMeasureDNotes[1].NoteTie).to.be.undefined;
         });
     });
 });

@@ -88,6 +88,12 @@ There are however limited editing features like making notes invisible, coloring
   * [Browse through our Issues](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues?&q=is%3Aissue)
   * [Open a new issue](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/new/choose) (may be moved to Discussions).
 
+### Font and bundle variants
+
+`opensheetmusicdisplay.min.js` is self-contained and waits for its embedded Bravura, Bravura Text, and Academico faces before measuring a score. `opensheetmusicdisplay-core.min.js` omits font binaries for applications that already manage web fonts; those applications must supply the complete profile declared by `IOSMDFontProfile`.
+
+Standalone SVG exports embed sources from the active profile by default. Set `embedFontProfileInSvg: false` to opt out. See [the font-profile contract](docs/font-profiles.md) for the exact faces, validation behavior, and subset rationale.
+
 ## Sponsor OSMD and get early access to the audio player and more
 
 <a href="https://github.com/sponsors/opensheetmusicdisplay/" alt="OSMD on Github Sponsors">

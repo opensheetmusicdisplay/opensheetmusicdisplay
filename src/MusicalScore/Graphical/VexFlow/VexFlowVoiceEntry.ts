@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "./VexFlowAdapter";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -30,7 +29,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         this.PositionAndShape.RelativePosition.y = boundingBox.y / unitInPixels;
         this.PositionAndShape.BorderTop = 0;
         this.PositionAndShape.BorderBottom = boundingBox.h / unitInPixels;
-        const halfStavenoteWidth: number = (staveNote.width - ((staveNote as any).paddingRight ?? 0)) / 2;
+        const halfStavenoteWidth: number = staveNote.width / 2;
         this.PositionAndShape.BorderLeft = -(modifierWidth + halfStavenoteWidth) / unitInPixels; // Left of our X origin is the modifier
         this.PositionAndShape.BorderRight = (boundingBox.w - modifierWidth) / unitInPixels; // Right of x origin is the note
     }

@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "./VexFlow/VexFlowAdapter";
 import { EngravingRules } from "./EngravingRules";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
@@ -8,6 +7,17 @@ import {
     ISkyBottomLineBatchCalculatorBackendTableConfiguration,
     SkyBottomLineBatchCalculatorBackend
 } from "./SkyBottomLineBatchCalculatorBackend";
+
+function getRasterImageDataContext(vexFlowContext: VF.CanvasContext): CanvasRenderingContext2D | undefined {
+    const contextWithCompat: any = vexFlowContext as any;
+    if (typeof contextWithCompat.getImageData === "function") {
+        return contextWithCompat as CanvasRenderingContext2D;
+    }
+    if (typeof contextWithCompat.context2D?.getImageData === "function") {
+        return contextWithCompat.context2D as CanvasRenderingContext2D;
+    }
+    return undefined;
+}
 
 /**
  * This class calculates the skylines and the bottom lines by iterating over pixels retrieved via
@@ -37,9 +47,11 @@ export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
         samplingUnit: number,
         tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration
     ): SkyBottomLineCalculationResult[] {
-        // vexFlowContext is CanvasRenderingContext2D in runtime
         const canvasWidth: number = canvas.width;
-        const context: CanvasRenderingContext2D = vexFlowContext as unknown as CanvasRenderingContext2D;
+        const context: CanvasRenderingContext2D | undefined = getRasterImageDataContext(vexFlowContext);
+        if (!context) {
+            return [];
+        }
         const imageData: ImageData = context.getImageData(0, 0, canvas.width, canvas.height);
         const rgbaLength: number = 4;
         const { elementWidth, elementHeight, numColumns } = tableConfiguration;

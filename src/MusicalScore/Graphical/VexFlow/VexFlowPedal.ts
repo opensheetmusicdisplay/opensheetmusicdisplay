@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import * as VF from "./VexFlowAdapter";
 import { BoundingBox } from "../BoundingBox";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
@@ -8,18 +8,54 @@ import { MusicSymbol } from "../MusicSymbol";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { Fraction } from "../../../Common/DataObjects/Fraction";
+import { OSMD_DEFAULT_TEXT_FONT_FAMILY } from "../ScoreTextFontRouting";
+
+/**
+ * OSMD distinguishes open-ended pedal segments while modern VexFlow exposes
+ * only the three drawing types. Keep the richer values in the OSMD adapter
+ * and map them to the closest VexFlow drawing type at the boundary.
+ */
+export interface VexFlowPedalStyleMap {
+    TEXT: number;
+    BRACKET: number;
+    MIXED: number;
+    BRACKET_OPEN_BEGIN: number;
+    BRACKET_OPEN_END: number;
+    BRACKET_OPEN_BOTH: number;
+    MIXED_OPEN_END: number;
+}
+
+export const VexFlowPedalStyles: Readonly<VexFlowPedalStyleMap> = {
+    TEXT: 1,
+    BRACKET: 2,
+    MIXED: 3,
+    BRACKET_OPEN_BEGIN: 4,
+    BRACKET_OPEN_END: 5,
+    BRACKET_OPEN_BOTH: 6,
+    MIXED_OPEN_END: 7,
+};
+
+function vexFlowPedalType(style: number): number {
+    if (style === VexFlowPedalStyles.TEXT) {
+        return VF.PedalMarking.type.TEXT;
+    }
+    if (style === VexFlowPedalStyles.MIXED || style === VexFlowPedalStyles.MIXED_OPEN_END) {
+        return VF.PedalMarking.type.MIXED;
+    }
+    return VF.PedalMarking.type.BRACKET;
+}
 /**
  * The vexflow adaptation of a pedal marking
  */
 export class VexFlowPedal extends GraphicalPedal {
     /** Defines the note where the pedal starts */
-    public startNote: Vex.Flow.StemmableNote;
+    public startNote: VF.StemmableNote;
     /** Defines the note where the pedal ends.
      *  (for pedal lines, visually, the pedal end is BEFORE the note, as in Vexflow,
      *  UNLESS pedal.EndsStave is set, in which case it ends at the end (furthest x) of the stave.
      */
-    public endNote: Vex.Flow.StemmableNote;
-    private vfStyle: Vex.Flow.PedalMarking.Styles = Vex.Flow.PedalMarking.Styles.BRACKET;
+    public endNote: VF.StemmableNote;
+    private vfStyle: number = VexFlowPedalStyles.BRACKET;
     public DepressText: string;
     public ReleaseText: string;
     public startVfVoiceEntry: VexFlowVoiceEntry;
@@ -42,30 +78,30 @@ export class VexFlowPedal extends GraphicalPedal {
         switch (this.pedalSymbol) {
             case MusicSymbol.PEDAL_SYMBOL:
                 //This renders the pedal symbols in VF.
-                this.vfStyle = Vex.Flow.PedalMarking.Styles.TEXT;
+                this.vfStyle = VexFlowPedalStyles.TEXT;
                 this.EndSymbolPositionAndShape = new BoundingBox(this, parent);
             break;
             case MusicSymbol.PEDAL_MIXED:
                 if (openBegin && openEnd) {
-                    this.vfStyle = (Vex.Flow.PedalMarking.Styles as any).BRACKET_OPEN_BOTH;
+                    this.vfStyle = VexFlowPedalStyles.BRACKET_OPEN_BOTH;
                 } else if (openBegin) {
-                    this.vfStyle = (Vex.Flow.PedalMarking.Styles as any).BRACKET_OPEN_BEGIN;
+                    this.vfStyle = VexFlowPedalStyles.BRACKET_OPEN_BEGIN;
                 } else if (openEnd) {
-                    this.vfStyle = (Vex.Flow.PedalMarking.Styles as any).MIXED_OPEN_END;
+                    this.vfStyle = VexFlowPedalStyles.MIXED_OPEN_END;
                 } else {
-                    this.vfStyle = Vex.Flow.PedalMarking.Styles.MIXED;
+                    this.vfStyle = VexFlowPedalStyles.MIXED;
                 }
             break;
             case MusicSymbol.PEDAL_BRACKET:
             default:
                 if (openBegin && openEnd) {
-                    this.vfStyle = (Vex.Flow.PedalMarking.Styles as any).BRACKET_OPEN_BOTH;
+                    this.vfStyle = VexFlowPedalStyles.BRACKET_OPEN_BOTH;
                 } else if (openBegin) {
-                    this.vfStyle = (Vex.Flow.PedalMarking.Styles as any).BRACKET_OPEN_BEGIN;
+                    this.vfStyle = VexFlowPedalStyles.BRACKET_OPEN_BEGIN;
                 } else if (openEnd) {
-                    this.vfStyle = (Vex.Flow.PedalMarking.Styles as any).BRACKET_OPEN_END;
+                    this.vfStyle = VexFlowPedalStyles.BRACKET_OPEN_END;
                 } else {
-                    this.vfStyle = Vex.Flow.PedalMarking.Styles.BRACKET;
+                    this.vfStyle = VexFlowPedalStyles.BRACKET;
                 }
             break;
         }
@@ -124,13 +160,18 @@ export class VexFlowPedal extends GraphicalPedal {
     /**
      * Get the actual vexflow Pedal Marking used for drawing
      */
-    public getPedalMarking(): Vex.Flow.PedalMarking {
-        const pedalMarking: Vex.Flow.PedalMarking = new Vex.Flow.PedalMarking([this.startNote, this.endNote]);
+    public getPedalMarking(): VF.PedalMarking {
+        const pedalMarking: VF.PedalMarking = new VF.PedalMarking([
+            this.startNote as unknown as VF.StaveNote,
+            this.endNote as unknown as VF.StaveNote,
+        ]);
         if (this.endMeasure) {
-            (pedalMarking as any).setEndStave((this.endMeasure as VexFlowMeasure).getVFStave());
+            (pedalMarking as any).setEndStave?.((this.endMeasure as VexFlowMeasure).getVFStave());
         }
-        pedalMarking.setStyle(this.vfStyle);
+        pedalMarking.setType(vexFlowPedalType(this.vfStyle));
+        (pedalMarking as any).style = this.vfStyle;
         pedalMarking.setLine(this.line);
+        (pedalMarking as any).setFont?.({ family: OSMD_DEFAULT_TEXT_FONT_FAMILY });
         pedalMarking.setCustomText(this.DepressText, this.ReleaseText);
         //If our end note is at the end of a stave, set that value
         if(!this.endVfVoiceEntry ||

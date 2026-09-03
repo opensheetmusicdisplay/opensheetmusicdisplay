@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "./VexFlowAdapter";
 import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { OctaveShift, OctaveEnum } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { BoundingBox } from "../BoundingBox";
@@ -7,6 +6,7 @@ import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import log from "loglevel";
+import { OSMD_DEFAULT_TEXT_FONT_FAMILY } from "../ScoreTextFontRouting";
 
 /**
  * The vexflow adaptation of a graphical shift.
@@ -18,7 +18,7 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
     /** Defines the note where the octave shift ends */
     public endNote: VF.StemmableNote;
     /** Top or bottom of the staffline */
-    private position: VF.TextBracket.Positions;
+    private position: number;
     /** Supscript is a smaller text after the regular text (e.g. va after 8) */
     private supscript: string;
     /** Main text element */
@@ -33,22 +33,22 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         super(octaveShift, parent);
         switch (octaveShift.Type) {
             case OctaveEnum.VA8:
-                this.position = VF.TextBracket.Positions.TOP;
+                this.position = VF.TextBracket.Position.TOP;
                 this.supscript = "va";
                 this.text = "8";
                 break;
             case OctaveEnum.MA15:
-                this.position = VF.TextBracket.Positions.TOP;
+                this.position = VF.TextBracket.Position.TOP;
                 this.supscript = "ma";
                 this.text = "15";
                 break;
             case OctaveEnum.VB8:
-                this.position = VF.TextBracket.Positions.BOTTOM;
+                this.position = VF.TextBracket.Position.BOTTOM;
                 this.supscript = "vb";
                 this.text = "8";
                 break;
             case OctaveEnum.MB15:
-                this.position = VF.TextBracket.Positions.BOTTOM;
+                this.position = VF.TextBracket.Position.BOTTOM;
                 this.supscript = "mb";
                 this.text = "15";
                 break;
@@ -91,8 +91,8 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
                 if (this.endMeasure?.parentSourceMeasure.Rules.OctaveShiftOnWholeMeasureNoteUntilEndOfMeasure &&
                     vve.notes[0].sourceNote.isWholeMeasureNote()) {
                     // draw whole note octave shift until end of measure
-                    //   Instead, we could try to fix the display of very short octaveshift brackets,
-                    //   which seem to overlap text (-> VF.TextBracket VexFlowPatch?).
+                    //   Instead, we could try to fix the display of very short octave-shift brackets,
+                    //   which still seem to overlap nearby text in some cases.
                     this.graphicalEndAtMeasureEnd = true;
                 }
                 return true;
@@ -110,12 +110,14 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         const self: VexFlowOctaveShift = this;
         if (this.graphicalEndAtMeasureEnd) {
             // draw until end of measure (measure end barline):
-            //   hack for Vexflow 1.2.93 (will need to be adjusted for Vexflow 4+):
             //   create a mock object with all the data Vexflow uses for the TextBracket
             //   (Vexflow theoretically expects a note here, from which it takes position and width)
             stopObject = {
                 getAbsoluteX(): number {
                     return (self.endMeasure.PositionAndShape.AbsolutePosition.x + self.endMeasure.PositionAndShape.Size.width) * 10;
+                },
+                getGlyphWidth(): number {
+                    return 0;
                 },
                 getGlyph(): Object {
                     return {
@@ -136,9 +138,10 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
             superscript: this.supscript,
             text: this.text,
         });
+        (vfBracket as any).setFont?.({ family: OSMD_DEFAULT_TEXT_FONT_FAMILY });
         if (this.endsOnDifferentStaffLine) {
             // make bracket open-ended (--- instead of ---|) if not ending on current staffline
-            (vfBracket as any).render_options.show_bracket = false;
+            vfBracket.renderOptions.showBracket = false;
         }
         return vfBracket;
     }

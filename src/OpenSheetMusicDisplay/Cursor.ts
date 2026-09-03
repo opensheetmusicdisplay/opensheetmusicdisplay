@@ -199,6 +199,10 @@ export class Cursor {
             reliableGseArr.sort((a, b) => a?.PositionAndShape?.AbsolutePosition?.x <= b?.PositionAndShape?.AbsolutePosition?.x ? -1 : 1 )[0];
       if (gse) {
         x = gse.PositionAndShape.AbsolutePosition.x;
+        const noteheadCenterOffset: number = gse.getNoteheadCenterAnchorOffset?.();
+        if (Number.isFinite(noteheadCenterOffset)) {
+          x += noteheadCenterOffset;
+        }
         musicSystem = gse.parentMeasure.ParentMusicSystem;
       } else if (gseArr.length > 0) {
         // all entries at this position have unreliable positions: interpolate between the closest

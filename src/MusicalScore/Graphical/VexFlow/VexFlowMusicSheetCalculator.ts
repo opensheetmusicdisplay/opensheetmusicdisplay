@@ -24,13 +24,12 @@ import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "./VexFlowAdapter";
 import log from "loglevel";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { TechnicalInstruction } from "../../VoiceData/Instructions/TechnicalInstruction";
-import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
+import { GraphicalLyricEntry, LyricFootprint } from "../GraphicalLyricEntry";
 import { GraphicalLabel } from "../GraphicalLabel";
 import { LyricsEntry } from "../../VoiceData/Lyrics/LyricsEntry";
 import { GraphicalLyricWord } from "../GraphicalLyricWord";
@@ -63,7 +62,7 @@ import { GraphicalChordSymbolContainer } from "../GraphicalChordSymbolContainer"
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 import { SystemLinesEnum } from "../SystemLinesEnum";
 import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
-import { VexFlowPedal } from "./VexFlowPedal";
+import { VexFlowPedal, VexFlowPedalStyles } from "./VexFlowPedal";
 import { MusicSymbol } from "../MusicSymbol";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { CollectionUtil } from "../../../Util/CollectionUtil";
@@ -73,16 +72,34 @@ import { VexFlowGlissando } from "./VexFlowGlissando";
 import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { Staff } from "../../VoiceData/Staff";
+import { getDefaultTextFontFamily } from "../ScoreTextFontRouting";
+import { VexFlowSystemSpacingPlanner } from "./VexFlowHorizontalSpacing";
+import { calculateLinkedSlurLayouts } from "../SlurLayout/SlurLinkedLayoutEngine";
+import { SlurLinkedLayoutInput, SlurLinkedLayoutOutput } from "../SlurLayout/SlurLinkedLayoutEngine";
+import { SlurCurveGeometry, SlurLayoutContext } from "../SlurLayout/SlurLayoutTypes";
+
+interface ContainerEntryInfo {
+  anchorX?: number;
+  cumulativeOverlap: number;
+  dashSpaceAtEnd?: number;
+  extend: boolean;
+  labelWidth: number;
+  leftExtent?: number;
+  measureMinimumWidth?: number;
+  measureNumber: number;
+  needsDashSpaceAtEnd?: boolean;
+  rightExtent?: number;
+  text: string;
+  xPosition?: number;
+}
+
+type ContainerEntryDict = Record<string, ContainerEntryInfo>;
+type ContainerOverflows = Record<string, number>;
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
-  /** space needed for a dash for lyrics spacing, calculated once */
-  private dashSpace: number;
   public beamsNeedUpdate: boolean = false;
-  /** Per-staff overflow (in pre-elongation units) of the previous measure's last lyric/chord
-   *  past its bar line. Used to prevent the next measure's first lyric/chord from colliding
-   *  with the overflow. Indexed first by Staff, then by verse/container index. */
-  private previousLyricOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
-  private previousChordOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
+  /** Per-staff overflow of the previous measure's final chord symbol. */
+  private previousChordOverflowsByStaff: Map<Staff, ContainerOverflows> = new Map<Staff, ContainerOverflows>();
 
   constructor(rules: EngravingRules) {
     super();
@@ -91,17 +108,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(this.rules);
     MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
 
-    // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
-    //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
-    if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "gonville") {
-      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
-    } else if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "petaluma") {
-      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Petaluma, (Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura];
-    }
-    // else keep new vexflow default Bravura (more cursive, bold)
   }
 
   protected clearRecreatedObjects(): void {
+    this.horizontalSystemSpacingPlanner?.clearAppliedPadding();
     super.clearRecreatedObjects();
     MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
     // Reset the measure-to-measure carry state of the lyrics/chord symbol elongation calculation:
@@ -109,9 +119,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // overflow of the last lyric measure leaked into the *next* render's first measures
     // (when no later measure with staff entries overwrote it), making re-renders elongate
     // slightly differently than the first render.
-    this.previousLyricOverflowsByStaff.clear();
     this.previousChordOverflowsByStaff.clear();
-    this.dashSpace = undefined;
     for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
       for (const graphicalMeasure of graphicalMeasures) {
         (<VexFlowMeasure>graphicalMeasure)?.clean();
@@ -122,13 +130,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected formatMeasures(): void {
     // let totalFinalizeBeamsTime: number = 0;
     for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
-      if (!verticalMeasureList || !verticalMeasureList[0]) {
+      const firstVisibleMeasure: VexFlowMeasure = verticalMeasureList?.find(
+        measure => measure?.isVisible(),
+      ) as VexFlowMeasure;
+      if (!firstVisibleMeasure) {
         continue;
       }
-      const firstVisibleMeasure: VexFlowMeasure = verticalMeasureList.find(measure => measure?.isVisible()) as VexFlowMeasure;
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
       firstVisibleMeasure.format();
       for (const measure of verticalMeasureList) {
+        if (!measure?.isVisible()) {
+          continue;
+        }
         for (const staffEntry of measure.staffEntries) {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
         }
@@ -143,6 +156,76 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
     this.beamsNeedUpdate = false;
+  }
+
+  protected prepareHorizontalSystemSpacing(): void {
+    for (const verticalMeasures of this.graphicalMusicSheet.MeasureList) {
+      const firstVisibleMeasure: VexFlowMeasure =
+        verticalMeasures.find(
+          (measure: GraphicalMeasure): boolean => !!measure?.isVisible(),
+        ) as VexFlowMeasure;
+      if (!firstVisibleMeasure?.formatVoices) {
+        continue;
+      }
+      const minimumWidth: number = verticalMeasures.reduce(
+        (width: number, measure: GraphicalMeasure): number =>
+          Math.max(width, measure?.minimumStaffEntriesWidth ?? 0),
+        0,
+      );
+      const contextsByTick: Map<number, VF.TickContext[]> =
+        new Map<number, VF.TickContext[]>();
+      for (const measure of verticalMeasures) {
+        if (!measure?.isVisible()) {
+          continue;
+        }
+        for (const staffEntry of measure.staffEntries) {
+          for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+            const context: VF.TickContext =
+              (voiceEntry as VexFlowVoiceEntry).vfStaveNote?.getTickContext?.();
+            if (!context) {
+              continue;
+            }
+            const tickId: number = context.getTickID();
+            const contexts: VF.TickContext[] = contextsByTick.get(tickId) ?? [];
+            if (!contexts.includes(context)) {
+              contexts.push(context);
+            }
+            contextsByTick.set(tickId, contexts);
+          }
+        }
+      }
+      const hardMinimumWidthPx: number = Array.from(
+        contextsByTick.values(),
+      ).reduce(
+        (total: number, contexts: VF.TickContext[]): number => {
+          const groupedWidth: number = contexts.reduce(
+            (width: number, context: VF.TickContext): number => {
+              context.preFormat();
+              return Math.max(width, context.getWidth());
+            },
+            0,
+          );
+          return total + groupedWidth;
+        },
+        0,
+      );
+      firstVisibleMeasure.formatVoices(
+        Math.max(minimumWidth * unitInPixels, hardMinimumWidthPx),
+        firstVisibleMeasure,
+      );
+      for (const measure of verticalMeasures) {
+        if (!measure?.isVisible()) {
+          continue;
+        }
+        for (const staffEntry of measure.staffEntries) {
+          (staffEntry as VexFlowStaffEntry).calculateXPosition();
+        }
+      }
+    }
+    this.horizontalSystemSpacingPlanner = new VexFlowSystemSpacingPlanner(
+      this.graphicalMusicSheet,
+      this.rules,
+    );
   }
 
   //protected clearSystemsAndMeasures(): void {
@@ -178,7 +261,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const allVoices: VF.Voice[] = [];
     const formatter: VF.Formatter = new VF.Formatter({
       // maxIterations: 2,
-      softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
+      softmaxFactor: this.rules.SoftmaxFactorVexFlow,
     });
 
     let maxStaffEntries: number = measures[0].staffEntries.length;
@@ -204,7 +287,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           if (measure.hasOnlyRests && !mvoice.ticksUsed.equals(mvoice.totalTicks)) {
             // fix layouting issues with whole measure rests in one staff and notes in other. especially in 12/8 rthythm (#1187)
             mvoice.ticksUsed = mvoice.totalTicks;
-            // Vexflow 1.2.93: needs VexFlowPatch for formatter.js (see #1187)
           }
           voices.push(mvoice);
           allVoices.push(mvoice);
@@ -219,15 +301,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // Reset formatting state left over from a previous render on the (reused) VexFlow notes back
       // to its initial values, so that all calculations read the same state on every render - it is
       // recalculated during each render anyway, but partly later than some readers:
-      // - center_x_shift (only set for center-aligned tickables, i.e. whole measure rests):
+      // - the center-aligned tickable x shift (only set for center-aligned tickables,
+      //   i.e. whole measure rests):
       //   read by the early VexFlowStaffEntry.calculateXPosition() call below (Note.getAbsoluteX()).
       //   Without the reset, a re-render reads the previous render's centered whole rest position
       //   there, where the first render read the unshifted one - making e.g. the lyrics/chord symbol
       //   elongation of the following measures (and thus the whole layout) differ from the first render.
-      // - the beam-applied stem extension (same reset as the VexFlowPatch beam.js postFormat fix
-      //   for #1636, which only runs when the beam is drawn): Articulation.draw() positions
-      //   articulations at the stem tip *before* the beams (re-)extend the stems, so without the
-      //   reset, articulations on beamed notes sit higher on re-renders than on the first render.
+      // - the beam-applied stem extension (same reset pattern as the legacy beam post-format fix
+      //   for #1636) and Stage 6's absolute slur/articulation clearance. Both are recalculated
+      //   from final geometry later in this render and must not leak into the next rebuild.
       // - TabNote widths: TabNote.setStave() re-measures the fret text width once a stave has a
       //   rendering context, i.e. during the draws at the end of a render. updateWidth() restores
       //   the construction-time width (from VexFlow's glyph table), which is what the first
@@ -245,7 +327,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       for (const voice of voices) {
         for (const tickable of voice.getTickables()) {
           const note: any = tickable as any;
-          note.center_x_shift = 0;
+          note.setCenterXShift?.(0);
           if (note.osmdInitialStemExtensionOverride === undefined) {
             note.osmdInitialStemExtensionOverride = note.stemExtensionOverride ?? null; // first render: snapshot
           } else {
@@ -260,6 +342,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           if (note.updateWidth && note.glyphs) { // TabNote
             note.updateWidth();
           }
+          for (const modifier of note.modifiers ?? []) {
+            if (modifier.getCategory?.() === VF.Articulation.CATEGORY) {
+              modifier.setOutwardShift?.(0);
+            }
+          }
         }
       }
       // all voices that belong to one stave are collectively added to create a common context in VexFlow.
@@ -272,13 +359,41 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const staffEntryFactor: number = 0.3;
 
     if (allVoices.length > 0) {
-      minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
-      * this.rules.VoiceSpacingMultiplierVexflow
-      + this.rules.VoiceSpacingAddendVexflow
-      + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
+      // A collapsed multi-rest in one part can leave its vertically aligned VexFlow voice with
+      // a nominal duration of zero while another staff still contains the complete measure.
+      // VexFlow 5 rejects such mixed nominal totals even for SOFT voices. Align the formatter's
+      // nominal duration to the longest voice; the voice tickables and their ticksUsed remain
+      // unchanged, so this only restores the common rhythmic coordinate range for the system.
+      const formatterTotalTicks: VF.Fraction = allVoices.reduce(
+        (longest: VF.Fraction, voice: VF.Voice): VF.Fraction => {
+          const total: VF.Fraction = voice.getTotalTicks();
+          return !longest || total.value() > longest.value() ? total : longest;
+        },
+        undefined,
+      );
+      for (const voice of allVoices) {
+        const voiceTotalTicks: VF.Fraction = voice.getTotalTicks();
+        if (!voiceTotalTicks.equals(formatterTotalTicks)) {
+          voiceTotalTicks.copy(formatterTotalTicks);
+        }
+      }
+      const formatterMinimumWidthPx: number = formatter.preCalculateMinTotalWidth(allVoices);
+      const hardNotationWidth: number =
+        formatter.getMinTotalWidth() / unitInPixels;
       if (parentSourceMeasure?.ImplicitMeasure) {
-        // shrink width in the ratio that the pickup measure is shorter compared to a full measure('s time signature):
-        minStaffEntriesWidth = parentSourceMeasure.Duration.RealValue / parentSourceMeasure.ActiveTimeSignature.RealValue * minStaffEntriesWidth;
+        // Preserve the compact preferred width used for pickups. The
+        // system-level constraint planner subsequently floors this against
+        // the pickup's actual right-hand notation extent and enforces every
+        // cross-measure hard clearance.
+        minStaffEntriesWidth =
+          (
+            formatterMinimumWidthPx / unitInPixels *
+            this.rules.VoiceSpacingMultiplierVexflow +
+            this.rules.VoiceSpacingAddendVexflow +
+            maxStaffEntries * staffEntryFactor
+          ) *
+          parentSourceMeasure.Duration.RealValue /
+          parentSourceMeasure.ActiveTimeSignature.RealValue;
         // e.g. a 1/4 pickup measure in a 3/4 time signature should be 1/4 / 3/4 = 1/3 as long (a third)
         // it seems like this should be respected by staffEntries.length and preCaculateMinTotalWidth, but apparently not,
         //   without this the pickup measures were always too long.
@@ -307,6 +422,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           minStaffEntriesWidth += this.rules.PickupMeasureSpacingSingleNoteAddend;
         }
         minStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
+      } else {
+        const softStaffEntriesWidth: number =
+          Math.max(0, formatterMinimumWidthPx / unitInPixels - hardNotationWidth)
+          * this.rules.VoiceSpacingMultiplierVexflow
+          + this.rules.VoiceSpacingAddendVexflow
+          + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
+        minStaffEntriesWidth = softStaffEntriesWidth + hardNotationWidth;
       }
 
         // TODO this could use some fine-tuning. currently using *1.5 + 1 by default, results in decent spacing.
@@ -315,14 +437,26 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // };
       MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
 
-      const formatVoicesDefault: (w: number, p: VexFlowMeasure) => void = (w, p) => {
-        formatter.formatToStave(allVoices, p.getVFStave());
+      const formatVoicesDefault: (w: number, p: VexFlowMeasure) => VF.Formatter = (w, p) => {
+        if (p.getVFStave().getWidth() > 0) {
+          formatter.formatToStave(allVoices, p.getVFStave());
+        } else {
+          formatter.format(allVoices, w);
+        }
+        return formatter;
       };
-      const formatVoicesAlignRests: (w: number,  p: VexFlowMeasure) => void = (w, p) => {
-        formatter.formatToStave(allVoices, p.getVFStave(), {
-          align_rests: true,
-          context: undefined
-        });
+      const formatVoicesAlignRests: (w: number,  p: VexFlowMeasure) => VF.Formatter = (w, p) => {
+        if (p.getVFStave().getWidth() > 0) {
+          formatter.formatToStave(allVoices, p.getVFStave(), {
+            alignRests: true,
+            context: undefined
+          });
+        } else {
+          formatter.format(allVoices, w, {
+            alignRests: true,
+          });
+        }
+        return formatter;
       };
 
       for (const measure of measures) {
@@ -419,151 +553,200 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return minStaffEntriesWidth;
   }
 
-  private calculateElongationFactor(containers: (GraphicalLyricEntry|GraphicalChordSymbolContainer)[], staffEntry: GraphicalStaffEntry, lastEntryDict: any,
+  private calculateElongationFactor(containers: (GraphicalLyricEntry|GraphicalChordSymbolContainer)[],
+                                    staffEntry: GraphicalStaffEntry, lastEntryDict: ContainerEntryDict,
                                     oldMinimumStaffEntriesWidth: number, elongationFactorForMeasureWidth: number,
                                     measureNumber: number, oldMinSpacing: number, nextMeasureOverlap: number): number {
     let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
     let currentContainerIndex: number = 0;
 
-    let needsDashSpaceAtEnd: boolean = false;
     for (const container of containers) {
-      const alignment: TextAlignmentEnum = container.GraphicalLabel.Label.textAlignment;
       let minSpacing: number = oldMinSpacing;
 
       let overlapAllowedIntoNextMeasure: number = nextMeasureOverlap;
-      needsDashSpaceAtEnd = false;
+      let needsDashSpaceAtEnd: boolean = false;
+      let dashSpaceAtEnd: number = 0;
+      const containerKey: string = container instanceof GraphicalLyricEntry
+        ? container.getLineIdentity()
+        : String(currentContainerIndex);
+      const previousEntry: ContainerEntryInfo = lastEntryDict[containerKey];
 
       if (container instanceof GraphicalLyricEntry && container.ParentLyricWord) {
         // spacing for multi-syllable words
         if (container.LyricsEntry.SyllableIndex > 0) { // syllables after first
-          // give a little more spacing for dash between syllables
+          // Keep the measured dash between adjacent syllables in addition to
+          // the configured breathing room around it.
           minSpacing = this.rules.BetweenSyllableMinimumDistance;
-          if (TextAlignment.IsCenterAligned(alignment)) {
-            minSpacing += 1.0; // TODO check for previous lyric alignment too. though center is not standard
-            // without this, there's not enough space for dashes between long syllables on eigth notes
+          if (previousEntry?.measureNumber === measureNumber && previousEntry.needsDashSpaceAtEnd) {
+            minSpacing += previousEntry.dashSpaceAtEnd ?? 0;
           }
         }
         const syllables: LyricsEntry[] = container.ParentLyricWord.GetLyricWord.Syllables;
         if (syllables.length > 1) {
           if (container.LyricsEntry.SyllableIndex < syllables.length - 1) {
             needsDashSpaceAtEnd = true;
+            dashSpaceAtEnd = container.getDashWidth();
             // if a middle syllable of a word, give less measure overlap into next measure, to give room for dash
-            if (this.dashSpace === undefined) { // don't replace undefined check
-              this.dashSpace = 1.5;
-              // better method, doesn't work:
-              // this.dashLength = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom)
-              //   .PositionAndShape.Size.width; // always returns 0
-            }
-            overlapAllowedIntoNextMeasure -= this.dashSpace;
+            overlapAllowedIntoNextMeasure -= dashSpaceAtEnd;
           }
         }
       }
 
-      const bBox: BoundingBox = container instanceof GraphicalLyricEntry ? container.GraphicalLabel.PositionAndShape : container.PositionAndShape;
-      const labelWidth: number = bBox.Size.width;
       const vexStaffEntry: VexFlowStaffEntry = staffEntry as VexFlowStaffEntry;
-      // vexStaffEntry.calculateXPosition(false);
-      // const notePosition: number = (staffEntry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote.getBoundingBox().getX() / unitInPixels;
       const staffEntryXPosition: number = vexStaffEntry.PositionAndShape.RelativePosition.x;
+      if (container instanceof GraphicalLyricEntry) {
+        const alignment: TextAlignmentEnum = container.GraphicalLabel.Label.textAlignment;
+        const footprint: LyricFootprint = container.getFootprint(staffEntryXPosition);
+
+        if (previousEntry?.extend) {
+          // TODO handle extend of last entry (extend is stored in lyrics entry of preceding syllable)
+        }
+
+        let lyricSpacingNeededToPreviousEntry: number = 0;
+        let lyricCurrentSpacingToPreviousEntry: number = 0;
+        if (previousEntry) {
+          lyricCurrentSpacingToPreviousEntry = footprint.anchorX - previousEntry.anchorX;
+          lyricSpacingNeededToPreviousEntry =
+            previousEntry.rightExtent + footprint.leftExtent + minSpacing;
+        }
+        const lyricCurrentSpacingFromMeasureStart: number = footprint.anchorX;
+        const lyricSpacingNeededFromMeasureStart: number = footprint.leftExtent + minSpacing;
+        const lyricOverlapAllowedIntoNextMeasure: number = TextAlignment.IsCenterAligned(alignment)
+          ? Math.min(overlapAllowedIntoNextMeasure, footprint.leftExtent)
+          : overlapAllowedIntoNextMeasure;
+
+        const roomToMeasureEnd: number = oldMinimumStaffEntriesWidth - footprint.anchorX;
+        const lyricSpacingNeededToMeasureEnd: number =
+          footprint.rightExtent - lyricOverlapAllowedIntoNextMeasure;
+
+        let lyricElongationFactorForMeasureStart: number = 1;
+        if (!previousEntry && lyricSpacingNeededFromMeasureStart > lyricCurrentSpacingFromMeasureStart) {
+          if (lyricCurrentSpacingFromMeasureStart > 0) {
+            lyricElongationFactorForMeasureStart =
+              lyricSpacingNeededFromMeasureStart / lyricCurrentSpacingFromMeasureStart;
+          } else {
+            lyricElongationFactorForMeasureStart = this.rules.MaximumLyricsElongationFactor;
+          }
+        }
+
+        let lyricElongationFactorForMeasureEnd: number = 1;
+        if (lyricSpacingNeededToMeasureEnd > 0) {
+          if (roomToMeasureEnd > 0) {
+            lyricElongationFactorForMeasureEnd = lyricSpacingNeededToMeasureEnd / roomToMeasureEnd;
+          } else {
+            lyricElongationFactorForMeasureEnd =
+              (footprint.anchorX + lyricSpacingNeededToMeasureEnd) / oldMinimumStaffEntriesWidth;
+          }
+        }
+
+        let lyricElongationFactorForPreviousEntry: number = 1;
+        if (previousEntry) {
+          if (lyricCurrentSpacingToPreviousEntry > 0) {
+            lyricElongationFactorForPreviousEntry =
+              lyricSpacingNeededToPreviousEntry / lyricCurrentSpacingToPreviousEntry;
+          } else if (lyricSpacingNeededToPreviousEntry > 0) {
+            lyricElongationFactorForPreviousEntry = this.rules.MaximumLyricsElongationFactor;
+          }
+        }
+
+        const elongationFactorForCurrentLyric: number = Math.max(
+          1,
+          lyricElongationFactorForMeasureStart,
+          lyricElongationFactorForMeasureEnd,
+          lyricElongationFactorForPreviousEntry,
+        );
+        newElongationFactorForMeasureWidth = Math.max(
+          newElongationFactorForMeasureWidth,
+          elongationFactorForCurrentLyric,
+        );
+
+        let lyricOverlap: number = Math.max(
+          lyricSpacingNeededToPreviousEntry - lyricCurrentSpacingToPreviousEntry,
+          0,
+        );
+        if (previousEntry) {
+          lyricOverlap += previousEntry.cumulativeOverlap;
+        }
+
+        lastEntryDict[containerKey] = {
+          anchorX: footprint.anchorX,
+          cumulativeOverlap: lyricOverlap,
+          dashSpaceAtEnd,
+          extend: container.LyricsEntry.extend,
+          labelWidth: footprint.labelWidth,
+          leftExtent: footprint.leftExtent,
+          measureMinimumWidth: oldMinimumStaffEntriesWidth,
+          measureNumber: measureNumber,
+          needsDashSpaceAtEnd: needsDashSpaceAtEnd,
+          rightExtent: footprint.rightExtent,
+          text: container.LyricsEntry.Text,
+          xPosition: footprint.leftEdgeX,
+        };
+        continue;
+      }
+
+      const bBox: BoundingBox = container.PositionAndShape;
+      const labelWidth: number = bBox.Size.width;
       let xPosition: number = staffEntryXPosition + bBox.BorderLeft;
-      // vexStaffEntry.calculateXPosition();
-      if (container instanceof GraphicalChordSymbolContainer && container.PositionAndShape.Parent.DataObject instanceof GraphicalMeasure) {
-        // the parent is only the measure for whole measure rest notes with chord symbols,
-        //   which should start near the beginning of the measure instead of the middle, where there is no desired staffEntry position.
-        //   TODO somehow on the 2nd render, above xPosition (from VexFlowStaffEntry) is way too big (for whole measure rests).
+      if (container.PositionAndShape.Parent.DataObject instanceof GraphicalMeasure) {
         xPosition = this.rules.ChordSymbolWholeMeasureRestXOffset + bBox.BorderMarginLeft +
           (container.PositionAndShape.Parent.DataObject as GraphicalMeasure).beginInstructionsWidth;
       }
 
-      if (lastEntryDict[currentContainerIndex] !== undefined) {
-        if (lastEntryDict[currentContainerIndex].extend) {
-          // TODO handle extend of last entry (extend is stored in lyrics entry of preceding syllable)
-          // only necessary for center alignment
-        }
-      }
-
       let spacingNeededToLastContainer: number;
-      let currentSpacingToLastContainer: number; // undefined for first container in measure
-      if (lastEntryDict[currentContainerIndex]) {
-        currentSpacingToLastContainer = xPosition - lastEntryDict[currentContainerIndex].xPosition;
-        // currentSpacingToLastContainer = lastEntryDict[currentContainerIndex].bBox.Size.width;
+      let currentSpacingToLastContainer: number;
+      if (previousEntry) {
+        currentSpacingToLastContainer = xPosition - previousEntry.xPosition;
       }
 
-      let currentSpacingToMeasureEnd: number;
-      let spacingNeededToMeasureEnd: number;
       const maxXInMeasure: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
 
-      if (TextAlignment.IsCenterAligned(alignment)) {
-        overlapAllowedIntoNextMeasure /= 4; // reserve space for overlap from next measure. its first note can't be spaced.
-        currentSpacingToMeasureEnd = maxXInMeasure - xPosition;
-        spacingNeededToMeasureEnd = (labelWidth / 2) - overlapAllowedIntoNextMeasure;
-        // spacing to last lyric only done if not first lyric in measure:
-        if (lastEntryDict[currentContainerIndex]) {
-          spacingNeededToLastContainer =
-            lastEntryDict[currentContainerIndex].labelWidth / 2 + labelWidth / 2 + minSpacing;
-        }
-      } else if (TextAlignment.IsLeft(alignment)) {
-        currentSpacingToMeasureEnd = maxXInMeasure - xPosition;
-        spacingNeededToMeasureEnd = labelWidth - overlapAllowedIntoNextMeasure;
-        if (lastEntryDict[currentContainerIndex]) {
-          spacingNeededToLastContainer = lastEntryDict[currentContainerIndex].labelWidth + minSpacing;
-        }
+      // Chord containers can contain independently aligned grid cells. Their
+      // aggregate bounding box is already the exact left/right footprint, so
+      // applying the first label's alignment a second time under-reserves
+      // centred or right-anchored slash constructions.
+      const currentSpacingToMeasureEnd: number = maxXInMeasure - xPosition;
+      const spacingNeededToMeasureEnd: number = labelWidth - overlapAllowedIntoNextMeasure;
+      if (previousEntry) {
+        spacingNeededToLastContainer = previousEntry.labelWidth + minSpacing;
       }
 
-      // get factor of how much we need to stretch the measure to space the current lyric
-      let elongationFactorForMeasureWidthForCurrentContainer: number = 1;
       let elongationFactorNeededForMeasureEnd: number;
       if (currentSpacingToMeasureEnd > 0) {
         elongationFactorNeededForMeasureEnd = spacingNeededToMeasureEnd / currentSpacingToMeasureEnd;
       } else {
-        // currentSpacingToMeasureEnd <= 0 happens for pickup/anacrusis measures, where the staff entry
-        // sits past the staff-entries-only width because xPosition includes begin instructions (clef, key,
-        // time signature) but maxXInMeasure does not. The xPosition - oldMin offset is roughly the
-        // begin-instructions width. Solve for F directly: oldMin*F >= xPosition + labelWidth - overlapAllowed.
         elongationFactorNeededForMeasureEnd = (xPosition + spacingNeededToMeasureEnd) / oldMinimumStaffEntriesWidth;
       }
       let elongationFactorNeededForLastContainer: number = 1;
-
-      if (container instanceof GraphicalLyricEntry && container.LyricsEntry) {
-        if (lastEntryDict[currentContainerIndex]) { // if previous lyric needs more spacing than measure end, take that spacing
-          const lastNoteDuration: Fraction = lastEntryDict[currentContainerIndex].sourceNoteDuration;
-          elongationFactorNeededForLastContainer = spacingNeededToLastContainer / currentSpacingToLastContainer;
-          if ((lastNoteDuration.Denominator) > 4) {
-            elongationFactorNeededForLastContainer *= 1.1; // from 1.2 upwards, this unnecessarily bloats shorter measures
-            // spacing in Vexflow depends on note duration, our minSpacing is calibrated for quarter notes
-            // if we double the measure length, the distance between eigth notes only gets half of the added length
-            // compared to a quarter note.
-          }
-        }
-      } else if (lastEntryDict[currentContainerIndex]) {
+      if (previousEntry) {
         elongationFactorNeededForLastContainer =
-        spacingNeededToLastContainer / currentSpacingToLastContainer;
+          spacingNeededToLastContainer / currentSpacingToLastContainer;
       }
 
-      elongationFactorForMeasureWidthForCurrentContainer = Math.max(
+      const elongationFactorForCurrentChord: number = Math.max(
+        1,
         elongationFactorNeededForMeasureEnd,
-        elongationFactorNeededForLastContainer
+        elongationFactorNeededForLastContainer,
       );
-
       newElongationFactorForMeasureWidth = Math.max(
         newElongationFactorForMeasureWidth,
-        elongationFactorForMeasureWidthForCurrentContainer
+        elongationFactorForCurrentChord,
       );
 
       let overlap: number = Math.max((spacingNeededToLastContainer - currentSpacingToLastContainer) || 0, 0);
-      if (lastEntryDict[currentContainerIndex]) {
-        overlap += lastEntryDict[currentContainerIndex].cumulativeOverlap;
+      if (previousEntry) {
+        overlap += previousEntry.cumulativeOverlap;
       }
 
-      // set up information about this lyric entry of verse j for next lyric entry of verse j
-      lastEntryDict[currentContainerIndex] = {
+      lastEntryDict[containerKey] = {
         cumulativeOverlap: overlap,
-        extend: container instanceof GraphicalLyricEntry ? container.LyricsEntry.extend : false,
+        dashSpaceAtEnd: 0,
+        extend: false,
         labelWidth: labelWidth,
+        measureMinimumWidth: oldMinimumStaffEntriesWidth,
         measureNumber: measureNumber,
-        needsDashSpaceAtEnd: needsDashSpaceAtEnd,
-        sourceNoteDuration: container instanceof GraphicalLyricEntry ? (container.LyricsEntry && container.LyricsEntry.Parent.Notes[0].Length) : false,
-        text: container instanceof GraphicalLyricEntry ? container.LyricsEntry.Text : container.GraphicalLabel.Label.text,
+        needsDashSpaceAtEnd: false,
+        text: container.GraphicalLabel.Label.text,
         xPosition: xPosition,
       };
 
@@ -574,76 +757,42 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   /**
-   * @param previousLyricOverflows Per-verse-index array (`[verseIndex]`) holding how far the
-   *   previous measure's last lyric extends past its bar line into this measure (in pre-elongation
-   *   units, +dashSpace if mid-word). Used to seed lastLyricEntryDict so the first lyric in this
-   *   measure is forced to leave clearance from the overhang.
+   * @param previousLyricOverflows Retained for API compatibility. Lyric
+   *   overflows are now represented by shared-column hard constraints.
    * @param previousChordOverflows Same as previousLyricOverflows but for chord symbols.
    * @returns
-   *   - `factor`: regular elongation factor from within-measure spacing constraints (subject to
+   *   - `factor`: residual chord-symbol elongation factor (subject to
    *     MaximumLyricsElongationFactor cap by the caller).
-   *   - `lastLyricEntryDict` / `lastChordEntryDict`: final state of the per-verse last-entry
-   *     dicts after processing. The caller uses these (with the post-cap measure width) to
-   *     compute the overflows passed into the next measure's call.
+   *   - `lastLyricEntryDict`: empty compatibility result.
+   *   - `lastChordEntryDict`: final state of each chord slot, used to
+   *     compute overflow passed into the next measure.
    */
   public calculateElongationFactorFromStaffEntries(staffEntries: GraphicalStaffEntry[], oldMinimumStaffEntriesWidth: number,
                                                   elongationFactorForMeasureWidth: number, measureNumber: number,
-                                                  previousLyricOverflows?: number[],
-                                                  previousChordOverflows?: number[]): {
+                                                  previousLyricOverflows?: ContainerOverflows,
+                                                  previousChordOverflows?: ContainerOverflows): {
     factor: number;
-    lastLyricEntryDict: { [i: number]: any };
-    lastChordEntryDict: { [i: number]: any };
+    lastLyricEntryDict: ContainerEntryDict;
+    lastChordEntryDict: ContainerEntryDict;
   } {
-    interface EntryInfo {
-      cumulativeOverlap: number;
-      extend: boolean;
-      labelWidth: number;
-      needsDashSpaceAtEnd?: boolean;
-      xPosition: number;
-      sourceNoteDuration: Fraction;
-      text: string;
-      measureNumber: number;
-    }
-    // holds lyrics entries for verses i
-    interface EntryDict {
-      [i: number]: EntryInfo;
-    }
-
     let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
 
-    const lastLyricEntryDict: EntryDict = {}; // holds info about last lyric entries for all verses j???
-    const lastChordEntryDict: EntryDict = {}; // holds info about last chord entries for all verses j???
+    const lastLyricEntryDict: ContainerEntryDict = {};
+    const lastChordEntryDict: ContainerEntryDict = {};
 
-    // Seed dicts with previous-measure overflow as synthetic entries, so the first lyric/chord
-    // in this measure is forced to leave clearance from the previous measure's overhang.
-    // The synthetic entry sits at xPosition 0 with labelWidth = overflow, so for left-aligned
-    // labels (the standard) the existing logic requires xPosition_first >= overflow + minSpacing.
-    if (previousLyricOverflows) {
-      for (let i: number = 0; i < previousLyricOverflows.length; i++) {
-        const overflow: number = previousLyricOverflows[i];
-        if (overflow > 0) {
-          lastLyricEntryDict[i] = {
-            cumulativeOverlap: 0,
-            extend: false,
-            labelWidth: overflow,
-            measureNumber: measureNumber - 1,
-            sourceNoteDuration: new Fraction(1, 4),
-            text: "",
-            xPosition: 0,
-          };
-        }
-      }
-    }
+    // Lyric spacing is now represented by shared-column hard constraints.
+    // Keep this public parameter for API compatibility, but do not seed the
+    // removed measure-local lyric-overflow path.
+    void previousLyricOverflows;
     if (previousChordOverflows) {
-      for (let i: number = 0; i < previousChordOverflows.length; i++) {
-        const overflow: number = previousChordOverflows[i];
+      for (const key of Object.keys(previousChordOverflows)) {
+        const overflow: number = previousChordOverflows[key];
         if (overflow > 0) {
-          lastChordEntryDict[i] = {
+          lastChordEntryDict[key] = {
             cumulativeOverlap: 0,
             extend: false,
             labelWidth: overflow,
             measureNumber: measureNumber - 1,
-            sourceNoteDuration: new Fraction(1, 4),
             text: "",
             xPosition: 0,
           };
@@ -651,21 +800,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
 
-    // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
+    // Lyric spacing is solved before this residual pass. Keep only chord
+    // symbols here until they are migrated to shared-column constraints.
     for (const staffEntry of staffEntries) {
-      if (staffEntry.LyricsEntries.length > 0 && this.rules.RenderLyrics) {
-        newElongationFactorForMeasureWidth =
-          this.calculateElongationFactor(
-            staffEntry.LyricsEntries,
-            staffEntry,
-            lastLyricEntryDict,
-            oldMinimumStaffEntriesWidth,
-            newElongationFactorForMeasureWidth,
-            measureNumber,
-            this.rules.HorizontalBetweenLyricsDistance,
-            this.rules.LyricOverlapAllowedIntoNextMeasure,
-          );
-      }
       if (staffEntry.graphicalChordContainers.length > 0 && this.rules.RenderChordSymbols) {
         newElongationFactorForMeasureWidth =
           this.calculateElongationFactor(
@@ -693,8 +830,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     interface PerStaffResult {
       staff: Staff;
-      lastLyricEntryDict: { [i: number]: any };
-      lastChordEntryDict: { [i: number]: any };
+      lastLyricEntryDict: ContainerEntryDict;
+      lastChordEntryDict: ContainerEntryDict;
     }
     const perStaffResults: PerStaffResult[] = [];
     const visibleStaves: Set<Staff> = new Set<Staff>();
@@ -705,17 +842,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       const staff: Staff = measure.ParentStaff;
       visibleStaves.add(staff);
-      const previousLyricOverflows: number[] = this.previousLyricOverflowsByStaff.get(staff);
-      const previousChordOverflows: number[] = this.previousChordOverflowsByStaff.get(staff);
+      const previousChordOverflows: ContainerOverflows = this.previousChordOverflowsByStaff.get(staff);
 
       // (measure as VexFlowMeasure).format(); // needed to get vexflow bbox / x-position
-      const result: { factor: number, lastLyricEntryDict: { [i: number]: any }, lastChordEntryDict: { [i: number]: any } } =
+      const result: {
+        factor: number;
+        lastLyricEntryDict: ContainerEntryDict;
+        lastChordEntryDict: ContainerEntryDict;
+      } =
         this.calculateElongationFactorFromStaffEntries(
           measure.staffEntries,
           oldMinimumStaffEntriesWidth,
           elongationFactorForMeasureWidth,
           measure.MeasureNumber,
-          previousLyricOverflows,
+          undefined,
           previousChordOverflows,
         );
       elongationFactorForMeasureWidth = result.factor;
@@ -731,23 +871,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     const newMinimumStaffEntriesWidth: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
 
-    // Compute overflow of this measure's last lyric/chord into the next measure, per staff and per verse,
-    // so the next measure's calculation can leave clearance for it.
+    // Compute overflow of this measure's final chord symbol into the next
+    // measure so the next residual pass can leave clearance for it.
     // overflow is measured against newMinimumStaffEntriesWidth (the bar position) using the same
     // pre-elongation xPosition convention used elsewhere in this calculator.
     for (const result of perStaffResults) {
-      const lyricOverflows: number[] = this.computeContainerOverflows(result.lastLyricEntryDict, newMinimumStaffEntriesWidth);
-      const chordOverflows: number[] = this.computeContainerOverflows(result.lastChordEntryDict, newMinimumStaffEntriesWidth);
-      this.previousLyricOverflowsByStaff.set(result.staff, lyricOverflows);
+      const chordOverflows: ContainerOverflows =
+        this.computeContainerOverflows(result.lastChordEntryDict, newMinimumStaffEntriesWidth);
       this.previousChordOverflowsByStaff.set(result.staff, chordOverflows);
     }
-    // For staves that were skipped (invisible or empty) this measure, drop the previous overflow
-    // so it doesn't get applied across a gap.
-    for (const staff of Array.from(this.previousLyricOverflowsByStaff.keys())) {
-      if (!visibleStaves.has(staff)) {
-        this.previousLyricOverflowsByStaff.delete(staff);
-      }
-    }
+    // For staves that were skipped (invisible or empty) this measure, drop
+    // previous chord overflow so it doesn't get applied across a gap.
     for (const staff of Array.from(this.previousChordOverflowsByStaff.keys())) {
       if (!visibleStaves.has(staff)) {
         this.previousChordOverflowsByStaff.delete(staff);
@@ -757,27 +891,30 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return newMinimumStaffEntriesWidth;
   }
 
-  private computeContainerOverflows(lastEntryDict: { [i: number]: any }, measureWidth: number): number[] {
-    const overflows: number[] = [];
+  private computeContainerOverflows(lastEntryDict: ContainerEntryDict, measureWidth: number): ContainerOverflows {
+    const overflows: ContainerOverflows = {};
     for (const key of Object.keys(lastEntryDict)) {
-      const i: number = Number(key);
-      const entry: any = lastEntryDict[i];
+      const entry: ContainerEntryInfo = lastEntryDict[key];
       if (!entry) {
         continue;
       }
-      // entry.xPosition is the lyric label's left edge in pre-elongation units.
-      // entry.labelWidth is the label width (does not scale with elongation).
-      // measureWidth is the elongated bar position.
-      const rightEdge: number = entry.xPosition + entry.labelWidth;
-      let overflow: number = Math.max(0, rightEdge - measureWidth);
-      // If this lyric is a multi-syllable mid-word, the next syllable is connected by a dash.
-      // The previous-measure elongation already reserved this.dashSpace for the dash via
-      // overlapAllowedIntoNextMeasure -= dashSpace; the next measure's first lyric must clear
-      // the dash too, otherwise the dash has no room to render between the two syllables.
-      if (entry.needsDashSpaceAtEnd && this.dashSpace !== undefined) {
-        overflow += this.dashSpace;
+      let overflow: number;
+      if (entry.anchorX !== undefined && entry.rightExtent !== undefined && entry.measureMinimumWidth) {
+        const scale: number = measureWidth / entry.measureMinimumWidth;
+        const rightEdge: number = entry.anchorX * scale + entry.rightExtent;
+        overflow = Math.max(0, rightEdge - measureWidth);
+      } else {
+        const rightEdge: number = entry.xPosition + entry.labelWidth;
+        overflow = Math.max(0, rightEdge - measureWidth);
       }
-      overflows[i] = overflow;
+      // If this lyric is a multi-syllable mid-word, the next syllable is connected by a dash.
+      // The previous-measure elongation already reserved the measured dash width via
+      // overlapAllowedIntoNextMeasure -= dashSpaceAtEnd; the next measure's first lyric must clear
+      // the dash too, otherwise the dash has no room to render between the two syllables.
+      if (entry.needsDashSpaceAtEnd) {
+        overflow += entry.dashSpaceAtEnd ?? 0;
+      }
+      overflows[key] = overflow;
     }
     return overflows;
   }
@@ -851,6 +988,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean, isTab: boolean): void {
     const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
     const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
+    const assignTieSvgId: (vfTie: VF.StaveTie | VF.TabTie | VF.TabSlide) => void = (
+      vfTie: VF.StaveTie | VF.TabTie | VF.TabSlide,
+    ): void => {
+      const tieAnchorId: string = startNote?.getSVGId?.() ?? endNote?.getSVGId?.();
+      if (tieAnchorId) {
+        (vfTie as any).setAttribute?.("id", `${tieAnchorId}-tie`);
+      }
+    };
 
     let vfStartNote: VF.StemmableNote  = undefined;
     let startNoteIndexInTie: number = 0;
@@ -870,18 +1015,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // split tie into two ties:
       if (vfStartNote) { // first_note or last_note must be not null in Vexflow
         const vfTie1: VF.StaveTie = new VF.StaveTie({
-          first_indices: [startNoteIndexInTie],
-          first_note: vfStartNote
+          firstIndexes: [startNoteIndexInTie],
+          firstNote: vfStartNote
         });
+        assignTieSvgId(vfTie1);
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
       }
 
       if (vfEndNote) {
         const vfTie2: VF.StaveTie = new VF.StaveTie({
-          last_indices: [endNoteIndexInTie],
-          last_note: vfEndNote
+          lastIndexes: [endNoteIndexInTie],
+          lastNote: vfEndNote
         });
+        assignTieSvgId(vfTie2);
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure2.addStaveTie(vfTie2, tie);
       }
@@ -900,20 +1047,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
             vfTie = new VF.TabSlide(
               {
-                first_indices: [startNoteIndexInTie],
-                first_note: vfStartNote,
-                last_indices: [endNoteIndexInTie],
-                last_note: vfEndNote,
+                firstIndexes: [startNoteIndexInTie],
+                firstNote: vfStartNote,
+                lastIndexes: [endNoteIndexInTie],
+                lastNote: vfEndNote,
               },
               slideDirection
             );
           } else {
             vfTie = new VF.TabTie(
               {
-                first_indices: [startNoteIndexInTie],
-                first_note: vfStartNote,
-                last_indices: [endNoteIndexInTie],
-                last_note: vfEndNote,
+                firstIndexes: [startNoteIndexInTie],
+                firstNote: vfStartNote,
+                lastIndexes: [endNoteIndexInTie],
+                lastNote: vfEndNote,
               },
               tie.Tie.Type
             );
@@ -921,10 +1068,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
         } else { // not Tab (guitar), normal StaveTie
           vfTie = new VF.StaveTie({
-            first_indices: [startNoteIndexInTie],
-            first_note: vfStartNote,
-            last_indices: [endNoteIndexInTie],
-            last_note: vfEndNote
+            firstIndexes: [startNoteIndexInTie],
+            firstNote: vfStartNote,
+            lastIndexes: [endNoteIndexInTie],
+            lastNote: vfEndNote
           });
           const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote.sourceNote);
           if (tieDirection === PlacementEnum.Below) {
@@ -934,6 +1081,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
         }
 
+        assignTieSvgId(vfTie);
         const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure.addStaveTie(vfTie, tie);
       }
@@ -1056,16 +1204,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       vfStave.setTempo(
         {
             bpm: metronomeExpression.TempoInBpm,
-            dots: metronomeExpression.dotted,
+            dots: metronomeExpression.dotted ? 1 : 0,
             duration: vexflowDuration
         },
         yShift * unitInPixels);
     }
 
     const xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
-    (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
-      xShift
-    );
+    const lastModifier: any = vfStave.getModifiers()[vfStave.getModifiers().length - 1];
+    lastModifier?.setXShift?.(xShift);
+    lastModifier?.setShiftX?.(xShift);
     vfMeasure.hasMetronomeMark = true;
     if (skyline) {
       // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
@@ -1136,13 +1284,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   normal rendering (e.g. high drum-stave notes) and in lazy/incremental rendering (the mark's measure can be
       //   drawn at a slightly different x, over taller notes, than a normal render). Only the Above chord
       //   symbol was previously considered here; now the notes under the mark are too.
-      let minBottomY: number; // undefined -> no clamping in StaveSection.draw (VexFlowPatch)
+      let minBottomY: number; // undefined -> no clamping in the StaveSection draw path
       const staffLine: StaffLine = gMeasure.ParentStaffLine;
       if (staffLine) {
         // x-footprint of the rehearsal mark box at the measure start (absolute units, as the skyline is
         //   indexed). xOffset/fontSize are in px; the label width is a conservative estimate.
         let start: number = gMeasure.PositionAndShape.AbsolutePosition.x;
-        let end: number = start + (xOffset + rehearsalExpression.label.length * fontSize * 0.6 + fontSize) / unitInPixels;
+        const rehearsalTextFontFamily: string = getDefaultTextFontFamily(this.rules);
+        const rehearsalTextWidthUnits: number = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
+          rehearsalExpression.label,
+          Fonts.TimesNewRoman,
+          FontStyles.Bold,
+          rehearsalTextFontFamily,
+        ) * (fontSize / unitInPixels);
+        const rehearsalBoxWidthUnits: number = Math.max(rehearsalTextWidthUnits + 0.6, 18 / unitInPixels);
+        let end: number = start + xOffset / unitInPixels + rehearsalBoxWidthUnits;
         // also clear an Above chord symbol in the measure: it is placed (calculateChordSymbols, earlier)
         //   against the skyline and can sit right where the mark goes, possibly beyond the mark's footprint.
         const chord: GraphicalChordSymbolContainer = this.rules.RehearsalMarkAboveChordSymbol
@@ -1158,7 +1314,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const topRelative: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(start, end);
         if (topRelative < 0) { // only lift if something actually rises above the staff here
           const marginInUnits: number = 0.5; // small gap between mark bottom and what's below it
-          // StaveSection.draw (VexFlowPatch) shifts the mark up so its box bottom doesn't exceed
+          // StaveSection.draw() shifts the mark up so its box bottom doesn't exceed
           //   stave.getYForLine(0) + minBottomY (px), keeping the mark above that element:
           minBottomY = (topRelative - marginInUnits) * unitInPixels;
           // reserve skyline over the range so updateStaffLineBorders/calculateSystemYLayout make room for the lifted mark
@@ -1167,8 +1323,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
 
-      // fontSize and minBottomY are extra arguments from VexFlowPatch (stave.js / stavesection.js)
-      (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize, minBottomY);
+      // fontSize and minBottomY are extra arguments on the current setSection() path.
+      (vfStave as any).setSection(
+        rehearsalExpression.label,
+        yOffset,
+        xOffset,
+        fontSize,
+        minBottomY,
+        getDefaultTextFontFamily(this.rules),
+      );
       return; // only draw one rehearsal mark at top (visible) instrument
     }
   }
@@ -1689,8 +1852,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   private calculateWavyLineSkyBottomLine(startVfVoiceEntry: VexFlowVoiceEntry, endVfVoiceEntry: VexFlowVoiceEntry,
     vfVibratoBracket: VexFlowVibratoBracket, parentStaffline: StaffLine): void {
-    const startStave: Vex.Flow.Stave = vfVibratoBracket.startNote.getStave();
-    let endStave: Vex.Flow.Stave = vfVibratoBracket.endNote?.getStave();
+    const startStave: VF.Stave = vfVibratoBracket.startNote.getStave();
+    let endStave: VF.Stave = vfVibratoBracket.endNote?.getStave();
     if (!endStave) { // e.g. if endNote undefined
       endStave = startStave;
       endVfVoiceEntry = startVfVoiceEntry;
@@ -1698,13 +1861,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     //In VF Line positions, need to negate for our units
     const highestVFTopTextPosition: number = Math.max(
-      startStave.options.top_text_position,
-      endStave.options.top_text_position
+      startStave.options.topTextPosition,
+      endStave.options.topTextPosition
     );
 
     //Whichever is higher, set the other to match
-    startStave.options.top_text_position = highestVFTopTextPosition;
-    endStave.options.top_text_position = highestVFTopTextPosition;
+    startStave.options.topTextPosition = highestVFTopTextPosition;
+    endStave.options.topTextPosition = highestVFTopTextPosition;
     let headroom: number = -highestVFTopTextPosition;
     let trillStartX: number = 0;
     let trillEndX: number = 0;
@@ -1735,7 +1898,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     } else {
       stopX = endVfVoiceEntry.PositionAndShape.AbsolutePosition.x + endVfVoiceEntry.PositionAndShape.BorderRight;
       //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-      const vfClefBefore: Vex.Flow.ClefNote = (endVfVoiceEntry.parentStaffEntry as VexFlowStaffEntry).vfClefBefore;
+      const vfClefBefore: VF.ClefNote = (endVfVoiceEntry.parentStaffEntry as VexFlowStaffEntry).vfClefBefore;
       if (vfClefBefore) {
         const clefWidth: number = vfClefBefore.getWidth() / 10;
         stopX += clefWidth;
@@ -1748,8 +1911,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     //If somewhere in our wavy line path we have to render higher than where the trill mark is set...
     if (headroom < trillSkyline) {
-      startStave.options.top_text_position = -headroom;
-      endStave.options.top_text_position = -headroom;
+      startStave.options.topTextPosition = -headroom;
+      endStave.options.topTextPosition = -headroom;
       //A decent enough approximation. Better than recalculating via Canvas or SVG sampling
       parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(trillStartX, trillEndX, headroom - TRILL_HEIGHT);
     } else { //Else just render where Vexflow has set the trill mark
@@ -1768,13 +1931,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         endBbox = vfPedal.endMeasure.PositionAndShape;
       }
       //Just for shorthand. Easier readability below
-      const PEDAL_STYLES_ENUM: any = Vex.Flow.PedalMarking.Styles;
+      const PEDAL_STYLES_ENUM: typeof VexFlowPedalStyles = VexFlowPedalStyles;
       const pedalMarking: any = vfPedal.getPedalMarking();
+      const pedalRenderOptions: any = pedalMarking.renderOptions ?? pedalMarking.render_options;
       //VF adds 3 lines to whatever the pedal line is set to.
       //VF also measures from the bottom line, whereas our bottom line is from the top staff line
       const yLineForPedalMarking: number = (pedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
       //VF Uses a margin offset for rendering. Take this into account
-      const pedalMarkingMarginXOffset: number = pedalMarking.render_options.text_margin_right / 10;
+      const pedalMarkingMarginXOffset: number =
+        (pedalRenderOptions.textMarginRight ?? pedalRenderOptions.text_margin_right) / 10;
       //TODO: Most of this should be in the bounding box calculation
       let startX: number = startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - pedalMarkingMarginXOffset;
 
@@ -1795,7 +1960,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       //We have the two seperate symbols, with two bounding boxes
       if (vfPedal.EndSymbolPositionAndShape) {
-        const symbolHalfHeight: number = pedalMarking.render_options.glyph_point_size / 20;
+        const symbolHalfHeight: number =
+          (pedalMarking.getFontInfo?.().size ?? pedalRenderOptions.glyph_point_size ?? 40) / 20;
         //Width of the Ped. symbol
         stopX = startX + 3.4;
         const startX2: number = endBbox.AbsolutePosition.x - pedalMarkingMarginXOffset;
@@ -1813,7 +1979,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + symbolHalfHeight);
         parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX2, stopX2, footroom + symbolHalfHeight);
       } else {
-        const bracketHeight: number = pedalMarking.render_options.bracket_height / 10;
+        const bracketHeight: number =
+          (pedalRenderOptions.bracketHeight ?? pedalRenderOptions.bracket_height) / 10;
 
         if(pedalMarking.EndsStave){
           if(endVfVoiceEntry){
@@ -1836,7 +2003,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
         }
         //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-        const vfClefBefore: Vex.Flow.ClefNote = (endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
+        const vfClefBefore: VF.ClefNote = (endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
         if (vfClefBefore) {
           const clefWidth: number = vfClefBefore.getWidth() / 10;
           stopX += clefWidth;
@@ -1864,7 +2031,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const yLineForOtherPedalMarking: number = (otherPedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
         //Only do these changes if current footroom is higher
         if(footroom > yLineForOtherPedalMarking) {
-          const otherPedalMarkingMarginXOffset: number = otherPedalMarking.render_options.text_margin_right / 10;
+          const otherRenderOptions: any =
+            otherPedalMarking.renderOptions ?? otherPedalMarking.render_options;
+          const otherPedalMarkingMarginXOffset: number =
+            (otherRenderOptions.textMarginRight ?? otherRenderOptions.text_margin_right) / 10;
           let otherPedalStartX: number = vfOtherPedal.startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
           let otherPedalStopX: number = undefined;
           vfOtherPedal.setLine(footroom - 3 - (parentStaffline.StaffLines.length - 1));
@@ -1873,7 +2043,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             otherPedalEndBBox = vfOtherPedal.endMeasure.PositionAndShape;
           }
           if (vfOtherPedal.EndSymbolPositionAndShape) {
-            const otherSymbolHalfHeight: number = pedalMarking.render_options.glyph_point_size / 20;
+            const otherSymbolHalfHeight: number =
+              (otherPedalMarking.getFontInfo?.().size ?? otherRenderOptions.glyph_point_size ?? 40) / 20;
             //Width of the Ped. symbol
             otherPedalStopX = otherPedalStartX + 3.4;
             const otherPedalStartX2: number = otherPedalEndBBox.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
@@ -1882,7 +2053,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX, otherPedalStopX, footroom + otherSymbolHalfHeight);
             parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX2, otherPedalStopX2, footroom + otherSymbolHalfHeight);
           } else {
-            const otherPedalBracketHeight: number = otherPedalMarking.render_options.bracket_height / 10;
+            const otherPedalBracketHeight: number =
+              (otherRenderOptions.bracketHeight ?? otherRenderOptions.bracket_height) / 10;
 
             if(otherPedalMarking.EndsStave){
                 otherPedalStopX = otherPedalEndBBox.AbsolutePosition.x + otherPedalEndBBox.Size.width - otherPedalMarkingMarginXOffset;
@@ -1899,7 +2071,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               }
             }
             //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-            const vfOtherClefBefore: Vex.Flow.ClefNote = (vfOtherPedal.endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
+            const vfOtherClefBefore: VF.ClefNote = (vfOtherPedal.endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
             if (vfOtherClefBefore) {
               const otherClefWidth: number = vfOtherClefBefore.getWidth() / 10;
               otherPedalStopX += otherClefWidth;
@@ -1962,7 +2134,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const textBracket: VF.TextBracket = vfOctaveShift.getTextBracket();
     const fontSize: number = (textBracket as any).font.size / 10;
 
-    if ((<any>textBracket).position === VF.TextBracket.Positions.TOP) {
+    if ((<any>textBracket).position === VF.TextBracket.Position.TOP) {
       // Math.ceil with a small tolerance: the geometric skyline calculation gives exact values where
       // the pixel-based one snapped to pixels (often exact integers, e.g. a note top exactly 1 unit
       // above the staff), and without the tolerance, a skyline minimum a fraction of a pixel inside
@@ -1973,7 +2145,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (headroom === Infinity) { // will cause Vexflow error
         return;
       }
-      (textBracket.start.getStave().options as any).top_text_position = Math.abs(headroom);
+      (textBracket.start.getStave().options as any).topTextPosition = Math.abs(headroom);
       parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
     } else {
       const footroom: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
@@ -2021,7 +2193,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * instructions, or previously placed repetition instructions (see #1689).
    * Shifted instructions reserve their space in the skyline, so that the staffline borders account for them.
    * The horizontal and default vertical position replicate the drawing code
-   * in VexFlowPatch/src/staverepetition.js (drawSymbolText() etc).
+   * in the current VexFlow repetition text rendering path.
    * @param measure the (uppermost) measure the repetition instruction was added to
    * @param repetition the VexFlow repetition (stave modifier) to place, created by addWordRepetition()
    */
@@ -2030,7 +2202,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (!repetition || !staffLine) {
       return;
     }
-    const type: number = (repetition as any).symbol_type;
+    const repetitionCompat: any = repetition as any;
+    const type: number = repetitionCompat.symbol_type ?? repetitionCompat.symbolType;
     const repetitionTypes: {[key: string]: number} = VF.Repetition.type as any;
     let text: string; // the texts drawn by staverepetition.js drawSymbolText()
     let hasCodaGlyphAfterText: boolean = false; // types that draw a coda glyph after the text
@@ -2073,10 +2246,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const fontHeightUnits: number = 1.6; // staverepetition.js draws the text with a 12pt (16px) font
     let textWidthUnits: number = 0;
     if (text.length > 0) {
-      // measure with the same font family string ("times") that staverepetition.js draws with,
-      //   so that the measured width matches the drawn width even if the font falls back to another one
+      // measure with the same score text font path that staverepetition.js now draws with,
+      //   so that the measured width matches the drawn width even if the browser synthesizes bold italic
       textWidthUnits = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
-        text, Fonts.TimesNewRoman, FontStyles.BoldItalic, "times") * fontHeightUnits;
+        text,
+        Fonts.TimesNewRoman,
+        FontStyles.BoldItalic,
+        getDefaultTextFontFamily(this.rules),
+      ) * fontHeightUnits;
     }
     const glyphWidthUnits: number = 2.4; // coda/segno glyph width (plus the 12px gap after the text for symbol_x)
     const measureStartX: number = measure.PositionAndShape.RelativePosition.x;
@@ -2122,7 +2299,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // default drawing band of staverepetition.js, relative to the top staff line:
     //   the text baseline is at getYForTopText(5) + 25 + 5 = 3 units above the top staff line (plus y_shift),
     //   glyphs are anchored similarly, so the drawn objects roughly span [-4.5, -2.5] units
-    const yShiftUnits: number = ((repetition as any).y_shift ?? 0) / unitInPixels; // -RepetitionSymbolsYOffset, see addWordRepetition
+    const yShiftUnits: number = ((repetitionCompat.y_shift ?? repetitionCompat.yShift) ?? 0) / unitInPixels;
     const defaultTop: number = -4.5 + yShiftUnits;
     const defaultBottom: number = -2.5 + yShiftUnits;
     const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
@@ -2147,7 +2324,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // something (e.g. a chord symbol or another repetition instruction) protrudes
       //   into the default position -> shift the repetition above it
       collisionShiftUnits = collisionMin - defaultBottom;
-      repetition.setShiftY((repetition as any).y_shift + collisionShiftUnits * unitInPixels);
+      repetition.setShiftY(((repetitionCompat.y_shift ?? repetitionCompat.yShift) ?? 0) + collisionShiftUnits * unitInPixels);
     }
     placedBoxes.push({ startX: startX, endX: endX, top: defaultTop + collisionShiftUnits });
     if (collisionShiftUnits < 0) {
@@ -2529,17 +2706,177 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         //vfStaffLine.SlursInVFStaffLine = vfSlurs;
       } // loop over MusicSystems
 
-    // order slurs that were saved to the Staffline
+    // Link every same-source segment before calculating curves. Placement is a source-slur
+    // decision, not a system-segment decision, so all segments share the placement selected
+    // at the real start note. Endpoint articulations are then moved absolutely against that
+    // fixed attachment. The displaced final bounds are merged into the existing skyline;
+    // rerunning the complete skyline pass here would repeat its formatter side effects.
+    const segmentsBySource: Map<Slur, {segment: GraphicalSlur, staffLine: StaffLine}[]> = new Map();
     for (const musicSystem of this.musicSystems) {
       for (const staffLine of musicSystem.StaffLines) {
-        // Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
+        for (const segment of staffLine.GraphicalSlurs) {
+          let linkedSegments: {segment: GraphicalSlur, staffLine: StaffLine}[] = segmentsBySource.get(segment.slur);
+          if (!linkedSegments) {
+            linkedSegments = [];
+            segmentsBySource.set(segment.slur, linkedSegments);
+          }
+          linkedSegments.push({segment, staffLine});
+        }
+      }
+    }
+
+    let linkedGroupIndex: number = 0;
+    for (const [sourceSlur, linkedSegments] of segmentsBySource) {
+      const linkedGroupId: string = `source-slur-${linkedGroupIndex++}`;
+      for (let index: number = 0; index < linkedSegments.length; index++) {
+        linkedSegments[index].segment.setLinkedSegment(
+          index,
+          linkedSegments.length,
+          linkedSegments[index].segment.placement,
+          linkedGroupId,
+        );
+      }
+      if (sourceSlur.isCrossed()) {
+        const startNote: GraphicalNote = this.rules.GNote(sourceSlur.StartNote);
+        const endNote: GraphicalNote = this.rules.GNote(sourceSlur.EndNote);
+        const startLine: StaffLine = startNote?.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
+        const endLine: StaffLine = endNote?.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
+        if (startLine && endLine && startLine.ParentMusicSystem !== endLine.ParentMusicSystem) {
+          for (const {segment} of linkedSegments) {
+            segment.markUnsupportedCrossStaffSystemBreak();
+          }
+          log.warn(
+            "Cross-staff slur across a system break is not yet supported " +
+            `(measures ${sourceSlur.StartNote.SourceMeasure.MeasureNumber}–` +
+            `${sourceSlur.EndNote.SourceMeasure.MeasureNumber}).`,
+          );
+        }
+        continue;
+      }
+
+      const sourceStartNote: GraphicalNote = this.rules.GNote(sourceSlur.StartNote);
+      const sourceStartLine: StaffLine =
+        sourceStartNote?.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.ParentStaffLine;
+      const placementSegment: GraphicalSlur =
+        linkedSegments.find(({staffLine}): boolean => staffLine === sourceStartLine)?.segment
+        ?? linkedSegments[0].segment;
+      const placement: PlacementEnum = placementSegment.determinePlacement();
+
+      for (let index: number = 0; index < linkedSegments.length; index++) {
+        const {segment} = linkedSegments[index];
+        segment.setLinkedSegment(index, linkedSegments.length, placement, linkedGroupId);
+      }
+    }
+
+    // Calculate curves only after final notehead, beam, articulation, and skyline geometry exists.
+    // Candidate geometry is prepared without mutating the skyline. Source slurs are then
+    // solved inner/shorter first, so every selected inner curve becomes a typed obstacle
+    // when the next outer route refreshes its immutable context.
+    for (const musicSystem of this.musicSystems) {
+      for (const staffLine of musicSystem.StaffLines) {
         const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
         for (const gSlur of sortedGSlurs) {
-            // crossed slurs will be handled later:
-            if (gSlur.slur.isCrossed()) {
-                continue;
+          if (!gSlur.slur.isCrossed()) {
+            gSlur.calculateCurve(this.rules, true);
+          }
+        }
+      }
+    }
+    const orderedGroups: [Slur, {segment: GraphicalSlur, staffLine: StaffLine}[]][] =
+      [...segmentsBySource.entries()]
+        .filter(([sourceSlur]): boolean => !sourceSlur.isCrossed())
+        .sort(([left], [right]): number => {
+          const leftDuration: number = Fraction.minus(
+            left.EndNote.getAbsoluteTimestamp(),
+            left.StartNote.getAbsoluteTimestamp(),
+          ).RealValue;
+          const rightDuration: number = Fraction.minus(
+            right.EndNote.getAbsoluteTimestamp(),
+            right.StartNote.getAbsoluteTimestamp(),
+          ).RealValue;
+          return leftDuration - rightDuration
+            || left.StartNote.getAbsoluteTimestamp().RealValue - right.StartNote.getAbsoluteTimestamp().RealValue
+            || left.EndNote.getAbsoluteTimestamp().RealValue - right.EndNote.getAbsoluteTimestamp().RealValue;
+        });
+    for (const [, linkedSegments] of orderedGroups) {
+      const sortedSegments: {segment: GraphicalSlur, staffLine: StaffLine}[] = [...linkedSegments].sort(
+        (left, right): number => left.segment.diagnostics.segmentIndex - right.segment.diagnostics.segmentIndex,
+      );
+      const linkedGroupId: string = sortedSegments[0].segment.diagnostics.linkedGroupId;
+      const calculatePlacementRoute: (placement: PlacementEnum) => SlurLinkedLayoutOutput | undefined =
+        (placement: PlacementEnum): SlurLinkedLayoutOutput | undefined => {
+          const inputs: SlurLinkedLayoutInput[] = [];
+          for (let index: number = 0; index < sortedSegments.length; index++) {
+            const {segment, staffLine} = sortedSegments[index];
+            segment.setLinkedSegment(index, sortedSegments.length, placement, linkedGroupId);
+            segment.calculateCurve(this.rules, true);
+            segment.refreshCandidateLayoutContext(staffLine);
+            const context: SlurLayoutContext = segment.layoutContext;
+            const seed: SlurCurveGeometry = segment.getCandidateSeed();
+            if (context && seed) {
+              inputs.push({context, seed});
             }
-            gSlur.calculateCurve(this.rules);
+          }
+          if (inputs.length !== sortedSegments.length) {
+            return undefined;
+          }
+          return calculateLinkedSlurLayouts(inputs, {
+            candidateLimit: this.rules.SlurCandidateLimit,
+            diagnosticsLevel: this.rules.SlurDiagnosticsLevel,
+            maximumPreferredClearance: this.rules.SlurMaximumPreferredClearance,
+            obstacleClearance: this.rules.SlurObstacleClearance,
+            scoreWeights: this.rules.SlurCandidateScoreWeights,
+          });
+        };
+      const routeScore: (output: SlurLinkedLayoutOutput | undefined) => number =
+        (output: SlurLinkedLayoutOutput | undefined): number => {
+          if (!output) {
+            return Number.POSITIVE_INFINITY;
+          }
+          return output.diagnostics.totalScore;
+        };
+
+      const automaticPlacement: PlacementEnum = sortedSegments[0].segment.placement;
+      let selectedPlacement: PlacementEnum = automaticPlacement;
+      if (sortedSegments[0].segment.canCompareAutomaticPlacements()) {
+        const aboveOutput: SlurLinkedLayoutOutput = calculatePlacementRoute(PlacementEnum.Above);
+        const belowOutput: SlurLinkedLayoutOutput = calculatePlacementRoute(PlacementEnum.Below);
+        const aboveScore: number = routeScore(aboveOutput);
+        const belowScore: number = routeScore(belowOutput);
+        selectedPlacement = aboveScore < belowScore
+          ? PlacementEnum.Above
+          : belowScore < aboveScore
+            ? PlacementEnum.Below
+            : automaticPlacement;
+        for (const {segment} of sortedSegments) {
+          segment.setPlacementCandidateScores(aboveScore, belowScore);
+        }
+      }
+      // Recalculate the selected side so endpoint bindings, typed obstacles,
+      // and immutable contexts all describe the geometry that will be applied.
+      const linkedOutput: SlurLinkedLayoutOutput = calculatePlacementRoute(selectedPlacement);
+      if (!linkedOutput) {
+        continue;
+      }
+      for (let index: number = 0; index < sortedSegments.length; index++) {
+        const {segment, staffLine} = sortedSegments[index];
+        segment.setLinkedLayoutDiagnostics(linkedOutput.diagnostics);
+        segment.applyCandidateLayoutResult(linkedOutput.results[index], staffLine);
+      }
+    }
+  }
+
+  /** Calculate cross-staff slurs after the system builder has fixed both staves' y positions. */
+  protected calculateCrossStaffSlursAfterSystemYLayout(): void {
+    if (!this.rules.RenderSlursAcrossStaves) {
+      return;
+    }
+    for (const musicSystem of this.musicSystems) {
+      for (const staffLine of musicSystem.StaffLines) {
+        for (const graphicalSlur of staffLine.GraphicalSlurs) {
+          if (graphicalSlur.slur.isCrossed()) {
+            graphicalSlur.calculateCurveCrossStaff(this.rules);
+          }
         }
       }
     }
@@ -2630,28 +2967,28 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             if (startNote.FretNumber > endNote.FretNumber) {
               slideDirection = -1;
             }
-            let first_indices: number[] = undefined;
-            let last_indices: number[] = undefined;
+            let firstIndexes: number[] = undefined;
+            let lastIndexes: number[] = undefined;
             let startStemmableNote: VF.StemmableNote  = undefined;
             // let startNoteIndexInTie: number = 0;
             if (vfStartNote && vfStartNote.vfnote && vfStartNote.vfnote.length >= 2) {
               startStemmableNote = vfStartNote.vfnote[0]; // otherwise needs to be undefined in TabSlide constructor!
-              first_indices = [0];
+              firstIndexes = [0];
               // startNoteIndexInTie = vfStartNote.vfnote[1];
             }
             let endStemmableNote: VF.StemmableNote  = undefined;
             // let endNoteIndexInTie: number = 0;
             if (vfEndNote && vfEndNote.vfnote && vfEndNote.vfnote.length >= 2) {
               endStemmableNote = vfEndNote.vfnote[0];
-              last_indices = [0];
+              lastIndexes = [0];
               // endNoteIndexInTie = vfEndNote.vfnote[1];
             }
             const vfTie: VF.TabSlide = new VF.TabSlide(
               {
-                first_indices: first_indices,
-                first_note: startStemmableNote,
-                last_indices: last_indices,
-                last_note: endStemmableNote,
+                firstIndexes: firstIndexes,
+                firstNote: startStemmableNote,
+                lastIndexes: lastIndexes,
+                lastNote: endStemmableNote,
               },
               slideDirection
             );
@@ -2674,4 +3011,3 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 }
-

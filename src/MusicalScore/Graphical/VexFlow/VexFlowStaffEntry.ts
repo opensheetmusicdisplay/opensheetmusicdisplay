@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "./VexFlowAdapter";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -9,6 +8,7 @@ import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { Note } from "../../VoiceData/Note";
 import { AccidentalEnum } from "../../../Common/DataObjects/Pitch";
 import { BoundingBox } from "../BoundingBox";
+import { LyricAlignmentMode } from "../../VoiceData/Lyrics/LyricsEntry";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -52,7 +52,8 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 if (this.parentMeasure.ParentStaff.isTab) {
                     // the x-position could be finetuned for the cursor.
                     // somehow, gve.vfStaveNote.getBoundingBox() is null for a TabNote (which is a StemmableNote).
-                    bboxToAdjust.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + (<any>gve.vfStaveNote).glyph.getWidth()) / unitInPixels;
+                    const glyphWidth: number = gve.vfStaveNote.getGlyphWidth?.() ?? (<any>gve.vfStaveNote).glyph?.getWidth?.() ?? 0;
+                    bboxToAdjust.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + glyphWidth) / unitInPixels;
                 } else {
                     bboxToAdjust.RelativePosition.x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
                     if (isSecondaryWholeRest) {
@@ -64,9 +65,8 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 const sourceNote: Note = gve.notes[0].sourceNote;
                 if (sourceNote.isRest() && sourceNote.Length.RealValue === this.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue) {
                     // whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
-                    // see Note.isWholeRest(), which is currently not safe
-                    bboxToAdjust.RelativePosition.x +=
-                        this.parentMeasure.parentSourceMeasure.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
+                    // see Note.isWholeRest(), which is currently not safe.
+                    // The VexFlow bar-rest duration already centers the glyph for us.
                     gve.PositionAndShape.BorderLeft = -0.7;
                     gve.PositionAndShape.BorderRight = 0.7;
                 }
@@ -76,10 +76,139 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             }
         }
         this.PositionAndShape.RelativePosition.x -= lastBorderLeft;
+        this.synchronizeLyricAnchorOffsets(stave);
+        this.synchronizeChordSymbolAnchorOffsets(stave);
         // TODO sometimes subtracting lastBorderLeft fixes the x-position for lyrics spacing, sometimes it makes it wrong
         //   e.g. wrong for Beethoven Geliebte measure 1 ("auf - dem", distance < width of "auf"), correct for measure 3 ("spä - hend")
         //   this leads to a (lyrics) measure elongation of ~1.3 for measure 1, though it doesn't need any elongation (should be factor 1)
         this.PositionAndShape.calculateBoundingBox();
+    }
+
+    /**
+     * Anchor lyrics to the pitched glyph belonging to their own voice.
+     *
+     * A GraphicalStaffEntry's generic origin is derived from the complete
+     * VexFlow note bounds. Those bounds include flags and modifiers, so using
+     * that origin directly can pull a lyric away from the notehead (most
+     * visibly on an unbeamed sixteenth note). Lyrics conventionally ignore
+     * those decorations: ordinary syllables are centred on the notehead/stem
+     * width, while a melismatic body begins at its left edge.
+     */
+    /**
+     * Synchronize lyric anchors after VexFlow has finalized the rendered note
+     * positions. VexFlow can make a last sub-pixel adjustment while drawing a
+     * stave, so the drawer calls this again before OSMD draws lyric labels.
+     */
+    public synchronizeLyricAnchorOffsets(stave: VF.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave()): void {
+        for (const lyricEntry of this.LyricsEntries) {
+            const voiceEntry: VexFlowVoiceEntry = this.graphicalVoiceEntries.find(
+                (candidate: VexFlowVoiceEntry): boolean =>
+                    candidate.parentVoiceEntry === lyricEntry.LyricsEntry.Parent,
+            ) as VexFlowVoiceEntry;
+            const staveNote: any = voiceEntry?.vfStaveNote;
+            if (!staveNote || staveNote.isRest?.()) {
+                continue;
+            }
+
+            const noteheadBeginX: number = staveNote.getNoteHeadBeginX?.();
+            const noteheadEndX: number = staveNote.getNoteHeadEndX?.();
+            if (!Number.isFinite(noteheadBeginX) || !Number.isFinite(noteheadEndX)) {
+                continue;
+            }
+
+            const lyricAnchorX: number =
+                lyricEntry.LyricsEntry.AlignmentMode === LyricAlignmentMode.MelismaLeft
+                    ? noteheadBeginX
+                    : (noteheadBeginX + noteheadEndX) / 2;
+            const anchorWithinMeasure: number = (lyricAnchorX - stave.getX()) / unitInPixels;
+            lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x =
+                anchorWithinMeasure - this.PositionAndShape.RelativePosition.x;
+        }
+    }
+
+    /**
+     * Return the left edge of the rendered pitched noteheads relative to this
+     * staff entry. Harmony belongs to the rhythmic column rather than a voice,
+     * so a multi-voice entry uses the leftmost pitched head in that column.
+     */
+    public getNoteheadLeftAnchorOffset(
+        stave: VF.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave(),
+    ): number | undefined {
+        const noteheadBeginXs: number[] = (this.graphicalVoiceEntries as VexFlowVoiceEntry[])
+            .map((voiceEntry: VexFlowVoiceEntry): any => voiceEntry.vfStaveNote)
+            .filter((staveNote: any): boolean => Boolean(staveNote) && !staveNote.isRest?.())
+            .map((staveNote: any): number => staveNote.getNoteHeadBeginX?.())
+            .filter((x: number): boolean => Number.isFinite(x));
+        if (noteheadBeginXs.length === 0) {
+            return undefined;
+        }
+        const anchorWithinMeasure: number =
+            (Math.min(...noteheadBeginXs) - stave.getX()) / unitInPixels;
+        return anchorWithinMeasure - this.PositionAndShape.RelativePosition.x;
+    }
+
+    /**
+     * Return the visual centre of the rendered note or rest column relative
+     * to this staff entry. Cursor placement should follow the glyph rather
+     * than the complete VexFlow bounding box, which can include accidentals,
+     * flags, stems, and modifiers.
+     */
+    public getNoteheadCenterAnchorOffset(
+        stave: VF.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave(),
+    ): number | undefined {
+        const centres: number[] = [];
+        for (const voiceEntry of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
+            const staveNote: any = voiceEntry.vfStaveNote;
+            if (!staveNote) {
+                continue;
+            }
+            // Cursor initialization can run immediately after updateGraphic(),
+            // before VexFlow has formatted the new notes. The optical helpers
+            // require a TickContext, so leave this voice entry to the caller's
+            // pre-format positional fallback until rendering has assigned one.
+            if (!staveNote.tickContext) {
+                continue;
+            }
+            const noteheadBeginX: number = staveNote.getNoteHeadBeginX?.();
+            const noteheadEndX: number = staveNote.getNoteHeadEndX?.();
+            if (Number.isFinite(noteheadBeginX) && Number.isFinite(noteheadEndX)) {
+                centres.push((noteheadBeginX + noteheadEndX) / 2);
+                continue;
+            }
+            const boundingBox: any = staveNote.getBoundingBox?.();
+            const boundingBoxX: number = boundingBox?.getX?.() ?? boundingBox?.x;
+            const boundingBoxWidth: number = boundingBox?.getW?.() ?? boundingBox?.w;
+            if (Number.isFinite(boundingBoxX) && Number.isFinite(boundingBoxWidth)) {
+                centres.push(boundingBoxX + boundingBoxWidth / 2);
+            }
+        }
+        if (centres.length === 0) {
+            return undefined;
+        }
+        const anchorWithinMeasure: number = (Math.min(...centres) - stave.getX()) / unitInPixels;
+        return anchorWithinMeasure - this.PositionAndShape.RelativePosition.x;
+    }
+
+    /**
+     * Synchronize harmony after VexFlow formatting (and once more after its
+     * draw-time note correction). Staff-entry bounds include stems, flags,
+     * and modifiers, so they are not a stable optical anchor for harmony.
+     */
+    public synchronizeChordSymbolAnchorOffsets(
+        stave: VF.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave(),
+    ): void {
+        const anchorOffsetX: number | undefined = this.getNoteheadLeftAnchorOffset(stave);
+        if (anchorOffsetX === undefined || !Number.isFinite(anchorOffsetX)) {
+            return;
+        }
+        for (const chordContainer of this.graphicalChordContainers) {
+            // Whole-rest harmony is deliberately parented to the measure, and
+            // direction-only harmony is positioned by interpolation later.
+            if (chordContainer.PositionAndShape.Parent !== this.PositionAndShape) {
+                continue;
+            }
+            chordContainer.alignToRhythmicAnchor(anchorOffsetX);
+        }
     }
 
     public setMaxAccidentals(): number {

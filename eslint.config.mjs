@@ -20,7 +20,6 @@ export default defineConfig(
             "react-native/",
             "src/SamplePlayerPatch/",
             "src/SoundfontPlayerPatch/",
-            "src/VexFlowPatch/",
         ],
     },
     eslint.configs.recommended,
@@ -207,6 +206,16 @@ export default defineConfig(
                 ...globals.node,
                 fetch: "readonly",
                 WebSocket: "readonly",
+            },
+        },
+    },
+    {
+        // Node-based browser renderer; callbacks passed to page.evaluate use browser globals.
+        files: ["scripts/render-layout-corpus*.mjs"],
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node,
             },
         },
     },

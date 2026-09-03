@@ -3,7 +3,12 @@ import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {MultiTempoExpression} from "../../VoiceData/Expressions/MultiTempoExpression";
 import {ContDynamicEnum, ContinuousDynamicExpression} from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import {ContinuousTempoExpression} from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousTempoExpression";
-import {DynamicEnum, InstantaneousDynamicExpression} from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
+import {
+    DynamicEnum,
+    InstantaneousDynamicComponent,
+    InstantaneousDynamicComponentType,
+    InstantaneousDynamicExpression,
+} from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
 import {OctaveShift} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {Instrument} from "../../Instrument";
 import {MultiExpression} from "../../VoiceData/Expressions/MultiExpression";
@@ -639,10 +644,23 @@ export class ExpressionReader {
                 this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
             }
             const numberXml: number = this.readNumber(dynamicsNode); // probably never given, just to comply with createExpressionIfNeeded()
-            let expressionText: string = dynamicsNode.elements()[0]?.name; // elements can in rare cases still be empty even though hasElements=true, see #1269
-            if (expressionText === "other-dynamics") {
-                expressionText = dynamicsNode.elements()[0].value;
-            }
+            const components: InstantaneousDynamicComponent[] = dynamicsNode.elements()
+                .map((element: IXmlElement): InstantaneousDynamicComponent => {
+                    if (element.name === "other-dynamics") {
+                        return {
+                            type: InstantaneousDynamicComponentType.Literal,
+                            text: element.value,
+                        };
+                    }
+                    return {
+                        type: InstantaneousDynamicComponentType.Standard,
+                        text: element.name,
+                    };
+                })
+                .filter((component: InstantaneousDynamicComponent): boolean => component.text?.length > 0);
+            // Keep playback semantics compatible by using the first authored component as the active dynamic.
+            // Every component is retained for engraving below.
+            const expressionText: string = components[0]?.text;
             if (expressionText) {
                 // ToDo: make duplicate recognition an afterReadingModule, as we can't definitively check here if there is a repetition:
                 // Compare with the active dynamic expression and only add it if there is a change in dynamic
@@ -674,7 +692,8 @@ export class ExpressionReader {
                         this.soundDynamic,
                         this.placement,
                         this.staffNumber,
-                        currentMeasure);
+                        currentMeasure,
+                        components);
                 instantaneousDynamicExpression.InMeasureTimestamp = inSourceMeasureCurrentFraction.clone();
                 this.getMultiExpression.addExpression(instantaneousDynamicExpression, "");
                 // addExpression unnecessary now?:

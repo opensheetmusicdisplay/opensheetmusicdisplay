@@ -43,6 +43,11 @@ export class GraphicalNote extends GraphicalObject {
     public lineShift: number = 0;
 
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
+        // MusicXML rest display-step/display-octave values are layout hints, not sounding pitch.
+        // Keep them fixed when the score transposes so rest placement does not drift vertically.
+        if (this.sourceNote?.isRest()) {
+            return this.sourceNote.Pitch;
+        }
         let transposedPitch: Pitch = this.sourceNote.Pitch;
         if (MusicSheetCalculator.transposeCalculator) {
             transposedPitch = MusicSheetCalculator.transposeCalculator.transposePitch(this.sourceNote.Pitch, keyInstruction, halfTones);

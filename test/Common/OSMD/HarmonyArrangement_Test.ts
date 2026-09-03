@@ -1,0 +1,386 @@
+import {expect} from "chai";
+import {GraphicalChordSymbolContainer} from
+  "../../../src/MusicalScore/Graphical/GraphicalChordSymbolContainer";
+import {GraphicalLabel} from "../../../src/MusicalScore/Graphical/GraphicalLabel";
+import {GraphicalLine} from "../../../src/MusicalScore/Graphical/GraphicalLine";
+import {LabelTextRun} from "../../../src/MusicalScore/Label";
+import {
+  ChordSymbolContainer,
+  HarmonyArrangement,
+  HarmonyBassArrangement,
+} from "../../../src/MusicalScore/VoiceData/ChordSymbolContainer";
+import {
+  SMUFL_CHORD_ACCIDENTAL_SHARP_GLYPH,
+  SMUFL_CHORD_AUGMENTED_GLYPH,
+  SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+  SMUFL_CHORD_DIMINISHED_GLYPH,
+  SMUFL_CHORD_HALF_DIMINISHED_GLYPH,
+  SMUFL_CHORD_MAJOR_SEVENTH_GLYPH,
+  SMUFL_CHORD_MINOR_GLYPH,
+} from "../../../src/Common/DataObjects/ChordSymbolGlyphs";
+import {KeyInstruction} from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
+import {OpenSheetMusicDisplay} from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import {TransposeCalculator} from "../../../src/Plugins/Transpose/TransposeCalculator";
+import {TestUtils} from "../../Util/TestUtils";
+import {VexFlowStaffEntry} from
+  "../../../src/MusicalScore/Graphical/VexFlow/VexFlowStaffEntry";
+
+describe("MusicXML harmony arrangements", (): void => {
+  it("preserves ordered components, degree ownership, arrangements, and separators", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = await loadHarmonyScore();
+    const sourceChords: ChordSymbolContainer[] = osmd.Sheet.SourceMeasures.flatMap((measure) =>
+      measure.VerticalSourceStaffEntryContainers.flatMap((vertical) =>
+        vertical.StaffEntries.filter(Boolean).flatMap((entry) => entry.ChordContainers),
+      ),
+    );
+    expect(sourceChords[0].Arrangement).to.equal(HarmonyArrangement.Vertical);
+    expect(sourceChords[0].Components).to.have.length(2);
+    expect(sourceChords[0].Components[0].ChordDegrees.map((degree) => degree.value)).to.deep.equal([9]);
+    expect(sourceChords[0].Components[1].ChordDegrees.map((degree) => degree.value)).to.deep.equal([13]);
+    expect(sourceChords[1].Arrangement).to.equal(HarmonyArrangement.Horizontal);
+    expect(sourceChords[2].Arrangement).to.equal(HarmonyArrangement.Diagonal);
+    expect(sourceChords[5].BassSeparator).to.deep.equal({text: "over", explicit: true});
+    expect(sourceChords[5].Components[0].BassArrangement).to.equal(HarmonyBassArrangement.Diagonal);
+    expect(sourceChords[13].Components[0].BassArrangement).to.equal(HarmonyBassArrangement.Horizontal);
+    expect(sourceChords[14].Components[0].BassArrangement).to.equal(HarmonyBassArrangement.Vertical);
+
+    const key: KeyInstruction = osmd.Sheet.SourceMeasures[0].getKeyInstruction(0);
+    expect(sourceChords[0].calculateUpperHarmonyText(sourceChords[0].Components[0], 2, key))
+      .to.match(/^D/);
+    expect(sourceChords[0].calculateUpperHarmonyText(sourceChords[0].Components[1], 2, key))
+      .to.match(/^A/);
+    expect(sourceChords[3].calculateUpperHarmonyText(sourceChords[3].Components[0], 2, key))
+      .to.match(/^D/);
+    expect(sourceChords[3].calculateBassText(sourceChords[3].Components[0], 2, key))
+      .to.match(/^F[#♯]/);
+
+    const qualityTexts: string[] = sourceChords.slice(6, 11).map((chord) =>
+      chord.calculateUpperHarmonyText(chord.Components[0], 0, key),
+    );
+    expect(qualityTexts[0]).to.equal("Cm");
+    expect(qualityTexts[0]).to.not.include(SMUFL_CHORD_MINOR_GLYPH);
+    expect(qualityTexts[1]).to.include(SMUFL_CHORD_AUGMENTED_GLYPH);
+    expect(qualityTexts[2]).to.include(SMUFL_CHORD_DIMINISHED_GLYPH);
+    expect(qualityTexts[3]).to.equal(`F${SMUFL_CHORD_HALF_DIMINISHED_GLYPH}`);
+    expect(qualityTexts[3]).to.not.match(/7$/);
+    expect(qualityTexts[4]).to.include(SMUFL_CHORD_MAJOR_SEVENTH_GLYPH);
+    expect(sourceChords[15].calculateUpperHarmonyText(sourceChords[15].Components[0], 0, key))
+      .to.equal("C#6/9");
+    expect(sourceChords[16].calculateUpperHarmonyText(sourceChords[16].Components[0], 0, key))
+      .to.equal("Em6/9");
+  });
+
+  it("lays out canonical polychord, slash, custom, and abbreviated geometry inside aggregate bounds", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = await loadHarmonyScore();
+    const systems: GraphicalChordSymbolContainer[][] = osmd.GraphicSheet.MusicPages
+      .flatMap((page) => page.MusicSystems)
+      .map((system) => system.StaffLines[0].Measures
+        .flatMap((measure) => measure.staffEntries)
+        .flatMap((entry) => entry.graphicalChordContainers),
+      );
+    const firstSystem: GraphicalChordSymbolContainer[] = systems[0];
+    // MusicXML arrangement metadata is retained, but all genuine polychords use
+    // the same centred fraction presentation.
+    for (const polychord of firstSystem.slice(0, 3)) {
+      expectCanonicalPolychord(polychord);
+    }
+
+    const firstSlash: GraphicalChordSymbolContainer = firstSystem[3];
+    const abbreviatedSlash: GraphicalChordSymbolContainer = firstSystem[4];
+    expect(firstSlash.IsUpperChordAbbreviated).to.equal(false);
+    expect(abbreviatedSlash.IsUpperChordAbbreviated).to.equal(true);
+    expect(abbreviatedSlash.GraphicalLabels).to.have.length(2);
+    expect(abbreviatedSlash.GraphicalLabels.every((label) => label.Label.print)).to.equal(true);
+    expect(firstSlash.GraphicalSeparators).to.have.length(0);
+    expect(abbreviatedSlash.GraphicalSeparators).to.have.length(0);
+    const firstSlashGlyph: GraphicalLabel = firstSlash.GraphicalLabels.find((label) =>
+      label.Label.text === SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+    );
+    const abbreviatedSlashGlyph: GraphicalLabel = abbreviatedSlash.GraphicalLabels.find((label) =>
+      label.Label.text === SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+    );
+    expect(firstSlashGlyph).to.not.equal(undefined);
+    expect(abbreviatedSlashGlyph).to.not.equal(undefined);
+    expect(abbreviatedSlash.PositionAndShape.BorderLeft).to.be.closeTo(
+      osmd.EngravingRules.ChordSymbolRelativeXOffset,
+      0.001,
+    );
+
+    const customSeparator: GraphicalChordSymbolContainer = firstSystem[5];
+    expect(customSeparator.GraphicalSeparators).to.have.length(0);
+    expect(customSeparator.GraphicalLabels.some((label) => label.Label.text === "over")).to.equal(true);
+
+    for (const chord of firstSystem) {
+      for (const separator of chord.GraphicalSeparators) {
+        const separatorX: number = separator.PositionAndShape.RelativePosition.x;
+        const separatorY: number = separator.PositionAndShape.RelativePosition.y;
+        expect(separatorX + separator.Line.Start.x)
+          .to.be.at.least(chord.PositionAndShape.BorderLeft - 0.001);
+        expect(separatorX + separator.Line.End.x)
+          .to.be.at.most(chord.PositionAndShape.BorderRight + 0.001);
+        expect(separatorY + separator.Line.Start.y)
+          .to.be.at.least(chord.PositionAndShape.BorderTop - 0.001);
+        expect(separatorY + separator.Line.End.y)
+          .to.be.at.most(chord.PositionAndShape.BorderBottom + 0.001);
+      }
+    }
+
+    expect(systems[2][0].IsUpperChordAbbreviated).to.equal(false);
+    expect(systems[2][1].IsUpperChordAbbreviated).to.equal(true);
+    expectCanonicalSlashChord(systems[2][0]);
+    expectCanonicalSlashChord(systems[2][1], true);
+    expectCanonicalSlashChord(systems[2][2]);
+    expectCanonicalSlashChord(systems[2][3]);
+
+    const sixNineChords: GraphicalChordSymbolContainer[] = systems[3];
+    for (const chord of sixNineChords) {
+      const runs: LabelTextRun[] = chord.GraphicalLabels[0].Label.textLines[0].runs;
+      const sixIndex: number = runs.findIndex((run) => run.text === "6");
+      expect(sixIndex).to.be.greaterThan(-1);
+      expect(runs[sixIndex + 1].text).to.equal("\u2044");
+      expect(runs[sixIndex + 2].text).to.equal("9");
+      expect(runs[sixIndex].baselineShift).to.be.lessThan(runs[sixIndex + 1].baselineShift);
+      expect(runs[sixIndex + 1].baselineShift).to.be.lessThan(runs[sixIndex + 2].baselineShift);
+    }
+
+    const referenceSlash: GraphicalChordSymbolContainer = systems[4][0];
+    expectCanonicalSlashChord(referenceSlash);
+    expect(referenceSlash.GraphicalLabels[0].Label.text).to.include(SMUFL_CHORD_MAJOR_SEVENTH_GLYPH);
+    const referenceUpper: GraphicalLabel = referenceSlash.GraphicalLabels[0];
+    const referenceSeparator: GraphicalLabel = referenceSlash.GraphicalLabels.find((label) =>
+      label.Label.text === SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+    );
+    const referenceProfileRight: number = referenceUpper.getRightProfileForVerticalBand(
+      referenceSeparator.PositionAndShape.RelativePosition.y + referenceSeparator.PositionAndShape.BorderTop -
+        referenceUpper.PositionAndShape.RelativePosition.y,
+      referenceSeparator.PositionAndShape.RelativePosition.y + referenceSeparator.PositionAndShape.BorderBottom -
+        referenceUpper.PositionAndShape.RelativePosition.y,
+    );
+    // The raised major-seventh run may overhang the slash. Only the D-flat
+    // body intersects the slash band and should determine its compact spacing.
+    expect(referenceProfileRight).to.be.lessThan(referenceUpper.PositionAndShape.BorderRight);
+    const referencePolychord: GraphicalChordSymbolContainer = systems[4][1];
+    expectCanonicalPolychord(referencePolychord);
+
+    for (const chord of systems.flat()) {
+      expect(chord.PositionAndShape.BorderLeft).to.be.closeTo(
+        osmd.EngravingRules.ChordSymbolRelativeXOffset,
+        0.001,
+      );
+    }
+  });
+
+  it("routes chord-quality symbols through explicit Bravura Text glyphs and remains rebuild-stable", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = await loadHarmonyScore();
+    const qualityGlyphs: string[] = [
+      SMUFL_CHORD_DIMINISHED_GLYPH,
+      SMUFL_CHORD_HALF_DIMINISHED_GLYPH,
+      SMUFL_CHORD_AUGMENTED_GLYPH,
+      SMUFL_CHORD_MAJOR_SEVENTH_GLYPH,
+      SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+      SMUFL_CHORD_ACCIDENTAL_SHARP_GLYPH,
+    ];
+    const renderedText: SVGTextElement[] = Array.from(document.querySelectorAll("text"));
+    for (const glyph of qualityGlyphs) {
+      const node: SVGTextElement = renderedText.find((candidate) => candidate.textContent?.includes(glyph));
+      expect(node, `missing chord glyph U+${glyph.charCodeAt(0).toString(16)}`).to.not.equal(undefined);
+      expect(node.getAttribute("font-family")).to.equal("Bravura Text");
+    }
+    const minorNode: SVGTextElement = renderedText.find((candidate) =>
+      candidate.textContent === "Cm",
+    );
+    expect(minorNode).to.not.equal(undefined);
+    expect(minorNode.getAttribute("font-family")).to.equal("Academico");
+    const fractionSlashNode: SVGTextElement = renderedText.find((candidate) =>
+      candidate.textContent === "\u2044",
+    );
+    expect(fractionSlashNode).to.not.equal(undefined);
+    expect(fractionSlashNode.getAttribute("font-family")).to.equal("Academico");
+
+    const firstGeometry: string[] = harmonyGeometry(osmd);
+    osmd.updateGraphic();
+    osmd.render();
+    expect(harmonyGeometry(osmd)).to.deep.equal(firstGeometry);
+  });
+
+  it("records harmony in staff-line-relative skyline coordinates on an indented first system", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = await loadHarmonyScore();
+    const firstSystem: any = osmd.GraphicSheet.MusicPages[0].MusicSystems[0];
+    const staffLine: any = firstSystem.StaffLines[0];
+    const chord: GraphicalChordSymbolContainer = staffLine.Measures
+      .flatMap((measure: any) => measure.staffEntries)
+      .flatMap((entry: any) => entry.graphicalChordContainers)[0];
+    const chordBox: any = chord.PositionAndShape;
+
+    expect(staffLine.PositionAndShape.RelativePosition.x).to.be.greaterThan(0);
+    chordBox.calculateAbsolutePosition();
+    staffLine.PositionAndShape.calculateAbsolutePosition();
+    const localAnchorX: number =
+      chordBox.AbsolutePosition.x - staffLine.PositionAndShape.AbsolutePosition.x;
+    const start: number = localAnchorX + chordBox.BorderMarginLeft;
+    const end: number = localAnchorX + chordBox.BorderMarginRight;
+    const chordTop: number = chordBox.RelativePosition.y + chordBox.BorderMarginTop;
+    const skylineTop: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(start, end);
+
+    expect(skylineTop).to.be.at.most(chordTop + 0.001);
+  });
+
+  it("anchors short chord symbols consistently to rendered notehead left edges", async (): Promise<void> => {
+    const osmd: OpenSheetMusicDisplay = await loadShortChordScore();
+    const assertAnchors: () => string[] = (): string[] => {
+      const anchoredChords: Array<{text: string, delta: number}> = osmd.GraphicSheet.MusicPages
+        .flatMap((page) => page.MusicSystems)
+        .flatMap((system) => system.StaffLines[0].Measures)
+        .flatMap((measure) => measure.staffEntries)
+        .flatMap((entry) => {
+          const anchorOffset: number | undefined =
+            (entry as VexFlowStaffEntry).getNoteheadLeftAnchorOffset();
+          if (anchorOffset === undefined) {
+            return [];
+          }
+          return entry.graphicalChordContainers
+            .filter((chord) => chord.PositionAndShape.Parent === entry.PositionAndShape)
+            .map((chord) => ({
+              text: chord.GraphicalLabel.Label.text,
+              delta: chord.PositionAndShape.RelativePosition.x +
+                chord.PositionAndShape.BorderLeft - anchorOffset,
+            }));
+        });
+
+      expect(anchoredChords.map((chord) => chord.text)).to.deep.equal(["C", "F", "G", "F", "C", "F"]);
+      for (const chord of anchoredChords) {
+        expect(chord.delta, chord.text).to.be.closeTo(
+          osmd.EngravingRules.ChordSymbolRelativeXOffset,
+          0.001,
+        );
+      }
+      expect(Math.max(...anchoredChords.map((chord) => chord.delta)) -
+        Math.min(...anchoredChords.map((chord) => chord.delta))).to.be.lessThan(0.001);
+      return anchoredChords.map((chord) => `${chord.text}|${chord.delta.toFixed(4)}`);
+    };
+
+    const firstGeometry: string[] = assertAnchors();
+    osmd.updateGraphic();
+    osmd.render();
+    expect(assertAnchors()).to.deep.equal(firstGeometry);
+  });
+});
+
+function expectCanonicalPolychord(chord: GraphicalChordSymbolContainer): void {
+  expect(chord.GraphicalLabels).to.have.length(2);
+  expect(chord.GraphicalSeparators).to.have.length(1);
+  const separator: GraphicalLine = chord.GraphicalSeparators[0].Line;
+  expect(separator.Start.y).to.be.closeTo(separator.End.y, 0.0001);
+  const upperBottom: number = chord.GraphicalLabels[0].PositionAndShape.RelativePosition.y +
+    chord.GraphicalLabels[0].PositionAndShape.BorderBottom;
+  const lowerTop: number = chord.GraphicalLabels[1].PositionAndShape.RelativePosition.y +
+    chord.GraphicalLabels[1].PositionAndShape.BorderTop;
+  const fontHeight: number = chord.GraphicalLabels[0].Label.fontHeight;
+  expect(separator.Start.y - upperBottom).to.be.at.least(fontHeight * 0.2);
+  expect(lowerTop - separator.Start.y).to.be.at.least(fontHeight * 0.35);
+  const lowerRuns: LabelTextRun[] = chord.GraphicalLabels[1].TextLines.flatMap((line) => line.runs ?? []);
+  const expectedLowerRunTop: number = Math.min(...lowerRuns.map((run) =>
+    ((run.baselineShift ?? 0) - 1) * fontHeight,
+  ));
+  // The lower border follows the scaled-run baseline actually used by the SVG
+  // drawer, so raised 7/9/11/13 alterations cannot enter the rule clearance.
+  expect(chord.GraphicalLabels[1].PositionAndShape.BorderTop)
+    .to.be.closeTo(expectedLowerRunTop, 0.001);
+  const labelCenters: number[] = chord.GraphicalLabels.map((label) =>
+    label.PositionAndShape.RelativePosition.x +
+    (label.PositionAndShape.BorderLeft + label.PositionAndShape.BorderRight) / 2,
+  );
+  expect(labelCenters[0]).to.be.closeTo(labelCenters[1], 0.001);
+  const separatorOffsetX: number = chord.GraphicalSeparators[0].PositionAndShape.RelativePosition.x;
+  expect(separatorOffsetX + separator.Start.x).to.be.lessThan(Math.min(...chord.GraphicalLabels.map((label) =>
+    label.PositionAndShape.RelativePosition.x + label.PositionAndShape.BorderLeft,
+  )));
+  expect(separatorOffsetX + separator.End.x).to.be.greaterThan(Math.max(...chord.GraphicalLabels.map((label) =>
+    label.PositionAndShape.RelativePosition.x + label.PositionAndShape.BorderRight,
+  )));
+  expect(chord.PositionAndShape.BorderLeft).to.be.closeTo(0, 0.001);
+}
+
+function expectCanonicalSlashChord(
+  chord: GraphicalChordSymbolContainer,
+  abbreviated: boolean = false,
+  expectedLeft: number = 0,
+): void {
+  expect(chord.GraphicalSeparators).to.have.length(0);
+  expect(chord.GraphicalLabels).to.have.length(abbreviated ? 2 : 3);
+  const slash: GraphicalLabel = chord.GraphicalLabels.find((label) =>
+    label.Label.text === SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH,
+  );
+  const bass: GraphicalLabel = abbreviated
+    ? chord.GraphicalLabels.find((label) => label !== slash)
+    : chord.GraphicalLabels[1];
+  expect(slash.Label.text).to.equal(SMUFL_CHORD_DIAGONAL_ARRANGEMENT_SLASH_GLYPH);
+  const slashCenterX: number = slash.PositionAndShape.RelativePosition.x +
+    (slash.PositionAndShape.BorderLeft + slash.PositionAndShape.BorderRight) / 2;
+  const slashCenterY: number = slash.PositionAndShape.RelativePosition.y +
+    (slash.PositionAndShape.BorderTop + slash.PositionAndShape.BorderBottom) / 2;
+  const bassLeft: number = bass.PositionAndShape.RelativePosition.x + bass.PositionAndShape.BorderLeft;
+  const bassTop: number = bass.PositionAndShape.RelativePosition.y + bass.PositionAndShape.BorderTop;
+  expect(bassTop).to.be.greaterThan(slashCenterY);
+  expect(slash.PositionAndShape.RelativePosition.x + slash.PositionAndShape.BorderRight)
+    .to.be.greaterThan(bassLeft);
+  const bassHorizontalSeparation: number = bassLeft - slashCenterX;
+  const bassVerticalSeparation: number = bassTop - slashCenterY;
+  expect(bassHorizontalSeparation).to.be.closeTo(bassVerticalSeparation, 0.001);
+  if (abbreviated) {
+    expect(chord.PositionAndShape.BorderLeft).to.be.closeTo(expectedLeft, 0.001);
+    return;
+  }
+  const upper: GraphicalLabel = chord.GraphicalLabels[0];
+  const slashTopRelativeToUpper: number = slash.PositionAndShape.RelativePosition.y +
+    slash.PositionAndShape.BorderTop - upper.PositionAndShape.RelativePosition.y;
+  const slashBottomRelativeToUpper: number = slash.PositionAndShape.RelativePosition.y +
+    slash.PositionAndShape.BorderBottom - upper.PositionAndShape.RelativePosition.y;
+  const upperRight: number = upper.PositionAndShape.RelativePosition.x +
+    upper.getRightProfileForVerticalBand(slashTopRelativeToUpper, slashBottomRelativeToUpper);
+  const upperBottom: number = upper.PositionAndShape.RelativePosition.y + upper.PositionAndShape.BorderBottom;
+  const upperHorizontalSeparation: number = slashCenterX - upperRight;
+  const upperVerticalSeparation: number = slashCenterY - upperBottom;
+  expect(upperHorizontalSeparation).to.be.closeTo(bassHorizontalSeparation, 0.001);
+  expect(upperVerticalSeparation).to.be.closeTo(bassVerticalSeparation, 0.001);
+  expect(upperHorizontalSeparation).to.be.closeTo(upperVerticalSeparation, 0.001);
+  expect(upperHorizontalSeparation).to.be.lessThan(upper.Label.fontHeight * 0.03);
+  expect(slash.PositionAndShape.RelativePosition.x + slash.PositionAndShape.BorderLeft)
+    .to.be.lessThan(upperRight);
+  expect(chord.PositionAndShape.BorderLeft).to.be.closeTo(expectedLeft, 0.001);
+}
+
+async function loadHarmonyScore(): Promise<OpenSheetMusicDisplay> {
+  const container: HTMLElement = TestUtils.getDivElement(document);
+  const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+  osmd.TransposeCalculator = new TransposeCalculator();
+  await osmd.load(TestUtils.getScore("test_harmony_arrangements.musicxml"));
+  osmd.setOptions({newSystemFromXML: true});
+  osmd.render();
+  return osmd;
+}
+
+async function loadShortChordScore(): Promise<OpenSheetMusicDisplay> {
+  const container: HTMLElement = TestUtils.getDivElement(document);
+  const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+  await osmd.load(TestUtils.getScore("test_chord_symbol_centering_short_symbols.musicxml"));
+  osmd.render();
+  return osmd;
+}
+
+function harmonyGeometry(osmd: OpenSheetMusicDisplay): string[] {
+  return osmd.GraphicSheet.MusicPages.flatMap((page) => page.MusicSystems)
+    .flatMap((system) => system.StaffLines)
+    .flatMap((staffLine) => staffLine.Measures)
+    .flatMap((measure) => measure.staffEntries)
+    .flatMap((entry) => entry.graphicalChordContainers)
+    .map((chord) => [
+      chord.UpperHarmonySignature,
+      chord.BassSignature,
+      chord.IsUpperChordAbbreviated ? "abbreviated" : "full",
+      chord.PositionAndShape.BorderLeft.toFixed(4),
+      chord.PositionAndShape.BorderRight.toFixed(4),
+      chord.PositionAndShape.BorderTop.toFixed(4),
+      chord.PositionAndShape.BorderBottom.toFixed(4),
+    ].join("|"));
+}

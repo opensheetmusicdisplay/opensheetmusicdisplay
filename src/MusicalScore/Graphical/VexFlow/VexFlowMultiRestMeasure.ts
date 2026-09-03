@@ -1,5 +1,4 @@
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "./VexFlowAdapter";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
@@ -41,11 +40,13 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
 
         // padding_right doesn't work well for clefs at measure end. this.endInstructionsWidth is also not yet set correctly here.
         // const padding_right: number = this.rules.MultipleRestMeasureElementPaddingRight * 10;
-        // padding is instead included in Vexflow in multimeasurerest.js:draw() (via VexFlowPatch), to not get too close to end repeat barline
+        // padding is instead included in VexFlow's MultiMeasureRest.draw() path, so the rest
+        // stays clear of the end repeat barline.
         // Also, we probably don't yet know whether we have an end measure clef here.
         // see e.g. test/data/test_multiple_rest_measures_repeat_3_measures.musicxml, issue #1329
 
         this.multiRestElement = new VF.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
+            numberOfMeasures: sourceMeasure.multipleRestMeasures,
             // padding_right: padding_right, // this overwrites any padding/endX calculations in Vexflow. doesn't work well for end clefs
             // number_line: 3
         });
@@ -55,7 +56,7 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
      * Draw this measure on a VexFlow CanvasContext
      * @param ctx
      */
-    public draw(ctx: Vex.IRenderContext): void {
+    public draw(ctx: VF.RenderContext): void {
         const measureNode: SVGGElement = ctx.openGroup() as SVGGElement;
         if (measureNode) {
             measureNode.classList?.add("vf-measure");

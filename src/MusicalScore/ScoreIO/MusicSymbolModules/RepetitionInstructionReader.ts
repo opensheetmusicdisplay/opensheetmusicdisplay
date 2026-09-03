@@ -36,6 +36,7 @@ export class RepetitionInstructionReader {
       let direction: string = "";
       let type: string = "";
       let style: string = "";
+      let repeatTimes: number = 0;
       const endingIndices: number[] = [];
 
       // read barline style
@@ -58,6 +59,11 @@ export class RepetitionInstructionReader {
         if ("repeat" === childNode.name && childNode.hasAttributes) {
           hasRepeat = true;
           direction = childNode.attribute("direction").value;
+          const rawTimes: string = childNode.attribute("times")?.value;
+          const parsedTimes: number = Number.parseInt(rawTimes, 10);
+          if (parsedTimes > 0) {
+            repeatTimes = parsedTimes;
+          }
         } else if ( "ending" === childNode.name && childNode.hasAttributes &&
                     childNode.attribute("type") !== undefined && childNode.attribute("number")) {
           if (childNode.attribute("print-object")?.value === "no") {
@@ -72,28 +78,7 @@ export class RepetitionInstructionReader {
             // MusicXML spec: "The element text is used when the text displayed in the ending is different than what appears in the number attribute."
             //   Finale v27.3 accordingly seems to put the desired printed number here instead of in "number" (#1367)
           }
-
-          // Parse the given ending indices:
-          // handle cases like: "1, 2" or "1 + 2" or even "1 - 3, 6"
-          const separatedEndingIndices: string[] = num.split("[,+]");
-          for (let idx2: number = 0, len2: number = separatedEndingIndices.length; idx2 < len2; ++idx2) {
-            const separatedEndingIndex: string = separatedEndingIndices[idx2];
-            const indices: string[] = separatedEndingIndex.match("[0-9]");
-
-            // check if possibly something like "1-3" is given..
-            if (separatedEndingIndex.search("-") !== -1 && indices.length === 2) {
-              const startIndex: number = parseInt(indices[0], 10);
-              const endIndex: number = parseInt(indices[1], 10);
-              for (let index: number = startIndex; index <= endIndex; index++) {
-                endingIndices.push(index);
-              }
-            } else {
-              for (let idx3: number = 0, len3: number = indices.length; idx3 < len3; ++idx3) {
-                const index: string = indices[idx3];
-                endingIndices.push(parseInt(index, 10));
-              }
-            }
-          }
+          endingIndices.push(...this.parseEndingNumbers(num));
         }
       }
 
@@ -126,6 +111,9 @@ export class RepetitionInstructionReader {
           }
           if (direction === "backward") {
             const newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.BackJumpLine);
+            if (repeatTimes > 0) {
+              newInstruction.Times = repeatTimes;
+            }
             this.addInstruction(this.repetitionInstructions, newInstruction);
           }
         }
@@ -351,6 +339,34 @@ export class RepetitionInstructionReader {
       }
     }
     this.repetitionInstructions.sort(RepetitionInstructionComparer.Compare);
+  }
+
+  private parseEndingNumbers(raw: string): number[] {
+    const endingIndices: number[] = [];
+    const groups: string[] = String(raw || "")
+      .split(/[,+]/)
+      .map((entry: string): string => entry.trim())
+      .filter((entry: string): boolean => entry.length > 0);
+
+    for (const group of groups) {
+      const rangeMatch: RegExpMatchArray = group.match(/^(\d+)\s*-\s*(\d+)$/);
+      if (rangeMatch) {
+        const startIndex: number = Number.parseInt(rangeMatch[1], 10);
+        const endIndex: number = Number.parseInt(rangeMatch[2], 10);
+        const step: number = startIndex <= endIndex ? 1 : -1;
+        for (let currentIndex: number = startIndex; currentIndex !== endIndex + step; currentIndex += step) {
+          endingIndices.push(currentIndex);
+        }
+        continue;
+      }
+
+      const numberMatches: string[] = group.match(/\d+/g) || [];
+      for (const match of numberMatches) {
+        endingIndices.push(Number.parseInt(match, 10));
+      }
+    }
+
+    return endingIndices;
   }
 
   private findInstructionInPreviousMeasure(currentInstructionIndex: number, currentMeasureIndex: number, searchedType: RepetitionInstructionEnum): boolean {

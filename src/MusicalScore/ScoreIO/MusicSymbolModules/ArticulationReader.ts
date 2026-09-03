@@ -18,6 +18,30 @@ export class ArticulationReader {
     this.rules = rules;
   }
 
+  private appendArticulation(target: Articulation[], newArticulation: Articulation): void {
+    if (target.some((existingArticulation) => existingArticulation.Equals(newArticulation))) {
+      return;
+    }
+    if (
+      newArticulation.articulationEnum === ArticulationEnum.staccato &&
+      target.length > 0 &&
+      target[0].articulationEnum !== ArticulationEnum.staccato
+    ) {
+      target.splice(0, 0, newArticulation);
+      return;
+    }
+    target.push(newArticulation);
+  }
+
+  private addNoteAndVoiceEntryArticulation(
+    currentVoiceEntry: VoiceEntry,
+    currentNote: Note,
+    newArticulation: Articulation,
+  ): void {
+    this.appendArticulation(currentVoiceEntry.Articulations, newArticulation);
+    this.appendArticulation(currentNote.Articulations, newArticulation);
+  }
+
   private getAccEnumFromString(input: string): AccidentalEnum {
     switch (input) {
       case "sharp":
@@ -64,7 +88,7 @@ export class ArticulationReader {
    * @param node
    * @param currentVoiceEntry
    */
-  public addArticulationExpression(node: IXmlElement, currentVoiceEntry: VoiceEntry): void {
+  public addArticulationExpression(node: IXmlElement, currentVoiceEntry: VoiceEntry, currentNote: Note): void {
     if (node !== undefined && node.elements().length > 0) {
       const childNodes: IXmlElement[] = node.elements();
       for (let idx: number = 0, len: number = childNodes.length; idx < len; ++idx) {
@@ -83,14 +107,7 @@ export class ArticulationReader {
               placement = PlacementEnum.Below;
             }
             const newArticulation: Articulation = new Articulation(articulationEnum, placement);
-            // staccato should be first // necessary?
-            if (name === "staccato") {
-              if (currentVoiceEntry.Articulations.length > 0 &&
-                currentVoiceEntry.Articulations[0].articulationEnum !== ArticulationEnum.staccato) {
-                currentVoiceEntry.Articulations.splice(0, 0, newArticulation); // TODO can't this overwrite another articulation?
-              }
-            }
-            else if (name === "breathmark") { // breath-mark
+            if (name === "breathmark") { // breath-mark
               if (placement === PlacementEnum.NotYetDefined) {
                 newArticulation.placement = PlacementEnum.Above;
               }
@@ -137,10 +154,7 @@ export class ArticulationReader {
               sourceMeasure.StaffLinkedExpressions[staffId].push(multi);
             }
 
-            // don't add the same articulation twice
-            if (!currentVoiceEntry.hasArticulation(newArticulation)) {
-              currentVoiceEntry.Articulations.push(newArticulation);
-            }
+            this.addNoteAndVoiceEntryArticulation(currentVoiceEntry, currentNote, newArticulation);
           }
         } catch (ex) {
           const errorMsg: string = "Invalid note articulation.";
@@ -207,9 +221,7 @@ export class ArticulationReader {
           placement = PlacementEnum.Below;
         }
         const newArticulation: Articulation = new Articulation(articulationEnum, placement);
-        if (!currentVoiceEntry.hasArticulation(newArticulation)) {
-          currentVoiceEntry.Articulations.push(newArticulation);
-        }
+        this.addNoteAndVoiceEntryArticulation(currentVoiceEntry, currentNote, newArticulation);
       }
     }
 

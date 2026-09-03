@@ -1,6 +1,7 @@
 import { ColoringModes } from "../Common/Enums/ColoringModes";
 import { FontStyles } from "../Common/Enums/FontStyles";
 import { DrawingParametersEnum } from "../Common/Enums/DrawingParametersEnum";
+import { IOSMDFontProfile } from "./FontProfile";
 
 export enum CursorType {
     Standard = 0,
@@ -67,13 +68,20 @@ export interface IOSMDOptions {
     defaultColorLabel?: string;
     /** Default color for labels in the title. Overrides defaultColorLabel for title labels like composer. Default black (undefined). */
     defaultColorTitle?: string;
-    /** Default font used for text and labels, e.g. title or lyrics. Default Times New Roman
+    /** Default font used for text and labels, e.g. title or lyrics. Default Academico
      * Note that OSMD originally always used Times New Roman,
      * so things like layout and spacing may still be optimized for it.
      * Valid options are CSS font families available in the browser used for rendering,
-     * e.g. Times New Roman, Helvetica.
+     * e.g. Academico, Times New Roman, Helvetica.
      */
     defaultFontFamily?: string;
+    /**
+     * Complete notation, music-text, and score-text font contract. The default
+     * bundle embeds its profile; the core bundle expects the host to supply it.
+     */
+    fontProfile?: IOSMDFontProfile;
+    /** Embed every font source from the active profile in standalone SVG exports. Default true. */
+    embedFontProfileInSvg?: boolean;
     /** Default font style, e.g. FontStyles.Bold (1). Default Regular (0). */
     defaultFontStyle?: FontStyles;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */

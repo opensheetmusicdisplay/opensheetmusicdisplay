@@ -14,6 +14,8 @@ import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/Graphic
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
 import { Fraction } from "../../../src/Common/DataObjects/Fraction";
 import { AccidentalEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
+import { TransposeCalculator } from "../../../src/Plugins/Transpose/TransposeCalculator";
+import { SourceMeasure } from "../../../src/MusicalScore/VoiceData/SourceMeasure";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -150,6 +152,587 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             },
             done
         );
+    });
+
+    it("keeps rest display hints fixed when the score transposes", (done: Mocha.Done) => {
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voice</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <rest>
+          <display-step>B</display-step>
+          <display-octave>4</display-octave>
+        </rest>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+    </measure>
+  </part>
+</score-partwise>`;
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+        function firstRenderedRestPitch(currentOsmd: OpenSheetMusicDisplay): string {
+            const restNote: any = currentOsmd.GraphicSheet.MeasureList
+                .flatMap((measureList: any[]) => measureList)
+                .flatMap((measure: any) => measure.staffEntries)
+                .flatMap((staffEntry: any) => staffEntry.graphicalVoiceEntries)
+                .flatMap((gve: any) => gve.notes)
+                .find((graphicalNote: any) => graphicalNote.sourceNote?.isRest?.());
+            expect(restNote, "expected a rendered rest note").to.not.equal(undefined);
+            return restNote.vfpitch[0];
+        }
+
+        osmd.load(xml).then(
+            () => {
+                osmd.render();
+                const restPitchBeforeTranspose: string = firstRenderedRestPitch(osmd);
+
+                osmd.TransposeCalculator = new TransposeCalculator();
+                osmd.Sheet.Transpose = 2;
+                osmd.updateGraphic();
+                osmd.render();
+
+                expect(firstRenderedRestPitch(osmd)).to.equal(restPitchBeforeTranspose);
+                done();
+            },
+            done
+        );
+    });
+
+    it("keeps visible quarter-rest optical clearance as hard layout padding", () => {
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1"><part-name>Voice</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note><rest/><duration>2</duration><type>quarter</type></note>
+      <note><rest/><duration>1</duration><type>eighth</type></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>eighth</type></note>
+    </measure>
+  </part>
+</score-partwise>`;
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+        return osmd.load(xml).then(() => {
+            osmd.render();
+            const restVoiceEntries: any[] = osmd.GraphicSheet.MeasureList
+                .flatMap((measureList: any[]) => measureList)
+                .flatMap((measure: any) => measure.staffEntries)
+                .flatMap((staffEntry: any) => staffEntry.graphicalVoiceEntries)
+                .filter((gve: any) => gve.notes?.[0]?.sourceNote?.isRest?.());
+            const quarterRest: any = restVoiceEntries.find(
+                (gve: any) => gve.notes[0].sourceNote.Length.RealValue === 0.25
+            );
+            const eighthRest: any = restVoiceEntries.find(
+                (gve: any) => gve.notes[0].sourceNote.Length.RealValue === 0.125
+            );
+
+            expect(osmd.Sheet.Rules.LyricsXPaddingFactorForLongLyrics).to.equal(1.0);
+            expect(osmd.Sheet.Rules.QuarterRestRightClearance).to.equal(0.45);
+            expect(quarterRest.vfStaveNote.getLayoutPadding().rightPx).to.equal(4.5);
+            expect(eighthRest.vfStaveNote.getLayoutPadding().rightPx).to.equal(0);
+        });
+    });
+
+    it("maps bass rest display hints onto centered rest lines", (done: Mocha.Done) => {
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano LH</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <note>
+        <rest>
+          <display-step>D</display-step>
+          <display-octave>3</display-octave>
+        </rest>
+        <duration>2</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <rest>
+          <display-step>F</display-step>
+          <display-octave>3</display-octave>
+        </rest>
+        <duration>2</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <rest>
+          <display-step>D</display-step>
+          <display-octave>3</display-octave>
+        </rest>
+        <duration>4</duration>
+        <type>half</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>`;
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+        function renderedRestPitches(currentOsmd: OpenSheetMusicDisplay): string[] {
+            return currentOsmd.GraphicSheet.MeasureList
+                .flatMap((measureList: any[]) => measureList)
+                .flatMap((measure: any) => measure.staffEntries)
+                .flatMap((staffEntry: any) => staffEntry.graphicalVoiceEntries)
+                .flatMap((gve: any) => gve.notes)
+                .filter((graphicalNote: any) => graphicalNote.sourceNote?.isRest?.())
+                .map((graphicalNote: any) => graphicalNote.vfpitch[0]);
+        }
+
+        osmd.load(xml).then(
+            () => {
+                osmd.render();
+                expect(renderedRestPitches(osmd)).to.deep.equal(["bn/4", "dn/5", "bn/4"]);
+                done();
+            },
+            done
+        );
+    });
+
+    it("uses the centered bar-rest duration for whole-measure rests", () => {
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Single staff</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <rest measure="yes"/>
+        <duration>8</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>`;
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+        function wholeMeasureRestMetrics(currentOsmd: OpenSheetMusicDisplay): { duration: string, centerOffset: number } {
+            const wholeMeasureRest: any = currentOsmd.GraphicSheet.MeasureList
+                .flatMap((measureList: any[]) => measureList)
+                .flatMap((measure: any) => measure.staffEntries)
+                .flatMap((staffEntry: any) => staffEntry.graphicalVoiceEntries)
+                .find((gve: any) => {
+                    const sourceNote: any = gve.notes?.[0]?.sourceNote;
+                    return sourceNote?.isRest?.() && (
+                        sourceNote.IsWholeMeasureRest ||
+                        sourceNote.Length.RealValue === sourceNote.SourceMeasure.ActiveTimeSignature.RealValue
+                    );
+                });
+            expect(wholeMeasureRest, "expected a whole-measure rest").to.not.equal(undefined);
+            const vfStaveNote: any = wholeMeasureRest.vfStaveNote;
+            const boundingBox: any = vfStaveNote.getBoundingBox();
+            const stave: any = vfStaveNote.getStave();
+            const restCenterX: number = boundingBox.getX() + boundingBox.getW() / 2;
+            const measureCenterX: number = (stave.getNoteStartX() + stave.getNoteEndX()) / 2;
+            return {
+                centerOffset: Math.abs(restCenterX - measureCenterX),
+                duration: vfStaveNote.getDuration(),
+            };
+        }
+
+        return osmd.load(xml).then(() => {
+            osmd.render();
+            const firstRenderMetrics: { duration: string, centerOffset: number } = wholeMeasureRestMetrics(osmd);
+            osmd.render();
+            const rerenderMetrics: { duration: string, centerOffset: number } = wholeMeasureRestMetrics(osmd);
+            expect(firstRenderMetrics.duration).to.equal("1");
+            expect(firstRenderMetrics.centerOffset).to.be.lessThan(0.01);
+            expect(rerenderMetrics.centerOffset).to.be.lessThan(0.01);
+        });
+    });
+
+    it("centers whole-measure rests even when other staves contain active notes", () => {
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Solo</part-name>
+    </score-part>
+    <score-part id="P2">
+      <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
+      <score-instrument id="P2-I1"><instrument-name>Piano</instrument-name></score-instrument>
+      <midi-instrument id="P2-I1"><midi-channel>1</midi-channel><midi-program>1</midi-program></midi-instrument>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <staff>1</staff>
+      </note>
+      <backup><duration>4</duration></backup>
+      <forward><duration>4</duration></forward>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <staves>2</staves>
+        <clef number="1"><sign>G</sign><line>2</line></clef>
+        <clef number="2"><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup><duration>1</duration></backup>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+      <forward><duration>1</duration></forward>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup><duration>1</duration></backup>
+      <note>
+        <pitch><step>D</step><octave>3</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+      <forward><duration>1</duration></forward>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup><duration>1</duration></backup>
+      <note>
+        <pitch><step>E</step><octave>3</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+      <forward><duration>1</duration></forward>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
+      <backup><duration>1</duration></backup>
+      <note>
+        <pitch><step>F</step><octave>3</octave></pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>`;
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+        function wholeMeasureRestMetrics(currentOsmd: OpenSheetMusicDisplay): { duration: string, centerOffset: number } {
+            const wholeMeasureRest: any = currentOsmd.GraphicSheet.MeasureList
+                .flatMap((measureList: any[]) => measureList)
+                .flatMap((measure: any) => measure.staffEntries)
+                .flatMap((staffEntry: any) => staffEntry.graphicalVoiceEntries)
+                .find((gve: any) => {
+                    const sourceNote: any = gve.notes?.[0]?.sourceNote;
+                    return sourceNote?.isRest?.() && (
+                        sourceNote.IsWholeMeasureRest ||
+                        sourceNote.Length.RealValue === sourceNote.SourceMeasure.ActiveTimeSignature.RealValue
+                    );
+                });
+            expect(wholeMeasureRest, "expected a whole-measure rest").to.not.equal(undefined);
+            const vfStaveNote: any = wholeMeasureRest.vfStaveNote;
+            const boundingBox: any = vfStaveNote.getBoundingBox();
+            const stave: any = vfStaveNote.getStave();
+            const restCenterX: number = boundingBox.getX() + boundingBox.getW() / 2;
+            const measureCenterX: number = (stave.getNoteStartX() + stave.getNoteEndX()) / 2;
+            return {
+                centerOffset: Math.abs(restCenterX - measureCenterX),
+                duration: vfStaveNote.getDuration(),
+            };
+        }
+
+        return osmd.load(xml).then(() => {
+            osmd.render();
+            const firstRenderMetrics: { duration: string, centerOffset: number } = wholeMeasureRestMetrics(osmd);
+            osmd.render();
+            const rerenderMetrics: { duration: string, centerOffset: number } = wholeMeasureRestMetrics(osmd);
+            expect(firstRenderMetrics.duration).to.equal("1");
+            expect(firstRenderMetrics.centerOffset).to.be.lessThan(0.01);
+            expect(rerenderMetrics.centerOffset).to.be.lessThan(0.01);
+        });
+    });
+
+    it("renders every consecutive 6/4 measure rest as one centered undotted bar rest", async (): Promise<void> => {
+        const restMeasures: string = [1, 2, 3, 4, 5].map((number: number): string => `
+    <measure number="${number}">
+      ${number === 1 ? `<attributes><divisions>4</divisions><time><beats>6</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef></attributes>` : ""}
+      <note><rest measure="yes"><display-step>D</display-step><display-octave>5</display-octave></rest>
+        <duration>24</duration><voice>1</voice><staff>1</staff></note>
+    </measure>`).join("");
+        const activeMeasures: string = [1, 2, 3, 4, 5].map((number: number): string => `
+    <measure number="${number}">
+      ${number === 1 ? `<attributes><divisions>4</divisions><time><beats>6</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef></attributes>` : ""}
+      ${[0, 1, 2, 3, 4, 5].map((): string => `<note><pitch><step>C</step><octave>3</octave></pitch>
+        <duration>4</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>`).join("")}
+    </measure>`).join("");
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1"><part-name>Voice</part-name></score-part>
+    <score-part id="P2"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1">${restMeasures}</part>
+  <part id="P2">${activeMeasures}</part>
+</score-partwise>`;
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+            TestUtils.getDivElement(document),
+        );
+        await osmd.load(xml);
+        osmd.render();
+
+        const rests: any[] = osmd.GraphicSheet.MeasureList.map(
+            (verticalMeasure: any[], index: number): any => {
+                const measure: any = verticalMeasure[0];
+                const rest: any = measure.staffEntries
+                    .flatMap((staffEntry: any): any[] => staffEntry.graphicalVoiceEntries)
+                    .find((voiceEntry: any): boolean => voiceEntry.notes?.[0]?.sourceNote?.isRest?.());
+                expect(rest, `measure ${index + 1} rest`).to.not.equal(undefined);
+                expect(rest.vfStaveNote, `measure ${index + 1} rendered rest`).to.not.equal(undefined);
+                const stave: any = rest.vfStaveNote.getStave();
+                const bounds: any = rest.vfStaveNote.getBoundingBox();
+                return {
+                    centerOffset: Math.abs(
+                        bounds.getX() + bounds.getW() / 2 -
+                        (stave.getNoteStartX() + stave.getNoteEndX()) / 2,
+                    ),
+                    dots: rest.vfStaveNote.getModifiers().filter(
+                        (modifier: any): boolean => modifier.getCategory?.() === "Dot",
+                    ).length,
+                    duration: rest.vfStaveNote.getDuration(),
+                };
+            },
+        );
+
+        expect(rests).to.have.length(5);
+        expect(rests.map((rest: any): string => rest.duration)).to.deep.equal(
+            ["1", "1", "1", "1", "1"],
+        );
+        expect(rests.map((rest: any): number => rest.dots)).to.deep.equal([0, 0, 0, 0, 0]);
+        expect(rests.every((rest: any): boolean => rest.centerOffset < 0.01)).to.equal(true);
+    });
+
+    it("keeps an upper lower-staff half rest within the staff in globally numbered voices", async (): Promise<void> => {
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+  <part id="P1"><measure number="1">
+    <attributes><divisions>4</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+      <clef><sign>F</sign><line>4</line></clef></attributes>
+    <note><rest><display-step>F</display-step><display-octave>3</display-octave></rest>
+      <duration>8</duration><voice>2</voice><type>half</type><staff>1</staff></note>
+    <note><pitch><step>C</step><octave>3</octave></pitch><duration>8</duration><voice>2</voice><type>half</type>
+      <stem>up</stem><staff>1</staff></note>
+    <backup><duration>16</duration></backup>
+    <note><pitch><step>F</step><octave>2</octave></pitch><duration>16</duration><voice>4</voice><type>whole</type>
+      <stem>down</stem><staff>1</staff></note>
+  </measure></part>
+</score-partwise>`;
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+            TestUtils.getDivElement(document),
+        );
+        await osmd.load(xml);
+        osmd.render();
+
+        const firstStaffEntry: any = osmd.GraphicSheet.MeasureList[0][0].staffEntries[0];
+        const restVoiceEntry: any = firstStaffEntry.graphicalVoiceEntries.find(
+            (voiceEntry: any): boolean => voiceEntry.notes?.[0]?.sourceNote?.isRest?.(),
+        );
+        expect(restVoiceEntry, "rendered half rest").to.not.equal(undefined);
+        const restLine: number = restVoiceEntry.vfStaveNote.getKeyProps()[0].line;
+        expect(restLine, "half rest remains within the bass staff").to.be.within(0, 6);
+    });
+
+    it("recreates intra-word lyric hyphens after an updateGraphic rebuild", async (): Promise<void> => {
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1"><part-name>Voice</part-name></score-part>
+    <score-part id="P2"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1"><measure number="1">
+    <attributes><divisions>1</divisions><time><beats>2</beats><beat-type>4</beat-type></time>
+      <clef><sign>G</sign><line>2</line></clef></attributes>
+    <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type>
+      <lyric number="1"><syllabic>begin</syllabic><text>yon</text></lyric>
+      <lyric number="2"><syllabic>begin</syllabic><text>win</text></lyric></note>
+    <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type>
+      <lyric number="1"><syllabic>end</syllabic><text>der</text></lyric>
+      <lyric number="2"><syllabic>end</syllabic><text>ter</text></lyric></note>
+  </measure></part>
+  <part id="P2"><measure number="1">
+    <attributes><divisions>1</divisions><time><beats>2</beats><beat-type>4</beat-type></time>
+      <clef><sign>F</sign><line>4</line></clef></attributes>
+    <note><rest measure="yes"/><duration>2</duration><voice>1</voice><staff>1</staff></note>
+  </measure></part>
+</score-partwise>`;
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+        await osmd.load(xml);
+        osmd.render();
+        expect(container.querySelectorAll(".dash"), "first render hyphens").to.have.length(2);
+
+        osmd.updateGraphic();
+        osmd.render();
+        expect(container.querySelectorAll(".dash"), "first rebuild hyphens").to.have.length(2);
+        const lyricDashes: any[] =
+            osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0].LyricsDashes;
+        expect(lyricDashes.length, "first rebuild model hyphens").to.equal(2);
+        const renderedLyricRowCenters: number[] = osmd.GraphicSheet.MeasureList[0][0].staffEntries
+            .flatMap((staffEntry: any): any[] => staffEntry.LyricsEntries)
+            .map((lyricEntry: any): SVGGraphicsElement => lyricEntry.GraphicalLabel.SVGNode as SVGGraphicsElement)
+            .filter((lyricNode: SVGGraphicsElement): boolean => lyricNode?.isConnected)
+            .map((lyricNode: SVGGraphicsElement): number => {
+                const bounds: DOMRect = lyricNode.getBBox();
+                return bounds.y + bounds.height / 2;
+            });
+        for (const dash of lyricDashes) {
+            const dashNode: SVGGraphicsElement = dash.SVGNode as SVGGraphicsElement;
+            expect(dashNode?.isConnected, "dash node remains attached").to.equal(true);
+            const renderedBounds: DOMRect = dashNode.getBBox();
+            const renderedCenterY: number = renderedBounds.y + renderedBounds.height / 2;
+            const nearestLyricRowDistance: number = Math.min(
+                ...renderedLyricRowCenters.map((rowCenter: number): number => Math.abs(rowCenter - renderedCenterY)),
+            );
+            expect(nearestLyricRowDistance, "dash stays on its rendered lyric row").to.be.lessThan(2);
+        }
+
+        osmd.updateGraphic();
+        osmd.render();
+        expect(container.querySelectorAll(".dash"), "second rebuild hyphens").to.have.length(2);
+    });
+
+    it("keeps lyric extender geometry stable through repeated renders", async (): Promise<void> => {
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1"><part-name>Voice</part-name></score-part>
+    <score-part id="P2"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1"><measure number="1">
+    <attributes><divisions>1</divisions><time><beats>3</beats><beat-type>4</beat-type></time>
+      <clef><sign>G</sign><line>2</line></clef></attributes>
+    <note><pitch><step>C</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>half</type>
+      <lyric number="1"><syllabic>single</syllabic><text>long</text><extend type="start"/></lyric></note>
+    <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type>
+      <lyric number="1"><extend type="stop"/></lyric></note>
+    <backup><duration>3</duration></backup>
+    <forward><duration>1</duration></forward>
+    <note><rest/><duration>1</duration><voice>2</voice><type>quarter</type></note>
+    <forward><duration>1</duration></forward>
+  </measure></part>
+  <part id="P2"><measure number="1">
+    <attributes><divisions>1</divisions><time><beats>3</beats><beat-type>4</beat-type></time>
+      <clef><sign>F</sign><line>4</line></clef></attributes>
+    <note><rest measure="yes"/><duration>3</duration><voice>1</voice><staff>1</staff></note>
+  </measure></part>
+</score-partwise>`;
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+            TestUtils.getDivElement(document),
+        );
+        await osmd.load(xml);
+        osmd.render();
+
+        const getLineGeometry: () => number[][] = (): number[][] =>
+            osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0].LyricLines.map(
+                (line: any): number[] => [line.Start.x, line.Start.y, line.End.x, line.End.y],
+            );
+        const expectStableVerticalGeometry: (
+            actual: number[][],
+            expected: number[][],
+            label: string,
+        ) => void = (actual: number[][], expected: number[][], label: string): void => {
+            expect(actual.length, label).to.equal(expected.length);
+            actual.forEach((line: number[], lineIndex: number): void => {
+                expect(line[1], `${label} ${lineIndex}:start-y`).to.be.closeTo(expected[lineIndex][1], 0.000001);
+                expect(line[3], `${label} ${lineIndex}:end-y`).to.be.closeTo(expected[lineIndex][3], 0.000001);
+                expect(Number.isFinite(line[2]), `${label} ${lineIndex}:finite-end-x`).to.equal(true);
+                expect(line[2], `${label} ${lineIndex}:positive-length`).to.be.greaterThan(line[0]);
+            });
+        };
+        const firstGeometry: number[][] = getLineGeometry();
+        expect(firstGeometry, "initial extender").to.have.length(1);
+
+        osmd.render();
+        expectStableVerticalGeometry(getLineGeometry(), firstGeometry, "second render extender");
+        osmd.updateGraphic();
+        osmd.render();
+        expectStableVerticalGeometry(getLineGeometry(), firstGeometry, "rebuilt extender");
     });
 
     it.skip("Timeout from server", (done: Mocha.Done) => {
@@ -308,6 +891,131 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             }
             // After 100 steps in the visible score, cursor reached 3rd note from 17, a C
             expect(osmd.cursors[0].NotesUnderCursor()[0].halfTone).to.equal(60);
+        });
+    });
+    describe("auto multi-rest rerender with hidden instruments", () => {
+        const scoreXml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voice</part-name>
+    </score-part>
+    <score-part id="P2">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <note><rest measure="yes"/><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="3">
+      <note><rest measure="yes"/><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="4">
+      <note><rest measure="yes"/><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="5">
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch><step>E</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="3">
+      <note>
+        <pitch><step>F</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="4">
+      <note>
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="5">
+      <note>
+        <pitch><step>A</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+  </part>
+</score-partwise>`;
+
+        it("recalculates auto multi-rests from scratch when hiding and re-showing an instrument", () => {
+            const div: HTMLElement = TestUtils.getDivElement(document);
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+            return osmd.load(scoreXml).then(() => {
+                osmd.render();
+
+                const restMeasures: SourceMeasure[] = osmd.Sheet.SourceMeasures.slice(1, 4);
+                for (const measure of restMeasures) {
+                    expect(measure.isReducedToMultiRest).to.equal(false);
+                    expect(measure.multipleRestMeasureNumber).to.equal(0);
+                    expect(measure.multipleRestMeasures || 0).to.equal(0);
+                }
+
+                osmd.Sheet.Instruments[1].Visible = false;
+                osmd.updateGraphic();
+                osmd.render();
+
+                expect(restMeasures[0].multipleRestMeasures).to.equal(3);
+                expect(restMeasures[0].multipleRestMeasureNumber).to.equal(1);
+                expect(restMeasures[1].multipleRestMeasureNumber).to.equal(2);
+                expect(restMeasures[2].multipleRestMeasureNumber).to.equal(3);
+                for (const measure of restMeasures) {
+                    expect(measure.isReducedToMultiRest).to.equal(true);
+                }
+
+                osmd.Sheet.Instruments[1].Visible = true;
+                osmd.updateGraphic();
+                osmd.render();
+
+                for (const measure of restMeasures) {
+                    expect(measure.isReducedToMultiRest).to.equal(false);
+                    expect(measure.multipleRestMeasureNumber).to.equal(0);
+                    expect(measure.multipleRestMeasures || 0).to.equal(0);
+                }
+            });
         });
     });
     describe("cursor", () => {

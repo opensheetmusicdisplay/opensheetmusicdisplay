@@ -17,6 +17,10 @@ import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/Vo
 import { GeometricSkyBottomLineCaches } from "./GeometricSkyBottomLineContext";
 import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
+import {
+    SlurCandidateScoreWeights,
+    SlurDiagnosticsLevel,
+} from "./SlurLayout/SlurLayoutTypes";
 
 /** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
  *  Not all of these options are meant to be modified by users of the library,
@@ -281,7 +285,7 @@ export class EngravingRules {
     /** How much spacing/padding should be added after notes with long lyrics on short notes
      * (>4 characters on <8th note),
      * so that the measure doesn't need to be elongated too much to avoid lyrics collisions.
-     * Default 1 = 10 pixels */
+     * Default 1.14 = 11.4 pixels */
     public LyricsXPaddingFactorForLongLyrics: number;
     /** How wide a text needs to be to trigger lyrics padding for short notes.
      * This is visual width, not number of characters, as e.g. 'zzz' is wider than 'iii'.
@@ -312,6 +316,16 @@ export class EngravingRules {
     public SlurPlacementFromXML: boolean;
     public SlurPlacementAtStems: boolean;
     public SlurPlacementUseSkyBottomLine: boolean;
+    /** Controls retained candidate diagnostics. Rendering is unaffected. */
+    public SlurDiagnosticsLevel: SlurDiagnosticsLevel;
+    /** Relative weights used by the deterministic candidate scorer. */
+    public SlurCandidateScoreWeights: SlurCandidateScoreWeights;
+    /** Desired minimum clearance between a slur centreline and an obstacle, in staff spaces. */
+    public SlurObstacleClearance: number;
+    /** Desired maximum visual clearance before a candidate starts to look detached, in staff spaces. */
+    public SlurMaximumPreferredClearance: number;
+    /** Maximum number of endpoint/curve combinations evaluated for one slur segment. */
+    public SlurCandidateLimit: number;
     public BezierCurveStepSize: number;
     public TPower3: number[];
     public OneMinusTPower3: number[];
@@ -324,9 +338,17 @@ export class EngravingRules {
     public TieHeightMaximum: number;
     public TieHeightInterpolationK: number;
     public TieHeightInterpolationD: number;
+    /** Horizontal gap between an open outer notehead and a tie endpoint, in staff spaces. */
+    public TieOpenNoteheadXClearance: number;
+    /** Extra clearance before a short tie enters a non-outer chord note, in staff spaces. */
+    public TieShortChordEndpointXClearance: number;
+    /** Long ties retain their established chord-entry geometry, in staff spaces. */
+    public TieShortChordEndpointMaximumSpan: number;
     public SlurNoteHeadYOffset: number;
     public SlurEndArticulationYOffset: number;
     public SlurStartArticulationYOffsetOfArticulation: number;
+    /** Minimum outward clearance between a slur attachment and a coincident endpoint articulation, in staff spaces. */
+    public SlurArticulationClearance: number;
     public SlurStemXOffset: number;
     public SlurSlopeMaxAngle: number;
     public SlurTangentMinAngle: number;
@@ -362,6 +384,8 @@ export class EngravingRules {
     public GlissandoDefaultWidth: number;
     public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
+    /** Text height for instantaneous dynamics such as pp, mf, and sfz. */
+    public InstantaneousDynamicTextHeight: number;
     public ContinuousDynamicTextHeight: number;
     /** Whether to use the XML offset value for expressions, especially wedges (crescendo). See #1477 */
     public UseEndOffsetForExpressions: boolean;
@@ -442,6 +466,8 @@ export class EngravingRules {
 
     public VoiceSpacingMultiplierVexflow: number;
     public VoiceSpacingAddendVexflow: number;
+    /** Optical clearance after a visible quarter-rest glyph, in staff spaces. */
+    public QuarterRestRightClearance: number;
     public PickupMeasureWidthMultiplier: number;
     /** The spacing between a repetition that is followed by an implicit/pickup/incomplete measure.
      *  (E.g. in a 4/4 time signature, a measure that repeats after the 3rd beat, continuing with a pickup measure)
@@ -496,7 +522,13 @@ export class EngravingRules {
     public DefaultColorTitle: string;
     public DefaultColorCursor: string;
     public DefaultFontFamily: string;
+    /** Notation glyph family selected by the active OSMD font profile. */
+    public DefaultNotationFontFamily: string;
+    /** SMuFL music-text family selected by the active OSMD font profile. */
+    public DefaultMusicTextFontFamily: string;
     public DefaultFontStyle: FontStyles;
+    /** Legacy compatibility field. The modern VexFlow runtime in this fork uses its own
+     * notation-font stack directly, so this no longer switches the active notation font. */
     public DefaultVexFlowNoteFont: string;
     public MaxMeasureToDrawIndex: number;
     /** The setting given in osmd.setOptions(), which may lead to a different index if there's a pickup measure. */
@@ -777,7 +809,9 @@ export class EngravingRules {
         this.ChordSymbolTextAlignmentTop = TextAlignmentEnum.LeftBottom;
         this.ChordSymbolTextAlignmentBottom = TextAlignmentEnum.LeftTop;
         this.ChordSymbolBottomMargin = 0.6;
-        this.ChordSymbolRelativeXOffset = -1.0;
+        // Left-align harmony exactly on the rendered notehead rather than the
+        // variable staff-entry bounds that also contain stems and flags.
+        this.ChordSymbolRelativeXOffset = 0;
         this.ChordSymbolExtraXShiftForShortChordSymbols = 0.3; // also see LyricsExtraXShiftForShortLyrics, same principle
         this.ChordSymbolExtraXShiftWidthThreshold = 2.0;
         this.ChordSymbolXSpacing = 1.0;
@@ -808,7 +842,7 @@ export class EngravingRules {
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.MeasureNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.MeasureNumberLabelOffset = 2;
-        this.MeasureNumberLabelXOffset = -0.5;
+        this.MeasureNumberLabelXOffset = 0;
         this.TupletsRatioed = false;
         this.TupletsRatioedUseXMLValue = true;
         this.TupletsBracketed = false;
@@ -841,6 +875,24 @@ export class EngravingRules {
         this.SlurPlacementFromXML = true;
         this.SlurPlacementAtStems = false;
         this.SlurPlacementUseSkyBottomLine = false;
+        this.SlurDiagnosticsLevel = "off";
+        this.SlurCandidateScoreWeights = {
+            clearance: 40,
+            excessiveClearance: 4,
+            anchorDisplacement: 12,
+            tangent: 10,
+            slope: 8,
+            curvature: 8,
+            contour: 2,
+            articulation: 24,
+            tieInteraction: 24,
+            staffLineInteraction: 12,
+            nesting: 30,
+            systemContinuity: 20,
+        };
+        this.SlurObstacleClearance = 0.35;
+        this.SlurMaximumPreferredClearance = 2.5;
+        this.SlurCandidateLimit = 96;
         this.BezierCurveStepSize = 1000;
         this.calculateCurveParametersArrays();
         this.TieGhostObjectWidth = 0.75;
@@ -850,9 +902,13 @@ export class EngravingRules {
         this.TieHeightMaximum = 1.2;
         this.TieHeightInterpolationK = 0.0288;
         this.TieHeightInterpolationD = 0.136;
+        this.TieOpenNoteheadXClearance = 0.15;
+        this.TieShortChordEndpointXClearance = 0.2;
+        this.TieShortChordEndpointMaximumSpan = 8;
         this.SlurNoteHeadYOffset = 0.5;
         this.SlurEndArticulationYOffset = 0.8;
         this.SlurStartArticulationYOffsetOfArticulation = 0.5;
+        this.SlurArticulationClearance = 0.35;
         this.SlurStemXOffset = 0.3;
         this.SlurSlopeMaxAngle = 15.0;
         this.SlurTangentMinAngle = 30.0;
@@ -897,7 +953,7 @@ export class EngravingRules {
         this.UnknownExpressionTextAlignment = TextAlignmentEnum.CenterBottom;
 
         // Lyrics
-        this.LyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
+        this.LyricsAlignmentStandard = TextAlignmentEnum.CenterBottom;
         this.LyricsHeight = 2.0; // actually size of lyrics
         this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.LyricsYMarginToBottomLine = 0.2;
@@ -923,6 +979,7 @@ export class EngravingRules {
         // expressions variables
         this.TempoYSpacing = 0.5; // note this is correlated with MetronomeMarkYShift: one-sided change can cause collisions
         this.InstantaneousTempoTextHeight = 2.3;
+        this.InstantaneousDynamicTextHeight = 4.6;
         this.ContinuousDynamicTextHeight = 2.3;
         this.UseEndOffsetForExpressions = true;
         this.MoodTextHeight = 2.3;
@@ -982,6 +1039,7 @@ export class EngravingRules {
         // xSpacing Variables
         this.VoiceSpacingMultiplierVexflow = 0.85;
         this.VoiceSpacingAddendVexflow = 3.0;
+        this.QuarterRestRightClearance = 0.45;
         this.PickupMeasureWidthMultiplier = 1.0;
         this.PickupMeasureRepetitionSpacing = 0.8;
         this.PickupMeasureSpacingSingleNoteAddend = 1.6;
@@ -993,7 +1051,7 @@ export class EngravingRules {
         this.MetronomeMarksDrawn = true;
         this.MetronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.MetronomeMarkYShift = -1.0; // note this is correlated with TempoYSpacing: one-sided change can cause collisions
-        this.SoftmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
+        this.SoftmaxFactorVexFlow = 15; // Lower than the VexFlow default to avoid overly wide note spacing.
         // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
         // if too low, smaller notes aren't positioned correctly.
         this.StaggerSameWholeNotes = true;
@@ -1014,9 +1072,11 @@ export class EngravingRules {
         this.ColorFlags = true;
         this.applyDefaultColorMusic("#000000"); // black. undefined is only black if a note's color hasn't been changed before.
         this.DefaultColorCursor = "#33e02f"; // green
-        this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
+        this.DefaultFontFamily = "Academico"; // default score text family
+        this.DefaultNotationFontFamily = "Bravura";
+        this.DefaultMusicTextFontFamily = "Bravura Text";
         this.DefaultFontStyle = FontStyles.Regular;
-        this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
+        this.DefaultVexFlowNoteFont = "Bravura"; // legacy no-op compatibility value on the modern VexFlow path
         this.MaxMeasureToDrawIndex = Number.MAX_VALUE;
         this.MaxMeasureToDrawNumber = Number.MAX_VALUE;
         this.MinMeasureToDrawIndex = 0;
@@ -1178,26 +1238,32 @@ export class EngravingRules {
         this.ChordSymbolLabelTexts.setValue(key, value);
     }
     public resetChordSymbolLabelTexts(chordtexts: Dictionary<ChordSymbolEnum, string>): Dictionary<ChordSymbolEnum, string> {
+        const diminishedSymbol: string = "o";
+        const halfDiminishedSymbol: string = "ø";
+        const augmentedSymbol: string = "+";
+        const majorSeventhSymbol: string = "△";
         chordtexts.setValue(ChordSymbolEnum.minor, "m");
-        chordtexts.setValue(ChordSymbolEnum.augmented, "aug");
-        chordtexts.setValue(ChordSymbolEnum.diminished, "dim");
+        chordtexts.setValue(ChordSymbolEnum.augmented, augmentedSymbol);
+        chordtexts.setValue(ChordSymbolEnum.diminished, diminishedSymbol);
         chordtexts.setValue(ChordSymbolEnum.dominant, "7");
-        chordtexts.setValue(ChordSymbolEnum.majorseventh, "maj7");
+        chordtexts.setValue(ChordSymbolEnum.majorseventh, majorSeventhSymbol);
         chordtexts.setValue(ChordSymbolEnum.minorseventh, "m7");
-        chordtexts.setValue(ChordSymbolEnum.diminishedseventh, "dim7");
-        chordtexts.setValue(ChordSymbolEnum.augmentedseventh, "aug7");
-        chordtexts.setValue(ChordSymbolEnum.halfdiminished, `m7${this.ChordAccidentalTexts.getValue(AccidentalEnum.FLAT)}5`);
-        chordtexts.setValue(ChordSymbolEnum.majorminor, "m(maj7)");
-        chordtexts.setValue(ChordSymbolEnum.majorsixth, "maj6");
+        chordtexts.setValue(ChordSymbolEnum.diminishedseventh, `${diminishedSymbol}7`);
+        chordtexts.setValue(ChordSymbolEnum.augmentedseventh, `${augmentedSymbol}7`);
+        // The half-diminished sign already denotes the seventh chord. Keep
+        // higher extensions explicit, but do not redundantly append "7".
+        chordtexts.setValue(ChordSymbolEnum.halfdiminished, halfDiminishedSymbol);
+        chordtexts.setValue(ChordSymbolEnum.majorminor, `m${majorSeventhSymbol}`);
+        chordtexts.setValue(ChordSymbolEnum.majorsixth, "6");
         chordtexts.setValue(ChordSymbolEnum.minorsixth, "m6");
         chordtexts.setValue(ChordSymbolEnum.dominantninth, "9");
-        chordtexts.setValue(ChordSymbolEnum.majorninth, "maj9");
+        chordtexts.setValue(ChordSymbolEnum.majorninth, `${majorSeventhSymbol}9`);
         chordtexts.setValue(ChordSymbolEnum.minorninth, "m9");
         chordtexts.setValue(ChordSymbolEnum.dominant11th, "11");
-        chordtexts.setValue(ChordSymbolEnum.major11th, "maj11");
+        chordtexts.setValue(ChordSymbolEnum.major11th, `${majorSeventhSymbol}11`);
         chordtexts.setValue(ChordSymbolEnum.minor11th, "m11");
         chordtexts.setValue(ChordSymbolEnum.dominant13th, "13");
-        chordtexts.setValue(ChordSymbolEnum.major13th, "maj13");
+        chordtexts.setValue(ChordSymbolEnum.major13th, `${majorSeventhSymbol}13`);
         chordtexts.setValue(ChordSymbolEnum.minor13th, "m13");
         chordtexts.setValue(ChordSymbolEnum.suspendedsecond, "sus2");
         chordtexts.setValue(ChordSymbolEnum.suspendedfourth, "sus4");
@@ -1251,11 +1317,11 @@ export class EngravingRules {
         this.addChordName("11sus2", "suspendedsecond", ["11"], [], []);
         this.addChordName("13sus2", "dominant13th", ["2"], [], ["3"]);
         this.addChordName("13sus2", "suspendedsecond", ["13"], [], []);
-        this.addChordName("m(maj9)", "majorminor", ["9"], [], []);
-        this.addChordName("m(maj11)", "majorminor", ["11"], [], []);
-        this.addChordName("m(maj13)", "majorminor", ["13"], [], []);
-        this.addChordName("69", "majorsixth", ["9"], [], []);
-        this.addChordName("mi69", "minorsixth", ["9"], [], []);
+        this.addChordName("m△9", "majorminor", ["9"], [], []);
+        this.addChordName("m△11", "majorminor", ["11"], [], []);
+        this.addChordName("m△13", "majorminor", ["13"], [], []);
+        this.addChordName("6/9", "majorsixth", ["9"], [], []);
+        this.addChordName("m6/9", "minorsixth", ["9"], [], []);
     }
 
     /**

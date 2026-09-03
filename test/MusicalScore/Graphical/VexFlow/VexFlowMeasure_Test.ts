@@ -29,6 +29,24 @@ import { AccidentalEnum } from "../../../../src/Common/DataObjects/Pitch";
 
 describe("VexFlow Measure", () => {
 
+   it("renders pedal markings through the modern VexFlow adapter", async (): Promise<void> => {
+      const container: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+      await osmd.load(TestUtils.getScore("test_pedal_signs.musicxml"));
+
+      expect(() => osmd.render()).to.not.throw();
+      expect(container.querySelector("svg")).to.not.equal(null);
+   });
+
+   it("renders x-shaped tablature notes through VexFlow 5 render options", async (): Promise<void> => {
+      const container: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+      await osmd.load(TestUtils.getScore("test_slide_glissando.musicxml"));
+
+      expect(() => osmd.render()).to.not.throw();
+      expect(container.querySelector("svg")).to.not.equal(null);
+   });
+
    it("Can create GraphicalMusicSheet", (done: Mocha.Done) => {
       const path: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
       const score: Document = TestUtils.getScore(path);
@@ -57,6 +75,212 @@ describe("VexFlow Measure", () => {
       expect(gms.MeasureList[0].length).to.equal(1);
       expect(gms.MeasureList[0][0].staffEntries.length).to.equal(0);
       done();
+   });
+
+   it("Formats consecutive volta pairs as dotted labels", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_repeat_volta_joined_1_2_separate_3.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+
+         const firstEndingMeasure: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(1, 0);
+         const thirdEndingMeasure: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(2, 0);
+
+         function getVoltaLabels(measure: GraphicalMeasure): string[] {
+            const stave: { getModifiers(): { getCategory(): string, number?: string, text?: string }[] } = (measure as any).stave;
+            return stave.getModifiers()
+               .filter((modifier: { getCategory(): string }): boolean => {
+                  const category: string = modifier.getCategory();
+                  return category === "voltas" || category === "Volta";
+               })
+               .map((modifier: { number?: string, text?: string }): string => String(modifier.number ?? modifier.text ?? ""));
+         }
+
+         expect(getVoltaLabels(firstEndingMeasure)).to.deep.equal(["1.2."]);
+         expect(getVoltaLabels(thirdEndingMeasure)).to.deep.equal(["3."]);
+         done();
+      }).catch(done);
+   });
+
+   it("aligns adjacent volta lines to the highest required lane", async (): Promise<void> => {
+      const source: Document = TestUtils.getScore("test_repeat_volta_1_2_3.musicxml");
+      const score: Document = source.cloneNode(true) as Document;
+      const firstEndingOctave: Element = score.querySelector('measure[number="2"] pitch octave');
+      firstEndingOctave.textContent = "7";
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+         TestUtils.getDivElement(document),
+      );
+      await osmd.load(score);
+      osmd.render();
+
+      const voltaYShift: (measureIndex: number) => number = (measureIndex: number): number => {
+         const measure: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(measureIndex, 0);
+         const volta: any = (measure as any).stave.getModifiers().find((modifier: any): boolean => {
+            const category: string = modifier.getCategory?.();
+            return category === "voltas" || category === "Volta";
+         });
+         expect(volta, `measure ${measureIndex + 1} volta`).to.not.equal(undefined);
+         return volta.getYShift();
+      };
+      const endingYShifts: number[] = [1, 2, 3].map(voltaYShift);
+
+      expect(Math.max(...endingYShifts) - Math.min(...endingYShifts)).to.be.lessThan(0.001);
+   });
+
+   it("uses the open lower notehead edge for a stem-down chord tie", async (): Promise<void> => {
+      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+<part id="P1"><measure number="1"><attributes><divisions>1</divisions>
+<time><beats>6</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+<note><pitch><step>F</step><octave>4</octave></pitch><duration>3</duration><tie type="start"/>
+<voice>1</voice><type>half</type><dot/><stem>down</stem><notations><tied type="start" orientation="under"/></notations></note>
+<note><chord/><pitch><step>C</step><octave>4</octave></pitch><duration>3</duration><tie type="start"/>
+<voice>1</voice><type>half</type><dot/><stem>down</stem><notations><tied type="start" orientation="under"/></notations></note>
+<note><pitch><step>F</step><octave>4</octave></pitch><duration>2</duration><tie type="stop"/>
+<voice>1</voice><type>half</type><stem>down</stem><notations><tied type="stop" orientation="under"/></notations></note>
+<note><chord/><pitch><step>C</step><octave>4</octave></pitch><duration>2</duration><tie type="stop"/>
+<voice>1</voice><type>half</type><stem>down</stem><notations><tied type="stop" orientation="under"/></notations></note>
+<note><rest/><duration>1</duration><voice>1</voice><type>quarter</type></note>
+</measure></part></score-partwise>`;
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+         TestUtils.getDivElement(document),
+      );
+      await osmd.load(xml);
+      osmd.render();
+
+      const measure: any = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+      const ties: any[] = measure.vfTies.filter((tie: any): boolean => tie.getNotes().firstNote);
+      expect(ties).to.have.length(2);
+      const tiesByHeight: any[] = ties.slice().sort((left: any, right: any): number => {
+         const leftNotes: any = left.getNotes();
+         const rightNotes: any = right.getNotes();
+         return leftNotes.firstNote.getSelectedNoteHeadBounds(leftNotes.firstIndexes[0]).centerY -
+            rightNotes.firstNote.getSelectedNoteHeadBounds(rightNotes.firstIndexes[0]).centerY;
+      });
+      const upperTie: any = tiesByHeight[0];
+      const lowerTie: any = tiesByHeight[1];
+      const lowerNotes: any = lowerTie.getNotes();
+      const lowerHead: any = lowerNotes.firstNote.getSelectedNoteHeadBounds(lowerNotes.firstIndexes[0]);
+      const lowerStartX: number = lowerTie.getRenderedTieCurves()[0].start.x;
+      const upperNotes: any = upperTie.getNotes();
+      const upperHead: any = upperNotes.firstNote.getSelectedNoteHeadBounds(upperNotes.firstIndexes[0]);
+      const upperStartX: number = upperTie.getRenderedTieCurves()[0].start.x;
+
+      expect(lowerStartX - lowerHead.right).to.be.closeTo(1.5, 0.01);
+      expect(upperStartX - upperHead.right).to.be.greaterThan(lowerStartX - lowerHead.right + 1);
+
+      osmd.render();
+      expect(lowerTie.getRenderedTieCurves()[0].start.x).to.be.closeTo(lowerStartX, 0.01);
+   });
+
+   it("uses the selected outer notehead edges for above and below ties", async (): Promise<void> => {
+      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+<part id="P1"><measure number="1"><attributes><divisions>1</divisions>
+<time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+<note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><tie type="start"/>
+<voice>1</voice><type>half</type><stem>down</stem><notations><tied type="start" orientation="under"/></notations></note>
+<note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><tie type="start"/>
+<voice>1</voice><type>half</type><stem>down</stem><notations><tied type="start" orientation="over"/></notations></note>
+<note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><tie type="stop"/>
+<voice>1</voice><type>half</type><stem>up</stem><notations><tied type="stop" orientation="under"/></notations></note>
+<note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><tie type="stop"/>
+<voice>1</voice><type>half</type><stem>up</stem><notations><tied type="stop" orientation="over"/></notations></note>
+</measure></part></score-partwise>`;
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+         TestUtils.getDivElement(document),
+      );
+      await osmd.load(xml);
+      osmd.render();
+
+      const measure: any = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+      const ties: any[] = measure.vfTies.filter((tie: any): boolean =>
+         Boolean(tie.getNotes().firstNote && tie.getNotes().lastNote));
+      expect(ties).to.have.length(2);
+      for (const tie of ties) {
+         const notes: any = tie.getNotes();
+         const firstHead: any = notes.firstNote.getSelectedNoteHeadBounds(notes.firstIndexes[0]);
+         const lastHead: any = notes.lastNote.getSelectedNoteHeadBounds(notes.lastIndexes[0]);
+         const curve: any = tie.getRenderedTieCurves()[0];
+         expect(curve.start.x - firstHead.right).to.be.closeTo(1.5, 0.01);
+         expect(lastHead.left - curve.end.x).to.be.closeTo(1.5, 0.01);
+      }
+
+      const firstRender: {start: number, end: number}[] = ties.map((tie: any) => ({
+         start: tie.getRenderedTieCurves()[0].start.x,
+         end: tie.getRenderedTieCurves()[0].end.x,
+      }));
+      osmd.render();
+      ties.forEach((tie: any, index: number): void => {
+         expect(tie.getRenderedTieCurves()[0].start.x).to.be.closeTo(firstRender[index].start, 0.01);
+         expect(tie.getRenderedTieCurves()[0].end.x).to.be.closeTo(firstRender[index].end, 0.01);
+      });
+   });
+
+   it("does not shorten an outer tie endpoint through a facing stem", async (): Promise<void> => {
+      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+<part id="P1"><measure number="1"><attributes><divisions>1</divisions>
+<time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+<note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+<note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><tie type="start"/>
+<voice>1</voice><type>half</type><stem>up</stem><notations><tied type="start" orientation="over"/></notations></note>
+<note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><stem>down</stem></note>
+<note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><tie type="stop"/>
+<voice>1</voice><type>half</type><stem>down</stem><notations><tied type="stop" orientation="over"/></notations></note>
+</measure></part></score-partwise>`;
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+         TestUtils.getDivElement(document),
+      );
+      await osmd.load(xml);
+      osmd.render();
+
+      const measure: any = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+      const tie: any = measure.vfTies.find((candidate: any): boolean =>
+         Boolean(candidate.getNotes().firstNote && candidate.getNotes().lastNote));
+      expect(tie).to.not.equal(undefined);
+      expect(tie.renderOptions.firstXShift).to.equal(0);
+      expect(tie.renderOptions.lastXShift).to.equal(0);
+      expect(tie.getRenderedTieCurves()[0].start.x).to.be.closeTo(tie.getFirstX(), 0.01);
+      expect(tie.getRenderedTieCurves()[0].end.x).to.be.closeTo(tie.getLastX(), 0.01);
+   });
+
+   it("leaves clearance before a short tie enters an inner chord note", async (): Promise<void> => {
+      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+<part id="P1"><measure number="1"><attributes><divisions>1</divisions>
+<time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>F</sign><line>4</line></clef></attributes>
+<note><pitch><step>F</step><octave>3</octave></pitch><duration>1</duration><tie type="start"/>
+<voice>1</voice><type>quarter</type><stem>down</stem><notations><tied type="start" orientation="under"/></notations></note>
+<note><pitch><step>A</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+<note><chord/><pitch><step>F</step><octave>3</octave></pitch><duration>1</duration><tie type="stop"/>
+<voice>1</voice><type>quarter</type><stem>down</stem><notations><tied type="stop" orientation="under"/></notations></note>
+<note><chord/><pitch><step>D</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+<note><rest/><duration>2</duration><voice>1</voice><type>half</type></note>
+</measure></part></score-partwise>`;
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(
+         TestUtils.getDivElement(document),
+      );
+      await osmd.load(xml);
+      osmd.render();
+
+      const measure: any = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+      const tie: any = measure.vfTies.find((candidate: any): boolean => {
+         const candidateNotes: any = candidate.getNotes();
+         return candidateNotes.lastNote?.getYs?.().length === 3;
+      });
+      expect(tie).to.not.equal(undefined);
+      const notes: any = tie.getNotes();
+      const heads: any[] = notes.lastNote.getYs().map((_: number, index: number): any =>
+         notes.lastNote.getSelectedNoteHeadBounds(index));
+      const chordLeft: number = Math.min(...heads.map((head: any): number => head.left));
+      const endX: number = tie.getRenderedTieCurves()[0].end.x;
+      expect(chordLeft - endX).to.be.closeTo(2, 0.01);
+
+      osmd.render();
+      expect(tie.getRenderedTieCurves()[0].end.x).to.be.closeTo(endX, 0.01);
    });
 
    it("Renders a tie between enharmonic spellings", (done: Mocha.Done) => {
@@ -212,7 +436,10 @@ describe("VexFlow Measure", () => {
       function firstMeasureHasTimeSignature(osmd: OpenSheetMusicDisplay): boolean {
          const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
          const stave: any = (gm as any).stave; // VexFlowMeasure.stave is protected, only need it here in the test
-         return stave.getModifiers().some((m: { getCategory(): string }) => m.getCategory() === "timesignatures");
+         return stave.getModifiers().some((m: { getCategory(): string }) => {
+            const category: string = m.getCategory();
+            return category === "timesignatures" || category === "TimeSignature";
+         });
       }
 
       const osmdDefault: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
@@ -426,7 +653,6 @@ describe("VexFlow Measure", () => {
 
       const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-
       osmdOff.load(xml).then(() => {
          osmdOff.EngravingRules.SlurFlattenToObstacle = false;
          osmdOff.render();
@@ -442,23 +668,28 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
-   // Non-regression test for the WIDTH-DRIVEN case of SlurFlattenToObstacle (issue #1466): a wide slur over a
-   // (near-)flat passage must not balloon. The minimum-arc floor grows with sqrt(width) rather than linearly, so
-   // wide slurs stay proportionally flat. Chopin Étude Op. 10 No. 4 has several system-spanning slurs that would
-   // otherwise arc very high; this checks the widest slur on the sheet is flattened substantially.
-   it("Keeps a wide slur over a flat passage from ballooning (SlurFlattenToObstacle, width-driven)", (done: Mocha.Done) => {
+   // Candidate-layout non-regression for issue #1466: the widest slur on this near-flat passage must retain a
+   // conservative arc. Comparing an enabled/disabled pre-candidate seed rule is no longer meaningful because the
+   // candidate solver owns the selected curve; assert the selected geometry itself instead.
+   it("Keeps a wide slur over a flat passage proportionally shallow", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_dynamics_attribute_Chopin_Etudes_op_10_4_Duepree02.musicxml");
       if (!score) {
          done(new Error("Score file not found"));
          return;
       }
       const xml: string = new XMLSerializer().serializeToString(score);
+      type WidestSlurGeometry = {
+         width: number;
+         arc: number;
+         selected: boolean;
+      };
 
-      // arc height (max distance from the straight start-end chord) of the WIDEST slur on the sheet
-      function widestSlurArcHeight(osmd: OpenSheetMusicDisplay): number {
+      // Width and arc height (maximum distance from the start-end chord) of the widest selected slur.
+      function widestSlurGeometry(renderer: OpenSheetMusicDisplay): WidestSlurGeometry {
          let widestWidth: number = 0;
          let arcOfWidest: number = 0;
-         for (const page of osmd.GraphicSheet.MusicPages) {
+         let selected: boolean = false;
+         for (const page of renderer.GraphicSheet.MusicPages) {
             for (const system of page.MusicSystems) {
                for (const staffLine of system.StaffLines) {
                   for (const gSlur of staffLine.GraphicalSlurs) {
@@ -481,31 +712,26 @@ describe("VexFlow Measure", () => {
                      }
                      widestWidth = width;
                      arcOfWidest = arc;
+                     selected = Boolean(gSlur.diagnostics.selectedCandidateId);
                   }
                }
             }
          }
-         return arcOfWidest;
+         return {width: widestWidth, arc: arcOfWidest, selected};
       }
 
-      const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-      const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-
-      osmdOff.load(xml).then(() => {
-         osmdOff.EngravingRules.SlurFlattenToObstacle = false;
-         osmdOff.render();
-         const arcWithout: number = widestSlurArcHeight(osmdOff);
-
-         return osmdOn.load(xml).then(() => {
-            osmdOn.render(); // SlurFlattenToObstacle is true by default
-            const arcWith: number = widestSlurArcHeight(osmdOn);
-            // the widest slur spans a (near-)flat passage, so flattening should cut its arc well below half
-            expect(arcWith, `widest slur's flattened arc (${arcWith.toFixed(1)}) should be far below unflattened (${arcWithout.toFixed(1)})`)
-               .to.be.lessThan(arcWithout * 0.65);
-            done();
-         });
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmd.load(xml).then(() => {
+         osmd.render();
+         const geometry: WidestSlurGeometry = widestSlurGeometry(osmd);
+         expect(geometry.selected, "the widest slur should come from the candidate solver").to.equal(true);
+         expect(geometry.width, "fixture must still exercise a genuinely wide slur").to.be.greaterThan(16);
+         expect(Number.isFinite(geometry.arc / geometry.width), "arc ratio should be finite").to.equal(true);
+         expect(geometry.arc / geometry.width, "wide slur should remain proportionally shallow")
+            .to.be.lessThan(0.08);
+         done();
       }).catch(done);
-   });
+   }).timeout(60000);
 
    // Regression test for NaN slur curves: measure 23 of the Moonlight sonata sample has a note carrying both a
    // slur start and an orphan slur stop with the same number (Sibelius export quirk). The stop used to close the

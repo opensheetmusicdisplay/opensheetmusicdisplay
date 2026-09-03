@@ -8,15 +8,16 @@ import { VexFlowTextMeasurer } from "../../../src/MusicalScore/Graphical/VexFlow
 import { VexFlowMeasure } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import { GraphicalMusicSheet } from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { EngravingRules } from "../../../src/MusicalScore/Graphical/EngravingRules";
-import { GraphicalLabel } from "../../../src/MusicalScore/Graphical/GraphicalLabel";
 import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
 import { MusicSystem } from "../../../src/MusicalScore/Graphical/MusicSystem";
 import { BoundingBox } from "../../../src/MusicalScore/Graphical/BoundingBox";
 import { TestUtils } from "../../Util/TestUtils";
-import Vex from "vexflow";
-import VF = Vex.Flow;
+import * as VF from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowAdapter";
 
 interface LabelRect {
+    baseline: number;
+    parentY: number;
+    relativeY: number;
     left: number;
     right: number;
     top: number;
@@ -58,25 +59,37 @@ function absolutePosition(bbox: BoundingBox): { x: number, y: number } {
 }
 
 /**
- * Collects the absolute label rectangles (without margins) of all chord symbols in a staff line.
- * @param staffLine the staff line to collect chord symbol labels from
- * @returns the label rectangles
+ * Collects the absolute aggregate rectangles (without margins) of all chord
+ * symbols in a staff line. A slash chord contains independently aligned labels,
+ * so its first label is not a reliable proxy for the construction.
+ * @param staffLine the staff line to collect chord symbol rectangles from
+ * @returns the chord symbol rectangles
  */
 function collectChordLabelRects(staffLine: StaffLine): LabelRect[] {
     const rects: LabelRect[] = [];
     for (const measure of staffLine.Measures) {
-        for (const staffEntry of measure.staffEntries) {
-            for (const chordContainer of staffEntry.graphicalChordContainers) {
-                const label: GraphicalLabel = chordContainer.GraphicalLabel;
-                const pos: { x: number, y: number } = absolutePosition(label.PositionAndShape);
-                rects.push({
-                    left: pos.x + label.PositionAndShape.BorderLeft,
-                    right: pos.x + label.PositionAndShape.BorderRight,
-                    top: pos.y + label.PositionAndShape.BorderTop,
-                    bottom: pos.y + label.PositionAndShape.BorderBottom,
-                    text: label.Label.text
-                });
-            }
+        rects.push(...collectMeasureChordLabelRects(measure as VexFlowMeasure));
+    }
+    return rects;
+}
+
+function collectMeasureChordLabelRects(measure: VexFlowMeasure): LabelRect[] {
+    const rects: LabelRect[] = [];
+    for (const staffEntry of measure.staffEntries) {
+        for (const chordContainer of staffEntry.graphicalChordContainers) {
+            const bbox: BoundingBox = chordContainer.PositionAndShape;
+            const pos: { x: number, y: number } = absolutePosition(bbox);
+            const parentPos: { x: number, y: number } = absolutePosition(bbox.Parent);
+            rects.push({
+                baseline: pos.y,
+                parentY: parentPos.y,
+                relativeY: bbox.RelativePosition.y,
+                left: pos.x + bbox.BorderLeft,
+                right: pos.x + bbox.BorderRight,
+                top: pos.y + bbox.BorderTop,
+                bottom: pos.y + bbox.BorderBottom,
+                text: chordContainer.GraphicalLabels.map((label) => label.Label.text).join("|")
+            });
         }
     }
     return rects;
@@ -96,6 +109,35 @@ function expectNoOverlaps(rects: LabelRect[]): void {
             const yOverlap: number = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
             const overlaps: boolean = xOverlap > epsilon && yOverlap > epsilon;
             expect(overlaps, `chord symbol labels "${a.text}" and "${b.text}" overlap`).to.equal(false);
+        }
+    }
+}
+
+/**
+ * Expects every harmony construction to finish before its owning measure's
+ * right barline with enough room for a measure number centred on that boundary.
+ * This checks the complete composite footprint, including slash basses and
+ * polychord separators, rather than only the upper label.
+ * @param graphicalSheet the calculated score to inspect
+ */
+function expectChordFootprintsBeforeBarlines(graphicalSheet: GraphicalMusicSheet): void {
+    const rules: EngravingRules = new EngravingRules();
+    const minimumClearance: number = Math.max(
+        rules.ChordSymbolXSpacing,
+        rules.MeasureNumberLabelHeight / 2,
+    );
+    for (const measuresOfAllStaves of graphicalSheet.MeasureList) {
+        for (const measure of measuresOfAllStaves as VexFlowMeasure[]) {
+            const chordRects: LabelRect[] = collectMeasureChordLabelRects(measure);
+            if (chordRects.length === 0) {
+                continue;
+            }
+            const measurePosition: {x: number, y: number} = absolutePosition(measure.PositionAndShape);
+            const measureRight: number = measurePosition.x + measure.PositionAndShape.Size.width;
+            const chordRight: number = Math.max(...chordRects.map((rect: LabelRect): number => rect.right));
+            expect(measureRight - chordRight,
+                `measure ${measure.MeasureNumber} chord-to-barline clearance`).to.be.at.least(
+                    minimumClearance - 0.01);
         }
     }
 }
@@ -128,17 +170,69 @@ describe("Chord symbol and repetition instruction collision avoidance", () => {
             }
         });
 
-        it("stacks colliding chord symbols above each other", () => {
+        it("keeps horizontally constrained chord symbols on one line", () => {
             let stackedPairFound: boolean = false;
             for (const staffLine of staffLines) {
                 const rects: LabelRect[] = collectChordLabelRects(staffLine);
                 for (let i: number = 1; i < rects.length; i++) {
-                    if (Math.abs(rects[i].top - rects[i - 1].top) > 0.5) {
+                    if (Math.abs(rects[i].baseline - rects[i - 1].baseline) > 0.5) {
                         stackedPairFound = true;
                     }
                 }
+                expect(stackedPairFound, `chord symbols should reserve horizontal space: ${rects.map((rect) =>
+                    `${rect.text}@x${rect.left.toFixed(2)}-${rect.right.toFixed(2)},y${rect.baseline.toFixed(2)}` +
+                    `(parent ${rect.parentY.toFixed(2)} + local ${rect.relativeY.toFixed(2)})`,
+                ).join("; ")}`).to.equal(false);
             }
-            expect(stackedPairFound, "at least one chord symbol is stacked above a colliding one").to.equal(true);
+        });
+
+        it("expands every whole-note measure to contain its late chord symbol", () => {
+            for (const measuresOfAllStaves of graphicalSheet.MeasureList) {
+                const measure: VexFlowMeasure = measuresOfAllStaves[0] as VexFlowMeasure;
+                const chordRects: LabelRect[] = collectMeasureChordLabelRects(measure);
+                expect(chordRects).to.have.length(2);
+            }
+            expectChordFootprintsBeforeBarlines(graphicalSheet);
+        });
+
+        it("does not give the opening bar extra rhythmic width beyond its instructions", () => {
+            const measures: VexFlowMeasure[] = graphicalSheet.MeasureList.map(
+                (verticalMeasures: VexFlowMeasure[]): VexFlowMeasure => verticalMeasures[0],
+            );
+            const variableWidths: number[] = measures.map((measure: VexFlowMeasure): number =>
+                measure.PositionAndShape.Size.width -
+                measure.beginInstructionsWidth -
+                measure.endInstructionsWidth,
+            );
+            expect(measures[0].beginInstructionsWidth).to.be.greaterThan(measures[1].beginInstructionsWidth);
+            expect(variableWidths[0]).to.be.at.most(Math.max(...variableWidths.slice(1)) + 0.01);
+            const chordClearances: number[] = measures.map((measure: VexFlowMeasure): number => {
+                const measurePosition: {x: number, y: number} = absolutePosition(measure.PositionAndShape);
+                const measureRight: number = measurePosition.x + measure.PositionAndShape.Size.width;
+                const chordRight: number = Math.max(...collectMeasureChordLabelRects(measure).map(
+                    (rect: LabelRect): number => rect.right,
+                ));
+                return measureRight - chordRight;
+            });
+            const diagnostics: object[] = measures.slice(0, 2).map((measure: VexFlowMeasure, index: number): object => ({
+                measure: measure.MeasureNumber,
+                width: measure.PositionAndShape.Size.width,
+                begin: measure.beginInstructionsWidth,
+                end: measure.endInstructionsWidth,
+                firstEntryX: measure.staffEntries[0].PositionAndShape.RelativePosition.x,
+                minimumStaffEntriesWidth: measure.minimumStaffEntriesWidth,
+                variableWidth: variableWidths[index],
+                chordClearance: chordClearances[index],
+            }));
+            expect(chordClearances[0], JSON.stringify(diagnostics)).to.be.closeTo(chordClearances[1], 0.01);
+        });
+    });
+
+    describe("varied chord-symbol barline clearance", () => {
+        it("places each barline after the final harmony skyline footprint", () => {
+            const graphicalSheet: GraphicalMusicSheet = buildGraphicalMusicSheet(
+                "OSMD_function_test_chord_tests_various.musicxml");
+            expectChordFootprintsBeforeBarlines(graphicalSheet);
         });
     });
 

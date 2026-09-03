@@ -4,15 +4,18 @@ import {MusicSheetCalculator} from "../Graphical/MusicSheetCalculator";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 import { EngravingRules } from "../Graphical/EngravingRules";
 import { PlacementEnum } from "./Expressions/AbstractExpression";
+import {
+    SMUFL_CHORD_AUGMENTED_GLYPH,
+    SMUFL_CHORD_DIMINISHED_GLYPH,
+    SMUFL_CHORD_HALF_DIMINISHED_GLYPH,
+    SMUFL_CHORD_MAJOR_SEVENTH_GLYPH,
+} from "../../Common/DataObjects/ChordSymbolGlyphs";
 
 export class ChordSymbolContainer {
-    private rootPitch: Pitch;
-    private chordKind: ChordSymbolEnum;
-    public NumeralText: string;
-    private bassPitch: Pitch;
-    private degrees: Degree[];
+    private components: HarmonyChordComponent[];
     private rules: EngravingRules;
     public Placement: PlacementEnum;
+    public Arrangement: HarmonyArrangement;
 
     constructor(
         rootPitch: Pitch,
@@ -20,56 +23,97 @@ export class ChordSymbolContainer {
         bassPitch: Pitch,
         chordDegrees: Degree[],
         rules: EngravingRules,
-        placement: PlacementEnum = PlacementEnum.Above
+        placement: PlacementEnum = PlacementEnum.Above,
+        components?: HarmonyChordComponent[],
+        arrangement: HarmonyArrangement = undefined,
+        bassSeparator: HarmonySeparator = undefined,
     ) {
-        this.rootPitch = rootPitch;
-        this.chordKind = chordKind;
-        this.bassPitch = bassPitch;
-        this.degrees = chordDegrees;
+        this.components = components?.length > 0
+            ? components
+            : [new HarmonyChordComponent(rootPitch, chordKind, bassPitch, chordDegrees)];
         this.rules = rules;
         this.Placement = placement;
+        this.Arrangement = arrangement ?? (this.components.length > 1
+            ? HarmonyArrangement.Vertical
+            : HarmonyArrangement.Diagonal);
+        if (bassSeparator && this.components[0]) {
+            this.components[0].BassSeparator = bassSeparator;
+        }
     }
 
     public get RootPitch(): Pitch {
-        return this.rootPitch;
+        return this.components[0]?.RootPitch;
     }
 
     public get ChordKind(): ChordSymbolEnum {
-        return this.chordKind;
+        return this.components[0]?.ChordKind;
     }
 
     public get BassPitch(): Pitch {
-        return this.bassPitch;
+        return this.components[0]?.BassPitch;
     }
 
     public get ChordDegrees(): Degree[] {
-        return this.degrees;
+        return this.components[0]?.ChordDegrees ?? [];
+    }
+
+    public get Components(): HarmonyChordComponent[] {
+        return this.components;
+    }
+
+    public get NumeralText(): string {
+        return this.components[0]?.NumeralText;
+    }
+
+    public set NumeralText(value: string) {
+        if (this.components[0]) {
+            this.components[0].NumeralText = value;
+        }
+    }
+
+    public get BassSeparator(): HarmonySeparator {
+        return this.components[0]?.BassSeparator;
     }
 
     public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number, keyInstruction: KeyInstruction): string {
-        // if (!chordSymbol) { // undefined
-        //     return; // handled in VexFlowGraphicalSymbolFactory.createChordSymbols
-        // }
-        if (chordSymbol.NumeralText !== undefined) { // if(chordSymbol.NumeralText) doesn't match empty string
-            return chordSymbol.NumeralText;
-        }
-        let transposedRootPitch: Pitch = chordSymbol.RootPitch;
+        const componentTexts: string[] = chordSymbol.Components.map((component: HarmonyChordComponent): string =>
+            chordSymbol.calculateComponentText(component, transposeHalftones, keyInstruction),
+        );
+        const separator: string = chordSymbol.Arrangement === HarmonyArrangement.Vertical ? "\n" : "/";
+        return componentTexts.join(separator);
+    }
 
+    public calculateComponentText(component: HarmonyChordComponent, transposeHalftones: number,
+                                  keyInstruction: KeyInstruction, includeBass: boolean = true): string {
+        let text: string = this.calculateUpperHarmonyText(component, transposeHalftones, keyInstruction);
+        if (includeBass && component.BassPitch) {
+            text += component.BassSeparator?.text ?? "/";
+            text += this.calculateBassText(component, transposeHalftones, keyInstruction);
+        }
+        return text;
+    }
+
+    public calculateUpperHarmonyText(component: HarmonyChordComponent, transposeHalftones: number,
+                                     keyInstruction: KeyInstruction): string {
+        if (component.NumeralText !== undefined) {
+            return component.NumeralText;
+        }
+        let transposedRootPitch: Pitch = component.RootPitch;
         if (MusicSheetCalculator.transposeCalculator) {
             transposedRootPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
-                chordSymbol.RootPitch,
+                component.RootPitch,
                 keyInstruction,
                 transposeHalftones
             );
         }
-        if (chordSymbol.ChordKind === ChordSymbolEnum.none) {
-            return chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
+        if (component.ChordKind === ChordSymbolEnum.none) {
+            return this.getTextFromChordKindEnum(component.ChordKind);
         }
         // main Note
         let text: string = Pitch.getNoteEnumString(transposedRootPitch.FundamentalNote);
         // main alteration
         if (transposedRootPitch.Accidental !== AccidentalEnum.NONE) {
-            text += chordSymbol.getTextForAccidental(transposedRootPitch.Accidental);
+            text += this.getTextForAccidental(transposedRootPitch.Accidental);
         }
 
         // degrees
@@ -79,11 +123,11 @@ export class ChordSymbolContainer {
             subs: [],
         };
 
-        for (const chordDegree of chordSymbol.ChordDegrees) {
+        for (const chordDegree of component.ChordDegrees) {
             if (chordDegree) {
                 let t: string = "";
                 if (chordDegree.alteration !== AccidentalEnum.NONE) {
-                    t += chordSymbol.getTextForAccidental(chordDegree.alteration);
+                    t += this.getTextForAccidental(chordDegree.alteration);
                 }
                 t += chordDegree.value;
                 switch (chordDegree.text) {
@@ -102,11 +146,11 @@ export class ChordSymbolContainer {
         }
 
         // chord kind text
-        let chordKind: string = chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
+        let chordKind: string = this.getTextFromChordKindEnum(component.ChordKind);
         const degreeTypeAry: string[] = ["adds", "alts", "subs"];
-        const customChords: CustomChord[] = chordSymbol.rules.CustomChords;
+        const customChords: CustomChord[] = this.rules.CustomChords;
         for (const customChord of customChords) {
-            if (customChord.chordKind !== chordSymbol.chordKind) {
+            if (customChord.chordKind !== component.ChordKind) {
                 continue;
             }
 
@@ -144,21 +188,24 @@ export class ChordSymbolContainer {
             text += "(omit " + degrees.subs.join(",") + ")";
         }
 
-        // bass
-        if (chordSymbol.BassPitch) {
-            let transposedBassPitch: Pitch = chordSymbol.BassPitch;
-            if (MusicSheetCalculator.transposeCalculator) {
-                transposedBassPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
-                    chordSymbol.BassPitch,
-                    keyInstruction,
-                    transposeHalftones
-                );
-            }
-            text += "/";
-            text += Pitch.getNoteEnumString(transposedBassPitch.FundamentalNote);
-            text += chordSymbol.getTextForAccidental(transposedBassPitch.Accidental);
-        }
         return text;
+    }
+
+    public calculateBassText(component: HarmonyChordComponent, transposeHalftones: number,
+                             keyInstruction: KeyInstruction): string {
+        if (!component.BassPitch) {
+            return "";
+        }
+        let transposedBassPitch: Pitch = component.BassPitch;
+        if (MusicSheetCalculator.transposeCalculator) {
+            transposedBassPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
+                component.BassPitch,
+                keyInstruction,
+                transposeHalftones
+            );
+        }
+        return Pitch.getNoteEnumString(transposedBassPitch.FundamentalNote) +
+            this.getTextForAccidental(transposedBassPitch.Accidental);
     }
 
     private getTextForAccidental(alteration: AccidentalEnum): string {
@@ -167,9 +214,71 @@ export class ChordSymbolContainer {
     }
 
     private getTextFromChordKindEnum(kind: ChordSymbolEnum): string {
-        return this.rules.ChordSymbolLabelTexts.getValue(kind) ?? "";
+        const configured: string = this.rules.ChordSymbolLabelTexts.getValue(kind) ?? "";
+        switch (kind) {
+            case ChordSymbolEnum.augmented:
+            case ChordSymbolEnum.augmentedseventh:
+                return configured.replace(/^(?:aug|\+)/i, SMUFL_CHORD_AUGMENTED_GLYPH);
+            case ChordSymbolEnum.diminished:
+            case ChordSymbolEnum.diminishedseventh:
+                return configured.replace(/^(?:dim|o|°)/i, SMUFL_CHORD_DIMINISHED_GLYPH);
+            case ChordSymbolEnum.halfdiminished:
+                return configured.replace(/^(?:ø|0|half-diminished)/i, SMUFL_CHORD_HALF_DIMINISHED_GLYPH);
+            case ChordSymbolEnum.majorseventh:
+            case ChordSymbolEnum.majorninth:
+            case ChordSymbolEnum.major11th:
+            case ChordSymbolEnum.major13th:
+                return configured.replace(/^(?:major|maj|△)/i, SMUFL_CHORD_MAJOR_SEVENTH_GLYPH);
+            default:
+                return configured;
+        }
     }
 
+}
+
+export class HarmonyChordComponent {
+    public RootPitch: Pitch;
+    public ChordKind: ChordSymbolEnum;
+    public BassPitch: Pitch;
+    public ChordDegrees: Degree[];
+    public NumeralText: string;
+    public BassArrangement: HarmonyBassArrangement;
+    public BassSeparator: HarmonySeparator;
+
+    constructor(
+        rootPitch: Pitch,
+        chordKind: ChordSymbolEnum,
+        bassPitch: Pitch,
+        chordDegrees: Degree[] = [],
+        numeralText: string = undefined,
+        bassArrangement: HarmonyBassArrangement = undefined,
+        bassSeparator: HarmonySeparator = undefined,
+    ) {
+        this.RootPitch = rootPitch;
+        this.ChordKind = chordKind;
+        this.BassPitch = bassPitch;
+        this.ChordDegrees = chordDegrees;
+        this.NumeralText = numeralText;
+        this.BassArrangement = bassArrangement;
+        this.BassSeparator = bassSeparator;
+    }
+}
+
+export enum HarmonyArrangement {
+    Horizontal = "horizontal",
+    Vertical = "vertical",
+    Diagonal = "diagonal",
+}
+
+export enum HarmonyBassArrangement {
+    Horizontal = "horizontal",
+    Vertical = "vertical",
+    Diagonal = "diagonal",
+}
+
+export interface HarmonySeparator {
+    text?: string;
+    explicit: boolean;
 }
 
 export class Degree {

@@ -28,6 +28,8 @@ import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartMa
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
 import { TemposCalculator } from "../MusicalScore/ScoreIO/MusicSymbolModules/TemposCalculator";
+import { IOSMDFontProfile, loadAndApplyFontProfile } from "./FontProfile";
+import { DEFAULT_OSMD_FONT_PROFILE } from "./FontProfileActive";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -96,6 +98,10 @@ export class OpenSheetMusicDisplay {
     protected autoResizeEnabled: boolean;
     protected resizeHandlerAttached: boolean;
     protected followCursor: boolean;
+    protected fontProfile: IOSMDFontProfile = DEFAULT_OSMD_FONT_PROFILE;
+    protected fontLoadPromise: Promise<void>;
+    protected fontsReady: boolean = false;
+    protected embedFontProfileInSvg: boolean = true;
     /** A function that is executed when the XML has been read.
      * The return value will be used as the actual XML OSMD parses,
      * so you can make modifications to the xml that OSMD will use.
@@ -108,8 +114,9 @@ export class OpenSheetMusicDisplay {
      *   or the string content of a .xml/.mxl file, or a file blob.
      * @param tempTitle is used as the title for the piece if there is no title in the XML.
      */
-    public load(content: string | Document | Blob, tempTitle: string = "Untitled Score"): Promise<{}> {
+    public async load(content: string | Document | Blob, tempTitle: string = "Untitled Score"): Promise<{}> {
         // Warning! This function is asynchronous! No error handling is done here.
+        await this.loadFonts();
         this.reset();
         const self: OpenSheetMusicDisplay = this;
         if (content instanceof Blob) {
@@ -266,6 +273,9 @@ export class OpenSheetMusicDisplay {
 
     /** Render the loaded music sheet to the container. */
     public render(): void {
+        if (!this.fontsReady) {
+            throw new Error("OSMD: fonts must finish loading before render(). Await osmd.loadFonts() first.");
+        }
         if (!this.graphic) {
             throw new Error("OSMD: load() needs to be called before render()");
         }
@@ -1036,16 +1046,34 @@ export class OpenSheetMusicDisplay {
     }
 
     // for now SVG only, see generateImages_browserless (PNG/SVG)
-    public exportSVG(): void {
+    public exportSVG(): string[] {
+        const exports: string[] = [];
         if (!this.drawer) {
-            return;
+            return exports;
         }
         for (const backend of this.drawer.Backends) {
             if (backend instanceof SvgVexFlowBackend) {
-                (backend as SvgVexFlowBackend).export();
+                exports.push((backend as SvgVexFlowBackend).export());
             }
             // if we add CanvasVexFlowBackend exporting, rename function to export() or exportImages() again
         }
+        return exports;
+    }
+
+    /** Load, validate, and activate every face in the current font profile. */
+    public loadFonts(): Promise<void> {
+        if (!this.fontLoadPromise) {
+            this.fontLoadPromise = loadAndApplyFontProfile(this.fontProfile)
+                .then((): void => {
+                    this.fontsReady = true;
+                })
+                .catch((error: unknown): never => {
+                    this.fontLoadPromise = undefined;
+                    this.fontsReady = false;
+                    throw error;
+                });
+        }
+        return this.fontLoadPromise;
     }
 
     /** States whether the render() function can be safely called. */
@@ -1064,7 +1092,8 @@ export class OpenSheetMusicDisplay {
      *  For example, setOptions({autoResize: false}) will disable autoResize even during runtime.
      */
     public setOptions(options: IOSMDOptions): void {
-        if (!this.rules) {
+        const rulesCreated: boolean = !this.rules;
+        if (rulesCreated) {
             this.rules = new EngravingRules();
         }
         if (!this.drawingParameters && !options.drawingParameters) {
@@ -1100,6 +1129,21 @@ export class OpenSheetMusicDisplay {
         // TODO this is a necessary step during the OSMD constructor. Maybe move this somewhere else
 
         // individual drawing parameters options
+        if (options.fontProfile && options.fontProfile !== this.fontProfile) {
+            this.fontProfile = options.fontProfile;
+            this.fontLoadPromise = undefined;
+            this.fontsReady = false;
+            this.needBackendUpdate = true;
+        }
+        if (rulesCreated || options.fontProfile) {
+            this.rules.DefaultFontFamily = this.fontProfile.textFontFamily;
+            this.rules.DefaultNotationFontFamily = this.fontProfile.notationFontFamily;
+            this.rules.DefaultMusicTextFontFamily = this.fontProfile.musicTextFontFamily;
+        }
+        if (options.embedFontProfileInSvg !== undefined) {
+            this.embedFontProfileInSvg = options.embedFontProfileInSvg;
+            this.needBackendUpdate = true;
+        }
         if (options.autoBeam !== undefined) { // only change an option if it was given in options, otherwise it will be undefined
             this.rules.AutoBeamNotes = options.autoBeam;
         }
@@ -1250,7 +1294,7 @@ export class OpenSheetMusicDisplay {
             this.rules.DefaultColorTitle = options.defaultColorTitle;
         }
         if (options.defaultFontFamily) {
-            this.rules.DefaultFontFamily = options.defaultFontFamily; // default "Times New Roman", also used if font family not found
+            this.rules.DefaultFontFamily = options.defaultFontFamily; // default "Academico", also used if font family not found
         }
         if (options.defaultFontStyle) {
             this.rules.DefaultFontStyle = options.defaultFontStyle; // e.g. FontStyles.Bold
@@ -1553,11 +1597,12 @@ export class OpenSheetMusicDisplay {
                 }
 
                 // restore old cursor state
-                if (this.rules.RestoreCursorAfterRerender) {
-                    this.cursors[i].hidden = hidden;
+                const recreatedCursor: Cursor = this.cursors[i];
+                if (this.rules.RestoreCursorAfterRerender && recreatedCursor) {
+                    recreatedCursor.hidden = hidden;
                     if (previousIterator) {
-                        this.cursors[i].iterator = previousIterator;
-                        this.cursors[i].update();
+                        recreatedCursor.iterator = previousIterator;
+                        recreatedCursor.update();
                     }
                 }
             }
@@ -1574,7 +1619,7 @@ export class OpenSheetMusicDisplay {
     public createBackend(type: BackendType, page: GraphicalMusicPage, idOverride?: string): VexFlowBackend {
         let backend: VexFlowBackend;
         if (type === undefined || type === BackendType.SVG) {
-            backend = new SvgVexFlowBackend(this.rules);
+            backend = new SvgVexFlowBackend(this.rules, this.fontProfile, this.embedFontProfileInSvg);
         } else {
             backend = new CanvasVexFlowBackend(this.rules);
         }

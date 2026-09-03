@@ -140,6 +140,15 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     }
 
     /**
+     * Return the width of the beginning stave modifiers after any backend-specific
+     * alignment pass. Backends without a separate formatted representation use
+     * the instruction width already recorded on the graphical measure.
+     */
+    public getFormattedBeginInstructionsWidth(): number {
+        return this.beginInstructionsWidth ?? 0;
+    }
+
+    /**
      * Add the given clef to the begin of the measure.
      * This has to update/increase BeginInstructionsWidth.
      * @param clef
@@ -402,4 +411,3 @@ export abstract class GraphicalMeasure extends GraphicalObject {
         return transposeHalftones;
     }
 }
-

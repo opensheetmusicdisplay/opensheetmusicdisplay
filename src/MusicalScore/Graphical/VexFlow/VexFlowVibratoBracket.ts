@@ -3,13 +3,16 @@ import { BoundingBox } from "../BoundingBox";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalWavyLine } from "../GraphicalWavyLine";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
-import Vex from "vexflow";
+import * as VF from "./VexFlowAdapter";
+
+const LEGACY_WAVE_HEIGHT: number = 6;
+const LEGACY_VIBRATO_WIDTH: number = 20;
 
 export class VexFlowVibratoBracket extends GraphicalWavyLine {
     /** Defines the note where the bracket starts */
-    public startNote: Vex.Flow.StemmableNote;
+    public startNote: VF.StemmableNote;
     /** Defines the note where the bracket ends */
-    public endNote: Vex.Flow.StemmableNote;
+    public endNote: VF.StemmableNote;
     public startVfVoiceEntry: VexFlowVoiceEntry;
     public endVfVoiceEntry: VexFlowVoiceEntry;
     //Line where vexflow renders the bracket. VF default is 1
@@ -63,24 +66,74 @@ export class VexFlowVibratoBracket extends GraphicalWavyLine {
     }
 
     public CalculateBoundingBox(): void {
-        const vfBracket: any = this.getVibratoBracket();
-        //Double the height of the wave, coverted to units
-        this.boundingBox.Size.height = vfBracket.render_options.wave_height * 0.2;
+        // Preserve the legacy OSMD/VexFlow wavy-line headroom until the Stage 2
+        // skyline reconciliation is complete.
+        this.boundingBox.Size.height = LEGACY_WAVE_HEIGHT * 0.2;
     }
 
-    public getVibratoBracket(): Vex.Flow.VibratoBracket {
-		const bracket: Vex.Flow.VibratoBracket = new Vex.Flow.VibratoBracket({
-			start: this.startNote,
-			stop: this.endNote,
-            toEndOfStopStave: this.toEndOfStopStave
-		});
+    public getVibratoBracket(): VF.VibratoBracket {
+        const bracketData: { start?: VF.Note | null, stop?: VF.Note | null } = {
+            start: this.startNote,
+            stop: this.endNote,
+        };
+        const bracket: VF.VibratoBracket = new VF.VibratoBracket(bracketData);
         bracket.setLine(this.line);
+        this.installLegacyCompatibility(bracket as any);
+        return bracket;
+    }
+
+    private installLegacyCompatibility(bracket: any): void {
+        bracket.render_options ??= {
+            harsh: false,
+            vibrato_width: LEGACY_VIBRATO_WIDTH,
+            wave_height: LEGACY_WAVE_HEIGHT,
+            wave_width: 4,
+            wave_girth: 2,
+        };
+        bracket.render_options.wave_height = LEGACY_WAVE_HEIGHT;
         if (this.isVibrato) {
-			//Render options for vibrato style
-			(bracket as any).render_options.vibrato_width = 20;
-		} else {
-			(bracket as any).render_options.wave_girth = 4;
-		}
-		return bracket;
+            bracket.render_options.vibrato_width = LEGACY_VIBRATO_WIDTH;
+        } else {
+            bracket.render_options.wave_girth = 4;
+        }
+
+        bracket.draw = (): void => {
+            const ctx: VF.RenderContext = bracket.checkContext();
+            bracket.setRendered();
+
+            const startNote: VF.StemmableNote | undefined = this.startNote;
+            const endNote: VF.StemmableNote | undefined = this.endNote;
+            const y: number =
+                startNote?.checkStave?.().getYForTopText(this.line) ??
+                endNote?.checkStave?.().getYForTopText(this.line) ??
+                0;
+
+            const startNoteHeadBeginX: number | undefined = (startNote as any)?.getNoteHeadBeginX?.();
+            const startX: number = startNote
+                ? (startNoteHeadBeginX ?? startNote.getAbsoluteX()) + this.getTrillOffset(startNote)
+                : (endNote?.checkStave?.().getTieStartX() ?? 0);
+
+            const stopX: number = endNote
+                ? (this.toEndOfStopStave
+                    ? endNote.checkStave().getTieEndX() - 10
+                    : endNote.getAbsoluteX() + endNote.getWidth())
+                : ((startNote?.checkStave?.().getTieEndX() ?? 0) - 10);
+
+            const vibratoWidth: number = Math.max(0, stopX - startX);
+            bracket.render_options.vibrato_width = vibratoWidth;
+            bracket.vibrato?.setVibratoWidth?.(vibratoWidth);
+            bracket.vibrato?.renderText?.(ctx, startX, y);
+        };
+    }
+
+    private getTrillOffset(note: VF.StemmableNote): number {
+        const modifiers: any[] = (note as any).modifiers ?? note.getModifiers?.() ?? [];
+        for (const modifier of modifiers) {
+            const modifierType: string | undefined = modifier?.type ?? modifier?.getAttribute?.("type");
+            if (modifierType === "tr") {
+                return modifier.getWidth?.() ?? modifier.glyph?.bbox?.w ?? 0;
+            }
+        }
+        return 0;
     }
 }
