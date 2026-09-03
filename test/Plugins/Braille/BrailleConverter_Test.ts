@@ -784,6 +784,14 @@ describe("Braille Converter:", () => {
             chai.expect(renderDynamic(DynamicEnum.f).braille).to.equal(dynF);
             chai.expect(renderDynamic(DynamicEnum.pp).braille).to.equal(dynPP);
             chai.expect(renderDynamic(DynamicEnum.mf).braille).to.equal(getDynamicBraille("mf"));
+
+            // combined markings are transcribed from their text (the enum is only the first symbol, sf / ff)
+            chai.expect(renderDynamic(DynamicEnum.sf, "sfmp").braille).to.equal(getDynamicBraille("sfmp"));
+            chai.expect(renderDynamic(DynamicEnum.ff, "ffz").braille).to.equal(getDynamicBraille("ffz"));
+            chai.expect(getDynamicBraille("sfmp")).to.not.equal(getDynamicBraille("sf"));
+            // free text falls back to the enum: no stray letters from "con fuoco" or "cresc."
+            chai.expect(renderDynamic(DynamicEnum.f, "f con fuoco").braille).to.equal(dynF);
+            chai.expect(renderDynamic(undefined, "cresc.").braille).to.equal("");
             done();
         });
 

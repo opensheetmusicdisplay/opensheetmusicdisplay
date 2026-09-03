@@ -805,7 +805,7 @@ export class BrailleMeasureRenderer {
             // Instantaneous dynamics (p, f, mf, etc.)
             if (multiExpr.InstantaneousDynamic) {
                 const dynResult: BrailleExpressionResult =
-                    renderDynamic(multiExpr.InstantaneousDynamic.DynEnum);
+                    renderDynamic(multiExpr.InstantaneousDynamic.DynEnum, multiExpr.InstantaneousDynamic.DynamicExpression);
                 if (dynResult.braille) {
                     events.push({
                         timestamp: timestamp,

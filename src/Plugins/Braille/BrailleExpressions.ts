@@ -204,14 +204,22 @@ export function getOrnamentName(ornamentEnum: OrnamentEnum): string {
 // ── Dynamic rendering ───────────────────────────────────────────────────
 
 /**
- * Get the braille string for a DynamicEnum value.
+ * Get the braille string for a dynamic marking, given its playback enum and (optionally) its text as written.
+ *
+ * A combined marking like sfmp (<sf/><mp/>) or ffz is transcribed letter by letter from its text, since its
+ * enum is only its first symbol (sf, ff). Free text like "cresc." or "f con fuoco" falls back to the enum,
+ * so that no stray letters get transcribed.
  *
  * Per Music Braille Code 2015, Par. 22.3.3, dynamic markings are word-sign
  * expressions placed before the affected note. An octave mark is REQUIRED
  * on the note following any word-sign expression (Par. 22.3(e)).
  */
-export function renderDynamic(dynamicEnum: DynamicEnum): BrailleExpressionResult {
-    const name: string = DynamicEnum[dynamicEnum];
+export function renderDynamic(dynamicEnum: DynamicEnum, dynamicText?: string): BrailleExpressionResult {
+    let name: string = DynamicEnum[dynamicEnum];
+    const normalizedText: string = dynamicText?.trim().toLowerCase();
+    if (normalizedText && /^[pfmsrz]+$/.test(normalizedText)) { // only the letters getDynamicBraille() transcribes
+        name = normalizedText;
+    }
     if (!name || name === "other") {
         return { braille: "", debugEntries: [] };
     }
