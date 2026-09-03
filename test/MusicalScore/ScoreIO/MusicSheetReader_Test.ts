@@ -316,4 +316,33 @@ describe("Music Sheet Reader", () => {
             done();
         });
     });
+
+    describe("transpose octave-change", () => {
+        const filename: string = "test/data/test_transpose_octave_change.musicxml";
+        let transposeSheet: MusicSheet;
+
+        before((): void => {
+            const doc: Document = getSheet(filename);
+            expect(doc, filename + " should be preprocessed by karma").to.not.be.undefined;
+            const fileScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            transposeSheet = new MusicSheetReader().createMusicSheet(fileScore, filename);
+        });
+
+        // MusicXML: sounding pitch = written pitch + chromatic + 12 * octave-change.
+        // Only <chromatic> used to be read, so octave-transposing instruments were an octave off.
+        it("reads chromatic without octave-change unchanged (regression guard)", (done: Mocha.Done) => {
+            expect(transposeSheet.Instruments[0].PlaybackTranspose).to.equal(-2);
+            done();
+        });
+
+        it("adds 12 per octave-change (Bb tenor sax: chromatic -2, octave-change -1)", (done: Mocha.Done) => {
+            expect(transposeSheet.Instruments[1].PlaybackTranspose).to.equal(-14);
+            done();
+        });
+
+        it("reads octave-change without chromatic", (done: Mocha.Done) => {
+            expect(transposeSheet.Instruments[2].PlaybackTranspose).to.equal(12);
+            done();
+        });
+    });
 });

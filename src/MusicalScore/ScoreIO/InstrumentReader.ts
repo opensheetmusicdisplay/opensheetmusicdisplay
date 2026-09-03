@@ -820,9 +820,15 @@ export class InstrumentReader {
     }
     const transposeNode: IXmlElement = attrNode.element("transpose");
     if (transposeNode) {
+      // MusicXML: sounding pitch = written pitch + chromatic + 12 * octave-change.
+      // E.g. Bb clarinet: chromatic -2. Bb tenor sax: chromatic -2, octave-change -1.
       const chromaticNode: IXmlElement = transposeNode.element("chromatic");
-      if (chromaticNode) {
-        this.instrument.PlaybackTranspose = parseInt(chromaticNode.value, 10);
+      const octaveChangeNode: IXmlElement = transposeNode.element("octave-change");
+      const chromatic: number = chromaticNode ? parseInt(chromaticNode.value, 10) : NaN;
+      const octaveChange: number = octaveChangeNode ? parseInt(octaveChangeNode.value, 10) : NaN;
+      if (!isNaN(chromatic) || !isNaN(octaveChange)) {
+        this.instrument.PlaybackTranspose =
+          (isNaN(chromatic) ? 0 : chromatic) + 12 * (isNaN(octaveChange) ? 0 : octaveChange);
       }
     }
     const clefList: IXmlElement[] = attrNode.elements("clef");
