@@ -65,4 +65,27 @@ describe("ExpressionReader", () => {
             expect(readDynamicTexts(true)).to.deep.equal(["sfmp", "sfp", "p"]);
         });
     });
+
+    describe("MusicXML 4.0 dynamics pf, sfzp and n", () => {
+        let dynamics: InstantaneousDynamicExpression[];
+
+        before((): void => {
+            dynamics = collectDynamics(readSheet("test/data/test_dynamics_musicxml4_n_pf_sfzp.musicxml"));
+        });
+
+        it("reads them as known dynamics", () => {
+            expect(dynamics.map((dynamic: InstantaneousDynamicExpression): string => dynamic.DynamicExpression))
+                .to.deep.equal(["pf", "sfzp", "n"]);
+            expect(dynamics.map((dynamic: InstantaneousDynamicExpression): DynamicEnum => dynamic.DynEnum))
+                .to.deep.equal([DynamicEnum.pf, DynamicEnum.sfzp, DynamicEnum.n]);
+        });
+
+        it("gives them a playback volume", () => {
+            const mp: number = InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.getValue(DynamicEnum.mp);
+            const f: number = InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.getValue(DynamicEnum.f);
+            expect(dynamics[0].Volume, "pf (poco forte) lies between mp and f").to.be.within(mp, f);
+            expect(dynamics[1].Volume, "sfzp like the other sforzando marks").to.equal(0.5);
+            expect(dynamics[2].Volume, "n (niente) is silence").to.equal(0);
+        });
+    });
 });

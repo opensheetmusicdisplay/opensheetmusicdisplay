@@ -27,6 +27,8 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sfz,    0.5);
         InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sffz,   0.5);
         InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.fz,     0.5);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sfzp,   0.5);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.pf,      92.0 / 127.0); // poco forte: between mf and f
         InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.mp,      60 / 127.0);
         InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.p,       28.0 / 127.0);
         InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.pp,      12.0 / 127.0);
@@ -34,6 +36,7 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.pppp,    7.0 / 127.0);
         InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.ppppp,    5.0 / 127.0);
         InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.pppppp,   4.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.n,        0.0); // niente
     }
 
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number,
@@ -117,6 +120,7 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         "pppppp", "ppppp", "pppp", "ppp", "pp", "p",
         "ffffff", "fffff", "ffff", "fff", "ff", "f",
         "mf", "mp", "sf", "sff", "sp", "spp", "fp", "rf", "rfz", "sfz", "sffz", "fz",
+        "pf", "sfzp", "n", // MusicXML 4.0
     ];
 
     //public getInstantaneousDynamicSymbol(expressionSymbolEnum:DynamicExpressionSymbolEnum): FontInfo.MusicFontSymbol {
@@ -196,7 +200,14 @@ export enum DynamicEnum {
     sfz = 21,
     sffz = 22,
     fz = 23,
-    other = 24
+    other = 24,
+    // added in MusicXML 4.0:
+    /** poco forte */
+    pf = 25,
+    /** sforzando-piano */
+    sfzp = 26,
+    /** niente */
+    n = 27
 }
 
 InstantaneousDynamicExpression.staticConstructor();
