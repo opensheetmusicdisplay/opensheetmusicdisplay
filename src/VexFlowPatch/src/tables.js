@@ -268,6 +268,17 @@ Flow.integerToNote.table = {
   11: 'B',
 };
 
+// VexFlowPatch: French lute tablature fret -> letter mapping.
+// a=open(0), b=1, c=2, ... historically skipping 'j' (i is used, j is not).
+Flow.frenchTabLetters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "k", "l", "m", "n", "o", "p"];
+Flow.fretToFrenchTabLetter = (fret) => {
+  const n = parseInt(fret, 10);
+  if (isNaN(n) || n < 0 || n >= Flow.frenchTabLetters.length) {
+    return fret; // leave 'x', out-of-range, or non-numeric frets untouched
+  }
+  return Flow.frenchTabLetters[n];
+};
+
 Flow.tabToGlyph = (fret, scale = 1.0, useAlternativeXGlyph = false) => {
   let glyph = null;
   let width = 0;

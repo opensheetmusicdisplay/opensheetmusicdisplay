@@ -1063,6 +1063,12 @@ export class VexFlowConverter {
             duration: duration,
             positions: tabPositions,
         });
+        // French lute tablature: render frets as letters (a, b, c, ...) instead of numbers.
+        // Flag comes from MusicXML staff-details/@show-frets="letters" via the Staff.
+        if (gve.parentStaffEntry?.parentMeasure?.ParentStaff?.tabUseLetters) {
+            (vfnote as any).render_options.tabUseLetters = true; // VexFlowPatch
+            vfnote.updateWidth(); // recompute glyphs as letters
+        }
         if (isXNotehead) {
             // (vfnote as any).render_options.fretScale = rules.TabXNoteheadScale; // doesn't work, is overwritten later
             (vfnote as any).render_options.scale = rules.TabXNoteheadScale; // VexFlowPatch

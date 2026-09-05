@@ -214,13 +214,20 @@ export class InstrumentReader {
           const staffDetailsNodes: IXmlElement[] = xmlNode.elements("staff-details"); // there can be multiple, even if redundant. see #1041
           for (const staffDetailsNode of staffDetailsNodes) {
             const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
-            if (staffLinesNode) {
+            const showFretsAttr: Attr = staffDetailsNode.attribute("show-frets");
+            if (staffLinesNode || showFretsAttr) {
               let staffNumber: number = 1;
               const staffNumberAttr: Attr = staffDetailsNode.attribute("number");
               if (staffNumberAttr) {
                 staffNumber = parseInt(staffNumberAttr.value, 10);
               }
-              this.instrument.Staves[staffNumber - 1].StafflineCount = parseInt(staffLinesNode.value, 10);
+              if (staffLinesNode) {
+                this.instrument.Staves[staffNumber - 1].StafflineCount = parseInt(staffLinesNode.value, 10);
+              }
+              // show-frets="letters" => French lute tablature (letters instead of fret numbers)
+              if (showFretsAttr && showFretsAttr.value === "letters") {
+                this.instrument.Staves[staffNumber - 1].tabUseLetters = true;
+              }
             }
           }
           // check multi measure rest
