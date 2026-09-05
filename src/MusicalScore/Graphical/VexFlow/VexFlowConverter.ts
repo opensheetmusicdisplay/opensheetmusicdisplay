@@ -642,7 +642,7 @@ export class VexFlowConverter {
             if (!stemColor && defaultColorStem) {
                 stemColor = defaultColorStem;
             }
-            const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
+            const stemStyle: object = { fillStyle: stemColor, strokeStyle: stemColor };
 
             if (stemColor) {
                 //gve.parentVoiceEntry.StemColor = stemColor; // this shouldn't be set by DefaultColorStem
@@ -726,7 +726,7 @@ export class VexFlowConverter {
 
         // half note tremolo: set notehead to half note (Vexflow otherwise takes the notehead from duration) (Hack)
         if (firstNote.Length.RealValue === 0.25 && firstNote.Notehead && firstNote.Notehead.Filled === false) {
-            const keyProps: Object[] = vfnote.getKeyProps();
+            const keyProps: object[] = vfnote.getKeyProps();
             for (let i: number = 0; i < keyProps.length; i++) {
                 (<any>keyProps[i]).code = "v81";
             }
