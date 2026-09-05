@@ -80,6 +80,8 @@ export class EngravingRules {
     public FlatBeams: boolean;
     public FlatBeamOffset: number;
     public FlatBeamOffsetPerBeam: number;
+    /** Whether to pull extreme high/low ledger line beams closer to the staff. */
+    public OptimizeExtremeLedgerBeams: boolean;
     public ClefLeftMargin: number;
     public ClefRightMargin: number;
     /** How many unique note positions a percussion score needs to have to not be rendered on one line.
@@ -707,6 +709,7 @@ export class EngravingRules {
         this.FlatBeams = false;
         this.FlatBeamOffset = 20;
         this.FlatBeamOffsetPerBeam = 10;
+        this.OptimizeExtremeLedgerBeams = false;
 
         // Beam Sizing Variables
         this.ClefLeftMargin = 0.5;
