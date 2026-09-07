@@ -563,8 +563,22 @@ export class MusicPartManagerIterator {
         }
     }
 
+    /**
+     * Moves back to the previous vertical container: the previous one in the current measure, the last one of the
+     * source-previous measure (repetitions are not unrolled backwards), or the front of the sheet.
+     * Keeps the enrolled timestamp consistent with the source position: the measure durations that recursiveMove()
+     * added to it when leaving a measure forward are subtracted again when moving back into that measure,
+     * so that moving back and forth across a measure boundary is neutral.
+     */
     private recursiveMoveBack(): void {
        if (this.currentVoiceEntryIndex > 0 ) {
+            if (this.currentVoiceEntryIndex === this.currentMeasure.VerticalSourceStaffEntryContainers.length) {
+                // coming back from the end of the sheet: recursiveMove() left the index behind the last container of the
+                //   last measure and had added the measure's duration to the enrolled timestamp when it left the measure,
+                //   which the positions inside the measure must not include.
+                //   (An end set by Sheet.SelectionEnd is reached at a container of the measure, without that addition.)
+                this.currentEnrolledMeasureTimestamp.Sub(this.currentMeasure.Duration);
+            }
             this.currentVoiceEntryIndex--;
             const currentContainer: VerticalSourceStaffEntryContainer = this.currentMeasure.VerticalSourceStaffEntryContainers[this.currentVoiceEntryIndex];
             this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
@@ -582,6 +596,8 @@ export class MusicPartManagerIterator {
         }
         else if (this.currentVoiceEntryIndex === 0  && this.currentMeasureIndex !== 0) {
             const m: SourceMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex-1];
+            // moving back into the previous measure: undo what recursiveMove() added when it left that measure forward
+            this.currentEnrolledMeasureTimestamp.Sub(m.Duration);
             this.currentMeasureIndex--;
             this.currentMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex];
             const currentContainer: VerticalSourceStaffEntryContainer = m.VerticalSourceStaffEntryContainers[m.VerticalSourceStaffEntryContainers.length-1];
