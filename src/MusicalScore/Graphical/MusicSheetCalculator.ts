@@ -4082,11 +4082,12 @@ export abstract class MusicSheetCalculator {
             }
         } else {
             if (voiceEntry.ParentVoice instanceof LinkedVoice) {
-                // Linked voice: set stem down, but only while another voice is present at
-                // the same staff entry (same clash guard as the main-voice branch below).
-                // A linked voice alone at its staff entry has no voice to avoid, so leave
-                // WantedStemDirection undefined and let pitch-based auto-stemming apply.
-                if (voiceEntry.ParentSourceStaffEntry.VoiceEntries.length > 1) {
+                // Linked (secondary) voice: stem down. With AutoStemSecondaryVoicesWhenAloneInMeasure, a secondary
+                //   voice that is the only voice with entries in this measure on this staff has no voice to avoid and
+                //   keeps WantedStemDirection undefined, i.e. gets pitch-based stems (#1719). Checking only the same
+                //   staff entry would not do: under a sustained main-voice note the secondary voice's notes would
+                //   flip to pitch-based stems mid-measure (e.g. The Entertainer m.56).
+                if (!this.rules.AutoStemSecondaryVoicesWhenAloneInMeasure || this.otherVoicePresentInMeasure(voiceEntry)) {
                     voiceEntry.WantedStemDirection = StemDirectionType.Down;
                 }
             } else {
@@ -4099,6 +4100,24 @@ export abstract class MusicSheetCalculator {
             }
         }
         // setBeamNotesWantedStemDirections() will be called at end of measure (createGraphicalMeasure)
+    }
+
+    /** Whether a voice other than the given entry's has an entry (note or rest) in the same measure on the same staff. */
+    private otherVoicePresentInMeasure(voiceEntry: VoiceEntry): boolean {
+        const staffEntry: SourceStaffEntry = voiceEntry.ParentSourceStaffEntry;
+        const staffIndex: number = staffEntry.ParentStaff.idInMusicSheet;
+        for (const container of staffEntry.VerticalContainerParent.ParentMeasure.VerticalSourceStaffEntryContainers) {
+            const otherStaffEntry: SourceStaffEntry = container.StaffEntries[staffIndex];
+            if (!otherStaffEntry) {
+                continue;
+            }
+            for (const otherVoiceEntry of otherStaffEntry.VoiceEntries) {
+                if (otherVoiceEntry.ParentVoice !== voiceEntry.ParentVoice) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /** Sets a voiceEntry's stem direction to one already set in other notes in its beam, if it has one. */

@@ -19,12 +19,13 @@ describe("VexFlow Measure - Secondary Voice Stem Direction (issue #1719)", () =>
    // Each measure has one voice entry per staff entry, so neither note collides with
    // another voice and both should auto-stem (pitch-based), leaving WantedStemDirection
    // Undefined. The bug forced the lone linked voice in measure 2 stem-down.
-   function graphicalMusicSheet(): GraphicalMusicSheet {
+   function graphicalMusicSheet(autoStemSecondaryVoicesWhenAloneInMeasure: boolean): GraphicalMusicSheet {
       const score: Document = TestUtils.getScore(path);
       expect(score).to.not.be.undefined;
       const partwise: Element = TestUtils.getPartWiseElement(score);
       expect(partwise).to.not.be.undefined;
       const reader: MusicSheetReader = new MusicSheetReader();
+      reader.rules.AutoStemSecondaryVoicesWhenAloneInMeasure = autoStemSecondaryVoicesWhenAloneInMeasure;
       const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
       const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), path);
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
@@ -41,17 +42,28 @@ describe("VexFlow Measure - Secondary Voice Stem Direction (issue #1719)", () =>
       return gves[0];
    }
 
-   it("Should not force a lone secondary (linked) voice stem-down", (done: Mocha.Done) => {
-      const gms: GraphicalMusicSheet = graphicalMusicSheet();
+   it("Should force a lone secondary (linked) voice stem-down by default (AutoStemSecondaryVoicesWhenAloneInMeasure off)",
+      (done: Mocha.Done) => {
+      const gms: GraphicalMusicSheet = graphicalMusicSheet(false);
       const secondaryVoiceEntry: GraphicalVoiceEntry = loneVoiceEntry(gms, 1); // measure 2, voice 7
       expect(secondaryVoiceEntry.parentVoiceEntry.WantedStemDirection).to.equal(
-         StemDirectionType.Undefined,
-         "a linked voice alone at its staff entry must keep an undefined (auto) stem, not forced Down");
+         StemDirectionType.Down,
+         "by default a secondary voice keeps its stems down, the usual signal for a secondary voice");
       done();
    });
 
-   it("Should stem the lone secondary voice identically to the identical main-voice measure", (done: Mocha.Done) => {
-      const gms: GraphicalMusicSheet = graphicalMusicSheet();
+   it("Should not force a lone secondary (linked) voice stem-down with AutoStemSecondaryVoicesWhenAloneInMeasure", (done: Mocha.Done) => {
+      const gms: GraphicalMusicSheet = graphicalMusicSheet(true);
+      const secondaryVoiceEntry: GraphicalVoiceEntry = loneVoiceEntry(gms, 1); // measure 2, voice 7
+      expect(secondaryVoiceEntry.parentVoiceEntry.WantedStemDirection).to.equal(
+         StemDirectionType.Undefined,
+         "a linked voice alone in its measure must keep an undefined (auto) stem, not forced Down");
+      done();
+   });
+
+   it("Should stem the lone secondary voice identically to the identical main-voice measure with the rule enabled",
+      (done: Mocha.Done) => {
+      const gms: GraphicalMusicSheet = graphicalMusicSheet(true);
       const mainVoiceEntry: GraphicalVoiceEntry = loneVoiceEntry(gms, 0);      // measure 1, voice 1
       const secondaryVoiceEntry: GraphicalVoiceEntry = loneVoiceEntry(gms, 1); // measure 2, voice 7
       expect(secondaryVoiceEntry.parentVoiceEntry.WantedStemDirection).to.equal(

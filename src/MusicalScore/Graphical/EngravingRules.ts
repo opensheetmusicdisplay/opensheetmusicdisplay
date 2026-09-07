@@ -115,6 +115,11 @@ export class EngravingRules {
     public BeamSlopeMaxAngle: number;
     public StemMinAllowedDistanceBetweenNoteHeadAndBeamLine: number;
     public SetWantedStemDirectionByXml: boolean;
+    /** Whether a secondary voice (any voice after the first one on a staff, e.g. MusicXML voice 2) that is the only
+     *  voice with entries in a measure gets pitch-based (automatic) stem directions instead of the stems-down that
+     *  mark a secondary voice. Only affects notes without a <stem> in the MusicXML (see SetWantedStemDirectionByXml).
+     *  Default false: stems down are the usual signal for a secondary voice (MuseScore renders it that way too), #1719. */
+    public AutoStemSecondaryVoicesWhenAloneInMeasure: boolean;
     public GraceNoteScalingFactor: number;
     public GraceNoteXOffset: number;
     /** Set this to e.g. -0.5 or -0.8 to put grace notes a lot closer to the main note. */
@@ -741,6 +746,7 @@ export class EngravingRules {
         this.BeamSlopeMaxAngle = 10.0;
         this.StemMinAllowedDistanceBetweenNoteHeadAndBeamLine = 1.0;
         this.SetWantedStemDirectionByXml = true;
+        this.AutoStemSecondaryVoicesWhenAloneInMeasure = false;
         // also see stemwidth further below
 
         // GraceNote Variables
