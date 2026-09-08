@@ -72,6 +72,18 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         }
     }
 
+    /** Whether the note is drawn although its own notehead is hidden (print-object="no"), because it shares the
+     * notehead of a visible unison note in another voice and its stem is beamed. The stem emanates from the shared
+     * notehead and has to reach the beam, and wherever Vexflow can't merge the two heads into one column it lays
+     * the hidden note's notehead out beside the visible one, where it has to be drawn too - otherwise the beam ends
+     * on a bare stem with nothing under it. E.g. Beethoven Moonlight Sonata 1st mvt. m.37, where the two heads are
+     * merged (test_unison_notehead_moonlight_sonata_measure37), and Debussy Arabesque no. 1 m.3, where the hidden
+     * eighth note's head can't merge with a half note's and gets a column of its own
+     * (test_unison_notehead_tuplet_arabesque_measure3). */
+    private static drawnAsSharedUnisonNote(note: Note): boolean {
+        return note.NoteBeam !== undefined && note.sharesNoteheadWithVisibleUnisonNote();
+    }
+
     /** (Re-)color notes and stems by setting their Vexflow styles.
      * Could be made redundant by a Vexflow PR, but Vexflow needs more solid and permanent color methods/variables for that
      * See VexFlowConverter.StaveNote()
@@ -88,6 +100,11 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         for (let i: number = 0; i < this.notes.length; i++) {
             const note: GraphicalNote = this.notes[i];
 
+            // notehead="none" asks for no notehead at all, so it always stays hidden. print-object="no" hides it
+            // too, unless the note is drawn anyway because it shares a visible unison note's notehead: then it is
+            // drawn whole, notehead included, exactly like its stem below.
+            const noteheadVisible: boolean = note.sourceNote.Notehead?.Shape !== NoteHeadShape.NONE &&
+                (note.sourceNote.PrintObject || VexFlowVoiceEntry.drawnAsSharedUnisonNote(note.sourceNote));
             sourceNoteNoteheadColor = note.sourceNote.NoteheadColor;
             noteheadColor = sourceNoteNoteheadColor;
             // Switch between XML colors and automatic coloring
@@ -100,8 +117,8 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     noteheadColor = this.rules.ColoringSetCurrent.getValue(fundamentalNote);
                 }
             }
-            if (!note.sourceNote.PrintObject || (note.sourceNote.Notehead?.Shape === NoteHeadShape.NONE)) {
-                noteheadColor = transparentColor; // transparent (for PrintObject=false or notehead="none")
+            if (!noteheadVisible) {
+                noteheadColor = transparentColor; // transparent (see noteheadVisible above)
             } else if (!noteheadColor // revert transparency after PrintObject was set to false, then true again
                 || noteheadColor === "#000000" // questionable, because you might want to set specific notes to black,
                                                // but unfortunately some programs export everything explicitly as black
@@ -118,15 +135,14 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     ", in measure #" + measureNumber);
             }*/
 
-            if (!sourceNoteNoteheadColor && this.rules.ColoringMode === ColoringModes.XML &&
-                note.sourceNote.PrintObject && note.sourceNote.Notehead?.Shape !== NoteHeadShape.NONE) {
+            if (!sourceNoteNoteheadColor && this.rules.ColoringMode === ColoringModes.XML && noteheadVisible) {
                 if (!note.sourceNote.isRest() && defaultColorNotehead) {
                     noteheadColor = defaultColorNotehead;
                 } else if (note.sourceNote.isRest() && defaultColorRest) {
                     noteheadColor = defaultColorRest;
                 }
             }
-            if (noteheadColor && note.sourceNote.PrintObject && note.sourceNote.Notehead?.Shape !== NoteHeadShape.NONE) {
+            if (noteheadColor && noteheadVisible) {
                 note.sourceNote.NoteheadColorCurrentlyRendered = noteheadColor;
             } else if (!noteheadColor) {
                 continue;
@@ -194,12 +210,10 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 stemTransparent = false;
                 break;
             }
-            // The note's own notehead is hidden, but it's shared with a visible unison note in another voice
-            // (print-object="no") and its stem is beamed. The stem emanates from the shared notehead and has to
-            // reach the beam, so keep it visible - otherwise the beam appears to hang in the air over a missing
-            // stem. E.g. Beethoven Moonlight Sonata 1st mvt. m.37: an eighth note shares a notehead with a dotted
-            // quarter in another voice, but its stem still joins the beam (test_unison_notehead_moonlight_sonata_measure37).
-            if (note.NoteBeam && note.sharesNoteheadWithVisibleUnisonNote()) {
+            // The note's own notehead is hidden, but it's drawn anyway because it shares a visible unison note's
+            // notehead and is beamed (see drawnAsSharedUnisonNote): its stem emanates from the shared notehead and
+            // has to reach the beam, otherwise the beam appears to hang in the air over a missing stem.
+            if (VexFlowVoiceEntry.drawnAsSharedUnisonNote(note)) {
                 stemTransparent = false;
                 break;
             }

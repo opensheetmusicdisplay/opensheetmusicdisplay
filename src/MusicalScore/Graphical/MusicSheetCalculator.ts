@@ -2367,7 +2367,11 @@ export abstract class MusicSheetCalculator {
                         this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
                     }
                 }
-                if (note.NoteTuplets.length > 0 && note.PrintObject) {
+                // Same for its tuplet: hidden or not, the note is one of the tuplet's notes, so the tuplet number
+                // (and bracket) has to span it. Leaving it out built the VF.Tuplet from the remaining notes and
+                // centered the number over those, off the beam's center.
+                // E.g. Debussy Arabesque no. 1 m.3 (test_unison_notehead_tuplet_arabesque_measure3).
+                if (note.NoteTuplets.length > 0 && (note.PrintObject || note.sharesNoteheadWithVisibleUnisonNote())) {
                     // a note can be part of more than one tuplet (nested tuplets); add it to each of them
                     for (const noteTuplet of note.NoteTuplets) {
                         this.handleTuplet(graphicalNote, noteTuplet, openTuplets);

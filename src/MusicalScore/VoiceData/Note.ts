@@ -221,9 +221,13 @@ export class Note {
     }
     /** Whether this note's own notehead is hidden (e.g. print-object="no" or notehead "none") but there is a
      * visible note on the same staff line in another voice at the same staff entry - i.e. a unison whose visible
-     * notehead this note shares. Used to keep such a note's beam and stem rendered (the stem still emanates from
-     * the shared notehead and joins the beam) instead of dropping it. E.g. an eighth note sharing a notehead with
-     * a dotted quarter in Beethoven's Moonlight Sonata 1st mvt. m.37 (test_unison_notehead_moonlight_sonata_measure37). */
+     * notehead this note shares. Used to render such a note like a visible one instead of dropping it: its beam
+     * and stem (the stem still emanates from the shared notehead and joins the beam), the notehead Vexflow lays
+     * out beside the visible one wherever the two heads can't be merged into one column
+     * (VexFlowVoiceEntry.drawnAsSharedUnisonNote), and its place in a tuplet, whose number spans it either way.
+     * E.g. an eighth note sharing a notehead with a dotted quarter in Beethoven's Moonlight Sonata 1st mvt. m.37
+     * (test_unison_notehead_moonlight_sonata_measure37), or the first note of a triplet sharing a half note's
+     * notehead in Debussy's Arabesque no. 1 m.3 (test_unison_notehead_tuplet_arabesque_measure3). */
     public sharesNoteheadWithVisibleUnisonNote(): boolean {
         if (this.printObject && this.notehead?.Shape !== NoteHeadShape.NONE) {
             return false; // this note's own notehead is visible, nothing to share
