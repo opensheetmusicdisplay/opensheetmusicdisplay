@@ -1004,13 +1004,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
-    // note: measureNumber is 0 for pickup measure
-    const measureNumber: number = metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber;
-    const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
-    const vfMeasure: VexFlowMeasure =
-      this.graphicalMusicSheet.findGraphicalMeasureByMeasureNumber(measureNumber, staffNumber) as VexFlowMeasure;
-    const firstMetronomeMark: boolean = vfMeasure === this.graphicalMusicSheet.MeasureList[0][0];
-    // const vfMeasure: VexFlowMeasure = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure);
+    // Draw the mark on the first visible staff of its measure, where all tempo markings go
+    //   (MusicSheetCalculator.calculateTempoExpressionsForMultiTempoExpression). The expression's StaffNumber is the
+    //   staff within its part, not an index into the measure list: used as one, it put every part's mark on the
+    //   first staff of the score, and lost the mark when that staff was hidden.
+    const measureIndex: number = metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.measureListIndex;
+    const vfMeasure: VexFlowMeasure = this.graphicalMusicSheet.MeasureList[measureIndex]?.find(
+      (measure: GraphicalMeasure) => measure?.ParentStaffLine && measure.ParentStaff.isVisible()) as VexFlowMeasure;
+    if (!vfMeasure) {
+      return;
+    }
+    const firstMetronomeMark: boolean = measureIndex === 0;
     if (vfMeasure.hasMetronomeMark) {
       return; // don't create more than one metronome mark per measure;
       // TODO some measures still seem to have two metronome marks, one less bold than the other (or not bold),

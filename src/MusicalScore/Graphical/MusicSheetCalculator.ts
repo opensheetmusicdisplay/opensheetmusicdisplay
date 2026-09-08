@@ -2092,6 +2092,13 @@ export abstract class MusicSheetCalculator {
 
             // const addAtLastList: GraphicalObject[] = [];
             for (const entry of multiTempoExpression.EntriesList) {
+                // Render each distinct tempo marking only once per position. MusicXML from part-based exporters (e.g.
+                //   Finale) often repeats a tempo marking in every part, and all of them are placed on this (first
+                //   visible) staff line, which stacked "Andante Simplice." five times above the first system of
+                //   CharlesGounod_Meditation. A marking given twice in one part is skipped just the same.
+                if (this.isTempoMarkingAlreadyRendered(staffLine, entry.Expression, absoluteTimestamp)) {
+                    continue;
+                }
                 let textAlignment: TextAlignmentEnum = this.rules.TempoExpressionTextAlignment;
                 if (this.rules.CompactMode) {
                     textAlignment = TextAlignmentEnum.LeftBottom;
@@ -2109,15 +2116,7 @@ export abstract class MusicSheetCalculator {
                 }
 
                 if (entry.Expression instanceof InstantaneousTempoExpression) {
-                    //already added?
-                    for (const expr of staffLine.AbstractExpressions) {
-                        if (expr instanceof GraphicalInstantaneousTempoExpression &&
-                            (expr.SourceExpression as AbstractTempoExpression).Label === entry.Expression.Label) {
-                            //already added
-                            continue;
-                        }
-                    }
-
+                    // registers itself in staffLine.AbstractExpressions, which is what isTempoMarkingAlreadyRendered() checks
                     const graphicalTempoExpr: GraphicalInstantaneousTempoExpression = new GraphicalInstantaneousTempoExpression(entry.Expression, graphLabel);
                     if (!graphicalTempoExpr.ParentStaffLine) {
                         log.warn("Adding staffline didn't work");
@@ -2133,19 +2132,45 @@ export abstract class MusicSheetCalculator {
                         }
                     }
                 } else if (entry.Expression instanceof ContinuousTempoExpression) {
-                    for (const expr of staffLine.AbstractExpressions) {
-                        if (expr instanceof GraphicalInstantaneousTempoExpression &&
-                        (expr.SourceExpression as AbstractTempoExpression).Label === entry.Expression.Label) {
-                            continue; // already added
-                        }
-                    }
                     // TODO maybe create GraphicalContinuousTempoExpression class,
                     //   though the ContinuousTempoExpressions we have currently behave the same graphically (accelerando, ritardando, etc).
                     //   The behavior difference rather affects playback (e.g. ritardando, which gradually changes tempo)
-                    staffLine.AbstractExpressions.push(new GraphicalInstantaneousTempoExpression(entry.Expression, graphLabel));
+                    // The constructor registers the expression in staffLine.AbstractExpressions; pushing it there a second
+                    //   time (as before) made the drawer draw the label twice.
+                    new GraphicalInstantaneousTempoExpression(entry.Expression, graphLabel);
                 }
             }
         }
+    }
+
+    /** Whether a tempo marking with the same text (or, for metronome marks, the same beat unit and bpm) at the same
+     *  position has already been placed on the staff line, so that a repeat of it (typically the same marking in
+     *  another part of the score) isn't rendered again, see calculateTempoExpressionsForMultiTempoExpression(). */
+    protected isTempoMarkingAlreadyRendered(staffLine: StaffLine, tempoExpression: AbstractTempoExpression, absoluteTimestamp: Fraction): boolean {
+        for (const graphicalExpression of staffLine.AbstractExpressions) {
+            if (!(graphicalExpression instanceof GraphicalInstantaneousTempoExpression)) {
+                continue;
+            }
+            const renderedExpression: AbstractTempoExpression = graphicalExpression.SourceExpression as AbstractTempoExpression;
+            if (!renderedExpression.ParentMultiTempoExpression?.AbsoluteTimestamp.Equals(absoluteTimestamp)) {
+                continue;
+            }
+            if ((renderedExpression.Label ?? "").trim() !== (tempoExpression.Label ?? "").trim()) {
+                continue;
+            }
+            if (renderedExpression instanceof InstantaneousTempoExpression && tempoExpression instanceof InstantaneousTempoExpression &&
+                renderedExpression.TempoType === TempoType.metronomeMark) {
+                // metronome marks have no text, compare what they show
+                if (tempoExpression.TempoType !== TempoType.metronomeMark ||
+                    renderedExpression.TempoInBpm !== tempoExpression.TempoInBpm ||
+                    renderedExpression.beatUnit !== tempoExpression.beatUnit ||
+                    renderedExpression.dotted !== tempoExpression.dotted) {
+                    continue;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
