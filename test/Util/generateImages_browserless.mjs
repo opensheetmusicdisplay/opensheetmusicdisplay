@@ -39,7 +39,8 @@ if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageF
     console.log("usage: " +
         "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]");
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
-    console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)');
+    console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting additionally skips the two biggest OSMD samples,' +
+        ' ActorPreludeSample and CharlesGounod_Meditation (a few seconds each), e.g. for quick runs on slow machines)');
     console.log("example: node test/Util/generateImages_browserless.mjs ../../build ./test/data/ ./export png");
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
@@ -196,6 +197,9 @@ async function init () {
     const fileEndingRegex = "^.*(([.]xml)|([.]musicxml)|([.]mxl))$";
     for (const sampleFilename of sampleDirFilenames) {
         if (osmdTestMode && filterRegex === "allSmall") {
+            // The npm scripts use "all": these two samples take about 3 s (Gounod) and 5 s (Actor, 2 images) next to
+            //   ~16 s for the other 333 images, and skipping them hid regressions in them from the visual regression
+            //   tests (e.g. the 5x "Andante Simplice." in Gounod). "allSmall" is kept for quick runs on slow machines.
             if (sampleFilename.match("^(Actor)|(Gounod)")) { // TODO maybe filter by file size instead
                 debug("filtering big file: " + sampleFilename, DEBUG);
                 continue;
