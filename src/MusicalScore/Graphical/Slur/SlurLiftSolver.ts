@@ -41,6 +41,11 @@ export interface SlurLiftOptions {
      *  depth. Yields to clearFloor/foreignClearNeed like the other caps. Omit to
      *  disable (pure-ratio behavior). */
     maxCpPx?: number;
+    /** Absolute ceiling on the CP perpendicular height that yields to nothing —
+     *  not to clearFloor, not to foreignClearNeed. Guards against a divergent
+     *  clearance requirement from an obstacle near a chord endpoint, which would
+     *  otherwise override every other cap. */
+    hardMaxCpPx?: number;
     /** Placement side. Above = curve bows to smaller screen-Y (upwards). */
     above: boolean;
 }
@@ -185,6 +190,25 @@ export function solveSlurLift(
     if (opts.maxCpPx !== undefined && opts.maxCpPx > 0) {
         const absCeiling: number = Math.max(clearFloor, opts.maxCpPx, foreignClearNeed);
         if (hCp > absCeiling) { hCp = absCeiling; }
+    }
+    // Cap 4: hard ceiling that yields to NOTHING. Every cap above is a
+    // Math.max(...) against the clearance requirements, so a single runaway
+    // requirement overrides all of them. `needed = (h + margin) / (3t(1-t))`
+    // diverges as t approaches either end of the chord, so an obstacle sitting
+    // near an endpoint demands a practically unbounded lift — measured as a
+    // 1530px tall, 161px wide curve whose control points sat ~3000 units below
+    // the sheet, ballooning across the systems underneath. Clearing such an
+    // obstacle is impossible anyway (the curve would have to leave the page), so
+    // the lift is bounded and the slur passes the note instead.
+    // It must still not clip a note the curve genuinely has to clear, so it
+    // yields to the OWN-voice clearance floor — but not to foreignClearNeed,
+    // which is the divergent term. A slur that needs a deep bow for its own
+    // notes (John Field) keeps it; one that is merely bowing wider than
+    // necessary (Dichterliebe, 61.5px with no obstacle asking for it) is
+    // trimmed.
+    if (opts.hardMaxCpPx !== undefined && opts.hardMaxCpPx > 0) {
+        const hardCeiling: number = Math.max(clearFloor, opts.hardMaxCpPx);
+        if (hCp > hardCeiling) { hCp = hardCeiling; }
     }
 
     // ── Symmetric control points in the chord frame, then rotate back. ─────────

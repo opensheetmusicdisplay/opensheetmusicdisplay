@@ -413,6 +413,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (stavesForMeasureColumn.length > 1) {
           VF.Stave.formatBegModifiers(stavesForMeasureColumn);
         }
+        // formatBegModifiers aligns begin modifiers across the column and leaves
+        // noteStartX carrying state from the columns it processed before. On a
+        // stretched last system that state no longer matches these staves, and
+        // measures carrying nothing but barlines were measured with 105px and
+        // 193px of padding before their first note (healthy measures: 15px) —
+        // the notes then sat far right of their own barline and ran into the
+        // next measure. OSMD already knows what the begin instructions are worth,
+        // so derive the note origin from that instead of inheriting VexFlow's
+        // cross-column value.
+        for (const measure of measures) {
+          const vfMeasure: VexFlowMeasure = measure as VexFlowMeasure;
+          const stave: VF.Stave = vfMeasure?.getVFStave?.();
+          if (!stave) { continue; }
+          stave.setNoteStartX(stave.getX() + vfMeasure.beginInstructionsWidth * unitInPixels);
+        }
         // Use the passed-in width w instead of reading from the stave.
         // Stave is freshly created by resetLayout() with zero width, so
         // stave.getNoteEndX() - stave.getNoteStartX() returns a negative

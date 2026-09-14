@@ -436,7 +436,13 @@ import JSZip from "jszip";
 export interface LoadedScore { calc: VexFlowMusicSheetCalculator, gms: GraphicalMusicSheet, reader: MusicSheetReader }
 
 /** Load a MusicXML/MXL score and run the layout (VexFlow calculator). */
-export async function loadScore(path: string, engravingRules?: Partial<EngravingRules>): Promise<LoadedScore> {
+/** `pageWidth` (OSMD units) narrows the page so MusicSystemBuilder wraps, which is
+ *  what a sub-1 zoom does in the app (sheet.pageWidth = containerWidth / zoom / 10).
+ *  Omit it to keep the default page width. */
+export async function loadScore(
+    path: string, engravingRules?: Partial<EngravingRules>, pageWidth?: number,
+    beforeCalculate?: (sheet: MusicSheet) => void,
+): Promise<LoadedScore> {
     let xmlString: string;
     if (path.endsWith(".mxl")) {
         const raw: string = TestUtils.getMXL(path);
@@ -457,12 +463,17 @@ export async function loadScore(path: string, engravingRules?: Partial<Engraving
     const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), path);
     const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
     if (engravingRules) { Object.assign(calc.rules, engravingRules); }
-    if (calc.rules.RenderSingleHorizontalStaffline) {
+    if (pageWidth !== undefined) {
+        sheet.pageWidth = pageWidth;
+    } else if (calc.rules.RenderSingleHorizontalStaffline) {
         // Single-line layout = one unbroken horizontal staffline: widen the line-break
         // threshold beyond any score's content so MusicSystemBuilder never wraps. OSMD's
         // render() does this by setting pageWidth to SheetMaximumWidth (zoom 1.0).
         sheet.pageWidth = calc.rules.SheetMaximumWidth / 10.0;
     }
+    // Lets a caller mark system breaks (SourceMeasure.printNewSystemXml) or edit
+    // the sheet before it is engraved — calculate() consumes those flags.
+    beforeCalculate?.(sheet);
     calc.calculate();
     return { calc, gms, reader };
 }
@@ -553,4 +564,67 @@ export function aggregateSlurQuality(reports: SlurQualityReport[]): SlurQualityA
         maxBowRatio: bows.length ? Math.max(...bows) : 0,
         meanBowPx: valid.length ? mean(valid.map(r => r.bowPx)) : 0,
     };
+}
+
+// ── Debug SVG artifacts ──────────────────────────────────────────────────────
+
+/** Inline the test fonts so the artifact renders standalone. */
+export function debugSvgFontCss(): string {
+    let css: string = "";
+    const fontData: Record<string, string> = (globalThis as any).__fontData__ ?? {};
+    for (const [family, b64] of Object.entries(fontData)) {
+        css += `@font-face{font-family:'${family}';src:url(data:font/woff2;base64,${b64})}`;
+    }
+    return css;
+}
+
+/** OSMD draws past the nominal canvas, so the served SVG clips. Recompute the
+ *  viewBox from the actual path/rect coordinates. */
+export function fitDebugSvgViewBox(svg: SVGSVGElement, pad: number = 50): void {
+    let minX: number = Infinity, minY: number = Infinity;
+    let maxX: number = -Infinity, maxY: number = -Infinity;
+    for (const el of svg.querySelectorAll("path, rect")) {
+        const d: string = el.getAttribute("d")
+            || (el.getAttribute("x") && `M${el.getAttribute("x")} ${el.getAttribute("y")}`)
+            || "";
+        const nums: number[] = d.match(/[\d.]+/g)?.map(Number) ?? [];
+        for (let i: number = 0; i + 1 < nums.length; i += 2) {
+            const x: number = nums[i];
+            const y: number = nums[i + 1];
+            if (!isFinite(x) || !isFinite(y)) { continue; }
+            if (x < minX) { minX = x; }
+            if (y < minY) { minY = y; }
+            if (x > maxX) { maxX = x; }
+            if (y > maxY) { maxY = y; }
+        }
+    }
+    if (isFinite(minX) && isFinite(minY) && maxX > minX && maxY > minY) {
+        svg.setAttribute("viewBox", `${minX - pad} ${minY - pad} ${maxX - minX + pad * 2} ${maxY - minY + pad * 2}`);
+    }
+}
+
+/** Write an annotated SVG to visual_regression/debug-svgs (override with
+ *  DEBUG_SVG_DIR). `name` is the file stem; the env suffix is appended here so
+ *  jsdom and browser runs never clobber each other. Node-only; a browser run
+ *  reports the name instead of writing. */
+export function writeDebugSvgHtml(svg: SVGSVGElement, name: string, caption?: string): string {
+    const isNode: boolean = typeof process !== "undefined" && typeof require !== "undefined";
+    const envTag: string = isNode ? "jsdom" : "browser";
+    const fileName: string = `${name}_${envTag}.html`;
+    const svgStr: string = new XMLSerializer().serializeToString(svg);
+    const head: string = caption ? `<p style="font:13px sans-serif;margin:6px">${caption}</p>` : "";
+    const html: string = `<!DOCTYPE html><html><meta charset="utf-8"><body style="margin:0">${head}${svgStr}</body></html>`;
+    if (isNode) {
+        // Node-only artifact write; ESM import would break the browser path.
+        /* eslint-disable @typescript-eslint/no-require-imports */
+        const fs2: any = require("fs");
+        const path2: any = require("path");
+        /* eslint-enable @typescript-eslint/no-require-imports */
+        const baseDir: string = process.env.DEBUG_SVG_DIR
+            || path2.resolve(__dirname, "../../visual_regression/debug-svgs");
+        if (!fs2.existsSync(baseDir)) { fs2.mkdirSync(baseDir, { recursive: true }); }
+        fs2.writeFileSync(path2.join(baseDir, fileName), html);
+    }
+    console.warn(`  ${fileName}`);
+    return fileName;
 }

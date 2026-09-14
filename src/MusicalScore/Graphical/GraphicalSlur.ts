@@ -151,6 +151,7 @@ export class GraphicalSlur extends GraphicalCurve {
                 slackPx: GraphicalSlur.antiBalloonSlack * unitInPixels,
                 maxBowRatio: GraphicalSlur.maxBowRatio,
                 maxCpPx: GraphicalSlur.maxBowCpY * unitInPixels,
+                hardMaxCpPx: GraphicalSlur.hardMaxBowCpY * unitInPixels,
                 above: isAbove,
             },
         );
@@ -216,6 +217,7 @@ export class GraphicalSlur extends GraphicalCurve {
                 slackPx: GraphicalSlur.antiBalloonSlack * unitInPixels,
                 maxBowRatio: GraphicalSlur.maxBowRatio,
                 maxCpPx: GraphicalSlur.maxBowCpY * unitInPixels,
+                hardMaxCpPx: GraphicalSlur.hardMaxBowCpY * unitInPixels,
                 above: isAbove,
             },
         );
@@ -740,8 +742,24 @@ export class GraphicalSlur extends GraphicalCurve {
                                     }
                                 }
                                 if (contAbsY !== undefined) {
-                                    endY = (5 - topLine)
-                                        + (endSL.PositionAndShape.AbsolutePosition.y - contAbsY);
+                                    // The offset is meant to be the distance between two
+                                    // STAVES inside the end note's system (a few units:
+                                    // treble vs bass). When the reference staffline
+                                    // resolves to a different system the difference is the
+                                    // whole inter-system distance instead, and the endpoint
+                                    // lands thousands of units away — the bezier control
+                                    // points then sit far below the sheet and the slur
+                                    // balloons down over the systems beneath it (measured:
+                                    // a 1530px tall, 161px wide curve, 43% of the sheet).
+                                    // Clamp to a plausible staff offset; beyond that the
+                                    // reference is wrong, not the music.
+                                    const rawOffset: number =
+                                        endSL.PositionAndShape.AbsolutePosition.y - contAbsY;
+                                    const maxOffset: number = GraphicalSlur.maxCrossSystemStaffOffset;
+                                    const offset: number = Math.abs(rawOffset) > maxOffset
+                                        ? Math.sign(rawOffset) * maxOffset
+                                        : rawOffset;
+                                    endY = (5 - topLine) + offset;
                                 } else {
                                     endY = startY;
                                 }
@@ -1087,6 +1105,17 @@ export class GraphicalSlur extends GraphicalCurve {
      *  fixed-fraction depth. Yields to obstacle clearance, so notes are never
      *  clipped — trims only cosmetic excess. */
     public static maxBowCpY: number = 6.0;
+    /** Cross-system slur halves take their endpoint from the staff offset inside
+     *  the end note's system. If that reference resolves to another system the
+     *  raw difference is the inter-system distance and the slur balloons far
+     *  below the sheet, so the offset is clamped to this many OSMD units — more
+     *  than any real staff separation, far less than a system gap. */
+    public static maxCrossSystemStaffOffset: number = 30.0;
+    /** Absolute ceiling on the slur bow that yields to no clearance requirement.
+     *  Generous enough that ordinary obstacle avoidance is untouched, small
+     *  enough that a divergent requirement cannot balloon the curve over the
+     *  systems below it. */
+    public static hardMaxBowCpY: number = 5.5;
 
     // ── Stubs for VexFlowMusicSheetDrawer ──────────────────────────────────────
 
