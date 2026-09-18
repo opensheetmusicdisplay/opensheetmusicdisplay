@@ -383,6 +383,38 @@ describe("VexFlow Measure", () => {
       }
    });
 
+   // Non-regression test for a tie starting at a notehead two voices share: MuseScore writes the unison by hiding
+   // one of the two notes with print-object="no". The tie's start note was looked up by pitch and timestamp only,
+   // found the hidden note of the other voice first, and handleTie() then skipped the tie since it doesn't draw a tie
+   // to a hidden note. E.g. Bach BWV 847 m.35: the held C2's first tie was missing, its second one was drawn.
+   it("Draws a tie that starts at a notehead shared with a hidden unison note of another voice", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_tie_hidden_unison_bwv847_measure35.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+         // "voice:pitch@timestamp" of each drawn tie's start note (OSMD octaves are MusicXML's minus 3)
+         const tieStarts: string[] = [];
+         for (const se of gm.staffEntries) {
+            for (const graphicalTie of se.GraphicalTies) {
+               const note: Note = graphicalTie.StartNote.sourceNote;
+               const pitch: string = Pitch.getNoteEnumString(note.Pitch.FundamentalNote) + (note.Pitch.Octave + 3);
+               tieStarts.push(`${note.ParentVoiceEntry.ParentVoice.VoiceId}:${pitch}@${note.getAbsoluteTimestamp().RealValue}`);
+            }
+         }
+         expect(tieStarts.sort()).to.deep.equal([
+            "1:B2@0.125", "1:B2@0.25", // the moving voice's B2, eighth to quarter to half
+            "2:C2@0.0625", "2:C2@0.25", // the held C2, from the shared notehead: dotted eighth to quarter to half
+         ]);
+         done();
+      }).catch(done);
+   });
+
    // Non-regression test for EngravingRules.RenderMeasureNumbersForImplicitMeasures.
    // Measures marked implicit="yes" in the MusicXML (e.g. measures without a meter like in Satie's Gnossiennes)
    // don't show a measure number by default, as per the MusicXML standard, but do when the rule is enabled.
