@@ -100,12 +100,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         // The tie note itself comes first: another voice can have the same pitch at the same time,
         // e.g. a unison note hidden with print-object="no" so that one notehead serves both voices,
         // and handleTie() doesn't draw a tie to a hidden note.
-        for (const gve of this.graphicalVoiceEntries) {
-            for (const graphicalNote of gve.notes) {
-                if (graphicalNote.sourceNote === tieNote) {
-                    return graphicalNote;
-                }
-            }
+        const ownGraphicalNote: GraphicalNote = this.findGraphicalNoteFromNote(tieNote);
+        if (ownGraphicalNote) {
+            return ownGraphicalNote;
         }
         for (const gve of this.graphicalVoiceEntries) {
             for (const graphicalNote of gve.notes) {
