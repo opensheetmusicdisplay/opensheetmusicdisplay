@@ -397,20 +397,65 @@ describe("VexFlow Measure", () => {
 
       osmd.load(score).then(() => {
          osmd.render();
-         const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
-         // "voice:pitch@timestamp" of each drawn tie's start note (OSMD octaves are MusicXML's minus 3)
-         const tieStarts: string[] = [];
-         for (const se of gm.staffEntries) {
-            for (const graphicalTie of se.GraphicalTies) {
-               const note: Note = graphicalTie.StartNote.sourceNote;
-               const pitch: string = Pitch.getNoteEnumString(note.Pitch.FundamentalNote) + (note.Pitch.Octave + 3);
-               tieStarts.push(`${note.ParentVoiceEntry.ParentVoice.VoiceId}:${pitch}@${note.getAbsoluteTimestamp().RealValue}`);
-            }
-         }
-         expect(tieStarts.sort()).to.deep.equal([
+         expect(drawnTieStarts(osmd)).to.deep.equal([
             "1:B2@0.125", "1:B2@0.25", // the moving voice's B2, eighth to quarter to half
             "2:C2@0.0625", "2:C2@0.25", // the held C2, from the shared notehead: dotted eighth to quarter to half
          ]);
+         done();
+      }).catch(done);
+   });
+
+   /** "voice:pitch@timestamp" of the start note of each tie drawn in the first measure (OSMD octaves are MusicXML's minus 3) */
+   function drawnTieStarts(osmd: OpenSheetMusicDisplay): string[] {
+      const tieStarts: string[] = [];
+      for (const se of osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries) {
+         for (const graphicalTie of se.GraphicalTies) {
+            const note: Note = graphicalTie.StartNote.sourceNote;
+            const pitch: string = Pitch.getNoteEnumString(note.Pitch.FundamentalNote) + (note.Pitch.Octave + 3);
+            tieStarts.push(`${note.ParentVoiceEntry.ParentVoice.VoiceId}:${pitch}@${note.getAbsoluteTimestamp().RealValue}`);
+         }
+      }
+      return tieStarts.sort();
+   }
+
+   // The same measure with the other one of the two unison notes hidden, the held C2's dotted eighth that carries the tie:
+   // MuseScore shows the same picture whichever of the two it hides. The tie is drawn from the visible note whose
+   // notehead the hidden note shares. (Looking the tie note up by its own GraphicalNote alone would skip this tie,
+   // and the pitch lookup before that only drew it because the visible note happened to be in the first voice.)
+   it("Draws the tie of a hidden unison note from the visible note whose notehead it shares", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_tie_hidden_unison_bwv847_measure35.musicxml").cloneNode(true) as Document;
+      score.querySelector("note[print-object]").removeAttribute("print-object"); // voice 1's 16th C2 is the visible one now
+      score.querySelector("dot").parentElement.setAttribute("print-object", "no"); // voice 2's dotted eighth C2, tied
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         expect(drawnTieStarts(osmd)).to.deep.equal([
+            "1:B2@0.125", "1:B2@0.25",
+            "1:C2@0.0625", "2:C2@0.25", // the held C2's first tie starts at voice 1's C2, the notehead it shares
+         ]);
+         done();
+      }).catch(done);
+   });
+
+   // A hidden voice doubling visible tied notes in unison (e.g. a voice for playback only): its tie isn't drawn a second
+   // time at the visible notes, which have their own tie. (The pitch lookup drew it, one tie above and one below.)
+   it("Draws the tie of notes doubled in unison by a hidden voice only once", (done: Mocha.Done) => {
+      const tiedHalfNotes: (voice: number, printObject: string) => string = (voice: number, printObject: string) =>
+         ["start", "stop"].map((tieType: string) =>
+            `<note${printObject}><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><tie type="${tieType}"/>` +
+            `<voice>${voice}</voice><type>half</type><notations><tied type="${tieType}"/></notations></note>`).join("");
+      const score: string = "<?xml version='1.0' encoding='UTF-8'?><score-partwise version='3.0'>" +
+         "<part-list><score-part id='P1'><part-name/></score-part></part-list><part id='P1'><measure number='1'>" +
+         "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+         "<clef><sign>G</sign><line>2</line></clef></attributes>" +
+         tiedHalfNotes(1, "") + "<backup><duration>4</duration></backup>" + tiedHalfNotes(2, " print-object='no'") +
+         "</measure></part></score-partwise>";
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         expect(drawnTieStarts(osmd)).to.deep.equal(["1:A4@0"]);
          done();
       }).catch(done);
    });

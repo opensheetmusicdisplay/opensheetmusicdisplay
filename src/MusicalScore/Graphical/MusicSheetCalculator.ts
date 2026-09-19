@@ -2798,6 +2798,12 @@ export abstract class MusicSheetCalculator {
                 if (!startNote.sourceNote.PrintObject || !endNote.sourceNote.PrintObject) {
                     continue;
                 }
+                const tieOfFoundNotes: Tie = startNote.sourceNote.NoteTie;
+                if (tieOfFoundNotes && tieOfFoundNotes !== tie && tieOfFoundNotes === endNote.sourceNote.NoteTie) {
+                    // not the tie's own notes (see findTieGraphicalNoteFromNote), and they are tied to each other themselves,
+                    // e.g. visible notes that a hidden voice doubles in unison: don't draw a second tie between them
+                    continue;
+                }
                 const graphicalTie: GraphicalTie = this.createGraphicalTie(tie, startGse, endGse, startNote, endNote);
                 startGse.GraphicalTies.push(graphicalTie);
                 if (this.staffEntriesWithGraphicalTies.indexOf(startGse) >= 0) {
