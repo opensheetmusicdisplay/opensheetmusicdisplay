@@ -91,11 +91,19 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     }
 
     /**
-     * Search through all the GraphicalNotes to find the suitable one for a TieEndNote.
+     * Search through all the GraphicalNotes to find the suitable one for a TieEndNote:
+     * the tie note's own GraphicalNote if this staff entry has it, otherwise one of the same pitch at the same time.
      * @param tieNote
      * @returns {any}
      */
     public findTieGraphicalNoteFromNote(tieNote: Note): GraphicalNote {
+        // The tie note itself comes first: another voice can have the same pitch at the same time,
+        // e.g. a unison note hidden with print-object="no" so that one notehead serves both voices,
+        // and handleTie() doesn't draw a tie to a hidden note.
+        const ownGraphicalNote: GraphicalNote = this.findGraphicalNoteFromNote(tieNote);
+        if (ownGraphicalNote) {
+            return ownGraphicalNote;
+        }
         for (const gve of this.graphicalVoiceEntries) {
             for (const graphicalNote of gve.notes) {
                 const note: Note = graphicalNote.sourceNote;

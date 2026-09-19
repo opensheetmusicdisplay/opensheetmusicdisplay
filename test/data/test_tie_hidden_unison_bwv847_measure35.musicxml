@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<!-- Bach, Prelude no. 2 in C minor BWV 847, left hand, measure 35, as MuseScore exports it: a held C2 in voice 2
+     (dotted eighth tied to a quarter tied to a half), and voice 1 moving above it, whose first note is the same C2
+     at the same time, hidden with print-object="no" so that a single notehead serves both voices.
+     Both ties of the held C2 must be drawn: the first one starts at the notehead the two voices share. -->
+<score-partwise version="3.0">
+  <work>
+    <work-title>test_tie_hidden_unison_bwv847_measure35</work-title>
+    </work>
+  <part-list><score-part id="P1"><part-name/></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <key><fifths>-3</fifths><mode>minor</mode></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <!-- voice 1: a sixteenth rest, the hidden C2, then a B2 held to the end of the measure -->
+      <note>
+        <rest/><duration>1</duration><voice>1</voice><type>16th</type>
+      </note>
+      <note print-object="no">
+        <pitch><step>C</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem>
+        <beam number="1">begin</beam><beam number="2">forward hook</beam>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>2</octave></pitch>
+        <duration>2</duration><tie type="start"/><voice>1</voice><type>eighth</type>
+        <accidental>natural</accidental><stem>up</stem><beam number="1">end</beam>
+        <notations><tied type="start"/></notations>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>2</octave></pitch>
+        <duration>4</duration><tie type="stop"/><tie type="start"/><voice>1</voice><type>quarter</type><stem>up</stem>
+        <notations><tied type="stop"/><tied type="start"/></notations>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>2</octave></pitch>
+        <duration>8</duration><tie type="stop"/><voice>1</voice><type>half</type><stem>up</stem>
+        <notations><tied type="stop"/></notations>
+      </note>
+      <backup><duration>15</duration></backup>
+      <!-- voice 2: the held C2, whose first notehead is shared with voice 1's hidden C2 -->
+      <note>
+        <pitch><step>C</step><octave>2</octave></pitch>
+        <duration>3</duration><tie type="start"/><voice>2</voice><type>eighth</type><dot/><stem>down</stem>
+        <notations><tied type="start"/></notations>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>2</octave></pitch>
+        <duration>4</duration><tie type="stop"/><tie type="start"/><voice>2</voice><type>quarter</type><stem>down</stem>
+        <notations><tied type="stop"/><tied type="start"/></notations>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>2</octave></pitch>
+        <duration>8</duration><tie type="stop"/><voice>2</voice><type>half</type><stem>down</stem>
+        <notations><tied type="stop"/></notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>
