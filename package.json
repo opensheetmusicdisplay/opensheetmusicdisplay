@@ -1,6 +1,6 @@
 {
   "name": "opensheetmusicdisplay",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
   "main": "build/opensheetmusicdisplay.min.js",
   "types": "build/dist/src/index.d.ts",
