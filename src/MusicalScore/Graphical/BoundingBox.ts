@@ -34,14 +34,14 @@ export class BoundingBox {
     protected boundingMarginRectangle: RectangleF2D;
     protected childElements: BoundingBox[] = [];
     protected parent: BoundingBox;
-    protected dataObject: Object;
+    protected dataObject: object;
     /**
      * Create a bounding box
      * @param dataObject Graphical object where the bounding box will be attached
      * @param parent Parent bounding box of an object in a higher hierarchy position
      * @param isSymbol Defines the bounding box to be symbol thus not calculating its boundaries by itself. NOTE: Borders need to be set!
      */
-    constructor(dataObject: Object = undefined, parent: BoundingBox = undefined, isSymbol: boolean = false) {
+    constructor(dataObject: object = undefined, parent: BoundingBox = undefined, isSymbol: boolean = false) {
         this.parent = parent;
         this.dataObject = dataObject;
         this.isSymbol = isSymbol;
@@ -219,7 +219,7 @@ export class BoundingBox {
         }
     }
 
-    public get DataObject(): Object {
+    public get DataObject(): object {
         return this.dataObject;
     }
 
@@ -565,13 +565,13 @@ export class BoundingBox {
     }
 
     public getClickedObjectOfType<T>(clickPosition: PointF2D): T {
-        const obj: Object = this.dataObject;
+        const obj: object = this.dataObject;
         if (this.pointLiesInsideBorders(clickPosition) && (<T>obj)) {
             return (obj as T);
         }
         for (let idx: number = 0, len: number = this.childElements.length; idx < len; ++idx) {
             const psi: BoundingBox = this.childElements[idx];
-            const innerObject: Object = psi.getClickedObjectOfType<T>(clickPosition);
+            const innerObject: T = psi.getClickedObjectOfType<T>(clickPosition);
             if (innerObject) {
                 return (innerObject as T);
             }

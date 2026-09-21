@@ -803,7 +803,7 @@ export class GraphicalMusicSheet {
     public getClickedObjectOfType<T>(positionOnMusicSheet: PointF2D): T {
         for (let idx: number = 0, len: number = this.musicPages.length; idx < len; ++idx) {
             const page: GraphicalMusicPage = this.musicPages[idx];
-            const o: Object = page.PositionAndShape.getClickedObjectOfType<T>(positionOnMusicSheet);
+            const o: T = page.PositionAndShape.getClickedObjectOfType<T>(positionOnMusicSheet);
             if (o) {
                 return (o as T);
             }
