@@ -116,6 +116,20 @@ describe("VexFlow Measure", () => {
             .getModifiers().filter((modifier: any): boolean => modifier.getCategory() === category));
    }
 
+   it("Renders sharp-sharp as two sharp signs and double-sharp as the double sharp symbol", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_accidental_sharp-sharp_double-sharp.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const accidentals: string[][] = firstNoteModifiers(osmd, "accidentals")
+            .map((modifiers: any[]): string[] => modifiers.map((accidental: any): string => accidental.type));
+         expect(accidentals, "measure 1: double-sharp, measure 2: sharp-sharp").to.deep.equal([["##"], ["#", "#"]]);
+         done();
+      }).catch(done);
+   });
+
    it("Draws the single-note tremolo of notes with a triple sharp or triple flat", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_tremolo_single_note_triple_accidentals.musicxml");
       const div: HTMLElement = TestUtils.getDivElement(document);
