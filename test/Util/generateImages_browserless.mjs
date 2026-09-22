@@ -528,6 +528,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestHeavyBarline = sampleFilename.includes("test_barline_heavy-heavy_mid_score");
     const isTestTupletRatioed = sampleFilename.includes("test_tuplet_ratioed");
     const isTestDrawFromMeasureNumber9ClefChange = sampleFilename.includes("test_drawFromMeasureNumber_9_respect_earlier_clef_changes");
+    const isTestDrawFromMeasureNumber2TempoMarkings = sampleFilename.includes("test_drawFromMeasureNumber_2_tempo_markings");
     const isTestOctaveShiftMultiline = sampleFilename.includes("test_octaveshift_multiline");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
@@ -543,6 +544,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawUpToMeasureNumber = 12;
     } else if (isTestDrawFromMeasureNumber9ClefChange) {
         drawFromMeasureNumber = 9;
+    } else if (isTestDrawFromMeasureNumber2TempoMarkings) {
+        drawFromMeasureNumber = 2;
     }
     osmdInstance.setOptions({
         autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
