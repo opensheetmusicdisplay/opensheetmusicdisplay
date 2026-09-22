@@ -149,7 +149,7 @@ export class VoiceGenerator {
         const slideElements: IXmlElement[] = notationNode.elements("slide");
         const glissElements: IXmlElement[] = notationNode.elements("glissando");
         if (this.slurReader !== undefined &&
-            (slurElements.length > 0 || slideElements.length > 0) &&
+            (slurElements.length > 0 || slideElements.length > 0 || glissElements.length > 0) &&
             !this.currentNote.ParentVoiceEntry.IsGrace) {
           this.slurReader.addSlur(slurElements, this.currentNote);
           if (slideElements.length > 0) {

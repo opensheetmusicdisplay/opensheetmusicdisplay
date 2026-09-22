@@ -14,6 +14,8 @@ export class SlurReader {
     /** Slur stops that were read before their matching start, kept separate from openSlurDict so they don't
      * interfere with normal start-before-stop slurs that reuse the same slur number. See addSlur(). */
     private openStopBeforeStartDict: { [_: number]: Slur } = {};
+    /** Open glissandi and slides: separate from openSlurDict, so they don't end a slur with the same number. */
+    private openGlissDict: { [_: number]: Slur } = {};
     constructor(musicSheet: MusicSheet) {
         this.musicSheet = musicSheet;
     }
@@ -80,10 +82,11 @@ export class SlurReader {
                                 pendingCrossStaffStop.PlacementXml = slurPlacementXml;
                                 this.linkSlurToNotes(pendingCrossStaffStop);
                             } else {
-                                let slur: Slur = this.openSlurDict[slurNumber];
+                                const openDict: { [_: number]: Slur } = isSlur ? this.openSlurDict : this.openGlissDict;
+                                let slur: Slur = openDict[slurNumber];
                                 if (!slur) {
                                     slur = new Slur();
-                                    this.openSlurDict[slurNumber] = slur;
+                                    openDict[slurNumber] = slur;
                                 }
                                 slur.StartNote = currentNote;
                                 slur.PlacementXml = slurPlacementXml;
@@ -92,17 +95,15 @@ export class SlurReader {
                             const nodeName: string = slurNode.name;
                             if (nodeName === "slide" || nodeName === "glissando") {
                                 // TODO for now, we abuse the SlurReader to also process slides and glissandi, to avoid a lot of duplicate code.
-                                //   though we might want to separate the code a bit, at least use its own openGlissDict instead of openSlurDict.
                                 //   also see variable glissElements later on
-                                const slur: Slur = this.openSlurDict[slurNumber];
+                                const slur: Slur = this.openGlissDict[slurNumber];
                                 if (slur && slur.StartNote !== currentNote) {
                                     const startNote: Note = slur.StartNote;
                                     const newGlissando: Glissando = new Glissando(startNote);
                                     newGlissando.AddNote(currentNote);
                                     newGlissando.EndNote = currentNote;
                                     currentNote.NoteGlissando = newGlissando;
-                                    // TODO use its own dict, openSlideDict? Can this cause problems if slur and slide have the same number?
-                                    delete this.openSlurDict[slurNumber];
+                                    delete this.openGlissDict[slurNumber];
                                 }
                             } else {
                                 const slur: Slur = this.openSlurDict[slurNumber];
