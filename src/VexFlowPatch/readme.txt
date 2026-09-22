@@ -46,6 +46,9 @@ Fix end_x ("right") position not adding padding / subtracting length for wide en
 notehead.js (custom addition):
 add stem_up_y_shift and stem_down_y_shift to shift notehead (independent of stem length)
 
+ornament.js (custom addition):
+respect Modifier.Position.BELOW in draw() (placement="below" in MusicXML)
+
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
 

@@ -145,6 +145,22 @@ export class Ornament extends Modifier {
     const start = this.note.getModifierStartXY(this.position, this.index);
     let glyphX = start.x;
     let glyphY = Math.min(stave.getYForTopText(this.text_line), glyphYBetweenLines);
+    if (this.position === Modifier.Position.BELOW) {
+      // VexFlowPatch: Place the entire ornament, including accidentals, below the stave and note.
+      // Glyphs are drawn upwards from their bottom origin.
+      const noteBottom = Math.max(...this.note.getYs(),
+        this.note.hasStem() ? Math.max(stemExtents.topY, stemExtents.baseY) : -Infinity);
+      const bottomSpacing = spacing * (this.text_line + 1 +
+        (stemDir === StaveNote.STEM_DOWN && this.note.beam ? 0.5 : 0));
+      let height = this.glyph.getMetrics().height;
+      if (this.accidentalLower) {
+        height += this.accidentalLower.getMetrics().height + this.render_options.accidentalLowerPadding;
+      }
+      if (this.accidentalUpper) {
+        height += this.accidentalUpper.getMetrics().height + this.render_options.accidentalUpperPadding;
+      }
+      glyphY = Math.max(stave.getYForBottomText(this.text_line), noteBottom + bottomSpacing) + height;
+    }
     glyphY += this.y_shift;
 
     // Ajdust x position if ornament is delayed
