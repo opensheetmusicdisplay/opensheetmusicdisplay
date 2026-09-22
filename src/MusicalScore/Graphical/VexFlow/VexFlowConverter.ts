@@ -682,13 +682,12 @@ export class VexFlowConverter {
                 if (accidentals[i] === "###") { // triple sharp
                     vfnote.addAccidental(i, new VF.Accidental("##"));
                     vfnote.addAccidental(i, new VF.Accidental("#"));
-                    continue;
                 } else if (accidentals[i] === "bbs") { // triple flat
                     vfnote.addAccidental(i, new VF.Accidental("bb"));
                     vfnote.addAccidental(i, new VF.Accidental("b"));
-                    continue;
+                } else {
+                    vfnote.addAccidental(i, new VF.Accidental(accidentals[i])); // normal accidental
                 }
-                vfnote.addAccidental(i, new VF.Accidental(accidentals[i])); // normal accidental
             }
 
             // add Tremolo strokes for single note tremolos
