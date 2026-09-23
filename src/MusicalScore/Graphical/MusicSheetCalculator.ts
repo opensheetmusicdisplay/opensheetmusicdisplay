@@ -493,7 +493,7 @@ export abstract class MusicSheetCalculator {
         let labelOffsetX: number = 0;
         for (let i: number = 0; i < staffLine.Measures.length; i++) {
             const measure: GraphicalMeasure = staffLine.Measures[i];
-            let skip: boolean = this.rules.RenderMeasureNumbersOnlyAtSystemStart && i > 1;
+            let skip: boolean = this.rules.RenderMeasureNumbersOnlyAtSystemStart && i >= 1;
             if (i === 1 && staffLine.Measures[0].parentSourceMeasure.ImplicitMeasure) {
                 skip = false; // if the first measure (i=0) is a pickup measure, we shouldn't skip measure number 1 (i=1)
             }
