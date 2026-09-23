@@ -53,6 +53,36 @@
           <slur type="stop" number="1"/>
         </notations>
       </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch><step>A</step><octave>4</octave></pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <glissando type="start" line-type="solid" number="1"/>
+        </notations>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <glissando type="stop" line-type="solid" number="1"/>
+          <glissando type="start" line-type="solid" number="1"/>
+        </notations>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>5</octave></pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <notations>
+          <glissando type="stop" line-type="solid" number="1"/>
+        </notations>
+      </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
       </barline>

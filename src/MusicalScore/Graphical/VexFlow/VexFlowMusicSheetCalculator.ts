@@ -2574,6 +2574,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               // loop over "normal" notes (= no gracenotes)
               for (const graphicalVoiceEntry of graphicalStaffEntry.graphicalVoiceEntries) {
                 for (const graphicalNote of graphicalVoiceEntry.notes) {
+                  // Remove the glissandi that end on this note from the open ones. A note that ends a glissando and
+                  //   starts the next one only has the next one as NoteGlissando.
+                  for (let index: number = openGlissandi.length - 1; index >= 0; index--) {
+                    const gGliss: GraphicalGlissando = openGlissandi[index];
+                    if (gGliss.Glissando.EndNote === graphicalNote.sourceNote) {
+                      // save Voice Entry in gliss and then remove it from array of open glissandi
+                      if (gGliss.staffEntries.indexOf(graphicalStaffEntry) === -1) {
+                        gGliss.staffEntries.push(graphicalStaffEntry);
+                      }
+                      openGlissandi.splice(index, 1);
+                    }
+                  }
                   const gliss: Glissando = graphicalNote.sourceNote.NoteGlissando;
                   // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
                   if (!gliss?.EndNote || !gliss?.StartNote) {
@@ -2586,18 +2598,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     openGlissandi.push(gGliss);
                     //gGliss.staffEntries.push(graphicalStaffEntry);
                     staffLine.addGlissandoToStaffline(gGliss);
-                  }
-                  if (gliss.EndNote === graphicalNote.sourceNote) {
-                    // Remove the gliss from the staffline if the note is the Endnote of a gliss
-                    const index: number = this.indexOfGraphicalGlissFromGliss(openGlissandi, gliss);
-                    if (index >= 0) {
-                      // save Voice Entry in gliss and then remove it from array of open glissandi
-                      const gGliss: GraphicalGlissando = openGlissandi[index];
-                      if (gGliss.staffEntries.indexOf(graphicalStaffEntry) === -1) {
-                        gGliss.staffEntries.push(graphicalStaffEntry);
-                      }
-                      openGlissandi.splice(index, 1);
-                    }
                   }
                 }
               }
