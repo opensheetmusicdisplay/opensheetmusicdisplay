@@ -761,7 +761,6 @@ export class ExpressionReader {
                 return;
             }
             this.fillMultiOrTempoExpression(text, currentMeasure, inSourceMeasureCurrentFraction, fontStyle, fontColor, defaultYXml);
-            this.initialize();
         }
     }
     private readNumber(node: IXmlElement): number {
@@ -803,7 +802,6 @@ export class ExpressionReader {
             this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml);
         }
         this.addWedge(wedgeNode, currentMeasure, inSourceMeasureCurrentFraction);
-        this.initialize();
     }
     private interpretRehearsalMark(
         rehearsalNode: IXmlElement, currentMeasure: SourceMeasure,
