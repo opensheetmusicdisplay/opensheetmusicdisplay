@@ -522,6 +522,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestWedgeMultilineCrescendo = sampleFilename.includes("test_wedge_multiline_crescendo");
     const isTestWedgeMultilineDecrescendo = sampleFilename.includes("test_wedge_multiline_decrescendo");
     const isTestWavyLineMultilineExtraGraphicalMeasure = sampleFilename.includes("test_wavy_line_multiline_extragraphicalmeasure");
+    const isTestSlidesStandardAndTabStaff = sampleFilename.includes("test_slides_standard_and_tab_staff");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
     const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
@@ -599,7 +600,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         isTestOctaveShiftInvisibleInstrument ||
         isTestWedgeMultilineCrescendo ||
         isTestWedgeMultilineDecrescendo ||
-        isTestWavyLineMultilineExtraGraphicalMeasure) {
+        isTestWavyLineMultilineExtraGraphicalMeasure ||
+        isTestSlidesStandardAndTabStaff) {
         osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
     }
     if (isTestTabs4Strings) {

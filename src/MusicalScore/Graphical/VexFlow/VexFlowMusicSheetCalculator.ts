@@ -2640,7 +2640,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const vfStartNote: VexFlowGraphicalNote = gGliss.staffEntries[0].findGraphicalNoteFromNote(startNote) as VexFlowGraphicalNote;
             const vfEndNote: VexFlowGraphicalNote = gGliss.staffEntries.last().findGraphicalNoteFromNote(endNote) as VexFlowGraphicalNote;
             if (!vfStartNote && !vfEndNote) {
-              return; // otherwise causes Vexflow error
+              continue; // otherwise causes Vexflow error. continue, not return: that would skip all following slides
             }
 
             let slideDirection: number = 1;
