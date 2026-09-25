@@ -1641,7 +1641,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!endStaffEntry) { // fix for rendering range set
         endStaffEntry = endMeasure.staffEntries[endMeasure.staffEntries.length - 1];
       }
-      graphicalWavyLine.setStartNote(startStaffEntry);
+      if (!graphicalWavyLine.setStartNote(startStaffEntry)) {
+        return; // no start note found (e.g. no staff entries in the start measure), nothing to attach the wavy line to
+      }
 
       if (endStaffLine !== startStaffLine) {
           let lastMeasureOfFirstShift: GraphicalMeasure = this.findLastStafflineMeasure(startStaffLine);
@@ -1680,7 +1682,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 lastNote = endStaffEntry;
               }
 
-              nextWavyLine.setStartNote(firstNote);
+              if (!nextWavyLine.setStartNote(firstNote)) {
+                continue; // no start note in this staffline (e.g. its first measure has no staff entries), skip only this segment
+              }
               nextWavyLine.setEndNote(lastNote);
               nextWavyLineStaffline.WavyLines.push(nextWavyLine);
               nextWavyLine.CalculateBoundingBox();
