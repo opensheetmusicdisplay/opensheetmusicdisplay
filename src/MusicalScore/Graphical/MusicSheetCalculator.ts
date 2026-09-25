@@ -2039,9 +2039,6 @@ export abstract class MusicSheetCalculator {
 
         if (multiTempoExpression.ContinuousTempo || multiTempoExpression.InstantaneousTempo) {
             // TempoExpressions always on the first visible System's StaffLine // TODO is it though?
-            if (this.rules.MinMeasureToDrawIndex > 0) {
-                return; // assuming that the tempo is always in measure 1 (idx 0), adding the expression causes issues when we don't draw measure 1
-            }
             if (!measures[0]) {
                 return;
             }

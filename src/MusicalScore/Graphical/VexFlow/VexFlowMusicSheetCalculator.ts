@@ -1041,7 +1041,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // }
       // console.log('max skyline: ' + maxSkylineBeginning);
     }
-    const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine?.SkyLine;
+    const skyline: number[] = this.musicSystems[0]?.StaffLines[0]?.SkyLine;
 
     if (metronomeExpression.metronomeNoteGroupLeft && metronomeExpression.metronomeNoteGroupRight) {
       // Complex metronome mark (note equation, e.g. swing notation)
