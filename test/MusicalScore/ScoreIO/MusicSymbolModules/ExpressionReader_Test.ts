@@ -6,6 +6,7 @@ import { DynamicEnum, InstantaneousDynamicExpression } from
     "../../../../src/MusicalScore/VoiceData/Expressions/InstantaneousDynamicExpression";
 import { MultiExpression } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiExpression";
 import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
+import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 
 describe("ExpressionReader", () => {
     /** Reads a test/data sample (preprocessed by karma) into a MusicSheet, optionally with custom rules. */
@@ -125,6 +126,25 @@ describe("ExpressionReader", () => {
             expect(dynamics[0].Volume, "pf (poco forte) lies between mp and f").to.be.within(mp, f);
             expect(dynamics[1].Volume, "sfzp like the other sforzando marks").to.equal(0.5);
             expect(dynamics[2].Volume, "n (niente) is silence").to.equal(0);
+        });
+    });
+
+    describe("dynamics after words or a wedge in the same direction", () => {
+        let dynamics: InstantaneousDynamicExpression[];
+
+        before((): void => {
+            dynamics = collectDynamics(readSheet("test/data/test_direction_dynamics_after_words_and_wedge.musicxml"));
+        });
+
+        it("keeps the direction's placement for a dynamic after words", () => {
+            expect(dynamics[0].DynamicExpression).to.equal("p");
+            expect(dynamics[0].Placement).to.equal(PlacementEnum.Below);
+        });
+
+        it("keeps the direction's placement and sound dynamics for a dynamic after a wedge stop", () => {
+            expect(dynamics[1].DynamicExpression).to.equal("f");
+            expect(dynamics[1].Placement).to.equal(PlacementEnum.Below);
+            expect(dynamics[1].SoundDynamic).to.equal(106);
         });
     });
 });
