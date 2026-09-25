@@ -4,7 +4,9 @@ import { MusicSheet } from "../../../../src/MusicalScore/MusicSheet";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import { DynamicEnum, InstantaneousDynamicExpression } from
     "../../../../src/MusicalScore/VoiceData/Expressions/InstantaneousDynamicExpression";
-import { MultiExpression } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiExpression";
+import { MultiExpression, MultiExpressionEntry } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiExpression";
+import { ContDynamicEnum, ContinuousDynamicExpression } from
+    "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 
@@ -145,6 +147,39 @@ describe("ExpressionReader", () => {
             expect(dynamics[1].DynamicExpression).to.equal("f");
             expect(dynamics[1].Placement).to.equal(PlacementEnum.Below);
             expect(dynamics[1].SoundDynamic).to.equal(106);
+        });
+    });
+
+    describe("wedges and words with other direction-types in the same direction", () => {
+        let sheet: MusicSheet;
+        let wedges: ContinuousDynamicExpression[];
+
+        before((): void => {
+            sheet = readSheet("test/data/test_direction_several_direction_types.musicxml");
+            wedges = sheet.SourceMeasures.flatMap((measure): ContinuousDynamicExpression[] =>
+                measure.StaffLinkedExpressions.flatMap((staffExpressions: MultiExpression[]): ContinuousDynamicExpression[] =>
+                    staffExpressions
+                        .map((expression: MultiExpression): ContinuousDynamicExpression => expression.StartingContinuousDynamic)
+                        .filter((wedge: ContinuousDynamicExpression): boolean => wedge !== undefined)
+                )
+            );
+        });
+
+        it("reads words after a dynamic", () => {
+            const labels: string[] = sheet.SourceMeasures[0].StaffLinkedExpressions[0].flatMap((expression: MultiExpression): string[] =>
+                expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
+            expect(labels).to.include("espress.");
+        });
+
+        it("keeps the direction's placement for a wedge after a wedge stop or after words", () => {
+            expect(wedges.map((wedge: ContinuousDynamicExpression): ContDynamicEnum => wedge.DynamicType))
+                .to.deep.equal([ContDynamicEnum.crescendo, ContDynamicEnum.diminuendo, ContDynamicEnum.crescendo]);
+            expect(wedges.map((wedge: ContinuousDynamicExpression): PlacementEnum => wedge.Placement))
+                .to.deep.equal([PlacementEnum.Below, PlacementEnum.Below, PlacementEnum.Below]);
+        });
+
+        it("keeps the direction's offset for a wedge stop after words", () => {
+            expect(wedges[2].EndMultiExpression.EndOffsetFraction.RealValue, "offset 1 = a quarter").to.equal(0.25);
         });
     });
 });
