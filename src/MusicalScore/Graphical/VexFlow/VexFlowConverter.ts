@@ -679,16 +679,18 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
-                if (accidentals[i] === "###") { // triple sharp
+                if (accidentals[i] === "sharp-sharp") { // two separate sharp signs, not the double-sharp cross
+                    vfnote.addAccidental(i, new VF.Accidental("#"));
+                    vfnote.addAccidental(i, new VF.Accidental("#"));
+                } else if (accidentals[i] === "###") { // triple sharp
                     vfnote.addAccidental(i, new VF.Accidental("##"));
                     vfnote.addAccidental(i, new VF.Accidental("#"));
-                    continue;
                 } else if (accidentals[i] === "bbs") { // triple flat
                     vfnote.addAccidental(i, new VF.Accidental("bb"));
                     vfnote.addAccidental(i, new VF.Accidental("b"));
-                    continue;
+                } else {
+                    vfnote.addAccidental(i, new VF.Accidental(accidentals[i])); // normal accidental
                 }
-                vfnote.addAccidental(i, new VF.Accidental(accidentals[i])); // normal accidental
             }
 
             // add Tremolo strokes for single note tremolos

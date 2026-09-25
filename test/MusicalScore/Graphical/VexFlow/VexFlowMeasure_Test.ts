@@ -109,6 +109,41 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   /** The VexFlow modifiers of one category on the first note of each measure (samples with one staff). */
+   function firstNoteModifiers(osmd: OpenSheetMusicDisplay, category: string): any[][] {
+      return osmd.GraphicSheet.MeasureList.map((measures: GraphicalMeasure[]): any[] =>
+         ((measures[0].staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote).vfnote[0] as any)
+            .getModifiers().filter((modifier: any): boolean => modifier.getCategory() === category));
+   }
+
+   it("Renders sharp-sharp as two sharp signs and double-sharp as the double sharp symbol", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_accidental_sharp-sharp_double-sharp.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const accidentals: string[][] = firstNoteModifiers(osmd, "accidentals")
+            .map((modifiers: any[]): string[] => modifiers.map((accidental: any): string => accidental.type));
+         expect(accidentals, "measure 1: double-sharp, measure 2: sharp-sharp").to.deep.equal([["##"], ["#", "#"]]);
+         done();
+      }).catch(done);
+   });
+
+   it("Draws the single-note tremolo of notes with a triple sharp or triple flat", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_tremolo_single_note_triple_accidentals.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         expect(firstNoteModifiers(osmd, "tremolo").map((tremolos: any[]): number => tremolos.length)).to.deep.equal([1, 1]);
+         expect(firstNoteModifiers(osmd, "accidentals").map((modifiers: any[]): string[] =>
+            modifiers.map((accidental: any): string => accidental.type))).to.deep.equal([["##", "#"], ["bb", "b"]]);
+         done();
+      }).catch(done);
+   });
+
    // Non-regression test for grace note fingering positioning
    // Before fix: baseFingeringXOffset was calculated across all notes in the staff entry,
    // causing grace notes to have incorrect offsets based on collision with other grace notes
