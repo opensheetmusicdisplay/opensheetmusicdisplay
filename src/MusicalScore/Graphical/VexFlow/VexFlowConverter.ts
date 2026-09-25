@@ -682,6 +682,12 @@ export class VexFlowConverter {
                 if (accidentals[i] === "sharp-sharp") { // two separate sharp signs, not the double-sharp cross
                     vfnote.addAccidental(i, new VF.Accidental("#"));
                     vfnote.addAccidental(i, new VF.Accidental("#"));
+                } else if (accidentals[i] === "natural-sharp") { // natural sign, then sharp sign (the first accidental added is drawn next to the notehead)
+                    vfnote.addAccidental(i, new VF.Accidental("#"));
+                    vfnote.addAccidental(i, new VF.Accidental("n"));
+                } else if (accidentals[i] === "natural-flat") { // natural sign, then flat sign
+                    vfnote.addAccidental(i, new VF.Accidental("b"));
+                    vfnote.addAccidental(i, new VF.Accidental("n"));
                 } else if (accidentals[i] === "###") { // triple sharp
                     vfnote.addAccidental(i, new VF.Accidental("##"));
                     vfnote.addAccidental(i, new VF.Accidental("#"));

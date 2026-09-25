@@ -57,10 +57,13 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         const drawPitch: Pitch = this.drawPitch(pitch);
         // recalculate the pitch, and this time don't ignore the accidental:
         this.vfpitch = VexFlowConverter.pitch(drawPitch, this.sourceNote.isRest(), this.clef, this.sourceNote.Notehead);
-        // sharp-sharp and double-sharp are both DOUBLESHARP: only AccidentalXml tells them apart, and drawPitch doesn't keep it.
-        //   VexFlowConverter.StaveNote() draws "sharp-sharp" as two "#" accidentals, like "###".
-        if (pitch.Accidental === AccidentalEnum.DOUBLESHARP && pitch.AccidentalXml === "sharp-sharp") {
-            this.vfpitch[1] = "sharp-sharp";
+        // sharp-sharp and double-sharp are both DOUBLESHARP, natural-sharp is a SHARP and natural-flat a FLAT:
+        //   only AccidentalXml tells them apart, and drawPitch doesn't keep it.
+        //   VexFlowConverter.StaveNote() draws each of them as two accidentals, like "###".
+        if ((pitch.Accidental === AccidentalEnum.DOUBLESHARP && pitch.AccidentalXml === "sharp-sharp") ||
+            (pitch.Accidental === AccidentalEnum.SHARP && pitch.AccidentalXml === "natural-sharp") ||
+            (pitch.Accidental === AccidentalEnum.FLAT && pitch.AccidentalXml === "natural-flat")) {
+            this.vfpitch[1] = pitch.AccidentalXml;
         }
         this.DrawnAccidental = drawPitch.Accidental;
         //}

@@ -130,6 +130,24 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   it("Renders natural-sharp and natural-flat as a natural sign followed by a sharp or flat sign", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_accidental_natural-sharp_natural-flat.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         // accidentals are drawn left of the notehead: the smaller (more negative) the x shift, the further left
+         const accidentalsLeftToRight: string[][] = firstNoteModifiers(osmd, "accidentals")
+            .map((modifiers: any[]): string[] => modifiers
+               .sort((a: any, b: any): number => a.getXShift() - b.getXShift())
+               .map((accidental: any): string => accidental.type));
+         expect(accidentalsLeftToRight, "double-sharp, natural-sharp, flat-flat, natural-flat").to.deep.equal(
+            [["##"], ["n", "#"], ["bb"], ["n", "b"]]);
+         done();
+      }).catch(done);
+   });
+
    it("Draws the single-note tremolo of notes with a triple sharp or triple flat", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_tremolo_single_note_triple_accidentals.musicxml");
       const div: HTMLElement = TestUtils.getDivElement(document);
