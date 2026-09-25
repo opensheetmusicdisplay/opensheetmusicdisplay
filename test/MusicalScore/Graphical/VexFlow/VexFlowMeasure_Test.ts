@@ -255,6 +255,43 @@ describe("VexFlow Measure", () => {
       );
    });
 
+   it("Draws ornaments with placement=\"below\" below the staff and their note, and other ornaments above", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_ornament_placement_below.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const box: (element: Element) => DOMRect = (element: Element): DOMRect => (element as SVGGraphicsElement).getBBox();
+         const placements: string[] = [];
+         for (const measures of osmd.GraphicSheet.MeasureList) {
+            const stave: any = (measures[0] as any).getVFStave(); // getBBox() is in the coordinates of the stave's lines
+            for (const staffEntry of measures[0].staffEntries) {
+               for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                  if (!voiceEntry.parentVoiceEntry.OrnamentContainer) {
+                     continue;
+                  }
+                  const note: VexFlowGraphicalNote = voiceEntry.notes[0] as VexFlowGraphicalNote;
+                  const ornament: DOMRect = box(note.getModifierSVGs()[0]); // the ornament is the note's only modifier
+                  const noteBottom: number = Math.max(...[...note.getNoteheadSVGs(), note.getStemSVG()]
+                     .map((element: Element): number => box(element).y + box(element).height));
+                  if (ornament.y > Math.max(stave.getYForLine(4), noteBottom)) {
+                     placements.push("below");
+                  } else if (ornament.y + ornament.height < stave.getYForLine(0)) {
+                     placements.push("above");
+                  } else {
+                     placements.push("between");
+                  }
+               }
+            }
+         }
+         // measure 1: voice 1 turn without placement; voice 2 trill, mordent and turn with an accidental-mark (placement="below").
+         //   measure 2: trill with placement="below" and a wavy line, which is always drawn above
+         expect(placements).to.deep.equal(["above", "below", "below", "below", "above"]);
+         done();
+      }).catch(done);
+   });
+
    // Non-regression test for EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature.
    // Pieces without a time signature in the source (e.g. Satie's Gnossiennes) should not render a
    // (synthesized default 4/4) time signature by default, but should when the rule is enabled.

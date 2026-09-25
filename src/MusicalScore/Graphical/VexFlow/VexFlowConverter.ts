@@ -986,7 +986,7 @@ export class VexFlowConverter {
             if (oContainer.AccidentalAbove !== AccidentalEnum.NONE) {
                 vfOrna.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
             }
-            vfOrna.setPosition(vfPosition); // Vexflow draws it above right now in any case, never below
+            vfOrna.setPosition(vfPosition);
             (vfnote as StaveNote).addModifier(0, vfOrna);
         }
     }

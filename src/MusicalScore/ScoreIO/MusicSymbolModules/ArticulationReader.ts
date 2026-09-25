@@ -298,7 +298,10 @@ export class ArticulationReader {
           const placementAttr: Attr = node.attribute("placement");
           if (placementAttr) {
             const placementString: string = placementAttr.value;
-            if (placementString === "below") {
+            // a wavy line is always drawn above the staff: an ornament that starts one stays above with it
+            const startsWavyLine: boolean = ornamentsNode.elements("wavy-line").some(
+              (wavyLine: IXmlElement) => wavyLine.attribute("type")?.value === "start");
+            if (placementString === "below" && !startsWavyLine) {
               ornament.placement = PlacementEnum.Below;
             }
           }
