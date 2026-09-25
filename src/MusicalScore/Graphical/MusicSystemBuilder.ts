@@ -844,7 +844,11 @@ export class MusicSystemBuilder {
         /*if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].parentSourceMeasure.endsPiece) {
             return SystemLinesEnum.ThinBold;
         }*/
-        if (this.nextMeasureHasKeyInstructionChange()) {
+        // a key change gets a double barline, unless the file gives another barline style there,
+        //   e.g. light-heavy at the end of a movement (no barline or a "regular" one in the file is SingleThin)
+        const endingBarStyle: SystemLinesEnum = sourceMeasure?.endingBarStyleEnum;
+        if (this.nextMeasureHasKeyInstructionChange() &&
+            (endingBarStyle === undefined || endingBarStyle === SystemLinesEnum.SingleThin)) {
         //if (this.nextMeasureHasKeyInstructionChange() || this.thisMeasureEndsWordRepetition() || this.nextMeasureBeginsWordRepetition()) {
         //  previously, we forced a double thin barline for places like "to coda" end of measure, even if it there's no double thin barline in the xml
             return SystemLinesEnum.DoubleThin;
