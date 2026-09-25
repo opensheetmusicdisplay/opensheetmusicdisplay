@@ -1036,7 +1036,10 @@ export class MusicSystemBuilder {
                 if (!sourceMeasure) {
                     return undefined;
                 }
-                return sourceMeasure.getKeyInstruction(this.visibleStaffIndices[visIndex]);
+                const key: KeyInstruction = sourceMeasure.getKeyInstruction(this.visibleStaffIndices[visIndex]);
+                if (key) {
+                    return key;
+                }
             }
         }
         return undefined;
