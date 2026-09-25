@@ -532,6 +532,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestDrawFromMeasureNumber9ClefChange = sampleFilename.includes("test_drawFromMeasureNumber_9_respect_earlier_clef_changes");
     const isTestDrawFromMeasureNumber2TempoMarkings = sampleFilename.includes("test_drawFromMeasureNumber_2_tempo_markings");
     const isTestOctaveShiftMultiline = sampleFilename.includes("test_octaveshift_multiline");
+    const isTestMeasureNumbersOnlyAtSystemStart = sampleFilename.includes("test_measure_numbers_only_at_system_start");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
@@ -557,7 +558,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawingParameters: defaultOrCompactTightMode, // note: default resets all EngravingRules. could be solved differently
         drawFromMeasureNumber: drawFromMeasureNumber,
         drawUpToMeasureNumber: drawUpToMeasureNumber,
-        newSystemFromXML: isFunctionTestSystemAndPageBreaks,
+        drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
+        newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
