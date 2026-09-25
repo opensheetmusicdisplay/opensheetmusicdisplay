@@ -27,6 +27,7 @@ import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
 import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
 import { AccidentalEnum, NoteEnum, Pitch } from "../../../../src/Common/DataObjects/Pitch";
 import { GraphicalNote } from "../../../../src/MusicalScore/Graphical/GraphicalNote";
+import { unitInPixels } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 
 describe("VexFlow Measure", () => {
 
@@ -566,6 +567,38 @@ describe("VexFlow Measure", () => {
          // bass staff (Below placement): the same stack, highest note first
          expect(fingeringsByNote(1, 0), "bass staff, beat 1").to.deep.equal(["G3=1", "E3=3", "C3=5"]);
          expect(fingeringsByNote(1, 1), "bass staff, beat 3").to.deep.equal(["A3=2", "F3=4", "C3=5"]);
+         done();
+      }).catch(done);
+   });
+
+   // An ornament above a stem-up note is drawn from the tip of its stem, which a beam extends. The skyline was measured
+   // from a first draw of each measure in which the notes were drawn before their beams, i.e. from the unextended stems:
+   // there the mordent sat lower than in the final render, so the fingering placed from the skyline covered it.
+   // E.g. Bach's Prelude BWV 847 m.34. Checked with both skyline calculations (geometric and raster).
+   it("Places a fingering above the ornament of a beamed stem-up note", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_ornament_fingering_beamed_stem_up_bwv847_measure34.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         for (const geometricSkyline of [true, false]) {
+            const skyline: string = geometricSkyline ? "geometric skyline" : "raster skyline";
+            osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geometricSkyline;
+            osmd.render();
+            const staffEntry: GraphicalStaffEntry = osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries[0];
+            const note: VexFlowGraphicalNote = staffEntry.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote;
+            const fingering: GraphicalLabel = staffEntry.FingeringEntries[0];
+            expect(fingering?.Label.text, `${skyline}: fingering of the ornamented note`).to.equal("3");
+            // the mordent is the note's only modifier. Its drawn box, in the page's units like the fingering's:
+            const ornament: SVGGElement = note.getSVGGElement().querySelector(".vf-modifiers");
+            const ornamentTop: number = ornament.getBBox().y / unitInPixels;
+            const fingeringBottom: number = fingering.PositionAndShape.AbsolutePosition.y + fingering.PositionAndShape.BorderBottom;
+            // (a tolerance of 1 pixel for the raster skyline. The fingering overlapped the mordent by more than a staff space.)
+            expect(fingeringBottom, `${skyline}: the fingering must be above the mordent`).to.be.at.most(ornamentTop + 0.1);
+         }
          done();
       }).catch(done);
    });

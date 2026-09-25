@@ -663,6 +663,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         // Draw stave lines
         this.stave.setContext(ctx).draw();
+        this.postFormatBeams();
         // Draw all voices
         for (const voiceID in this.vfVoices) {
             if (this.vfVoices.hasOwnProperty(voiceID)) {
@@ -736,6 +737,37 @@ export class VexFlowMeasure extends GraphicalMeasure {
             ctx.closeGroup();
         }
         this.correctNotePositions();
+    }
+
+    /** Makes the beams drawn by draw() extend their notes' stems now, before the notes are drawn.
+     * A Vexflow beam extends its notes' stems to reach it in Beam.postFormat(), which Beam.draw() calls, i.e. after the notes
+     * were drawn. But a note's modifiers are placed from its stem as the note is drawn, e.g. an ornament above a stem-up note
+     * (Ornament.draw() reads note.getStem().getExtents()). So the first draw of a measure, the one that measures the skyline
+     * (SkyBottomLineCalculator), drew such an ornament from the unextended stem, lower than every later draw: the skyline missed
+     * the ornament as rendered, and what was placed from the skyline could cover it, e.g. a fingering in Bach's Prelude BWV 847
+     * m.34 (test_ornament_fingering_beamed_stem_up_bwv847_measure34).
+     */
+    private postFormatBeams(): void {
+        const beams: VF.Beam[] = [...(this.autoVfBeams ?? [])];
+        for (const voiceID in this.vfbeams) {
+            if (this.vfbeams.hasOwnProperty(voiceID)) {
+                beams.push(...this.vfbeams[voiceID]);
+            }
+        }
+        if (!this.isTabMeasure || this.rules.TupletNumbersInTabs) { // see draw()
+            beams.push(...(this.autoTupletVfBeams ?? []));
+        }
+        for (const beam of beams) {
+            if ((beam as any).postFormatted) {
+                continue;
+            }
+            for (const note of beam.getNotes()) {
+                // The beam reads the notes' y values, which only follow the stave's current position once the notes are drawn
+                //   (Voice.draw() sets their stave). E.g. OptimizeExtremeLedgerBeams compares them with the stave's lines.
+                note.setStave(this.stave);
+            }
+            beam.postFormat();
+        }
     }
 
     // this currently formats multiple measures, see VexFlowMusicSheetCalculator.formatMeasures()
