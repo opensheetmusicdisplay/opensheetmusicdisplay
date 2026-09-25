@@ -305,7 +305,7 @@ export abstract class MusicSystem extends GraphicalObject {
             let instrNameLabel: Label;
             if (isFirstSystem) {
                 instrNameLabel = instrument.NameLabel;
-                if (!this.rules.RenderPartNames || !instrNameLabel?.print) {
+                if (!this.rules.RenderPartNames || !instrNameLabel?.print || !instrNameLabel.text?.trim()) {
                     instrNameLabel = new Label("", instrument.NameLabel.textAlignment, instrument.NameLabel.font);
                     systemLabelsRightMargin = 0; // might affect lyricist/tempo placement. but without this there's still some extra x-spacing.
                 }

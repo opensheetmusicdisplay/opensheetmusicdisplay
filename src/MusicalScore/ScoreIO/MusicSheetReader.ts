@@ -1036,12 +1036,6 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             throw new MusicSheetReadingException(errorMsg, e);
         }
 
-        for (let idx: number = 0, len: number = this.musicSheet.Instruments.length; idx < len; ++idx) {
-            const instrument: Instrument = this.musicSheet.Instruments[idx];
-            if (!instrument.Name) {
-                instrument.Name = "Instr. " + instrument.IdString;
-            }
-        }
         return instrumentDict;
     }
 
