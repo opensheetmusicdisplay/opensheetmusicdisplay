@@ -844,11 +844,16 @@ export class MusicSystemBuilder {
         /*if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].parentSourceMeasure.endsPiece) {
             return SystemLinesEnum.ThinBold;
         }*/
-        // a key change gets a double barline, unless the file gives another barline style there,
-        //   e.g. light-heavy at the end of a movement (no barline or a "regular" one in the file is SingleThin)
+        // a key change gets a double barline, unless the file gives another barline style there that we can draw:
+        //   light-heavy (e.g. at the end of a movement), heavy-heavy, or none (e.g. an invisible barline splitting a measure at the key change).
+        //   Styles we can't draw at a measure end yet (see VexFlowMeasure.addMeasureLine(), e.g. dashed, dotted, heavy) would be drawn
+        //   as a regular barline, which is too inconspicuous before a key change, so they get the double barline too,
+        //   like no barline or a "regular" one in the file (SingleThin).
         const endingBarStyle: SystemLinesEnum = sourceMeasure?.endingBarStyleEnum;
-        if (this.nextMeasureHasKeyInstructionChange() &&
-            (endingBarStyle === undefined || endingBarStyle === SystemLinesEnum.SingleThin)) {
+        const keepEndingBarStyle: boolean = endingBarStyle === SystemLinesEnum.ThinBold ||
+            endingBarStyle === SystemLinesEnum.DoubleBold ||
+            endingBarStyle === SystemLinesEnum.None;
+        if (this.nextMeasureHasKeyInstructionChange() && !keepEndingBarStyle) {
         //if (this.nextMeasureHasKeyInstructionChange() || this.thisMeasureEndsWordRepetition() || this.nextMeasureBeginsWordRepetition()) {
         //  previously, we forced a double thin barline for places like "to coda" end of measure, even if it there's no double thin barline in the xml
             return SystemLinesEnum.DoubleThin;

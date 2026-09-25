@@ -68,6 +68,34 @@
         <type>whole</type>
       </note>
       <barline location="right">
+        <bar-style>dashed</bar-style>
+      </barline>
+    </measure>
+    <measure number="5">
+      <attributes>
+        <key><fifths>-2</fifths></key>
+      </attributes>
+      <note>
+        <pitch><step>D</step><octave>5</octave></pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <barline location="right">
+        <bar-style>none</bar-style>
+      </barline>
+    </measure>
+    <measure number="6">
+      <attributes>
+        <key><fifths>-3</fifths></key>
+      </attributes>
+      <note>
+        <pitch><step>D</step><octave>5</octave></pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <barline location="right">
         <bar-style>light-heavy</bar-style>
       </barline>
     </measure>

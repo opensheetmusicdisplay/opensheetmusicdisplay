@@ -304,17 +304,17 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
-   it("Keeps the file's barline style before a key change, and only adds the double barline if the file has none or a regular one", (done: Mocha.Done) => {
+   it("Keeps the file's barline style before a key change if we can draw it, and draws a double barline otherwise", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_key_change_keeps_given_barline_style.musicxml");
       const div: HTMLElement = TestUtils.getDivElement(document);
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
 
       osmd.load(score).then(() => {
          osmd.render();
-         const endBarlineTypes: number[] = osmd.GraphicSheet.MeasureList.slice(0, 3).map((measures: GraphicalMeasure[]): number =>
+         const endBarlineTypes: number[] = osmd.GraphicSheet.MeasureList.slice(0, 5).map((measures: GraphicalMeasure[]): number =>
             ((measures[0] as VexFlowMeasure).getVFStave().getModifiers(VF.StaveModifier.Position.END, "barlines")[0] as any).getType());
-         expect(endBarlineTypes, "measures 1-3 end with no barline, a regular one and light-heavy in the file").to.deep.equal(
-            [VF.Barline.type.DOUBLE, VF.Barline.type.DOUBLE, VF.Barline.type.END]);
+         expect(endBarlineTypes, "measures 1-5 end with no barline, a regular one, light-heavy, dashed (can't be drawn) and none in the file")
+            .to.deep.equal([VF.Barline.type.DOUBLE, VF.Barline.type.DOUBLE, VF.Barline.type.END, VF.Barline.type.DOUBLE, VF.Barline.type.NONE]);
          done();
       }).catch(done);
    });
