@@ -30,6 +30,10 @@ export class VexFlowVibratoBracket extends GraphicalWavyLine {
      * @param graphicalStaffEntry the staff entry that holds the start note
      */
      public setStartNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
+        if (!graphicalStaffEntry) {
+            // e.g. an empty measure in the drawing range, or an IsExtraGraphicalMeasure, has no staff entries
+            return false;
+        }
         for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
             const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
             if (vve?.vfStaveNote) {
@@ -46,6 +50,10 @@ export class VexFlowVibratoBracket extends GraphicalWavyLine {
      * @param graphicalStaffEntry the staff entry that holds the end note
      */
     public setEndNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
+        if (!graphicalStaffEntry) {
+            // e.g. an empty measure in the drawing range, or an IsExtraGraphicalMeasure, has no staff entries
+            return false;
+        }
         // this is duplicate code from setStartNote, but if we make one general method, we add a lot of branching.
         for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
             const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);

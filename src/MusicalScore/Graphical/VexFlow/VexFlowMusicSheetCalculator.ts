@@ -1644,8 +1644,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       graphicalWavyLine.setStartNote(startStaffEntry);
 
       if (endStaffLine !== startStaffLine) {
-          let lastMeasureOfFirstShift: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
-          if (lastMeasureOfFirstShift === undefined) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
+          let lastMeasureOfFirstShift: GraphicalMeasure = this.findLastStafflineMeasure(startStaffLine);
+          if (lastMeasureOfFirstShift === undefined) { // e.g. when drawUpToMeasureNumber set, or no staffentries found above
             lastMeasureOfFirstShift = endMeasure;
           }
           const lastNoteOfFirstShift: GraphicalStaffEntry = lastMeasureOfFirstShift.staffEntries[lastMeasureOfFirstShift.staffEntries.length - 1];
@@ -1657,14 +1657,23 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           if (systemsInBetweenCount > 0) {
             for (let i: number = startStaffLine.ParentMusicSystem.Id; i < endStaffLine.ParentMusicSystem.Id; i++) {
               const nextWavyLineMusicSystem: MusicSystem = this.musicSystems[i + 1];
-              const nextWavyLineStaffline: StaffLine = nextWavyLineMusicSystem.StaffLines[staffIndex];
+              let nextWavyLineStaffline: StaffLine; // not always = nextWavyLineMusicSystem.StaffLines[staffIndex], e.g. when first instrument invisible
+              for (const staffline of nextWavyLineMusicSystem.StaffLines) {
+                if (staffline.ParentStaff.idInMusicSheet === staffIndex) {
+                  nextWavyLineStaffline = staffline;
+                  break;
+                }
+              }
+              if (!nextWavyLineStaffline) { // shouldn't happen
+                continue;
+              }
               const nextWavyLineFirstMeasure: GraphicalMeasure = nextWavyLineStaffline.Measures[0];
               // vibrato starts on the first measure
               const nextWavyLine: VexFlowVibratoBracket = new VexFlowVibratoBracket(wavyLine, nextWavyLineFirstMeasure.PositionAndShape,
                 nextWavyLineStaffline.ParentStaff.isTab);
-              let nextWavyLineLastMeasure: GraphicalMeasure = nextWavyLineStaffline.Measures[nextWavyLineStaffline.Measures.length - 1];
+              let nextWavyLineLastMeasure: GraphicalMeasure = this.findLastStafflineMeasure(nextWavyLineStaffline);
               const firstNote: GraphicalStaffEntry = nextWavyLineFirstMeasure.staffEntries[0];
-              let lastNote: GraphicalStaffEntry = nextWavyLineLastMeasure.staffEntries[nextWavyLineLastMeasure.staffEntries.length - 1];
+              let lastNote: GraphicalStaffEntry = nextWavyLineLastMeasure?.staffEntries[nextWavyLineLastMeasure.staffEntries.length - 1];
               //If the end measure's is the ending staffline, this endMeasure is the end of the wavy line
               if (endMeasure.ParentStaffLine === nextWavyLineStaffline) {
                 nextWavyLineLastMeasure = endMeasure;
