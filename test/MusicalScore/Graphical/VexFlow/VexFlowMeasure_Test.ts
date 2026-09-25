@@ -507,6 +507,53 @@ describe("VexFlow Measure", () => {
       }
    });
 
+   // A hidden unison note whose visible partner is the upper note of a chord: Vexflow misses that unison, so it neither
+   // staggers the two heads nor gives them one shape, and the hidden eighth's filled head lands on the dotted half's
+   // open one. It must stay transparent there, or the dotted half reads as a dotted quarter. Its stem still reaches the
+   // beam from the shared head. E.g. Liszt's Liebestraum no. 3 m.42.
+   it("Leaves the notehead of a hidden unison note transparent where it would fill a visible head of another shape", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_unison_notehead_over_chord_liebestraum_measure42.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+         let hiddenVfStaveNote: any;
+         let hiddenHead: any;
+         let visibleHead: any;
+         for (const se of gm.staffEntries) {
+            for (const gve of se.graphicalVoiceEntries) {
+               for (let i: number = 0; i < gve.notes.length; i++) {
+                  const note: Note = gve.notes[i].sourceNote;
+                  if (note.Pitch?.FundamentalNote !== NoteEnum.E || note.Pitch.Octave !== 0) {
+                     continue; // E3
+                  }
+                  const vfStaveNote: any = (gve as VexFlowVoiceEntry).vfStaveNote;
+                  if (note.PrintObject) {
+                     visibleHead = vfStaveNote.note_heads[i];
+                  } else if (!hiddenHead) {
+                     hiddenVfStaveNote = vfStaveNote;
+                     hiddenHead = vfStaveNote.note_heads[i];
+                  }
+               }
+            }
+         }
+         expect(hiddenHead, "should find the hidden unison note").to.not.be.undefined;
+         expect(visibleHead, "should find the visible unison note").to.not.be.undefined;
+         // premise: the two heads share one column although their shapes differ
+         expect(hiddenHead.getAbsoluteX(), "heads share one column").to.equal(visibleHead.getAbsoluteX());
+         expect(hiddenHead.glyph_code, "heads have different shapes").to.not.equal(visibleHead.glyph_code);
+         expect(hiddenHead.getStyle()?.fillStyle, "hidden unison notehead stays transparent").to.equal("#00000000");
+         expect(visibleHead.getStyle()?.fillStyle, "visible notehead is drawn").to.not.equal("#00000000");
+         expect(hiddenVfStaveNote.getStemStyle()?.fillStyle, "hidden unison note stem must not be transparent").to.not.equal("#00000000");
+         done();
+      }).catch(done);
+   });
+
    // Non-regression test for a tie starting at a notehead two voices share: MuseScore writes the unison by hiding
    // one of the two notes with print-object="no". The tie's start note was looked up by pitch and timestamp only,
    // found the hidden note of the other voice first, and handleTie() then skipped the tie since it doesn't draw a tie

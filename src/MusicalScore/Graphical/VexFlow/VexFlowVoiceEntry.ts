@@ -71,6 +71,28 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         return note.NoteBeam !== undefined && note.sharesNoteheadWithVisibleUnisonNote();
     }
 
+    /** Whether the notehead of a hidden unison note (see drawnAsSharedUnisonNote) lands exactly on the head of the
+     * visible note it shares, but with another shape, e.g. a filled eighth note head on an open half note head.
+     * Vexflow staggers two such heads side by side (mergeableUnison in its StaveNote.format()), but it only compares
+     * the base line of each stave note, so it misses a unison with another note of a chord and leaves the two heads
+     * in one column. Drawing the hidden head there would fill the visible open head, which then reads as a quarter
+     * note - e.g. Liszt's Liebestraum no. 3 m.42, an eighth note run starting on the E3 of a dotted half E2-E3 chord
+     * (test_unison_notehead_over_chord_liebestraum_measure42). Where the two heads have the same shape, the hidden
+     * one is inked over the visible one without changing it. */
+    private overprintsSharedHeadOfOtherShape(noteIndex: number, sharedUnisonNote: Note): boolean {
+        const vfStaveNote: any = this.vfStaveNote;
+        const shared: GraphicalNote = this.rules.GNote(sharedUnisonNote);
+        const sharedVfStaveNote: any = (shared?.parentVoiceEntry as VexFlowVoiceEntry)?.vfStaveNote;
+        const head: any = vfStaveNote?.note_heads?.[noteIndex];
+        const sharedHead: any = sharedVfStaveNote?.note_heads?.[shared.parentVoiceEntry.notes.indexOf(shared)];
+        if (!head || !sharedHead) {
+            return false;
+        }
+        const sameColumn: boolean = vfStaveNote.getXShift() === sharedVfStaveNote.getXShift() &&
+            head.isDisplaced() === sharedHead.isDisplaced();
+        return sameColumn && head.glyph_code !== sharedHead.glyph_code;
+    }
+
     /** (Re-)color notes and stems by setting their Vexflow styles.
      * Could be made redundant by a Vexflow PR, but Vexflow needs more solid and permanent color methods/variables for that
      * See VexFlowConverter.StaveNote()
@@ -93,7 +115,8 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             const sharedUnisonNote: Note = note.sourceNote.NoteBeam !== undefined ?
                 note.sourceNote.visibleUnisonNoteSharingNotehead() : undefined;
             const noteheadVisible: boolean = note.sourceNote.Notehead?.Shape !== NoteHeadShape.NONE &&
-                (note.sourceNote.PrintObject || sharedUnisonNote !== undefined);
+                (note.sourceNote.PrintObject ||
+                 sharedUnisonNote !== undefined && !this.overprintsSharedHeadOfOtherShape(i, sharedUnisonNote));
             // A note drawn for its shared unison notehead takes that visible note's color: where Vexflow merges the
             // two heads into one column, its head is inked exactly over the visible one (in draw order after it,
             // if its voice comes later) and must not overprint a color set on that note - e.g. by an app
