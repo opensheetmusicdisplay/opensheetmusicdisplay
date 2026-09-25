@@ -78,4 +78,13 @@ describe("Measure numbers only at system start", () => {
             });
         expect(systems.map(measureNumberTexts)).to.deep.equal([[], ["4"], ["7"]]);
     });
+
+    it("can be turned off again with setOptions()", () => {
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+        osmd.setOptions({ drawMeasureNumbersOnlyAtSystemStart: true });
+        osmd.setOptions({ drawTitle: false }); // leaving the option out keeps it
+        expect(osmd.EngravingRules.RenderMeasureNumbersOnlyAtSystemStart, "after setOptions() without the option").to.equal(true);
+        osmd.setOptions({ drawMeasureNumbersOnlyAtSystemStart: false });
+        expect(osmd.EngravingRules.RenderMeasureNumbersOnlyAtSystemStart).to.equal(false);
+    });
 });

@@ -1182,7 +1182,7 @@ export class OpenSheetMusicDisplay {
         if (options.drawMeasureNumbers !== undefined) {
             this.rules.RenderMeasureNumbers = options.drawMeasureNumbers;
         }
-        if (options.drawMeasureNumbersOnlyAtSystemStart) {
+        if (options.drawMeasureNumbersOnlyAtSystemStart !== undefined) {
             this.rules.RenderMeasureNumbersOnlyAtSystemStart = options.drawMeasureNumbersOnlyAtSystemStart;
         }
         if (options.drawLyrics !== undefined) {
