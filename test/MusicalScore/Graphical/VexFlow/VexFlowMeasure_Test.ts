@@ -27,6 +27,9 @@ import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
 import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
 import { AccidentalEnum, NoteEnum, Pitch } from "../../../../src/Common/DataObjects/Pitch";
 import { GraphicalNote } from "../../../../src/MusicalScore/Graphical/GraphicalNote";
+import { VexFlowMeasure } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
+import Vex from "vexflow";
+import VF = Vex.Flow;
 
 describe("VexFlow Measure", () => {
 
@@ -281,6 +284,22 @@ describe("VexFlow Measure", () => {
          osmdRuleOn.EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature = true;
          osmdRuleOn.render();
          expect(firstMeasureHasTimeSignature(osmdRuleOn), "rule enabled: time signature is rendered").to.equal(true);
+         done();
+      }).catch(done);
+   });
+
+   it("Draws a double barline before a key change that only a later part has", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_key_change_later_part_double_barline.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         for (const measure of osmd.GraphicSheet.MeasureList[0] as VexFlowMeasure[]) {
+            const barline: any = measure.getVFStave().getModifiers(VF.StaveModifier.Position.END, "barlines")[0];
+            expect(barline.getType(), `barline at the end of measure 1 on staff ${measure.ParentStaff.idInMusicSheet + 1}`)
+               .to.equal(VF.Barline.type.DOUBLE);
+         }
          done();
       }).catch(done);
    });
