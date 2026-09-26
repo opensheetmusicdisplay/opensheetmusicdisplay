@@ -182,7 +182,7 @@ describe("Measure repeat presentation", () => {
  * the style of test/MusicalScore/ScoreIO/Key_Test.ts and test/MusicalScore/Graphical/VexFlow/VexFlowConverter_Clef_Test.ts,
  * rather than separate files under test/data/ - each one exists solely to reproduce a single specific defect.
  */
-describe("Measure repeat presentation - reviewed defect regressions", () => {
+describe("Measure repeat presentation: edge cases", () => {
     let container: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
     const xmlParser: DOMParser = new DOMParser();
@@ -570,8 +570,8 @@ describe("Measure repeat presentation - reviewed defect regressions", () => {
           </part>
         </score-partwise>`;
 
-    it("blocks a one-measure repeat anywhere on the staff when an unclosed wavy line is declared LATER in the " +
-        "piece (it is drawn from the render's first measure once actually drawn, not from where it's declared)",
+    it("keeps a one-measure repeat written out when an unclosed wavy line is declared later on the staff " +
+        "(it is drawn from the first rendered measure, not from where it is declared)",
         async () => {
         osmd.EngravingRules.RenderMeasureRepeats = true;
         await osmd.load(parseXml(wavyLineXml));
@@ -594,8 +594,8 @@ describe("Measure repeat presentation - reviewed defect regressions", () => {
         expect(findMeasure(osmd, 3, 0).NotesAreAbbreviated, "measure 4 stays written out").to.equal(false);
     });
 
-    it("keeps a left-hand candidate written out when a cross-staff slur reaches into it from the right hand " +
-        "(dangling into the sign otherwise), but still abbreviates an unrelated, uncomplicated left-hand unit",
+    it("keeps a left-hand unit written out when a cross-staff slur reaches into it from the right hand, " +
+        "but still abbreviates another left-hand unit",
         async () => {
         osmd.EngravingRules.RenderMeasureRepeats = true;
         await osmd.load(parseXml(crossStaffSlurXml));
@@ -631,8 +631,8 @@ describe("Measure repeat presentation - reviewed defect regressions", () => {
         expect(findMeasure(osmd, 6, 0).NotesAreAbbreviated, "measure 7 (mid-measure clef change)").to.equal(false);
     });
 
-    it("re-checks the reference pattern's visibility against the CURRENT render's draw range on re-render, not " +
-        "a stale ParentStaffLine left over from an earlier, wider render of the same instance", async () => {
+    it("checks the reference pattern's visibility against the current draw range on re-render, not " +
+        "a ParentStaffLine left over from an earlier, wider render of the same instance", async () => {
         osmd.EngravingRules.RenderMeasureRepeats = true;
         await osmd.load(TestUtils.getScore("test_measure_repeat_drums.musicxml"));
         osmd.render(); // first, full render: measure 2 (index 1) is validly abbreviated (measure 1 is drawn too)
@@ -654,8 +654,8 @@ describe("Measure repeat presentation - reviewed defect regressions", () => {
         expect(findMeasure(osmd, 3, 0).NotesAreAbbreviated, "measure 4 (incoming extender from measure 3)").to.equal(false);
     });
 
-    it("keeps a unit written out when an incoming lyric extender started further back, across a plain gap " +
-        "measure with no lyrics of its own - matching calculateLyricExtend()'s own stopping rule", async () => {
+    it("keeps a unit written out when an incoming lyric extender started further back, across a measure " +
+        "without lyrics, with the stopping rule of calculateLyricExtend()", async () => {
         osmd.EngravingRules.RenderMeasureRepeats = true;
         await osmd.load(parseXml(lyricExtenderFurtherBackXml));
         osmd.render();
@@ -666,8 +666,8 @@ describe("Measure repeat presentation - reviewed defect regressions", () => {
         expect(findMeasure(osmd, 4, 0).NotesAreAbbreviated, "measure 5 (extender from two measures back)").to.equal(false);
     });
 
-    it("doesn't construct a slur that's entirely inside an abbreviated unit, so it can't pollute the " +
-        "staffline's skyline/bottomline with an invisible curve", async () => {
+    it("does not create a slur that is entirely inside an abbreviated unit, so an invisible curve " +
+        "does not change the skyline or bottom line", async () => {
         osmd.EngravingRules.RenderMeasureRepeats = true;
         await osmd.load(parseXml(hiddenSlurXml));
         osmd.render();
@@ -676,8 +676,7 @@ describe("Measure repeat presentation - reviewed defect regressions", () => {
         expect(staffLine.GraphicalSlurs.length, "the hidden slur is never constructed").to.equal(0);
     });
 
-    it("clamps a hostile 'slashes' attribute instead of drawing an unbounded number of slash marks or an " +
-        "absurdly wide sign", async () => {
+    it("draws at most 4 slashes for a very large 'slashes' value", async () => {
         osmd.EngravingRules.RenderMeasureRepeats = true;
         await osmd.load(parseXml(pathologicalSlashesXml));
         osmd.render();
