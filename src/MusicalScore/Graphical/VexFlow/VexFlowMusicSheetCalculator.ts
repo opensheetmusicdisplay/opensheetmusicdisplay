@@ -1302,7 +1302,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       if (!graphicalOctaveShift.endNote) { // fix for rendering range set
         let endGse: GraphicalStaffEntry;
-        for (let i: number = endMeasure.staffEntries.length - 1; i >= 0; i++) {
+        for (let i: number = endMeasure.staffEntries.length - 1; i >= 0; i--) {
           // search backwards from end of measure
           if (endMeasure.staffEntries[i]) {
             endGse = endMeasure.staffEntries[i];
