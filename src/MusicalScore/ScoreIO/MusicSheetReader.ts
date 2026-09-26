@@ -597,10 +597,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             this.readTitleAndComposerFromCreditsLegacy(root);
             return;
         }
+        // 0 if the score has no <defaults>, no <top-system-distance>, or no <page-height> in <page-layout>
         const systemYCoordinates: number = this.computeSystemYCoordinates(root);
-        if (systemYCoordinates === 0) {
-            return;
-        }
         // let largestTitleCreditSize: number = 1;
         let finalTitle: string = undefined;
         // let largestCreditYInfo: number = 0;
@@ -610,10 +608,26 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         const creditElements: IXmlElement[] = root.elements("credit");
         for (let idx: number = 0, len: number = creditElements.length; idx < len; ++idx) {
             const credit: IXmlElement = creditElements[idx];
-            if (!credit.attribute("page")) {
-                return;
-            }
-            if (credit.attribute("page").value === "1") {
+            const page: string = credit.attribute("page")?.value ?? "1"; // optional in MusicXML, 1 by default
+            if (page === "1") {
+                if (systemYCoordinates === 0) {
+                    // without page layout, the position of a credit doesn't tell its role: read it by its <credit-type>
+                    const [creditType, creditText] = this.getCreditTypeAndText(credit);
+                    if (creditType === "title") {
+                        if (!finalTitle) {
+                            finalTitle = creditText;
+                        }
+                    } else if (creditType === "subtitle") {
+                        finalSubtitle = finalSubtitle ? finalSubtitle + "\n" + creditText : creditText;
+                    } else if (creditType === "composer") {
+                        finalComposer = finalComposer ? finalComposer + "\n" + creditText : creditText;
+                    } else if (creditType === "lyricist" && !this.musicSheet.Lyricist) {
+                        this.musicSheet.Lyricist = new Label(this.trimString(creditText));
+                    } else if (creditType === "rights" && !this.musicSheet.Copyright) {
+                        this.musicSheet.Copyright = new Label(this.trimString(creditText), TextAlignmentEnum.CenterBottom, undefined, true);
+                    }
+                    continue;
+                }
                 let creditChildren: IXmlElement[] = undefined;
                 if (credit) {
                     let isSubtitle: boolean = false;
@@ -718,6 +732,18 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 this.musicSheet.Composer = new Label(this.trimString(finalComposer));
             }
         }
+    }
+
+    /** The <credit-type> of a credit that gives exactly one, and its text: its <credit-words> joined, as they follow
+     *  one another, as MusicXmlParserPass1::credit() also does in MuseScore's importer. Nothing for another credit,
+     *  or one without text. */
+    private getCreditTypeAndText(credit: IXmlElement): [string?, string?] {
+        const creditTypes: IXmlElement[] = credit.elements("credit-type");
+        const text: string = credit.elements("credit-words").map((words: IXmlElement) => words.value).join("");
+        if (creditTypes.length !== 1 || !text.trim()) {
+            return [];
+        }
+        return [creditTypes[0].value, text];
     }
 
     /** @deprecated Old OSMD < 1.8.6 way of parsing composer + subtitles,
