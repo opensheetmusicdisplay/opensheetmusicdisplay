@@ -941,7 +941,7 @@ export class BrailleConverter {
                     for (const note of ve.Notes) {
                         if (note.NoteSlurs) {
                             for (const slur of note.NoteSlurs) {
-                                if (slur.StartNote === note && !activeSlurs.has(slur)) {
+                                if (slur.StartNote === note && slur.EndNote && !activeSlurs.has(slur)) { // no end note: see Slur.HasUnattachedEnd
                                     activeSlurs.set(slur, 1);
                                 }
                             }

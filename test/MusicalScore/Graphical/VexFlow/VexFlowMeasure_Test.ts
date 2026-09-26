@@ -1020,10 +1020,12 @@ describe("VexFlow Measure", () => {
    });
 
    // Regression test for NaN slur curves: measure 23 of the Moonlight sonata sample has a note carrying both a
-   // slur start and an orphan slur stop with the same number (Sibelius export quirk). The stop used to close the
-   // start on its very own note, creating a zero-length slur whose curve calculation divided 0 by 0, ending up
-   // as an invalid SVG path (<path d="... CNaN NaN ...">). Now the stop is ignored and no self-slur is created.
-   it("Creates no zero-length (NaN-curve) slur for a note with both a slur start and an orphan stop", (done: Mocha.Done) => {
+   // slur start and a slur stop with the same number (how Dolet for Sibelius writes a slur whose end isn't attached to
+   // a note). The stop used to close the start on its very own note, creating a zero-length slur whose curve
+   // calculation divided 0 by 0, ending up as an invalid SVG path (<path d="... CNaN NaN ...">). Now no self-slur is
+   // created: the slur has no end note (see Slur.HasUnattachedEnd), and isn't drawn, as its whole note isn't the
+   // measure's last note.
+   it("Creates no zero-length (NaN-curve) slur for a note with both a slur start and a slur stop", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_slurs_long_steep_arc_moonlight_sonata_issue1466.musicxml");
       if (!score) {
          done(new Error("Score file not found"));

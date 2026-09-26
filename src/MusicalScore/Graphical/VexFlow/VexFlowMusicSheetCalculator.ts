@@ -2524,7 +2524,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 for (const graphicalNote of graphicalVoiceEntry.notes) {
                   for (const slur of graphicalNote.sourceNote.NoteSlurs) {
                     // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
-                    if (!slur.EndNote || !slur.StartNote) {
+                    if (!slur.StartNote || (!slur.EndNote && !slur.HasUnattachedEnd)) {
+                      continue;
+                    }
+                    if (!slur.EndNote && graphicalMeasure.staffEntries[graphicalMeasure.staffEntries.length - 1] !== graphicalStaffEntry) {
+                      // a slur without end note is only drawn to the barline from the measure's last note (see Slur.HasUnattachedEnd):
+                      //   from an earlier note, where it ended is unknown, and it would be drawn over the rest of the measure
                       continue;
                     }
                     // add new VexFlowSlur to List
@@ -2595,6 +2600,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 }
               }
             } // loop over StaffEntries
+
+            // a slur without end note, drawn from the measure's last note to the barline, ends here (see Slur.HasUnattachedEnd)
+            for (let slurIndex: number = openGraphicalSlurs.length - 1; slurIndex >= 0; slurIndex--) {
+              if (!openGraphicalSlurs[slurIndex].slur.EndNote) {
+                openGraphicalSlurs.splice(slurIndex, 1);
+              }
+            }
           } // loop over Measures
 
           // a slur carried over into this staffline that got no staff entry has nothing on this staff in this system to

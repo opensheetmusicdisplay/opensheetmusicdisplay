@@ -25,31 +25,35 @@ export class SlurReader {
         try {
             if (slurNodes) {
                 // Process stops before starts within one notations node: a slur can't start and stop on the
-                // same note, so a stop always refers to an earlier slur. If the start were read first, a stop
+                // same note, so a stop refers to an earlier slur. If the start were read first, a stop
                 // with the same slur number would wrongly close the slur just opened on this very note as a
                 // zero-length slur (e.g. Sibelius can export a start followed by an orphan stop on one note,
                 // see test_slurs_long_steep_arc_moonlight_sonata_issue1466.musicxml measure 23).
+                // If the stop ends no earlier slur though, the start of its number on this note is a slur whose end
+                // isn't attached to a note, see Slur.HasUnattachedEnd.
                 const stopNodes: IXmlElement[] = [];
                 const otherNodes: IXmlElement[] = [];
+                const startNumbers: Set<number> = new Set();
+                const numbersStartedBeforeStop: Set<number> = new Set(); // start written before the stop, see the stop case
                 for (const slurNode of slurNodes) {
-                    if (slurNode.attribute("type")?.value === "stop") {
+                    const type: string = slurNode.attribute("type")?.value;
+                    const slurNumber: number = this.readSlurNumber(slurNode);
+                    if (type === "stop") {
                         stopNodes.push(slurNode);
+                        if (startNumbers.has(slurNumber)) {
+                            numbersStartedBeforeStop.add(slurNumber);
+                        }
                     } else {
                         otherNodes.push(slurNode);
+                        if (type === "start") {
+                            startNumbers.add(slurNumber);
+                        }
                     }
                 }
                 for (const slurNode of stopNodes.concat(otherNodes)) {
                     if (slurNode.attributes().length > 0) {
                         const type: string = slurNode.attribute("type").value;
-                        let slurNumber: number = 1;
-                        try {
-                            const slurNumberAttribute: IXmlAttribute = slurNode.attribute("number");
-                            if (slurNumberAttribute) {
-                                slurNumber = parseInt(slurNode.attribute("number").value, 10);
-                            }
-                        } catch (ex) {
-                            log.debug("VoiceGenerator.addSlur number: ", ex);
-                        }
+                        const slurNumber: number = this.readSlurNumber(slurNode);
 
                         let slurPlacementXml: PlacementEnum = PlacementEnum.NotYetDefined;
                         const placementAttr: Attr = slurNode.attribute("placement");
@@ -86,12 +90,22 @@ export class SlurReader {
                             } else {
                                 const openDict: { [_: number]: Slur } = isSlur ? this.openSlurDict : this.openGlissDictOfStaff(currentNote);
                                 let slur: Slur = openDict[slurNumber];
-                                if (!slur) {
+                                if (!slur || slur.HasUnattachedEnd) {
+                                    // an open slur with an unattached end (see below) keeps its start note
                                     slur = new Slur();
                                     openDict[slurNumber] = slur;
                                 }
                                 slur.StartNote = currentNote;
                                 slur.PlacementXml = slurPlacementXml;
+                                if (isSlur && pendingCrossStaffStop?.EndNote === currentNote) {
+                                    // This note also has a stop of this number that ended no earlier slur (stops are read
+                                    // first): Dolet for Sibelius writes a slur whose end isn't attached to a note like this,
+                                    // e.g. one running into a repeat barline (#1516). Linked to its start note already, so it
+                                    // can be drawn to the barline (see Slur.HasUnattachedEnd), unless a later stop of its
+                                    // number ends it (e.g. if the stop on this note was an orphan instead).
+                                    slur.HasUnattachedEnd = true;
+                                    currentNote.NoteSlurs.push(slur);
+                                }
                             }
                         } else if (type === "stop") {
                             const nodeName: string = slurNode.name;
@@ -110,14 +124,20 @@ export class SlurReader {
                                 }
                             } else {
                                 const slur: Slur = this.openSlurDict[slurNumber];
-                                if (slur && slur.StartNote !== currentNote) {
+                                // A stop written after a start of its number on this note doesn't end an earlier slur whose
+                                // end isn't attached to a note: Dolet writes such slurs one after another with the same
+                                // number, so it's this note's own slur whose end isn't attached.
+                                const endsOwnSlur: boolean = slur?.HasUnattachedEnd === true && numbersStartedBeforeStop.has(slurNumber);
+                                if (slur && slur.StartNote !== currentNote && !endsOwnSlur) {
                                     // normal case: the matching start of this number was read first
                                     slur.EndNote = currentNote;
+                                    slur.HasUnattachedEnd = false;
                                     this.linkSlurToNotes(slur);
                                     delete this.openSlurDict[slurNumber];
-                                } else if (!slur) {
-                                    // No open start with this number. Either a cross-staff slur whose start is
-                                    // written after the stop (completed in the start branch above), or an orphan
+                                } else if (!slur || endsOwnSlur) {
+                                    // No open start with this number (or see endsOwnSlur). Either a cross-staff slur whose
+                                    // start is written after the stop (completed in the start branch above), a start on this
+                                    // note (a slur whose end isn't attached to a note, see there), or an orphan
                                     // stop with no start (e.g. a slur started on a grace note, whose start is
                                     // skipped by the reader - see VoiceGenerator). Defer it without touching
                                     // openSlurDict, so it can't disturb normal slurs that reuse this number.
@@ -142,6 +162,20 @@ export class SlurReader {
         }
     }
 
+    /** The number attribute of a slur, slide or glissando node, 1 if it has none. */
+    private readSlurNumber(slurNode: IXmlElement): number {
+        let slurNumber: number = 1;
+        try {
+            const slurNumberAttribute: IXmlAttribute = slurNode.attribute("number");
+            if (slurNumberAttribute) {
+                slurNumber = parseInt(slurNumberAttribute.value, 10);
+            }
+        } catch (ex) {
+            log.debug("SlurReader.readSlurNumber: ", ex);
+        }
+        return slurNumber;
+    }
+
     /** The open glissandi and slides of the note's staff, by number (see openGlissDicts). */
     private openGlissDictOfStaff(note: Note): { [_: number]: Slur } {
         const staff: Staff = note.ParentStaffEntry?.ParentStaff;
@@ -153,13 +187,21 @@ export class SlurReader {
         return openGlissDict;
     }
 
-    /** Links a fully-defined slur (both StartNote and EndNote set) to its two notes, unless it duplicates an existing one. */
+    /** Links a fully-defined slur (both StartNote and EndNote set) to its two notes, unless it duplicates an existing one
+     *  (then it's also unlinked from its start note, which a slur that had an unattached end so far is linked to already).
+     */
     private linkSlurToNotes(slur: Slur): void {
         const endNote: Note = slur.EndNote;
+        const startNoteSlurs: Slur[] = slur.StartNote.NoteSlurs;
+        const startNoteIndex: number = startNoteSlurs.indexOf(slur); // see Slur.HasUnattachedEnd
         // check that a slur with the same notes hasn't already been added:
         if (!endNote.isDuplicateSlur(slur)) {
             endNote.NoteSlurs.push(slur);
-            slur.StartNote.NoteSlurs.push(slur);
+            if (startNoteIndex === -1) {
+                startNoteSlurs.push(slur);
+            }
+        } else if (startNoteIndex !== -1) {
+            startNoteSlurs.splice(startNoteIndex, 1);
         }
     }
 
