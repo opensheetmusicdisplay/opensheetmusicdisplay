@@ -37,6 +37,73 @@ describe("Music Sheet Reader", () => {
         done();
     });
 
+    describe("credits", () => {
+        function readScore(xml: string): MusicSheet {
+            const doc: Document = new DOMParser().parseFromString(xml, "text/xml");
+            return new MusicSheetReader().createMusicSheet(new IXmlElement(doc.getElementsByTagName("score-partwise")[0]), "credits.musicxml");
+        }
+        function scoreXml(head: string): string {
+            return `<?xml version="1.0" encoding="UTF-8"?>
+            <score-partwise version="4.0">${head}
+                <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+                <part id="P1"><measure number="1">
+                    <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+                        <clef><sign>G</sign><line>2</line></clef></attributes>
+                    <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+                </measure></part>
+            </score-partwise>`;
+        }
+
+        // The sample has no page layout (no <defaults>) and no <work> or <movement-title>: its credits alone give
+        //   the title, two subtitles, the composer, the lyricist (in two credit-words) and the rights. Some omit page.
+        it("reads the credits of a score without page layout by their credit-type", (done: Mocha.Done) => {
+            const creditsPath: string = "test/data/test_credits_without_page_layout.musicxml";
+            const creditsSheet: MusicSheet = new MusicSheetReader().createMusicSheet(
+                new IXmlElement(getSheet(creditsPath).getElementsByTagName("score-partwise")[0]), creditsPath);
+            expect(creditsSheet.TitleString, "title").to.equal("Twinkle, Twinkle, Little Star");
+            expect(creditsSheet.SubtitleString, "subtitles").to.equal("Ah! vous dirai-je, maman\nFrench folk song");
+            expect(creditsSheet.ComposerString, "composer").to.equal("Traditional");
+            expect(creditsSheet.LyricistString, "lyricist").to.equal("Words: Jane Taylor");
+            expect(creditsSheet.CopyrightString, "rights").to.equal("Public domain");
+            done();
+        });
+
+        it("reads the other credits of a score with page layout when a credit omits page", (done: Mocha.Done) => {
+            const creditsSheet: MusicSheet = readScore(scoreXml(`
+                <work><work-title>Twinkle, Twinkle, Little Star</work-title></work>
+                <defaults><scaling><millimeters>7</millimeters><tenths>40</tenths></scaling>
+                    <page-layout><page-height>1697</page-height><page-width>1200</page-width></page-layout>
+                    <system-layout><top-system-distance>170</top-system-distance></system-layout></defaults>
+                <credit page="1"><credit-type>subtitle</credit-type>
+                    <credit-words default-x="600" default-y="1560" justify="center">Ah! vous dirai-je, maman</credit-words></credit>
+                <credit><credit-type>composer</credit-type>
+                    <credit-words default-x="1130" default-y="1500" justify="right">Traditional</credit-words></credit>`));
+            expect(creditsSheet.SubtitleString, "subtitle").to.equal("Ah! vous dirai-je, maman");
+            expect(creditsSheet.ComposerString, "composer").to.equal("Traditional");
+            done();
+        });
+
+        // The composer is only in a credit, so it must be read from it for this to be a meaningful guard: on develop,
+        //   which reads no credits without page layout, the title and lyricist checks below would pass anyway.
+        it("reads the composer from a credit but keeps the title, lyricist and rights given in the metadata", (done: Mocha.Done) => {
+            const creditsSheet: MusicSheet = readScore(scoreXml(`
+                <work><work-title>Twinkle, Twinkle, Little Star</work-title></work>
+                <identification>
+                    <creator type="lyricist">Jane Taylor</creator>
+                    <rights>© 1806 Jane Taylor</rights>
+                </identification>
+                <credit page="1"><credit-type>title</credit-type><credit-words>TWINKLE, TWINKLE</credit-words></credit>
+                <credit page="1"><credit-type>lyricist</credit-type><credit-words>Words: J. Taylor</credit-words></credit>
+                <credit page="1"><credit-type>rights</credit-type><credit-words>Public domain</credit-words></credit>
+                <credit page="1"><credit-type>composer</credit-type><credit-words>Traditional</credit-words></credit>`));
+            expect(creditsSheet.ComposerString, "composer from the credit").to.equal("Traditional");
+            expect(creditsSheet.TitleString, "title kept from the metadata").to.equal("Twinkle, Twinkle, Little Star");
+            expect(creditsSheet.LyricistString, "lyricist kept from the metadata").to.equal("Jane Taylor");
+            expect(creditsSheet.CopyrightString, "rights kept from the metadata").to.equal("© 1806 Jane Taylor");
+            done();
+        });
+    });
+
     it("reads measures", (done: Mocha.Done) => {
         expect(sheet.SourceMeasures.length).to.equal(38);
         done();
