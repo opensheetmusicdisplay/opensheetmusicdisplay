@@ -533,6 +533,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestDrawFromMeasureNumber2TempoMarkings = sampleFilename.includes("test_drawFromMeasureNumber_2_tempo_markings");
     const isTestOctaveShiftMultiline = sampleFilename.includes("test_octaveshift_multiline");
     const isTestMeasureNumbersOnlyAtSystemStart = sampleFilename.includes("test_measure_numbers_only_at_system_start");
+    // the second half of a measure split for a system break, see test_grace_notes_only_measure*: systems as in the file
+    const isTestGraceNotesOnlyMeasure = sampleFilename.startsWith("test_grace_notes_only_measure");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
@@ -559,7 +561,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawFromMeasureNumber: drawFromMeasureNumber,
         drawUpToMeasureNumber: drawUpToMeasureNumber,
         drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
-        newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart,
+        newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default

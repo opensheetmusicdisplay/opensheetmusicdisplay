@@ -12,6 +12,9 @@ import { VexFlowVoiceEntry } from "../../../src/MusicalScore/Graphical/VexFlow/V
 import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { OctaveEnum } from "../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
+import { VexFlowPedal } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowPedal";
+import { VexFlowOctaveShift } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowOctaveShift";
+import { VexFlowVibratoBracket } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowVibratoBracket";
 
 /**
  * Grace notes after their main note (#1706): a Nachschlag, e.g. the two small notes ending a trill, is written in MusicXML
@@ -240,6 +243,59 @@ describe("Grace notes after the main note (#1706)", () => {
             expect(bassStaffLines.length, "three systems").to.equal(3);
             expect(bassStaffLines.map(staffLine => staffLine.Pedals.length), "pedal lines per system")
                 .to.deep.equal([1, 0, 1]);
+        });
+
+        /** Loads a score with the system breaks of the file (new-system). */
+        async function loadWithSystemBreaks(score: Document): Promise<OpenSheetMusicDisplay> {
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+            osmd.setOptions({ newSystemFromXML: true });
+            await osmd.load(score);
+            return osmd;
+        }
+
+        describe("with spanners on the other staff across it", () => {
+            // from the first half of m.1 to m.2, and from the first half of m.3 to m.4: a pedal line, an 8vb, a slur, a glissando
+            //   and a trill on the bass staff. With the system breaks of the file, the grace notes of m.1 are a system of their
+            //   own, with nothing on the bass staff, and those of m.3 start the system of m.4.
+            const spannersSample: string = "test_grace_notes_only_measure_spanners.musicxml";
+
+            function bassStaffLines(osmd: OpenSheetMusicDisplay): StaffLine[] {
+                return osmd.GraphicSheet.MusicPages[0].MusicSystems.map(system => system.StaffLines[1]);
+            }
+
+            it("draws them in the other systems, and from the first note on the staff in a system starting with the grace notes", async () => {
+                // the 8vb, the slur and the glissando used to abort the render in the system of the grace notes alone, and the
+                //   segments of the pedal line and the trill were left out in the system starting with the grace notes
+                const osmd: OpenSheetMusicDisplay = await loadWithSystemBreaks(TestUtils.getScore(spannersSample));
+                expect(() => osmd.render()).to.not.throw();
+                const staffLines: StaffLine[] = bassStaffLines(osmd);
+                expect(staffLines.length, "systems: m.1 | grace notes | m.2 | m.3 | grace notes and m.4").to.equal(5);
+                const segmentsPerSystem: number[] = [1, 0, 1, 1, 1];
+                expect(staffLines.map(staffLine => staffLine.Pedals.length), "pedal lines").to.deep.equal(segmentsPerSystem);
+                expect(staffLines.map(staffLine => staffLine.OctaveShifts.length), "8vb").to.deep.equal(segmentsPerSystem);
+                expect(staffLines.map(staffLine => staffLine.GraphicalSlurs.length), "slurs").to.deep.equal(segmentsPerSystem);
+                expect(staffLines.map(staffLine => staffLine.GraphicalGlissandi.length), "glissandi").to.deep.equal(segmentsPerSystem);
+                expect(staffLines.map(staffLine => staffLine.WavyLines.length), "trills").to.deep.equal(segmentsPerSystem);
+                const m4Bass: VexFlowVoiceEntry = osmd.GraphicSheet.MeasureList[5][1].staffEntries[0].graphicalVoiceEntries[0] as VexFlowVoiceEntry;
+                const lastSystem: StaffLine = staffLines[4];
+                expect((lastSystem.Pedals[0] as VexFlowPedal).startNote, "pedal line from m.4").to.equal(m4Bass.vfStaveNote);
+                expect((lastSystem.OctaveShifts[0] as VexFlowOctaveShift).startNote, "8vb from m.4").to.equal(m4Bass.vfStaveNote);
+                expect((lastSystem.WavyLines[0] as VexFlowVibratoBracket).startNote, "trill from m.4").to.equal(m4Bass.vfStaveNote);
+            });
+
+            it("draws a pedal marked with signs, also when a system starts with the grace notes", async () => {
+                // the "Ped." and "*" of a pedal across systems take another path, which used to leave out the whole pedal when the
+                //   system of its end started with a measure with nothing on the staff
+                const score: Document = TestUtils.getScore(spannersSample).cloneNode(true) as Document;
+                for (const pedal of Array.from(score.getElementsByTagName("pedal"))) {
+                    pedal.setAttribute("line", "no");
+                    pedal.setAttribute("sign", "yes");
+                }
+                const osmd: OpenSheetMusicDisplay = await loadWithSystemBreaks(score);
+                osmd.render();
+                expect(bassStaffLines(osmd).map(staffLine => staffLine.Pedals.length), "\"Ped.\" or \"*\" per system")
+                    .to.deep.equal([1, 0, 1, 1, 1]);
+            });
         });
     });
 });

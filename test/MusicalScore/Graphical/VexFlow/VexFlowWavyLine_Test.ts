@@ -102,14 +102,15 @@ describe("Wavy line across systems", () => {
         expect(wavyLineSegments()).to.deep.equal(["1: Violin II m.1-2", "2: Violin II m.3-4", "3: Violin II m.5-6"]);
     });
 
-    it("skips the segment of a system without a start note instead of aborting the render", async () => {
+    it("starts the segment of a system whose first measure has no notes at the first note of the system", async () => {
         const score: Document = TestUtils.getScore(sampleFilename).cloneNode(true) as Document;
         // empty the first measure of the second system: a measure without notes has no staff entries
         score.querySelectorAll("measure[number='3'] note").forEach((note: Element) => note.remove());
         await osmd.load(score);
-        osmd.render();
+        osmd.render(); // threw a TypeError before PR #1733, then left out the segments of the second system
         expect(wavyLineSegments()).to.deep.equal([
             "1: Violin I m.1-2", "1: Violin II m.1-2",
+            "2: Violin I m.4-4", "2: Violin II m.4-4",
             "3: Violin I m.5-6", "3: Violin II m.5-6",
         ]);
     });

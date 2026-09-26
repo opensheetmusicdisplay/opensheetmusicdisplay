@@ -1374,6 +1374,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             // Shift starts on the first measure
             const nextOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, nextShiftFirstMeasure.PositionAndShape);
             let nextShiftLastMeasure: GraphicalMeasure = this.findLastStafflineMeasure(nextShiftStaffline);
+            if (!nextShiftLastMeasure) {
+              // nothing on this staff in this system (e.g. a measure of only grace notes on another staff, split off to
+              //   break the system): no note to draw the octave shift from, it goes on in the next system.
+              continue;
+            }
 
             if (i < endStaffLine.ParentMusicSystem.Id - 1) {
               // "in-between" staffline before the staffline where the octave shift ends: make octave shift go to end of staffline
@@ -1382,7 +1387,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               nextOctaveShift.endMeasure = nextShiftLastMeasure;
               // this is tested by the sample test_octaveshift_multiline_grace_notes.musicxml (see PR #1646)
             }
-            const firstNote: GraphicalStaffEntry = nextShiftFirstMeasure.staffEntries[0];
+            // (the first measure of the system can have nothing on this staff, like the system above)
+            const firstNote: GraphicalStaffEntry = this.findFirstStafflineMeasure(nextShiftStaffline).staffEntries[0];
             let lastNote: GraphicalStaffEntry = nextShiftLastMeasure.staffEntries[nextShiftLastMeasure.staffEntries.length - 1];
 
             //If the end measure's staffline is the ending staffline, this endMeasure is the end of the shift
@@ -1436,6 +1442,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // a measure can have no staff entries if e.g. measure.IsExtraGraphicalMeasure, used to show key/rhythm changes.
       }
       // else continue with the measure before this one
+    }
+  }
+
+  /** Finds the first staffline measure that has staffentries, see findLastStafflineMeasure(). */
+  protected findFirstStafflineMeasure(staffline: StaffLine): GraphicalMeasure {
+    for (const measure of staffline.Measures) {
+      if (measure.staffEntries.length > 0) {
+        return measure;
+        // a measure can also have no staff entries if there is nothing on this staff, e.g. a measure of only grace notes
+        //   on another staff, split off to break the system inside a cadenza.
+      }
     }
   }
 
@@ -1528,7 +1545,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           // pedal starts on the first measure
           const nextPedal: VexFlowPedal = new VexFlowPedal(pedal, nextPedalFirstMeasure.PositionAndShape);
           graphicalPedal.setEndsStave(endMeasure, endTimeStamp);
-          const firstNote: GraphicalStaffEntry = nextPedalFirstMeasure.staffEntries[0];
+          // (the first measure of the system can have nothing on this staff, e.g. a measure of only grace notes on another
+          //   staff, split off to break the system)
+          const firstNote: GraphicalStaffEntry = this.findFirstStafflineMeasure(endStaffLine)?.staffEntries[0];
           if(!nextPedal.setStartNote(firstNote)){
             return;
           }
@@ -1580,7 +1599,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 //   break the system): the pedal is held through it, with no note to draw a line from.
                 continue;
               }
-              const firstNote: GraphicalStaffEntry = nextPedalFirstMeasure.staffEntries[0];
+              // (the first measure of the system can have nothing on this staff, like the system above)
+              const firstNote: GraphicalStaffEntry = this.findFirstStafflineMeasure(nextPedalStaffline).staffEntries[0];
               let lastNote: GraphicalStaffEntry = nextPedalLastMeasure.staffEntries[nextPedalLastMeasure.staffEntries.length - 1];
 
               //If the end measure's staffline is the ending staffline, this endMeasure is the end of the pedal
@@ -1707,7 +1727,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               const nextWavyLine: VexFlowVibratoBracket = new VexFlowVibratoBracket(wavyLine, nextWavyLineFirstMeasure.PositionAndShape,
                 nextWavyLineStaffline.ParentStaff.isTab);
               let nextWavyLineLastMeasure: GraphicalMeasure = this.findLastStafflineMeasure(nextWavyLineStaffline);
-              const firstNote: GraphicalStaffEntry = nextWavyLineFirstMeasure.staffEntries[0];
+              // (the first measure of the system can have nothing on this staff, e.g. a measure of only grace notes on another
+              //   staff, split off to break the system)
+              const firstNote: GraphicalStaffEntry = this.findFirstStafflineMeasure(nextWavyLineStaffline)?.staffEntries[0];
               let lastNote: GraphicalStaffEntry = nextWavyLineLastMeasure?.staffEntries[nextWavyLineLastMeasure.staffEntries.length - 1];
               //If the end measure's is the ending staffline, this endMeasure is the end of the wavy line
               if (endMeasure.ParentStaffLine === nextWavyLineStaffline) {
@@ -1716,7 +1738,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               }
 
               if (!nextWavyLine.setStartNote(firstNote)) {
-                continue; // no start note in this staffline (e.g. its first measure has no staff entries), skip only this segment
+                continue; // no start note in this staffline (e.g. nothing on this staff in this system), skip only this segment
               }
               nextWavyLine.setEndNote(lastNote);
               nextWavyLineStaffline.WavyLines.push(nextWavyLine);
@@ -2573,6 +2595,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               }
             } // loop over StaffEntries
           } // loop over Measures
+
+          // a slur carried over into this staffline that got no staff entry has nothing on this staff in this system to
+          //   draw a curve along (e.g. a measure of only grace notes on another staff, split off to break the system):
+          //   it is only drawn in the other systems, and stays open for the next one.
+          for (const gSlur of openGraphicalSlurs) {
+            if (gSlur.staffEntries.length === 0) {
+              staffLine.GraphicalSlurs.splice(staffLine.GraphicalSlurs.indexOf(gSlur), 1);
+            }
+          }
         } // loop over StaffLines
 
         // Attach vfSlur array to the vfStaffline to be drawn
@@ -2657,6 +2688,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               }
             } // loop over StaffEntries
           } // loop over Measures
+
+          // like for slurs (see calculateSlurs()): a glissando carried over into this staffline that got no staff entry has
+          //   nothing on this staff in this system to draw a line to. It stays open for the next system.
+          for (const gGliss of openGlissandi) {
+            if (gGliss.staffEntries.length === 0) {
+              staffLine.GraphicalGlissandi.splice(staffLine.GraphicalGlissandi.indexOf(gGliss), 1);
+            }
+          }
         } // loop over StaffLines
       } // loop over MusicSystems
 
