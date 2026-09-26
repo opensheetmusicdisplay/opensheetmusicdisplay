@@ -263,39 +263,46 @@ export class Cursor {
   public updateWidthAndStyle(measurePositionAndShape: BoundingBox, x: number, y: number, height: number): void {
     const cursorElement: HTMLImageElement = this.cursorElement;
     let newWidth: number = 0;
+    let newHeight: number = 0;
     switch (this.cursorOptions.type) {
       case CursorType.ThinLeft:
         cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newHeight = height * 10.0 * this.openSheetMusicDisplay.zoom;
         newWidth = 5 * this.openSheetMusicDisplay.zoom;
         break;
       case CursorType.ShortThinTopLeft:
         cursorElement.style.top = ((y-2.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = (x * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.height = (1.5 * 10.0 * this.openSheetMusicDisplay.zoom);
+        newHeight = 1.5 * 10.0 * this.openSheetMusicDisplay.zoom;
         newWidth = 5 * this.openSheetMusicDisplay.zoom;
         break;
       case CursorType.CurrentArea:
         cursorElement.style.top = measurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
         cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newHeight = height * 10.0 * this.openSheetMusicDisplay.zoom;
         newWidth = measurePositionAndShape.Size.width * 10 * this.openSheetMusicDisplay.zoom;
         break;
       case CursorType.CurrentAreaLeft:
         cursorElement.style.top = measurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
         cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newHeight = height * 10.0 * this.openSheetMusicDisplay.zoom;
         newWidth = (x-measurePositionAndShape.AbsolutePosition.x) * 10 * this.openSheetMusicDisplay.zoom;
         break;
         default:
         cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newHeight = height * 10.0 * this.openSheetMusicDisplay.zoom;
         newWidth = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
         break;
     }
 
+    cursorElement.height = newHeight;
+    // the height also as inline style: page CSS overrides the height attribute, e.g. Tailwind's img { height: auto; },
+    //   which shrank the cursor to the 1 pixel height of its image. A height the app set with !important is kept.
+    if (cursorElement.style.getPropertyPriority("height") !== "important") {
+      cursorElement.style.height = newHeight + "px";
+    }
     // if (newWidth !== cursorElement.width) { // this `if` is unnecessary and prevents updating color
     cursorElement.width = newWidth;
     if (this.cursorImageOutdated(newWidth)) {
