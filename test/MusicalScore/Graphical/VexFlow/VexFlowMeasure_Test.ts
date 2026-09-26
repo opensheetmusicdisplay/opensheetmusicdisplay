@@ -294,6 +294,54 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   /** The accidentals of the ornament on the first note of each measure, above and below, each from left to right */
+   function drawnOrnamentAccidentals(osmd: OpenSheetMusicDisplay): string[][][] {
+      const accidentalTypes: any = (VF as any).accidentalCodes.accidentals;
+      const types: (accidental: any) => string[] = (accidental: any): string[] => !accidental ? [] :
+         (accidental.glyphs ?? [accidental]).map((glyph: any): string =>
+            Object.keys(accidentalTypes).find((type: string): boolean => accidentalTypes[type].code === glyph.code));
+      return firstNoteModifiers(osmd, "ornaments").map((ornaments: any[]): string[][] =>
+         [types(ornaments[0].accidentalUpper), types(ornaments[0].accidentalLower)]);
+   }
+
+   // Turns in G sharp minor whose lower note F double sharp is marked double-sharp (m. 1) and sharp-sharp (m. 2), a turn whose
+   //   lower note is F sharp again, marked natural-sharp (m. 3), and a turn whose upper note F double sharp is marked sharp-sharp (m. 4).
+   it("Renders sharp-sharp and natural-sharp accidental marks of ornaments as two signs, like note accidentals", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_ornament_accidental_mark_sharp-sharp.musicxml");
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmd.load(score).then(() => {
+         osmd.render();
+         expect(drawnOrnamentAccidentals(osmd), "[above, below] of each measure's turn").to.deep.equal(
+            [[[], ["##"]], [[], ["#", "#"]], [[], ["n", "#"]], [["#", "#"], []]]);
+         // the two sharps of measure 2 are drawn side by side with a space between them, before the turn itself
+         const ornamentPaths: Element[] = Array.from((osmd.GraphicSheet.MeasureList[1][0].staffEntries[0].graphicalVoiceEntries[0]
+            .notes[0] as VexFlowGraphicalNote).getModifierSVGs()[0].children);
+         const [first, second] = ornamentPaths.map((path: Element): DOMRect => (path as SVGGraphicsElement).getBBox());
+         // the accidentalSpacing (3) is scaled by 1/1.3, like the ornament's accidentals themselves
+         expect(second.x - (first.x + first.width), "the space between the two sharps").to.be.closeTo(3 / 1.3, 1.5);
+         done();
+      }).catch(done);
+   });
+
+   // One ornament per measure: a trill with a triple-sharp mark, a turn below with a triple-flat mark, a mordent with a
+   //   natural-flat mark and an inverted mordent with a slash-flat mark.
+   it("Renders triple, natural-flat and slash-flat accidental marks of ornaments instead of failing or leaving them out", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_ornament_accidental_mark_values.musicxml");
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmd.load(score).then(() => {
+         osmd.render();
+         expect(drawnOrnamentAccidentals(osmd), "[above, below] of each measure's ornament").to.deep.equal(
+            [[["#", "##"], []], [[], ["b", "bb"]], [[], ["n", "b"]], [["bs"], []]]);
+         // the sharp and the double sharp of the triple sharp share one line, like the accidentals of a note
+         const ornamentPaths: Element[] = Array.from((osmd.GraphicSheet.MeasureList[0][0].staffEntries[0].graphicalVoiceEntries[0]
+            .notes[0] as VexFlowGraphicalNote).getModifierSVGs()[0].children);
+         const [sharp, doubleSharp] = ornamentPaths.slice(1).map((path: Element): DOMRect => (path as SVGGraphicsElement).getBBox());
+         expect(sharp.y + sharp.height / 2, "the centers of the sharp and the double sharp")
+            .to.be.closeTo(doubleSharp.y + doubleSharp.height / 2, 1);
+         done();
+      }).catch(done);
+   });
+
    // Non-regression test for EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature.
    // Pieces without a time signature in the source (e.g. Satie's Gnossiennes) should not render a
    // (synthesized default 4/4) time signature by default, but should when the rule is enabled.

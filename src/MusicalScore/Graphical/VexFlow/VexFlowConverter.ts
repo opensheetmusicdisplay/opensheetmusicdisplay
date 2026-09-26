@@ -980,14 +980,36 @@ export class VexFlowConverter {
             }
         }
         if (vfOrna) {
+            // a list of accidentals, which our VexFlowPatch of ornament.js draws side by side
             if (oContainer.AccidentalBelow !== AccidentalEnum.NONE) {
-                vfOrna.setLowerAccidental(Pitch.accidentalVexflow(oContainer.AccidentalBelow));
+                vfOrna.setLowerAccidental(
+                    VexFlowConverter.ornamentAccidentals(oContainer.AccidentalBelow, oContainer.AccidentalBelowXml) as any);
             }
             if (oContainer.AccidentalAbove !== AccidentalEnum.NONE) {
-                vfOrna.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
+                vfOrna.setUpperAccidental(
+                    VexFlowConverter.ornamentAccidentals(oContainer.AccidentalAbove, oContainer.AccidentalAboveXml) as any);
             }
             vfOrna.setPosition(vfPosition);
             (vfnote as StaveNote).addModifier(0, vfOrna);
+        }
+    }
+
+    /** The VexFlow accidentals of an ornament's accidental mark, from left to right. As for notes in StaveNote(),
+     *  marks without a glyph of their own are drawn as two accidentals, e.g. sharp-sharp as two sharps. */
+    public static ornamentAccidentals(accidental: AccidentalEnum, accidentalXml: string): string[] {
+        switch (accidental) {
+            case AccidentalEnum.DOUBLESHARP:
+                return accidentalXml === "sharp-sharp" ? ["#", "#"] : ["##"];
+            case AccidentalEnum.SHARP:
+                return accidentalXml === "natural-sharp" ? ["n", "#"] : ["#"];
+            case AccidentalEnum.FLAT:
+                return accidentalXml === "natural-flat" ? ["n", "b"] : ["b"];
+            case AccidentalEnum.TRIPLESHARP:
+                return ["#", "##"];
+            case AccidentalEnum.TRIPLEFLAT:
+                return ["b", "bb"];
+            default:
+                return [Pitch.accidentalVexflow(accidental)];
         }
     }
 

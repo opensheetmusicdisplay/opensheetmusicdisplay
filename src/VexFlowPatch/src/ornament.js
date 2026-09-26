@@ -19,6 +19,39 @@ import { Glyph } from './glyph';
 // To enable logging for this class. Set `Vex.Flow.Ornament.DEBUG` to `true`.
 function L(...args) { if (Ornament.DEBUG) Vex.L('Vex.Flow.Ornament', args); }
 
+// VexFlowPatch: the glyph of an accidental of an ornament, also for a list of accidentals drawn side by side
+//   (e.g. ['#', '#'] for a sharp-sharp). Like a note's accidentals, they share a baseline, with `spacing` between them.
+//   Positioned like a single glyph with origin (0.5, 1.0): render() takes the center and the bottom.
+function createAccidentalGlyph(accids, scale, spacing) {
+  if (!Array.isArray(accids)) {
+    accids = [accids];
+  }
+  const glyphs = accids.map(accid => new Glyph(Flow.accidentalCodes(accid).code, scale));
+  if (glyphs.length === 1) {
+    glyphs[0].setOrigin(0.5, 1.0);
+    return glyphs[0];
+  }
+  let top = Infinity;
+  let bottom = -Infinity;
+  let width = spacing * (glyphs.length - 1);
+  for (const glyph of glyphs) {
+    top = Math.min(top, glyph.bbox.getY());
+    bottom = Math.max(bottom, glyph.bbox.getY() + glyph.bbox.getH());
+    width += glyph.bbox.getW();
+  }
+  return {
+    glyphs,
+    getMetrics: () => ({ width, height: bottom - top }),
+    render: (ctx, x, y) => {
+      let left = x - width / 2;
+      for (const glyph of glyphs) {
+        glyph.render(ctx, left - glyph.bbox.getX(), y - bottom);
+        left += glyph.bbox.getW() + spacing;
+      }
+    },
+  };
+}
+
 export class Ornament extends Modifier {
   static get CATEGORY() { return 'ornaments'; }
 
@@ -67,6 +100,7 @@ export class Ornament extends Modifier {
       font_scale: 38,
       accidentalLowerPadding: 3,
       accidentalUpperPadding: 3,
+      accidentalSpacing: 3, // between the accidentals of a list, as between a note's accidentals (Accidental.format())
     };
 
     this.ornament = Flow.ornamentCodes(this.type);
@@ -84,18 +118,18 @@ export class Ornament extends Modifier {
   setDelayed(delayed) { this.delayed = delayed; return this; }
 
   // Set the upper accidental for the ornament
+  // VexFlowPatch: also a list of accidentals, drawn side by side (e.g. ['#', '#'] for a sharp-sharp)
   setUpperAccidental(accid) {
-    const scale = this.render_options.font_scale / 1.3;
-    this.accidentalUpper = new Glyph(Flow.accidentalCodes(accid).code, scale);
-    this.accidentalUpper.setOrigin(0.5, 1.0);
+    this.accidentalUpper = createAccidentalGlyph(accid, this.render_options.font_scale / 1.3,
+      this.render_options.accidentalSpacing / 1.3);
     return this;
   }
 
   // Set the lower accidental for the ornament
+  // VexFlowPatch: also a list of accidentals, see setUpperAccidental()
   setLowerAccidental(accid) {
-    const scale = this.render_options.font_scale / 1.3;
-    this.accidentalLower = new Glyph(Flow.accidentalCodes(accid).code, scale);
-    this.accidentalLower.setOrigin(0.5, 1.0);
+    this.accidentalLower = createAccidentalGlyph(accid, this.render_options.font_scale / 1.3,
+      this.render_options.accidentalSpacing / 1.3);
     return this;
   }
 
