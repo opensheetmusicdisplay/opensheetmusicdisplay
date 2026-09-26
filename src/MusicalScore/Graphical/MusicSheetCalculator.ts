@@ -491,11 +491,18 @@ export abstract class MusicSheetCalculator {
         }
         let previousMeasureNumber: number = staffLine.Measures[0].MeasureNumber;
         let labelOffsetX: number = 0;
+        let labelCreated: boolean = false; // whether a measure number label was created for this system yet
         for (let i: number = 0; i < staffLine.Measures.length; i++) {
             const measure: GraphicalMeasure = staffLine.Measures[i];
-            let skip: boolean = this.rules.RenderMeasureNumbersOnlyAtSystemStart && i > 1;
-            if (i === 1 && staffLine.Measures[0].parentSourceMeasure.ImplicitMeasure) {
-                skip = false; // if the first measure (i=0) is a pickup measure, we shouldn't skip measure number 1 (i=1)
+            let skip: boolean = this.rules.RenderMeasureNumbersOnlyAtSystemStart && i >= 1;
+            if (i === 1 && staffLine.Measures[0].parentSourceMeasure.ImplicitMeasure && !labelCreated) {
+                // the first measure (i=0) is implicit and has no number: a pickup measure, or e.g. the second part of a measure split by a repeat.
+                //   Then we shouldn't skip the number of this measure (i=1), e.g. measure number 1 after a pickup measure.
+                skip = false;
+                if (this.rules.RenderMeasureNumbersOnlyAtSystemStart) {
+                    // it's the only number of the system, so draw it regardless of the measure number interval (MeasureNumberLabelOffset)
+                    previousMeasureNumber = measure.MeasureNumber;
+                }
             }
             if (skip) {
                 return; // no more measures number labels need to be rendered for this system, so we can just return instead of continue.
@@ -528,6 +535,7 @@ export abstract class MusicSheetCalculator {
                     isFirstMeasureAndNotPrintedOne
                     ) {
                     this.calculateSingleMeasureNumberPlacement(measure, staffLine, musicSystem, labelOffsetX);
+                    labelCreated = true;
                 }
                 previousMeasureNumber = measure.MeasureNumber;
             }
@@ -2039,9 +2047,6 @@ export abstract class MusicSheetCalculator {
 
         if (multiTempoExpression.ContinuousTempo || multiTempoExpression.InstantaneousTempo) {
             // TempoExpressions always on the first visible System's StaffLine // TODO is it though?
-            if (this.rules.MinMeasureToDrawIndex > 0) {
-                return; // assuming that the tempo is always in measure 1 (idx 0), adding the expression causes issues when we don't draw measure 1
-            }
             if (!measures[0]) {
                 return;
             }

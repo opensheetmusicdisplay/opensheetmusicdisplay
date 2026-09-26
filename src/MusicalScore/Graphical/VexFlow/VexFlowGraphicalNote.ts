@@ -4,7 +4,7 @@ import {ColoringOptions, GraphicalNote, VisibilityOptions} from "../GraphicalNot
 import {Note} from "../../VoiceData/Note";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
-import {Pitch} from "../../../Common/DataObjects/Pitch";
+import {AccidentalEnum, Pitch} from "../../../Common/DataObjects/Pitch";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {OctaveEnum, OctaveShift} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
@@ -57,6 +57,14 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         const drawPitch: Pitch = this.drawPitch(pitch);
         // recalculate the pitch, and this time don't ignore the accidental:
         this.vfpitch = VexFlowConverter.pitch(drawPitch, this.sourceNote.isRest(), this.clef, this.sourceNote.Notehead);
+        // sharp-sharp and double-sharp are both DOUBLESHARP, natural-sharp is a SHARP and natural-flat a FLAT:
+        //   only AccidentalXml tells them apart, and drawPitch doesn't keep it.
+        //   VexFlowConverter.StaveNote() draws each of them as two accidentals, like "###".
+        if ((pitch.Accidental === AccidentalEnum.DOUBLESHARP && pitch.AccidentalXml === "sharp-sharp") ||
+            (pitch.Accidental === AccidentalEnum.SHARP && pitch.AccidentalXml === "natural-sharp") ||
+            (pitch.Accidental === AccidentalEnum.FLAT && pitch.AccidentalXml === "natural-flat")) {
+            this.vfpitch[1] = pitch.AccidentalXml;
+        }
         this.DrawnAccidental = drawPitch.Accidental;
         //}
     }

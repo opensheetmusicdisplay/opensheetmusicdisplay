@@ -61,14 +61,46 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
 
     /** Whether the note is drawn although its own notehead is hidden (print-object="no"), because it shares the
      * notehead of a visible unison note in another voice and its stem is beamed. The stem emanates from the shared
-     * notehead and has to reach the beam, and wherever Vexflow can't merge the two heads into one column it lays
-     * the hidden note's notehead out beside the visible one, where it has to be drawn too - otherwise the beam ends
-     * on a bare stem with nothing under it. E.g. Beethoven Moonlight Sonata 1st mvt. m.37, where the two heads are
-     * merged (test_unison_notehead_moonlight_sonata_measure37), and Debussy Arabesque no. 1 m.3, where the hidden
-     * eighth note's head can't merge with a half note's and gets a column of its own
-     * (test_unison_notehead_tuplet_arabesque_measure3). */
-    private static drawnAsSharedUnisonNote(note: Note): boolean {
-        return note.NoteBeam !== undefined && note.sharesNoteheadWithVisibleUnisonNote();
+     * notehead and has to reach the beam. E.g. Beethoven Moonlight Sonata 1st mvt. m.37, heads of the same shape
+     * (test_unison_notehead_moonlight_sonata_measure37), and Debussy Arabesque no. 1 m.3, where the hidden eighth's
+     * stem rises from a half note's head (test_unison_notehead_tuplet_arabesque_measure3). Vexflow lays the hidden
+     * note's notehead out beside the visible one only next to a whole note (mergeableUnison in the VexFlowPatch
+     * stavenote.js, see hiddenUnisonBaseHead in VexFlowMusicSheetCalculator.calculateMeasureXLayout()): there it has
+     * to be drawn too, otherwise the beam ends on a bare stem with nothing under it.
+     * The beam has to be drawn, i.e. join the note to other drawn notes (see inDrawnBeam). Hidden notes that only
+     * write out a tremolo for playback, e.g. 16ths under a dotted half with tremolo strokes, are beamed among
+     * themselves, and only the first of them shares the half's notehead: it was drawn as a lone 16th with flags
+     * (test_unison_hidden_tremolo_playback_notes_actor_prelude_measure33). */
+    private drawnAsSharedUnisonNote(note: Note): boolean {
+        return this.inDrawnBeam && note.sharesNoteheadWithVisibleUnisonNote();
+    }
+
+    /** Whether the Vexflow note is part of a beam that is drawn. VexFlowMeasure.finalizeBeams() creates a Vexflow beam
+     * only for two or more notes, and Vexflow sets StemmableNote.beam for each of them. */
+    private get inDrawnBeam(): boolean {
+        return Boolean((this.vfStaveNote as any)?.beam);
+    }
+
+    /** Whether the notehead of a hidden unison note (see drawnAsSharedUnisonNote) lands exactly on the head of the
+     * visible note it shares, but with another shape, e.g. a filled eighth note head on an open half note head.
+     * Vexflow leaves the two heads in one column on purpose where the hidden note is on the base line of its stave
+     * note (see drawnAsSharedUnisonNote), and also where the visible note is another note of a chord: Vexflow only
+     * compares the base line of each stave note, so it misses that unison. Drawing the hidden head there would fill
+     * the visible open head, which then reads as a quarter note - e.g. Liszt's Liebestraum no. 3 m.42, an eighth
+     * note run starting on the E3 of a dotted half E2-E3 chord (test_unison_notehead_over_chord_liebestraum_measure42).
+     * Where the two heads have the same shape, the hidden one is inked over the visible one without changing it. */
+    private overprintsSharedHeadOfOtherShape(noteIndex: number, sharedUnisonNote: Note): boolean {
+        const vfStaveNote: any = this.vfStaveNote;
+        const shared: GraphicalNote = this.rules.GNote(sharedUnisonNote);
+        const sharedVfStaveNote: any = (shared?.parentVoiceEntry as VexFlowVoiceEntry)?.vfStaveNote;
+        const head: any = vfStaveNote?.note_heads?.[noteIndex];
+        const sharedHead: any = sharedVfStaveNote?.note_heads?.[shared.parentVoiceEntry.notes.indexOf(shared)];
+        if (!head || !sharedHead) {
+            return false;
+        }
+        const sameColumn: boolean = vfStaveNote.getXShift() === sharedVfStaveNote.getXShift() &&
+            head.isDisplaced() === sharedHead.isDisplaced();
+        return sameColumn && head.glyph_code !== sharedHead.glyph_code;
     }
 
     /** (Re-)color notes and stems by setting their Vexflow styles.
@@ -90,10 +122,10 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             // notehead="none" asks for no notehead at all, so it always stays hidden. print-object="no" hides it
             // too, unless the note is drawn anyway because it shares a visible unison note's notehead: then it is
             // drawn whole, notehead included, exactly like its stem below (see drawnAsSharedUnisonNote).
-            const sharedUnisonNote: Note = note.sourceNote.NoteBeam !== undefined ?
-                note.sourceNote.visibleUnisonNoteSharingNotehead() : undefined;
+            const sharedUnisonNote: Note = this.inDrawnBeam ? note.sourceNote.visibleUnisonNoteSharingNotehead() : undefined;
             const noteheadVisible: boolean = note.sourceNote.Notehead?.Shape !== NoteHeadShape.NONE &&
-                (note.sourceNote.PrintObject || sharedUnisonNote !== undefined);
+                (note.sourceNote.PrintObject ||
+                 sharedUnisonNote !== undefined && !this.overprintsSharedHeadOfOtherShape(i, sharedUnisonNote));
             // A note drawn for its shared unison notehead takes that visible note's color: where Vexflow merges the
             // two heads into one column, its head is inked exactly over the visible one (in draw order after it,
             // if its voice comes later) and must not overprint a color set on that note - e.g. by an app
@@ -207,7 +239,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             // The note's own notehead is hidden, but it's drawn anyway because it shares a visible unison note's
             // notehead and is beamed (see drawnAsSharedUnisonNote): its stem emanates from the shared notehead and
             // has to reach the beam, otherwise the beam appears to hang in the air over a missing stem.
-            if (VexFlowVoiceEntry.drawnAsSharedUnisonNote(note)) {
+            if (this.drawnAsSharedUnisonNote(note)) {
                 stemTransparent = false;
                 break;
             }

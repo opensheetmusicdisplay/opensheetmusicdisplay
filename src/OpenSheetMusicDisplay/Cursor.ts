@@ -79,6 +79,7 @@ export class Cursor {
   public currentPageNumber: number = 1;
   private cursorOptions: CursorOptions;
   private cursorOptionsRendered: CursorOptions;
+  private cursorWidthRendered: number;
   private skipInvisibleNotes: boolean = true;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
@@ -297,11 +298,25 @@ export class Cursor {
 
     // if (newWidth !== cursorElement.width) { // this `if` is unnecessary and prevents updating color
     cursorElement.width = newWidth;
-    if (this.cursorOptionsRendered !== this.cursorOptions) {
+    if (this.cursorImageOutdated(newWidth)) {
       this.updateStyle(newWidth, this.cursorOptions);
-      // only update style (creating new cursor element) if options changed.
-      //   For width, it seems to be enough to update cursorElement.width, see osmd#1519
+      // only update style (creating new cursor image) if the width or the options changed.
+      //   Stretching the old image to a new width might be enough (see osmd#1519), but redrawing keeps the image exact.
     }
+  }
+
+  /** Whether updateStyle() would draw a different image than the current one.
+   *  The image only depends on the width and on the type, color and alpha options.
+   *  Compared by value: the options are usually changed in place (cursor.CursorOptions.color = ..., see #1519),
+   *  and cursorOptionsRendered is a clone, so comparing the objects themselves is always unequal.
+   */
+  private cursorImageOutdated(width: number): boolean {
+    const rendered: CursorOptions = this.cursorOptionsRendered;
+    return rendered === undefined ||
+      width !== this.cursorWidthRendered ||
+      rendered.type !== this.cursorOptions.type ||
+      rendered.color !== this.cursorOptions.color ||
+      rendered.alpha !== this.cursorOptions.alpha;
   }
 
   /** Hide the cursor. */
@@ -365,7 +380,8 @@ export class Cursor {
     }
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, 1);
-    this.cursorOptionsRendered = {...this.cursorOptions}; // clone, otherwise !== doesn't work
+    this.cursorOptionsRendered = {...this.cursorOptions}; // clone, so that changes made in place are detected
+    this.cursorWidthRendered = width;
     // Set the actual image
     this.cursorElement.src = c.toDataURL("image/png");
   }

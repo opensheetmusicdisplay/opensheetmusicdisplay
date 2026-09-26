@@ -63,7 +63,8 @@ function centerRest(rest, noteU, noteL) {
  * dotted-vs-tuplet unison - has no second dot to collide and still overlaps. Shared
  * by the two-voice and three-voice collision paths so the same decision is used in
  * both (the divergence between them is what previously left three-voice unisons
- * staggered).
+ * staggered). The head of a hidden note (note.hiddenUnisonBaseHead, set by OSMD)
+ * shares the visible head's column whatever the shapes, except next to a whole note.
  * @param a a notesList entry, i.e. { line, isrest, note, ... }
  * @param b the other notesList entry
  * @param staggerSameWholeNotes EngravingRules.StaggerSameWholeNotes: keep two identical whole notes apart
@@ -81,7 +82,13 @@ function mergeableUnison(a, b, staggerSameWholeNotes) {
       wholeNoteCount++;
     }
   }
-  if (halfNoteCount === 1 || wholeNoteCount === 1) return false; // mismatched notehead shapes
+  if (wholeNoteCount === 1) return false; // mismatched notehead shapes (a stem from a whole note's wider head won't fit)
+  // VexFlowPatch: a hidden note (print-object="no") sharing the visible head of the other voice's unison note gets no
+  //   column of its own: OSMD draws its head only over an identical visible head (VexFlowVoiceEntry.color()), a stem
+  //   it has rises from the shared head, and the visible note keeps its place. OSMD sets hiddenUnisonBaseHead before
+  //   each format (VexFlowMusicSheetCalculator.calculateMeasureXLayout()).
+  if (a.note.hiddenUnisonBaseHead || b.note.hiddenUnisonBaseHead) return true;
+  if (halfNoteCount === 1) return false; // mismatched notehead shapes
   if (staggerSameWholeNotes && wholeNoteCount === 2) return false; // keep identical whole notes apart
   // Both voices dotted with different dot counts -> their augmentation dots would collide
   // at the shared column; keep them staggered (one zero-dot side has nothing to collide).
