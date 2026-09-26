@@ -1628,7 +1628,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         // graphicalLength.RealValue is the note length as a fraction of a whole note.
                         // VF.RESOLUTION (e.g., 16384) is the number of ticks for a whole note.
                         // We use Fraction arithmetic to avoid floating-point precision issues.
-                        vfTicks.numerator = graphicalLength.Numerator * VF.RESOLUTION;
+                        // Fraction keeps the whole part apart (WholeValue), so a length of a whole note or more needs the expanded numerator.
+                        vfTicks.numerator = graphicalLength.GetExpandedNumerator() * VF.RESOLUTION;
                         vfTicks.denominator = graphicalLength.Denominator;
                         // Simplify the fraction to reduce large numbers
                         vfTicks.simplify();
