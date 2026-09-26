@@ -991,6 +991,9 @@ export abstract class MusicSheetCalculator {
         this.calculateSkyBottomLines();
         // calculate TupletsNumbers
         this.calculateTupletNumbers();
+        // reserve skyline space for two-/four-measure repeat units' numbers (EngravingRules.RenderMeasureRepeats),
+        //   before measure numbers are placed below, so a measure number on the same barline goes above it
+        this.reserveSkylineForMeasureRepeats();
 
         // calculate MeasureNumbers
         if (this.rules.RenderMeasureNumbers) {
@@ -3287,6 +3290,12 @@ export abstract class MusicSheetCalculator {
         // override
     }
 
+    /** Reserves skyline space for two- or four-measure repeat units' numbers (EngravingRules.RenderMeasureRepeats).
+     *  No-op here; overridden by VexFlowMusicSheetCalculator, the only backend that currently draws these. */
+    protected reserveSkylineForMeasureRepeats(): void {
+        // override
+    }
+
     /**
      * Re-adjust the x positioning of expressions.
      */
@@ -3381,6 +3390,9 @@ export abstract class MusicSheetCalculator {
                     const placement: PlacementEnum = this.getFingeringPlacement(measure);
                     for (const gse of measure.staffEntries) {
                         gse.FingeringEntries = [];
+                        if (measure.NotesAreAbbreviated) {
+                            continue; // the notes these fingerings belong to aren't drawn (EngravingRules.RenderMeasureRepeats)
+                        }
                         const skybottomcalculator: SkyBottomLineCalculator = line.SkyBottomLineCalculator;
                         const staffEntryPositionX: number = gse.PositionAndShape.RelativePosition.x +
                             measure.PositionAndShape.RelativePosition.x;

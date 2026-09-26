@@ -537,6 +537,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestGraceNotesOnlyMeasure = sampleFilename.startsWith("test_grace_notes_only_measure");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
+    const isTestMeasureRepeat = sampleFilename.includes("test_measure_repeat_");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
     if (isTestEndClefStaffEntryBboxes) {
         options.drawBoundingBoxString = "VexFlowStaffEntry";
@@ -638,6 +639,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestOptimizeExtremeLedgerBeams) {
         osmdInstance.EngravingRules.OptimizeExtremeLedgerBeams = true;
+    }
+    if (isTestMeasureRepeat) {
+        osmdInstance.EngravingRules.RenderMeasureRepeats = true;
     }
     return options;
 }
