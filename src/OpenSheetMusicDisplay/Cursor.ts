@@ -307,20 +307,21 @@ export class Cursor {
     cursorElement.width = newWidth;
     if (this.cursorImageOutdated(newWidth)) {
       this.updateStyle(newWidth, this.cursorOptions);
-      // only update style (creating new cursor image) if the width or the options changed.
-      //   Stretching the old image to a new width might be enough (see osmd#1519), but redrawing keeps the image exact.
+      // only draw a new cursor image if it would look different. A solid color image is stretched to a new width,
+      //   the standard cursor's gradient is redrawn, which keeps it exact (see osmd#1519).
     }
   }
 
   /** Whether updateStyle() would draw a different image than the current one.
-   *  The image only depends on the width and on the type, color and alpha options.
+   *  The image only depends on the type, color and alpha options, and for the standard cursor's gradient on the width
+   *  (a solid color image is a single pixel, stretched to the width).
    *  Compared by value: the options are usually changed in place (cursor.CursorOptions.color = ..., see #1519),
    *  and cursorOptionsRendered is a clone, so comparing the objects themselves is always unequal.
    */
   private cursorImageOutdated(width: number): boolean {
     const rendered: CursorOptions = this.cursorOptionsRendered;
     return rendered === undefined ||
-      width !== this.cursorWidthRendered ||
+      (width !== this.cursorWidthRendered && !this.hasSolidColor()) ||
       rendered.type !== this.cursorOptions.type ||
       rendered.color !== this.cursorOptions.color ||
       rendered.alpha !== this.cursorOptions.alpha;
@@ -362,40 +363,48 @@ export class Cursor {
     if (cursorOptions !== undefined) {
       this.cursorOptions = cursorOptions;
     }
-    // Create a dummy canvas to generate the image for the cursor, one pixel high (the img element stretches it)
+    // Create a dummy canvas to generate the image for the cursor, one pixel high (the img element stretches it).
+    //   A solid color is also one pixel wide, the standard cursor's gradient as wide as the width attribute (rounded down).
     const c: HTMLCanvasElement = document.createElement("canvas");
-    c.width = this.cursorElement.width;
+    c.width = this.hasSolidColor() ? 1 : Math.max(1, Math.floor(width));
     c.height = 1;
     const ctx: CanvasRenderingContext2D = c.getContext("2d");
     ctx.globalAlpha = this.cursorOptions.alpha;
     ctx.fillStyle = this.cursorOptions.color;
     ctx.fillRect(0, 0, c.width, 1);
-    switch (this.cursorOptions.type) {
-      case CursorType.ThinLeft:
-      case CursorType.ShortThinTopLeft:
-      case CursorType.CurrentArea:
-      case CursorType.CurrentAreaLeft:
-        break; // solid color
-      default: {
-        // fade out to both sides by masking the alpha. A gradient from the color to "white" or "transparent" (black at alpha 0)
-        //   tints the edges, as canvas gradients don't interpolate with premultiplied alpha:
-        //   fading to white gave the cursor light edges on dark backgrounds.
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = "destination-in";
-        const mask: CanvasGradient = ctx.createLinearGradient(0, 0, c.width, 0);
-        mask.addColorStop(0, "rgba(0,0,0,0)");
-        mask.addColorStop(0.2, "rgba(0,0,0,1)");
-        mask.addColorStop(0.8, "rgba(0,0,0,1)");
-        mask.addColorStop(1, "rgba(0,0,0,0)");
-        ctx.fillStyle = mask;
-        ctx.fillRect(0, 0, c.width, 1);
-        break;
-      }
+    if (!this.hasSolidColor()) {
+      // fade out to both sides by masking the alpha. A gradient from the color to "white" or "transparent" (black at alpha 0)
+      //   tints the edges, as canvas gradients don't interpolate with premultiplied alpha:
+      //   fading to white gave the cursor light edges on dark backgrounds.
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "destination-in";
+      const mask: CanvasGradient = ctx.createLinearGradient(0, 0, c.width, 0);
+      mask.addColorStop(0, "rgba(0,0,0,0)");
+      mask.addColorStop(0.2, "rgba(0,0,0,1)");
+      mask.addColorStop(0.8, "rgba(0,0,0,1)");
+      mask.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = mask;
+      ctx.fillRect(0, 0, c.width, 1);
     }
     this.cursorOptionsRendered = {...this.cursorOptions}; // clone, so that changes made in place are detected
     this.cursorWidthRendered = width;
     // Set the actual image
     this.cursorElement.src = c.toDataURL("image/png");
+  }
+
+  /** Whether the cursor type is drawn in a solid color, which doesn't depend on the width
+   *  (the standard cursor fades out to both sides instead).
+   */
+  private hasSolidColor(): boolean {
+    switch (this.cursorOptions.type) {
+      case CursorType.ThinLeft:
+      case CursorType.ShortThinTopLeft:
+      case CursorType.CurrentArea:
+      case CursorType.CurrentAreaLeft:
+        return true;
+      default:
+        return false;
+    }
   }
 
   public get Iterator(): MusicPartManagerIterator {
