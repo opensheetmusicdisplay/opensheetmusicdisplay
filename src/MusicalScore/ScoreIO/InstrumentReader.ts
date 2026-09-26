@@ -1379,7 +1379,7 @@ export class InstrumentReader {
 
   /**
    * The note's duration derived from its <type>, including augmentation <dot>s (e.g. a dotted eighth
-   * yields 3/16). Returns a zero Fraction when no <type> is given.
+   * yields 3/16, a dotted whole note 3/2). Returns a zero Fraction when no <type> is given.
    * @param xmlNode
    * @returns {Fraction}
    */
@@ -1388,7 +1388,9 @@ export class InstrumentReader {
     const dots: number = xmlNode.elements("dot").length;
     let addition: Fraction = typeDuration.clone();
     for (let i: number = 0; i < dots; i++) {
-      addition = new Fraction(addition.Numerator, addition.Denominator * 2);
+      // each dot adds half of the previous addition. Fraction.multiply() includes the whole part (WholeValue),
+      //   which Numerator leaves out (a whole note is 1 + 0/1).
+      addition = Fraction.multiply(addition, new Fraction(1, 2));
       typeDuration.Add(addition);
     }
     return typeDuration;
