@@ -35,8 +35,10 @@ export class Cursor {
       this.cursorElementId = `cursorImg-${id}`;
     }
 
-    const curs: HTMLElement = document.createElement("img");
+    const curs: HTMLImageElement = document.createElement("img");
     curs.id = this.cursorElementId;
+    curs.alt = ""; // decorative: screen readers skip it instead of announcing an unlabeled image
+    curs.draggable = false; // dragging on the cursor doesn't drag a copy of its image
     curs.style.position = "absolute";
     if (this.cursorOptions.follow === true) {
       this.wantedZIndex = "-1";
@@ -45,7 +47,7 @@ export class Cursor {
       this.wantedZIndex = "-2";
       curs.style.zIndex = this.wantedZIndex;
     }
-    this.cursorElement = <HTMLImageElement>curs;
+    this.cursorElement = curs;
     this.container.appendChild(curs);
   }
 

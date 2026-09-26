@@ -72,4 +72,10 @@ describe("Cursor image element", () => {
         expect(Array.from(pixels.slice(fadeX * 4, fadeX * 4 + 3))).to.satisfy((rgb: number[]) =>
             Math.abs(rgb[0] - 0x33) < 12 && Math.abs(rgb[1] - 0xe0) < 12 && Math.abs(rgb[2] - 0x2f) < 12);
     });
+
+    it("is hidden from screen readers and can't be dragged", async () => {
+        const cursor: Cursor = await showCursor();
+        expect(cursor.cursorElement.getAttribute("alt"), "an empty alt marks the image as decorative").to.equal("");
+        expect(cursor.cursorElement.draggable).to.equal(false);
+    });
 });
