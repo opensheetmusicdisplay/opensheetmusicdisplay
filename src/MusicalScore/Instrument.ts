@@ -35,6 +35,7 @@ export class Instrument extends InstrumentalGroup {
     private lyricVersesNumbers: string[] = [];
     private subInstruments: SubInstrument[] = [];
     private partAbbreviation: string;
+    private partAbbreviationPrintObject: boolean = true;
 
     public get Voices(): Voice[] {
         return this.voices;
@@ -114,6 +115,13 @@ export class Instrument extends InstrumentalGroup {
     }
     public set PartAbbreviation(value: string) {
         this.partAbbreviation = value;
+    }
+    /** Whether the part abbreviation is shown: false for print-object="no" on part-abbreviation or part-abbreviation-display. */
+    public get PartAbbreviationPrintObject(): boolean {
+        return this.partAbbreviationPrintObject;
+    }
+    public set PartAbbreviationPrintObject(value: boolean) {
+        this.partAbbreviationPrintObject = value;
     }
 
     public get Visible(): boolean {

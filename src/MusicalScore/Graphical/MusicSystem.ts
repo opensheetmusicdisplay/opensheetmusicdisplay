@@ -311,10 +311,13 @@ export abstract class MusicSystem extends GraphicalObject {
                 }
             } else {
                 if (!this.rules.RenderPartAbbreviations || !this.rules.RenderPartNames // don't render abbreviations if we don't render part names
-                    || this.staffLines.length === 1 // don't render part abbreviations if there's only one instrument/part (could be an option in the future)
-                    || !instrument.PartAbbreviation
-                    || instrument.PartAbbreviation === "") {
+                    || this.staffLines.length === 1) { // don't render part abbreviations if there's only one instrument/part (could be an option in the future)
                     return;
+                }
+                if (!instrument.PartAbbreviation?.trim() || !instrument.PartAbbreviationPrintObject) {
+                    // no abbreviation to show for this part: no label, but the other parts still get theirs
+                    systemLabelsRightMargin = 0; // restored below if another part's label takes space
+                    continue;
                 }
                 const labelText: string = instrument.PartAbbreviation;
                 // const labelText: string = instrument.NameLabel.text[0] + ".";
