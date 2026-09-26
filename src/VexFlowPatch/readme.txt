@@ -48,6 +48,7 @@ add stem_up_y_shift and stem_down_y_shift to shift notehead (independent of stem
 
 ornament.js (custom addition):
 respect Modifier.Position.BELOW in draw() (placement="below" in MusicXML)
+setUpperAccidental() and setLowerAccidental() also take a list of accidentals, drawn side by side (e.g. sharp-sharp)
 
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
