@@ -902,6 +902,35 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 //   and take no time of their own: they must not create a gap (ghost rest) between the main note and the measure end
                 continue;
             }
+            if ((gve as VexFlowVoiceEntry).isStandAloneGrace) {
+                // stand-alone grace notes are tickables of their voice at their time. Those at one time take their vexflow ticks
+                //   one after the other, fitted into the time until the next entry of the voice (or the measure end): so the voice
+                //   is as long as the measure, and a later note of the voice stays aligned with the other voices.
+                const graceStart: Fraction = gve.notes[0].sourceNote.getAbsoluteTimestamp();
+                const voiceEnd: Fraction = latestVoiceTimestamp ?? this.parentSourceMeasure.AbsoluteTimestamp;
+                const gapBeforeGrace: Fraction = Fraction.minus(graceStart, voiceEnd);
+                if (gapBeforeGrace.RealValue > 0) {
+                    const ghostGves: VexFlowVoiceEntry[] = this.createGhostGves(gapBeforeGrace);
+                    gvEntries.splice(idx, 0, ...ghostGves);
+                    idx += ghostGves.length;
+                }
+                let lastGraceIndex: number = idx;
+                while ((gvEntries[lastGraceIndex + 1] as VexFlowVoiceEntry)?.isStandAloneGrace &&
+                    gvEntries[lastGraceIndex + 1].notes[0].sourceNote.getAbsoluteTimestamp().Equals(graceStart)) {
+                    lastGraceIndex++;
+                }
+                const nextEntry: GraphicalVoiceEntry = gvEntries.slice(lastGraceIndex + 1).find(
+                    (entry: GraphicalVoiceEntry) => !entry.parentVoiceEntry?.GraceAfterMainNote);
+                const graceTime: Fraction = Fraction.max(graceStart, voiceEnd);
+                const nextTime: Fraction = nextEntry ? nextEntry.notes[0].sourceNote.getAbsoluteTimestamp() :
+                    Fraction.plus(this.parentSourceMeasure.AbsoluteTimestamp, this.parentSourceMeasure.Duration);
+                const graceTicks: VF.Fraction = this.fitTicks(
+                    gvEntries.slice(idx, lastGraceIndex + 1).map((grace: GraphicalVoiceEntry) => (grace as VexFlowVoiceEntry).vfStaveNote),
+                    Fraction.minus(nextTime, graceTime));
+                latestVoiceTimestamp = Fraction.plus(graceTime, new Fraction(graceTicks.numerator, graceTicks.denominator * VF.RESOLUTION));
+                idx = lastGraceIndex;
+                continue;
+            }
             const gNotesStartTimestamp: Fraction = gve.notes[0].sourceNote.getAbsoluteTimestamp();
             // find the voiceEntry end timestamp:
             let gNotesEndTimestamp: Fraction = new Fraction();
@@ -956,6 +985,31 @@ export class VexFlowMeasure extends GraphicalMeasure {
             gvEntries = gvEntries.concat(ghostGves);
         }
         return gvEntries;
+    }
+
+    /**
+     * Reduces the vexflow ticks of the given tickables in proportion if they don't fit into the available time,
+     * unless there is no time available (e.g. for grace notes before a rest at the same time in a tablature staff).
+     * @returns the ticks the tickables take together
+     */
+    private fitTicks(tickables: VF.Tickable[], availableTime: Fraction): VF.Fraction {
+        const ticks: VF.Fraction = new VF.Fraction(0, 1);
+        for (const tickable of tickables) {
+            if (tickable.getTicks().denominator === 0) {
+                tickable.getTicks().denominator = 1; // see graphicalMeasureCreatedCalculations() (#1073)
+            }
+            ticks.add(tickable.getTicks().numerator, tickable.getTicks().denominator).simplify();
+        }
+        const availableTicks: VF.Fraction =
+            new VF.Fraction(availableTime.GetExpandedNumerator() * VF.RESOLUTION, availableTime.Denominator).simplify();
+        if (availableTicks.value() <= 0 || ticks.value() <= availableTicks.value()) {
+            return ticks;
+        }
+        for (const tickable of tickables) {
+            // its ticks * available ticks / ticks of all the tickables
+            tickable.getTicks().multiply(availableTicks.numerator * ticks.denominator, availableTicks.denominator * ticks.numerator).simplify();
+        }
+        return availableTicks;
     }
 
     private createGhostGves(duration: Fraction): VexFlowVoiceEntry[] {
@@ -1485,6 +1539,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
         return;
     }
 
+    /** Whether a grace note gets the slash given in the XML (slash="yes"): only the first of several grace notes in a row
+     *  (Vexflow would draw a slash through each of them), and not a hidden one (Vexflow would draw its slash anyway). */
+    private hasGraceSlash(graceGve: GraphicalVoiceEntry, isFirstGraceNote: boolean): boolean {
+        return isFirstGraceNote && graceGve.parentVoiceEntry.GraceNoteSlash &&
+            graceGve.notes.some((note: GraphicalNote) => note.sourceNote.PrintObject);
+    }
+
     public graphicalMeasureCreatedCalculations(): void {
         let graceSlur: boolean;
         let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
@@ -1492,6 +1553,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             graceSlur = false;
             graceGVoiceEntriesBefore = [];
+            const voicesWithGraceAfterMainNote: Set<Voice> = new Set<Voice>();
             // create vex flow Stave Notes:
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
                 if (gve.parentVoiceEntry.IsGrace) {
@@ -1501,6 +1563,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         //   the main note's staff entry (see InstrumentReader.attachGraceNotesAfterMainNote), but are drawn as
                         //   stand-alone grace notes right of it: own tickables of the vexflow voice (added below),
                         //   not a GraceNoteGroup attached to a following main note.
+                        gve.GraceSlash = this.hasGraceSlash(gve, !voicesWithGraceAfterMainNote.has(gve.parentVoiceEntry.ParentVoice));
+                        voicesWithGraceAfterMainNote.add(gve.parentVoiceEntry.ParentVoice);
                         (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
                         continue;
                     }
@@ -1529,10 +1593,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         //if (gveGrace.notes[0].sourceNote.PrintObject) {
                         // grace notes should generally be rendered independently of main note instead of skipped if main note is invisible
                         // could be an option to make grace notes transparent if main note is transparent. set grace notes' PrintObject to false then.
-                        gveGrace.GraceSlash = gveGrace.parentVoiceEntry.GraceNoteSlash;
-                        if (i > 0) {
-                            gveGrace.GraceSlash = false; // without this, Vexflow draws multiple grace slashes, which looks wrong.
-                        }
+                        gveGrace.GraceSlash = this.hasGraceSlash(gveGrace, i === 0);
                         const vfStaveNote: StaveNote = VexFlowConverter.StaveNote(gveGrace);
                         gveGrace.vfStaveNote = vfStaveNote;
                         graceNotes.push(vfStaveNote);
@@ -1547,12 +1608,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     graceGVoiceEntriesBefore = [];
                 }
             }
-        }
-        // remaining grace notes at end of measure, turned into stand-alone grace notes:
-        if (graceGVoiceEntriesBefore.length > 0) {
+            // remaining grace notes without a main note after them in this staff entry (e.g. at the end of the measure,
+            //   or in a voice that has no other note here), turned into stand-alone grace notes:
+            const voicesWithStandAloneGrace: Set<Voice> = new Set<Voice>();
             for (const graceGve of graceGVoiceEntriesBefore) {
+                graceGve.GraceSlash = this.hasGraceSlash(graceGve, !voicesWithStandAloneGrace.has(graceGve.parentVoiceEntry.ParentVoice));
+                voicesWithStandAloneGrace.add(graceGve.parentVoiceEntry.ParentVoice);
                 (graceGve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(graceGve);
-                graceGve.parentVoiceEntry.GraceAfterMainNote = true;
+                (graceGve as VexFlowVoiceEntry).isStandAloneGrace = true;
             }
         }
 
@@ -1587,10 +1650,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             const restFilledEntries: GraphicalVoiceEntry[] = this.getRestFilledVexFlowStaveNotesPerVoice(voice);
                     // .sort((a,b) => a.)
+            // the staff entry whose in-measure clef this voice has drawn (once, e.g. not before each stand-alone grace note there)
+            let staffEntryWithClef: VexFlowStaffEntry;
             // create vex flow voices and add tickables to it:
             for (const voiceEntry of restFilledEntries) {
                 if (voiceEntry.parentVoiceEntry) {
-                    if (voiceEntry.parentVoiceEntry.IsGrace && !voiceEntry.parentVoiceEntry.GraceAfterMainNote) {
+                    if (voiceEntry.parentVoiceEntry.IsGrace && !voiceEntry.parentVoiceEntry.GraceAfterMainNote &&
+                        !(voiceEntry as VexFlowVoiceEntry).isStandAloneGrace) {
                         continue;
                     }
                 }
@@ -1622,8 +1688,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         graphicalLength.RealValue === this.parentSourceMeasure.ActiveTimeSignature.RealValue;
                     const ticksMismatch: boolean =
                         Math.abs(vfTicks.value() - graphicalLength.RealValue * VF.RESOLUTION) > 0.001;
-                    if (sourceNote.NoteTuplet ||
-                        (ticksMismatch && !isWholeMeasureRest && !voiceEntry.parentVoiceEntry?.IsGrace)) {
+                    // (not for stand-alone grace notes, whose vexflow ticks the rest filling above has used and fitted)
+                    if (!vexFlowVoiceEntry.isStandAloneGrace && (sourceNote.NoteTuplet ||
+                        (ticksMismatch && !isWholeMeasureRest && !voiceEntry.parentVoiceEntry?.IsGrace))) {
                         // Calculate ticks using VexFlow Fraction to preserve precision.
                         // graphicalLength.RealValue is the note length as a fraction of a whole note.
                         // VF.RESOLUTION (e.g., 16384) is the number of ticks for a whole note.
@@ -1642,7 +1709,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 //if (isMainVoice) {
                 const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
                 // (not for grace notes after their main note, which share its staff entry but are drawn right of it)
-                if (vfse && vfse.vfClefBefore && !voiceEntry.parentVoiceEntry?.GraceAfterMainNote) {
+                if (vfse && vfse.vfClefBefore && !voiceEntry.parentVoiceEntry?.GraceAfterMainNote && vfse !== staffEntryWithClef) {
+                    staffEntryWithClef = vfse;
                     if (voiceEntry.notes[0] && !voiceEntry.notes[0].sourceNote.PrintObject) {
                         const clefColor: string = this.rules.DefaultColorMusic || "#000000";
                         // need to cast to any because ClefNote actually extends Note, which extends Tickable, which extends Element,

@@ -14,6 +14,9 @@ import { NoteHeadShape } from "../../VoiceData/Notehead";
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     private mVexFlowStaveNote: VF.StemmableNote;
     public vfGhostNotes: VF.GhostNote[]; // sometimes we need multiple ghost notes instead of just one note (vfStaveNote).
+    /** A grace note that no main note follows in its staff entry (e.g. the only note of its voice there), drawn as its own
+     *  tickable of the voice. Unlike a grace note after its main note (VoiceEntry.GraceAfterMainNote), it keeps its timestamp. */
+    public isStandAloneGrace: boolean = false;
 
     constructor(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry, rules?: EngravingRules) {
         super(parentVoiceEntry, parentStaffEntry, rules);

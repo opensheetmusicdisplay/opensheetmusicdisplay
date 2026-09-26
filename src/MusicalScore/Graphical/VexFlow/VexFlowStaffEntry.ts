@@ -30,9 +30,12 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
         // The positions are needed for cursor placement and mouse/tap interactions
         let lastBorderLeft: number = 0;
+        // grace notes after their main note, and stand-alone grace notes that no main note follows (VexFlowVoiceEntry.isStandAloneGrace)
+        const isGraceWithoutMainNote: (gve: VexFlowVoiceEntry) => boolean = (gve: VexFlowVoiceEntry): boolean =>
+            gve.parentVoiceEntry?.GraceAfterMainNote || gve.isStandAloneGrace;
         // a staff entry of stand-alone grace notes only (e.g. in a measure of only grace notes, split off to break the system
         //   inside a cadenza) has no main note to take its position from: its first grace note gives it.
-        const positioningGraceEntry: VexFlowVoiceEntry = this.graphicalVoiceEntries.every(gve => gve.parentVoiceEntry?.GraceAfterMainNote) ?
+        const positioningGraceEntry: VexFlowVoiceEntry = (this.graphicalVoiceEntries as VexFlowVoiceEntry[]).every(isGraceWithoutMainNote) ?
             this.graphicalVoiceEntries[0] as VexFlowVoiceEntry : undefined;
         for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
             if (gve.vfStaveNote) {
@@ -40,7 +43,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 if (!gve.vfStaveNote.preFormatted) {
                     continue;
                 }
-                if (gve.parentVoiceEntry?.GraceAfterMainNote && gve !== positioningGraceEntry) {
+                if (isGraceWithoutMainNote(gve) && gve !== positioningGraceEntry) {
                     // grace notes after their main note (e.g. a Nachschlag ending a trill) share the main note's staff entry
                     //   (see InstrumentReader.attachGraceNotesAfterMainNote), but are drawn as their own small notes right of it:
                     //   they must neither set the staff entry's x position (cursor position) nor widen its bounding box (slur endpoints).
