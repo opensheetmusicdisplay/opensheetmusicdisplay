@@ -51,4 +51,25 @@ describe("Cursor image element", () => {
         cursor.next();
         expect(cursor.cursorElement.getBoundingClientRect().height).to.equal(50);
     });
+
+    it("fades the standard cursor out to transparent at both sides, not to white (no light edges on dark backgrounds)", async () => {
+        const cursor: Cursor = await showCursor();
+        const image: HTMLImageElement = cursor.cursorElement;
+        const canvas: HTMLCanvasElement = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = 1;
+        const context: CanvasRenderingContext2D = canvas.getContext("2d");
+        context.drawImage(image, 0, 0);
+        const pixels: Uint8ClampedArray = context.getImageData(0, 0, canvas.width, 1).data;
+        const alpha: (x: number) => number = (x: number): number => pixels[x * 4 + 3];
+        const middleAlpha: number = alpha(Math.floor(canvas.width / 2));
+        expect(middleAlpha, "the cursor's alpha option (0.5) in the middle").to.be.closeTo(0.5 * 255, 3);
+        expect(alpha(0), "left edge").to.be.lessThan(0.2 * middleAlpha);
+        expect(alpha(canvas.width - 1), "right edge").to.be.lessThan(0.2 * middleAlpha);
+        // in the fade, the cursor's color #33e02f with less alpha, not a mix with white
+        const fadeX: number = Math.round(canvas.width * 0.1);
+        expect(alpha(fadeX)).to.be.within(0.2 * middleAlpha, 0.8 * middleAlpha);
+        expect(Array.from(pixels.slice(fadeX * 4, fadeX * 4 + 3))).to.satisfy((rgb: number[]) =>
+            Math.abs(rgb[0] - 0x33) < 12 && Math.abs(rgb[1] - 0xe0) < 12 && Math.abs(rgb[2] - 0x2f) < 12);
+    });
 });

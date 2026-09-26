@@ -362,31 +362,36 @@ export class Cursor {
     if (cursorOptions !== undefined) {
       this.cursorOptions = cursorOptions;
     }
-    // Create a dummy canvas to generate the gradient for the cursor
-    // FIXME This approach needs to be improved
+    // Create a dummy canvas to generate the image for the cursor, one pixel high (the img element stretches it)
     const c: HTMLCanvasElement = document.createElement("canvas");
     c.width = this.cursorElement.width;
     c.height = 1;
     const ctx: CanvasRenderingContext2D = c.getContext("2d");
     ctx.globalAlpha = this.cursorOptions.alpha;
-    // Generate the gradient
-    const gradient: CanvasGradient = ctx.createLinearGradient(0, 0, this.cursorElement.width, 0);
+    ctx.fillStyle = this.cursorOptions.color;
+    ctx.fillRect(0, 0, c.width, 1);
     switch (this.cursorOptions.type) {
       case CursorType.ThinLeft:
       case CursorType.ShortThinTopLeft:
       case CursorType.CurrentArea:
       case CursorType.CurrentAreaLeft:
-        gradient.addColorStop(1, this.cursorOptions.color);
+        break; // solid color
+      default: {
+        // fade out to both sides by masking the alpha. A gradient from the color to "white" or "transparent" (black at alpha 0)
+        //   tints the edges, as canvas gradients don't interpolate with premultiplied alpha:
+        //   fading to white gave the cursor light edges on dark backgrounds.
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = "destination-in";
+        const mask: CanvasGradient = ctx.createLinearGradient(0, 0, c.width, 0);
+        mask.addColorStop(0, "rgba(0,0,0,0)");
+        mask.addColorStop(0.2, "rgba(0,0,0,1)");
+        mask.addColorStop(0.8, "rgba(0,0,0,1)");
+        mask.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = mask;
+        ctx.fillRect(0, 0, c.width, 1);
         break;
-      default:
-        gradient.addColorStop(0, "white"); // it was: "transparent"
-        gradient.addColorStop(0.2, this.cursorOptions.color);
-        gradient.addColorStop(0.8, this.cursorOptions.color);
-        gradient.addColorStop(1, "white"); // it was: "transparent"
-      break;
+      }
     }
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, 1);
     this.cursorOptionsRendered = {...this.cursorOptions}; // clone, so that changes made in place are detected
     this.cursorWidthRendered = width;
     // Set the actual image
