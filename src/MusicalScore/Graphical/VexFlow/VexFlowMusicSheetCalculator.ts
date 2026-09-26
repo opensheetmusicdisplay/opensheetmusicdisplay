@@ -1,6 +1,8 @@
 import { MusicSheetCalculator } from "../MusicSheetCalculator";
 import { VexFlowGraphicalSymbolFactory } from "./VexFlowGraphicalSymbolFactory";
 import { GraphicalMeasure } from "../GraphicalMeasure";
+import { VexFlowMeasureRepeat } from "./VexFlowMeasureRepeat";
+import { MeasureRepeatInstruction, MeasureRepeatType } from "../../VoiceData/Instructions/MeasureRepeatInstruction";
 import { StaffLine } from "../StaffLine";
 import { SkyBottomLineBatchCalculator } from "../SkyBottomLineBatchCalculator";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
@@ -12,6 +14,7 @@ import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalTie } from "../GraphicalTie";
 import { Tie } from "../../VoiceData/Tie";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
+import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
 import { MultiExpression } from "../../VoiceData/Expressions/MultiExpression";
 import { RepetitionInstruction } from "../../VoiceData/Instructions/RepetitionInstruction";
 import { Beam } from "../../VoiceData/Beam";
@@ -73,6 +76,7 @@ import { VexFlowGlissando } from "./VexFlowGlissando";
 import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { Staff } from "../../VoiceData/Staff";
+import { Note, TremoloBetweenNotes } from "../../VoiceData/Note";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -83,6 +87,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    *  with the overflow. Indexed first by Staff, then by verse/container index. */
   private previousLyricOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
   private previousChordOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
+  /** The two- and four-measure repeat units created by the current render's prepareMeasureRepeats(), each
+   *  needing its number's skyline space reserved once the staffline's own skyline has been computed - see
+   *  reserveSkylineForMeasureRepeats(). Rebuilt (and consumed) on every render. */
+  private measureRepeatUnitsPendingSkyline: VexFlowMeasureRepeat[] = [];
 
   constructor(rules: EngravingRules) {
     super();
@@ -143,6 +151,363 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
     this.beamsNeedUpdate = false;
+    this.prepareMeasureRepeats();
+  }
+
+  /**
+   * Decide which measure-repeat units (see EngravingRules.RenderMeasureRepeats, and InstrumentReader's reading
+   * of MusicXML measure-repeat into SourceMeasure.MeasureRepeatInstructions) can be drawn as a sign instead of
+   * their written-out notes, and set VexFlowMeasure.MeasureRepeat for every measure of each qualifying unit.
+   * Runs after the main loop of formatMeasures(), i.e. after the measure widths and system breaks used are
+   * those of the fully written-out notes: nothing about layout (measure widths, the cursor, the iterator)
+   * changes when a unit is abbreviated, only how VexFlowMeasure.draw() draws that measure's own notes.
+   */
+  private prepareMeasureRepeats(): void {
+    this.measureRepeatUnitsPendingSkyline = [];
+    // measuresByStaff.get(staffIndex).get(sourceMeasure) -> that staff's VexFlowMeasure for that source measure.
+    //   Built (and MeasureRepeat reset) every time, not only when the rule is on: re-rendering with the rule
+    //   switched off on the same OpenSheetMusicDisplay instance must remove any signs from the previous render.
+    const measuresByStaff: Map<number, Map<SourceMeasure, VexFlowMeasure>> = new Map<number, Map<SourceMeasure, VexFlowMeasure>>();
+    for (const verticalMeasures of this.graphicalMusicSheet.MeasureList) {
+      for (const measure of verticalMeasures) {
+        if (!(measure instanceof VexFlowMeasure)) {
+          continue; // e.g. undefined for a multi-rest-collapsed staff
+        }
+        measure.MeasureRepeat = undefined;
+        const staffIndex: number = measure.ParentStaff.idInMusicSheet;
+        let byMeasure: Map<SourceMeasure, VexFlowMeasure> = measuresByStaff.get(staffIndex);
+        if (!byMeasure) {
+          byMeasure = new Map<SourceMeasure, VexFlowMeasure>();
+          measuresByStaff.set(staffIndex, byMeasure);
+        }
+        byMeasure.set(measure.parentSourceMeasure, measure);
+      }
+    }
+    if (!this.rules.RenderMeasureRepeats || this.rules.LazyConsistentGraphic) {
+      // LazyConsistentGraphic: an incremental renderNext() batch, which only ever draws a growing prefix of
+      //   the sheet - a unit straddling the batch boundary could be completed only by a later batch, so
+      //   whether it may be abbreviated could change batch to batch. Only a full render() draws repeat signs.
+      return;
+    }
+
+    const sourceMeasures: SourceMeasure[] = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures;
+    const staffIndicesWithDeclarations: Set<number> = new Set<number>();
+    for (const sourceMeasure of sourceMeasures) {
+      for (const staffIndex of sourceMeasure.MeasureRepeatInstructions.keys()) {
+        staffIndicesWithDeclarations.add(staffIndex);
+      }
+    }
+    for (const staffIndex of staffIndicesWithDeclarations) {
+      const byMeasure: Map<SourceMeasure, VexFlowMeasure> = measuresByStaff.get(staffIndex);
+      if (!byMeasure) {
+        continue;
+      }
+      const wavyLineRanges: {start: number, end: number}[] = this.findWavyLineRanges(sourceMeasures, staffIndex);
+      for (const unit of VexFlowMusicSheetCalculator.findMeasureRepeatUnits(sourceMeasures, staffIndex)) {
+        this.tryCreateMeasureRepeat(sourceMeasures, byMeasure, staffIndex, unit, wavyLineRanges);
+      }
+    }
+  }
+
+  /**
+   * Scan a staff's declared measure-repeat instructions and group the measures from a `start` to the next
+   * `stop` (or the end of the part, if `stop` is omitted - MusicXML explicitly allows this) into repeat units
+   * of the declared length (1, 2 or 4 measures each - see InstrumentReader.SUPPORTED_MEASURE_REPEAT_LENGTHS).
+   * A declaration this can't use (Invalid, a Stop, or more than one declaration in the same measure) ends the
+   * previous run without starting a new one; a trailing partial unit that doesn't reach a full repeated length
+   * is left out (and so stays written out - never partially abbreviate a unit).
+   * @param measures all of the piece's SourceMeasures, in order
+   * @param staffIndex the global staff index (see Staff.idInMusicSheet) to scan
+   */
+  private static findMeasureRepeatUnits(measures: SourceMeasure[], staffIndex: number):
+      {unitStart: number, length: number, slashes: number}[] {
+    const units: {unitStart: number, length: number, slashes: number}[] = [];
+    let active: MeasureRepeatInstruction;
+    let runStart: number = 0;
+    const closeRun: (runEnd: number) => void = (runEnd: number): void => {
+      if (!active) {
+        return;
+      }
+      for (let unitStart: number = runStart; unitStart + active.measures <= runEnd; unitStart += active.measures) {
+        units.push({unitStart, length: active.measures, slashes: active.slashes});
+      }
+    };
+    for (let index: number = 0; index < measures.length; index++) {
+      const declarations: MeasureRepeatInstruction[] = measures[index].MeasureRepeatInstructions.get(staffIndex);
+      if (!declarations || declarations.length === 0) {
+        continue;
+      }
+      closeRun(index); // any declaration (valid or not) ends the previous run right before this measure
+      active = declarations.length === 1 && declarations[0].type === MeasureRepeatType.Start ? declarations[0] : undefined;
+      runStart = index;
+    }
+    closeRun(measures.length);
+    return units;
+  }
+
+  /**
+   * Try to build a VexFlowMeasureRepeat for one candidate unit and assign it to that unit's measures. Does
+   * nothing if the unit fails any of the conditions listed on EngravingRules.RenderMeasureRepeats: the unit's
+   * measures must all be drawn in the current draw range and in one system, the pattern they repeat must
+   * itself be visible in the rendered output, and nothing in the unit may need its own notes to be seen.
+   */
+  private tryCreateMeasureRepeat(sourceMeasures: SourceMeasure[], byMeasure: Map<SourceMeasure, VexFlowMeasure>, staffIndex: number,
+      unit: {unitStart: number, length: number, slashes: number}, wavyLineRanges: {start: number, end: number}[]): void {
+    if (unit.length !== 1 && unit.length !== 2 && unit.length !== 4) {
+      // Defensive: VexFlowMeasureRepeat only supports these three lengths (its constructor/drawNumber index
+      //   this.measures[length / 2 - 1]). InstrumentReader.SUPPORTED_MEASURE_REPEAT_LENGTHS already filters
+      //   everything else out on read, so this shouldn't be reachable - but a future change to the reader (or
+      //   some other, unnoticed path into findMeasureRepeatUnits()) must not silently misbehave here.
+      return;
+    }
+    if (unit.unitStart < this.rules.MinMeasureToDrawIndex || unit.unitStart + unit.length - 1 > this.rules.MaxMeasureToDrawIndex) {
+      // The unit's own measures aren't (all) part of the CURRENT draw range - e.g. a full render followed by
+      //   setOptions({drawUpToMeasureNumber: N}) and a re-render on the same instance, narrowing the range to
+      //   before this unit. GraphicalMeasure.ParentStaffLine is never cleared between renders (see the comment
+      //   below), so a single-measure unit's own "all measures share one ParentStaffLine" check just below is
+      //   trivially true even when that one measure is stale and wasn't (re-)drawn this render at all - which
+      //   would otherwise leave the public GraphicalMeasure.NotesAreAbbreviated reporting true for a measure this
+      //   render doesn't draw as a sign (or draw at all). Checking the index range first closes that regardless
+      //   of unit length.
+      return;
+    }
+    const unitMeasures: VexFlowMeasure[] = [];
+    for (let i: number = 0; i < unit.length; i++) {
+      const graphicalMeasure: VexFlowMeasure = byMeasure.get(sourceMeasures[unit.unitStart + i]);
+      if (!graphicalMeasure) {
+        return; // e.g. the staff is invisible here: there's nothing to draw a sign onto
+      }
+      unitMeasures.push(graphicalMeasure);
+    }
+    if (unitMeasures.some((measure: VexFlowMeasure): boolean => measure.isTabMeasure)) {
+      return; // TAB staves are left written-out for now (a future PR); see EngravingRules.RenderMeasureRepeats
+    }
+    // All of the unit's measures must be drawn, in the same system (see MusicSystemBuilder.buildMusicSystems(),
+    //   which runs before this and assigns ParentStaffLine to every measure it places this render). The index
+    //   check above already confirmed the unit's measures are all within the current draw range; this additionally
+    //   catches a measure that's in range but never gets a ParentStaffLine this render for another reason (e.g. an
+    //   invisible staff).
+    const staffLine: StaffLine = unitMeasures[0].ParentStaffLine;
+    if (!staffLine || unitMeasures.some((measure: VexFlowMeasure): boolean => measure.ParentStaffLine !== staffLine)) {
+      return;
+    }
+    const referenceStart: number = unit.unitStart - unit.length;
+    if (referenceStart < 0) {
+      return; // the pattern being repeated doesn't exist (e.g. right at the start of the piece)
+    }
+    if (referenceStart < this.rules.MinMeasureToDrawIndex) {
+      // The referenced pattern's own measures aren't part of THIS render's draw range at all, so they can't be
+      //   visible now. Checking their GraphicalMeasure.ParentStaffLine below isn't enough on its own to catch
+      //   this: unlike the unit's own measures above, these are never mixed with in-range measures in a way that
+      //   would force a mismatch, so a stale ParentStaffLine surviving from an earlier, wider render (see the
+      //   comment above) could otherwise pass the check even though nothing was actually (re-)drawn there this
+      //   time - e.g. a full render followed by setOptions({drawFromMeasureNumber: N}) and a re-render on the
+      //   same instance. This index check is the same guard calculateSingleWavyLine() uses for this exact purpose.
+      return;
+    }
+    // The referenced pattern must itself be visible in the rendered output - unlike the unit's own measures,
+    //   it need not be in the same system (it was necessarily drawn earlier, since it comes before the unit).
+    for (let i: number = 0; i < unit.length; i++) {
+      if (!byMeasure.get(sourceMeasures[referenceStart + i])?.ParentStaffLine) {
+        return;
+      }
+    }
+    if (!VexFlowMusicSheetCalculator.canAbbreviateMeasureRepeatUnit(sourceMeasures, staffIndex, unit.unitStart, unit.length, wavyLineRanges)) {
+      return;
+    }
+    const display: VexFlowMeasureRepeat = new VexFlowMeasureRepeat(unitMeasures, unit.slashes);
+    if (unit.length > 1) {
+      this.measureRepeatUnitsPendingSkyline.push(display);
+    }
+    for (const measure of unitMeasures) {
+      measure.MeasureRepeat = display;
+    }
+  }
+
+  /**
+   * Whether nothing in this unit needs its own notes to be visible: no clef, key or time signature change at
+   * the unit's start (including one carried in from the very end of the previous measure), at any barline
+   * inside the unit (checked from both sides of the barline - see below), or literally in the middle of one of
+   * the unit's measures; no grace notes; no lyrics (the unit's own, or an extender/melisma line still running
+   * when it reaches the unit, however many earlier measures back that line started); no multi-measure rest; and
+   * no tie, slur, glissando, beam, tuplet, arpeggio or
+   * two-note tremolo that resolves to a note in a DIFFERENT measure than the unit's own, OR on a DIFFERENT
+   * staff (checked via the actual resolved model objects, not via raw MusicXML notation declarations: OSMD
+   * never draws a tie/slur/glissando whose other endpoint didn't resolve, so an unresolved declaration was
+   * never visible in the first place and abbreviating the measure loses nothing - see the design note on this PR).
+   * A trill wavy-line is a separate check (wavyLineRanges) because OSMD models it as an Expression, not as a
+   * note-owned span (see ExpressionReader.addWavyLine / InstrumentReader.getWavyLines).
+   */
+  private static canAbbreviateMeasureRepeatUnit(sourceMeasures: SourceMeasure[], staffIndex: number, unitStart: number, length: number,
+      wavyLineRanges: {start: number, end: number}[]): boolean {
+    const previousMeasure: SourceMeasure = sourceMeasures[unitStart - 1];
+    if (previousMeasure?.LastInstructionsStaffEntries[staffIndex]?.Instructions.length) {
+      return false; // e.g. a clef change shown ahead of time at the end of the previous measure
+    }
+    if (VexFlowMusicSheetCalculator.hasIncomingLyricExtender(sourceMeasures, unitStart, staffIndex)) {
+      return false; // an extender/melisma line still running when it reaches the unit would otherwise end
+                    //   visibly at the unit's own (now hidden) notes instead of wherever it should resolve
+    }
+    const unitMeasures: SourceMeasure[] = sourceMeasures.slice(unitStart, unitStart + length);
+    const unitSet: Set<SourceMeasure> = new Set<SourceMeasure>(unitMeasures);
+    for (let measureIndex: number = 0; measureIndex < unitMeasures.length; measureIndex++) {
+      const measure: SourceMeasure = unitMeasures[measureIndex];
+      if (measure.isReducedToMultiRest) {
+        return false;
+      }
+      if (measure.FirstInstructionsStaffEntries[staffIndex]?.Instructions.length) {
+        return false; // a clef/key/time change at the unit's start, or at a barline inside it
+      }
+      // A clef/key/time change shown ahead of time at the end of THIS measure - i.e. at a barline INSIDE the
+      //   unit, not just the one right before the whole unit (checked above) - e.g. a clef change at the middle
+      //   barline of a two-measure unit, which OSMD may record on the FIRST measure's own
+      //   LastInstructionsStaffEntries rather than the SECOND measure's FirstInstructionsStaffEntries.
+      if (measureIndex < unitMeasures.length - 1 && measure.LastInstructionsStaffEntries[staffIndex]?.Instructions.length) {
+        return false;
+      }
+      const staffEntries: SourceStaffEntry[] = measure.getEntriesPerStaff(staffIndex);
+      for (let entryIndex: number = 0; entryIndex < staffEntries.length; entryIndex++) {
+        const sourceStaffEntry: SourceStaffEntry = staffEntries[entryIndex];
+        // A clef/key/time change occurring literally in the middle of the measure (not at its very start -
+        //   already covered by FirstInstructionsStaffEntries above): left undetected, it would be hidden along
+        //   with the notes, and anything read after it in the model would be (mis)interpreted under the wrong
+        //   clef/key/time context.
+        if (entryIndex > 0 && sourceStaffEntry.Instructions.length) {
+          return false;
+        }
+        for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
+          if (voiceEntry.IsGrace || !voiceEntry.LyricsEntries.isEmpty()) {
+            return false;
+          }
+          for (const note of voiceEntry.Notes) {
+            if (VexFlowMusicSheetCalculator.measureRepeatNoteCrosses(note, staffIndex, unitSet)) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+    const unitStartIndex: number = unitMeasures[0].measureListIndex;
+    const unitEndIndex: number = unitMeasures[unitMeasures.length - 1].measureListIndex;
+    if (wavyLineRanges.some((range: {start: number, end: number}): boolean =>
+        range.start <= unitEndIndex && range.end >= unitStartIndex)) {
+      return false; // a trill wavy-line starts, ends, or passes through this unit's measures
+    }
+    return true;
+  }
+
+  /**
+   * Whether an extender/melisma line from a lyric syllable before this unit would still be running by the time
+   * it reaches the unit's first note, on this staff - walking backwards, however many earlier measures that
+   * takes, with the exact same stopping rule MusicSheetCalculator.calculateLyricExtend() itself uses walking
+   * FORWARDS from a lyric with "extend": a rest-only entry, or a (any-verse) lyric syllable, stops the line.
+   * Walking backwards, the first such entry found is where a real forward scan would necessarily also stop
+   * (nothing in between has a lyric or is rest-only, by construction of the walk) - so it alone decides the
+   * answer: a rest-only entry means no line reaches this far (return false), and a lyric syllable means a line
+   * reaches exactly this far iff that syllable itself has "extend" (whichever verse it's on, matching
+   * calculateLyricExtend()'s own verse-agnostic stopping check).
+   */
+  private static hasIncomingLyricExtender(sourceMeasures: SourceMeasure[], unitStart: number, staffIndex: number): boolean {
+    for (let measureIndex: number = unitStart - 1; measureIndex >= 0; measureIndex--) {
+      const staffEntries: SourceStaffEntry[] = sourceMeasures[measureIndex].getEntriesPerStaff(staffIndex);
+      for (let entryIndex: number = staffEntries.length - 1; entryIndex >= 0; entryIndex--) {
+        const sourceStaffEntry: SourceStaffEntry = staffEntries[entryIndex];
+        if (sourceStaffEntry.hasOnlyRests) {
+          return false;
+        }
+        let hasExtend: boolean = false;
+        let hasLyrics: boolean = false;
+        for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
+          voiceEntry.LyricsEntries.forEach((_verse: string, lyricsEntry: LyricsEntry): void => {
+            hasLyrics = true;
+            hasExtend = hasExtend || lyricsEntry.extend;
+          });
+        }
+        if (hasLyrics) {
+          return hasExtend;
+        }
+      }
+    }
+    return false; // reached the start of the piece without finding a lyric or a rest
+  }
+
+  /** Whether any resolved tie/beam/tuplet/arpeggio/slur/glissando/two-note-tremolo of this note reaches a note
+   *  outside unitMeasures, OR onto a DIFFERENT staff than staffIndex - a genuinely visible, cross-measure (or
+   *  cross-staff) span that the unit's sign would otherwise hide or leave dangling. A connected note on another
+   *  staff is always treated as escaping, even when it happens to share a SourceMeasure with the unit (one
+   *  SourceMeasure spans every staff of the instrument): that other staff's own measure isn't part of THIS
+   *  staff's unit and keeps drawing its notes normally regardless of what happens here, so the connection stays
+   *  genuinely visible and must not be silently absorbed into the sign. */
+  private static measureRepeatNoteCrosses(note: Note, staffIndex: number, unitMeasures: Set<SourceMeasure>): boolean {
+    const escapes: (other: Note) => boolean = (other: Note): boolean =>
+      !!other && (!unitMeasures.has(other.SourceMeasure) || other.ParentStaff?.idInMusicSheet !== staffIndex);
+    if (note.NoteTie?.Notes.some(escapes)) {
+      return true;
+    }
+    if (note.NoteBeam?.Notes.some(escapes)) {
+      return true;
+    }
+    if (note.NoteTuplet?.Notes.some((group: Note[]): boolean => group.some(escapes))) {
+      return true;
+    }
+    if (note.Arpeggio?.notes.some(escapes)) {
+      return true;
+    }
+    if (note.NoteSlurs?.some((slur: Slur): boolean => escapes(slur.StartNote) || escapes(slur.EndNote))) {
+      return true;
+    }
+    const gliss: Glissando = note.NoteGlissando;
+    if (gliss && (escapes(gliss.StartNote) || escapes(gliss.EndNote))) {
+      return true;
+    }
+    const tremolo: TremoloBetweenNotes = note.TremoloInfo?.tremoloBetweenNotes;
+    if (tremolo && (escapes(tremolo.startNote) || escapes(tremolo.stopNote))) {
+      return true;
+    }
+    return false;
+  }
+
+  /** Collects this staff's trill wavy-line extents (by SourceMeasure.measureListIndex) across the whole piece.
+   *  An unresolved (still open) wavy-line's extent runs to the end of the piece. */
+  private findWavyLineRanges(sourceMeasures: SourceMeasure[], staffIndex: number): {start: number, end: number}[] {
+    const ranges: {start: number, end: number}[] = [];
+    for (const measure of sourceMeasures) {
+      const expressions: MultiExpression[] = measure.StaffLinkedExpressions[staffIndex];
+      if (!expressions) {
+        continue;
+      }
+      for (const multiExpression of expressions) {
+        const wavyLine: WavyLine = multiExpression.WavyLineStart;
+        if (!wavyLine) {
+          continue;
+        }
+        const endMeasure: SourceMeasure = wavyLine.ParentEndMultiExpression?.SourceMeasureParent;
+        // An unclosed wavy line (no "stop") is drawn by calculateSingleWavyLine() starting from the FIRST
+        //   RENDERED measure of the WHOLE STAFF (MeasureList[MinMeasureToDrawIndex]), not from wherever its
+        //   <wavy-line type="start"> happens to be declared - so it must block abbreviation anywhere on the
+        //   staff, not just from its own measure onward. Using 0 here (rather than reading the current render's
+        //   MinMeasureToDrawIndex) keeps this correct even after a re-render with a narrower draw range, since 0
+        //   is always <= MinMeasureToDrawIndex.
+        ranges.push({start: endMeasure ? measure.measureListIndex : 0, end: endMeasure ? endMeasure.measureListIndex : Number.MAX_SAFE_INTEGER});
+      }
+    }
+    return ranges;
+  }
+
+  /**
+   * Reserves skyline space for every two- or four-measure repeat unit's number (see
+   * VexFlowMeasureRepeat.reserveSkyline()). Called from calculateMusicSystems() after calculateSkyBottomLines()
+   * has computed the staffline's skyline - which, for an abbreviated unit, reflects the drawn sign itself (or
+   * nothing at all under it), not the fully written-out notes underneath: the skyline follows whatever is
+   * actually drawn, and EngravingRules.RenderMeasureRepeats replaces the notes with the sign - and calculating
+   * it outright replaces the skyline array, so reserving any earlier would be overwritten - and before measure
+   * numbers are placed, so a measure number landing on the same barline is placed above the reservation instead
+   * of overlapping it.
+   */
+  protected reserveSkylineForMeasureRepeats(): void {
+    for (const display of this.measureRepeatUnitsPendingSkyline) {
+      display.reserveSkyline();
+    }
   }
 
   //protected clearSystemsAndMeasures(): void {
@@ -2475,6 +2840,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   */
 
   // Generate all Graphical Slurs and attach them to the staffline
+  /** Whether note's own graphical measure - on note's own staff - is currently abbreviated by a measure-repeat
+   *  sign (EngravingRules.RenderMeasureRepeats), i.e. note itself isn't actually drawn. A note with no graphical
+   *  counterpart yet (e.g. outside the current draw range) is treated as not hidden - there's nothing to hide it
+   *  behind. Mirrors the identically-named private method in VexFlowMusicSheetDrawer, which gates DRAWING a
+   *  slur/glissando that was already constructed; this one gates CONSTRUCTING one in the first place. */
+  private measureRepeatHidesNote(note: Note): boolean {
+    const parentMeasure: GraphicalMeasure = this.rules.GNote(note)?.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
+    return parentMeasure?.NotesAreAbbreviated === true;
+  }
+
   protected calculateSlurs(): void {
     const openSlursDict: { [staffId: number]: GraphicalSlur[] } = {};
     for (const graphicalMeasure of this.graphicalMusicSheet.MeasureList[0]) { //let i: number = 0; i < this.graphicalMusicSheet.MeasureList[0].length; i++) {
@@ -2530,6 +2905,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     if (!slur.EndNote && graphicalMeasure.staffEntries[graphicalMeasure.staffEntries.length - 1] !== graphicalStaffEntry) {
                       // a slur without end note is only drawn to the barline from the measure's last note (see Slur.HasUnattachedEnd):
                       //   from an earlier note, where it ended is unknown, and it would be drawn over the rest of the measure
+                      continue;
+                    }
+                    // A slur whose real start AND end notes are BOTH hidden behind a measure-repeat sign (on
+                    //   their own staff - EngravingRules.RenderMeasureRepeats) connects notes that aren't drawn,
+                    //   so it must not be constructed at all - not just skipped at draw time - or its (invisible)
+                    //   curve would still be measured into the staffline's skyline/bottomline (see
+                    //   GraphicalSlur.calculateCurve()), and a real slur drawn nearby could be re-routed around a
+                    //   ghost curve nobody can see. This is a NEW, additional guard alongside the existing
+                    //   open/close logic below (deliberately left untouched - see the design note on this PR).
+                    if (this.measureRepeatHidesNote(slur.StartNote) && this.measureRepeatHidesNote(slur.EndNote)) {
                       continue;
                     }
                     // add new VexFlowSlur to List
@@ -2679,6 +3064,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                   const gliss: Glissando = graphicalNote.sourceNote.NoteGlissando;
                   // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
                   if (!gliss?.EndNote || !gliss?.StartNote) {
+                    continue;
+                  }
+                  // See the matching comment in calculateSlurs(): don't construct a glissando whose real start
+                  //   AND end notes are both hidden behind a measure-repeat sign - a NEW, additional guard.
+                  if (this.measureRepeatHidesNote(gliss.StartNote) && this.measureRepeatHidesNote(gliss.EndNote)) {
                     continue;
                   }
                   // add new VexFlowGlissando to List

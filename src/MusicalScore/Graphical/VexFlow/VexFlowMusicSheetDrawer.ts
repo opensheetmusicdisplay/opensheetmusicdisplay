@@ -37,7 +37,7 @@ import { VexFlowGlissando } from "./VexFlowGlissando";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { SvgVexFlowBackend } from "./SvgVexFlowBackend";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
-import { TremoloBetweenNotes } from "../../VoiceData/Note";
+import { Note, TremoloBetweenNotes } from "../../VoiceData/Note";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 
 /**
@@ -141,8 +141,33 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         ctx.closeGroup();
     }
 
+    /** Whether note's own graphical measure - on note's own staff - is currently abbreviated by a measure-repeat
+     *  sign (EngravingRules.RenderMeasureRepeats), i.e. note itself isn't actually drawn. A note with no
+     *  graphical counterpart yet (e.g. outside the current draw/lazy-horizontal range) is treated as not hidden,
+     *  matching lazyDrawsSlur()'s own "can't locate it, don't suppress" fallback. Mirrors the identically-named
+     *  private method in VexFlowMusicSheetCalculator, which gates CONSTRUCTING a slur/glissando in the first
+     *  place; this copy gates DRAWING one that was already constructed. */
+    private measureRepeatHidesNote(note: Note): boolean {
+        const parentMeasure: GraphicalMeasure = this.rules.GNote(note)?.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
+        return parentMeasure?.NotesAreAbbreviated === true;
+    }
+
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
         for (const graphicalSlur of vfstaffLine.GraphicalSlurs) {
+            // Skip only a slur whose real start AND end notes are BOTH hidden behind a measure-repeat sign (on
+            // their own staff - EngravingRules.RenderMeasureRepeats): such a slur connects notes that aren't
+            // drawn, so drawing it would float over nothing (calculateSlurs() already skips constructing this
+            // case, so this check is mostly a defensive fallback there). Checking the slur's own real
+            // StartNote/EndNote - rather than every staffEntry this particular graphical SEGMENT happens to
+            // touch - also correctly handles a slur spanning multiple systems: a per-staffline continuation
+            // segment (see calculateSlurs()'s open/close logic) can consist entirely of abbreviated staffEntries
+            // even when the slur's real endpoints, on OTHER systems, are fully visible - e.g. a phrase slur
+            // spanning three systems where the whole MIDDLE system is abbreviated must still have that middle
+            // segment drawn, since neither real endpoint is hidden. calculateSlurs()'s own open/close logic is
+            // deliberately left untouched (see the design note on this PR) - this only gates the actual drawing.
+            if (this.measureRepeatHidesNote(graphicalSlur.slur.StartNote) && this.measureRepeatHidesNote(graphicalSlur.slur.EndNote)) {
+                continue;
+            }
             // lazy horizontal: gate by the slur's actual note x-positions (forward-stable), not its bezier
             // points. Cross-staff slurs recompute their bezier here (at draw time) and can be degenerate in a
             // partial layout, so a bezier-based gate would let them slip into several batches at once.
@@ -193,6 +218,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     private drawGlissandi(vfStaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
         for (const gGliss of vfStaffLine.GraphicalGlissandi) {
+            // See the matching comment in drawSlurs(): skip only when the glissando's real start AND end notes
+            // are both hidden behind a measure-repeat sign; a segment merely passing through/over one on the way
+            // to a real, visible endpoint elsewhere must still be drawn.
+            if (this.measureRepeatHidesNote(gGliss.Glissando.StartNote) && this.measureRepeatHidesNote(gGliss.Glissando.EndNote)) {
+                continue;
+            }
             this.drawGlissando(gGliss, absolutePos);
         }
     }
@@ -288,9 +319,13 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // Draw the StaffEntries
         for (const staffEntry of measure.staffEntries) {
             this.drawStaffEntry(staffEntry);
-            newBuzzRollId = this.drawBuzzRolls(staffEntry, newBuzzRollId);
+            if (!measure.NotesAreAbbreviated) { // these notes aren't drawn either (EngravingRules.RenderMeasureRepeats)
+                newBuzzRollId = this.drawBuzzRolls(staffEntry, newBuzzRollId);
+            }
         }
-        this.drawTremolosBetweenNotes(measure);
+        if (!measure.NotesAreAbbreviated) {
+            this.drawTremolosBetweenNotes(measure);
+        }
     }
 
     protected drawBuzzRolls(staffEntry: GraphicalStaffEntry, newBuzzRollId): number {

@@ -543,6 +543,10 @@ export class EngravingRules {
     public RenderChordSymbols: boolean;
     public RenderMultipleRestMeasures: boolean;
     public AutoGenerateMultipleRestMeasuresFromRestMeasures: boolean;
+    /** Whether to draw a measure with a MusicXML measure-repeat declaration (measure-style/measure-repeat)
+     *  as a one-, two- or four-measure repeat sign (simile) instead of writing out its notes.
+     *  The source notes, timestamps, measure widths, cursor and iterator are unchanged either way. */
+    public RenderMeasureRepeats: boolean;
     public RenderRehearsalMarks: boolean;
     public RenderClefsAtBeginningOfStaffline: boolean;
     public RenderKeySignatures: boolean;
@@ -1051,6 +1055,7 @@ export class EngravingRules {
         this.RenderChordSymbols = true;
         this.RenderMultipleRestMeasures = true;
         this.AutoGenerateMultipleRestMeasuresFromRestMeasures = true;
+        this.RenderMeasureRepeats = false;
         this.RenderRehearsalMarks = true;
         this.RenderClefsAtBeginningOfStaffline = true;
         this.RenderKeySignatures = true;

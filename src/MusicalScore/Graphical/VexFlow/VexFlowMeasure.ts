@@ -1,6 +1,7 @@
 import Vex from "vexflow";
 import VF = Vex.Flow;
 import {GraphicalMeasure} from "../GraphicalMeasure";
+import {VexFlowMeasureRepeat} from "./VexFlowMeasureRepeat";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
@@ -91,6 +92,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
     private vftuplets: { [voiceID: number]: VF.Tuplet[] } = {};
     // The engraving rules of OSMD.
     public rules: EngravingRules;
+
+    /** Set by VexFlowMusicSheetCalculator.prepareMeasureRepeats() when this measure is part of a validated
+     *  measure-repeat unit (see EngravingRules.RenderMeasureRepeats); undefined otherwise. Rebuilt on every
+     *  layout, since which units can be drawn as a sign depends on the current draw range and system breaks. */
+    public MeasureRepeat: VexFlowMeasureRepeat;
+
+    public get NotesAreAbbreviated(): boolean {
+        return this.MeasureRepeat !== undefined;
+    }
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
@@ -663,6 +673,30 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         // Draw stave lines
         this.stave.setContext(ctx).draw();
+        if (this.MeasureRepeat) {
+            this.MeasureRepeat.draw(ctx, this);
+        } else {
+            this.drawNotes(ctx);
+        }
+        ctx.closeGroup(); // close measure group
+
+        // Draw vertical lines
+        for (const connector of this.connectors) {
+            ctx.openGroup("connector");
+            connector.setContext(ctx).draw();
+            ctx.closeGroup();
+        }
+        this.correctNotePositions();
+    }
+
+    /**
+     * Draws this measure's voices, beams, tuplets and ties (i.e. everything but the stave lines, barlines and
+     * clefs, which draw() handles itself). Extracted from draw() so a measure whose notes are abbreviated
+     * (see GraphicalMeasure.NotesAreAbbreviated / EngravingRules.RenderMeasureRepeats) can skip this call and
+     * draw a repeat sign instead.
+     * @param ctx
+     */
+    private drawNotes(ctx: Vex.IRenderContext): void {
         this.postFormatBeams();
         // Draw all voices
         for (const voiceID in this.vfVoices) {
@@ -728,15 +762,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
             tie.setContext(ctx);
             tie.draw();
         }
-        ctx.closeGroup(); // close measure group
-
-        // Draw vertical lines
-        for (const connector of this.connectors) {
-            ctx.openGroup("connector");
-            connector.setContext(ctx).draw();
-            ctx.closeGroup();
-        }
-        this.correctNotePositions();
     }
 
     /** Makes the beams drawn by draw() extend their notes' stems now, before the notes are drawn.

@@ -80,6 +80,14 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     /** Only exists on multiple rest measure (VexFlowMultiRestMeasure). See isMultiRestMeasure() function. */
     public multiRestElement: any;
 
+    /** Whether this measure's own notes, beams, tuplets, ties, fingerings, slurs, glissandi, buzz rolls and
+     *  two-note tremolos are replaced by a drawn repeat sign instead (see EngravingRules.RenderMeasureRepeats).
+     *  Independent, direction-based content (dynamics, words, chord symbols, rehearsal marks, pedal, wedges,
+     *  octave shifts) is unaffected. Always false unless overridden (currently only by VexFlowMeasure). */
+    public get NotesAreAbbreviated(): boolean {
+        return false;
+    }
+
     public get ParentStaff(): Staff {
         return this.parentStaff;
     }

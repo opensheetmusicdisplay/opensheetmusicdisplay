@@ -1,4 +1,5 @@
 import {Fraction} from "../../Common/DataObjects/Fraction";
+import {MeasureRepeatInstruction} from "./Instructions/MeasureRepeatInstruction";
 import {VerticalSourceStaffEntryContainer} from "./VerticalSourceStaffEntryContainer";
 import {SourceStaffEntry} from "./SourceStaffEntry";
 import {RepetitionInstruction, RepetitionInstructionEnum, AlignmentType} from "./Instructions/RepetitionInstruction";
@@ -82,6 +83,11 @@ export class SourceMeasure {
     public RhythmPrinted: RhythmInstruction; // the rhythm printed (rendered) in this measure
     public multipleRestMeasures: number; // usually undefined (0), unless "multiple-rest" given in XML (e.g. 4 measure rest)
     // public multipleRestMeasuresPerStaff: Dictionary<number, number>; // key: staffId. value: how many rest measures
+    /** MusicXML <measure-repeat> declarations read from this measure's <attributes>, by global staff index
+     *  (see MusicSheet.getGlobalStaffIndexOfFirstStaff / Staff.idInMusicSheet). Only used to decide whether
+     *  EngravingRules.RenderMeasureRepeats may draw this measure's notes as a repeat sign instead of writing
+     *  them out (see VexFlowMusicSheetCalculator); the notes themselves are never affected. */
+    public MeasureRepeatInstructions: Map<number, MeasureRepeatInstruction[]> = new Map<number, MeasureRepeatInstruction[]>();
     private absoluteTimestamp: Fraction;
     private completeNumberOfStaves: number;
     private duration: Fraction;
