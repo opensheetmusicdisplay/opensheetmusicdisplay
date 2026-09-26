@@ -242,10 +242,25 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   would move them even further. Freeze the rests at their converged first-render
       //   positions instead (same pattern as the existing shiftRestVerticalDisabled
       //   workaround for ledger-lined rests; centerRest() is absolute, i.e. harmless).
+      // - x_shift, and the y_shift of augmentation dots: StaveNote.format() shifts one of two colliding
+      //   unison notes aside (setXShift()) and lifts the other one's dots above it (setYShift()), but never
+      //   back. Restore the x_shift it had before the first render (usually 0, VexFlowConverter shifts whole
+      //   rests), snapshotted on the first render, and the dots' 0 - otherwise notes that aren't staggered
+      //   anymore, e.g. after PrintObject changed hiddenUnisonBaseHead (below), would stay shifted.
       for (const voice of voices) {
         for (const tickable of voice.getTickables()) {
           const note: any = tickable as any;
           note.center_x_shift = 0;
+          if (note.osmdInitialXShift === undefined) {
+            note.osmdInitialXShift = note.x_shift ?? 0; // first render: snapshot
+          } else {
+            note.x_shift = note.osmdInitialXShift;
+            for (const modifier of note.modifiers ?? []) {
+              if (modifier.getCategory?.() === "dots") {
+                modifier.setYShift(0);
+              }
+            }
+          }
           if (note.osmdInitialStemExtensionOverride === undefined) {
             note.osmdInitialStemExtensionOverride = note.stemExtensionOverride ?? null; // first render: snapshot
           } else {
@@ -259,6 +274,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
           if (note.updateWidth && note.glyphs) { // TabNote
             note.updateWidth();
+          }
+        }
+      }
+      // Tell the patched StaveNote.format() which notes have a hidden note on their base line that shares the
+      // visible head of another voice's unison note, so that it doesn't stagger that head beside the visible one
+      // (VexFlowPatch stavenote.js mergeableUnison()). Set on each render, PrintObject can change between renders.
+      for (const staffEntry of measure.staffEntries) {
+        for (const gve of staffEntry.graphicalVoiceEntries) {
+          const vfStaveNote: any = (gve as VexFlowVoiceEntry).vfStaveNote;
+          if (vfStaveNote && gve.notes.length > 0) {
+            const baseNote: GraphicalNote = gve.notes.reduce(
+              (lowest: GraphicalNote, note: GraphicalNote) => note.staffLine < lowest.staffLine ? note : lowest);
+            vfStaveNote.hiddenUnisonBaseHead = baseNote.sourceNote.sharesNoteheadWithVisibleUnisonNote();
           }
         }
       }

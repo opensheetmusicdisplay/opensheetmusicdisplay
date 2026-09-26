@@ -61,12 +61,12 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
 
     /** Whether the note is drawn although its own notehead is hidden (print-object="no"), because it shares the
      * notehead of a visible unison note in another voice and its stem is beamed. The stem emanates from the shared
-     * notehead and has to reach the beam, and wherever Vexflow can't merge the two heads into one column it lays
-     * the hidden note's notehead out beside the visible one, where it has to be drawn too - otherwise the beam ends
-     * on a bare stem with nothing under it. E.g. Beethoven Moonlight Sonata 1st mvt. m.37, where the two heads are
-     * merged (test_unison_notehead_moonlight_sonata_measure37), and Debussy Arabesque no. 1 m.3, where the hidden
-     * eighth note's head can't merge with a half note's and gets a column of its own
-     * (test_unison_notehead_tuplet_arabesque_measure3).
+     * notehead and has to reach the beam. E.g. Beethoven Moonlight Sonata 1st mvt. m.37, heads of the same shape
+     * (test_unison_notehead_moonlight_sonata_measure37), and Debussy Arabesque no. 1 m.3, where the hidden eighth's
+     * stem rises from a half note's head (test_unison_notehead_tuplet_arabesque_measure3). Vexflow lays the hidden
+     * note's notehead out beside the visible one only next to a whole note (mergeableUnison in the VexFlowPatch
+     * stavenote.js, see hiddenUnisonBaseHead in VexFlowMusicSheetCalculator.calculateMeasureXLayout()): there it has
+     * to be drawn too, otherwise the beam ends on a bare stem with nothing under it.
      * The beam has to be drawn, i.e. join the note to other drawn notes (see inDrawnBeam). Hidden notes that only
      * write out a tremolo for playback, e.g. 16ths under a dotted half with tremolo strokes, are beamed among
      * themselves, and only the first of them shares the half's notehead: it was drawn as a lone 16th with flags
@@ -83,12 +83,12 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
 
     /** Whether the notehead of a hidden unison note (see drawnAsSharedUnisonNote) lands exactly on the head of the
      * visible note it shares, but with another shape, e.g. a filled eighth note head on an open half note head.
-     * Vexflow staggers two such heads side by side (mergeableUnison in its StaveNote.format()), but it only compares
-     * the base line of each stave note, so it misses a unison with another note of a chord and leaves the two heads
-     * in one column. Drawing the hidden head there would fill the visible open head, which then reads as a quarter
-     * note - e.g. Liszt's Liebestraum no. 3 m.42, an eighth note run starting on the E3 of a dotted half E2-E3 chord
-     * (test_unison_notehead_over_chord_liebestraum_measure42). Where the two heads have the same shape, the hidden
-     * one is inked over the visible one without changing it. */
+     * Vexflow leaves the two heads in one column on purpose where the hidden note is on the base line of its stave
+     * note (see drawnAsSharedUnisonNote), and also where the visible note is another note of a chord: Vexflow only
+     * compares the base line of each stave note, so it misses that unison. Drawing the hidden head there would fill
+     * the visible open head, which then reads as a quarter note - e.g. Liszt's Liebestraum no. 3 m.42, an eighth
+     * note run starting on the E3 of a dotted half E2-E3 chord (test_unison_notehead_over_chord_liebestraum_measure42).
+     * Where the two heads have the same shape, the hidden one is inked over the visible one without changing it. */
     private overprintsSharedHeadOfOtherShape(noteIndex: number, sharedUnisonNote: Note): boolean {
         const vfStaveNote: any = this.vfStaveNote;
         const shared: GraphicalNote = this.rules.GNote(sharedUnisonNote);

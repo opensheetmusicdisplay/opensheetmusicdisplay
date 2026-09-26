@@ -74,6 +74,7 @@ Save and restore noteheads (e.g. slash noteheads) in reset()
 open group for ledger lines (SVG)
 preFormat() and getBoundingBox(): add paddingRight variable to allow for custom right padding (e.g. for long lyrics below note)
 allow notehead y_shift without shifting stem (stem_up_y_shift)
+don't stagger the head of a hidden unison note (note.hiddenUnisonBaseHead, set by OSMD) beside the visible head it shares (mergeableUnison)
 
 staverepetition.js (fixed vexflow 4):
 add TO_CODA enum to type() and draw()
