@@ -12,9 +12,11 @@ import { VexFlowVoiceEntry } from "../../../src/MusicalScore/Graphical/VexFlow/V
 import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { OctaveEnum } from "../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
+import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { VexFlowPedal } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowPedal";
 import { VexFlowOctaveShift } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowOctaveShift";
 import { VexFlowVibratoBracket } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowVibratoBracket";
+import { unitInPixels } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 
 /**
  * Grace notes after their main note (#1706): a Nachschlag, e.g. the two small notes ending a trill, is written in MusicXML
@@ -252,6 +254,18 @@ describe("Grace notes after the main note (#1706)", () => {
             await osmd.load(score);
             return osmd;
         }
+
+        it("places the cursor at its first grace note", async () => {
+            // the staff entry of the grace notes has no main note to take its position (the cursor's) from. Starting a
+            //   system, it used to stay at the left edge of the system.
+            const osmd: OpenSheetMusicDisplay = await loadWithSystemBreaks(TestUtils.getScore(graceOnlySample));
+            osmd.render();
+            const staffEntry: GraphicalStaffEntry = osmd.GraphicSheet.MeasureList[1][0].staffEntries[0];
+            const firstGraceNote: VexFlowVoiceEntry = staffEntry.graphicalVoiceEntries[0] as VexFlowVoiceEntry;
+            expect(firstGraceNote.parentVoiceEntry.IsGrace).to.equal(true);
+            expect(staffEntry.PositionAndShape.AbsolutePosition.x, "x of the staff entry at the first grace note")
+                .to.be.closeTo(firstGraceNote.vfStaveNote.getAbsoluteX() / unitInPixels, 1);
+        });
 
         describe("with spanners on the other staff across it", () => {
             // from the first half of m.1 to m.2, and from the first half of m.3 to m.4: a pedal line, an 8vb, a slur, a glissando
