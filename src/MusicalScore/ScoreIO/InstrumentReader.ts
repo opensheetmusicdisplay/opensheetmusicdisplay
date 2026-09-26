@@ -220,7 +220,9 @@ export class InstrumentReader {
               if (staffNumberAttr) {
                 staffNumber = parseInt(staffNumberAttr.value, 10);
               }
-              this.instrument.Staves[staffNumber - 1].StafflineCount = parseInt(staffLinesNode.value, 10);
+              const staff: Staff = this.instrument.Staves[staffNumber - 1];
+              staff.StafflineCount = parseInt(staffLinesNode.value, 10);
+              staff.hasXmlStafflineCount = !isNaN(staff.StafflineCount);
             }
           }
           // check multi measure rest

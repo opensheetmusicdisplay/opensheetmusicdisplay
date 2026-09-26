@@ -426,13 +426,14 @@ export class VoiceGenerator {
         } else if (noteElement.name === "unpitched") {
           const displayStepElement: IXmlElement = noteElement.element("display-step");
           const octave: IXmlElement = noteElement.element("display-octave");
+          const stafflineCount: number = this.currentStaffEntry.ParentStaff.StafflineCount;
           if (octave) {
             noteOctave = parseInt(octave.value, 10);
             displayOctaveUnpitched = noteOctave - 3;
             if (octavePlusOne) {
               noteOctave += 1;
             }
-            if (this.instrument.Staves[0].StafflineCount === 1) {
+            if (stafflineCount === 1) {
               displayOctaveUnpitched += 1;
             }
           }
@@ -440,8 +441,12 @@ export class VoiceGenerator {
             noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
             let octaveShift: number = 0;
             let noteValueShift: number = this.musicSheet.Rules.PercussionXMLDisplayStepNoteValueShift;
-            if (this.instrument.Staves[0].StafflineCount === 1) {
+            if (stafflineCount === 1) {
               noteValueShift -= 3; // for percussion one line scores, we need to set the notes 3 lines lower
+            } else if (stafflineCount > 1 && stafflineCount < 5) {
+              // MusicXML counts the lines up from E4, the bottom line of a treble staff,
+              //   but VexFlowMeasure.setLineNumber() draws 2-4 lines from G4 up.
+              noteValueShift += 2;
             }
             [displayStepUnpitched, octaveShift] = Pitch.lineShiftFromNoteEnum(noteStep, noteValueShift);
             displayOctaveUnpitched += octaveShift;
