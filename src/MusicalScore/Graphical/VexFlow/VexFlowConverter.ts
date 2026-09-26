@@ -240,8 +240,9 @@ export class VexFlowConverter {
         });
         // ticks = frac * VF.RESOLUTION, kept as an exact rational via VF.Fraction
         // (e.g. 1/12 -> 16384/12 -> 4096/3) so the voice's resolution multiplier stays correct.
+        // Fraction keeps the whole part apart (WholeValue), so a gap of a whole note or more needs the expanded numerator.
         const vfTicks: VF.Fraction = ghostNote.getTicks();
-        vfTicks.numerator = frac.Numerator * VF.RESOLUTION;
+        vfTicks.numerator = frac.GetExpandedNumerator() * VF.RESOLUTION;
         vfTicks.denominator = frac.Denominator;
         vfTicks.simplify();
         return [ghostNote];
