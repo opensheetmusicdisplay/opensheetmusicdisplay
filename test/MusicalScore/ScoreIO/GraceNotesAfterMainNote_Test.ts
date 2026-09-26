@@ -11,6 +11,7 @@ import { GraphicalVoiceEntry } from "../../../src/MusicalScore/Graphical/Graphic
 import { VexFlowVoiceEntry } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
 import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { OctaveEnum } from "../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
 
 /**
  * Grace notes after their main note (#1706): a Nachschlag, e.g. the two small notes ending a trill, is written in MusicXML
@@ -228,6 +229,17 @@ describe("Grace notes after the main note (#1706)", () => {
                 expect(gve.parentVoiceEntry.IsGrace).to.equal(true);
                 expect((gve as VexFlowVoiceEntry).vfStaveNote, "drawn").to.not.equal(undefined);
             }
+        });
+
+        it("holds a pedal line through it when it is a system of its own, with nothing on the pedal's staff", async () => {
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+            osmd.setOptions({ newSystemFromXML: true }); // one system per measure
+            await osmd.load(TestUtils.getScore(graceOnlySample));
+            expect(() => osmd.render()).to.not.throw();
+            const bassStaffLines: StaffLine[] = osmd.GraphicSheet.MusicPages[0].MusicSystems.map(system => system.StaffLines[1]);
+            expect(bassStaffLines.length, "three systems").to.equal(3);
+            expect(bassStaffLines.map(staffLine => staffLine.Pedals.length), "pedal lines per system")
+                .to.deep.equal([1, 0, 1]);
         });
     });
 });
