@@ -1575,6 +1575,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 nextPedal.ChangeEnd = false;
               }
               let nextPedalLastMeasure: GraphicalMeasure = this.findLastStafflineMeasure(nextPedalStaffline);
+              if (!nextPedalLastMeasure) {
+                // nothing on this staff in this system (e.g. a measure of only grace notes on another staff, split off to
+                //   break the system): the pedal is held through it, with no note to draw a line from.
+                continue;
+              }
               const firstNote: GraphicalStaffEntry = nextPedalFirstMeasure.staffEntries[0];
               let lastNote: GraphicalStaffEntry = nextPedalLastMeasure.staffEntries[nextPedalLastMeasure.staffEntries.length - 1];
 

@@ -11,6 +11,7 @@ import { GraphicalVoiceEntry } from "../../../src/MusicalScore/Graphical/Graphic
 import { VexFlowVoiceEntry } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
 import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { OctaveEnum } from "../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
 
 /**
  * Grace notes after their main note (#1706): a Nachschlag, e.g. the two small notes ending a trill, is written in MusicXML
@@ -210,5 +211,35 @@ describe("Grace notes after the main note (#1706)", () => {
         for (const gve of graceGves) {
             expect((gve.notes[0] as VexFlowGraphicalNote).octaveShift, "grace note under the 8va").to.not.equal(OctaveEnum.NONE);
         }
+    });
+
+    describe("a measure of grace notes only", () => {
+        // m.2 is the second half of m.1, split off so that a system can break inside a cadenza: two grace notes in the
+        //   treble staff and nothing else, so no main note to attach them to, and nothing at all in the bass staff.
+        const graceOnlySample: string = "test_grace_notes_only_measure.musicxml";
+
+        it("is rendered, its grace notes drawn as stand-alone grace notes", async () => {
+            // a voice of such grace notes alone has no timed entry to fill the rest of the measure from
+            const osmd: OpenSheetMusicDisplay = await load(graceOnlySample);
+            expect(() => osmd.render()).to.not.throw();
+            const graceGves: GraphicalVoiceEntry[] = osmd.GraphicSheet.MeasureList[1][0].staffEntries
+                .flatMap(staffEntry => staffEntry.graphicalVoiceEntries);
+            expect(graceGves.length, "the two grace notes of m.2").to.equal(2);
+            for (const gve of graceGves) {
+                expect(gve.parentVoiceEntry.IsGrace).to.equal(true);
+                expect((gve as VexFlowVoiceEntry).vfStaveNote, "drawn").to.not.equal(undefined);
+            }
+        });
+
+        it("holds a pedal line through it when it is a system of its own, with nothing on the pedal's staff", async () => {
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+            osmd.setOptions({ newSystemFromXML: true }); // one system per measure
+            await osmd.load(TestUtils.getScore(graceOnlySample));
+            expect(() => osmd.render()).to.not.throw();
+            const bassStaffLines: StaffLine[] = osmd.GraphicSheet.MusicPages[0].MusicSystems.map(system => system.StaffLines[1]);
+            expect(bassStaffLines.length, "three systems").to.equal(3);
+            expect(bassStaffLines.map(staffLine => staffLine.Pedals.length), "pedal lines per system")
+                .to.deep.equal([1, 0, 1]);
+        });
     });
 });
