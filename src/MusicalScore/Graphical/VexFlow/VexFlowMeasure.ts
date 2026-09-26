@@ -909,6 +909,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
 
         const measureEndTimestamp: Fraction = Fraction.plus(this.parentSourceMeasure.AbsoluteTimestamp, this.parentSourceMeasure.Duration);
+        if (!latestVoiceTimestamp) {
+            // a voice of stand-alone grace notes only (e.g. the second half of a measure split for a system break) has no entry
+            //   that takes time: it is empty from the measure start on.
+            latestVoiceTimestamp = this.parentSourceMeasure.AbsoluteTimestamp;
+        }
         const restLength: Fraction = Fraction.minus(measureEndTimestamp, latestVoiceTimestamp);
         if (restLength.RealValue > 0) {
             // fill the gap with a rest ghost note

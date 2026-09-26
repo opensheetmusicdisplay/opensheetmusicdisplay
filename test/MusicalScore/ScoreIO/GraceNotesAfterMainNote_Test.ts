@@ -211,4 +211,23 @@ describe("Grace notes after the main note (#1706)", () => {
             expect((gve.notes[0] as VexFlowGraphicalNote).octaveShift, "grace note under the 8va").to.not.equal(OctaveEnum.NONE);
         }
     });
+
+    describe("a measure of grace notes only", () => {
+        // m.2 is the second half of m.1, split off so that a system can break inside a cadenza: two grace notes in the
+        //   treble staff and nothing else, so no main note to attach them to, and nothing at all in the bass staff.
+        const graceOnlySample: string = "test_grace_notes_only_measure.musicxml";
+
+        it("is rendered, its grace notes drawn as stand-alone grace notes", async () => {
+            // a voice of such grace notes alone has no timed entry to fill the rest of the measure from
+            const osmd: OpenSheetMusicDisplay = await load(graceOnlySample);
+            expect(() => osmd.render()).to.not.throw();
+            const graceGves: GraphicalVoiceEntry[] = osmd.GraphicSheet.MeasureList[1][0].staffEntries
+                .flatMap(staffEntry => staffEntry.graphicalVoiceEntries);
+            expect(graceGves.length, "the two grace notes of m.2").to.equal(2);
+            for (const gve of graceGves) {
+                expect(gve.parentVoiceEntry.IsGrace).to.equal(true);
+                expect((gve as VexFlowVoiceEntry).vfStaveNote, "drawn").to.not.equal(undefined);
+            }
+        });
+    });
 });
