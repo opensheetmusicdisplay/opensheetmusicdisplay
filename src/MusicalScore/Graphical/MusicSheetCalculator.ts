@@ -2097,6 +2097,10 @@ export abstract class MusicSheetCalculator {
 
             // const addAtLastList: GraphicalObject[] = [];
             for (const entry of multiTempoExpression.EntriesList) {
+                // A metronome mark with print-object="no" sets the tempo, but isn't drawn.
+                if (entry.Expression instanceof InstantaneousTempoExpression && !entry.Expression.printObject) {
+                    continue;
+                }
                 // Render each distinct tempo marking only once per position. MusicXML from part-based exporters (e.g.
                 //   Finale) often repeats a tempo marking in every part, and all of them are placed on this (first
                 //   visible) staff line, which stacked "Andante Simplice." five times above the first system of

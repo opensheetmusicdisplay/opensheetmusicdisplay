@@ -49,6 +49,8 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
     public dotted: boolean;
     public beatUnit: string;
     public isMetronomeMark: boolean;
+    /** Whether a metronome mark is drawn (false for MusicXML print-object="no"). A hidden mark still sets the tempo. */
+    public printObject: boolean = true;
     /** For complex metronome marks (note equations like swing): left-side note group */
     public metronomeNoteGroupLeft: MetronomeNoteGroup;
     /** For complex metronome marks (note equations like swing): right-side note group */

@@ -211,7 +211,6 @@ export class ExpressionReader {
                     const beatUnit: IXmlElement = dirContentNode.element("beat-unit");
                     const dotted: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
                     const bpm: IXmlElement = dirContentNode.element("per-minute");
-                    // TODO check print-object = false -> don't render invisible metronome mark
                     if (beatUnit !== undefined && bpm) {
                         const useCurrentFractionForPositioning: boolean =
                             (dirContentNode.hasAttributes && dirContentNode.attribute("default-x") !== undefined);
@@ -240,6 +239,7 @@ export class ExpressionReader {
                         this.musicSheet.HasBPMInfo = true;
                         instantaneousTempoExpression.dotted = dotted;
                         instantaneousTempoExpression.beatUnit = beatUnit.value;
+                        instantaneousTempoExpression.printObject = dirContentNode.attribute("print-object")?.value !== "no";
                         this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
                         this.currentMultiTempoExpression.CombinedExpressionsText = "test";
                     }
@@ -621,6 +621,7 @@ export class ExpressionReader {
         instantaneousTempoExpression.metronomeNoteGroupLeft = leftGroup;
         instantaneousTempoExpression.metronomeNoteGroupRight = rightGroup;
         instantaneousTempoExpression.metronomeRelation = metronomeRelationNode.value;
+        instantaneousTempoExpression.printObject = metronomeNode.attribute("print-object")?.value !== "no";
 
         if (this.musicSheet.DefaultStartTempoInBpm === 0) {
             this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
