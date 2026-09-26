@@ -1182,7 +1182,7 @@ export class OpenSheetMusicDisplay {
         if (options.drawMeasureNumbers !== undefined) {
             this.rules.RenderMeasureNumbers = options.drawMeasureNumbers;
         }
-        if (options.drawMeasureNumbersOnlyAtSystemStart) {
+        if (options.drawMeasureNumbersOnlyAtSystemStart !== undefined) {
             this.rules.RenderMeasureNumbersOnlyAtSystemStart = options.drawMeasureNumbersOnlyAtSystemStart;
         }
         if (options.drawLyrics !== undefined) {
@@ -1274,14 +1274,14 @@ export class OpenSheetMusicDisplay {
         if (options.drawUpToSystemNumber) {
             this.rules.MaxSystemToDrawNumber = options.drawUpToSystemNumber;
         }
-        if (options.tupletsRatioed) {
-            this.rules.TupletsRatioed = true;
+        if (options.tupletsRatioed !== undefined) {
+            this.rules.TupletsRatioed = options.tupletsRatioed;
         }
-        if (options.tupletsBracketed) {
-            this.rules.TupletsBracketed = true;
+        if (options.tupletsBracketed !== undefined) {
+            this.rules.TupletsBracketed = options.tupletsBracketed;
         }
-        if (options.tripletsBracketed) {
-            this.rules.TripletsBracketed = true;
+        if (options.tripletsBracketed !== undefined) {
+            this.rules.TripletsBracketed = options.tripletsBracketed;
         }
         if (options.autoResize) {
             if (!this.resizeHandlerAttached) {

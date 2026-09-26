@@ -27,6 +27,9 @@ import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
 import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
 import { AccidentalEnum, NoteEnum, Pitch } from "../../../../src/Common/DataObjects/Pitch";
 import { GraphicalNote } from "../../../../src/MusicalScore/Graphical/GraphicalNote";
+import { VexFlowMeasure } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
+import Vex from "vexflow";
+import VF = Vex.Flow;
 
 describe("VexFlow Measure", () => {
 
@@ -105,6 +108,59 @@ describe("VexFlow Measure", () => {
          const continuedNaturals: GraphicalTie[] = graphicalTies.filter(
             (t: GraphicalTie) => t.EndNote && (t.EndNote as VexFlowGraphicalNote).DrawnAccidental === AccidentalEnum.NATURAL);
          expect(continuedNaturals.length, "no continued tie note re-draws a natural").to.equal(0);
+         done();
+      }).catch(done);
+   });
+
+   /** The VexFlow modifiers of one category on the first note of each measure (samples with one staff). */
+   function firstNoteModifiers(osmd: OpenSheetMusicDisplay, category: string): any[][] {
+      return osmd.GraphicSheet.MeasureList.map((measures: GraphicalMeasure[]): any[] =>
+         ((measures[0].staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote).vfnote[0] as any)
+            .getModifiers().filter((modifier: any): boolean => modifier.getCategory() === category));
+   }
+
+   it("Renders sharp-sharp as two sharp signs and double-sharp as the double sharp symbol", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_accidental_sharp-sharp_double-sharp.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const accidentals: string[][] = firstNoteModifiers(osmd, "accidentals")
+            .map((modifiers: any[]): string[] => modifiers.map((accidental: any): string => accidental.type));
+         expect(accidentals, "measure 1: double-sharp, measure 2: sharp-sharp").to.deep.equal([["##"], ["#", "#"]]);
+         done();
+      }).catch(done);
+   });
+
+   it("Renders natural-sharp and natural-flat as a natural sign followed by a sharp or flat sign", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_accidental_natural-sharp_natural-flat.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         // accidentals are drawn left of the notehead: the smaller (more negative) the x shift, the further left
+         const accidentalsLeftToRight: string[][] = firstNoteModifiers(osmd, "accidentals")
+            .map((modifiers: any[]): string[] => modifiers
+               .sort((a: any, b: any): number => a.getXShift() - b.getXShift())
+               .map((accidental: any): string => accidental.type));
+         expect(accidentalsLeftToRight, "double-sharp, natural-sharp, flat-flat, natural-flat").to.deep.equal(
+            [["##"], ["n", "#"], ["bb"], ["n", "b"]]);
+         done();
+      }).catch(done);
+   });
+
+   it("Draws the single-note tremolo of notes with a triple sharp or triple flat", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_tremolo_single_note_triple_accidentals.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         expect(firstNoteModifiers(osmd, "tremolo").map((tremolos: any[]): number => tremolos.length)).to.deep.equal([1, 1]);
+         expect(firstNoteModifiers(osmd, "accidentals").map((modifiers: any[]): string[] =>
+            modifiers.map((accidental: any): string => accidental.type))).to.deep.equal([["##", "#"], ["bb", "b"]]);
          done();
       }).catch(done);
    });
@@ -199,6 +255,43 @@ describe("VexFlow Measure", () => {
       );
    });
 
+   it("Draws ornaments with placement=\"below\" below the staff and their note, and other ornaments above", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_ornament_placement_below.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const box: (element: Element) => DOMRect = (element: Element): DOMRect => (element as SVGGraphicsElement).getBBox();
+         const placements: string[] = [];
+         for (const measures of osmd.GraphicSheet.MeasureList) {
+            const stave: any = (measures[0] as any).getVFStave(); // getBBox() is in the coordinates of the stave's lines
+            for (const staffEntry of measures[0].staffEntries) {
+               for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                  if (!voiceEntry.parentVoiceEntry.OrnamentContainer) {
+                     continue;
+                  }
+                  const note: VexFlowGraphicalNote = voiceEntry.notes[0] as VexFlowGraphicalNote;
+                  const ornament: DOMRect = box(note.getModifierSVGs()[0]); // the ornament is the note's only modifier
+                  const noteBottom: number = Math.max(...[...note.getNoteheadSVGs(), note.getStemSVG()]
+                     .map((element: Element): number => box(element).y + box(element).height));
+                  if (ornament.y > Math.max(stave.getYForLine(4), noteBottom)) {
+                     placements.push("below");
+                  } else if (ornament.y + ornament.height < stave.getYForLine(0)) {
+                     placements.push("above");
+                  } else {
+                     placements.push("between");
+                  }
+               }
+            }
+         }
+         // measure 1: voice 1 turn without placement; voice 2 trill, mordent and turn with an accidental-mark (placement="below").
+         //   measure 2: trill with placement="below" and a wavy line, which is always drawn above
+         expect(placements).to.deep.equal(["above", "below", "below", "below", "above"]);
+         done();
+      }).catch(done);
+   });
+
    // Non-regression test for EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature.
    // Pieces without a time signature in the source (e.g. Satie's Gnossiennes) should not render a
    // (synthesized default 4/4) time signature by default, but should when the rule is enabled.
@@ -228,6 +321,37 @@ describe("VexFlow Measure", () => {
          osmdRuleOn.EngravingRules.RenderTimeSignaturesForSamplesWithoutTimeSignature = true;
          osmdRuleOn.render();
          expect(firstMeasureHasTimeSignature(osmdRuleOn), "rule enabled: time signature is rendered").to.equal(true);
+         done();
+      }).catch(done);
+   });
+
+   it("Draws a double barline before a key change that only a later part has", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_key_change_later_part_double_barline.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         for (const measure of osmd.GraphicSheet.MeasureList[0] as VexFlowMeasure[]) {
+            const barline: any = measure.getVFStave().getModifiers(VF.StaveModifier.Position.END, "barlines")[0];
+            expect(barline.getType(), `barline at the end of measure 1 on staff ${measure.ParentStaff.idInMusicSheet + 1}`)
+               .to.equal(VF.Barline.type.DOUBLE);
+         }
+         done();
+      }).catch(done);
+   });
+
+   it("Keeps the file's barline style before a key change if we can draw it, and draws a double barline otherwise", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_key_change_keeps_given_barline_style.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const endBarlineTypes: number[] = osmd.GraphicSheet.MeasureList.slice(0, 5).map((measures: GraphicalMeasure[]): number =>
+            ((measures[0] as VexFlowMeasure).getVFStave().getModifiers(VF.StaveModifier.Position.END, "barlines")[0] as any).getType());
+         expect(endBarlineTypes, "measures 1-5 end with no barline, a regular one, light-heavy, dashed (can't be drawn) and none in the file")
+            .to.deep.equal([VF.Barline.type.DOUBLE, VF.Barline.type.DOUBLE, VF.Barline.type.END, VF.Barline.type.DOUBLE, VF.Barline.type.NONE]);
          done();
       }).catch(done);
    });
@@ -381,6 +505,53 @@ describe("VexFlow Measure", () => {
          expect(visibleHead.getStyle()?.fillStyle, `${variant}: visible notehead keeps its XML color`).to.equal("#FF0000");
          expect(hiddenHead.getStyle()?.fillStyle, `${variant}: hidden unison notehead is colored like the visible one`).to.equal("#FF0000");
       }
+   });
+
+   // A hidden unison note whose visible partner is the upper note of a chord: Vexflow misses that unison, so it neither
+   // staggers the two heads nor gives them one shape, and the hidden eighth's filled head lands on the dotted half's
+   // open one. It must stay transparent there, or the dotted half reads as a dotted quarter. Its stem still reaches the
+   // beam from the shared head. E.g. Liszt's Liebestraum no. 3 m.42.
+   it("Leaves the notehead of a hidden unison note transparent where it would fill a visible head of another shape", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_unison_notehead_over_chord_liebestraum_measure42.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+         let hiddenVfStaveNote: any;
+         let hiddenHead: any;
+         let visibleHead: any;
+         for (const se of gm.staffEntries) {
+            for (const gve of se.graphicalVoiceEntries) {
+               for (let i: number = 0; i < gve.notes.length; i++) {
+                  const note: Note = gve.notes[i].sourceNote;
+                  if (note.Pitch?.FundamentalNote !== NoteEnum.E || note.Pitch.Octave !== 0) {
+                     continue; // E3
+                  }
+                  const vfStaveNote: any = (gve as VexFlowVoiceEntry).vfStaveNote;
+                  if (note.PrintObject) {
+                     visibleHead = vfStaveNote.note_heads[i];
+                  } else if (!hiddenHead) {
+                     hiddenVfStaveNote = vfStaveNote;
+                     hiddenHead = vfStaveNote.note_heads[i];
+                  }
+               }
+            }
+         }
+         expect(hiddenHead, "should find the hidden unison note").to.not.be.undefined;
+         expect(visibleHead, "should find the visible unison note").to.not.be.undefined;
+         // premise: the two heads share one column although their shapes differ
+         expect(hiddenHead.getAbsoluteX(), "heads share one column").to.equal(visibleHead.getAbsoluteX());
+         expect(hiddenHead.glyph_code, "heads have different shapes").to.not.equal(visibleHead.glyph_code);
+         expect(hiddenHead.getStyle()?.fillStyle, "hidden unison notehead stays transparent").to.equal("#00000000");
+         expect(visibleHead.getStyle()?.fillStyle, "visible notehead is drawn").to.not.equal("#00000000");
+         expect(hiddenVfStaveNote.getStemStyle()?.fillStyle, "hidden unison note stem must not be transparent").to.not.equal("#00000000");
+         done();
+      }).catch(done);
    });
 
    // Non-regression test for a tie starting at a notehead two voices share: MuseScore writes the unison by hiding

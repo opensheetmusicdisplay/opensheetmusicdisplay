@@ -2,7 +2,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 import { BrailleConverter } from '../src/Plugins/Braille/BrailleConverter';
 import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
 import * as jsPDF  from '../node_modules/jspdf/dist/jspdf.es.min';
-import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.umd.min';
+// the ES build, not the UMD build: since svg2pdf.js 2.8 declares "type": "module", webpack bundles the UMD build as an ES module,
+//   whose UMD wrapper then looks for a global jspdf and crashes. The ES build imports "jspdf", which resolves to the same jspdf.es.min.js.
+import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.es.min';
 import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculator';
 
 /*jslint browser:true */

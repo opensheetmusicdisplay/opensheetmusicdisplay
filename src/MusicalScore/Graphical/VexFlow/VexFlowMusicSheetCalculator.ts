@@ -1041,7 +1041,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // }
       // console.log('max skyline: ' + maxSkylineBeginning);
     }
-    const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine?.SkyLine;
+    const skyline: number[] = this.musicSystems[0]?.StaffLines[0]?.SkyLine;
 
     if (metronomeExpression.metronomeNoteGroupLeft && metronomeExpression.metronomeNoteGroupRight) {
       // Complex metronome mark (note equation, e.g. swing notation)
@@ -2645,7 +2645,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const vfStartNote: VexFlowGraphicalNote = gGliss.staffEntries[0].findGraphicalNoteFromNote(startNote) as VexFlowGraphicalNote;
             const vfEndNote: VexFlowGraphicalNote = gGliss.staffEntries.last().findGraphicalNoteFromNote(endNote) as VexFlowGraphicalNote;
             if (!vfStartNote && !vfEndNote) {
-              return; // otherwise causes Vexflow error
+              continue; // otherwise causes Vexflow error. continue, not return: that would skip all following slides
             }
 
             let slideDirection: number = 1;

@@ -522,6 +522,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestWedgeMultilineCrescendo = sampleFilename.includes("test_wedge_multiline_crescendo");
     const isTestWedgeMultilineDecrescendo = sampleFilename.includes("test_wedge_multiline_decrescendo");
     const isTestWavyLineMultilineExtraGraphicalMeasure = sampleFilename.includes("test_wavy_line_multiline_extragraphicalmeasure");
+    const isTestSlidesStandardAndTabStaff = sampleFilename.includes("test_slides_standard_and_tab_staff");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
     const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
@@ -529,7 +530,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestHeavyBarline = sampleFilename.includes("test_barline_heavy-heavy_mid_score");
     const isTestTupletRatioed = sampleFilename.includes("test_tuplet_ratioed");
     const isTestDrawFromMeasureNumber9ClefChange = sampleFilename.includes("test_drawFromMeasureNumber_9_respect_earlier_clef_changes");
+    const isTestDrawFromMeasureNumber2TempoMarkings = sampleFilename.includes("test_drawFromMeasureNumber_2_tempo_markings");
     const isTestOctaveShiftMultiline = sampleFilename.includes("test_octaveshift_multiline");
+    const isTestMeasureNumbersOnlyAtSystemStart = sampleFilename.includes("test_measure_numbers_only_at_system_start");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
@@ -544,6 +547,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawUpToMeasureNumber = 12;
     } else if (isTestDrawFromMeasureNumber9ClefChange) {
         drawFromMeasureNumber = 9;
+    } else if (isTestDrawFromMeasureNumber2TempoMarkings) {
+        drawFromMeasureNumber = 2;
     }
     osmdInstance.setOptions({
         autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
@@ -553,7 +558,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawingParameters: defaultOrCompactTightMode, // note: default resets all EngravingRules. could be solved differently
         drawFromMeasureNumber: drawFromMeasureNumber,
         drawUpToMeasureNumber: drawUpToMeasureNumber,
-        newSystemFromXML: isFunctionTestSystemAndPageBreaks,
+        drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
+        newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
@@ -596,7 +602,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         isTestOctaveShiftInvisibleInstrument ||
         isTestWedgeMultilineCrescendo ||
         isTestWedgeMultilineDecrescendo ||
-        isTestWavyLineMultilineExtraGraphicalMeasure) {
+        isTestWavyLineMultilineExtraGraphicalMeasure ||
+        isTestSlidesStandardAndTabStaff) {
         osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
     }
     if (isTestTabs4Strings) {

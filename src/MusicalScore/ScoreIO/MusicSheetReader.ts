@@ -916,6 +916,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 if (node.name === "score-part") {
                     const instrIdString: string = node.attribute("id").value;
                     const instrument: Instrument = new Instrument(instrumentId, instrIdString, this.musicSheet, currentGroup);
+                    // a part without a <part-name> element has no name, like one with an empty <part-name/>:
+                    //   the part id (the Instrument's default name, e.g. "P1") isn't a name to show.
+                    instrument.Name = "";
                     instrumentId++;
                     const partElements: IXmlElement[] = node.elements();
                     for (let idx2: number = 0, len2: number = partElements.length; idx2 < len2; ++idx2) {
@@ -1036,12 +1039,6 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             throw new MusicSheetReadingException(errorMsg, e);
         }
 
-        for (let idx: number = 0, len: number = this.musicSheet.Instruments.length; idx < len; ++idx) {
-            const instrument: Instrument = this.musicSheet.Instruments[idx];
-            if (!instrument.Name) {
-                instrument.Name = "Instr. " + instrument.IdString;
-            }
-        }
         return instrumentDict;
     }
 

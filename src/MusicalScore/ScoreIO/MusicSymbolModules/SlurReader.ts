@@ -7,6 +7,7 @@ import { ITextTranslation } from "../../Interfaces/ITextTranslation";
 import { PlacementEnum } from "../../VoiceData/Expressions";
 import { Glissando } from "../../VoiceData/Glissando";
 import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
+import { Staff } from "../../VoiceData/Staff";
 
 export class SlurReader {
     private musicSheet: MusicSheet;
@@ -14,8 +15,9 @@ export class SlurReader {
     /** Slur stops that were read before their matching start, kept separate from openSlurDict so they don't
      * interfere with normal start-before-stop slurs that reuse the same slur number. See addSlur(). */
     private openStopBeforeStartDict: { [_: number]: Slur } = {};
-    /** Open glissandi and slides: separate from openSlurDict, so they don't end a slur with the same number. */
-    private openGlissDict: { [_: number]: Slur } = {};
+    /** Open glissandi and slides by staff and number: separate from openSlurDict, so they don't end a slur with the same
+     * number, and per staff, because e.g. the standard and the tab staff of a guitar part both write a slide with number 1. */
+    private openGlissDicts: Map<Staff, { [_: number]: Slur }> = new Map();
     constructor(musicSheet: MusicSheet) {
         this.musicSheet = musicSheet;
     }
@@ -82,7 +84,7 @@ export class SlurReader {
                                 pendingCrossStaffStop.PlacementXml = slurPlacementXml;
                                 this.linkSlurToNotes(pendingCrossStaffStop);
                             } else {
-                                const openDict: { [_: number]: Slur } = isSlur ? this.openSlurDict : this.openGlissDict;
+                                const openDict: { [_: number]: Slur } = isSlur ? this.openSlurDict : this.openGlissDictOfStaff(currentNote);
                                 let slur: Slur = openDict[slurNumber];
                                 if (!slur) {
                                     slur = new Slur();
@@ -96,14 +98,15 @@ export class SlurReader {
                             if (nodeName === "slide" || nodeName === "glissando") {
                                 // TODO for now, we abuse the SlurReader to also process slides and glissandi, to avoid a lot of duplicate code.
                                 //   also see variable glissElements later on
-                                const slur: Slur = this.openGlissDict[slurNumber];
+                                const openGlissDict: { [_: number]: Slur } = this.openGlissDictOfStaff(currentNote);
+                                const slur: Slur = openGlissDict[slurNumber];
                                 if (slur && slur.StartNote !== currentNote) {
                                     const startNote: Note = slur.StartNote;
                                     const newGlissando: Glissando = new Glissando(startNote);
                                     newGlissando.AddNote(currentNote);
                                     newGlissando.EndNote = currentNote;
                                     currentNote.NoteGlissando = newGlissando;
-                                    delete this.openGlissDict[slurNumber];
+                                    delete openGlissDict[slurNumber];
                                 }
                             } else {
                                 const slur: Slur = this.openSlurDict[slurNumber];
@@ -137,6 +140,17 @@ export class SlurReader {
             const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/SlurError", "Error while reading slur.");
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
         }
+    }
+
+    /** The open glissandi and slides of the note's staff, by number (see openGlissDicts). */
+    private openGlissDictOfStaff(note: Note): { [_: number]: Slur } {
+        const staff: Staff = note.ParentStaffEntry?.ParentStaff;
+        let openGlissDict: { [_: number]: Slur } = this.openGlissDicts.get(staff);
+        if (!openGlissDict) {
+            openGlissDict = {};
+            this.openGlissDicts.set(staff, openGlissDict);
+        }
+        return openGlissDict;
     }
 
     /** Links a fully-defined slur (both StartNote and EndNote set) to its two notes, unless it duplicates an existing one. */

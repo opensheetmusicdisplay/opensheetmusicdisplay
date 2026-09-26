@@ -46,6 +46,9 @@ Fix end_x ("right") position not adding padding / subtracting length for wide en
 notehead.js (custom addition):
 add stem_up_y_shift and stem_down_y_shift to shift notehead (independent of stem length)
 
+ornament.js (custom addition):
+respect Modifier.Position.BELOW in draw() (placement="below" in MusicXML)
+
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
 
@@ -85,6 +88,7 @@ fix rehearsal marks not rendered with canvas backend in browser
 stavetempo.js (custom addition):
 open a context group for vf-stavetempo, and one for its subgroup vf-bpm (for just the "= 150" text node)
 add drawNoteEquation() and drawNoteGroup() for complex metronome marks (note equations like swing: 8th+8th = quarter+8th under triplet bracket)
+keep the leading space of the vf-bpm text in SVG (xml:space="preserve"), so that SVG shows "= 150" as far from the note as canvas
 
 stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
