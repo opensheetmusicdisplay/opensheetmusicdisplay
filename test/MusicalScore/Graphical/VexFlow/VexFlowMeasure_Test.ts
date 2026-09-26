@@ -554,6 +554,47 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // Hidden notes that only write out a tremolo for playback: a dotted half with tremolo strokes, and the same tremolo
+   // as twelve hidden 16ths in another voice, beamed among themselves. Only the first 16th shares the dotted half's
+   // notehead, so it's the only one that joins its beam, and a beam of one note isn't drawn. The 16th was drawn anyway,
+   // as a lone 16th with flags beside the dotted half (its stem and flags since #1038, its head too since #1730).
+   // E.g. ActorPreludeSample percussion part "1" m.33-38.
+   it("Draws nothing of a hidden unison note whose beam has no other drawn note, e.g. a tremolo written out for playback", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_unison_hidden_tremolo_playback_notes_actor_prelude_measure33.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+         let hiddenNote: Note;
+         let hiddenVfStaveNote: any;
+         let visibleVfStaveNote: any;
+         for (const gve of gm.staffEntries[0].graphicalVoiceEntries) {
+            if (gve.notes[0].sourceNote.PrintObject) {
+               visibleVfStaveNote = (gve as VexFlowVoiceEntry).vfStaveNote;
+            } else {
+               hiddenNote = gve.notes[0].sourceNote;
+               hiddenVfStaveNote = (gve as VexFlowVoiceEntry).vfStaveNote;
+            }
+         }
+         expect(hiddenVfStaveNote, "should find the first hidden 16th").to.not.be.undefined;
+         expect(visibleVfStaveNote, "should find the dotted half").to.not.be.undefined;
+         // premise: the 16th shares the dotted half's notehead, but it's the only note of its beam that is drawn
+         expect(hiddenNote.sharesNoteheadWithVisibleUnisonNote(), "the 16th shares the dotted half's notehead").to.be.true;
+         expect(hiddenVfStaveNote.beam, "a beam of one note isn't drawn").to.not.be.ok;
+         expect(hiddenVfStaveNote.note_heads[0].getStyle()?.fillStyle, "hidden notehead stays transparent").to.equal("#00000000");
+         expect(hiddenVfStaveNote.getStemStyle()?.fillStyle, "hidden stem stays transparent").to.equal("#00000000");
+         expect(hiddenVfStaveNote.getFlagStyle()?.fillStyle, "hidden flags stay transparent").to.equal("#00000000");
+         expect(visibleVfStaveNote.note_heads[0].getStyle()?.fillStyle, "the dotted half is drawn").to.not.equal("#00000000");
+         expect(visibleVfStaveNote.getStemStyle()?.fillStyle, "the dotted half's stem is drawn").to.not.equal("#00000000");
+         done();
+      }).catch(done);
+   });
+
    // Non-regression test for a tie starting at a notehead two voices share: MuseScore writes the unison by hiding
    // one of the two notes with print-object="no". The tie's start note was looked up by pitch and timestamp only,
    // found the hidden note of the other voice first, and handleTie() then skipped the tie since it doesn't draw a tie
