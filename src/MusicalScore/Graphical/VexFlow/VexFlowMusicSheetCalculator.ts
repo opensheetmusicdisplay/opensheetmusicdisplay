@@ -224,10 +224,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   Without the reset, a re-render reads the previous render's centered whole rest position
       //   there, where the first render read the unshifted one - making e.g. the lyrics/chord symbol
       //   elongation of the following measures (and thus the whole layout) differ from the first render.
-      // - the beam-applied stem extension (same reset as the VexFlowPatch beam.js postFormat fix
-      //   for #1636, which only runs when the beam is drawn): Articulation.draw() positions
-      //   articulations at the stem tip *before* the beams (re-)extend the stems, so without the
-      //   reset, articulations on beamed notes sit higher on re-renders than on the first render.
+      // - the beam-applied stem extension: the beams recalculate it when a render first draws the measure
+      //   (VexFlowMeasure.postFormatBeams(), before the notes, with the same reset in the VexFlowPatch
+      //   beam.js postFormat fix for #1636). That is after the early VexFlowStaffEntry.calculateXPosition()
+      //   call below, whose voice entry bounding boxes include the stems (StaveNote.getBoundingBox()), so
+      //   without the reset, a re-render would read the previous render's extended stems there.
       // - TabNote widths: TabNote.setStave() re-measures the fret text width once a stave has a
       //   rendering context, i.e. during the draws at the end of a render. updateWidth() restores
       //   the construction-time width (from VexFlow's glyph table), which is what the first
