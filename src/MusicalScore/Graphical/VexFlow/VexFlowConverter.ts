@@ -339,8 +339,8 @@ export class VexFlowConverter {
                     baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
                 if (isWholeMeasureRest) {
                     keys = ["d/5"];
-                    if (gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1) {
-                        keys = ["b/4"];
+                    if (gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount <= 2) {
+                        keys = ["b/4"]; // the line of a one-line staff, the top line of a 2-line staff (see VexFlowMeasure.setLineNumber())
                     }
                     duration = "w";
                     numDots = 0;

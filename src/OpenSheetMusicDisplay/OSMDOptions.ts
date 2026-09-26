@@ -192,8 +192,8 @@ export interface IOSMDOptions {
     newPageFromXML?: boolean;
     /** A custom function that is executed when the xml is read, modifies it, and returns a new xml string that OSMD then parses. */
     onXMLRead?(xml: string): string;
-    /** The cutoff number for rendering percussion clef stafflines as a single line. Default is 4.
-     *  This is number of instruments specified, e.g. a drumset:
+    /** The cutoff number for rendering percussion clef stafflines as a single line. Default is 3.
+     *  This is the number of different note positions on the staff (usually one per instrument), e.g. a drumset:
      *     <score-part id="P1">
      *       <part-name>Drumset</part-name>
      *       <part-abbreviation>D. Set</part-abbreviation>
@@ -210,7 +210,7 @@ export interface IOSMDOptions {
      *           <instrument-name>Acoustic Snare</instrument-name>
      *           </score-instrument>
      *           ...
-     *   Would still render as 5 stafflines by default, since we have 4 (or greater) instruments in this part.
+     *   Would still render as 5 stafflines by default, since we have 3 (or more) note positions in this part.
      *   While a snare:
      *   <score-part id="P2">
      *   <part-name>Concert Snare Drum</part-name>
@@ -222,15 +222,16 @@ export interface IOSMDOptions {
      *       <instrument-name>Acoustic Snare</instrument-name>
      *       </score-instrument>
      *       ...
-     *   Would render with 1 line on the staff, since we only have 2 voices.
+     *   Would render with 1 line on the staff, since we only have 2 note positions.
+     *   A staff whose MusicXML gives the number of lines (<staff-lines>) keeps it.
      *   If this value is 0, the feature is turned off.
-     *   If this value is -1, it will render all percussion clefs as a single line.
+     *   The value -1 was meant to render all percussion clefs as a single line, but has no effect.
      */
     percussionOneLineCutoff?: number;
     /** This property is only active if the above property is active (percussionOneLineCutoff)
      *  This is the cutoff for forcing all voices to the single line, instead of rendering them at different
      *  positions above/below the line.
-     *  The default is 3, so if a part has less than voices, all of them will be rendered on the line.
+     *  The default is 1, so a part with only one note position is rendered on the line.
      *  This is for cases like a Concert snare, which has multiple 'instruments' available (snare, side stick)
      *  should still render only on the line since there is no ambiguity.
      *  If this value is 0, the feature is turned off.
