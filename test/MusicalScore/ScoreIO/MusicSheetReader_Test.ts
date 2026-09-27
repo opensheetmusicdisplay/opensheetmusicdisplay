@@ -315,6 +315,42 @@ describe("Music Sheet Reader", () => {
             expectTripletThenTwoEighths(notes, "MuseScore measure 1");
             done();
         });
+
+        /**
+         * Asserts a measure of test_triplet_dotted_whole_note_duration.musicxml: a whole-note triplet in 4/2 with a dotted whole
+         * note, a half note and a whole note (sounding 1, 1/3 and 2/3), encoded correctly in measure 1 and un-reduced in measure 2
+         * (then a breve). The dotted type duration the detection compares with used to add each dot from Fraction.Numerator,
+         * which leaves out the whole part (Fraction(1, 1) is WholeValue 1 + 0/1), so a dotted whole note counted as 1 instead of
+         * 3/2: the correct <duration> 1 then looked un-reduced and was shortened to 2/3, and the un-reduced 3/2 wasn't detected.
+         */
+        function expectDottedWholeNoteTriplet(measure: SourceMeasure, label: string): void {
+            const notes: Note[] = measureNonRestNotes(measure);
+            expect(notes.length, `${label}: dotted whole, half and whole note`).to.equal(3);
+            const lengths: number[] = [1, 1 / 3, 2 / 3];
+            const timestamps: number[] = [0, 1, 4 / 3];
+            for (let i: number = 0; i < 3; i++) {
+                expect(notes[i].NoteTuplet, `${label}: note ${i} belongs to a tuplet`).to.not.be.undefined;
+                expect(notes[i].Length.RealValue, `${label}: length of note ${i}`).to.be.closeTo(lengths[i], 1e-8);
+                expect(notes[i].ParentStaffEntry.Timestamp.RealValue, `${label}: timestamp of note ${i}`).to.be.closeTo(timestamps[i], 1e-8);
+            }
+            expect(measure.Duration.RealValue, `${label}: the 4/2 measure lasts a breve`).to.be.closeTo(2, 1e-8);
+        }
+
+        it("reads a correctly reduced dotted whole note in a whole-note triplet as a whole note, not 2/3 (measure 1)", (done: Mocha.Done) => {
+            const dottedSheet: MusicSheet = readSheet("test_triplet_dotted_whole_note_duration.musicxml");
+            expectDottedWholeNoteTriplet(dottedSheet.SourceMeasures[0], "correctly reduced measure 1");
+            // as 5/3 of 4/2, the first measure used to be read as a pickup measure (measure number 0)
+            expect(dottedSheet.SourceMeasures[0].MeasureNumber, "measure 1 isn't read as a pickup measure").to.equal(1);
+            done();
+        });
+
+        it("reads an un-reduced dotted whole note in a whole-note triplet as a whole note, not 3/2 (measure 2)", (done: Mocha.Done) => {
+            const dottedSheet: MusicSheet = readSheet("test_triplet_dotted_whole_note_duration.musicxml");
+            expectDottedWholeNoteTriplet(dottedSheet.SourceMeasures[1], "un-reduced measure 2");
+            expect(dottedSheet.SourceMeasures[2].AbsoluteTimestamp.RealValue, "the breve of measure 3 starts after two breves")
+                .to.be.closeTo(4, 1e-8);
+            done();
+        });
     });
 
     describe("transpose octave-change", () => {

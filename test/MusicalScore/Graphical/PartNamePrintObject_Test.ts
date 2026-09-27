@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { GraphicalLabel } from "../../../src/MusicalScore/Graphical/GraphicalLabel";
+import { MusicSystem } from "../../../src/MusicalScore/Graphical/MusicSystem";
 
 /**
  * <part-name print-object="no"> hides a part's name (#808): the part's name label isn't created, while the other
@@ -10,6 +11,8 @@ import { GraphicalLabel } from "../../../src/MusicalScore/Graphical/GraphicalLab
  * An empty or whitespace-only <part-name> is rendered without a label and without space for one; an empty one isn't
  * replaced with the placeholder "Instr. P1". A part without a <part-name> element is treated like one with an empty
  * part-name: its part id ("P1") isn't used as its name.
+ * On later systems, a part without an abbreviation to show (none, whitespace only, or print-object="no" on
+ * <part-abbreviation> or <part-abbreviation-display>) gets no label, and the other parts keep theirs.
  */
 describe("Part name print-object", () => {
     let container: HTMLElement;
@@ -72,4 +75,19 @@ describe("Part name print-object", () => {
                    "no space for the label when it is the only part").to.equal(0);
         });
     }
+
+    it("renders the abbreviations of the other parts, next to the staves, when a part has no abbreviation to show", async () => {
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+        osmd.setOptions({ newSystemFromXML: true });
+        await osmd.load(TestUtils.getScore("test_part_abbreviations_partly_missing.musicxml"));
+        osmd.render();
+        const secondSystem: MusicSystem = osmd.GraphicSheet.MusicPages[0].MusicSystems[1];
+        const labels: GraphicalLabel[] = secondSystem.Labels;
+        expect(labels.map((label: GraphicalLabel) => label.Label.text),
+            "flute and piano; the oboe has none, the clarinet's and the horn's are hidden, the bassoon's is only a space")
+            .to.deep.equal(["Fl.", "Pno."]);
+        const labelWidth: number = Math.max(...labels.map((label: GraphicalLabel) => label.PositionAndShape.Size.width));
+        expect(secondSystem.StaffLines[0].PositionAndShape.RelativePosition.x, "the staves start right of the labels")
+            .to.be.greaterThan(labelWidth);
+    });
 });
