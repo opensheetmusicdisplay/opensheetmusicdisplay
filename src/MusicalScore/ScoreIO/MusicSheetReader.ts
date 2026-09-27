@@ -534,12 +534,14 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
         try {
             if (!this.musicSheet.Title) {
-                const barI: number = Math.max(
-                    0, filePath.lastIndexOf("/"), filePath.lastIndexOf("\\")
-                );
-                const filename: string = filePath.substr(barI);
-                const filenameSplits: string[] = filename.split(".", 1);
-                this.musicSheet.Title = new Label(filenameSplits[0]);
+                // filePath is the tempTitle of OpenSheetMusicDisplay.load(): a title ("Untitled Score" by default), used as it is,
+                //   or the name or path of a MusicXML file, whose file name is used without its extension
+                let title: string = filePath;
+                const extension: RegExpMatchArray = filePath.match(/\.(xml|musicxml|mxl)$/i);
+                if (extension) {
+                    title = filePath.substring(Math.max(filePath.lastIndexOf("/"), filePath.lastIndexOf("\\")) + 1, extension.index);
+                }
+                this.musicSheet.Title = new Label(title);
             }
         } catch (ex) {
             log.info("MusicSheetReader.pushSheetLabels", "read title from file name", ex);

@@ -104,6 +104,34 @@ describe("Music Sheet Reader", () => {
         });
     });
 
+    describe("title of a score without one", () => {
+        const untitledXml: string = `<?xml version="1.0" encoding="UTF-8"?>
+            <score-partwise version="4.0">
+                <part-list><score-part id="P1"><part-name>Flute</part-name></score-part></part-list>
+                <part id="P1"><measure number="1">
+                    <attributes><divisions>1</divisions></attributes>
+                    <note><rest/><duration>4</duration><type>whole</type></note>
+                </measure></part>
+            </score-partwise>`;
+        // the path given to createMusicSheet() is the tempTitle of OpenSheetMusicDisplay.load(): a title, or the name or path of a MusicXML file
+        const titlesByTempTitle: [string, string][] = [
+            ["Sonata No. 1", "Sonata No. 1"],
+            ["AC/DC Medley", "AC/DC Medley"],
+            ["test/data/Sonata No. 1.musicxml", "Sonata No. 1"],
+            ["C:\\scores\\song.v2.MXL", "song.v2"],
+            ["https://example.com/scores/song.xml", "song"],
+        ];
+        for (const [tempTitle, title] of titlesByTempTitle) {
+            it(`is "${title}" for the tempTitle "${tempTitle}"`, (done: Mocha.Done) => {
+                const doc: Document = new DOMParser().parseFromString(untitledXml, "text/xml");
+                const untitledSheet: MusicSheet = new MusicSheetReader().createMusicSheet(
+                    new IXmlElement(doc.getElementsByTagName("score-partwise")[0]), tempTitle);
+                expect(untitledSheet.TitleString).to.equal(title);
+                done();
+            });
+        }
+    });
+
     it("reads measures", (done: Mocha.Done) => {
         expect(sheet.SourceMeasures.length).to.equal(38);
         done();

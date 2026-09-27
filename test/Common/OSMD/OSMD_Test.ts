@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../Util/TestUtils";
+import JSZip from "jszip";
 import { IOSMDOptions } from "../../../src/OpenSheetMusicDisplay/OSMDOptions";
 import { DrawingParametersEnum } from "../../../src/Common/Enums/DrawingParametersEnum";
 import { Cursor } from "../../../src/OpenSheetMusicDisplay/Cursor";
@@ -181,6 +182,35 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             },
             done
         );
+    });
+
+    it("uses tempTitle as the title of a score without one, also for a Blob, an MXL file or a URL", async () => {
+        const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+            <score-partwise version="4.0">
+                <part-list><score-part id="P1"><part-name>Flute</part-name></score-part></part-list>
+                <part id="P1"><measure number="1">
+                    <attributes><divisions>1</divisions></attributes>
+                    <note><rest/><duration>4</duration><type>whole</type></note>
+                </measure></part>
+            </score-partwise>`;
+        const zip: JSZip = new JSZip();
+        zip.file("META-INF/container.xml", "<container><rootfiles><rootfile full-path='score.xml'/></rootfiles></container>");
+        zip.file("score.xml", xml);
+        const contents: [string, string | Blob][] = [
+            ["XML string", xml],
+            ["XML string with byte order mark", "\uf7ef\uf7bb\uf7bf" + xml],
+            ["XML Blob", new Blob([xml])],
+            ["MXL string", await zip.generateAsync({type: "binarystring"})],
+            ["MXL Blob", await zip.generateAsync({type: "blob"})],
+            ["URL", URL.createObjectURL(new Blob([xml]))],
+        ];
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+        const titles: string[] = [];
+        for (const [name, content] of contents) {
+            await opensheetmusicdisplay.load(content, "Evening Song");
+            titles.push(`${name}: ${opensheetmusicdisplay.Sheet.TitleString}`);
+        }
+        expect(titles, titles.join("; ")).to.deep.equal(contents.map(([name]) => `${name}: Evening Song`));
     });
 
     // skip: this test is unnecessary and creates traffic (to google)

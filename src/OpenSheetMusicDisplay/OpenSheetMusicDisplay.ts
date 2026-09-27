@@ -107,6 +107,7 @@ export class OpenSheetMusicDisplay {
      * @param content is either the url of a file, or the root node of a MusicXML document,
      *   or the string content of a .xml/.mxl file, or a file blob.
      * @param tempTitle is used as the title for the piece if there is no title in the XML.
+     *   The name or path of a MusicXML file (e.g. "scores/Sonata No. 1.musicxml") is used without its folder and extension.
      */
     public load(content: string | Document | Blob, tempTitle: string = "Untitled Score"): Promise<{}> {
         // Warning! This function is asynchronous! No error handling is done here.
@@ -118,13 +119,13 @@ export class OpenSheetMusicDisplay {
             return mxlFile.tryUnzip().then(() => {
                 if (mxlFile.unzipSuccessful) {
                     return mxlFile.getXmlString().then((xmlString) => {
-                        return self.load(xmlString);
+                        return self.load(xmlString, tempTitle);
                     });
                 } else {
                     // not a zip
                     if (content instanceof Blob) { // always true. unfortunately need to check again for linter
                         return content.text().then((blobString) => {
-                            return self.load(blobString);
+                            return self.load(blobString, tempTitle);
                         });
                     }
                 }
@@ -137,7 +138,7 @@ export class OpenSheetMusicDisplay {
                 // This is a zip file, unpack it first
                 return MXLHelper.MXLtoXMLstring(str).then(
                     (x: string) => {
-                        return self.load(x);
+                        return self.load(x, tempTitle);
                     },
                     (err: any) => {
                         log.debug(err);
@@ -149,7 +150,7 @@ export class OpenSheetMusicDisplay {
             if (str.startsWith("\uf7ef\uf7bb\uf7bf")) {
                 log.debug("[OSMD] UTF with BOM detected, truncate first 3 bytes and pass along: " + str);
                 // UTF with BOM detected, truncate first three bytes and pass along
-                return self.load(str.substring(3));
+                return self.load(str.substring(3), tempTitle);
             }
             let trimmedStr: string = str;
             if (/^\s/.test(trimmedStr)) { // only trim if we need to. (end of string is irrelevant)
@@ -166,7 +167,7 @@ export class OpenSheetMusicDisplay {
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
                 return AJAX.ajax(trimmedStr, this.loadUrlTimeout).then(
-                    (s: string) => { return self.load(s); },
+                    (s: string) => { return self.load(s, tempTitle); },
                     (exc: Error) => { throw exc; }
                 );
             } else {
