@@ -10,8 +10,6 @@
     </score-part>
   </part-list>
   <part id="P1">
-    <!-- m1: right hand (staff 1) plays a written-out melody throughout and is never abbreviated. Left hand
-         (staff 2, bass clef) plays a broken-chord figure, written out (nothing repeated yet). -->
     <measure number="1">
       <attributes>
         <divisions>2</divisions>
@@ -90,10 +88,7 @@
         <staff>2</staff>
       </note>
     </measure>
-    <!-- m2: the left hand changes to treble clef right here, and a measure-repeat start is (invalidly, for
-         drawing purposes) declared in the same measure: a clef change at the unit's own start means this
-         measure's notes must stay visible, so it is written out despite the declaration (see T3). The figure
-         itself also changes shape here, to suit the new clef. -->
+    <!-- Staff 2 changes clef where its one-measure repeat starts. -->
     <measure number="2">
       <attributes>
         <clef number="2">
@@ -162,8 +157,7 @@
         <staff>2</staff>
       </note>
     </measure>
-    <!-- m3-m4: now that the clef is settled, a fresh measure-repeat start (still specific to staff 2 via
-         number="2") correctly abbreviates the (still fully written out) repeats of m2's figure. -->
+    <!-- Staff 2 starts a one-measure repeat. -->
     <measure number="3">
       <attributes>
         <measure-style number="2">
@@ -287,7 +281,6 @@
         <staff>2</staff>
       </note>
     </measure>
-    <!-- m5: the presentation ends, both hands close on a written-out final measure. -->
     <measure number="5">
       <attributes>
         <measure-style number="2">

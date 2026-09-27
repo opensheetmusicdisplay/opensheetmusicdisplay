@@ -789,31 +789,17 @@ export class InstrumentReader {
     }
   }
 
-  /** Numbers of measures in a repeated pattern that OSMD can draw as a sign (see VexFlowMeasureRepeat.ts).
-   *  MusicXML allows any positive-integer-or-empty content, but only 1, 2 and 4 get a drawn sign here,
-   *  matching MuseScore's own limit to these three (tlayout.cpp's layoutMeasureRepeat: any other value
-   *  "should never happen"). */
+  /** Measure-repeat lengths supported by the renderer. */
   private static readonly SUPPORTED_MEASURE_REPEAT_LENGTHS: number[] = [1, 2, 4];
 
-  /**
-   * Read every `<measure-repeat>` declared in an `<attributes>` node at the start of a measure (see the
-   * isAttributesNodeAtBeginOfMeasure call at this method's call site), and keep it on
-   * currentMeasure.MeasureRepeatInstructions for the staff(s) it applies to: the staff given by the enclosing
-   * `<measure-style number="...">`, or every staff of this part if `number` is omitted.
-   * This only records the declaration; EngravingRules.RenderMeasureRepeats and VexFlowMusicSheetCalculator
-   * decide whether it actually becomes a drawn sign. A declaration this method can't use (an unsupported or
-   * missing/empty measure count - e.g. some older exporters write an empty `<measure-repeat type="start"/>`
-   * - or an unresolvable staff number) is read as Invalid, which ends an earlier inherited declaration on the
-   * affected staff/staves instead of simply being ignored.
-   * @param attributesNode
-   */
+  /** Reads measure-repeat declarations into their target staff entries. */
   private readMeasureRepeats(attributesNode: IXmlElement): void {
     for (const measureStyleNode of attributesNode.elements("measure-style")) {
       const measureRepeatNode: IXmlElement = measureStyleNode.element("measure-repeat");
       if (!measureRepeatNode) {
         continue;
       }
-      // number: the 1-based staff this declaration applies to, or undefined for every staff of this part.
+      // An omitted number applies to every staff in the part.
       let staffNumber: number;
       let staffNumberValid: boolean = true;
       const numberAttr: IXmlAttribute = measureStyleNode.attribute("number");
@@ -828,10 +814,9 @@ export class InstrumentReader {
       const typeAttr: string = measureRepeatNode.attribute("type")?.value;
       if (staffNumberValid) {
         if (typeAttr === "stop") {
-          type = MeasureRepeatType.Stop; // the element's content and "slashes" are ignored for a stop (MusicXML spec)
+          type = MeasureRepeatType.Stop;
         } else if (typeAttr === "start") {
-          // MusicXML content is positive-integer-or-empty: validate with parseInt + a range check, like the
-          //   multi-rest reading just below and the staff-lines reading just above, not with a regular expression.
+          // Accept only renderer-supported repeat lengths.
           measures = parseInt(measureRepeatNode.value, 10);
           if (!isNaN(measures) && InstrumentReader.SUPPORTED_MEASURE_REPEAT_LENGTHS.includes(measures)) {
             type = MeasureRepeatType.Start;
@@ -841,7 +826,7 @@ export class InstrumentReader {
               slashes = !isNaN(slashesValue) && slashesValue >= 1 ? slashesValue : 1;
             }
           } else {
-            measures = 0; // unsupported or missing/empty count: stays Invalid, ending any inherited presentation
+            measures = 0;
           }
         }
       }
@@ -849,10 +834,8 @@ export class InstrumentReader {
 
       for (let staffIndex: number = 0; staffIndex < this.instrument.Staves.length; staffIndex++) {
         if (staffNumberValid && staffNumber !== undefined && staffIndex !== staffNumber - 1) {
-          continue; // declared for one specific (valid) staff only, this isn't it
+          continue;
         }
-        // an unresolvable staff number (staffNumberValid === false) can't be narrowed down, so it ends
-        //   presentation on every staff of this part instead of guessing which one was meant.
         const globalStaffIndex: number = this.inSourceMeasureInstrumentIndex + staffIndex;
         const declarations: MeasureRepeatInstruction[] = this.currentMeasure.MeasureRepeatInstructions.get(globalStaffIndex) ?? [];
         declarations.push(instruction);

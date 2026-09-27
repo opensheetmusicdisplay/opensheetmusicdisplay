@@ -5,9 +5,12 @@ import { GraphicalMeasure } from "../../../src/MusicalScore/Graphical/GraphicalM
 import { GraphicalInstantaneousDynamicExpression } from "../../../src/MusicalScore/Graphical/GraphicalInstantaneousDynamicExpression";
 import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
 import { GraphicalSlur } from "../../../src/MusicalScore/Graphical/GraphicalSlur";
+import { VexFlowMeasure } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
+import { Slur } from "../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/Slur";
+import { Note } from "../../../src/MusicalScore/VoiceData/Note";
 
 /**
- * EngravingRules.RenderMeasureRepeats (default false): draws a measure with a MusicXML measure-repeat
+ * EngravingRules.RenderMeasureRepeats (default true): draws a measure with a MusicXML measure-repeat
  * declaration as a one-, two- or four-measure repeat sign (simile) instead of its written-out notes. The
  * underlying notes, timestamps, measure widths, cursor and iterator are unaffected either way - only how
  * VexFlowMeasure.draw() draws a qualifying measure's own notes changes.
@@ -35,11 +38,12 @@ describe("Measure repeat presentation", () => {
 
     it("draws a one-measure repeat as a sign with no notes, keeping the notes, timestamps, measure width and " +
         "an independent dynamic inside it unaffected", async () => {
-        // rendered separately, with default rules (RenderMeasureRepeats off), to compare the measure width against
+        // Compare with the same score written out.
         const referenceContainer: HTMLElement = document.createElement("div");
         referenceContainer.style.width = "1800px";
         document.body.appendChild(referenceContainer);
         const referenceOsmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(referenceContainer);
+        referenceOsmd.EngravingRules.RenderMeasureRepeats = false;
         await referenceOsmd.load(TestUtils.getScore("test_measure_repeat_drums.musicxml"));
         referenceOsmd.render();
         const referenceWidth: number = findMeasure(referenceOsmd, 1, 0).PositionAndShape.Size.width;
@@ -126,7 +130,7 @@ describe("Measure repeat presentation", () => {
         }
         // left hand (staff 2, global staff index 1): measure 1 has no declaration reaching it yet
         expect(findMeasure(osmd, 0, 1).NotesAreAbbreviated, "left hand measure 1").to.equal(false);
-        // measure 2 declares a start, but changes clef at its own start - it must stay written out (see T3)
+        // Measure 2 changes clef at its start, so its notes stay visible.
         const clefChangeMeasure: GraphicalMeasure = findMeasure(osmd, 1, 1);
         expect(clefChangeMeasure.NotesAreAbbreviated, "left hand measure 2 (clef change)").to.equal(false);
         expect(clefChangeMeasure.staffEntries.length, "left hand measure 2 keeps its notes").to.be.greaterThan(0);
@@ -137,23 +141,62 @@ describe("Measure repeat presentation", () => {
         expect(findMeasure(osmd, 4, 1).NotesAreAbbreviated, "left hand measure 5").to.equal(false);
     });
 
-    it("draws no signs with default rules, and adds/removes them when the rule is toggled on the same instance", async () => {
+    it("draws signs by default, restores the notes when disabled, and can be enabled again", async () => {
         await osmd.load(TestUtils.getScore("test_measure_repeat_drums.musicxml"));
-        osmd.render(); // default rules: RenderMeasureRepeats is off
-        expect(container.querySelectorAll(".vf-measure-repeat").length, "default: no signs").to.equal(0);
-        const noteheadsByDefault: number = container.querySelectorAll(".vf-notehead").length;
-        expect(noteheadsByDefault, "default: notes are drawn").to.be.greaterThan(0);
-
-        osmd.EngravingRules.RenderMeasureRepeats = true;
         osmd.render();
-        expect(container.querySelectorAll(".vf-measure-repeat").length, "enabled: signs are drawn").to.be.greaterThan(0);
-        expect(container.querySelectorAll(".vf-notehead").length, "enabled: fewer noteheads are drawn")
-            .to.be.lessThan(noteheadsByDefault);
+        const signsByDefault: number = container.querySelectorAll(".vf-measure-repeat").length;
+        expect(signsByDefault, "default: signs are drawn").to.equal(3);
+        const noteheadsByDefault: number = container.querySelectorAll(".vf-notehead").length;
 
         osmd.EngravingRules.RenderMeasureRepeats = false;
         osmd.render();
-        expect(container.querySelectorAll(".vf-measure-repeat").length, "disabled again: no signs").to.equal(0);
-        expect(container.querySelectorAll(".vf-notehead").length, "disabled again: all notes return").to.equal(noteheadsByDefault);
+        expect(container.querySelectorAll(".vf-measure-repeat").length, "disabled: no signs").to.equal(0);
+        expect(container.querySelectorAll(".vf-notehead").length, "disabled: hidden notes return")
+            .to.be.greaterThan(noteheadsByDefault);
+        osmd.updateGraphic();
+        osmd.render();
+        expect(container.querySelectorAll(".vf-measure-repeat").length, "disabled after updateGraphic").to.equal(0);
+
+        osmd.EngravingRules.RenderMeasureRepeats = true;
+        osmd.render();
+        expect(container.querySelectorAll(".vf-measure-repeat").length, "enabled again").to.equal(signsByDefault);
+        expect(container.querySelectorAll(".vf-notehead").length, "enabled again: same noteheads").to.equal(noteheadsByDefault);
+    });
+
+    it("puts both dots in the spaces next to the middle line, close to one, two or four slashes", async () => {
+        osmd.EngravingRules.RenderMeasureRepeats = true;
+        for (const lines of [5, 1]) {
+            for (const slashes of [1, 2, 4]) {
+                await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0">
+                    <part-list><score-part id="P1"><part-name>Violin</part-name></score-part></part-list><part id="P1">
+                    <measure number="1"><attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+                    <clef><sign>G</sign><line>2</line></clef><staff-details><staff-lines>${lines}</staff-lines></staff-details>
+                    </attributes><note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><type>whole</type></note></measure>
+                    <measure number="2"><attributes><measure-style><measure-repeat type="start" slashes="${slashes}">1</measure-repeat>
+                    </measure-style></attributes><note><pitch><step>C</step><octave>5</octave></pitch>
+                    <duration>4</duration><type>whole</type></note></measure></part></score-partwise>`);
+                osmd.render();
+                const measure: VexFlowMeasure = findMeasure(osmd, 1, 0) as VexFlowMeasure;
+                const spacing: number = measure.getVFStave().getSpacingBetweenLines();
+                expect(measure.ParentStaff.StafflineCount).to.equal(lines);
+                // A one-line stave shows only the middle of VexFlow's five line slots.
+                const middleY: number = measure.getVFStave().getYForLine(2);
+                const sign: Element = container.querySelector(".vf-measure-repeat");
+                expect(sign, `${lines} lines, ${slashes} slashes`).to.not.equal(null);
+                const shapes: SVGGraphicsElement[] = Array.from(sign.children) as SVGGraphicsElement[];
+                expect(shapes.length).to.equal(slashes + 2);
+                const firstSlash: DOMRect = shapes[0].getBBox();
+                const lastSlash: DOMRect = shapes[slashes - 1].getBBox();
+                for (let dot: number = 0; dot < 2; dot++) {
+                    const box: DOMRect = shapes[slashes + dot].getBBox();
+                    expect(box.y + box.height / 2, "dot center in the adjacent space")
+                        .to.be.closeTo(middleY + (dot === 0 ? -0.5 : 0.5) * spacing, 0.01);
+                    expect(box.height, "dot fits between the staff lines").to.be.lessThan(spacing);
+                    expect(box.x + box.width / 2, "dot close to the slashes")
+                        .to.be.within(firstSlash.x, lastSlash.x + lastSlash.width);
+                }
+            }
+        }
     });
 
     it("stops reporting NotesAreAbbreviated for a measure a narrower re-render (drawUpToMeasureNumber) no " +
@@ -173,15 +216,6 @@ describe("Measure repeat presentation", () => {
     });
 });
 
-/**
- * Regression tests for defects found in an adversarial review of the measure-repeat presentation feature
- * (2026-09-26), each reproduced against the pre-fix code before being fixed. See the fix commit's own message
- * for the full description of each defect.
- *
- * Most fixtures here are small, purpose-built MusicXML documents parsed inline (see parseXml() below), following
- * the style of test/MusicalScore/ScoreIO/Key_Test.ts and test/MusicalScore/Graphical/VexFlow/VexFlowConverter_Clef_Test.ts,
- * rather than separate files under test/data/ - each one exists solely to reproduce a single specific defect.
- */
 describe("Measure repeat presentation: edge cases", () => {
     let container: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
@@ -208,6 +242,89 @@ describe("Measure repeat presentation: edge cases", () => {
      *  back a pre-parsed fixture file's Document. */
     function parseXml(xml: string): Document {
         return xmlParser.parseFromString(xml, "text/xml");
+    }
+
+    for (const atEnd of [true, false]) {
+        it(`keeps an unattached-end slur's measure written out (${atEnd ? "last" : "earlier"} note)`, async () => {
+            const slur: string = '<notations><slur number="1" type="start"/><slur number="1" type="stop"/></notations>';
+            await osmd.load(parseXml(`<?xml version="1.0"?><score-partwise version="4.0">
+                <part-list><score-part id="P1"><part-name>Violin</part-name></score-part></part-list><part id="P1">
+                <measure number="1"><attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+                <clef><sign>G</sign><line>2</line></clef></attributes>
+                <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><type>half</type></note>
+                <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><type>half</type></note></measure>
+                <measure number="2"><attributes><measure-style><measure-repeat type="start">1</measure-repeat></measure-style></attributes>
+                <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><type>half</type>${atEnd ? "" : slur}</note>
+                <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><type>half</type>${atEnd ? slur : ""}</note></measure>
+                <measure number="3">
+                <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><type>half</type></note>
+                <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><type>half</type></note></measure>
+                </part></score-partwise>`));
+            osmd.EngravingRules.RenderMeasureRepeats = true;
+            for (const rebuild of [false, true]) {
+                if (rebuild) {
+                    osmd.updateGraphic();
+                }
+                osmd.render();
+                const measure: GraphicalMeasure = findMeasure(osmd, 1, 0);
+                expect(measure.NotesAreAbbreviated, "the slur's unit keeps its notes").to.equal(false);
+                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-notehead').length).to.equal(2);
+                expect(findMeasure(osmd, 2, 0).NotesAreAbbreviated, "the next plain unit still abbreviates").to.equal(true);
+                const sourceSlur: Slur = measure.staffEntries[atEnd ? 1 : 0].graphicalVoiceEntries[0].notes[0].sourceNote.NoteSlurs[0];
+                expect(sourceSlur.HasUnattachedEnd, "the source slur is preserved").to.equal(true);
+                expect(sourceSlur.EndNote === undefined).to.equal(true);
+                const drawnSlurs: GraphicalSlur[] = measure.ParentStaffLine.GraphicalSlurs;
+                expect(drawnSlurs.length, "only a slur from the final entry is drawn").to.equal(atEnd ? 1 : 0);
+                if (atEnd) {
+                    const path: string = (drawnSlurs[0].SVGElement as SVGGElement).querySelector("path").getAttribute("d");
+                    expect(path).to.not.match(/NaN|undefined/);
+                    const barlineX: number = measure.PositionAndShape.RelativePosition.x + measure.PositionAndShape.Size.width;
+                    expect(drawnSlurs[0].bezierEndPt.x).to.be.within(barlineX - measure.endInstructionsWidth - 0.001, barlineX);
+                }
+            }
+        });
+    }
+
+    for (const crosses of [true, false]) {
+        it(`${crosses ? "preserves" : "abbreviates"} nested tuplets with the outer tuplet ${crosses ? "crossing" : "inside"} the unit`, async () => {
+            const outerNote: (type: string) => string = (type: string): string => `
+                <note><pitch><step>C</step><octave>5</octave></pitch><duration>18</duration><type>half</type><dot/>
+                <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+                <notations><tuplet number="1" type="${type}" bracket="yes"/></notations></note>`;
+            const innerNotes: string = ["D", "E", "F"].map((step: string, index: number): string => `
+                <note><pitch><step>${step}</step><octave>5</octave></pitch><duration>6</duration><type>quarter</type><dot/>
+                <time-modification><actual-notes>9</actual-notes><normal-notes>4</normal-notes></time-modification>
+                ${index === 1 ? "" : `<notations><tuplet number="2" type="${index === 0 ? "start" : "stop"}" bracket="yes">
+                <tuplet-actual><tuplet-number>3</tuplet-number><tuplet-type>quarter</tuplet-type><tuplet-dot/></tuplet-actual>
+                </tuplet></notations>`}</note>`).join("");
+            const contained: string = outerNote("start") + innerNotes + outerNote("stop");
+            await osmd.load(parseXml(`<?xml version="1.0"?><score-partwise version="4.0">
+                <part-list><score-part id="P1"><part-name>Violin</part-name></score-part></part-list><part id="P1">
+                <measure number="1"><attributes><divisions>9</divisions>
+                <time><beats>${crosses ? 2 : 6}</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef>
+                </attributes>${crosses ? outerNote("start") : contained}</measure>
+                <measure number="2"><attributes><measure-style><measure-repeat type="start">1</measure-repeat></measure-style></attributes>
+                ${crosses ? innerNotes : contained}</measure>
+                <measure number="3"><attributes><measure-style><measure-repeat type="stop"/></measure-style></attributes>
+                ${crosses ? outerNote("stop") : `<note><pitch><step>C</step><octave>5</octave></pitch>
+                <duration>54</duration><type>whole</type><dot/></note>`}</measure></part></score-partwise>`));
+            for (const rebuild of [false, true]) {
+                if (rebuild) {
+                    osmd.updateGraphic();
+                }
+                osmd.render();
+                const measure: GraphicalMeasure = findMeasure(osmd, 1, 0);
+                const note: Note = measure.staffEntries[crosses ? 0 : 1].graphicalVoiceEntries[0].notes[0].sourceNote;
+                expect(note.NoteTuplets.length, "the reader keeps both enclosing tuplets").to.equal(2);
+                const outside: (other: Note) => boolean = (other: Note): boolean => other.SourceMeasure !== osmd.Sheet.SourceMeasures[1];
+                expect(note.NoteTuplet.Notes.some((group: Note[]): boolean => group.some(outside)), "the inner tuplet stays inside").to.equal(false);
+                expect(note.NoteTuplets.some((tuplet): boolean => tuplet.Notes.some((group: Note[]): boolean => group.some(outside))),
+                    "only the crossing case has notes outside the unit").to.equal(crosses);
+                expect(measure.NotesAreAbbreviated).to.equal(!crosses);
+                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-notehead').length).to.equal(crosses ? 3 : 0);
+                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-measure-repeat').length).to.equal(crosses ? 0 : 1);
+            }
+        });
     }
 
     const wavyLineXml: string = `<?xml version="1.0" encoding="UTF-8"?>

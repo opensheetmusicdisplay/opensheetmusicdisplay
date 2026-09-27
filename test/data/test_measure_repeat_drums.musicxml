@@ -22,7 +22,6 @@
     </score-part>
   </part-list>
   <part id="P1">
-    <!-- m1: the played groove (voice 1 = hands: closed hi-hat + snare backbeat, voice 2 = feet: kick) -->
     <measure number="1">
       <attributes>
         <divisions>2</divisions>
@@ -192,9 +191,7 @@
         <type>quarter</type>
       </note>
     </measure>
-    <!-- m2-m3: a one-measure repeat of m1's groove (notes still written out in full - measure-repeat only
-         asks a renderer to draw a sign instead). The "f" dynamic here is independent Direction content, and
-         must still be drawn even though the notes it sits above are replaced by the sign (see T1). -->
+    <!-- One-measure repeat with an independent forte direction. -->
     <measure number="2">
       <attributes>
         <measure-style>
@@ -518,7 +515,6 @@
         <type>quarter</type>
       </note>
     </measure>
-    <!-- m4-m5: a different two-measure pattern, played and written out in full. -->
     <measure number="4">
       <attributes>
         <measure-style>
@@ -654,8 +650,7 @@
         <type>whole</type>
       </note>
     </measure>
-    <!-- m6-m7: a two-measure repeat of m4-m5's pattern (slashes="2", following MuseScore's own export
-         convention of one slash per repeated measure). Notes are again written out in full. -->
+    <!-- Two-measure repeat with two slashes. -->
     <measure number="6">
       <attributes>
         <measure-style>
@@ -791,7 +786,6 @@
         <type>whole</type>
       </note>
     </measure>
-    <!-- m8: a fill, written out and never abbreviated (the "stop" below ends the presentation before it). -->
     <measure number="8">
       <attributes>
         <measure-style>
@@ -932,7 +926,6 @@
         <type>quarter</type>
       </note>
     </measure>
-    <!-- m9: ends with a crash cymbal and the final barline. -->
     <measure number="9">
       <note>
         <unpitched>

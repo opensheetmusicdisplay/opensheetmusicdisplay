@@ -93,9 +93,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     // The engraving rules of OSMD.
     public rules: EngravingRules;
 
-    /** Set by VexFlowMusicSheetCalculator.prepareMeasureRepeats() when this measure is part of a validated
-     *  measure-repeat unit (see EngravingRules.RenderMeasureRepeats); undefined otherwise. Rebuilt on every
-     *  layout, since which units can be drawn as a sign depends on the current draw range and system breaks. */
+    /** Repeat unit drawn in place of this measure's note content, if any. */
     public MeasureRepeat: VexFlowMeasureRepeat;
 
     public get NotesAreAbbreviated(): boolean {
@@ -689,13 +687,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.correctNotePositions();
     }
 
-    /**
-     * Draws this measure's voices, beams, tuplets and ties (i.e. everything but the stave lines, barlines and
-     * clefs, which draw() handles itself). Extracted from draw() so a measure whose notes are abbreviated
-     * (see GraphicalMeasure.NotesAreAbbreviated / EngravingRules.RenderMeasureRepeats) can skip this call and
-     * draw a repeat sign instead.
-     * @param ctx
-     */
+    /** Draws this measure's note content. */
     private drawNotes(ctx: Vex.IRenderContext): void {
         this.postFormatBeams();
         // Draw all voices
