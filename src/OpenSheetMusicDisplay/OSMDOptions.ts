@@ -86,7 +86,9 @@ export interface IOSMDOptions {
      * see DrawingParameters.ts:setForCompactTightMode().
      */
     drawingParameters?: string | DrawingParametersEnum;
-    /** Whether to draw credits (title, subtitle, composer, lyricist) (in future: copyright etc., see <credit>). */
+    /** Whether to draw credits, including title, subtitle, composer, lyricist, copyright and independent first-page words.
+     *  Independent words require EngravingRules.ReadFirstPageCreditWords to be enabled before loading the score.
+     */
     drawCredits?: boolean;
     /** Whether to draw the title of the piece. If false, disables drawing Subtitle as well. */
     drawTitle?: boolean;

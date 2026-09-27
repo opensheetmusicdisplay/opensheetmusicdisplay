@@ -51,6 +51,7 @@ export class GraphicalMusicSheet {
     private title: GraphicalLabel;
     private subtitle: GraphicalLabel;
     private composer: GraphicalLabel;
+    private firstPageCreditWords: GraphicalLabel[] = [];
     private lyricist: GraphicalLabel;
     private copyright: GraphicalLabel;
     private cursors: GraphicalLine[] = [];
@@ -119,6 +120,14 @@ export class GraphicalMusicSheet {
 
     public set Composer(value: GraphicalLabel) {
         this.composer = value;
+    }
+
+    public get FirstPageCreditWords(): GraphicalLabel[] {
+        return this.firstPageCreditWords;
+    }
+
+    public set FirstPageCreditWords(value: GraphicalLabel[]) {
+        this.firstPageCreditWords = value;
     }
 
     public get Lyricist(): GraphicalLabel {
