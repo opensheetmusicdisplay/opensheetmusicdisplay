@@ -897,9 +897,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         let gvEntries: GraphicalVoiceEntry[] = this.getGraphicalVoiceEntriesPerVoice(voice);
         for (let idx: number = 0; idx < gvEntries.length; idx++) {
             const gve: GraphicalVoiceEntry = gvEntries[idx];
-            if (gve.parentVoiceEntry?.GraceAfterMainNote) {
-                // grace notes after their main note share its timestamp (see InstrumentReader.attachGraceNotesAfterMainNote)
-                //   and take no time of their own: they must not create a gap (ghost rest) between the main note and the measure end
+            if (gve.parentVoiceEntry?.IsGrace && !(gve as VexFlowVoiceEntry).isStandAloneGrace) {
+                // Grace notes attached before or after a main note take no time of their own,
+                // including a GraceNoteGroup attached to a main note of another voice.
                 continue;
             }
             if ((gve as VexFlowVoiceEntry).isStandAloneGrace) {
@@ -922,11 +922,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const nextEntry: GraphicalVoiceEntry = gvEntries.slice(lastGraceIndex + 1).find(
                     (entry: GraphicalVoiceEntry) => !entry.parentVoiceEntry?.GraceAfterMainNote);
                 const graceTime: Fraction = Fraction.max(graceStart, voiceEnd);
-                const nextTime: Fraction = nextEntry ? nextEntry.notes[0].sourceNote.getAbsoluteTimestamp() :
+                let nextTime: Fraction = nextEntry ? nextEntry.notes[0].sourceNote.getAbsoluteTimestamp() :
                     Fraction.plus(this.parentSourceMeasure.AbsoluteTimestamp, this.parentSourceMeasure.Duration);
-                const graceTicks: VF.Fraction = this.fitTicks(
-                    gvEntries.slice(idx, lastGraceIndex + 1).map((grace: GraphicalVoiceEntry) => (grace as VexFlowVoiceEntry).vfStaveNote),
-                    Fraction.minus(nextTime, graceTime));
+                const tickables: VF.Tickable[] = gvEntries.slice(idx, lastGraceIndex + 1).map(
+                    (grace: GraphicalVoiceEntry) => (grace as VexFlowVoiceEntry).vfStaveNote);
+                if (this.isTabMeasure && nextEntry?.notes[0].sourceNote.isRest() && nextTime.Equals(graceTime)) {
+                    // A TAB rest is invisible and cannot carry a GraceNoteGroup. Fit the grace notes and its ghost notes
+                    // into the rest's time, so drawing the grace notes before the rest doesn't delay the following notes.
+                    tickables.push(...(nextEntry as VexFlowVoiceEntry).vfGhostNotes);
+                    nextTime = Fraction.plus(nextTime, nextEntry.notes[0].sourceNote.Length);
+                }
+                const graceTicks: VF.Fraction = this.fitTicks(tickables, Fraction.minus(nextTime, graceTime));
                 latestVoiceTimestamp = Fraction.plus(graceTime, new Fraction(graceTicks.numerator, graceTicks.denominator * VF.RESOLUTION));
                 idx = lastGraceIndex;
                 continue;
@@ -971,8 +977,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         const measureEndTimestamp: Fraction = Fraction.plus(this.parentSourceMeasure.AbsoluteTimestamp, this.parentSourceMeasure.Duration);
         if (!latestVoiceTimestamp) {
-            // a voice of stand-alone grace notes only (e.g. the second half of a measure split for a system break) has no entry
-            //   that takes time: it is empty from the measure start on.
+            // A voice containing only attached grace notes has no entry that takes time
+            // (e.g. cross-staff grace notes in Debussy_Mandoline): fill from the measure start.
             latestVoiceTimestamp = this.parentSourceMeasure.AbsoluteTimestamp;
         }
         const restLength: Fraction = Fraction.minus(measureEndTimestamp, latestVoiceTimestamp);
@@ -989,7 +995,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     /**
      * Reduces the vexflow ticks of the given tickables in proportion if they don't fit into the available time,
-     * unless there is no time available (e.g. for grace notes before a rest at the same time in a tablature staff).
+     * unless there is no time available.
      * @returns the ticks the tickables take together
      */
     private fitTicks(tickables: VF.Tickable[], availableTime: Fraction): VF.Fraction {

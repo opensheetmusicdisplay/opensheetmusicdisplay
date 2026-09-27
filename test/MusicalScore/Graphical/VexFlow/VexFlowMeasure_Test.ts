@@ -1240,40 +1240,6 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
-   // A voice that holds only a grace note in a measure (here voice 2, beside a whole note in voice 1) has no note that takes time.
-   //   The score still renders, and the grace note is drawn as a stand-alone grace note, a tickable of its voice.
-   for (const tablature of [false, true]) {
-      it(`Renders a voice that holds only a grace note${tablature ? " in a tablature staff" : ""}`, (done: Mocha.Done) => {
-         const clef: string = tablature ?
-            "<clef><sign>TAB</sign><line>5</line></clef><staff-details><staff-lines>6</staff-lines></staff-details>" :
-            "<clef><sign>G</sign><line>2</line></clef>";
-         const technical: (stringNumber: number, fret: number) => string = (stringNumber: number, fret: number): string =>
-            tablature ? `<notations><technical><string>${stringNumber}</string><fret>${fret}</fret></technical></notations>` : "";
-         const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
-         <score-partwise version="4.0">
-            <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
-            <part id="P1">
-               <measure number="1">
-                  <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>${clef}</attributes>
-                  <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type>${technical(1, 0)}</note>
-                  <backup><duration>4</duration></backup>
-                  <note><grace/><pitch><step>C</step><octave>4</octave></pitch><voice>2</voice><type>eighth</type>${technical(2, 1)}</note>
-               </measure>
-            </part>
-         </score-partwise>`;
-         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-         osmd.load(xml).then(() => {
-            osmd.render();
-            const measure: VexFlowMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0) as VexFlowMeasure;
-            const graceEntry: VexFlowVoiceEntry = measure.staffEntries[0].graphicalVoiceEntries.find(
-               (gve: GraphicalVoiceEntry) => gve.parentVoiceEntry.IsGrace) as VexFlowVoiceEntry;
-            const voiceTickables: VF.Tickable[] = measure.vfVoices[graceEntry.parentVoiceEntry.ParentVoice.VoiceId].getTickables();
-            expect(voiceTickables.includes(graceEntry.vfStaveNote), "the grace note is a tickable of its voice").to.equal(true);
-            done();
-         }).catch(done);
-      });
-   }
-
    // A grace note alone in its voice later in the measure (here voice 2 at the third beat) is drawn at its time: it starts half
    //   a measure into its voice, and its staff entry takes its position from it (the cursor position there).
    //   Rendering doesn't change the model, so a second updateGraphic() gives the same layout.
@@ -1310,12 +1276,6 @@ describe("VexFlow Measure", () => {
                expect(staffEntries.length, `${layout}: the whole note, and the grace note at the third beat`).to.equal(2);
                const wholeNote: VexFlowVoiceEntry = staffEntries[0].graphicalVoiceEntries[0] as VexFlowVoiceEntry;
                const graceNote: VexFlowVoiceEntry = staffEntries[1].graphicalVoiceEntries[0] as VexFlowVoiceEntry;
-               const voiceTickables: VF.Tickable[] = measure.vfVoices[graceNote.parentVoiceEntry.ParentVoice.VoiceId].getTickables();
-               const graceIndex: number = voiceTickables.indexOf(graceNote.vfStaveNote);
-               expect(graceIndex, `${layout}: the grace note is a tickable of its voice`).to.be.at.least(0);
-               const ticksBefore: number = voiceTickables.slice(0, graceIndex).reduce(
-                  (sum: number, tickable: VF.Tickable) => sum + tickable.getTicks().value(), 0);
-               expect(ticksBefore, `${layout}: the grace note starts half a measure into its voice`).to.equal(VF.RESOLUTION / 2);
                expect(graceNote.vfStaveNote.getAbsoluteX(), `${layout}: the grace note is drawn right of the whole note`)
                   .to.be.greaterThan(wholeNote.vfStaveNote.getAbsoluteX());
                expect(staffEntries[1].PositionAndShape.RelativePosition.x, `${layout}: its staff entry is right of the whole note's`)
@@ -1328,39 +1288,29 @@ describe("VexFlow Measure", () => {
       });
    }
 
-   // A grace note alone in its voice where another voice goes on (here voice 2 at the first beat, beside two half notes
-   //   in voice 1) is drawn there, like one at the end of the measure.
-   it("Draws a grace note that a voice holds alone before later notes of another voice", (done: Mocha.Done) => {
-      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
-      <score-partwise version="4.0">
-         <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
-         <part id="P1">
-            <measure number="1">
-               <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
-                  <clef><sign>G</sign><line>2</line></clef></attributes>
-               <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type></note>
-               <note><pitch><step>D</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type></note>
-               <backup><duration>4</duration></backup>
-               <note><grace/><pitch><step>D</step><octave>4</octave></pitch><voice>2</voice><type>eighth</type></note>
-            </measure>
-         </part>
-      </score-partwise>`;
+   // Grace notes attached to another voice's main note take no time in their own voice.
+   it("Keeps notes aligned after a grace note attached to another voice", (done: Mocha.Done) => {
+      const xml: string = scoreWithMeasure(
+         `<note><grace/>${xmlPitch("D", 5)}<voice>1</voice><type>eighth</type></note>
+         <forward><duration>2</duration><voice>1</voice></forward>
+         <note>${xmlPitch("E", 5)}<duration>2</duration><voice>1</voice><type>half</type></note>
+         <backup><duration>4</duration></backup>
+         <note>${xmlPitch("C", 4)}<duration>2</duration><voice>2</voice><type>half</type></note>
+         <note>${xmlPitch("D", 4)}<duration>2</duration><voice>2</voice><type>half</type></note>`);
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       osmd.load(xml).then(() => {
          osmd.render();
-         const measure: VexFlowMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0) as VexFlowMeasure;
-         const graceEntry: VexFlowVoiceEntry = measure.staffEntries[0].graphicalVoiceEntries.find(
-            (gve: GraphicalVoiceEntry) => gve.parentVoiceEntry.IsGrace) as VexFlowVoiceEntry;
-         const voiceTickables: VF.Tickable[] = measure.vfVoices[graceEntry.parentVoiceEntry.ParentVoice.VoiceId].getTickables();
-         expect(graceEntry.vfStaveNote !== undefined && voiceTickables.includes(graceEntry.vfStaveNote),
-            "the grace note is a tickable of its voice").to.equal(true);
+         expect(voiceEntryAt(osmd, 0.5, 1).vfStaveNote.getAbsoluteX(), "E5 and D4 start together")
+            .to.be.closeTo(voiceEntryAt(osmd, 0.5, 2).vfStaveNote.getAbsoluteX(), 0.01);
+         expect(voiceEntryAt(osmd, 0, 1, true).vfStaveNote.getAbsoluteX(), "the grace note stays before voice 2's C4")
+            .to.be.lessThan(voiceEntryAt(osmd, 0, 2).vfStaveNote.getAbsoluteX());
          done();
       }).catch(done);
    });
-   /** The grace notes of the first measure, in the order of their staff entries and voices */
-   function graceNotesOfFirstMeasure(osmd: OpenSheetMusicDisplay): VexFlowVoiceEntry[] {
+   /** The grace notes of the given measure, in the order of their staff entries and voices */
+   function graceNotesOfMeasure(osmd: OpenSheetMusicDisplay, measureIndex: number = 0): VexFlowVoiceEntry[] {
       const graceEntries: VexFlowVoiceEntry[] = [];
-      for (const staffEntry of osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries) {
+      for (const staffEntry of osmd.GraphicSheet.findGraphicalMeasure(measureIndex, 0).staffEntries) {
          for (const gve of staffEntry.graphicalVoiceEntries) {
             if (gve.parentVoiceEntry.IsGrace) {
                graceEntries.push(gve as VexFlowVoiceEntry);
@@ -1377,6 +1327,8 @@ describe("VexFlow Measure", () => {
          (step: string, octave: number, voice: number, beam: string): string =>
             `<note><grace slash="yes"/><pitch><step>${step}</step><octave>${octave}</octave></pitch><voice>${voice}</voice>` +
             `<type>eighth</type><beam number="1">${beam}</beam></note>`;
+      const hiddenGrace: (step: string, voice: number) => string = (step: string, voice: number): string =>
+         `<note print-object="no"><grace slash="yes"/>${xmlPitch(step, 5)}<voice>${voice}</voice><type>eighth</type></note>`;
       const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
       <score-partwise version="4.0">
          <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
@@ -1392,53 +1344,28 @@ describe("VexFlow Measure", () => {
                ${grace("G", 4, 2, "begin")}${grace("A", 4, 2, "end")}
             </measure>
             <measure number="2">
-               <note><pitch><step>G</step><octave>5</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type></note>
-            </measure>
-         </part>
-      </score-partwise>`;
-      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-      osmd.load(xml).then(() => {
-         osmd.render();
-         const graceEntries: VexFlowVoiceEntry[] = graceNotesOfFirstMeasure(osmd);
-         const slashes: (entries: VexFlowVoiceEntry[]) => boolean[] = (entries: VexFlowVoiceEntry[]): boolean[] =>
-            entries.map((gve: VexFlowVoiceEntry) => (gve.vfStaveNote as any).slash === true);
-         expect(slashes(graceEntries.filter((gve: VexFlowVoiceEntry) => gve.parentVoiceEntry.GraceAfterMainNote)),
-            "the grace notes after their main note").to.deep.equal([true, false]);
-         expect(slashes(graceEntries.filter((gve: VexFlowVoiceEntry) => gve.isStandAloneGrace)),
-            "the grace notes alone in voice 2").to.deep.equal([true, false]);
-         done();
-      }).catch(done);
-   });
-
-   // A hidden grace note (print-object="no") doesn't get its slash, which Vexflow would draw although the note is hidden:
-   //   one before its main note (a GraceNoteGroup), one after it, and one alone in voice 2.
-   it("Doesn't draw the slash of a hidden grace note", (done: Mocha.Done) => {
-      const hiddenGrace: (step: string, octave: number, voice: number) => string = (step: string, octave: number, voice: number): string =>
-         `<note print-object="no"><grace slash="yes"/><pitch><step>${step}</step><octave>${octave}</octave></pitch>` +
-         `<voice>${voice}</voice><type>eighth</type></note>`;
-      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
-      <score-partwise version="4.0">
-         <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
-         <part id="P1">
-            <measure number="1">
-               <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
-                  <clef><sign>G</sign><line>2</line></clef></attributes>
-               ${hiddenGrace("D", 5, 1)}
+               ${hiddenGrace("D", 1)}
                <note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type></note>
-               ${hiddenGrace("E", 5, 1)}
+               ${hiddenGrace("E", 1)}
                <backup><duration>4</duration></backup>
                <forward><duration>2</duration><voice>2</voice></forward>
-               ${hiddenGrace("G", 4, 2)}
+               ${hiddenGrace("G", 2)}
             </measure>
          </part>
       </score-partwise>`;
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       osmd.load(xml).then(() => {
          osmd.render();
-         const graceEntries: VexFlowVoiceEntry[] = graceNotesOfFirstMeasure(osmd);
-         expect(graceEntries.length, "before and after the whole note, and alone in voice 2").to.equal(3);
-         expect(graceEntries.map((gve: VexFlowVoiceEntry) => (gve.vfStaveNote as any).slash === true), "no slash")
-            .to.deep.equal([false, false, false]);
+         const graceEntries: VexFlowVoiceEntry[] = graceNotesOfMeasure(osmd);
+         const slashes: (entries: VexFlowVoiceEntry[]) => boolean[] = (entries: VexFlowVoiceEntry[]): boolean[] =>
+            entries.map((gve: VexFlowVoiceEntry) => gve.GraceSlash === true);
+         expect(slashes(graceEntries.filter((gve: VexFlowVoiceEntry) => gve.parentVoiceEntry.GraceAfterMainNote)),
+            "the grace notes after their main note").to.deep.equal([true, false]);
+         expect(slashes(graceEntries.filter((gve: VexFlowVoiceEntry) => gve.parentVoiceEntry.ParentVoice.VoiceId === 2)),
+            "the grace notes alone in voice 2").to.deep.equal([true, false]);
+         const hidden: VexFlowVoiceEntry[] = graceNotesOfMeasure(osmd, 1);
+         expect(hidden.length, "hidden notes before, after and without a main note").to.equal(3);
+         expect(slashes(hidden), "hidden notes have no slash").to.deep.equal([false, false, false]);
          done();
       }).catch(done);
    });
@@ -1469,18 +1396,13 @@ describe("VexFlow Measure", () => {
          gve.parentVoiceEntry.ParentVoice.VoiceId === voiceId && gve.parentVoiceEntry.IsGrace === grace) as VexFlowVoiceEntry;
    }
 
-   // Stand-alone grace notes at one time (here in voice 2 at the second beat) take their vexflow ticks one after the other as
-   //   tickables of their voice, reduced in proportion if they don't fit into the time until the next note of the voice: so the
-   //   voice takes a measure, and its next note is aligned with the eighth notes of voice 1. (The length of a grace note ignores
-   //   its time modification, its vexflow ticks don't.)
+   // Stand-alone grace notes stay between the surrounding notes, and the following notes of both voices stay aligned.
    const eighth: string = "<type>eighth</type>";
    const triplet: (position: string) => string = (position: string): string =>
       eighth + "<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>" +
       (position ? `<notations><tuplet type="${position}"/></notations>` : "");
    for (const { description, graces, gap } of [
-      { description: "two eighths in the time of a quarter", graces: [eighth, eighth], gap: 2 }, // they fit exactly
       { description: "three eighths in the time of a quarter", graces: [eighth, eighth, eighth], gap: 2 },
-      { description: "a quarter in the time of an eighth", graces: ["<type>quarter</type>"], gap: 1 },
       { description: "three triplet eighths in the time of a quarter", graces: [triplet("start"), triplet(""), triplet("stop")], gap: 2 },
    ]) {
       it(`Keeps the note after stand-alone grace notes aligned with the other voices: ${description}`, (done: Mocha.Done) => {
@@ -1496,13 +1418,17 @@ describe("VexFlow Measure", () => {
          const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
          osmd.load(xml).then(() => {
             osmd.render();
-            const measure: VexFlowMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0) as VexFlowMeasure;
-            const voice2Ticks: number = measure.vfVoices[2].getTickables().reduce(
-               (sum: number, tickable: VF.Tickable) => sum + tickable.getTicks().value(), 0);
-            expect(voice2Ticks, "voice 2 takes a measure").to.be.closeTo(VF.RESOLUTION, 0.001);
             const noteTime: number = (2 + gap) / 8;
             expect(voiceEntryAt(osmd, noteTime, 2).vfStaveNote.getAbsoluteX(), "the note of voice 2 after the grace notes")
                .to.be.closeTo(voiceEntryAt(osmd, noteTime, 1).vfStaveNote.getAbsoluteX(), 0.01);
+            const left: number = voiceEntryAt(osmd, 0.125, 1).vfStaveNote.getAbsoluteX();
+            const right: number = voiceEntryAt(osmd, noteTime, 1).vfStaveNote.getAbsoluteX();
+            const positions: number[] = graceNotesOfMeasure(osmd).map((gve: VexFlowVoiceEntry) => gve.vfStaveNote.getAbsoluteX());
+            expect(positions.length, "all three grace notes are drawn").to.equal(3);
+            for (let i: number = 0; i < positions.length; i++) {
+               expect(positions[i], "grace notes follow the preceding note and each other").to.be.greaterThan(i === 0 ? left : positions[i - 1]);
+               expect(positions[i], "grace notes precede the following note").to.be.lessThan(right);
+            }
             done();
          }).catch(done);
       });
@@ -1520,35 +1446,11 @@ describe("VexFlow Measure", () => {
       osmd.load(xml).then(() => {
          osmd.render();
          const measure: VexFlowMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0) as VexFlowMeasure;
-         const voice2: VF.Tickable[] = measure.vfVoices[2].getTickables();
-         expect(voice2.reduce((sum: number, tickable: VF.Tickable) => sum + tickable.getTicks().value(), 0), "voice 2 takes a measure")
-            .to.be.closeTo(VF.RESOLUTION, 0.001);
-         const lastGraceNote: VF.BoundingBox = (voice2[voice2.length - 1] as VF.StaveNote).getBoundingBox();
+         const graceEntries: VexFlowVoiceEntry[] = graceNotesOfMeasure(osmd);
+         expect(graceEntries.length, "all ten grace notes are drawn").to.equal(10);
+         const lastGraceNote: VF.BoundingBox = (graceEntries[9].vfStaveNote as VF.StaveNote).getBoundingBox();
          expect(lastGraceNote.getX() + lastGraceNote.getW(), "the last grace note ends before the end of the measure")
             .to.be.at.most(measure.getVFStave().getNoteEndX());
-         done();
-      }).catch(done);
-   });
-
-   // A clef change at stand-alone grace notes (here to the bass clef at the third beat, where voice 2 has two grace notes) is
-   //   drawn once in their voice, before the first of them, not before each of them.
-   it("Draws a clef change at stand-alone grace notes once in their voice", (done: Mocha.Done) => {
-      const grace: (step: string) => string = (step: string): string =>
-         `<note><grace/>${xmlPitch(step, 3)}<voice>2</voice><type>eighth</type></note>`;
-      const xml: string = scoreWithMeasure(
-         `<note>${xmlPitch("C", 5)}<duration>2</duration><voice>1</voice><type>half</type></note>
-         <attributes><clef><sign>F</sign><line>4</line></clef></attributes>
-         <note>${xmlPitch("D", 3)}<duration>2</duration><voice>1</voice><type>half</type></note>
-         <backup><duration>4</duration></backup><forward><duration>2</duration><voice>2</voice></forward>${grace("E")}${grace("F")}`);
-      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-      osmd.load(xml).then(() => {
-         osmd.render();
-         const measure: VexFlowMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0) as VexFlowMeasure;
-         const clefsBefore: (voiceId: number) => boolean[] = (voiceId: number): boolean[] =>
-            measure.vfVoices[voiceId].getTickables().filter((tickable: VF.Tickable) => !(tickable instanceof VF.GhostNote))
-               .map((tickable: VF.Tickable) => (tickable as any).modifiers.some((modifier: VF.Modifier) => modifier.getCategory() === "notesubgroup"));
-         expect(clefsBefore(1), "voice 1: the clef before its second half note").to.deep.equal([false, true]);
-         expect(clefsBefore(2), "voice 2: the clef before its first grace note").to.deep.equal([true, false]);
          done();
       }).catch(done);
    });
@@ -1565,7 +1467,7 @@ describe("VexFlow Measure", () => {
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const layout: () => { sharp: boolean, x: number }[] = (): { sharp: boolean, x: number }[] =>
          [voiceEntryAt(osmd, 0, 1, true), voiceEntryAt(osmd, 0.5, 2, true)].map((gve: VexFlowVoiceEntry) => ({
-            sharp: (gve.vfStaveNote as any).modifiers.some((modifier: any) => modifier.getCategory() === "accidentals"),
+            sharp: (gve.notes[0] as VexFlowGraphicalNote).DrawnAccidental === AccidentalEnum.SHARP,
             x: Math.round(gve.vfStaveNote.getAbsoluteX()),
          }));
       osmd.load(xml).then(() => {
@@ -1581,7 +1483,7 @@ describe("VexFlow Measure", () => {
    });
 
    // In a tablature staff, a grace note before a rest (a GhostNote, which can't carry a GraceNoteGroup) is drawn on its own
-   //   before the rest, also after updateGraphic().
+   //   before the rest without delaying the following notes, also after updateGraphic().
    it("Keeps a grace note before a rest in a tablature staff in place after updateGraphic()", (done: Mocha.Done) => {
       const fret: (stringNumber: number, fretNumber: number) => string = (stringNumber: number, fretNumber: number): string =>
          `<notations><technical><string>${stringNumber}</string><fret>${fretNumber}</fret></technical></notations>`;
@@ -1589,7 +1491,11 @@ describe("VexFlow Measure", () => {
          `<note><grace/>${xmlPitch("C", 4)}<voice>1</voice><type>eighth</type>${fret(2, 1)}</note>
          <note><rest/><duration>1</duration><voice>1</voice><type>quarter</type></note>
          <note>${xmlPitch("D", 4)}<duration>1</duration><voice>1</voice><type>quarter</type>${fret(2, 3)}</note>
-         <note>${xmlPitch("E", 4)}<duration>2</duration><voice>1</voice><type>half</type>${fret(1, 0)}</note>`,
+         <note>${xmlPitch("E", 4)}<duration>2</duration><voice>1</voice><type>half</type>${fret(1, 0)}</note>
+         <backup><duration>4</duration></backup>
+         <note>${xmlPitch("G", 3)}<duration>1</duration><voice>2</voice><type>quarter</type>${fret(3, 0)}</note>
+         <note>${xmlPitch("A", 3)}<duration>1</duration><voice>2</voice><type>quarter</type>${fret(3, 2)}</note>
+         <note>${xmlPitch("B", 3)}<duration>2</duration><voice>2</voice><type>half</type>${fret(3, 4)}</note>`,
          "<clef><sign>TAB</sign><line>5</line></clef><staff-details><staff-lines>6</staff-lines></staff-details>");
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const layout: () => { grace: number, rest: number } = (): { grace: number, rest: number } => ({
@@ -1600,28 +1506,17 @@ describe("VexFlow Measure", () => {
          osmd.render();
          const firstLayout: { grace: number, rest: number } = layout();
          expect(firstLayout.grace, "the grace note before the rest").to.be.lessThan(firstLayout.rest);
+         for (const time of [0.25, 0.5]) {
+            expect(voiceEntryAt(osmd, time, 1).vfStaveNote.getAbsoluteX(), "notes after the rest align with voice 2")
+               .to.be.closeTo(voiceEntryAt(osmd, time, 2).vfStaveNote.getAbsoluteX(), 0.01);
+         }
          osmd.updateGraphic();
          osmd.render();
          expect(layout(), "after updateGraphic()").to.deep.equal(firstLayout);
-         done();
-      }).catch(done);
-   });
-
-   // A clef change later in the measure doesn't apply to a stand-alone grace note before it, also after updateGraphic().
-   it("Keeps the clef of a stand-alone grace note before a clef change after updateGraphic()", (done: Mocha.Done) => {
-      const xml: string = scoreWithMeasure(
-         `<note>${xmlPitch("C", 5)}<duration>2</duration><voice>1</voice><type>half</type></note>
-         <attributes><clef><sign>F</sign><line>4</line></clef></attributes>
-         <note>${xmlPitch("D", 3)}<duration>2</duration><voice>1</voice><type>half</type></note>
-         <backup><duration>4</duration></backup><forward><duration>1</duration><voice>2</voice></forward>
-         <note><grace/>${xmlPitch("E", 4)}<voice>2</voice><type>eighth</type></note>`);
-      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-      osmd.load(xml).then(() => {
-         osmd.render();
-         expect((voiceEntryAt(osmd, 0.25, 2, true).vfStaveNote as any).clef, "treble clef").to.equal("treble");
-         osmd.updateGraphic();
-         osmd.render();
-         expect((voiceEntryAt(osmd, 0.25, 2, true).vfStaveNote as any).clef, "after updateGraphic()").to.equal("treble");
+         for (const time of [0.25, 0.5]) {
+            expect(voiceEntryAt(osmd, time, 1).vfStaveNote.getAbsoluteX(), "notes after the rest still align after updateGraphic()")
+               .to.be.closeTo(voiceEntryAt(osmd, time, 2).vfStaveNote.getAbsoluteX(), 0.01);
+         }
          done();
       }).catch(done);
    });
