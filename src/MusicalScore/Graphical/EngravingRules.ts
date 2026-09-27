@@ -543,6 +543,13 @@ export class EngravingRules {
     public RenderChordSymbols: boolean;
     public RenderMultipleRestMeasures: boolean;
     public AutoGenerateMultipleRestMeasuresFromRestMeasures: boolean;
+    /** Draw explicit MusicXML measure-repeat declarations as signs (default true).
+     *  Notes, timestamps, measure widths, cursor and iterator are preserved.
+     *  A whole repeat unit stays written out if it spans systems or the draw range, its reference is not visible,
+     *  or it contains clef/key/time changes, grace notes, lyrics/extenders, trill lines, multi-rests,
+     *  connections outside the unit or to another staff, or a slur with an unattached end.
+     *  TAB staves and incremental renderNext() remain written out. */
+    public RenderMeasureRepeats: boolean;
     public RenderRehearsalMarks: boolean;
     public RenderClefsAtBeginningOfStaffline: boolean;
     public RenderKeySignatures: boolean;
@@ -1051,6 +1058,7 @@ export class EngravingRules {
         this.RenderChordSymbols = true;
         this.RenderMultipleRestMeasures = true;
         this.AutoGenerateMultipleRestMeasuresFromRestMeasures = true;
+        this.RenderMeasureRepeats = true;
         this.RenderRehearsalMarks = true;
         this.RenderClefsAtBeginningOfStaffline = true;
         this.RenderKeySignatures = true;

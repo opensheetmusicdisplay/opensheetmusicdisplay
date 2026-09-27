@@ -6,6 +6,7 @@ import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
+import {MeasureRepeatInstruction, MeasureRepeatType} from "../VoiceData/Instructions/MeasureRepeatInstruction";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {Fraction} from "../../Common/DataObjects/Fraction";
@@ -207,6 +208,7 @@ export class InstrumentReader {
           if (currentFraction.Equals(new Fraction(0, 1)) &&
               this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveAbstractInstructionList(this.instrument.Staves.length, true);
+            this.readMeasureRepeats(xmlNode);
           }
           if (this.isAttributesNodeAtEndOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode, currentFraction)) {
             this.saveClefInstructionAtEndOfMeasure();
@@ -783,6 +785,61 @@ export class InstrumentReader {
         } else {
           firstStaffEntry.Instructions.splice(0, 0, keyInstruction);
         }
+      }
+    }
+  }
+
+  /** Measure-repeat lengths supported by the renderer. */
+  private static readonly SUPPORTED_MEASURE_REPEAT_LENGTHS: number[] = [1, 2, 4];
+
+  /** Reads measure-repeat declarations into their target staff entries. */
+  private readMeasureRepeats(attributesNode: IXmlElement): void {
+    for (const measureStyleNode of attributesNode.elements("measure-style")) {
+      const measureRepeatNode: IXmlElement = measureStyleNode.element("measure-repeat");
+      if (!measureRepeatNode) {
+        continue;
+      }
+      // An omitted number applies to every staff in the part.
+      let staffNumber: number;
+      let staffNumberValid: boolean = true;
+      const numberAttr: IXmlAttribute = measureStyleNode.attribute("number");
+      if (numberAttr) {
+        staffNumber = parseInt(numberAttr.value, 10);
+        staffNumberValid = !isNaN(staffNumber) && staffNumber >= 1 && staffNumber <= this.instrument.Staves.length;
+      }
+
+      let type: MeasureRepeatType = MeasureRepeatType.Invalid;
+      let measures: number = 0;
+      let slashes: number = 1;
+      const typeAttr: string = measureRepeatNode.attribute("type")?.value;
+      if (staffNumberValid) {
+        if (typeAttr === "stop") {
+          type = MeasureRepeatType.Stop;
+        } else if (typeAttr === "start") {
+          // Accept only renderer-supported repeat lengths.
+          measures = parseInt(measureRepeatNode.value, 10);
+          if (!isNaN(measures) && InstrumentReader.SUPPORTED_MEASURE_REPEAT_LENGTHS.includes(measures)) {
+            type = MeasureRepeatType.Start;
+            const slashesAttr: IXmlAttribute = measureRepeatNode.attribute("slashes");
+            if (slashesAttr) {
+              const slashesValue: number = parseInt(slashesAttr.value, 10);
+              slashes = !isNaN(slashesValue) && slashesValue >= 1 ? slashesValue : 1;
+            }
+          } else {
+            measures = 0;
+          }
+        }
+      }
+      const instruction: MeasureRepeatInstruction = new MeasureRepeatInstruction(type, measures, slashes);
+
+      for (let staffIndex: number = 0; staffIndex < this.instrument.Staves.length; staffIndex++) {
+        if (staffNumberValid && staffNumber !== undefined && staffIndex !== staffNumber - 1) {
+          continue;
+        }
+        const globalStaffIndex: number = this.inSourceMeasureInstrumentIndex + staffIndex;
+        const declarations: MeasureRepeatInstruction[] = this.currentMeasure.MeasureRepeatInstructions.get(globalStaffIndex) ?? [];
+        declarations.push(instruction);
+        this.currentMeasure.MeasureRepeatInstructions.set(globalStaffIndex, declarations);
       }
     }
   }

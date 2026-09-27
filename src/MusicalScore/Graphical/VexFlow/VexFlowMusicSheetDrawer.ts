@@ -288,9 +288,13 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // Draw the StaffEntries
         for (const staffEntry of measure.staffEntries) {
             this.drawStaffEntry(staffEntry);
-            newBuzzRollId = this.drawBuzzRolls(staffEntry, newBuzzRollId);
+            if (!measure.NotesAreAbbreviated) { // these notes aren't drawn either (EngravingRules.RenderMeasureRepeats)
+                newBuzzRollId = this.drawBuzzRolls(staffEntry, newBuzzRollId);
+            }
         }
-        this.drawTremolosBetweenNotes(measure);
+        if (!measure.NotesAreAbbreviated) {
+            this.drawTremolosBetweenNotes(measure);
+        }
     }
 
     protected drawBuzzRolls(staffEntry: GraphicalStaffEntry, newBuzzRollId): number {

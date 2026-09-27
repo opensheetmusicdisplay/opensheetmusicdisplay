@@ -991,6 +991,8 @@ export abstract class MusicSheetCalculator {
         this.calculateSkyBottomLines();
         // calculate TupletsNumbers
         this.calculateTupletNumbers();
+        // Reserve space for multi-measure repeat counts before placing measure numbers.
+        this.reserveSkylineForMeasureRepeats();
 
         // calculate MeasureNumbers
         if (this.rules.RenderMeasureNumbers) {
@@ -3291,6 +3293,11 @@ export abstract class MusicSheetCalculator {
         // override
     }
 
+    /** Reserves skyline space for measure-repeat counts. */
+    protected reserveSkylineForMeasureRepeats(): void {
+        // override
+    }
+
     /**
      * Re-adjust the x positioning of expressions.
      */
@@ -3385,6 +3392,9 @@ export abstract class MusicSheetCalculator {
                     const placement: PlacementEnum = this.getFingeringPlacement(measure);
                     for (const gse of measure.staffEntries) {
                         gse.FingeringEntries = [];
+                        if (measure.NotesAreAbbreviated) {
+                            continue; // Fingerings belong to notes replaced by the repeat sign.
+                        }
                         const skybottomcalculator: SkyBottomLineCalculator = line.SkyBottomLineCalculator;
                         const staffEntryPositionX: number = gse.PositionAndShape.RelativePosition.x +
                             measure.PositionAndShape.RelativePosition.x;

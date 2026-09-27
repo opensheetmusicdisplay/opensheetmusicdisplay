@@ -1,6 +1,7 @@
 import Vex from "vexflow";
 import VF = Vex.Flow;
 import {GraphicalMeasure} from "../GraphicalMeasure";
+import {VexFlowMeasureRepeat} from "./VexFlowMeasureRepeat";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
@@ -91,6 +92,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
     private vftuplets: { [voiceID: number]: VF.Tuplet[] } = {};
     // The engraving rules of OSMD.
     public rules: EngravingRules;
+
+    /** Repeat unit drawn in place of this measure's note content, if any. */
+    public MeasureRepeat: VexFlowMeasureRepeat;
+
+    public get NotesAreAbbreviated(): boolean {
+        return this.MeasureRepeat !== undefined;
+    }
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
@@ -663,6 +671,24 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         // Draw stave lines
         this.stave.setContext(ctx).draw();
+        if (this.MeasureRepeat) {
+            this.MeasureRepeat.draw(ctx, this);
+        } else {
+            this.drawNotes(ctx);
+        }
+        ctx.closeGroup(); // close measure group
+
+        // Draw vertical lines
+        for (const connector of this.connectors) {
+            ctx.openGroup("connector");
+            connector.setContext(ctx).draw();
+            ctx.closeGroup();
+        }
+        this.correctNotePositions();
+    }
+
+    /** Draws this measure's note content. */
+    private drawNotes(ctx: Vex.IRenderContext): void {
         this.postFormatBeams();
         // Draw all voices
         for (const voiceID in this.vfVoices) {
@@ -728,15 +754,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
             tie.setContext(ctx);
             tie.draw();
         }
-        ctx.closeGroup(); // close measure group
-
-        // Draw vertical lines
-        for (const connector of this.connectors) {
-            ctx.openGroup("connector");
-            connector.setContext(ctx).draw();
-            ctx.closeGroup();
-        }
-        this.correctNotePositions();
     }
 
     /** Makes the beams drawn by draw() extend their notes' stems now, before the notes are drawn.

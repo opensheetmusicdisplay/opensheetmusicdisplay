@@ -1,6 +1,8 @@
 import { MusicSheetCalculator } from "../MusicSheetCalculator";
 import { VexFlowGraphicalSymbolFactory } from "./VexFlowGraphicalSymbolFactory";
 import { GraphicalMeasure } from "../GraphicalMeasure";
+import { VexFlowMeasureRepeat } from "./VexFlowMeasureRepeat";
+import { MeasureRepeatInstruction, MeasureRepeatType } from "../../VoiceData/Instructions/MeasureRepeatInstruction";
 import { StaffLine } from "../StaffLine";
 import { SkyBottomLineBatchCalculator } from "../SkyBottomLineBatchCalculator";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
@@ -12,6 +14,7 @@ import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalTie } from "../GraphicalTie";
 import { Tie } from "../../VoiceData/Tie";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
+import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
 import { MultiExpression } from "../../VoiceData/Expressions/MultiExpression";
 import { RepetitionInstruction } from "../../VoiceData/Instructions/RepetitionInstruction";
 import { Beam } from "../../VoiceData/Beam";
@@ -73,6 +76,7 @@ import { VexFlowGlissando } from "./VexFlowGlissando";
 import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { Staff } from "../../VoiceData/Staff";
+import { Note, TremoloBetweenNotes } from "../../VoiceData/Note";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -83,6 +87,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    *  with the overflow. Indexed first by Staff, then by verse/container index. */
   private previousLyricOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
   private previousChordOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
+  /** Multi-measure repeat units awaiting skyline reservation in the current render. */
+  private measureRepeatUnitsPendingSkyline: VexFlowMeasureRepeat[] = [];
 
   constructor(rules: EngravingRules) {
     super();
@@ -143,6 +149,262 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
     this.beamsNeedUpdate = false;
+    this.prepareMeasureRepeats();
+  }
+
+  /** Assigns repeat signs after fully written-out measures establish widths and system breaks. */
+  private prepareMeasureRepeats(): void {
+    this.measureRepeatUnitsPendingSkyline = [];
+    // Index measures by staff and clear repeat assignments from prior renders.
+    const measuresByStaff: Map<number, Map<SourceMeasure, VexFlowMeasure>> = new Map<number, Map<SourceMeasure, VexFlowMeasure>>();
+    for (const verticalMeasures of this.graphicalMusicSheet.MeasureList) {
+      for (const measure of verticalMeasures) {
+        if (!(measure instanceof VexFlowMeasure)) {
+          continue; // e.g. undefined for a multi-rest-collapsed staff
+        }
+        measure.MeasureRepeat = undefined;
+        const staffIndex: number = measure.ParentStaff.idInMusicSheet;
+        let byMeasure: Map<SourceMeasure, VexFlowMeasure> = measuresByStaff.get(staffIndex);
+        if (!byMeasure) {
+          byMeasure = new Map<SourceMeasure, VexFlowMeasure>();
+          measuresByStaff.set(staffIndex, byMeasure);
+        }
+        byMeasure.set(measure.parentSourceMeasure, measure);
+      }
+    }
+    if (!this.rules.RenderMeasureRepeats || this.rules.LazyConsistentGraphic) {
+      // Incremental batches can split a repeat unit.
+      return;
+    }
+
+    const sourceMeasures: SourceMeasure[] = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures;
+    const staffIndicesWithDeclarations: Set<number> = new Set<number>();
+    for (const sourceMeasure of sourceMeasures) {
+      for (const staffIndex of sourceMeasure.MeasureRepeatInstructions.keys()) {
+        staffIndicesWithDeclarations.add(staffIndex);
+      }
+    }
+    for (const staffIndex of staffIndicesWithDeclarations) {
+      const byMeasure: Map<SourceMeasure, VexFlowMeasure> = measuresByStaff.get(staffIndex);
+      if (!byMeasure) {
+        continue;
+      }
+      const wavyLineRanges: {start: number, end: number}[] = this.findWavyLineRanges(sourceMeasures, staffIndex);
+      for (const unit of VexFlowMusicSheetCalculator.findMeasureRepeatUnits(sourceMeasures, staffIndex)) {
+        this.tryCreateMeasureRepeat(sourceMeasures, byMeasure, staffIndex, unit, wavyLineRanges);
+      }
+    }
+  }
+
+  /** Groups each staff's contiguous valid repeat declarations into complete units. */
+  private static findMeasureRepeatUnits(measures: SourceMeasure[], staffIndex: number):
+      {unitStart: number, length: number, slashes: number}[] {
+    const units: {unitStart: number, length: number, slashes: number}[] = [];
+    let active: MeasureRepeatInstruction;
+    let runStart: number = 0;
+    const closeRun: (runEnd: number) => void = (runEnd: number): void => {
+      if (!active) {
+        return;
+      }
+      for (let unitStart: number = runStart; unitStart + active.measures <= runEnd; unitStart += active.measures) {
+        units.push({unitStart, length: active.measures, slashes: active.slashes});
+      }
+    };
+    for (let index: number = 0; index < measures.length; index++) {
+      const declarations: MeasureRepeatInstruction[] = measures[index].MeasureRepeatInstructions.get(staffIndex);
+      if (!declarations || declarations.length === 0) {
+        continue;
+      }
+      closeRun(index); // any declaration (valid or not) ends the previous run right before this measure
+      active = declarations.length === 1 && declarations[0].type === MeasureRepeatType.Start ? declarations[0] : undefined;
+      runStart = index;
+    }
+    closeRun(measures.length);
+    return units;
+  }
+
+  /** Assigns a repeat sign when its unit and referenced pattern are visible and abbreviable. */
+  private tryCreateMeasureRepeat(sourceMeasures: SourceMeasure[], byMeasure: Map<SourceMeasure, VexFlowMeasure>, staffIndex: number,
+      unit: {unitStart: number, length: number, slashes: number}, wavyLineRanges: {start: number, end: number}[]): void {
+    if (unit.unitStart < this.rules.MinMeasureToDrawIndex || unit.unitStart + unit.length - 1 > this.rules.MaxMeasureToDrawIndex) {
+      // Avoid assignments to measures outside the current draw range.
+      return;
+    }
+    const unitMeasures: VexFlowMeasure[] = [];
+    for (let i: number = 0; i < unit.length; i++) {
+      const graphicalMeasure: VexFlowMeasure = byMeasure.get(sourceMeasures[unit.unitStart + i]);
+      if (!graphicalMeasure) {
+        return;
+      }
+      unitMeasures.push(graphicalMeasure);
+    }
+    if (unitMeasures.some((measure: VexFlowMeasure): boolean => measure.isTabMeasure)) {
+      return;
+    }
+    // A repeat sign requires every unit measure in one staff line.
+    const staffLine: StaffLine = unitMeasures[0].ParentStaffLine;
+    if (!staffLine || unitMeasures.some((measure: VexFlowMeasure): boolean => measure.ParentStaffLine !== staffLine)) {
+      return;
+    }
+    const referenceStart: number = unit.unitStart - unit.length;
+    if (referenceStart < 0) {
+      return;
+    }
+    if (referenceStart < this.rules.MinMeasureToDrawIndex) {
+      // The referenced pattern must be in the current draw range.
+      return;
+    }
+    // The referenced pattern must be visible; it may be in another system.
+    for (let i: number = 0; i < unit.length; i++) {
+      if (!byMeasure.get(sourceMeasures[referenceStart + i])?.ParentStaffLine) {
+        return;
+      }
+    }
+    if (!VexFlowMusicSheetCalculator.canAbbreviateMeasureRepeatUnit(sourceMeasures, staffIndex, unit.unitStart, unit.length, wavyLineRanges)) {
+      return;
+    }
+    const display: VexFlowMeasureRepeat = new VexFlowMeasureRepeat(unitMeasures, unit.slashes);
+    if (unit.length > 1) {
+      this.measureRepeatUnitsPendingSkyline.push(display);
+    }
+    for (const measure of unitMeasures) {
+      measure.MeasureRepeat = display;
+    }
+  }
+
+  /** Whether the unit can hide its notes without losing instructions, lyrics or connections to visible notation. */
+  private static canAbbreviateMeasureRepeatUnit(sourceMeasures: SourceMeasure[], staffIndex: number, unitStart: number, length: number,
+      wavyLineRanges: {start: number, end: number}[]): boolean {
+    const previousMeasure: SourceMeasure = sourceMeasures[unitStart - 1];
+    if (previousMeasure?.LastInstructionsStaffEntries[staffIndex]?.Instructions.length) {
+      return false;
+    }
+    if (VexFlowMusicSheetCalculator.hasIncomingLyricExtender(sourceMeasures, unitStart, staffIndex)) {
+      return false;
+    }
+    const unitMeasures: SourceMeasure[] = sourceMeasures.slice(unitStart, unitStart + length);
+    const unitSet: Set<SourceMeasure> = new Set<SourceMeasure>(unitMeasures);
+    for (let measureIndex: number = 0; measureIndex < unitMeasures.length; measureIndex++) {
+      const measure: SourceMeasure = unitMeasures[measureIndex];
+      if (measure.isReducedToMultiRest) {
+        return false;
+      }
+      if (measure.FirstInstructionsStaffEntries[staffIndex]?.Instructions.length) {
+        return false;
+      }
+      // Check advance instructions at internal unit barlines.
+      if (measureIndex < unitMeasures.length - 1 && measure.LastInstructionsStaffEntries[staffIndex]?.Instructions.length) {
+        return false;
+      }
+      const staffEntries: SourceStaffEntry[] = measure.getEntriesPerStaff(staffIndex);
+      for (let entryIndex: number = 0; entryIndex < staffEntries.length; entryIndex++) {
+        const sourceStaffEntry: SourceStaffEntry = staffEntries[entryIndex];
+        // Preserve instructions inside a measure.
+        if (entryIndex > 0 && sourceStaffEntry.Instructions.length) {
+          return false;
+        }
+        for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
+          if (voiceEntry.IsGrace || !voiceEntry.LyricsEntries.isEmpty()) {
+            return false;
+          }
+          for (const note of voiceEntry.Notes) {
+            if (VexFlowMusicSheetCalculator.measureRepeatNoteCrosses(note, staffIndex, unitSet)) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+    const unitStartIndex: number = unitMeasures[0].measureListIndex;
+    const unitEndIndex: number = unitMeasures[unitMeasures.length - 1].measureListIndex;
+    if (wavyLineRanges.some((range: {start: number, end: number}): boolean =>
+        range.start <= unitEndIndex && range.end >= unitStartIndex)) {
+      return false;
+    }
+    return true;
+  }
+
+  /** Scan backwards to a rest-only entry or a lyric in any verse, matching calculateLyricExtend()'s forward scan. */
+  private static hasIncomingLyricExtender(sourceMeasures: SourceMeasure[], unitStart: number, staffIndex: number): boolean {
+    for (let measureIndex: number = unitStart - 1; measureIndex >= 0; measureIndex--) {
+      const staffEntries: SourceStaffEntry[] = sourceMeasures[measureIndex].getEntriesPerStaff(staffIndex);
+      for (let entryIndex: number = staffEntries.length - 1; entryIndex >= 0; entryIndex--) {
+        const sourceStaffEntry: SourceStaffEntry = staffEntries[entryIndex];
+        if (sourceStaffEntry.hasOnlyRests) {
+          return false;
+        }
+        let hasExtend: boolean = false;
+        let hasLyrics: boolean = false;
+        for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
+          voiceEntry.LyricsEntries.forEach((_verse: string, lyricsEntry: LyricsEntry): void => {
+            hasLyrics = true;
+            hasExtend = hasExtend || lyricsEntry.extend;
+          });
+        }
+        if (hasLyrics) {
+          return hasExtend;
+        }
+      }
+    }
+    return false;
+  }
+
+  /** Whether a connection leaves this staff's unit, or a slur has an unattached end that may reach the barline. */
+  private static measureRepeatNoteCrosses(note: Note, staffIndex: number, unitMeasures: Set<SourceMeasure>): boolean {
+    const escapes: (other: Note) => boolean = (other: Note): boolean =>
+      !!other && (!unitMeasures.has(other.SourceMeasure) || other.ParentStaff?.idInMusicSheet !== staffIndex);
+    if (note.NoteTie?.Notes.some(escapes)) {
+      return true;
+    }
+    if (note.NoteBeam?.Notes.some(escapes)) {
+      return true;
+    }
+    if (note.NoteTuplets.some((tuplet: Tuplet): boolean => tuplet.Notes.some((group: Note[]): boolean => group.some(escapes)))) {
+      return true;
+    }
+    if (note.Arpeggio?.notes.some(escapes)) {
+      return true;
+    }
+    if (note.NoteSlurs?.some((slur: Slur): boolean => slur.HasUnattachedEnd || escapes(slur.StartNote) || escapes(slur.EndNote))) {
+      return true;
+    }
+    const gliss: Glissando = note.NoteGlissando;
+    if (gliss && (escapes(gliss.StartNote) || escapes(gliss.EndNote))) {
+      return true;
+    }
+    const tremolo: TremoloBetweenNotes = note.TremoloInfo?.tremoloBetweenNotes;
+    if (tremolo && (escapes(tremolo.startNote) || escapes(tremolo.stopNote))) {
+      return true;
+    }
+    return false;
+  }
+
+  /** Collects trill wavy-line ranges for this staff. */
+  private findWavyLineRanges(sourceMeasures: SourceMeasure[], staffIndex: number): {start: number, end: number}[] {
+    const ranges: {start: number, end: number}[] = [];
+    for (const measure of sourceMeasures) {
+      const expressions: MultiExpression[] = measure.StaffLinkedExpressions[staffIndex];
+      if (!expressions) {
+        continue;
+      }
+      for (const multiExpression of expressions) {
+        const wavyLine: WavyLine = multiExpression.WavyLineStart;
+        if (!wavyLine) {
+          continue;
+        }
+        const endMeasure: SourceMeasure = wavyLine.ParentEndMultiExpression?.SourceMeasureParent;
+        // An unclosed wavy line is drawn from the first rendered measure, even before its declaration.
+        ranges.push({start: endMeasure ? measure.measureListIndex : 0, end: endMeasure ? endMeasure.measureListIndex : Number.MAX_SAFE_INTEGER});
+      }
+    }
+    return ranges;
+  }
+
+  /** Reserve after calculateSkyBottomLines() replaces the skyline and before measure numbers are placed above it. */
+  protected reserveSkylineForMeasureRepeats(): void {
+    for (const display of this.measureRepeatUnitsPendingSkyline) {
+      display.reserveSkyline();
+    }
   }
 
   //protected clearSystemsAndMeasures(): void {
@@ -2475,6 +2737,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   */
 
   // Generate all Graphical Slurs and attach them to the staffline
+  /** Returns whether a repeat sign replaces the note's graphical measure. */
+  private measureRepeatHidesNote(note: Note): boolean {
+    const parentMeasure: GraphicalMeasure = this.rules.GNote(note)?.parentVoiceEntry?.parentStaffEntry?.parentMeasure;
+    return parentMeasure?.NotesAreAbbreviated === true;
+  }
+
   protected calculateSlurs(): void {
     const openSlursDict: { [staffId: number]: GraphicalSlur[] } = {};
     for (const graphicalMeasure of this.graphicalMusicSheet.MeasureList[0]) { //let i: number = 0; i < this.graphicalMusicSheet.MeasureList[0].length; i++) {
@@ -2530,6 +2798,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     if (!slur.EndNote && graphicalMeasure.staffEntries[graphicalMeasure.staffEntries.length - 1] !== graphicalStaffEntry) {
                       // a slur without end note is only drawn to the barline from the measure's last note (see Slur.HasUnattachedEnd):
                       //   from an earlier note, where it ended is unknown, and it would be drawn over the rest of the measure
+                      continue;
+                    }
+                    // Hidden endpoints must not contribute a slur curve to the skyline.
+                    if (this.measureRepeatHidesNote(slur.StartNote) && this.measureRepeatHidesNote(slur.EndNote)) {
                       continue;
                     }
                     // add new VexFlowSlur to List
@@ -2681,6 +2953,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                   if (!gliss?.EndNote || !gliss?.StartNote) {
                     continue;
                   }
+                  // Hidden endpoints must not contribute a glissando to the staff line.
+                  if (this.measureRepeatHidesNote(gliss.StartNote) && this.measureRepeatHidesNote(gliss.EndNote)) {
+                    continue;
+                  }
                   // add new VexFlowGlissando to List
                   if (gliss.StartNote === graphicalNote.sourceNote) {
                     // Add a Graphical Glissando to the staffline, if the recent note is the Startnote of a slur
@@ -2776,4 +3052,3 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 }
-
