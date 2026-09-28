@@ -448,7 +448,9 @@ export class MusicPartManagerIterator {
                     const forwardJumpTargetMeasureIndex: number = currentRepetition.getForwardJumpTargetForIteration(
                         this.getRepetitionIterationCount(currentRepetition));
 
-                    if (forwardJumpTargetMeasureIndex >= 0) {
+                    // The ending or coda to jump to lies after this measure. A target at or before it (e.g. from a "2." bracket
+                    //   placed before the "1." bracket) would be jumped to on every pass, endlessly: then the measures just go on.
+                    if (forwardJumpTargetMeasureIndex > this.currentMeasureIndex) {
                         this.currentMeasureIndex = forwardJumpTargetMeasureIndex;
                         this.currentMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex];
                         this.currentVoiceEntryIndex = -1;
