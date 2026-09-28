@@ -13,7 +13,7 @@ describe("Tempo state", (): void => {
         container.remove();
     });
 
-    async function bpmAtEachNote(filename: string): Promise<number[]> {
+    async function tempoState(filename: string): Promise<{ bpms: number[], metronomeBpms: number[] }> {
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
         await osmd.load(TestUtils.getScore(filename));
         osmd.render();
@@ -24,16 +24,32 @@ describe("Tempo state", (): void => {
             bpms.push(osmd.cursor.Iterator.CurrentBpm);
             osmd.cursor.next();
         }
-        return bpms;
+        const metronomeBpms: number[] = osmd.Sheet.TimestampSortedTempoExpressionsList
+            .map(expression => expression.InstantaneousTempo)
+            .filter(expression => expression?.isMetronomeMark)
+            .map(expression => expression.TempoInBpm);
+        return { bpms, metronomeBpms };
     }
 
-    it("keeps an explicit tempo through a tempo word and a BPM-free note equation", async (): Promise<void> => {
-        expect(await bpmAtEachNote("test_tempo_state.musicxml"))
-            .to.deep.equal([60, 96, 96, 96]);
+    it("keeps an explicit tempo through a BPM-free note equation and a tempo word", async (): Promise<void> => {
+        const state: { bpms: number[], metronomeBpms: number[] } = await tempoState("test_tempo_state.musicxml");
+        expect(state.bpms).to.deep.equal([60, 96, 96, 96]);
+        expect(state.metronomeBpms).to.deep.equal([60, 96, 96]);
     });
 
-    it("uses the existing default tempo policy for an initial BPM-free note equation", async (): Promise<void> => {
-        expect(await bpmAtEachNote("test_tempo_state_start_fallback.musicxml"))
-            .to.deep.equal([106, 106]);
+    it("keeps a defined tempo for an initial BPM-free note equation", async (): Promise<void> => {
+        const state: { bpms: number[], metronomeBpms: number[] } = await tempoState("test_tempo_state_start_fallback.musicxml");
+        expect(state.bpms).to.have.lengthOf(2);
+        expect(state.bpms[0]).to.be.greaterThan(0);
+        expect(state.bpms[1]).to.equal(state.bpms[0]);
+        expect(state.metronomeBpms).to.deep.equal([state.bpms[0]]);
+    });
+
+    it("keeps a defined tempo when the first BPM-free equation follows an unmarked measure", async (): Promise<void> => {
+        const state: { bpms: number[], metronomeBpms: number[] } = await tempoState("test_tempo_state_delayed_equation.musicxml");
+        expect(state.bpms).to.have.lengthOf(2);
+        expect(state.bpms[0]).to.be.greaterThan(0);
+        expect(state.bpms[1]).to.equal(state.bpms[0]);
+        expect(state.metronomeBpms).to.deep.equal([state.bpms[0]]);
     });
 });
