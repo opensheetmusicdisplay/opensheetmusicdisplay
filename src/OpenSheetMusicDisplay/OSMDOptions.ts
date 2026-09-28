@@ -102,7 +102,9 @@ export interface IOSMDOptions {
      *  unless explicitly enabled (drawPartNames: false, drawPartAbbreviations: true).
      */
     drawPartNames?: boolean;
-    /** Whether to draw part (instrument) name abbreviations each system after the first. Only draws if drawPartNames. Default true. */
+    /** Whether to draw part (instrument) name abbreviations each system after the first. Only draws if drawPartNames. Default true.
+     *  Single-staff systems additionally need EngravingRules.RenderPartAbbreviationsForSingleStaff.
+     */
     drawPartAbbreviations?: boolean;
     /** Whether to draw measure numbers (labels). Default true.
      * Draws a measure number label at first measure, system start measure,

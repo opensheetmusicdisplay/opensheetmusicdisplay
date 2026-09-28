@@ -525,6 +525,10 @@ export class EngravingRules {
     public RenderCopyright: boolean;
     public RenderPartNames: boolean;
     public RenderPartAbbreviations: boolean;
+    /** Whether to render part abbreviations on systems with only one staff.
+     *  Requires RenderPartNames and RenderPartAbbreviations. Default false.
+     */
+    public RenderPartAbbreviationsForSingleStaff: boolean;
     /** Internal cache-gate for lazy (renderAppend) rendering: when true, the lazy reuse caches (skyline)
      *  are active. Set by OpenSheetMusicDisplay.renderAppend() and forced false by a normal render(), so
      *  the caches never affect a non-lazy render. Not a user toggle. */
@@ -1047,6 +1051,7 @@ export class EngravingRules {
         this.RenderCopyright = false;
         this.RenderPartNames = true;
         this.RenderPartAbbreviations = true;
+        this.RenderPartAbbreviationsForSingleStaff = false;
         this.LazyConsistentGraphic = false;
         this.RenderSystemLabelsAfterFirstPage = true;
         this.RenderFingerings = true;
