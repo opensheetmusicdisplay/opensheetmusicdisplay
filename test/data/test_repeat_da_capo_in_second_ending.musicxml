@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <work>
+    <work-title>D.C. in the second ending of a repeat from the first measure</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!-- Measures 1-2 repeated with a first ending (2) and a second ending (3), which has the D.C.:
+         played 1 2 1 3, then after the D.C. without the repeat: 1 3. -->
+    <measure number="1">
+      <barline location="left">
+        <bar-style>heavy-light</bar-style>
+        <repeat direction="forward"/>
+      </barline>
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <barline location="left">
+        <ending number="1" type="start">1.</ending>
+      </barline>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+        <ending number="1" type="stop"/>
+        <repeat direction="backward"/>
+      </barline>
+    </measure>
+    <measure number="3">
+      <barline location="left">
+        <ending number="2" type="start">2.</ending>
+      </barline>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <direction placement="above">
+        <direction-type>
+          <words>D.C.</words>
+        </direction-type>
+        <sound dacapo="yes"/>
+      </direction>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+        <ending number="2" type="discontinue"/>
+      </barline>
+    </measure>
+  </part>
+</score-partwise>

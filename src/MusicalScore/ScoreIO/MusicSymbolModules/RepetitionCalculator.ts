@@ -81,7 +81,11 @@ export class RepetitionCalculator {
                   }
               }
           } else {
-              if (last.RepetitonUnderConstruction.BackwardJumpInstructions.length === 0) {
+              // A forward repeat without a backward repeat is repeated until the end of the piece.
+              //   A repetition without a forward repeat and without a backward jump repeats nothing, e.g. one from an ending
+              //   without any repeat sign (played once) or one left open by a D.C. al Coda: finalizeRepetition() drops it.
+              if (last.RepetitonUnderConstruction.BackwardJumpInstructions.length === 0 &&
+                  last.RepetitonUnderConstruction.startMarker?.type !== RepetitionInstructionEnum.None) {
                   const lastMeasureIndex: number = sourceMeasures.length - 1;
                   const backJumpInstruction: RepetitionInstruction = new RepetitionInstruction( lastMeasureIndex,
                                                                                                 RepetitionInstructionEnum.BackJumpLine,
@@ -347,9 +351,10 @@ export class RepetitionCalculator {
         case RepetitionInstructionEnum.DaCapo:
             currentRepetition = this.getOrCreateCurrentRepetition();
             if (currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.length > 0) {
+                // the D.C. gets its own repetition, also after one that starts at the first measure (with endings, so still open)
                 this.finalizeRepetition(currentRepetition);
-            }
-            if (currentRepetition.RepetitonUnderConstruction.StartIndex !== 0) {
+                currentRepetition = this.createNewRepetition(0);
+            } else if (currentRepetition.RepetitonUnderConstruction.StartIndex !== 0) {
                 currentRepetition = this.createNewRepetition(0);
             }
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
@@ -592,7 +597,12 @@ export class RepetitionCalculator {
           }
           let addRepetition: boolean = true;
           const lastRep: Repetition = this.getLastFinalizedRepetition();
-          if (lastRep !== undefined && currentRep.coversIdenticalMeasures(lastRep)) {
+          // The same repetition read twice, e.g. from a repeat sign and a "D.C." at the end of the same measure.
+          //   A D.C. or D.S. in the last ending of a repetition covers the same measures, but jumps back from a later measure,
+          //   so it is kept. (After the D.C., the iterator doesn't take the repeat again, so neither restarts the other.)
+          if (lastRep !== undefined && currentRep.coversIdenticalMeasures(lastRep) &&
+              !(currentRep.FromWords &&
+                currentRep.BackwardJumpInstructions.last().measureIndex > lastRep.BackwardJumpInstructions.last().measureIndex)) {
               if (currentRep.NumberOfEndings > lastRep.NumberOfEndings) {
                   const index: number = this.musicSheet.Repetitions.indexOf(lastRep, 0);
                   if (index > -1) {

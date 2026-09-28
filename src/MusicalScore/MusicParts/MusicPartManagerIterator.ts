@@ -85,6 +85,10 @@ export class MusicPartManagerIterator {
     private currentRelativeInMeasureTimestamp: Fraction = new Fraction(0, 1);
     private currentVerticalContainerInMeasureTimestamp: Fraction = new Fraction(0, 1);
     private jumpResponsibleRepetition: Repetition = undefined;
+    /** The D.C. or D.S. repetition whose measures are played again after its jump back,
+     *  until it jumps forward (to its coda, its last ending or the end) or its measures are passed.
+     *  Repeats are not taken again in these measures. */
+    private replayedRepetitionFromWords: Repetition = undefined;
     private currentBpm: number;
     private activeDynamicExpressions: AbstractExpression[] = [];
     private activeTempoExpression: MultiTempoExpression;
@@ -401,9 +405,21 @@ export class MusicPartManagerIterator {
                   currentRepetition.StartIndex >= this.JumpResponsibleRepetition.StartIndex &&
                   currentRepetition.EndIndex <= this.JumpResponsibleRepetition.EndIndex
                 ) {
-                    this.resetRepetitionIterationCount(currentRepetition);
+                    this.restartNestedRepetition(currentRepetition);
                 }
             }
+        }
+    }
+
+    /**
+     * Starts a repetition again that lies within the repetition that jumped last: it is played with all its passes again.
+     * After a D.C. or D.S., repeats are not taken again: it is played once, as its last pass (with its last ending).
+     */
+    private restartNestedRepetition(repetition: Repetition): void {
+        if (this.replayedRepetitionFromWords) {
+            this.setRepetitionIterationCount(repetition, repetition.UserNumberOfRepetitions);
+        } else {
+            this.resetRepetitionIterationCount(repetition);
         }
     }
 
@@ -425,7 +441,7 @@ export class MusicPartManagerIterator {
                   && currentRepetition !== this.JumpResponsibleRepetition
                   && currentRepetition.StartIndex >= this.JumpResponsibleRepetition.StartIndex
                   && currentRepetition.EndIndex <= this.JumpResponsibleRepetition.EndIndex) {
-                    this.resetRepetitionIterationCount(currentRepetition);
+                    this.restartNestedRepetition(currentRepetition);
                 }
 
                 if (this.repetitionIterationCountDictKeys.contains(currentRepetition)) {
@@ -438,6 +454,10 @@ export class MusicPartManagerIterator {
                         this.currentVoiceEntryIndex = -1;
                         this.jumpResponsibleRepetition = currentRepetition;
                         this.forwardJumpOccurred = true;
+                        if (currentRepetition === this.replayedRepetitionFromWords) {
+                            // the coda or the last ending is played for the first time
+                            this.replayedRepetitionFromWords = undefined;
+                        }
                         return;
                     }
                     if (forwardJumpTargetMeasureIndex === -2) {
@@ -450,6 +470,9 @@ export class MusicPartManagerIterator {
         if (this.JumpResponsibleRepetition !== undefined && this.currentMeasureIndex > this.JumpResponsibleRepetition.EndIndex) {
             this.jumpResponsibleRepetition = undefined;
         }
+        if (this.replayedRepetitionFromWords && this.currentMeasureIndex > this.replayedRepetitionFromWords.EndIndex) {
+            this.replayedRepetitionFromWords = undefined;
+        }
     }
     private doBackJump(currentRepetition: Repetition): void {
         if (currentRepetition.SkipRepetition || this.musicSheet.Rules.CursorIgnoreRepetitions) {
@@ -461,6 +484,9 @@ export class MusicPartManagerIterator {
         this.incrementRepetitionIterationCount(currentRepetition);
         this.jumpResponsibleRepetition = currentRepetition;
         this.backJumpOccurred = true;
+        if (currentRepetition.FromWords) { // D.C. or D.S.
+            this.replayedRepetitionFromWords = currentRepetition;
+        }
     }
     private activateCurrentRhythmInstructions(): void {
         if (
