@@ -153,20 +153,21 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     });
 
-    it.skip("Timeout from server", (done: Mocha.Done) => {
-        // TODO this test times out from time to time, even with osmd.loadUrlTimeout set to 5000.
-        //   the test is unreliable, which makes it hard to test.
-        //   also, it's better not to use OSMD to fetch one's score anyways.
-        //   also, the timeout adds unnecessary time to the testing suite.
-        const score: string = "https://httpstat.us/408";
+    it("load missing file by URL", (done: Mocha.Done) => {
+        // e.g. a typo in the path: the karma server answers 404, like any web server
+        const url: string = "base/test/data/does_not_exist.musicxml";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
-        opensheetmusicdisplay.load(score).then(
+        opensheetmusicdisplay.load(url).then(
             (_: {}) => {
-                done(new Error("Unexpected response from server"));
+                done(new Error("A missing file appears to be loaded correctly"));
             },
             (exc: Error) => {
-                done();
+                if (exc.message.match(/404/)) {
+                    done();
+                } else {
+                    done(new Error("Unexpected error: " + exc.message));
+                }
             }
         );
     });
@@ -211,25 +212,6 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             titles.push(`${name}: ${opensheetmusicdisplay.Sheet.TitleString}`);
         }
         expect(titles, titles.join("; ")).to.deep.equal(contents.map(([name]) => `${name}: Evening Song`));
-    });
-
-    // skip: this test is unnecessary and creates traffic (to google)
-    it.skip("load something invalid by URL", (done: Mocha.Done) => {
-        const url: string = "https://www.google.com";
-        const div: HTMLElement = TestUtils.getDivElement(document);
-        const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
-        opensheetmusicdisplay.load(url).then(
-            (_: {}) => {
-                done(new Error("Invalid URL appears to be loaded correctly"));
-            },
-            (exc: Error) => {
-                if (exc.message.toLowerCase().match(/opensheetmusicdisplay.*invalid/)) {
-                    done();
-                } else {
-                    done(new Error("Unexpected error: " + exc.message));
-                }
-            }
-        );
     });
 
     it("load invalid URL", (done: Mocha.Done) => {
