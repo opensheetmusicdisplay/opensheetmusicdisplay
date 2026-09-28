@@ -66,7 +66,8 @@ export class TemposCalculator implements IAfterSheetReadingModule {
                      *  it keeps the tempo in force, changed by the ratio of a note equation's sides (1 for a swing mark).
                      */
                     if (ite.isMetronomeMark) {
-                        ite.TempoInBpm = previousTempo * ite.getNoteEquationTempoFactor();
+                        const factor: Fraction = ite.getNoteEquationTempoFactor();
+                        ite.TempoInBpm = previousTempo * factor.GetExpandedNumerator() / factor.Denominator;
                     } else if (ite instanceof InstantaneousTempoExpression && ite.TempoType !== TempoType.change) {
                         // An inst tempo should normally have a non-zero BPM.
                         ite.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo(ite.InstTempo);

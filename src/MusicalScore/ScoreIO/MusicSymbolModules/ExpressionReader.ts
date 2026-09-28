@@ -203,11 +203,11 @@ export class ExpressionReader {
                     // Complex metronome mark (note equation, e.g. swing notation)
                     this.parseComplexMetronomeMark(dirContentNode, metronomeNotes, metronomeRelation,
                                                    currentMeasure, timestampFraction);
+                } else if (!dirContentNode.element("per-minute") && dirContentNode.elements("beat-unit").length > 1) {
+                    // Note equation written with two beat units, e.g. quarter = dotted quarter (a metric modulation)
+                    this.parseBeatUnitNoteEquation(dirContentNode, currentMeasure, timestampFraction);
                 } else {
                     // Simple metronome mark: beat-unit = BPM
-                    // TODO handle two <beat-unit> elements without <per-minute> (simple note equation,
-                    //   e.g. quarter = half for metric modulations). This is a simpler MusicXML pattern
-                    //   than <metronome-note> — no beams or tuplets, just two note types.
                     const beatUnit: IXmlElement = dirContentNode.element("beat-unit");
                     const dotted: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
                     const bpm: IXmlElement = dirContentNode.element("per-minute");
@@ -543,12 +543,6 @@ export class ExpressionReader {
     private parseComplexMetronomeMark(metronomeNode: IXmlElement, metronomeNotes: IXmlElement[],
                                       metronomeRelationNode: IXmlElement,
                                       currentMeasure: SourceMeasure, timestampFraction: Fraction): void {
-        const useCurrentFractionForPositioning: boolean =
-            (metronomeNode.hasAttributes && metronomeNode.attribute("default-x") !== undefined);
-        if (useCurrentFractionForPositioning) {
-            this.directionTimestamp = Fraction.createFromFraction(timestampFraction);
-        }
-
         // Split metronome-note elements into left and right groups, divided by metronome-relation.
         // We iterate the raw children to determine ordering.
         const allChildren: IXmlElement[] = metronomeNode.elements();
@@ -614,6 +608,42 @@ export class ExpressionReader {
         // Build note groups
         const leftGroup: MetronomeNoteGroup = { notes: leftNotes, tuplet: leftTuplet };
         const rightGroup: MetronomeNoteGroup = { notes: rightNotes, tuplet: rightTuplet };
+        this.addNoteEquation(metronomeNode, leftGroup, rightGroup, metronomeRelationNode.value, currentMeasure, timestampFraction);
+    }
+
+    /** Parse a note equation written with two beat units instead of metronome-note elements, e.g. quarter = dotted quarter
+     *  (MusicXML's simpler form of a metric modulation). The first beat unit, with its dots and tied beat units, is the left
+     *  side, the second one the right side. A tie is not drawn, but its beat unit counts for the tempo.
+     */
+    private parseBeatUnitNoteEquation(metronomeNode: IXmlElement, currentMeasure: SourceMeasure, timestampFraction: Fraction): void {
+        const leftNotes: MetronomeNote[] = [];
+        const rightNotes: MetronomeNote[] = [];
+        let notes: MetronomeNote[] = leftNotes;
+        for (const child of metronomeNode.elements()) {
+            if (child.name === "beat-unit") {
+                if (leftNotes.length > 0) {
+                    notes = rightNotes; // the second beat unit starts the right side
+                }
+                notes.push({ type: child.value, dots: 0 });
+            } else if (child.name === "beat-unit-dot" && notes.length > 0) {
+                notes[notes.length - 1].dots++;
+            } else if (child.name === "beat-unit-tied" && child.element("beat-unit")) {
+                notes.push({ type: child.element("beat-unit").value, dots: child.elements("beat-unit-dot").length });
+            }
+        }
+        this.addNoteEquation(metronomeNode, { notes: leftNotes }, { notes: rightNotes }, "equals", currentMeasure, timestampFraction);
+    }
+
+    /** Add a note equation (e.g. a swing mark or a metric modulation) as a metronome mark. Its BPM is the direction's
+     *  sound tempo, or 0, which TemposCalculator replaces with the tempo in force times the equation's tempo factor.
+     */
+    private addNoteEquation(metronomeNode: IXmlElement, leftGroup: MetronomeNoteGroup, rightGroup: MetronomeNoteGroup,
+                            relation: string, currentMeasure: SourceMeasure, timestampFraction: Fraction): void {
+        const useCurrentFractionForPositioning: boolean =
+            (metronomeNode.hasAttributes && metronomeNode.attribute("default-x") !== undefined);
+        if (useCurrentFractionForPositioning) {
+            this.directionTimestamp = Fraction.createFromFraction(timestampFraction);
+        }
 
         // Create the tempo expression. Use the sound tempo from the parent <sound> element.
         this.createNewTempoExpressionIfNeeded(currentMeasure);
@@ -627,7 +657,7 @@ export class ExpressionReader {
         instantaneousTempoExpression.parentMeasure = currentMeasure;
         instantaneousTempoExpression.metronomeNoteGroupLeft = leftGroup;
         instantaneousTempoExpression.metronomeNoteGroupRight = rightGroup;
-        instantaneousTempoExpression.metronomeRelation = metronomeRelationNode.value;
+        instantaneousTempoExpression.metronomeRelation = relation;
         instantaneousTempoExpression.printObject = metronomeNode.attribute("print-object")?.value !== "no";
 
         if (this.musicSheet.DefaultStartTempoInBpm === 0) {

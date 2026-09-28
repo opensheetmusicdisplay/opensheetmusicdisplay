@@ -262,15 +262,15 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
      *  The left side is read in the old tempo and the right side in the new one (the usual reading of a metric modulation),
      *  so quarter = dotted quarter gives 1.5: the new dotted quarter lasts as long as the old quarter.
      *  Both sides of a swing mark (two eighths = triplet quarter + eighth) last one quarter, so it keeps the tempo (1).
-     *  1 if this is no note equation or a side's length is unknown.
+     *  1 if this is no note equation or a side's length is unknown. A fraction, so that e.g. 144 * 2 / 3 stays exactly 96.
      */
-    public getNoteEquationTempoFactor(): number {
+    public getNoteEquationTempoFactor(): Fraction {
         const left: Fraction = InstantaneousTempoExpression.getMetronomeNoteGroupLength(this.metronomeNoteGroupLeft);
         const right: Fraction = InstantaneousTempoExpression.getMetronomeNoteGroupLength(this.metronomeNoteGroupRight);
         if (!(left?.RealValue > 0) || !(right?.RealValue > 0)) {
-            return 1;
+            return new Fraction(1, 1);
         }
-        return right.RealValue / left.RealValue;
+        return new Fraction(right.GetExpandedNumerator() * left.Denominator, right.Denominator * left.GetExpandedNumerator());
     }
 
     /** The length of one side of a note equation, e.g. 3/8 for a dotted quarter. A side's tuplet covers all its notes
