@@ -583,6 +583,13 @@ export class RepetitionCalculator {
   private finalizeRepetition(repContainer: RepetitionBuildingContainer): void {
       const currentRep: Repetition = repContainer.RepetitonUnderConstruction;
       if (currentRep.BackwardJumpInstructions.length > 0) {
+          // A first ending with no second ending written after it (the "2." bracket is often left out) is played on
+          //   every pass but the last, which goes on right after it. That measure is its second ending,
+          //   as the end of the piece is for a Fine (see RepetitionInstructionEnum.Fine above).
+          if (currentRep.NumberOfEndings === 1 && currentRep.EndingIndexDict[1]) {
+              const afterFirstEnding: number = currentRep.EndingIndexDict[1].part.EndIndex + 1;
+              currentRep.setEndingStartIndex(2, afterFirstEnding < this.musicSheet.SourceMeasures.length ? afterFirstEnding : -2);
+          }
           let addRepetition: boolean = true;
           const lastRep: Repetition = this.getLastFinalizedRepetition();
           if (lastRep !== undefined && currentRep.coversIdenticalMeasures(lastRep)) {
