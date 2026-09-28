@@ -31,13 +31,13 @@ describe("Tempo state", (): void => {
         return { bpms, metronomeBpms };
     }
 
-    it("keeps an explicit tempo through a BPM-free note equation and a tempo word", async (): Promise<void> => {
+    it("keeps an explicit tempo through BPM-free note equations and a tempo word", async (): Promise<void> => {
         const state: { bpms: number[], metronomeBpms: number[] } = await tempoState("test_tempo_state.musicxml");
-        expect(state.bpms).to.deep.equal([60, 96, 96, 96]);
-        expect(state.metronomeBpms).to.deep.equal([60, 96, 96]);
+        expect(state.bpms).to.deep.equal([60, 96, 96, 96, 96]);
+        expect(state.metronomeBpms).to.deep.equal([60, 96, 96, 96]);
     });
 
-    it("keeps a defined tempo for an initial BPM-free note equation", async (): Promise<void> => {
+    it("keeps a defined tempo for an initial swing mark", async (): Promise<void> => {
         const state: { bpms: number[], metronomeBpms: number[] } = await tempoState("test_tempo_state_start_fallback.musicxml");
         expect(state.bpms).to.have.lengthOf(2);
         expect(state.bpms[0]).to.be.greaterThan(0);
@@ -45,7 +45,7 @@ describe("Tempo state", (): void => {
         expect(state.metronomeBpms).to.deep.equal([state.bpms[0]]);
     });
 
-    it("keeps a defined tempo when the first BPM-free equation follows an unmarked measure", async (): Promise<void> => {
+    it("keeps a defined tempo when the first swing mark follows an unmarked measure", async (): Promise<void> => {
         const state: { bpms: number[], metronomeBpms: number[] } = await tempoState("test_tempo_state_delayed_equation.musicxml");
         expect(state.bpms).to.have.lengthOf(2);
         expect(state.bpms[0]).to.be.greaterThan(0);
