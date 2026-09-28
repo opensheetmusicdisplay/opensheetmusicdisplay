@@ -60,7 +60,7 @@ import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AbstractGraphicalInstruction } from "./AbstractGraphicalInstruction";
 import { GraphicalInstantaneousTempoExpression } from "./GraphicalInstantaneousTempoExpression";
-import { InstantaneousTempoExpression, TempoType } from "../VoiceData/Expressions/InstantaneousTempoExpression";
+import { InstantaneousTempoExpression, MetronomeNote, MetronomeNoteGroup } from "../VoiceData/Expressions/InstantaneousTempoExpression";
 import { ContinuousTempoExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousTempoExpression";
 import { FontStyles } from "../../Common/Enums/FontStyles";
 import { AbstractTempoExpression } from "../VoiceData/Expressions/AbstractTempoExpression";
@@ -2103,6 +2103,9 @@ export abstract class MusicSheetCalculator {
                 if (entry.Expression instanceof InstantaneousTempoExpression && !entry.Expression.printObject) {
                     continue;
                 }
+                if (entry.Expression instanceof InstantaneousTempoExpression && entry.Expression.isMetronomeMark) {
+                    continue;
+                }
                 // Render each distinct tempo marking only once per position. MusicXML from part-based exporters (e.g.
                 //   Finale) often repeats a tempo marking in every part, and all of them are placed on this (first
                 //   visible) staff line, which stacked "Andante Simplice." five times above the first system of
@@ -2135,13 +2138,6 @@ export abstract class MusicSheetCalculator {
                         // all graphical expression creations should be in one place and have basic stuff like labels, lines, ...
                         // in their constructor
                     }
-                    // in case of metronome mark:
-                    if (this.rules.MetronomeMarksDrawn) {
-                        if ((entry.Expression as InstantaneousTempoExpression).TempoType === TempoType.metronomeMark) {
-                            this.createMetronomeMark((entry.Expression as InstantaneousTempoExpression));
-                            continue;
-                        }
-                    }
                 } else if (entry.Expression instanceof ContinuousTempoExpression) {
                     // TODO maybe create GraphicalContinuousTempoExpression class,
                     //   though the ContinuousTempoExpressions we have currently behave the same graphically (accelerando, ritardando, etc).
@@ -2154,9 +2150,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    /** Whether a tempo marking with the same text (or, for metronome marks, the same beat unit and bpm) at the same
-     *  position has already been placed on the staff line, so that a repeat of it (typically the same marking in
-     *  another part of the score) isn't rendered again, see calculateTempoExpressionsForMultiTempoExpression(). */
+    /** Whether tempo text has already been placed at this position, typically from another part. */
     protected isTempoMarkingAlreadyRendered(staffLine: StaffLine, tempoExpression: AbstractTempoExpression, absoluteTimestamp: Fraction): boolean {
         for (const graphicalExpression of staffLine.AbstractExpressions) {
             if (!(graphicalExpression instanceof GraphicalInstantaneousTempoExpression)) {
@@ -2169,23 +2163,38 @@ export abstract class MusicSheetCalculator {
             if ((renderedExpression.Label ?? "").trim() !== (tempoExpression.Label ?? "").trim()) {
                 continue;
             }
-            if (renderedExpression instanceof InstantaneousTempoExpression && tempoExpression instanceof InstantaneousTempoExpression &&
-                renderedExpression.TempoType === TempoType.metronomeMark) {
-                // metronome marks have no text, compare what they show
-                if (tempoExpression.TempoType !== TempoType.metronomeMark ||
-                    renderedExpression.TempoInBpm !== tempoExpression.TempoInBpm ||
-                    renderedExpression.beatUnit !== tempoExpression.beatUnit ||
-                    renderedExpression.dotted !== tempoExpression.dotted) {
-                    continue;
-                }
-            }
             return true;
         }
         return false;
     }
 
+    /** Whether two metronome marks print the same: note equations by their notes rather than their playback tempo,
+     *  other marks by beat unit and bpm. */
+    protected isSameMetronomeMark(first: InstantaneousTempoExpression, second: InstantaneousTempoExpression): boolean {
+        const firstIsEquation: boolean = !!(first.metronomeNoteGroupLeft && first.metronomeNoteGroupRight);
+        const secondIsEquation: boolean = !!(second.metronomeNoteGroupLeft && second.metronomeNoteGroupRight);
+        if (firstIsEquation || secondIsEquation) {
+            return firstIsEquation && secondIsEquation && first.metronomeRelation === second.metronomeRelation &&
+                this.isSameMetronomeNoteGroup(first.metronomeNoteGroupLeft, second.metronomeNoteGroupLeft) &&
+                this.isSameMetronomeNoteGroup(first.metronomeNoteGroupRight, second.metronomeNoteGroupRight);
+        }
+        return first.TempoInBpm === second.TempoInBpm && first.beatUnit === second.beatUnit && first.dotted === second.dotted;
+    }
+
+    private isSameMetronomeNoteGroup(first: MetronomeNoteGroup, second: MetronomeNoteGroup): boolean {
+        return first.notes.length === second.notes.length &&
+            first.notes.every((note: MetronomeNote, index: number): boolean => note.type === second.notes[index].type &&
+                note.dots === second.notes[index].dots && note.beam === second.notes[index].beam) &&
+            first.tuplet?.actualNotes === second.tuplet?.actualNotes && first.tuplet?.normalNotes === second.tuplet?.normalNotes &&
+            first.tuplet?.bracket === second.tuplet?.bracket && first.tuplet?.showNumber === second.tuplet?.showNumber;
+    }
+
     protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
         throw new Error(this.abstractNotImplementedErrorMessage);
+    }
+
+    protected layoutMetronomeMarks(): void {
+        return;
     }
 
     protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
@@ -4101,12 +4110,27 @@ export abstract class MusicSheetCalculator {
     private calculateTempoExpressions(): void {
         const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, this.rules.MaxMeasureToDrawIndex);
         const minIndex: number = this.rules.MinMeasureToDrawIndex;
-        for (let i: number = minIndex; i <= maxIndex; i++) {
-            const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
-            for (let j: number = 0; j < sourceMeasure.TempoExpressions.length; j++) {
-                this.calculateTempoExpressionsForMultiTempoExpression(sourceMeasure, sourceMeasure.TempoExpressions[j], i);
+        // Measure marks against notation, lay out text, then resolve their actual mutual collisions.
+        if (this.rules.MetronomeMarksDrawn) {
+            // A direction may be stored outside the drawing range while its display anchor is inside it.
+            for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
+                for (const expression of this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i].TempoExpressions) {
+                    for (const entry of expression.EntriesList) {
+                        if (entry.Expression instanceof InstantaneousTempoExpression && entry.Expression.isMetronomeMark &&
+                            entry.Expression.printObject) {
+                            this.createMetronomeMark(entry.Expression);
+                        }
+                    }
+                }
             }
         }
+        for (let i: number = minIndex; i <= maxIndex; i++) {
+            const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+            for (const expression of sourceMeasure.TempoExpressions) {
+                this.calculateTempoExpressionsForMultiTempoExpression(sourceMeasure, expression, i);
+            }
+        }
+        this.layoutMetronomeMarks();
     }
 
     private calculateRehearsalMarks(): void {

@@ -464,14 +464,23 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //    }
     //
     //}
+    /** The tempo at the start of the piece, not the first later tempo instruction. */
     public getExpressionsStartTempoInBPM(): number {
-        if (this.TimestampSortedTempoExpressionsList.length > 0) {
-            const me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
-            if (me.InstantaneousTempo) {
-                return me.InstantaneousTempo.TempoInBpm;
-            } else if (me.ContinuousTempo) {
-                return me.ContinuousTempo.StartTempo;
+        const expressions: MultiTempoExpression[] = this.TimestampSortedTempoExpressionsList;
+        let me: MultiTempoExpression = expressions[0];
+        if (!me || me.AbsolutePlaybackTimestamp.RealValue !== 0) {
+            return this.userStartTempoInBPM;
+        }
+        // At time zero, use the last explicit sound tempo as the baseline, or the last instruction.
+        for (let i: number = 1; i < expressions.length && expressions[i].AbsolutePlaybackTimestamp.RealValue === 0; i++) {
+            if (!(me.PlaybackTempoInBpm > 0) || expressions[i].PlaybackTempoInBpm > 0) {
+                me = expressions[i];
             }
+        }
+        if (me.InstantaneousTempo) {
+            return me.PlaybackTempoInBpm ?? me.InstantaneousTempo.TempoInBpm;
+        } else if (me.ContinuousTempo) {
+            return me.ContinuousTempo.StartTempo;
         }
         return this.userStartTempoInBPM;
     }

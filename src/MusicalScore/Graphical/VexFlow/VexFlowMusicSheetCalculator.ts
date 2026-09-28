@@ -77,6 +77,26 @@ import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/Wavy
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { Staff } from "../../VoiceData/Staff";
 import { Note, TremoloBetweenNotes } from "../../VoiceData/Note";
+import { GeometricSkyBottomLineContext } from "../GeometricSkyBottomLineContext";
+import { GraphicalInstantaneousTempoExpression } from "../GraphicalInstantaneousTempoExpression";
+
+/** Extents of a drawing, in pixels relative to its staffline and the top line of its staff. */
+interface IMetronomeBounds {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+interface IMetronomePlacement {
+  measure: VexFlowMeasure;
+  expression: InstantaneousTempoExpression;
+  mark: VF.StaveTempo;
+  bounds: IMetronomeBounds;
+  yShift: number;
+  /** Whether the mark is where the existing layout draws it, which already reserves space for it. */
+  existingPosition: boolean;
+}
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -89,6 +109,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   private previousChordOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
   /** Multi-measure repeat units awaiting skyline reservation in the current render. */
   private measureRepeatUnitsPendingSkyline: VexFlowMeasureRepeat[] = [];
+  private metronomePlacements: IMetronomePlacement[] = [];
 
   constructor(rules: EngravingRules) {
     super();
@@ -117,6 +138,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // slightly differently than the first render.
     this.previousLyricOverflowsByStaff.clear();
     this.previousChordOverflowsByStaff.clear();
+    this.metronomePlacements = [];
     this.dashSpace = undefined;
     for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
       for (const graphicalMeasure of graphicalMeasures) {
@@ -1299,17 +1321,31 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     //   (MusicSheetCalculator.calculateTempoExpressionsForMultiTempoExpression). The expression's StaffNumber is the
     //   staff within its part, not an index into the measure list: used as one, it put every part's mark on the
     //   first staff of the score, and lost the mark when that staff was hidden.
-    const measureIndex: number = metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.measureListIndex;
+    const sourceMeasures: SourceMeasure[] = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures;
+    const absoluteTimestamp: Fraction = metronomeExpression.ParentMultiTempoExpression.AbsoluteTimestamp;
+    let measureIndex: number = metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.measureListIndex;
+    while (measureIndex + 1 < sourceMeasures.length && absoluteTimestamp.gte(sourceMeasures[measureIndex + 1].AbsoluteTimestamp)) {
+      measureIndex++;
+    }
+    while (measureIndex > 0 && absoluteTimestamp.lt(sourceMeasures[measureIndex].AbsoluteTimestamp)) {
+      measureIndex--;
+    }
+    if (measureIndex < this.rules.MinMeasureToDrawIndex || measureIndex > this.rules.MaxMeasureToDrawIndex) {
+      return;
+    }
     const vfMeasure: VexFlowMeasure = this.graphicalMusicSheet.MeasureList[measureIndex]?.find(
       (measure: GraphicalMeasure) => measure?.ParentStaffLine && measure.ParentStaff.isVisible()) as VexFlowMeasure;
     if (!vfMeasure) {
       return;
     }
     const firstMetronomeMark: boolean = measureIndex === 0;
-    if (vfMeasure.hasMetronomeMark) {
-      return; // don't create more than one metronome mark per measure;
-      // TODO some measures still seem to have two metronome marks, one less bold than the other (or not bold),
-      //   might be because of both <sound> node and <per-minute> node (within <metronome>) creating metronome marks
+    // A measure can have marks at different times. The same mark at the same time, typically repeated in another
+    //   part, is drawn once, following the tempo-text deduplication rule above.
+    const timestamp: Fraction = Fraction.minus(absoluteTimestamp, sourceMeasures[measureIndex].AbsoluteTimestamp);
+    if (this.metronomePlacements.some((placement: IMetronomePlacement): boolean => placement.measure === vfMeasure &&
+      placement.expression.ParentMultiTempoExpression.AbsoluteTimestamp.Equals(absoluteTimestamp) &&
+      this.isSameMetronomeMark(placement.expression, metronomeExpression))) {
+      return;
     }
     const vfStave: VF.Stave = vfMeasure.getVFStave();
 
@@ -1317,22 +1353,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let hasExpressionsAboveStaffline: boolean = false;
     for (const expression of metronomeExpression.parentMeasure.TempoExpressions) {
       const isMetronomeExpression: boolean = expression.InstantaneousTempo?.TempoType === TempoType.metronomeMark;
+      // Only tempo text at the time of the mark lies under it, so text elsewhere in the measure does not raise it.
       if (expression.getPlacementOfFirstEntry() === PlacementEnum.Above &&
-          !isMetronomeExpression) {
+          !isMetronomeExpression && expression.AbsoluteTimestamp.Equals(absoluteTimestamp)) {
         hasExpressionsAboveStaffline = true;
         break;
       }
     }
     if (hasExpressionsAboveStaffline) {
       yShift -= 1.4;
-      // TODO improve this with proper skyline / collision detection. unfortunately we don't have a skyline here yet.
-      // let maxSkylineBeginning: number = 0;
-      // for (let i = 0; i < skyline.length / 1; i++) { // search in first 3rd, disregard end of measure
-      //   maxSkylineBeginning = Math.max(skyline[i], maxSkylineBeginning);
-      // }
-      // console.log('max skyline: ' + maxSkylineBeginning);
     }
-    const skyline: number[] = this.musicSystems[0]?.StaffLines[0]?.SkyLine;
+    const skyline: number[] = vfMeasure.ParentStaffLine.SkyLine;
 
     if (metronomeExpression.metronomeNoteGroupLeft && metronomeExpression.metronomeNoteGroupRight) {
       // Complex metronome mark (note equation, e.g. swing notation)
@@ -1357,16 +1388,135 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         yShift * unitInPixels);
     }
 
-    const xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
-    (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
-      xShift
-    );
-    vfMeasure.hasMetronomeMark = true;
-    if (skyline) {
-      // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
+    const index: number = vfStave.getModifiers().length - 1;
+    const mark: VF.StaveTempo = vfStave.getModifiers()[index] as VF.StaveTempo;
+    let xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
+    if (timestamp.RealValue > 0) {
+      // Within the measure, place the mark at its time, like other expressions.
+      const staffLine: StaffLine = vfMeasure.ParentStaffLine;
+      const position: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+        metronomeExpression.ParentMultiTempoExpression.AbsoluteTimestamp,
+        this.graphicalMusicSheet.MeasureList[measureIndex].indexOf(vfMeasure),
+        staffLine,
+        staffLine.isPartOfMultiStaffInstrument()
+      );
+      // StaveTempo.draw adds the beginning modifiers' width to every tempo mark.
+      xShift = (position.x - vfMeasure.PositionAndShape.RelativePosition.x) * unitInPixels - vfStave.getModifierXShift(index);
+    }
+    mark.setShiftX(xShift);
+    // Measure first, so that the existing reservation below is not treated as notation under this mark.
+    this.prepareMetronomePlacement(vfMeasure, metronomeExpression, mark, index, xShift, yShift);
+    if (skyline && timestamp.RealValue <= 0) {
+      // Retain the established space above a mark at the beginning of a measure.
       skyline[0] = Math.min(skyline[0], -4.5 + yShift);
     }
-    // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
+  }
+
+  /** Measures the drawn mark and its clearance from the notation, before tempo text takes its space. */
+  private prepareMetronomePlacement(measure: VexFlowMeasure, expression: InstantaneousTempoExpression, mark: VF.StaveTempo,
+                                    index: number, xShift: number, yShift: number): void {
+    const stave: VF.Stave = measure.getVFStave();
+    const staffLine: StaffLine = measure.ParentStaffLine;
+    const staffLineWidth: number = staffLine.PositionAndShape.Size.width;
+    // Draw into a geometric context one staffline wider on each side, so that no part of the mark is clipped.
+    const margin: number = staffLineWidth * unitInPixels;
+    const context: GeometricSkyBottomLineContext =
+      new GeometricSkyBottomLineContext(3 * margin, 300, this.rules.GeometricSkyBottomLineCaches);
+    context.translate(margin + measure.PositionAndShape.RelativePosition.x * unitInPixels - stave.getX(), -stave.getYForLine(0));
+    const previousContext: Vex.IRenderContext = stave.getContext();
+    try {
+      stave.setContext(context as any);
+      mark.draw(stave, stave.getModifierXShift(index));
+    } finally {
+      stave.setContext(previousContext);
+    }
+    const columnTops: number[] = [];
+    const columnBottoms: number[] = [];
+    context.copyExtentsInto(columnTops, columnBottoms);
+    const bounds: IMetronomeBounds = {left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity};
+    columnTops.forEach((top: number, column: number): void => {
+      bounds.left = Math.min(bounds.left, column - margin);
+      bounds.right = Math.max(bounds.right, column + 1 - margin);
+      bounds.top = Math.min(bounds.top, top);
+      bounds.bottom = Math.max(bounds.bottom, columnBottoms[column]);
+    });
+    if (bounds.left > bounds.right) {
+      return;
+    }
+    const atMeasureStart: boolean = expression.ParentMultiTempoExpression.AbsoluteTimestamp.lte(measure.parentSourceMeasure.AbsoluteTimestamp);
+    if (!atMeasureStart) {
+      // Keep a mark placed within the measure inside its staffline, like calculateLabel() does for text.
+      let horizontalOffset: number = 0;
+      if (bounds.right / unitInPixels > staffLineWidth) {
+        horizontalOffset = staffLineWidth - this.rules.MeasureRightMargin - bounds.right / unitInPixels;
+      }
+      const left: number = bounds.left / unitInPixels + horizontalOffset;
+      if (left < staffLine.PositionAndShape.BorderMarginLeft) {
+        horizontalOffset += staffLine.PositionAndShape.BorderMarginLeft - left + this.rules.LabelXOffsetForStafflineLeftOverflowCheck;
+      }
+      mark.setShiftX(xShift + horizontalOffset * unitInPixels);
+      bounds.left += horizontalOffset * unitInPixels;
+      bounds.right += horizontalOffset * unitInPixels;
+    }
+    // Keep the existing position unless the drawing intersects the notation; then keep TempoYSpacing from it.
+    const clearance: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(
+      bounds.left / unitInPixels, bounds.right / unitInPixels) - bounds.bottom / unitInPixels;
+    const offset: number = clearance < 0 ? clearance - this.rules.TempoYSpacing : 0;
+    bounds.top += offset * unitInPixels;
+    bounds.bottom += offset * unitInPixels;
+    this.metronomePlacements.push({measure, expression, mark, bounds, yShift: (yShift + offset) * unitInPixels,
+      existingPosition: atMeasureStart && offset === 0});
+  }
+
+  protected layoutMetronomeMarks(): void {
+    const occupiedByStaffLine: Map<StaffLine, IMetronomeBounds[]> = new Map<StaffLine, IMetronomeBounds[]>();
+    const padding: number = this.rules.TempoYSpacing * unitInPixels;
+    for (const placement of this.metronomePlacements) {
+      const staffLine: StaffLine = placement.measure.ParentStaffLine;
+      let occupied: IMetronomeBounds[] = occupiedByStaffLine.get(staffLine);
+      if (!occupied) {
+        occupied = [];
+        for (const expression of staffLine.AbstractExpressions) {
+          if (!(expression instanceof GraphicalInstantaneousTempoExpression) || !expression.GraphicalLabel.Label.text) {
+            continue;
+          }
+          // The label's border without its margin, so that a mark fitting beside the text is not stacked.
+          const box: BoundingBox = expression.GraphicalLabel.PositionAndShape;
+          occupied.push({
+            left: (box.RelativePosition.x + box.BorderLeft) * unitInPixels,
+            right: (box.RelativePosition.x + box.BorderRight) * unitInPixels,
+            top: (box.RelativePosition.y + box.BorderTop) * unitInPixels,
+            bottom: (box.RelativePosition.y + box.BorderBottom) * unitInPixels
+          });
+        }
+        occupied.sort((a: IMetronomeBounds, b: IMetronomeBounds): number => b.bottom - a.bottom);
+        occupiedByStaffLine.set(staffLine, occupied);
+      }
+      const bounds: IMetronomeBounds = placement.bounds;
+      let offset: number = 0;
+      // Moving only upwards allows one bottom-to-top pass, including earlier marks.
+      // Only an actual overlap moves the mark; the padding applies to the resolved position.
+      for (const obstacle of occupied) {
+        if (bounds.left < obstacle.right && bounds.right > obstacle.left &&
+            bounds.bottom + offset > obstacle.top && bounds.top + offset < obstacle.bottom) {
+          offset = obstacle.top - padding - bounds.bottom;
+        }
+      }
+      placement.mark.setShiftY(placement.yShift + offset);
+      bounds.top += offset;
+      bounds.bottom += offset;
+      // Keep bottom-to-top order without sorting the whole list again; retain order for equal bottoms.
+      let insertionIndex: number = 0;
+      while (insertionIndex < occupied.length && occupied[insertionIndex].bottom >= bounds.bottom) {
+        insertionIndex++;
+      }
+      occupied.splice(insertionIndex, 0, bounds);
+      // A mark left at its existing position keeps the existing reservation; others reserve their drawing.
+      if (!placement.existingPosition || offset !== 0) {
+        staffLine.SkyBottomLineCalculator.updateSkyLineInRange(
+          bounds.left / unitInPixels, bounds.right / unitInPixels, bounds.top / unitInPixels);
+      }
+    }
   }
 
   /** Convert MetronomeNoteGroup data into the format expected by VexFlow's StaveTempo.drawNoteEquation(). */

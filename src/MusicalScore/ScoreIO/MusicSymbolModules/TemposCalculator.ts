@@ -56,6 +56,7 @@ export class TemposCalculator implements IAfterSheetReadingModule {
         const ExpressionsList: MultiTempoExpression[] = [];
         let previousMte: MultiTempoExpression = null;
         let previousTempo: number = primoTempo;
+        let soundTempoTimestamp: Fraction;
         for (let mteIndex: number = 0, mteSource: MultiTempoExpression[] = AllExp; mteIndex < mteSource.length; mteIndex++) {
             const mte: MultiTempoExpression = mteSource[mteIndex];
             if (previousMte === null || mte.AbsoluteTimestamp !== previousMte.AbsoluteTimestamp) {
@@ -97,8 +98,11 @@ export class TemposCalculator implements IAfterSheetReadingModule {
                         }
                     }
                 }
-                // A BPM-free metronome mark keeps the last valid tempo, whether given in the score or resolved above.
-                if (mte.InstantaneousTempo?.TempoInBpm > 0) {
+                // Keep explicit sound BPM over simultaneous inferred values as the baseline for later marks.
+                if (mte.PlaybackTempoInBpm > 0) {
+                    previousTempo = mte.PlaybackTempoInBpm;
+                    soundTempoTimestamp = mte.AbsolutePlaybackTimestamp;
+                } else if (mte.InstantaneousTempo?.TempoInBpm > 0 && !mte.AbsolutePlaybackTimestamp.Equals(soundTempoTimestamp)) {
                     previousTempo = mte.InstantaneousTempo.TempoInBpm;
                 }
             }
@@ -138,9 +142,13 @@ export class TemposCalculator implements IAfterSheetReadingModule {
             }
         }
         previousTempo = primoTempo;
+        soundTempoTimestamp = undefined;
         for (let exp_index: number = 0; exp_index < ExpressionsList.length; exp_index++) {
             const mte: MultiTempoExpression = ExpressionsList[exp_index];
-            if (mte.InstantaneousTempo != null) {
+            if (mte.PlaybackTempoInBpm > 0) {
+                previousTempo = mte.PlaybackTempoInBpm;
+                soundTempoTimestamp = mte.AbsolutePlaybackTimestamp;
+            } else if (mte.InstantaneousTempo != null && !mte.AbsolutePlaybackTimestamp.Equals(soundTempoTimestamp)) {
                 previousTempo = mte.InstantaneousTempo.TempoInBpm;
             }
             if (mte.ContinuousTempo != null) {
@@ -177,7 +185,7 @@ export class TemposCalculator implements IAfterSheetReadingModule {
                 let endTimestamp: Fraction = Fraction.plus(endMeasure.AbsoluteTimestamp, Fraction.minus(endMeasure.Duration, new Fraction(1, 64)));
                 let nextTimestamp: Fraction;
                 if (exp_index < ExpressionsList.length - 1) {
-                    nextTimestamp = ExpressionsList[exp_index + 1].AbsoluteTimestamp;
+                    nextTimestamp = ExpressionsList[exp_index + 1].AbsolutePlaybackTimestamp;
                     if (nextTimestamp.RealValue < endTimestamp.RealValue) {
                         endTimestamp = nextTimestamp;
                     }
@@ -191,38 +199,42 @@ export class TemposCalculator implements IAfterSheetReadingModule {
             }
         }
         musicSheet.TimestampSortedTempoExpressionsList = ExpressionsList;
-        if (ExpressionsList[0]?.InstantaneousTempo) {
-            musicSheet.DefaultStartTempoInBpm = ExpressionsList[0].InstantaneousTempo.TempoInBpm;
+        if (ExpressionsList[0]?.InstantaneousTempo && ExpressionsList[0].AbsolutePlaybackTimestamp.RealValue === 0) {
+            musicSheet.DefaultStartTempoInBpm = primoTempo;
         }
     }
     /** Clean the start of the  expressions list and return the TempoPrimo BPM.
      *
-     * Make sure that there is an Inst tempo at [0 0/1] with a non-zero BPM.
-     * Return that BPM for TempoPrimo.
+     * Use the initial setting until the first playback instruction, or resolve an instruction at time zero.
+     * Return that BPM for TempoPrimo; a later instruction must not become the starting tempo.
      */
     private static cleanExpListStartingEntry(ms: MusicSheet, ExpList: MultiTempoExpression[]): number {
         // if there is no mte given at the start of the piece:
-        if (ExpList.length === 0 || !ExpList[0].AbsoluteTimestamp.Equals(new Fraction(0, 1))) {
-            const mte: MultiTempoExpression = new MultiTempoExpression(ms.SourceMeasures[0], new Fraction(0, 1));
-            // insert at start
-            ExpList = [mte].concat(ExpList);
+        if (ExpList.length === 0 || ExpList[0].AbsolutePlaybackTimestamp.RealValue !== 0) {
+            return ms.DefaultStartTempoInBpm || ms.userStartTempoInBPM;
         }
         if (!ExpList[0].InstantaneousTempo) {
             const I: InstantaneousTempoExpression = new InstantaneousTempoExpression("*generated", PlacementEnum.Above, 1, 0, ExpList[0], true);
             ExpList[0].addExpression(I, "");
         }
         const Inst0: InstantaneousTempoExpression = ExpList[0].InstantaneousTempo;
-        if (Inst0.TempoInBpm > 0) {
-            // we have what we need
-            return Inst0.TempoInBpm;
+        let soundTempo: number = ExpList[0].PlaybackTempoInBpm;
+        for (let i: number = 1; i < ExpList.length && ExpList[i].AbsolutePlaybackTimestamp.RealValue === 0; i++) {
+            if (ExpList[i].PlaybackTempoInBpm > 0) {
+                soundTempo = ExpList[i].PlaybackTempoInBpm;
+            }
         }
-        // Missing BPM can be 0, or undefined for the generated expression above.
-        if (ms.DefaultStartTempoInBpm > 0) {
-            Inst0.TempoInBpm = ms.DefaultStartTempoInBpm;
-        } else {
-            Inst0.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.moderato);
+        if (!(Inst0.TempoInBpm > 0)) {
+            // Missing BPM can be 0, or undefined for a generated expression or an unknown tempo word.
+            if (soundTempo > 0) {
+                Inst0.TempoInBpm = soundTempo;
+            } else if (ms.DefaultStartTempoInBpm > 0) {
+                Inst0.TempoInBpm = ms.DefaultStartTempoInBpm;
+            } else {
+                Inst0.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.moderato);
+            }
         }
-        return Inst0.TempoInBpm;
+        return soundTempo > 0 ? soundTempo : Inst0.TempoInBpm;
     }
 }
 export class TempoSorter {
@@ -236,7 +248,7 @@ export class TempoSorter {
      */
     public static Compare(x: MultiTempoExpression, y: MultiTempoExpression): number {
         let ret: number = 0;
-        ret = TempoSorter.CompareNumber(x.AbsoluteTimestamp.RealValue, y.AbsoluteTimestamp.RealValue);
+        ret = TempoSorter.CompareNumber(x.AbsolutePlaybackTimestamp.RealValue, y.AbsolutePlaybackTimestamp.RealValue);
         if (ret !== 0) {
             return ret;
         }

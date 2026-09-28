@@ -25,6 +25,8 @@ export class ExpressionReader {
     private musicSheet: MusicSheet;
     private placement: PlacementEnum;
     private soundTempo: number;
+    private soundTimestamp: Fraction;
+    private explicitSoundTempo: number;
     private soundDynamic: number;
     private divisions: number;
     private offsetDivisions: number;
@@ -180,11 +182,12 @@ export class ExpressionReader {
                 }
                 //console.log(`value: ${tempoAttr.value}\n  soundTempo: ${this.soundTempo}`);
                 currentMeasure.TempoInBPM = this.soundTempo;
-                if (this.musicSheet.DefaultStartTempoInBpm === 0) {
-                    this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
-                }
                 this.musicSheet.HasBPMInfo = true;
                 isTempoInstruction = true;
+                this.explicitSoundTempo = this.soundTempo;
+                const soundOffset: IXmlElement = n.element("offset") ??
+                    (offsetNode?.attribute("sound")?.value === "yes" ? offsetNode : undefined);
+                this.soundTimestamp = this.readTempoTimestamp(soundOffset, inSourceMeasureCurrentFraction);
             }
             if (dynAttr) {
                 const match: string[] = dynAttr.value.match(/\d+/);
@@ -193,9 +196,13 @@ export class ExpressionReader {
             }
         }
         const dirNodes: IXmlElement[] = directionNode.elements("direction-type");
+        const originalDirectionTimestamp: Fraction = this.directionTimestamp;
         for (const dirNode of dirNodes) {
+            this.directionTimestamp = originalDirectionTimestamp;
             let dirContentNode: IXmlElement = dirNode.element("metronome");
             if (dirContentNode) {
+                this.directionTimestamp = this.readTempoTimestamp(
+                    dirContentNode.attribute("default-x") ? undefined : offsetNode, inSourceMeasureCurrentFraction);
                 const metronomeNotes: IXmlElement[] = dirContentNode.elements("metronome-note");
                 const metronomeRelation: IXmlElement = dirContentNode.element("metronome-relation");
 
@@ -212,11 +219,6 @@ export class ExpressionReader {
                     const dotted: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
                     const bpm: IXmlElement = dirContentNode.element("per-minute");
                     if (beatUnit !== undefined && bpm) {
-                        const useCurrentFractionForPositioning: boolean =
-                            (dirContentNode.hasAttributes && dirContentNode.attribute("default-x") !== undefined);
-                        if (useCurrentFractionForPositioning) {
-                            this.directionTimestamp = Fraction.createFromFraction(timestampFraction);
-                        }
                         // per-minute can contain text alongside the number (e.g. "c. 108" for circa)
                         // -> find first number ("c. 108" matches 108, "108.5" would match 108.5)
                         const bpmMatch: RegExpMatchArray = bpm.value.match(/(\d+\.?\d*)/);
@@ -233,9 +235,6 @@ export class ExpressionReader {
                         this.soundTempo = bpmNumber;
                         // make sure to take dotted beats into account
                         currentMeasure.TempoInBPM = this.soundTempo * (dotted?1.5:1);
-                        if (this.musicSheet.DefaultStartTempoInBpm === 0) {
-                            this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
-                        }
                         this.musicSheet.HasBPMInfo = true;
                         instantaneousTempoExpression.dotted = dotted;
                         instantaneousTempoExpression.beatUnit = beatUnit.value;
@@ -257,6 +256,8 @@ export class ExpressionReader {
             dirContentNode = dirNode.element("words");
             if (dirContentNode) {
                 if (isTempoInstruction) {
+                    this.directionTimestamp = this.readTempoTimestamp(
+                        dirContentNode.attribute("default-x") ? undefined : offsetNode, inSourceMeasureCurrentFraction);
                     this.createNewTempoExpressionIfNeeded(currentMeasure);
                     this.currentMultiTempoExpression.CombinedExpressionsText = dirContentNode.value;
                     const instantaneousTempoExpression: InstantaneousTempoExpression = new InstantaneousTempoExpression(
@@ -501,6 +502,8 @@ export class ExpressionReader {
     private initialize(): void {
         this.placement = PlacementEnum.NotYetDefined;
         this.soundTempo = 0;
+        this.soundTimestamp = undefined;
+        this.explicitSoundTempo = undefined;
         this.soundDynamic = 0;
         this.offsetDivisions = 0;
     }
@@ -660,9 +663,6 @@ export class ExpressionReader {
         instantaneousTempoExpression.metronomeRelation = relation;
         instantaneousTempoExpression.printObject = metronomeNode.attribute("print-object")?.value !== "no";
 
-        if (this.musicSheet.DefaultStartTempoInBpm === 0) {
-            this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
-        }
         this.musicSheet.HasBPMInfo = true;
         this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
         this.currentMultiTempoExpression.CombinedExpressionsText = "test";
@@ -856,11 +856,25 @@ export class ExpressionReader {
         return existingMultiExpression;
     }
 
+    private readTempoTimestamp(offset: IXmlElement, sourceTimestamp: Fraction): Fraction {
+        const timestamp: Fraction = sourceTimestamp.clone();
+        if (offset) {
+            const value: string = offset.value.trim();
+            const divisions: number = Number(value);
+            if (/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value) && Number.isFinite(divisions)) {
+                timestamp.Add(new Fraction(divisions, 4 * this.divisions));
+            }
+        }
+        return timestamp;
+    }
+
     private createNewTempoExpressionIfNeeded(currentMeasure: SourceMeasure): void {
         if (!this.currentMultiTempoExpression ||
             this.currentMultiTempoExpression.SourceMeasureParent !== currentMeasure ||
             this.currentMultiTempoExpression.Timestamp !== this.directionTimestamp) {
             this.currentMultiTempoExpression = new MultiTempoExpression(currentMeasure, Fraction.createFromFraction(this.directionTimestamp));
+            this.currentMultiTempoExpression.PlaybackTimestamp = this.soundTimestamp?.clone();
+            this.currentMultiTempoExpression.PlaybackTempoInBpm = this.explicitSoundTempo;
             currentMeasure.TempoExpressions.push(this.currentMultiTempoExpression);
         }
     }

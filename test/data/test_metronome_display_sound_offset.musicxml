@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<score-partwise version="4.0">
+  <work><work-title>Printed tempo at beat 2, sound tempo at beat 3</work-title></work>
+  <part-list>
+    <score-part id="P1"><part-name>Flute</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome><beat-unit>quarter</beat-unit><per-minute>60</per-minute></metronome>
+        </direction-type>
+        <sound tempo="60"/>
+      </direction>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <direction placement="above">
+        <direction-type>
+          <metronome><beat-unit>quarter</beat-unit><per-minute>120</per-minute></metronome>
+        </direction-type>
+        <offset>-1</offset>
+        <sound tempo="120"/>
+      </direction>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+    </measure>
+  </part>
+</score-partwise>
