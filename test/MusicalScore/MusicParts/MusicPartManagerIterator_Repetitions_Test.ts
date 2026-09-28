@@ -73,12 +73,13 @@ describe("MusicPartManagerIterator measure order with repetitions", () => {
     });
 
     /**
-     * Sample: four movements (the measure numbers restart), see the comment in the file:
+     * Sample: five movements (the measure numbers restart), see the comment in the file:
      * 1. A first ending without a forward repeat after a repeat goes back to the measure after that repeat (it went back to the first measure).
      * 2. A segno in the measure of a forward repeat: the repeat's endings belong to the repeat, and the D.S. al Coda is taken
      *    (the repeat's backward jump closed the segno's repetition, so the D.S. al Coda was lost).
      * 3. No repeat or jump, so the first instruction of movement 4 crosses two movement starts.
      * 4. "Menuetto D.C. al Fine" goes back to the start of its movement (it went back to the first measure of the piece, and wasn't read).
+     * 5. The Fine of movement 4's D.C. al Fine ends that movement, then this one is played (the Fine ended the piece).
      */
     it("plays repeats and jumps within their movement", async () => {
         expect(await playedMeasures("test_repeat_movements.musicxml")).to.deep.equal([
@@ -86,6 +87,7 @@ describe("MusicPartManagerIterator measure order with repetitions", () => {
             4, 5, 4, 6, 7, 8, 4, 6, 7, 9,
             10, 11,
             12, 13, 14, 12, 13,
+            15, 16, 17,
         ]);
     });
 });

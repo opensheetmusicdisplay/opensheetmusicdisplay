@@ -10,12 +10,13 @@
     </score-part>
   </part-list>
   <part id="P1">
-    <!-- Four movements (the measure numbers restart), played:
+    <!-- Five movements (the measure numbers restart), played:
          1. |: 1 :| 2 [1. 3 :| 4 (a first ending without a forward repeat after a repeat): 1 1 2 3 2 4
          2. Segno |: 1 [1. 2 :| [2. 3 ] 4 (To Coda) 5 (D.S. al Coda) Coda 6
             (the segno in the measure of the forward repeat): 1 2 1 3 4 5, after the D.S.: 1 3 4, the coda: 6
          3. 1 2 (no repeat or jump)
-         4. 1 2 (Fine) 3 ("Menuetto D.C. al Fine", back to the start of this movement): 1 2 3, after the D.C.: 1 2 -->
+         4. 1 2 (Fine) 3 ("Menuetto D.C. al Fine", back to the start of this movement): 1 2 3, after the D.C.: 1 2
+         5. 1 2 3 (after the Fine of movement 4, which ends that movement, not the piece): 1 2 3 -->
     <measure number="1">
       <barline location="left">
         <bar-style>heavy-light</bar-style>
@@ -265,6 +266,42 @@
         </direction-type>
         <sound dacapo="yes"/>
       </direction>
+    </measure>
+    <measure number="1">
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="3">
+      <note>
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+      </barline>
     </measure>
   </part>
 </score-partwise>

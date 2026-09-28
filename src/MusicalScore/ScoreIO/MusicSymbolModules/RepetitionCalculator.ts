@@ -15,6 +15,8 @@ export class RepetitionCalculator {
   private lastRepetitionCommonPartStartIndex: number = 0;
   /** The first measure of the current movement, where a D.C. jumps to. */
   private movementStartIndex: number = 0;
+  /** The first measures of the movements after the first one (where the measure numbers restart). */
+  private movementStartIndices: number[] = [];
   private currentMeasure: SourceMeasure;
   private currentMeasureIndex: number;
 
@@ -36,12 +38,12 @@ export class RepetitionCalculator {
     const sourceMeasures: SourceMeasure[] = this.musicSheet.SourceMeasures;
     // Detect movement boundaries where measure numbers reset (e.g. multi-movement pieces without explicit <movement> tags).
     // Repetitions should not cross these boundaries.
-    const movementStartIndices: Set<number> = new Set();
+    this.movementStartIndices = [];
     for (let i: number = 1; i < sourceMeasures.length; i++) {
       const curNum: number = sourceMeasures[i].MeasureNumberXML ?? sourceMeasures[i].MeasureNumber;
       const prevNum: number = sourceMeasures[i - 1].MeasureNumberXML ?? sourceMeasures[i - 1].MeasureNumber;
       if (curNum <= 1 && prevNum > 1) {
-        movementStartIndices.add(i);
+        this.movementStartIndices.push(i);
       }
     }
 
@@ -58,7 +60,7 @@ export class RepetitionCalculator {
       //   (the last one crossed, if a movement has no repetition instructions)
       if (this.currentMeasureIndex > lastInstructionMeasureIndex) {
         let crossedMovementStart: number = undefined;
-        for (const movementStart of movementStartIndices) {
+        for (const movementStart of this.movementStartIndices) {
           if (movementStart > lastInstructionMeasureIndex && movementStart <= this.currentMeasureIndex) {
             crossedMovementStart = Math.max(movementStart, crossedMovementStart ?? movementStart);
           }
@@ -331,7 +333,7 @@ export class RepetitionCalculator {
             if (currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction === undefined) {
                 currentRepetition.FineFound = true;
                 currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction = currentRepetitionInstruction;
-                currentRepetition.RepetitonUnderConstruction.setEndingStartIndex(2, -2);
+                currentRepetition.RepetitonUnderConstruction.setEndingStartIndex(2, this.getFineTarget());
                 this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
             } else {
                 this.currentMeasure.LastRepetitionInstructions.push(new RepetitionInstruction(this.currentMeasureIndex,
@@ -439,7 +441,7 @@ export class RepetitionCalculator {
                     currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction =
                       new RepetitionInstruction(fineMeasureIndex, RepetitionInstructionEnum.Fine,
                                                 AlignmentType.Begin, currentRepetition.RepetitonUnderConstruction);
-                    currentRepetition.RepetitonUnderConstruction.setEndingStartIndex(2, -2);
+                    currentRepetition.RepetitonUnderConstruction.setEndingStartIndex(2, this.getFineTarget());
                     this.musicSheet.SourceMeasures[fineMeasureIndex].LastRepetitionInstructions.
                       splice(0, 0, currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction);
                 }
@@ -473,7 +475,7 @@ export class RepetitionCalculator {
                     currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction =
                       new RepetitionInstruction(fineMeasureIndex, RepetitionInstructionEnum.Fine,
                                                 AlignmentType.Begin, currentRepetition.RepetitonUnderConstruction);
-                    currentRepetition.RepetitonUnderConstruction.setEndingStartIndex(2, -2);
+                    currentRepetition.RepetitonUnderConstruction.setEndingStartIndex(2, this.getFineTarget());
                     this.musicSheet.SourceMeasures[fineMeasureIndex].LastRepetitionInstructions.
                       splice(0, 0, currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction);
                 }
@@ -616,6 +618,14 @@ export class RepetitionCalculator {
       }
       segno.parentRepetition = repContainer.RepetitonUnderConstruction;
       repContainer.RepetitonUnderConstruction.startMarker = segno;
+  }
+
+  /**
+   * Returns where a D.C. or D.S. al Fine goes on at its Fine: the start of the next movement, or -2 (the end of the piece)
+   * in the last movement.
+   */
+  private getFineTarget(): number {
+      return this.movementStartIndices.find(movementStart => movementStart > this.currentMeasureIndex) ?? -2;
   }
 
   /** Whether the instruction type jumps back: a backward repeat, D.C. or D.S. */
