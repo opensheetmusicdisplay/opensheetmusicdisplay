@@ -59,6 +59,8 @@ export class RepetitionInstruction /*implements IComparable*/ {
     public parentRepetition: Repetition;
     /** How many times this should be repeated */
     public Times: number;
+    /** Whether the instruction was read from words that are drawn as text, e.g. "Menuetto D.C.": the instruction itself isn't drawn. */
+    public DrawnAsText: boolean = false;
 
     public CompareTo(obj: Object): number {
         const other: RepetitionInstruction = <RepetitionInstruction>obj;

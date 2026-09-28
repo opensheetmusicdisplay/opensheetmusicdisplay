@@ -38,7 +38,10 @@ describe("RepetitionInstructionReader", () => {
             { text: "dal segno al coda", expectedType: RepetitionInstructionEnum.DalSegnoAlCoda },
             { text: "D.S.", expectedType: RepetitionInstructionEnum.DalSegno },
             { text: "Dal Segno", expectedType: RepetitionInstructionEnum.DalSegno },
+            { text: "D.S.al Coda", expectedType: RepetitionInstructionEnum.DalSegnoAlCoda },
             { text: "D.C. al Fine", expectedType: RepetitionInstructionEnum.DaCapoAlFine },
+            { text: "D.C.al Fine", expectedType: RepetitionInstructionEnum.DaCapoAlFine },
+            { text: "Da Capo al Fine", expectedType: RepetitionInstructionEnum.DaCapoAlFine },
             { text: "D.C. al Coda", expectedType: RepetitionInstructionEnum.DaCapoAlCoda },
             { text: "D.C.", expectedType: RepetitionInstructionEnum.DaCapo },
             { text: "Da Capo", expectedType: RepetitionInstructionEnum.DaCapo },
@@ -63,6 +66,7 @@ describe("RepetitionInstructionReader", () => {
             "gradually build up to coda",
             "drums tacet until Fine",
             "Tuning D-A-D-G-B-D, Capo 4th fret",
+            "tacet D.S.",
         ];
         for (const text of plainTextCases) {
             it("does not detect \"" + text + "\" as repetition instruction", () => {
@@ -70,6 +74,14 @@ describe("RepetitionInstructionReader", () => {
                 expect(reader.repetitionInstructions.length).to.equal(0);
             });
         }
+
+        // a D.C. or D.S. after a capitalized word, usually the section to play again: played, but its words are drawn as text
+        it("detects the D.C. in \"Menuetto D.C. al Fine\", whose words are drawn as text", () => {
+            expect(handleWords("Menuetto D.C. al Fine"), "words are rendered as text").to.equal(false);
+            expect(reader.repetitionInstructions.length).to.equal(1);
+            expect(reader.repetitionInstructions[0].type).to.equal(RepetitionInstructionEnum.DaCapoAlFine);
+            expect(reader.repetitionInstructions[0].DrawnAsText).to.equal(true);
+        });
     });
 
     describe("words mentioning D.S. within a longer text (issue #1687)", () => {

@@ -2327,6 +2327,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param measureIndex
    */
   protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction, measureIndex: number): void {
+    if (repetitionInstruction.DrawnAsText) {
+      return; // its words are drawn as text (expression)
+    }
     // find first visible StaffLine
     let uppermostMeasure: VexFlowMeasure = undefined;
     const measures: VexFlowMeasure[] = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
