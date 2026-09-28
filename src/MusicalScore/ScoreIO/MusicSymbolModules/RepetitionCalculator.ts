@@ -227,9 +227,26 @@ export class RepetitionCalculator {
   //   return true;
   // }
 
+  /**
+   * How an instruction is played: as written, except for a D.C. or D.S. with a Fine before it, which goes back
+   * and ends at that Fine, as the D.C. / D.S. al Fine it is. The instruction keeps its type, so its label reads as written.
+   */
+  private typePlayedAs(instruction: RepetitionInstruction): RepetitionInstructionEnum {
+    const fineBefore: () => boolean = (): boolean =>
+      this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Fine, instruction.measureIndex) >= 0;
+    switch (instruction.type) {
+      case RepetitionInstructionEnum.DaCapo:
+        return fineBefore() ? RepetitionInstructionEnum.DaCapoAlFine : instruction.type;
+      case RepetitionInstructionEnum.DalSegno:
+        return fineBefore() ? RepetitionInstructionEnum.DalSegnoAlFine : instruction.type;
+      default:
+        return instruction.type;
+    }
+  }
+
   private handleRepetitionInstructions(currentRepetitionInstruction: RepetitionInstruction): boolean {
     let currentRepetition: RepetitionBuildingContainer;
-    switch (currentRepetitionInstruction.type) {
+    switch (this.typePlayedAs(currentRepetitionInstruction)) {
         case RepetitionInstructionEnum.StartLine:
             currentRepetition = this.createNewRepetition(this.currentMeasureIndex);
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;

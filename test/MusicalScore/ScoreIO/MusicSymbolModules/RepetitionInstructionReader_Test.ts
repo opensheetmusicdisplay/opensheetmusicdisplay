@@ -84,6 +84,54 @@ describe("RepetitionInstructionReader", () => {
         });
     });
 
+    describe("handleRepetitionInstructionsFromWordsOrSymbols with a sound element", () => {
+        const reader: RepetitionInstructionReader = new RepetitionInstructionReader();
+        reader.MusicSheet = new MusicSheet();
+        reader.prepareReadingMeasure(undefined, 0);
+
+        /**
+         * Lets the reader handle a direction with the given words and sound attributes.
+         * @returns true if the reader handled the direction as a repetition instruction
+         */
+        function handleDirection(wordsText: string, soundAttributes: string): boolean {
+            reader.repetitionInstructions.length = 0;
+            const doc: Document = new DOMParser().parseFromString(
+                "<direction><direction-type><words>" + wordsText + "</words></direction-type>" +
+                (soundAttributes ? "<sound " + soundAttributes + "/>" : "") + "</direction>", "text/xml");
+            const direction: IXmlElement = new IXmlElement(doc.documentElement);
+            return reader.handleRepetitionInstructionsFromWordsOrSymbols(direction.element("direction-type"), 0, direction.element("sound"));
+        }
+
+        interface SoundTestCase {
+            text: string;
+            sound: string;
+            expectedType: RepetitionInstructionEnum;
+        }
+        // words in other languages, which only the sound names
+        const soundCases: SoundTestCase[] = [
+            { text: "Fin", sound: "fine=\"yes\"", expectedType: RepetitionInstructionEnum.Fine },
+            { text: "Da Capo bis Ende", sound: "dacapo=\"yes\"", expectedType: RepetitionInstructionEnum.DaCapo },
+            { text: "Dal Segno bis Ende", sound: "dalsegno=\"segno1\"", expectedType: RepetitionInstructionEnum.DalSegno },
+            { text: "Zur Coda", sound: "tocoda=\"coda1\"", expectedType: RepetitionInstructionEnum.ToCoda },
+            // words that name an instruction still say which one it is
+            { text: "D.C. al Fine", sound: "dacapo=\"yes\"", expectedType: RepetitionInstructionEnum.DaCapoAlFine },
+        ];
+        for (const testCase of soundCases) {
+            it("reads \"" + testCase.text + "\" with <sound " + testCase.sound + "/> as repetition instruction", () => {
+                expect(handleDirection(testCase.text, testCase.sound), "direction is handled as repetition instruction").to.equal(true);
+                expect(reader.repetitionInstructions.length).to.equal(1);
+                expect(reader.repetitionInstructions[0].type).to.equal(testCase.expectedType);
+            });
+        }
+
+        it("leaves words it doesn't know as text without a sound that names an instruction", () => {
+            expect(handleDirection("Fin", undefined)).to.equal(false);
+            expect(handleDirection("Fin", "tempo=\"100\"")).to.equal(false);
+            expect(handleDirection("Fin", "dacapo=\"no\"")).to.equal(false);
+            expect(reader.repetitionInstructions.length).to.equal(0);
+        });
+    });
+
     describe("words mentioning D.S. within a longer text (issue #1687)", () => {
         const path: string = "test/data/test_words_voice_tacet_on_ds_1687.musicxml";
         let sheet: MusicSheet;
