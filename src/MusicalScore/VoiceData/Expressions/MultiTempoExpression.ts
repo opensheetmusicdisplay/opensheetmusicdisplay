@@ -20,11 +20,19 @@ export class MultiTempoExpression {
     private expressions: TempoExpressionEntry[] = [];
     private combinedExpressionsText: string;
 
+    /** Explicit MusicXML sound timing, independent of the printed direction's position. */
+    public PlaybackTimestamp: Fraction;
+    /** Explicit sound tempo in quarter notes per minute, which may differ from the printed mark. */
+    public PlaybackTempoInBpm: number;
+
     public get Timestamp(): Fraction {
         return this.timestamp;
     }
     public get AbsoluteTimestamp(): Fraction {
         return Fraction.plus(this.sourceMeasure.AbsoluteTimestamp, this.timestamp);
+    }
+    public get AbsolutePlaybackTimestamp(): Fraction {
+        return Fraction.plus(this.sourceMeasure.AbsoluteTimestamp, this.PlaybackTimestamp ?? this.timestamp);
     }
     public get SourceMeasureParent(): SourceMeasure {
         return this.sourceMeasure;

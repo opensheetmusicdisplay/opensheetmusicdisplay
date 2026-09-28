@@ -82,9 +82,7 @@ describe("Duplicate tempo expressions", () => {
         const texts: string[] = renderedTempoLabels(osmd).map(([text]) => text).filter(text => text !== "");
         expect(texts.filter(text => text === "Allegro").length, "one 'Allegro'").to.equal(1);
         expect(texts.filter(text => text === "rit.").length, "one 'rit.' (in measure 2, a different position)").to.equal(1);
-        // the metronome mark is drawn by Vexflow on the stave (VexFlowMeasure.hasMetronomeMark), once per staff-measure
-        const measure1Staves: any[] = osmd.GraphicSheet.MeasureList[0];
-        expect(measure1Staves.filter(measure => measure.hasMetronomeMark).length, "metronome marks in measure 1").to.equal(1);
+        expect(container.querySelectorAll(".vf-stavetempo").length, "one printed metronome mark").to.equal(1);
     });
 
     it("still renders the marking when the part that carried the first copy is hidden", async () => {
@@ -95,8 +93,6 @@ describe("Duplicate tempo expressions", () => {
         const allegro: [string, StaffLine][] = renderedTempoLabels(osmd).filter(([text]) => text === "Allegro");
         expect(allegro.length, "one 'Allegro'").to.equal(1);
         expect(allegro[0][1].ParentStaff.ParentInstrument.Name, "on the visible part's staff").to.equal("Oboe");
-        const measure1Staves: any[] = osmd.GraphicSheet.MeasureList[0];
-        expect(measure1Staves.filter(measure => measure.hasMetronomeMark && measure.ParentStaff.isVisible()).length,
-               "metronome mark on the visible staff").to.equal(1);
+        expect(container.querySelectorAll(".vf-stavetempo").length, "metronome mark on the visible staff").to.equal(1);
     });
 });
