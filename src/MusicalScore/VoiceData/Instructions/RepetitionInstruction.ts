@@ -61,6 +61,8 @@ export class RepetitionInstruction /*implements IComparable*/ {
     public Times: number;
     /** Whether the instruction was read from words that are drawn as text, e.g. "Menuetto D.C.": the instruction itself isn't drawn. */
     public DrawnAsText: boolean = false;
+    /** Whether the MusicXML marks this segno as the target of a D.S. (<sound segno="...">): it is never taken for a D.S. itself. */
+    public MarkedAsTarget: boolean = false;
 
     public CompareTo(obj: Object): number {
         const other: RepetitionInstruction = <RepetitionInstruction>obj;

@@ -466,7 +466,8 @@ export class InstrumentReader {
           let handeled: boolean = false;
           if (this.repetitionInstructionReader) {
             handeled = this.repetitionInstructionReader.handleRepetitionInstructionsFromWordsOrSymbols( directionTypeNode,
-                                                                                                        relativePositionInMeasure);
+                                                                                                        relativePositionInMeasure,
+                                                                                                        xmlNode.element("sound"));
           }
           if (!handeled) {
            let expressionReader: ExpressionReader = this.expressionReaders[0];

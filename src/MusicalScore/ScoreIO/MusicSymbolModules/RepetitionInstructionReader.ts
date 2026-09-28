@@ -134,7 +134,15 @@ export class RepetitionInstructionReader {
     return pieceEndingDetected;
   }
 
-  public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number): boolean {
+  /**
+   * Reads a repetition instruction (e.g. D.S., Fine, a segno sign) from a direction.
+   * @param directionTypeNode the direction-type element (words, segno or coda)
+   * @param relativeMeasurePosition the position of the direction in the measure (not used)
+   * @param soundNode the direction's sound element, if any: <sound segno="..."> marks a segno as the target of a D.S.
+   * @returns true if the direction is (only) a repetition instruction, false if it is drawn as text
+   */
+  public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number,
+                                                        soundNode?: IXmlElement): boolean {
     const wordsNode: IXmlElement = directionTypeNode.element("words");
     const measureIndex: number = this.currentMeasureIndex;
     if (wordsNode) {
@@ -155,6 +163,7 @@ export class RepetitionInstructionReader {
       }
       const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, type);
       newInstruction.DrawnAsText = drawnAsText;
+      newInstruction.MarkedAsTarget = type === RepetitionInstructionEnum.Segno && !!soundNode?.attribute("segno");
       this.addInstruction(this.repetitionInstructions, newInstruction);
       return !drawnAsText;
     } else if (directionTypeNode.element("segno")) {
@@ -162,6 +171,7 @@ export class RepetitionInstructionReader {
       //   measureIndex++;
       // }
       const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Segno);
+      newInstruction.MarkedAsTarget = !!soundNode?.attribute("segno");
       this.addInstruction(this.repetitionInstructions, newInstruction);
       return true;
     } else if (directionTypeNode.element("coda")) {
@@ -243,7 +253,9 @@ export class RepetitionInstructionReader {
           // }
           break;
         case RepetitionInstructionEnum.Segno:
-          if (segnoCount - dalSegnaCount > 0) { // two segnos in a row
+          // Two segnos in a row: the second one is taken for a D.S. back to the first (e.g. a renvoi sign),
+          //   unless the MusicXML marks it as a D.S. target itself (a segno that a later D.S. jumps to).
+          if (segnoCount - dalSegnaCount > 0 && !instruction.MarkedAsTarget) {
             let foundInstruction: boolean = false;
             for (let idx: number = 0, len: number = this.repetitionInstructions.length; idx < len; ++idx) {
               const instr: RepetitionInstruction = this.repetitionInstructions[idx];
@@ -307,6 +319,7 @@ export class RepetitionInstructionReader {
           case RepetitionInstructionEnum.Segno:
             segnoCount++;
             break;
+          case RepetitionInstructionEnum.DalSegno: // it uses the segno before it, so a segno after it is a new one
           case RepetitionInstructionEnum.DalSegnoAlFine:
           case RepetitionInstructionEnum.DalSegnoAlCoda:
             dalSegnaCount++;
