@@ -68,9 +68,8 @@ export class TemposCalculator implements IAfterSheetReadingModule {
                      */
                     if (ite.isMetronomeMark) {
                         ite.TempoInBpm = previousTempo;
-                    }
-                    // An inst tempo should normally have a non-zero BPM.
-                    if (ite instanceof InstantaneousTempoExpression && ite.TempoType !== TempoType.change) {
+                    } else if (ite instanceof InstantaneousTempoExpression && ite.TempoType !== TempoType.change) {
+                        // An inst tempo should normally have a non-zero BPM.
                         ite.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo(ite.InstTempo);
                     }
                     // A change tempo will have a 0 BPM unless it was set by #calculatePrimoTempo, because it was on the first measure.
@@ -97,7 +96,10 @@ export class TemposCalculator implements IAfterSheetReadingModule {
                                 }
                         }
                     }
-                    previousTempo = ite.TempoInBpm;
+                }
+                // A BPM-free metronome mark keeps the last valid tempo, whether given in the score or resolved above.
+                if (mte.InstantaneousTempo?.TempoInBpm > 0) {
+                    previousTempo = mte.InstantaneousTempo.TempoInBpm;
                 }
             }
             /** Here we process two mte entries with the same TimeStamp.
@@ -210,15 +212,15 @@ export class TemposCalculator implements IAfterSheetReadingModule {
             ExpList[0].addExpression(I, "");
         }
         const Inst0: InstantaneousTempoExpression = ExpList[0].InstantaneousTempo;
-        if (Inst0.TempoInBpm !== 0.0) {
+        if (Inst0.TempoInBpm > 0) {
             // we have what we need
             return Inst0.TempoInBpm;
         }
-        if (Inst0.TempoInBpm === 0.0 && ms.DefaultStartTempoInBpm > 0) {
+        // Missing BPM can be 0, or undefined for the generated expression above.
+        if (ms.DefaultStartTempoInBpm > 0) {
             Inst0.TempoInBpm = ms.DefaultStartTempoInBpm;
-        }
-        if (Inst0.TempoInBpm === 0.0) {
-            Inst0.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo[InstTempo.moderato];
+        } else {
+            Inst0.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.moderato);
         }
         return Inst0.TempoInBpm;
     }
