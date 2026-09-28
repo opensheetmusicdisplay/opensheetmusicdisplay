@@ -28,11 +28,9 @@ describe("Tempo expressions when drawing starts after measure 1 (drawFromMeasure
     it("draws the tempo text and metronome mark of the first drawn measure", () => {
         const tempoTexts: string[] = osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0].AbstractExpressions
             .filter(expression => expression instanceof GraphicalInstantaneousTempoExpression)
-            .map(expression => (expression as GraphicalInstantaneousTempoExpression).GraphicalLabel.Label.text)
-            .filter(text => text !== ""); // a metronome mark has an empty label, Vexflow draws the mark on the stave
+            .map(expression => (expression as GraphicalInstantaneousTempoExpression).GraphicalLabel.Label.text);
         expect(tempoTexts).to.deep.equal(["Meno mosso"]);
-        const measure2Staves: any[] = osmd.GraphicSheet.MeasureList[1];
-        expect(measure2Staves.filter(measure => measure.hasMetronomeMark).length, "metronome marks in measure 2").to.equal(1);
+        expect(container.querySelectorAll(".vf-stavetempo").length, "metronome marks in measure 2").to.equal(1);
     });
 
     it("keeps the lyricist above the metronome mark", () => {
