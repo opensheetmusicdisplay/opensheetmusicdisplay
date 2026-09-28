@@ -4054,13 +4054,17 @@ export abstract class MusicSheetCalculator {
                 activeVoltaSpans.push({startMeasure: i, endingIndices: beginEndingIndices});
             }
 
-            // Process all regular instructions
-            for (let idx: number = 0, len: number = sourceMeasure.FirstRepetitionInstructions.length; idx < len; ++idx) {
-                const instruction: RepetitionInstruction = sourceMeasure.FirstRepetitionInstructions[idx];
-                this.calculateWordRepetitionInstruction(instruction, i);
-            }
-            for (let idx: number = 0, len: number = sourceMeasure.LastRepetitionInstructions.length; idx < len; ++idx) {
-                const instruction: RepetitionInstruction = sourceMeasure.LastRepetitionInstructions[idx];
+            // Process all regular instructions.
+            //   One sign or text of each kind per measure (not for endings): e.g. the Fine that a D.C. al Fine found backwards
+            //   is a second instruction if the Fine also belongs to a segno's repetition.
+            const drawnTypes: RepetitionInstructionEnum[] = [];
+            for (const instruction of sourceMeasure.FirstRepetitionInstructions.concat(sourceMeasure.LastRepetitionInstructions)) {
+                if (instruction.type !== RepetitionInstructionEnum.Ending) {
+                    if (drawnTypes.indexOf(instruction.type) >= 0) {
+                        continue;
+                    }
+                    drawnTypes.push(instruction.type);
+                }
                 this.calculateWordRepetitionInstruction(instruction, i);
             }
 
