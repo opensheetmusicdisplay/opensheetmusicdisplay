@@ -72,7 +72,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                     if (isRest) {
                         // a GhostNote (rest in a tab measure) doesn't draw modifiers, so these grace notes are drawn as their own tickables
                         for (const graceGve of graceGVoiceEntriesBefore) {
-                            graceGve.parentVoiceEntry.GraceAfterMainNote = true; // added to the vexflow voice below
+                            graceGve.isStandAloneGrace = true; // added to the vexflow voice below
                         }
                     } else {
                         // attach the grace notes to their main note in a Vexflow GraceNoteGroup, which formats and draws them
@@ -90,7 +90,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             }
             // remaining grace notes without a main note after them (e.g. at the end of the measure): stand-alone grace notes
             for (const graceGve of graceGVoiceEntriesBefore) {
-                graceGve.parentVoiceEntry.GraceAfterMainNote = true;
+                graceGve.isStandAloneGrace = true;
             }
         }
 
@@ -114,7 +114,8 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             // create vex flow voices and add tickables to it:
             for (const voiceEntry of restFilledEntries) {
                 if (voiceEntry.parentVoiceEntry) {
-                    if (voiceEntry.parentVoiceEntry.IsGrace && !voiceEntry.parentVoiceEntry.GraceAfterMainNote) {
+                    if (voiceEntry.parentVoiceEntry.IsGrace && !voiceEntry.parentVoiceEntry.GraceAfterMainNote &&
+                        !(voiceEntry as VexFlowVoiceEntry).isStandAloneGrace) {
                         continue;
                     }
                 }
