@@ -37,16 +37,19 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         //   inside a cadenza) has no main note to take its position from: its first grace note gives it.
         const positioningGraceEntry: VexFlowVoiceEntry = (this.graphicalVoiceEntries as VexFlowVoiceEntry[]).every(isGraceWithoutMainNote) ?
             this.graphicalVoiceEntries[0] as VexFlowVoiceEntry : undefined;
+        // grace notes are drawn as small notes beside their main note: left of it (in a GraceNoteGroup), or right of it
+        //   (grace notes after their main note, e.g. a Nachschlag ending a trill, which share the main note's staff entry,
+        //   see InstrumentReader.attachGraceNotesAfterMainNote). They must neither set the staff entry's x position (cursor position)
+        //   nor widen its bounding box (slur endpoints). They are placed where they are drawn afterwards (positionGraceEntries()).
+        const graceEntries: VexFlowVoiceEntry[] = [];
         for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
             if (gve.vfStaveNote) {
                 gve.vfStaveNote.setStave(stave);
                 if (!gve.vfStaveNote.preFormatted) {
                     continue;
                 }
-                if (isGraceWithoutMainNote(gve) && gve !== positioningGraceEntry) {
-                    // grace notes after their main note (e.g. a Nachschlag ending a trill) share the main note's staff entry
-                    //   (see InstrumentReader.attachGraceNotesAfterMainNote), but are drawn as their own small notes right of it:
-                    //   they must neither set the staff entry's x position (cursor position) nor widen its bounding box (slur endpoints).
+                if (gve.parentVoiceEntry?.IsGrace && gve !== positioningGraceEntry) {
+                    graceEntries.push(gve);
                     continue;
                 }
                 gve.applyBordersFromVexflow();
@@ -92,7 +95,48 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         // TODO sometimes subtracting lastBorderLeft fixes the x-position for lyrics spacing, sometimes it makes it wrong
         //   e.g. wrong for Beethoven Geliebte measure 1 ("auf - dem", distance < width of "auf"), correct for measure 3 ("spä - hend")
         //   this leads to a (lyrics) measure elongation of ~1.3 for measure 1, though it doesn't need any elongation (should be factor 1)
+        // the bounding box without the grace notes (see above)
+        const childElements: BoundingBox[] = this.PositionAndShape.ChildElements;
+        this.PositionAndShape.ChildElements = childElements.filter(
+            (child: BoundingBox) => !graceEntries.some((gve: VexFlowVoiceEntry) => gve.PositionAndShape === child));
         this.PositionAndShape.calculateBoundingBox();
+        this.PositionAndShape.ChildElements = childElements;
+        this.positionGraceEntries(graceEntries);
+    }
+
+    /**
+     * Places the voice entries of grace notes where Vexflow draws them, relative to the staff entry (see calculateXPosition()),
+     * like the voice entries that give the staff entry its position. Otherwise they would be at the main note's position,
+     * and e.g. a click on the main note could find its grace note instead (GraphicalMusicSheet.GetNearestVoiceEntry()).
+     */
+    private positionGraceEntries(graceEntries: VexFlowVoiceEntry[]): void {
+        if (graceEntries.length === 0) {
+            return;
+        }
+        // Vexflow places the notes of a GraceNoteGroup left of their main note only when drawing the group
+        //   (Modifier.alignSubNotesWithNote()). Do it now to know where they are drawn (drawing does it again, with the same result).
+        for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
+            const vfNote: any = gve.vfStaveNote;
+            if (!vfNote?.preFormatted) {
+                continue;
+            }
+            for (const modifier of vfNote.modifiers ?? []) {
+                if (modifier instanceof VF.GraceNoteGroup) {
+                    (modifier as any).alignSubNotesWithNote((modifier as any).getGraceNotes(), vfNote);
+                }
+            }
+        }
+        const isTab: boolean = this.parentMeasure.ParentStaff.isTab;
+        for (const gve of graceEntries) {
+            let x: number; // relative to the measure, like the staff entry's position in calculateXPosition()
+            if (isTab) {
+                x = (gve.vfStaveNote.getAbsoluteX() + (<any>gve.vfStaveNote).glyph.getWidth()) / unitInPixels;
+            } else {
+                gve.applyBordersFromVexflow();
+                x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels - gve.PositionAndShape.BorderLeft;
+            }
+            gve.PositionAndShape.RelativePosition.x = x - this.PositionAndShape.RelativePosition.x;
+        }
     }
 
     public setMaxAccidentals(): number {

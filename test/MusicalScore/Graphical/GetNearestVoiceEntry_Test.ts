@@ -14,8 +14,10 @@ interface DrawnNoteHead {
 
 /**
  * GraphicalMusicSheet.GetNearestVoiceEntry() finds the voice entry of the note drawn at a position, e.g. of a click.
- * It compares the distances of the entries' notes, not of the entries' positions: that's the top of the entry's bounding box,
- * e.g. the stem tip of an up-stem note, and a click on its note head found another voice's note next to it.
+ * - It compares the distances of the entries' notes, not of the entries' positions: that's the top of the entry's bounding box,
+ *   e.g. the stem tip of an up-stem note, and a click on its note head found another voice's note next to it.
+ * - The voice entries of grace notes are where the grace notes are drawn, beside their main note. They were at the main note's
+ *   position, so a click on the main note could find its grace note, and a click on a grace note found another note.
  */
 describe("GetNearestVoiceEntry", () => {
     let container: HTMLElement;
@@ -77,6 +79,17 @@ describe("GetNearestVoiceEntry", () => {
         expect(heads.length).to.equal(12);
         for (const head of heads) {
             expectFound(sheet, head, sampleName);
+        }
+    });
+
+    it("finds grace notes and their main notes (grace notes before and after the main note, TAB)", async () => {
+        for (const sampleName of ["OSMD_function_test_GraceNotes.xml", "test_grace_notes_after_main_note_1706.musicxml",
+                                  "test_tab_grace_note_simple.musicxml"]) {
+            const { sheet, heads } = await render(sampleName);
+            expect(heads.some(({ voiceEntry }) => voiceEntry.parentVoiceEntry.IsGrace), `grace notes in ${sampleName}`).to.equal(true);
+            for (const head of heads) {
+                expectFound(sheet, head, sampleName);
+            }
         }
     });
 });
