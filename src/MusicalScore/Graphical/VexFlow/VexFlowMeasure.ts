@@ -11,6 +11,7 @@ import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
+import {VexFlowKeySignatureNote} from "./VexFlowKeySignatureNote";
 import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
@@ -1574,6 +1575,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
         let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
         const graveGVoiceEntriesAdded: GraphicalVoiceEntry[] = [];
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
+            for (const key of graphicalStaffEntry.vfKeys) {
+                key.attachedToNote = false;
+            }
+        }
+        for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             graceSlur = false;
             graceGVoiceEntriesBefore = [];
             const voicesWithGraceAfterMainNote: Set<Voice> = new Set<Voice>();
@@ -1619,6 +1625,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         gveGrace.GraceSlash = this.hasGraceSlash(gveGrace, i === 0);
                         const vfStaveNote: StaveNote = VexFlowConverter.StaveNote(gveGrace);
                         gveGrace.vfStaveNote = vfStaveNote;
+                        this.attachInStaffKeys(graphicalStaffEntry, vfStaveNote);
                         graceNotes.push(vfStaveNote);
                     }
                     const graceNoteGroup: VF.GraceNoteGroup = new VF.GraceNoteGroup(graceNotes, graceSlur);
@@ -1732,7 +1739,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 //if (isMainVoice) {
                 const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
                 // (not for grace notes after their main note, which share its staff entry but are drawn right of it)
-                if (vfse && vfse.vfClefBefore && !voiceEntry.parentVoiceEntry?.GraceAfterMainNote && vfse !== staffEntryWithClef) {
+                if (vfse && !voiceEntry.parentVoiceEntry?.GraceAfterMainNote) {
+                    this.attachInStaffKeys(vfse, vexFlowVoiceEntry.vfStaveNote as VF.StaveNote);
+                }
+                if (vfse && vfse.vfClefBefore && vfse.vfKeys.length === 0 &&
+                    !voiceEntry.parentVoiceEntry?.GraceAfterMainNote && vfse !== staffEntryWithClef) {
                     staffEntryWithClef = vfse;
                     if (voiceEntry.notes[0] && !voiceEntry.notes[0].sourceNote.PrintObject) {
                         const clefColor: string = this.rules.DefaultColorMusic || "#000000";
@@ -1769,6 +1780,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
             }
         }
+        this.createInStaffInstructionVoice();
         this.setStemDirectionFromVexFlow();
         for (const graceGVoiceEntry of graveGVoiceEntriesAdded) {
             this.createFingerings(graceGVoiceEntry);
@@ -1777,6 +1789,57 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         this.createArticulations();
         this.createOrnaments();
+    }
+
+    /** Share modifier spacing with the note's accidentals, and keep clef/key order explicit. */
+    private attachInStaffKeys(entry: VexFlowStaffEntry, note: VF.StaveNote): void {
+        const keys: VexFlowKeySignatureNote[] = entry.vfKeys.filter(key => !key.attachedToNote);
+        if (keys.length === 0) {
+            return;
+        }
+        const instructions: VF.Note[] = entry.vfClefBefore ? [entry.vfClefBefore, ...keys] : keys;
+        for (const instruction of instructions) {
+            instruction.setStave(this.stave);
+        }
+        if (entry.vfClefBefore) {
+            // Instructions remain visible when their anchor note is hidden.
+            const color: string = this.rules.DefaultColorMusic || "#000000";
+            (entry.vfClefBefore as any).setStyle({fillStyle: color, strokeStyle: color});
+        }
+        note.addModifier(0, new NoteSubGroup(instructions));
+        for (const key of keys) {
+            key.attachedToNote = true;
+        }
+    }
+
+    protected createInStaffInstructionVoice(): void {
+        const entries: VexFlowStaffEntry[] = (this.staffEntries as VexFlowStaffEntry[])
+            .filter((entry: VexFlowStaffEntry): boolean => entry.vfKeys.some((key: VexFlowKeySignatureNote): boolean => !key.attachedToNote));
+        if (entries.length === 0) {
+            return;
+        }
+        // A graphical-only voice positions signatures where no note starts.
+        const voice: VF.Voice = new VF.Voice({num_beats: 4, beat_value: 4}).setMode(VF.Voice.Mode.SOFT);
+        const start: Fraction = entries[0].sourceStaffEntry.Timestamp;
+        if (start.RealValue > 0) {
+            voice.addTickables(VexFlowConverter.GhostNotes(start));
+        }
+        for (let index: number = 0; index < entries.length; index++) {
+            const entry: VexFlowStaffEntry = entries[index];
+            const end: Fraction = entries[index + 1]?.sourceStaffEntry.Timestamp || this.parentSourceMeasure.Duration;
+            const duration: Fraction = Fraction.minus(end, entry.sourceStaffEntry.Timestamp);
+            const keys: VF.KeySigNote[] = entry.vfKeys.filter((key: VexFlowKeySignatureNote): boolean => !key.attachedToNote);
+            const instructions: VF.Note[] = entry.vfClefBefore ? [entry.vfClefBefore, ...keys] : keys;
+            const carrier: VF.GhostNote = VexFlowKeySignatureNote.createCarrier(instructions, this.stave);
+            entry.vfInStaffInstructionNote = carrier;
+            const vfTicks: VF.Fraction = carrier.getTicks();
+            vfTicks.numerator = duration.GetExpandedNumerator() * VF.RESOLUTION;
+            vfTicks.denominator = duration.Denominator;
+            vfTicks.simplify();
+            voice.addTickable(carrier);
+        }
+        const voiceId: number = Math.min(0, ...Object.keys(this.vfVoices).map(Number)) - 1;
+        this.vfVoices[voiceId] = voice;
     }
 
     private createArpeggio(voiceEntry: GraphicalVoiceEntry): void {

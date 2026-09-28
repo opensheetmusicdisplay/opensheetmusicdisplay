@@ -170,6 +170,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                 }
             }
         }
+        this.createInStaffInstructionVoice();
         //this.createArticulations();
         //this.createOrnaments();
     }

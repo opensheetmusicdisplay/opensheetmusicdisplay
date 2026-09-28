@@ -184,6 +184,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 this.checkIfRhythmInstructionsAreSetAndEqual(instrumentReaders);
                 this.checkSourceMeasureForNullEntries();
                 sourceMeasureCounter = this.setSourceMeasureDuration(instrumentReaders, sourceMeasureCounter);
+                for (const instrumentReader of instrumentReaders) {
+                    instrumentReader.finalizeKeyInstructions();
+                }
+                this.checkSourceMeasureForNullEntries(); // a measure-end key may have left an empty entry
                 //MusicSheetReader.doCalculationsAfterDurationHasBeenSet(instrumentReaders);
                 // commented out because it's only open tie deletion, which works incorrectly, see #1530
                 this.currentMeasure.AbsoluteTimestamp = this.currentFraction.clone();
@@ -497,7 +501,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         }
                     }
                 }
-                if (sourceStaffEntry !== undefined && sourceStaffEntry.VoiceEntries.length === 0 && sourceStaffEntry.ChordContainers.length === 0) {
+                if (sourceStaffEntry !== undefined && sourceStaffEntry.VoiceEntries.length === 0 &&
+                    sourceStaffEntry.ChordContainers.length === 0 && sourceStaffEntry.Instructions.length === 0) {
                     this.currentMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries[j] = undefined;
                 }
             }

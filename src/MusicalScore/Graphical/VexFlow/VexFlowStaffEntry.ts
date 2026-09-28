@@ -9,6 +9,7 @@ import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { Note } from "../../VoiceData/Note";
 import { AccidentalEnum } from "../../../Common/DataObjects/Pitch";
 import { BoundingBox } from "../BoundingBox";
+import { VexFlowKeySignatureNote } from "./VexFlowKeySignatureNote";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -18,6 +19,8 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
     // if there is a in-measure clef given before this staffEntry,
     // it will be converted to a VF.ClefNote and assigned to this variable:
     public vfClefBefore: VF.ClefNote;
+    public vfKeys: VexFlowKeySignatureNote[] = [];
+    public vfInStaffInstructionNote: VF.GhostNote;
 
     /**
      * Calculates the staff entry positions from the VexFlow stave information and the tickabels inside the staff.
@@ -26,6 +29,11 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
      */
     public calculateXPosition(): void {
         const stave: VF.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave();
+
+        if (this.graphicalVoiceEntries.length === 0 && this.vfInStaffInstructionNote) {
+            this.PositionAndShape.RelativePosition.x = this.vfInStaffInstructionNote.getAbsoluteX() / unitInPixels;
+            this.PositionAndShape.BorderLeft = -this.vfInStaffInstructionNote.getWidth() / unitInPixels;
+        }
 
         // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
         // The positions are needed for cursor placement and mouse/tap interactions
