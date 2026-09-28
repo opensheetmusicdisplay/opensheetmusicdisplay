@@ -86,8 +86,10 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 if (sourceNote.isRest() && sourceNote.Length.RealValue === this.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue) {
                     // whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
                     // see Note.isWholeRest(), which is currently not safe
-                    bboxToAdjust.RelativePosition.x +=
-                        this.parentMeasure.parentSourceMeasure.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
+                    if (gve.vfStaveNote.isCenterAligned()) {
+                        bboxToAdjust.RelativePosition.x +=
+                            this.parentMeasure.parentSourceMeasure.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
+                    }
                     gve.PositionAndShape.BorderLeft = -0.7;
                     gve.PositionAndShape.BorderRight = 0.7;
                 }

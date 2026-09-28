@@ -34,6 +34,7 @@ import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { Staff } from "../../VoiceData/Staff";
+import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -348,9 +349,14 @@ export class VexFlowConverter {
                     // If it's a whole rest we want it smack in the middle. Apparently there is still an issue in vexflow:
                     // https://github.com/0xfe/vexflow/issues/579 The author reports that he needs to add some negative x shift
                     // if the measure has no modifiers.
-                    alignCenter = true;
-                    xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
-                    // affects VexFlowStaffEntry.calculateXPosition()
+                    // Keep the rest at its time when a key inside the measure would collide with a centered rest.
+                    const keyInMeasure: boolean = gve.parentStaffEntry.parentMeasure.staffEntries.some(
+                        (entry: GraphicalStaffEntry) => (entry as VexFlowStaffEntry).vfKeys?.length > 0);
+                    if (!keyInMeasure) {
+                        alignCenter = true;
+                        xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
+                        // affects VexFlowStaffEntry.calculateXPosition()
+                    }
                 }
                 //If we have more than one visible voice entry, shift the rests so no collision occurs
                 if (note.sourceNote.ParentStaff.Voices.length > 1) {

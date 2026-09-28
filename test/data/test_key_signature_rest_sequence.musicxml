@@ -34,7 +34,7 @@
         <duration>4</duration>
       </note>
       <backup>
-        <duration>2</duration>
+        <duration>3</duration>
       </backup>
       <attributes>
         <key>
@@ -42,7 +42,7 @@
         </key>
       </attributes>
       <forward>
-        <duration>2</duration>
+        <duration>3</duration>
       </forward>
     </measure>
     <measure number="3">

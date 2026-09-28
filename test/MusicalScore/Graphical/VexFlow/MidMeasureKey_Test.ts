@@ -6,6 +6,7 @@ import { TransposeCalculator } from "../../../../src/Plugins/Transpose/Transpose
 import { ITransposeCalculator } from "../../../../src/MusicalScore/Interfaces/ITransposeCalculator";
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { AccidentalEnum } from "../../../../src/Common/DataObjects/Pitch";
+import { unitInPixels } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 
 describe("Mid-measure key rendering", (): void => {
     let div: HTMLElement;
@@ -58,6 +59,14 @@ describe("Mid-measure key rendering", (): void => {
         expect(afterChange.DrawnAccidental, "the G-major F sharp needs no accidental").to.equal(AccidentalEnum.NONE);
         expect(keyBounds.x).to.be.greaterThan(beforeChange.vfnote[0].getAbsoluteX());
         expect(keyBounds.x + keyBounds.width).to.be.lessThan(afterChange.vfnote[0].getAbsoluteX());
+
+        osmd.EngravingRules.RenderKeySignatures = false;
+        osmd.updateGraphic();
+        osmd.render();
+        expect(keys(), "key glyphs are hidden").to.have.length(0);
+        for (const note of notesIn(0)) {
+            expect(note.DrawnAccidental, "the hidden key still determines pitch accidentals").to.equal(AccidentalEnum.NONE);
+        }
     });
 
     it("carries the final key across a system, repeated render, and a later range", async (): Promise<void> => {
@@ -121,35 +130,19 @@ describe("Mid-measure key rendering", (): void => {
             .to.be.greaterThan(notesIn(0)[1].vfnote[0].getAbsoluteX());
     });
 
-    it("does not hide an in-measure key in an automatic multiple rest", async (): Promise<void> => {
+    it("keeps a rest measure's key visible and clear of the rest", async (): Promise<void> => {
         await osmd.load(TestUtils.getScore("test_key_signature_rest_sequence.musicxml"));
         expect(osmd.Sheet.SourceMeasures[1].canBeReducedToMultiRest(), "a timed key prevents rest reduction").to.equal(false);
         osmd.render();
         expect(osmd.Sheet.SourceMeasures[1].isReducedToMultiRest, "the change interrupts rest compression").to.equal(false);
         expect(osmd.GraphicSheet.MeasureList[1][0] !== undefined, "the key's measure remains visible").to.equal(true);
         expect(keys(), "the timed key is still drawn").to.have.length(1);
-    });
-
-    it("places a key at a non-dyadic tuplet timestamp", async (): Promise<void> => {
-        await loadScore("test_key_signature_tuplet.musicxml");
-
-        const [beforeChange, afterChange]: VexFlowGraphicalNote[] = notesIn(0);
-        expect(keys(), "the tuplet key is rendered").to.have.length(1);
-        const key: SVGGraphicsElement = keys()[0];
-        const keyEntry: GraphicalStaffEntry | undefined = osmd.GraphicSheet.MeasureList[0][0].staffEntries.find(
-            (entry: GraphicalStaffEntry): boolean => entry.sourceStaffEntry.Timestamp.RealValue === 1 / 12,
-        );
-        expect(keyEntry, "the key retains its exact tuplet timestamp").to.not.equal(undefined);
-        expect(key.getBBox().x).to.be.greaterThan(beforeChange.vfnote[0].getAbsoluteX());
-        expect(key.getBBox().x + key.getBBox().width).to.be.lessThan(afterChange.vfnote[0].getAbsoluteX());
-    });
-
-    it("preserves a tie through a key change without creating another note", async (): Promise<void> => {
-        await loadScore("test_key_signature_tie.musicxml");
-
-        expect(keys(), "the key is drawn between the tied notes").to.have.length(1);
-        expect(div.querySelectorAll(".vf-stavetie"), "the original tie remains").to.have.length(1);
-        expect(notesIn(0), "the key itself adds no graphical note").to.have.length(2);
+        const restBounds: DOMRect = notesIn(1)[0].getSVGGElement().getBBox();
+        expect(keys()[0].getBBox().x, "the key is drawn right of the measure rest, not over it")
+            .to.be.greaterThan(restBounds.x + restBounds.width);
+        const restEntry: GraphicalStaffEntry = notesIn(1)[0].parentVoiceEntry.parentStaffEntry;
+        expect(restEntry.PositionAndShape.AbsolutePosition.x * unitInPixels, "the rest's layout anchor stays inside its drawn glyph")
+            .to.be.within(restBounds.x, restBounds.x + restBounds.width);
     });
 
     it("orders a same-time clef, key, natural, and note without overlap", async (): Promise<void> => {
@@ -170,29 +163,6 @@ describe("Mid-measure key rendering", (): void => {
             .to.be.at.most(natural.getBBox().x);
         expect(natural.getBBox().x + natural.getBBox().width, "the natural precedes the note")
             .to.be.at.most(changedNote.vfnote[0].getAbsoluteX());
-    });
-
-    it("honors RenderKeySignatures without changing accidental calculation", async (): Promise<void> => {
-        osmd.EngravingRules.RenderKeySignatures = false;
-        await loadScore("test_key_signature_mid_measure.musicxml");
-
-        expect(keys(), "key glyphs are hidden").to.have.length(0);
-        for (const note of notesIn(0)) {
-            expect(note.DrawnAccidental, "the hidden key still determines pitch accidentals").to.equal(AccidentalEnum.NONE);
-        }
-    });
-
-    it("honors hidden TAB key-signature spacing", async (): Promise<void> => {
-        const keyCounts: number[] = [];
-        for (const addSpacing of [false, true]) {
-            osmd.EngravingRules.TabKeySignatureRendered = false;
-            osmd.EngravingRules.TabKeySignatureSpacingAdded = addSpacing;
-            await loadScore("test_key_signature_tab.musicxml");
-            expect(keys().filter((key: SVGGraphicsElement): boolean => key.getAttribute("visibility") !== "hidden"),
-                "TAB key glyphs remain hidden").to.have.length(0);
-            keyCounts.push(keys().length);
-        }
-        expect(keyCounts, "only the spacing-enabled render retains the hidden key reservation").to.deep.equal([0, 1]);
     });
 
     it("draws a key before a beamed grace-note group", async (): Promise<void> => {

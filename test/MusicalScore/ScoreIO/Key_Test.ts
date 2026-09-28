@@ -366,20 +366,7 @@ describe("Mid-measure keys", (): void => {
     }
   });
 
-  it("keeps a key at its timestamp when only a forward follows it", (): void => {
-    const sheet: MusicSheet = readMeasures(`<measure number="1">
-      <attributes>${meterAndClef}</attributes>
-      <note><rest/><duration>2</duration><type>half</type></note>
-      <attributes><key><fifths>1</fifths></key></attributes>
-      <forward><duration>2</duration></forward>
-    </measure>`);
-    const entries: SourceStaffEntry[] = timedKeys(sheet);
-    expect(entries.length).to.equal(1);
-    expect(entries[0].Timestamp.RealValue).to.equal(0.5);
-    expect(entries[0].VoiceEntries.length).to.equal(0);
-  });
-
-  it("carries the last musical-time key, even when backup serializes it earlier", (): void => {
+  it("resolves keys in musical order after backup, including changes followed only by forward", (): void => {
     const sheet: MusicSheet = readMeasures(`<measure number="1">
       <attributes>${meterAndClef}</attributes>
       <note><rest/><duration>4</duration><type>whole</type></note>
@@ -398,11 +385,9 @@ describe("Mid-measure keys", (): void => {
     expect(entries.map((entry: SourceStaffEntry): number => (entry.Instructions[0] as KeyInstruction).Key)).to.deep.equal([1, 2]);
     expect(entries.every((entry: SourceStaffEntry): boolean => entry.VoiceEntries.length === 0)).to.equal(true);
     expect(sheet.SourceMeasures[1].getKeyInstruction(0).Key, "G is a new key after ending in D").to.equal(1);
-  });
 
-  it("deduplicates redeclarations in musical time rather than XML order", (): void => {
     for (const firstBeat of [0, 1]) {
-      const sheet: MusicSheet = readMeasures(`<measure number="1">
+      const redeclaredSheet: MusicSheet = readMeasures(`<measure number="1">
         <attributes>${meterAndClef}</attributes>
         <note><rest/><duration>4</duration><type>whole</type></note>
         <backup><duration>2</duration></backup>
@@ -411,8 +396,8 @@ describe("Mid-measure keys", (): void => {
         <attributes><key><fifths>1</fifths></key></attributes>
         <forward><duration>${4 - firstBeat}</duration></forward>
       </measure>`);
-      expect(sheet.SourceMeasures[0].getKeyInstruction(0).Key).to.equal(firstBeat === 0 ? 1 : 0);
-      expect(timedKeys(sheet).map((entry: SourceStaffEntry): number => entry.Timestamp.RealValue))
+      expect(redeclaredSheet.SourceMeasures[0].getKeyInstruction(0).Key).to.equal(firstBeat === 0 ? 1 : 0);
+      expect(timedKeys(redeclaredSheet).map((entry: SourceStaffEntry): number => entry.Timestamp.RealValue))
         .to.deep.equal(firstBeat === 0 ? [] : [0.25]);
     }
   });

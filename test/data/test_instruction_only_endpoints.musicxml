@@ -2,11 +2,11 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="4.0">
   <work>
-    <work-title>Instruction-only entries and octave continuation</work-title>
+    <work-title>Instruction-only entries and line continuation</work-title>
   </work>
   <part-list>
     <score-part id="P1">
-      <part-name>Flute</part-name>
+      <part-name>Piano</part-name>
     </score-part>
   </part-list>
   <part id="P1">
@@ -30,6 +30,11 @@
           <octave-shift type="down" size="8"/>
         </direction-type>
       </direction>
+      <direction placement="below">
+        <direction-type>
+          <pedal type="start" line="yes" sign="no"/>
+        </direction-type>
+      </direction>
       <note>
         <pitch>
           <step>C</step>
@@ -37,13 +42,22 @@
         </pitch>
         <duration>4</duration>
         <type>whole</type>
+        <notations>
+          <ornaments>
+            <wavy-line type="start" number="1"/>
+          </ornaments>
+        </notations>
       </note>
     </measure>
     <measure number="2">
       <print new-system="yes"/>
-      <forward>
-        <duration>1</duration>
-      </forward>
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+      </note>
+      <backup>
+        <duration>3</duration>
+      </backup>
       <attributes>
         <key>
           <fifths>-1</fifths>
@@ -86,9 +100,13 @@
       </forward>
     </measure>
     <measure number="4">
-      <forward>
-        <duration>1</duration>
-      </forward>
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+      </note>
+      <backup>
+        <duration>3</duration>
+      </backup>
       <attributes>
         <key>
           <fifths>3</fifths>
@@ -107,10 +125,20 @@
         </pitch>
         <duration>4</duration>
         <type>whole</type>
+        <notations>
+          <ornaments>
+            <wavy-line type="stop" number="1"/>
+          </ornaments>
+        </notations>
       </note>
       <direction placement="above">
         <direction-type>
           <octave-shift type="stop" size="8"/>
+        </direction-type>
+      </direction>
+      <direction placement="below">
+        <direction-type>
+          <pedal type="stop" line="yes" sign="no"/>
         </direction-type>
       </direction>
     </measure>
