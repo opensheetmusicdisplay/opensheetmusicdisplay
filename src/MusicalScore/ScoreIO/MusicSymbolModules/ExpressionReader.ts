@@ -554,7 +554,8 @@ export class ExpressionReader {
         const allChildren: IXmlElement[] = metronomeNode.elements();
         const leftNotes: MetronomeNote[] = [];
         const rightNotes: MetronomeNote[] = [];
-        let currentTuplet: MetronomeTuplet | undefined;
+        let leftTuplet: MetronomeTuplet | undefined;
+        let rightTuplet: MetronomeTuplet | undefined;
         let passedRelation: boolean = false;
 
         for (const child of allChildren) {
@@ -587,12 +588,18 @@ export class ExpressionReader {
                     const normalEl: IXmlElement = tupletEl.element("normal-notes");
                     const bracketAttr: IXmlAttribute = tupletEl.attribute("bracket");
                     const showNumberAttr: IXmlAttribute = tupletEl.attribute("show-number");
-                    currentTuplet = {
+                    const tuplet: MetronomeTuplet = {
                         actualNotes: actualEl ? parseInt(actualEl.value, 10) : 3,
                         normalNotes: normalEl ? parseInt(normalEl.value, 10) : 2,
                         bracket: bracketAttr ? bracketAttr.value === "yes" : true,
                         showNumber: showNumberAttr ? showNumberAttr.value : "actual",
                     };
+                    // the tuplet belongs to the side it starts on, e.g. the right side of a swing mark
+                    if (passedRelation) {
+                        rightTuplet = tuplet;
+                    } else {
+                        leftTuplet = tuplet;
+                    }
                 }
                 // tupletType === "stop" — tuplet ends on this note, handled below
             }
@@ -605,8 +612,8 @@ export class ExpressionReader {
         }
 
         // Build note groups
-        const leftGroup: MetronomeNoteGroup = { notes: leftNotes };
-        const rightGroup: MetronomeNoteGroup = { notes: rightNotes, tuplet: currentTuplet };
+        const leftGroup: MetronomeNoteGroup = { notes: leftNotes, tuplet: leftTuplet };
+        const rightGroup: MetronomeNoteGroup = { notes: rightNotes, tuplet: rightTuplet };
 
         // Create the tempo expression. Use the sound tempo from the parent <sound> element.
         this.createNewTempoExpressionIfNeeded(currentMeasure);

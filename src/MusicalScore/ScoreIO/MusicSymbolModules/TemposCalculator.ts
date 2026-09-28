@@ -62,12 +62,11 @@ export class TemposCalculator implements IAfterSheetReadingModule {
                 // Here we make sure that all Inst tempos have a non-zero BPM.
                 if (mte.InstantaneousTempo != null && mte.InstantaneousTempo.TempoInBpm === 0.0) {
                     const ite: InstantaneousTempoExpression = mte.InstantaneousTempo;
-                    /** This is to handle bad input data.
-                     * If a metronomeMark tempo gets into the system without a BPM,
-                     *  we here give it the assumed value of 'a tempo'.
+                    /** A metronome mark without a BPM, e.g. a note equation (a metric modulation or a swing mark), or bad input data:
+                     *  it keeps the tempo in force, changed by the ratio of a note equation's sides (1 for a swing mark).
                      */
                     if (ite.isMetronomeMark) {
-                        ite.TempoInBpm = previousTempo;
+                        ite.TempoInBpm = previousTempo * ite.getNoteEquationTempoFactor();
                     } else if (ite instanceof InstantaneousTempoExpression && ite.TempoType !== TempoType.change) {
                         // An inst tempo should normally have a non-zero BPM.
                         ite.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo(ite.InstTempo);

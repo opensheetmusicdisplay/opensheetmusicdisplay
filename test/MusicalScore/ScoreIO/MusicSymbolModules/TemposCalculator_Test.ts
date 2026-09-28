@@ -31,10 +31,11 @@ describe("Tempo state", (): void => {
         return { bpms, metronomeBpms };
     }
 
-    it("keeps an explicit tempo through BPM-free note equations and a tempo word", async (): Promise<void> => {
+    it("changes the tempo at a metric modulation and keeps it through a tempo word and a swing mark", async (): Promise<void> => {
         const state: { bpms: number[], metronomeBpms: number[] } = await tempoState("test_tempo_state.musicxml");
-        expect(state.bpms).to.deep.equal([60, 96, 96, 96, 96]);
-        expect(state.metronomeBpms).to.deep.equal([60, 96, 96, 96]);
+        // quarter = dotted quarter in m3: the new dotted quarter lasts as long as the old quarter, 96 * 1.5 = 144
+        expect(state.bpms).to.deep.equal([60, 96, 144, 144, 144]);
+        expect(state.metronomeBpms).to.deep.equal([60, 96, 144, 144]);
     });
 
     it("keeps a defined tempo for an initial swing mark", async (): Promise<void> => {
