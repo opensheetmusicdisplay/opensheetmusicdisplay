@@ -68,9 +68,8 @@ export class TemposCalculator implements IAfterSheetReadingModule {
                      */
                     if (ite.isMetronomeMark) {
                         ite.TempoInBpm = previousTempo;
-                    }
-                    // An inst tempo should normally have a non-zero BPM.
-                    if (ite instanceof InstantaneousTempoExpression && ite.TempoType !== TempoType.change) {
+                    } else if (ite instanceof InstantaneousTempoExpression && ite.TempoType !== TempoType.change) {
+                        // An inst tempo should normally have a non-zero BPM.
                         ite.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo(ite.InstTempo);
                     }
                     // A change tempo will have a 0 BPM unless it was set by #calculatePrimoTempo, because it was on the first measure.
@@ -218,7 +217,7 @@ export class TemposCalculator implements IAfterSheetReadingModule {
             Inst0.TempoInBpm = ms.DefaultStartTempoInBpm;
         }
         if (Inst0.TempoInBpm === 0.0) {
-            Inst0.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo[InstTempo.moderato];
+            Inst0.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.moderato);
         }
         return Inst0.TempoInBpm;
     }
