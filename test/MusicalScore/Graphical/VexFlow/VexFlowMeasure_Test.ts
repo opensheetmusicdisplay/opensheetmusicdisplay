@@ -1240,9 +1240,9 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
-   // A grace note alone in its voice later in the measure (here voice 2 at the third beat) is drawn at its time: it starts half
-   //   a measure into its voice, and its staff entry takes its position from it (the cursor position there).
-   //   Rendering doesn't change the model, so a second updateGraphic() gives the same layout.
+   // A grace note alone in its voice later in the measure (here voice 2 at the third beat) is drawn at its time, right of the
+   //   whole note of voice 1, and its staff entry takes its position from it (the cursor position there).
+   //   Rendering doesn't change the model (GraceAfterMainNote), so this also holds after updateGraphic().
    for (const tablature of [false, true]) {
       it(`Draws a grace note that a voice holds alone at its time in the measure${tablature ? " in a tablature staff" : ""}`, (done: Mocha.Done) => {
          const clef: string = tablature ?
