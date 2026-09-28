@@ -1651,8 +1651,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         const voices: Voice[] = this.getVoicesWithinMeasure();
 
-        // Calculate offsets for fingerings
-        if (this.rules.RenderFingerings) {
+        // Calculate offsets for fingerings and string numbers.
+        if (this.rules.RenderFingerings || this.rules.RenderStringNumbersClassical) {
             for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
                 graphicalStaffEntry.setModifierXOffsets();
             }
@@ -1754,24 +1754,30 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     continue;
                 }
 
-                // add fingering
-                if (voiceEntry.parentVoiceEntry && this.rules.RenderFingerings) {
-                    if (this.rules.FingeringPosition === PlacementEnum.Left ||
-                        this.rules.FingeringPosition === PlacementEnum.Right) {
-                            this.createFingerings(voiceEntry);
-                    } // else created in MusicSheetCalculator.calculateFingerings() as Labels
-                    this.createStringNumber(voiceEntry);
-                }
+                if (!voiceEntry.parentVoiceEntry?.IsGrace) {
+                    // add fingering
+                    if (voiceEntry.parentVoiceEntry && this.rules.RenderFingerings) {
+                        if (this.rules.FingeringPosition === PlacementEnum.Left ||
+                            this.rules.FingeringPosition === PlacementEnum.Right) {
+                                this.createFingerings(voiceEntry);
+                        } // else created in MusicSheetCalculator.calculateFingerings() as Labels
+                    }
+                    if (voiceEntry.parentVoiceEntry) {
+                        this.createStringNumber(voiceEntry);
+                    }
 
-                // add Arpeggio
-                this.createArpeggio(voiceEntry);
+                    // add Arpeggio
+                    this.createArpeggio(voiceEntry);
+                }
 
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
             }
         }
         this.setStemDirectionFromVexFlow();
         for (const graceGVoiceEntry of graveGVoiceEntriesAdded) {
-            this.createFingerings(graceGVoiceEntry);
+            if (this.rules.RenderFingerings) {
+                this.createFingerings(graceGVoiceEntry);
+            }
             this.createStringNumber(graceGVoiceEntry);
             this.createArpeggio(graceGVoiceEntry);
         }
