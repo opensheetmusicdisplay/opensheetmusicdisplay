@@ -937,6 +937,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         let instrumentId: number = 0;
         const instrumentDict: { [_: string]: Instrument } = {};
         let currentGroup: InstrumentalGroup;
+        // The reader builds a nesting tree; crossing numbered groups cannot be named reliably.
+        const canAssignGroupNames: boolean = this.groupNumbersAreProperlyNested(entryList);
         try {
             const entryArray: IXmlElement[] = entryList;
             for (let idx: number = 0, len: number = entryArray.length; idx < len; ++idx) {
@@ -1041,7 +1043,25 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     }
                 } else {
                     if ((node.name === "part-group") && (node.attribute("type").value === "start")) {
-                        const iG: InstrumentalGroup = new InstrumentalGroup("group", this.musicSheet, currentGroup);
+                        const iG: InstrumentalGroup = new InstrumentalGroup(undefined, this.musicSheet, currentGroup);
+                        const groupName: IXmlElement = node.element("group-name");
+                        const groupAbbreviation: IXmlElement = node.element("group-abbreviation");
+                        if (groupName) {
+                            iG.Name = groupName.value;
+                        }
+                        if (groupAbbreviation) {
+                            iG.Abbreviation = groupAbbreviation.value;
+                        }
+                        iG.PrintName = canAssignGroupNames;
+                        iG.PrintAbbreviation = canAssignGroupNames;
+                        const nameDisplay: IXmlElement = node.element("group-name-display");
+                        if (nameDisplay) {
+                            iG.PrintName = iG.PrintName && nameDisplay.attribute("print-object")?.value !== "no";
+                        }
+                        const abbreviationDisplay: IXmlElement = node.element("group-abbreviation-display");
+                        if (abbreviationDisplay) {
+                            iG.PrintAbbreviation = iG.PrintAbbreviation && abbreviationDisplay.attribute("print-object")?.value !== "no";
+                        }
                         if (currentGroup) {
                             currentGroup.InstrumentalGroups.push(iG);
                         } else {
@@ -1051,6 +1071,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     } else {
                         if ((node.name === "part-group") && (node.attribute("type").value === "stop")) {
                             if (currentGroup) {
+                                const hasMultipleParts: boolean = this.countInstrumentsInGroup(currentGroup) > 1;
+                                currentGroup.PrintName = currentGroup.PrintName && hasMultipleParts;
+                                currentGroup.PrintAbbreviation = currentGroup.PrintAbbreviation && hasMultipleParts;
                                 if (currentGroup.InstrumentalGroups.length === 1) {
                                     const instr: InstrumentalGroup = currentGroup.InstrumentalGroups[0];
                                     if (currentGroup.Parent) {
@@ -1075,6 +1098,35 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
 
         return instrumentDict;
+    }
+
+    private countInstrumentsInGroup(group: InstrumentalGroup): number {
+        let count: number = 0;
+        for (const child of group.InstrumentalGroups) {
+            count += child instanceof Instrument ? 1 : this.countInstrumentsInGroup(child);
+        }
+        return count;
+    }
+
+    private groupNumbersAreProperlyNested(entryList: IXmlElement[]): boolean {
+        const numbers: string[] = [];
+        for (const entry of entryList) {
+            if (entry.name !== "part-group") {
+                continue;
+            }
+            const number: string = entry.attribute("number")?.value ?? "1";
+            if (entry.attribute("type")?.value === "start") {
+                if (numbers.indexOf(number) >= 0) {
+                    return false;
+                }
+                numbers.push(number);
+            } else if (entry.attribute("type")?.value === "stop") {
+                if (numbers.pop() !== number) {
+                    return false;
+                }
+            }
+        }
+        return numbers.length === 0;
     }
 
     /**

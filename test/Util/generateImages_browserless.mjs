@@ -525,6 +525,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestSlidesStandardAndTabStaff = sampleFilename.includes("test_slides_standard_and_tab_staff");
     const isTestPartAbbreviationsPartlyMissing = sampleFilename.includes("test_part_abbreviations_partly_missing");
     const isTestPartAbbreviationSingleStaff = sampleFilename.includes("test_part_abbreviation_single_staff");
+    const isTestPartGroupNames = sampleFilename.includes("test_group_name") || sampleFilename.includes("test_group_hidden_name");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
     const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
@@ -609,7 +610,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         isTestWavyLineMultilineExtraGraphicalMeasure ||
         isTestSlidesStandardAndTabStaff ||
         isTestPartAbbreviationsPartlyMissing ||
-        isTestPartAbbreviationSingleStaff) {
+        isTestPartAbbreviationSingleStaff ||
+        isTestPartGroupNames) {
         osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
     }
     if (isTestPartAbbreviationSingleStaff) {

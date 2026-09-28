@@ -524,6 +524,8 @@ export class EngravingRules {
     public RenderLyricist: boolean;
     public RenderCopyright: boolean;
     public RenderPartNames: boolean;
+    /** Whether to render part-group names and abbreviations. Requires RenderPartNames. Default true. */
+    public RenderPartGroupNames: boolean;
     public RenderPartAbbreviations: boolean;
     /** Whether to render part abbreviations on systems with only one staff.
      *  Requires RenderPartNames and RenderPartAbbreviations. Default false.
@@ -1050,6 +1052,7 @@ export class EngravingRules {
         this.RenderLyricist = true;
         this.RenderCopyright = false;
         this.RenderPartNames = true;
+        this.RenderPartGroupNames = true;
         this.RenderPartAbbreviations = true;
         this.RenderPartAbbreviationsForSingleStaff = false;
         this.LazyConsistentGraphic = false;

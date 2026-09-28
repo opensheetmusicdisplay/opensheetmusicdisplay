@@ -36,6 +36,7 @@ export abstract class MusicSystem extends GraphicalObject {
      * That is why the labels are labels.values() and not labels.keys().
      */
     protected labels: Dictionary<Instrument, GraphicalLabel> = new Dictionary<Instrument, GraphicalLabel>();
+    protected groupLabels: Map<InstrumentalGroup, GraphicalLabel> = new Map<InstrumentalGroup, GraphicalLabel>();
     protected measureNumberLabels: GraphicalLabel[] = [];
     protected maxLabelLength: number;
     protected objectsToRedraw: [Object[], Object][] = [];
@@ -91,7 +92,7 @@ export abstract class MusicSystem extends GraphicalObject {
     }
 
     public get Labels(): GraphicalLabel[] {
-        return this.labels.values();
+        return [...this.groupLabels.values(), ...this.labels.values()];
     }
 
     public get ObjectsToRedraw(): [Object[], Object][] {
@@ -300,6 +301,9 @@ export abstract class MusicSystem extends GraphicalObject {
                                     labelMarginBorderFactor: number, isFirstSystem: boolean = false): void {
 
         const originalSystemLabelsRightMargin: number = systemLabelsRightMargin;
+        const groupLabelsByDepth: GraphicalLabel[][] = [];
+        const groups: InstrumentalGroup[] = this.staffLines[0]?.ParentStaff.ParentInstrument.GetMusicSheet.InstrumentalGroups ?? [];
+        this.createGroupLabels(groups, 0, isFirstSystem, instrumentLabelTextHeight, groupLabelsByDepth);
         for (let idx: number = 0, len: number = this.staffLines.length; idx < len; ++idx) {
             const instrument: Instrument = this.staffLines[idx].ParentStaff.ParentInstrument;
             let instrNameLabel: Label;
@@ -329,34 +333,104 @@ export abstract class MusicSystem extends GraphicalObject {
                 );
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.setValue(instrument, graphicalLabel);
-                // X-Position will be 0 (Label starts at the same PointF_2D with MusicSystem)
-                // Y-Position will be calculated after the y-Spacing
-                // graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
+                // X is set after all group and part label widths are known; Y is set after staff spacing.
             } else {
                 systemLabelsRightMargin = 0;
             }
         }
 
-        // calculate maxLabelLength (needed for X-Spacing)
-        this.maxLabelLength = 0.0;
-        const labels: GraphicalLabel[] = this.labels.values();
-        for (let idx: number = 0, len: number = labels.length; idx < len; ++idx) {
-            const label: GraphicalLabel = labels[idx];
-            if (!label.Label.print) {
+        // Group labels and part labels occupy separate columns; their combined width reserves system space.
+        let labelX: number = 0;
+        let hasPreviousColumn: boolean = false;
+        for (const groupLabels of groupLabelsByDepth) {
+            if (!groupLabels?.length) {
                 continue;
             }
-            if (label.PositionAndShape.Size.width > this.maxLabelLength) {
-                this.maxLabelLength = label.PositionAndShape.Size.width;
-                systemLabelsRightMargin = originalSystemLabelsRightMargin;
+            if (hasPreviousColumn) {
+                labelX += originalSystemLabelsRightMargin;
             }
+            let columnWidth: number = 0;
+            for (const label of groupLabels) {
+                label.PositionAndShape.RelativePosition = new PointF2D(labelX, 0);
+                columnWidth = Math.max(columnWidth, label.PositionAndShape.Size.width);
+            }
+            labelX += columnWidth;
+            hasPreviousColumn = true;
+        }
+        const partLabels: GraphicalLabel[] = this.labels.values().filter((label: GraphicalLabel): boolean =>
+            label.Label.print && !!label.Label.text?.trim());
+        if (hasPreviousColumn && partLabels.length > 0) {
+            labelX += originalSystemLabelsRightMargin;
+        }
+        let partColumnWidth: number = 0;
+        for (const label of partLabels) {
+            label.PositionAndShape.RelativePosition = new PointF2D(labelX, 0);
+            partColumnWidth = Math.max(partColumnWidth, label.PositionAndShape.Size.width);
+        }
+        this.maxLabelLength = labelX + partColumnWidth;
+        if (this.maxLabelLength > 0) {
+            systemLabelsRightMargin = originalSystemLabelsRightMargin;
         }
         this.updateMusicSystemStaffLineXPosition(systemLabelsRightMargin);
+    }
+
+    private createGroupLabels(groups: InstrumentalGroup[], depth: number, isFirstSystem: boolean,
+                              textHeight: number, byDepth: GraphicalLabel[][]): void {
+        if (!this.rules.RenderPartGroupNames) {
+            return;
+        }
+        for (const group of groups) {
+            if (group instanceof Instrument) {
+                continue;
+            }
+            const text: string = isFirstSystem ? group.Name : group.Abbreviation;
+            const print: boolean = isFirstSystem ? group.PrintName && this.rules.RenderPartNames
+                : group.PrintAbbreviation && this.rules.RenderPartNames && this.rules.RenderPartAbbreviations
+                    && (this.staffLines.length !== 1 || this.rules.RenderPartAbbreviationsForSingleStaff);
+            if (print && text?.trim() && this.staffLinesForGroup(group).length > 0) {
+                const label: GraphicalLabel = new GraphicalLabel(
+                    new Label(text), textHeight, TextAlignmentEnum.LeftCenter, this.rules, this.boundingBox
+                );
+                label.setLabelPositionAndShapeBorders();
+                this.groupLabels.set(group, label);
+                if (!byDepth[depth]) {
+                    byDepth[depth] = [];
+                }
+                byDepth[depth].push(label);
+            }
+            this.createGroupLabels(group.InstrumentalGroups, depth + 1, isFirstSystem, textHeight, byDepth);
+        }
+    }
+
+    private instrumentBelongsToGroup(instrument: Instrument, group: InstrumentalGroup): boolean {
+        let parent: InstrumentalGroup = instrument.Parent;
+        while (parent) {
+            if (parent === group) {
+                return true;
+            }
+            parent = parent.Parent;
+        }
+        return false;
+    }
+
+    private staffLinesForGroup(group: InstrumentalGroup): StaffLine[] {
+        return this.staffLines.filter((line: StaffLine): boolean =>
+            this.instrumentBelongsToGroup(line.ParentStaff.ParentInstrument, group));
     }
 
     /**
      * Set the Y-Positions for the MusicSystem's Labels.
      */
     public setMusicSystemLabelsYPosition(): void {
+        this.groupLabels.forEach((value: GraphicalLabel, key: InstrumentalGroup): void => {
+            const lines: StaffLine[] = this.staffLinesForGroup(key);
+            if (lines.length > 0) {
+                const firstY: number = lines[0].PositionAndShape.RelativePosition.y;
+                const lastY: number = lines[lines.length - 1].PositionAndShape.RelativePosition.y;
+                value.PositionAndShape.RelativePosition = new PointF2D(
+                    value.PositionAndShape.RelativePosition.x, (firstY + lastY) / 2 + 2.0);
+            }
+        });
         this.labels.forEach((key: Instrument, value: GraphicalLabel): void => {
             let ypositionSum: number = 0;
             let staffCounter: number = 0;
@@ -374,7 +448,8 @@ export abstract class MusicSystem extends GraphicalObject {
                 }
             }
             if (staffCounter > 0) {
-                value.PositionAndShape.RelativePosition = new PointF2D(0.0, ypositionSum / staffCounter + 2.0);
+                value.PositionAndShape.RelativePosition = new PointF2D(
+                    value.PositionAndShape.RelativePosition.x, ypositionSum / staffCounter + 2.0);
             }
         });
     }
