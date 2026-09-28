@@ -10,7 +10,11 @@ export class RepetitionCalculator {
   private musicSheet: MusicSheet;
   private repetitionInstructions: RepetitionInstruction[] = [];
   private openRepetitions: RepetitionBuildingContainer[] = [];
+  /** Where a repetition without a start line (forward repeat or segno) starts:
+   *  after the last backward jump or ending, or at the start of the movement. */
   private lastRepetitionCommonPartStartIndex: number = 0;
+  /** The first measure of the current movement, where a D.C. jumps to. */
+  private movementStartIndex: number = 0;
   private currentMeasure: SourceMeasure;
   private currentMeasureIndex: number;
 
@@ -27,6 +31,7 @@ export class RepetitionCalculator {
 
     this.openRepetitions.length = 0;
     this.lastRepetitionCommonPartStartIndex = 0;
+    this.movementStartIndex = 0;
 
     const sourceMeasures: SourceMeasure[] = this.musicSheet.SourceMeasures;
     // Detect movement boundaries where measure numbers reset (e.g. multi-movement pieces without explicit <movement> tags).
@@ -41,24 +46,40 @@ export class RepetitionCalculator {
     }
 
     let lastInstructionMeasureIndex: number = 0;
+    // after a backward jump or an ending, for the instructions in the following measures
+    let commonPartStartAfterJump: number = undefined;
     for (const instruction of this.repetitionInstructions) {
       this.currentMeasureIndex = instruction.measureIndex;
+      if (commonPartStartAfterJump !== undefined && this.currentMeasureIndex >= commonPartStartAfterJump) {
+        this.lastRepetitionCommonPartStartIndex = Math.max(this.lastRepetitionCommonPartStartIndex, commonPartStartAfterJump);
+        commonPartStartAfterJump = undefined;
+      }
       // If we crossed a movement boundary, finalize all open repetitions so they don't span across movements
+      //   (the last one crossed, if a movement has no repetition instructions)
       if (this.currentMeasureIndex > lastInstructionMeasureIndex) {
+        let crossedMovementStart: number = undefined;
         for (const movementStart of movementStartIndices) {
           if (movementStart > lastInstructionMeasureIndex && movementStart <= this.currentMeasureIndex) {
-            while (this.openRepetitions.length > 0) {
-              this.finalizeRepetition(this.openRepetitions.last());
-            }
-            this.lastRepetitionCommonPartStartIndex = movementStart;
-            break;
+            crossedMovementStart = Math.max(movementStart, crossedMovementStart ?? movementStart);
           }
+        }
+        if (crossedMovementStart !== undefined) {
+          while (this.openRepetitions.length > 0) {
+            this.finalizeRepetition(this.openRepetitions.last());
+          }
+          this.lastRepetitionCommonPartStartIndex = crossedMovementStart;
+          this.movementStartIndex = crossedMovementStart;
         }
       }
       lastInstructionMeasureIndex = this.currentMeasureIndex;
       try {
         this.currentMeasure = sourceMeasures[this.currentMeasureIndex];
         this.handleRepetitionInstructions(instruction);
+        // a repetition without a start line starts after a backward jump or an ending (in a following measure)
+        if (instruction.type === RepetitionInstructionEnum.Ending ? instruction.alignment !== AlignmentType.Begin :
+            RepetitionCalculator.isBackwardJump(instruction.type)) {
+          commonPartStartAfterJump = this.currentMeasureIndex + 1;
+        }
       } catch (error) {
         log.error("RepetitionCalculator: calculateRepetitions", error);
       }
@@ -224,7 +245,8 @@ export class RepetitionCalculator {
             }
             break;
         case RepetitionInstructionEnum.Ending:
-            currentRepetition = this.getOrCreateCurrentRepetition();
+            // without a forward repeat, the repetition starts after the previous one (or at the start of the movement)
+            currentRepetition = this.getOrCreateCurrentRepetition(this.lastRepetitionCommonPartStartIndex);
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
             const isFirstEndingStart: boolean = currentRepetitionInstruction.endingIndices.contains(1) &&
                                                 currentRepetitionInstruction.alignment === AlignmentType.Begin;
@@ -243,8 +265,9 @@ export class RepetitionCalculator {
                         }
                     }
                     if (currentRepetition === undefined) {
-                        currentRepetition = this.createNewRepetition(0);
-                        currentRepetition.RepetitonUnderConstruction.startMarker = new RepetitionInstruction(0, RepetitionInstructionEnum.None);
+                        currentRepetition = this.createNewRepetition(this.lastRepetitionCommonPartStartIndex);
+                        currentRepetition.RepetitonUnderConstruction.startMarker =
+                          new RepetitionInstruction(this.lastRepetitionCommonPartStartIndex, RepetitionInstructionEnum.None);
                     }
                 }
                 if (currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction === undefined) {
@@ -281,6 +304,19 @@ export class RepetitionCalculator {
             currentRepetition.SegnoFound = true;
             currentRepetition.RepetitonUnderConstruction.startMarker = currentRepetitionInstruction;
             this.currentMeasure.FirstRepetitionInstructions.push(currentRepetitionInstruction);
+            {
+                // A repeat starting in the segno's measure (its forward repeat was read first) lies within the D.S. repetition:
+                //   the D.S. repetition goes below it, so that the repeat's endings and backward jump go to the repeat,
+                //   and the backward jump doesn't close the D.S. repetition before its D.S. is read.
+                const count: number = this.openRepetitions.length;
+                const repeat: RepetitionBuildingContainer = this.openRepetitions[count - 2];
+                if (repeat && !repeat.RepetitonUnderConstruction.FromWords &&
+                    repeat.RepetitonUnderConstruction.BackwardJumpInstructions.length === 0 &&
+                    repeat.RepetitonUnderConstruction.StartIndex === this.currentMeasureIndex) {
+                    this.openRepetitions[count - 2] = currentRepetition;
+                    this.openRepetitions[count - 1] = repeat;
+                }
+            }
             break;
         case RepetitionInstructionEnum.Fine:
             if (this.openRepetitions.length === 0) {
@@ -349,19 +385,19 @@ export class RepetitionCalculator {
             }
             break;
         case RepetitionInstructionEnum.DaCapo:
-            currentRepetition = this.getOrCreateCurrentRepetition();
+            currentRepetition = this.getOrCreateCurrentRepetition(this.movementStartIndex);
             if (currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.length > 0) {
-                // the D.C. gets its own repetition, also after one that starts at the first measure (with endings, so still open)
+                // the D.C. gets its own repetition, also after one that starts where the D.C. jumps to (with endings, so still open)
                 this.finalizeRepetition(currentRepetition);
-                currentRepetition = this.createNewRepetition(0);
-            } else if (currentRepetition.RepetitonUnderConstruction.StartIndex !== 0) {
-                currentRepetition = this.createNewRepetition(0);
+                currentRepetition = this.createNewRepetition(this.movementStartIndex);
+            } else if (currentRepetition.RepetitonUnderConstruction.StartIndex !== this.movementStartIndex) {
+                currentRepetition = this.createNewRepetition(this.movementStartIndex);
             }
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
             currentRepetition.RepetitonUnderConstruction.FromWords = true;
-            currentRepetition.RepetitonUnderConstruction.startMarker = new RepetitionInstruction(0, RepetitionInstructionEnum.None,
-                                                                                                 AlignmentType.Begin,
-                                                                                                 currentRepetition.RepetitonUnderConstruction);
+            currentRepetition.RepetitonUnderConstruction.startMarker =
+              new RepetitionInstruction(this.movementStartIndex, RepetitionInstructionEnum.None, AlignmentType.Begin,
+                                        currentRepetition.RepetitonUnderConstruction);
             currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.push(currentRepetitionInstruction);
             this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
             if (currentRepetition.RepetitonUnderConstruction.EndingParts.length === 0) {
@@ -372,26 +408,14 @@ export class RepetitionCalculator {
             currentRepetition = this.getOrCreateCurrentRepetition2(true);
             if (currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.length > 0) {
                 this.finalizeRepetition(currentRepetition);
-                currentRepetition = this.createNewRepetition(0);
+                currentRepetition = this.createNewRepetition(this.movementStartIndex);
                 currentRepetition.RepetitonUnderConstruction.FromWords = true;
-                currentRepetition.RepetitonUnderConstruction.startMarker = new RepetitionInstruction(0, RepetitionInstructionEnum.None,
-                                                                                                     AlignmentType.Begin,
-                                                                                                     currentRepetition.RepetitonUnderConstruction);
+                currentRepetition.RepetitonUnderConstruction.startMarker =
+                  new RepetitionInstruction(this.movementStartIndex, RepetitionInstructionEnum.None, AlignmentType.Begin,
+                                            currentRepetition.RepetitonUnderConstruction);
             }
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
-            if (!currentRepetition.SegnoFound) {
-                const segnoMeasureIndex: number = this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Segno,
-                                                                                          currentRepetitionInstruction.measureIndex);
-                if (segnoMeasureIndex >= 0) {
-                    currentRepetition.SegnoFound = true;
-                    currentRepetition.RepetitonUnderConstruction.startMarker = new RepetitionInstruction( segnoMeasureIndex,
-                                                                                                          RepetitionInstructionEnum.Segno,
-                                                                                                          AlignmentType.Begin,
-                                                                                                          currentRepetition.RepetitonUnderConstruction);
-                    this.musicSheet.SourceMeasures[segnoMeasureIndex].FirstRepetitionInstructions.splice(
-                      0, 0, currentRepetition.RepetitonUnderConstruction.startMarker);
-                }
-            }
+            this.startAtSegnoBackwards(currentRepetition);
             if (currentRepetition.RepetitonUnderConstruction.EndingIndexDict.hasOwnProperty(1)) {
                 currentRepetition.RepetitonUnderConstruction.setEndingEndIndex(1, this.currentMeasureIndex);
             }
@@ -399,23 +423,14 @@ export class RepetitionCalculator {
             this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
             break;
         case RepetitionInstructionEnum.DalSegnoAlFine:
-            if (this.openRepetitions.length === 0) {
+            // (the segno's repetition may have been closed already, e.g. by a repeat sign after the segno: see startAtSegnoBackwards())
+            if (this.openRepetitions.length === 0 &&
+                this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Segno, this.currentMeasureIndex) < 0) {
                 break;
             }
             currentRepetition = this.getOrCreateCurrentRepetition2(true);
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
-            if (!currentRepetition.SegnoFound) {
-                const segnoMeasureIndex: number = this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Segno,
-                                                                                          currentRepetitionInstruction.measureIndex);
-                if (segnoMeasureIndex >= 0) {
-                    currentRepetition.SegnoFound = true;
-                    currentRepetition.RepetitonUnderConstruction.startMarker =
-                      new RepetitionInstruction(segnoMeasureIndex, RepetitionInstructionEnum.Segno,
-                                                AlignmentType.Begin, currentRepetition.RepetitonUnderConstruction);
-                    this.musicSheet.SourceMeasures[segnoMeasureIndex].FirstRepetitionInstructions.
-                      splice(0, 0, currentRepetition.RepetitonUnderConstruction.startMarker);
-                }
-            }
+            this.startAtSegnoBackwards(currentRepetition);
             if (!currentRepetition.FineFound) {
                 const fineMeasureIndex: number = this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Fine,
                                                                                          currentRepetitionInstruction.measureIndex);
@@ -436,17 +451,18 @@ export class RepetitionCalculator {
             this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
             break;
         case RepetitionInstructionEnum.DaCapoAlFine:
-            currentRepetition = this.getOrCreateCurrentRepetition();
+            currentRepetition = this.getOrCreateCurrentRepetition(this.movementStartIndex);
             if (currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.length > 0) {
                 this.finalizeRepetition(currentRepetition);
-                currentRepetition = this.createNewRepetition(0);
+                currentRepetition = this.createNewRepetition(this.movementStartIndex);
             }
-            if (currentRepetition.RepetitonUnderConstruction.startMarker !== undefined && currentRepetition.RepetitonUnderConstruction.StartIndex !== 0) {
-                currentRepetition = this.createNewRepetition(0);
+            if (currentRepetition.RepetitonUnderConstruction.startMarker !== undefined &&
+                currentRepetition.RepetitonUnderConstruction.StartIndex !== this.movementStartIndex) {
+                currentRepetition = this.createNewRepetition(this.movementStartIndex);
             }
-            currentRepetition.RepetitonUnderConstruction.startMarker = new RepetitionInstruction(0, RepetitionInstructionEnum.None,
-                                                                                                 AlignmentType.Begin,
-                                                                                                 currentRepetition.RepetitonUnderConstruction);
+            currentRepetition.RepetitonUnderConstruction.startMarker =
+              new RepetitionInstruction(this.movementStartIndex, RepetitionInstructionEnum.None, AlignmentType.Begin,
+                                        currentRepetition.RepetitonUnderConstruction);
             currentRepetition.RepetitonUnderConstruction.FromWords = true;
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
             if (!currentRepetition.FineFound) {
@@ -469,23 +485,14 @@ export class RepetitionCalculator {
             this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
             break;
         case RepetitionInstructionEnum.DalSegnoAlCoda:
-            if (this.openRepetitions.length === 0) {
+            // (the segno's repetition may have been closed already, e.g. by a repeat sign after the segno: see startAtSegnoBackwards())
+            if (this.openRepetitions.length === 0 &&
+                this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Segno, this.currentMeasureIndex) < 0) {
                 break;
             }
             currentRepetition = this.getOrCreateCurrentRepetition2(true);
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
-            if (!currentRepetition.SegnoFound) {
-                const segnoMeasureIndex: number = this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Segno,
-                                                                                          currentRepetitionInstruction.measureIndex);
-                if (segnoMeasureIndex >= 0) {
-                    currentRepetition.SegnoFound = true;
-                    currentRepetition.RepetitonUnderConstruction.startMarker =
-                      new RepetitionInstruction(segnoMeasureIndex, RepetitionInstructionEnum.Segno,
-                                                AlignmentType.Begin, currentRepetition.RepetitonUnderConstruction);
-                    this.musicSheet.SourceMeasures[segnoMeasureIndex].FirstRepetitionInstructions.
-                      splice(0, 0, currentRepetition.RepetitonUnderConstruction.startMarker);
-                }
-            }
+            this.startAtSegnoBackwards(currentRepetition);
             if (!currentRepetition.ToCodaFound) {
                 const toCodaMeasureIndex: number = this.findInstructionInMainListBackwards(RepetitionInstructionEnum.ToCoda,
                                                                                            currentRepetitionInstruction.measureIndex);
@@ -519,19 +526,20 @@ export class RepetitionCalculator {
             this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
             break;
         case RepetitionInstructionEnum.DaCapoAlCoda:
-            currentRepetition = this.getOrCreateCurrentRepetition();
+            currentRepetition = this.getOrCreateCurrentRepetition(this.movementStartIndex);
             if (currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.length > 0) {
                 this.finalizeRepetition(currentRepetition);
-                currentRepetition = this.createNewRepetition(0);
+                currentRepetition = this.createNewRepetition(this.movementStartIndex);
             } else if (currentRepetition.RepetitonUnderConstruction.EndingParts.length === 0) {
-                currentRepetition = this.createNewRepetition(0);
+                currentRepetition = this.createNewRepetition(this.movementStartIndex);
             }
-            if (currentRepetition.RepetitonUnderConstruction.startMarker !== undefined && currentRepetition.RepetitonUnderConstruction.StartIndex !== 0) {
-                currentRepetition = this.createNewRepetition(0);
+            if (currentRepetition.RepetitonUnderConstruction.startMarker !== undefined &&
+                currentRepetition.RepetitonUnderConstruction.StartIndex !== this.movementStartIndex) {
+                currentRepetition = this.createNewRepetition(this.movementStartIndex);
             }
-            currentRepetition.RepetitonUnderConstruction.startMarker = new RepetitionInstruction(0, RepetitionInstructionEnum.None,
-                                                                                                 AlignmentType.Begin,
-                                                                                                 currentRepetition.RepetitonUnderConstruction);
+            currentRepetition.RepetitonUnderConstruction.startMarker =
+              new RepetitionInstruction(this.movementStartIndex, RepetitionInstructionEnum.None, AlignmentType.Begin,
+                                        currentRepetition.RepetitonUnderConstruction);
             currentRepetition.RepetitonUnderConstruction.FromWords = true;
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
             if (!currentRepetition.ToCodaFound) {
@@ -574,16 +582,56 @@ export class RepetitionCalculator {
     return true;
   }
 
+  /** Returns the measure index of the last instruction of the given type at or before startMeasureIndex in the current movement, or -1. */
   private findInstructionInMainListBackwards(instruction: RepetitionInstructionEnum, startMeasureIndex: number): number {
       for (let i: number = this.repetitionInstructions.length - 1; i >= 0; i--) {
           const repetitionInstruction: RepetitionInstruction = this.repetitionInstructions[i];
-          {
-              if (repetitionInstruction.measureIndex <= startMeasureIndex && repetitionInstruction.type === instruction) {
-                  return repetitionInstruction.measureIndex;
-              }
+          if (repetitionInstruction.measureIndex <= startMeasureIndex && repetitionInstruction.measureIndex >= this.movementStartIndex &&
+              repetitionInstruction.type === instruction) {
+              return repetitionInstruction.measureIndex;
           }
       }
       return -1;
+  }
+
+  /**
+   * Starts a D.S. repetition at the last segno before the D.S. in the movement, if the segno's own repetition wasn't found
+   * (e.g. a repeat sign after the segno closed it, see getOrCreateCurrentRepetition2()).
+   * The segno's instruction is reused, so that the segno isn't drawn twice.
+   */
+  private startAtSegnoBackwards(repContainer: RepetitionBuildingContainer): void {
+      if (repContainer.SegnoFound) {
+          return;
+      }
+      const segnoMeasureIndex: number = this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Segno, this.currentMeasureIndex);
+      if (segnoMeasureIndex < 0) {
+          return;
+      }
+      repContainer.SegnoFound = true;
+      const firstInstructions: RepetitionInstruction[] = this.musicSheet.SourceMeasures[segnoMeasureIndex].FirstRepetitionInstructions;
+      let segno: RepetitionInstruction = firstInstructions.find(instruction => instruction.type === RepetitionInstructionEnum.Segno);
+      if (!segno) {
+          segno = new RepetitionInstruction(segnoMeasureIndex, RepetitionInstructionEnum.Segno, AlignmentType.Begin);
+          firstInstructions.splice(0, 0, segno);
+      }
+      segno.parentRepetition = repContainer.RepetitonUnderConstruction;
+      repContainer.RepetitonUnderConstruction.startMarker = segno;
+  }
+
+  /** Whether the instruction type jumps back: a backward repeat, D.C. or D.S. */
+  private static isBackwardJump(type: RepetitionInstructionEnum): boolean {
+      switch (type) {
+          case RepetitionInstructionEnum.BackJumpLine:
+          case RepetitionInstructionEnum.DaCapo:
+          case RepetitionInstructionEnum.DaCapoAlFine:
+          case RepetitionInstructionEnum.DaCapoAlCoda:
+          case RepetitionInstructionEnum.DalSegno:
+          case RepetitionInstructionEnum.DalSegnoAlFine:
+          case RepetitionInstructionEnum.DalSegnoAlCoda:
+              return true;
+          default:
+              return false;
+      }
   }
   private finalizeRepetition(repContainer: RepetitionBuildingContainer): void {
       const currentRep: Repetition = repContainer.RepetitonUnderConstruction;
@@ -639,12 +687,17 @@ export class RepetitionCalculator {
   //         this.finalizeRepetition(openRep);
   //     }
   // }
+  /**
+   * Returns the innermost open repetition from words (or from repeat signs), after finalizing the finished repetitions within it.
+   * A repeat within it that has no backward jump yet stays open, e.g. one with a To Coda or Fine before its backward repeat.
+   */
   private getCurrentRepetition(fromWords: boolean): RepetitionBuildingContainer {
       let currentRepetition: RepetitionBuildingContainer = undefined;
       for (let i: number = this.openRepetitions.length - 1; i >= 0; i--) {
           if (this.openRepetitions[i].RepetitonUnderConstruction.FromWords === fromWords) {
               currentRepetition = this.openRepetitions[i];
-              while (i < this.openRepetitions.length - 1) {
+              while (i < this.openRepetitions.length - 1 &&
+                     this.openRepetitions.last().RepetitonUnderConstruction.BackwardJumpInstructions.length > 0) {
                   this.finalizeRepetition(this.openRepetitions.last());
               }
               return currentRepetition;
@@ -652,12 +705,15 @@ export class RepetitionCalculator {
       }
       return currentRepetition;
   }
-  private getOrCreateCurrentRepetition(): RepetitionBuildingContainer {
+  /**
+   * Returns the innermost open repetition, or a new one starting at startIndex (without a start line) if none is open.
+   */
+  private getOrCreateCurrentRepetition(startIndex: number): RepetitionBuildingContainer {
     if (this.openRepetitions.length > 0) {
         return this.openRepetitions.last();
     }
-    const newRep: RepetitionBuildingContainer = this.createNewRepetition(0);
-    newRep.RepetitonUnderConstruction.startMarker = new RepetitionInstruction(0, RepetitionInstructionEnum.None,
+    const newRep: RepetitionBuildingContainer = this.createNewRepetition(startIndex);
+    newRep.RepetitonUnderConstruction.startMarker = new RepetitionInstruction(startIndex, RepetitionInstructionEnum.None,
                                                                               AlignmentType.Begin,
                                                                               newRep.RepetitonUnderConstruction);
     return newRep;
@@ -673,8 +729,9 @@ export class RepetitionCalculator {
               return currentRepetition;
           }
       }
-      currentRepetition = this.createNewRepetition(this.lastRepetitionCommonPartStartIndex);
-      currentRepetition.RepetitonUnderConstruction.startMarker = new RepetitionInstruction(this.lastRepetitionCommonPartStartIndex,
+      const startIndex: number = Math.min(this.lastRepetitionCommonPartStartIndex, this.currentMeasureIndex);
+      currentRepetition = this.createNewRepetition(startIndex);
+      currentRepetition.RepetitonUnderConstruction.startMarker = new RepetitionInstruction(startIndex,
                                                                                            RepetitionInstructionEnum.None,
                                                                                            AlignmentType.Begin,
                                                                                            currentRepetition.RepetitonUnderConstruction);
@@ -699,7 +756,8 @@ export class RepetitionCalculator {
           }
       }
       const currentRepetition: RepetitionBuildingContainer = new RepetitionBuildingContainer(this.musicSheet);
-      this.lastRepetitionCommonPartStartIndex = commonPartStartIndex;
+      // not back, e.g. for a D.C. from the start of the movement
+      this.lastRepetitionCommonPartStartIndex = Math.max(this.lastRepetitionCommonPartStartIndex, commonPartStartIndex);
       this.openRepetitions.push(currentRepetition);
       return currentRepetition;
   }
