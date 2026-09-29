@@ -320,10 +320,84 @@ describe("Mid-measure keys", (): void => {
     return new MusicSheetReader().createMusicSheet(new IXmlElement(doc.documentElement), "keys");
   }
 
-  function timedKeys(sheet: MusicSheet, measure: number = 0): SourceStaffEntry[] {
-    return sheet.SourceMeasures[measure].getEntriesPerStaff(0).filter((entry: SourceStaffEntry): boolean =>
+  function timedKeys(sheet: MusicSheet, measure: number = 0, staff: number = 0): SourceStaffEntry[] {
+    return sheet.SourceMeasures[measure].getEntriesPerStaff(staff).filter((entry: SourceStaffEntry): boolean =>
       entry.Instructions.some((instruction: AbstractNotationInstruction): boolean => instruction instanceof KeyInstruction));
   }
+
+  function openingKeys(sheet: MusicSheet): KeyInstruction[] {
+    return [0, 1].map((staff: number): KeyInstruction => sheet.SourceMeasures[0].getKeyInstruction(staff));
+  }
+
+  it("keeps overlapping numbered opening keys in MusicXML source order", (): void => {
+    const score: Document = TestUtils.getScore("test_staff_specific_keys.musicxml");
+    const sheet: MusicSheet = new MusicSheetReader().createMusicSheet(
+      new IXmlElement(TestUtils.getPartWiseElement(score)), "staff-specific keys");
+    const [upper, lower]: KeyInstruction[] = openingKeys(sheet);
+    expect([upper.Key, lower.Key]).to.deep.equal([1, -1]);
+    expect(upper === lower, "each staff owns its opening instruction").to.equal(false);
+    expect(upper.Parent === sheet.SourceMeasures[0].FirstInstructionsStaffEntries[0]).to.equal(true);
+    expect(lower.Parent === sheet.SourceMeasures[0].FirstInstructionsStaffEntries[1]).to.equal(true);
+    expect([0, 1].map((staff: number): number => sheet.SourceMeasures[1].getKeyInstruction(staff).Key))
+      .to.deep.equal([2, 2]);
+  });
+
+  it("limits initial backfill to a numbered staff and treats an invalid number as unnumbered", (): void => {
+    const score: Document = TestUtils.getScore("test_staff_specific_key_backfill.musicxml");
+    const backfill: MusicSheet = new MusicSheetReader().createMusicSheet(
+      new IXmlElement(TestUtils.getPartWiseElement(score)), "staff-specific key backfill");
+    expect(openingKeys(backfill).map((key: KeyInstruction): number => key.Key)).to.deep.equal([0, -2]);
+
+    const invalidNumber: MusicSheet = readMeasures(`<measure number="1">
+      <attributes><divisions>1</divisions><key number="0"><fifths>2</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time><staves>2</staves></attributes>
+      <note><rest/><duration>4</duration><type>whole</type><staff>1</staff></note>
+      <backup><duration>4</duration></backup>
+      <note><rest/><duration>4</duration><type>whole</type><staff>2</staff></note>
+    </measure>`);
+    expect(openingKeys(invalidNumber).map((key: KeyInstruction): number => key.Key)).to.deep.equal([2, 2]);
+  });
+
+  it("keeps a numbered mid-measure key after backup on its staff and defers its exact-end successor", (): void => {
+    const sheet: MusicSheet = readMeasures(`<measure number="1">
+      <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time><staves>2</staves></attributes>
+      <note><rest/><duration>4</duration><type>whole</type><staff>1</staff></note>
+      <backup><duration>2</duration></backup>
+      <attributes><key number="2"><fifths>-1</fifths></key></attributes>
+      <note><rest/><duration>2</duration><type>half</type><staff>2</staff></note>
+      <attributes><key number="2"><fifths>-2</fifths></key></attributes>
+    </measure>
+    <measure number="2">
+      <note><rest/><duration>4</duration><type>whole</type><staff>1</staff></note>
+      <backup><duration>4</duration></backup>
+      <note><rest/><duration>4</duration><type>whole</type><staff>2</staff></note>
+    </measure>`);
+    const lowerTimedKeys: SourceStaffEntry[] = timedKeys(sheet, 0, 1);
+    expect(lowerTimedKeys.map((entry: SourceStaffEntry): number => entry.Timestamp.RealValue)).to.deep.equal([0.5]);
+    expect((lowerTimedKeys[0].Instructions[0] as KeyInstruction).Key).to.equal(-1);
+    expect(sheet.SourceMeasures[0].getKeyInstruction(0).Key).to.equal(0);
+    expect(sheet.SourceMeasures[1].getKeyInstruction(1)?.Key).to.equal(-2);
+    expect(sheet.SourceMeasures[1].getKeyInstruction(0)).to.equal(undefined);
+  });
+
+  it("omits a first numbered C-major declaration after a keyless measure", (): void => {
+    const sheet: MusicSheet = readMeasures(`<measure number="1">
+      <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time><staves>2</staves></attributes>
+      <note><rest/><duration>4</duration><type>whole</type><staff>1</staff></note>
+      <backup><duration>4</duration></backup>
+      <note><rest/><duration>4</duration><type>whole</type><staff>2</staff></note>
+    </measure>
+    <measure number="2">
+      <note><rest/><duration>4</duration><type>whole</type><staff>1</staff></note>
+      <backup><duration>4</duration></backup>
+      <note><rest/><duration>1</duration><type>quarter</type><staff>2</staff></note>
+      <attributes><key number="2"><fifths>0</fifths></key></attributes>
+      <note><rest/><duration>3</duration><type>half</type><dot/><staff>2</staff></note>
+    </measure>`);
+    expect(openingKeys(sheet).map((key: KeyInstruction): number => key.Key)).to.deep.equal([0, 0]);
+    expect(timedKeys(sheet, 1, 0).length).to.equal(0);
+    expect(timedKeys(sheet, 1, 1).length).to.equal(0);
+  });
 
   it("keeps the opening key and owns the change at its exact timestamp", (): void => {
     const doc: Document = TestUtils.getScore("test_key_signature_mid_measure.musicxml");

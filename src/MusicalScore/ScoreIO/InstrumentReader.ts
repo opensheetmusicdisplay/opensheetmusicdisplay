@@ -58,6 +58,8 @@ export class InstrumentReader {
       this.musicSheet = instrument.GetMusicSheet;
       this.instrument = instrument;
       this.activeClefs = new Array(instrument.Staves.length);
+      this.activeKeys = new Array(instrument.Staves.length);
+      this.activeKeysHaveBeenInitialized = new Array(instrument.Staves.length).fill(false);
       this.activeClefsHaveBeenInitialized = new Array(instrument.Staves.length);
       for (let i: number = 0; i < instrument.Staves.length; i++) {
         this.activeClefsHaveBeenInitialized[i] = false;
@@ -84,13 +86,13 @@ export class InstrumentReader {
   private currentStaff: Staff;
   private currentStaffEntry: SourceStaffEntry;
   private activeClefs: ClefInstruction[];
-  private activeKey: KeyInstruction;
-  private pendingEndKey: KeyInstruction;
+  private activeKeys: KeyInstruction[];
+  private pendingEndKeys: KeyInstruction[] = [];
   private measureEndFraction: Fraction;
-  private keyAtMeasureStart: number;
+  private keyAtMeasureStart: number[];
   private activeRhythm: RhythmInstruction;
   private activeClefsHaveBeenInitialized: boolean[];
-  private activeKeyHasBeenInitialized: boolean = false;
+  private activeKeysHaveBeenInitialized: boolean[];
   private abstractInstructions: [number, AbstractNotationInstruction, Fraction][] = [];
   //TODO: remove line below if it is not needed anymore?
   //private openChordSymbolContainers: ChordSymbolContainer[] = [];
@@ -102,7 +104,7 @@ export class InstrumentReader {
   private followingMultirestMeasures: number;
 
   public get ActiveKey(): KeyInstruction {
-    return this.activeKey;
+    return this.activeKeys[0];
   }
 
   public get MaxTieNoteFraction(): Fraction {
@@ -131,23 +133,15 @@ export class InstrumentReader {
     this.currentMeasure = currentMeasure;
     this.followingMultirestMeasures = Math.max(this.followingMultirestMeasures - 1, 0);
     this.inSourceMeasureInstrumentIndex = this.musicSheet.getGlobalStaffIndexOfFirstStaff(this.instrument);
-    if (this.pendingEndKey) {
-      for (let staffIndex: number = 0; staffIndex < this.instrument.Staves.length; staffIndex++) {
-        const globalIndex: number = this.inSourceMeasureInstrumentIndex + staffIndex;
-        let entry: SourceStaffEntry = currentMeasure.FirstInstructionsStaffEntries[globalIndex];
-        if (!entry) {
-          entry = new SourceStaffEntry(undefined, undefined);
-          currentMeasure.FirstInstructionsStaffEntries[globalIndex] = entry;
-        }
-        entry.removeFirstInstructionOfTypeKeyInstruction();
-        const key: KeyInstruction = KeyInstruction.copy(this.pendingEndKey);
-        key.Parent = entry;
-        entry.Instructions.splice(entry.Instructions[0] instanceof ClefInstruction ? 1 : 0, 0, key);
+    for (let staffIndex: number = 0; staffIndex < this.pendingEndKeys.length; staffIndex++) {
+      const key: KeyInstruction = this.pendingEndKeys[staffIndex];
+      if (key) {
+        this.storeInitialKeyInstruction(currentMeasure, staffIndex, key);
+        this.activeKeys[staffIndex] = key;
       }
-      this.activeKey = this.pendingEndKey;
-      this.pendingEndKey = undefined;
     }
-    this.keyAtMeasureStart = this.activeKey?.Key ?? 0;
+    this.pendingEndKeys = [];
+    this.keyAtMeasureStart = Array.from(this.activeKeys, (key: KeyInstruction): number => key?.Key ?? 0);
     if (this.repetitionInstructionReader) {
      this.repetitionInstructionReader.prepareReadingMeasure(currentMeasure, this.currentXmlMeasureIndex);
     }
@@ -571,7 +565,9 @@ export class InstrumentReader {
           const musicTimestamp: Fraction = currentFraction.clone();
           this.currentStaffEntry = this.currentMeasure.findOrCreateStaffEntry(
               musicTimestamp, this.inSourceMeasureInstrumentIndex + noteStaff - 1, this.currentStaff).staffEntry;
-          this.currentStaffEntry.ChordContainers.push(ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey));
+          this.currentStaffEntry.ChordContainers.push(
+            ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKeys[noteStaff - 1])
+          );
         }
         this.measureEndFraction = Fraction.max(this.measureEndFraction, currentFraction).clone();
       }
@@ -588,8 +584,10 @@ export class InstrumentReader {
             this.createDefaultClefInstruction(this.musicSheet.getGlobalStaffIndexOfFirstStaff(this.instrument) + i);
           }
         }
-        if (!this.activeKeyHasBeenInitialized) {
-          this.createDefaultKeyInstruction();
+        for (let staffIndex: number = 0; staffIndex < this.instrument.Staves.length; staffIndex++) {
+          if (!this.activeKeysHaveBeenInitialized[staffIndex]) {
+            this.createDefaultKeyInstruction(staffIndex);
+          }
         }
 
         for (let i: number = 0; i < this.expressionReaders.length; i++) {
@@ -727,7 +725,7 @@ export class InstrumentReader {
     const end: Fraction = Fraction.max(this.currentMeasure.Duration, this.measureEndFraction);
     for (let staffIndex: number = 0; staffIndex < this.instrument.Staves.length; staffIndex++) {
       const globalIndex: number = this.inSourceMeasureInstrumentIndex + staffIndex;
-      let activeKey: number = this.currentMeasure.getKeyInstruction(globalIndex)?.Key ?? this.keyAtMeasureStart;
+      let activeKey: number = this.currentMeasure.getKeyInstruction(globalIndex)?.Key ?? this.keyAtMeasureStart[staffIndex];
       for (const entry of this.currentMeasure.getEntriesPerStaff(globalIndex)) {
         for (const instruction of entry.Instructions.slice()) {
           if (instruction instanceof KeyInstruction) {
@@ -737,9 +735,9 @@ export class InstrumentReader {
               continue;
             }
             activeKey = instruction.Key;
-            this.activeKey = instruction;
+            this.activeKeys[staffIndex] = instruction;
             if (entry.Timestamp.Equals(end)) {
-              this.pendingEndKey = instruction;
+              this.pendingEndKeys[staffIndex] = instruction;
               entry.Instructions.splice(entry.Instructions.indexOf(instruction), 1);
             }
           }
@@ -810,9 +808,9 @@ export class InstrumentReader {
   }
 
   /**
-   * Create the default [[KeyInstruction]] in case no [[KeyInstruction]] is given in the whole [[Instrument]].
+   * Create the default key for one staff without overwriting the other staves.
    */
-  private createDefaultKeyInstruction(): void {
+  private createDefaultKeyInstruction(staffIndex: number): void {
     let first: SourceMeasure;
     if (this.musicSheet.SourceMeasures.length > 0) {
       first = this.musicSheet.SourceMeasures[0];
@@ -820,24 +818,21 @@ export class InstrumentReader {
       first = this.currentMeasure;
     }
     const keyInstruction: KeyInstruction = new KeyInstruction(undefined, 0, KeyEnum.major);
-    this.activeKey = keyInstruction;
-    for (let j: number = this.inSourceMeasureInstrumentIndex; j < this.inSourceMeasureInstrumentIndex + this.instrument.Staves.length; j++) {
-      if (!first.FirstInstructionsStaffEntries[j]) {
-        const firstStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
-        first.FirstInstructionsStaffEntries[j] = firstStaffEntry;
-        keyInstruction.Parent = firstStaffEntry;
-        firstStaffEntry.Instructions.push(keyInstruction);
-      } else {
-        const firstStaffEntry: SourceStaffEntry = first.FirstInstructionsStaffEntries[j];
-        keyInstruction.Parent = firstStaffEntry;
-        firstStaffEntry.removeFirstInstructionOfTypeKeyInstruction();
-        if (firstStaffEntry.Instructions[0] instanceof ClefInstruction) {
-          firstStaffEntry.Instructions.splice(1, 0, keyInstruction);
-        } else {
-          firstStaffEntry.Instructions.splice(0, 0, keyInstruction);
-        }
-      }
+    this.storeInitialKeyInstruction(first, staffIndex, keyInstruction);
+    this.activeKeys[staffIndex] = keyInstruction;
+  }
+
+  private storeInitialKeyInstruction(measure: SourceMeasure, staffIndex: number, key: KeyInstruction): void {
+    const globalIndex: number = this.inSourceMeasureInstrumentIndex + staffIndex;
+    let entry: SourceStaffEntry = measure.FirstInstructionsStaffEntries[globalIndex];
+    if (!entry) {
+      entry = new SourceStaffEntry(undefined, undefined);
+      measure.FirstInstructionsStaffEntries[globalIndex] = entry;
     }
+    entry.removeFirstInstructionOfTypeKeyInstruction();
+    key.Parent = entry;
+    const position: number = entry.Instructions[0] instanceof ClefInstruction ? 1 : 0;
+    entry.Instructions.splice(position, 0, key);
   }
 
   /** Measure-repeat lengths supported by the renderer. */
@@ -1075,9 +1070,20 @@ export class InstrumentReader {
         this.abstractInstructions.push([staffNumber, clefInstruction, currentFraction]);
       }
     }
-    if (attrNode.element("key") !== undefined && this.instrument.MidiInstrumentId !== MidiInstrument.Percussion) {
+    for (const keyElement of attrNode.elements("key")) {
+      if (this.instrument.MidiInstrumentId === MidiInstrument.Percussion) {
+        continue;
+      }
+      let staffNumber: number;
+      const numberAttribute: IXmlAttribute = keyElement.attribute("number");
+      if (numberAttribute) {
+        staffNumber = parseInt(numberAttribute.value, 10);
+        if (isNaN(staffNumber) || staffNumber < 1 || staffNumber > this.instrument.Staves.length) {
+          staffNumber = undefined;
+        }
+      }
       let key: number = 0;
-      const keyNode: IXmlElement = attrNode.element("key").element("fifths");
+      const keyNode: IXmlElement = keyElement.element("fifths");
       if (keyNode) {
         try {
           key = parseInt(keyNode.value, 10);
@@ -1093,10 +1099,7 @@ export class InstrumentReader {
 
       }
       let keyEnum: KeyEnum = KeyEnum.none;
-      let modeNode: IXmlElement = attrNode.element("key");
-      if (modeNode) {
-        modeNode = modeNode.element("mode");
-      }
+      const modeNode: IXmlElement = keyElement.element("mode");
       if (modeNode) {
         try {
           keyEnum = KeyEnum[modeNode.value];
@@ -1110,23 +1113,24 @@ export class InstrumentReader {
           log.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
       }
-      const keyInstruction: KeyInstruction = new KeyInstruction(undefined, key, keyEnum);
-      if (currentFraction.RealValue > 0 && !this.activeKeyHasBeenInitialized) {
-        this.createDefaultKeyInstruction();
-        this.activeKeyHasBeenInitialized = true;
-      }
-      if (currentFraction.RealValue > 0) {
-        // Preserve the attribute's timestamp, including when no note follows it in document order.
-        for (let staffIndex: number = 0; staffIndex < this.instrument.Staves.length; staffIndex++) {
+      for (let staffIndex: number = 0; staffIndex < this.instrument.Staves.length; staffIndex++) {
+        if (staffNumber !== undefined && staffNumber !== staffIndex + 1) {
+          continue;
+        }
+        const keyInstruction: KeyInstruction = new KeyInstruction(undefined, key, keyEnum);
+        if (currentFraction.RealValue > 0) {
+          if (!this.activeKeysHaveBeenInitialized[staffIndex]) {
+            this.createDefaultKeyInstruction(staffIndex);
+            this.activeKeysHaveBeenInitialized[staffIndex] = true;
+          }
           const entry: SourceStaffEntry = this.currentMeasure.findOrCreateStaffEntry(
             currentFraction, this.inSourceMeasureInstrumentIndex + staffIndex, this.instrument.Staves[staffIndex]
           ).staffEntry;
-          const staffKey: KeyInstruction = KeyInstruction.copy(keyInstruction);
-          staffKey.Parent = entry;
-          entry.Instructions.push(staffKey);
+          keyInstruction.Parent = entry;
+          entry.Instructions.push(keyInstruction);
+        } else {
+          this.abstractInstructions.push([staffIndex + 1, keyInstruction, currentFraction]);
         }
-      } else {
-        this.abstractInstructions.push([1, keyInstruction, currentFraction]);
       }
     }
     if (attrNode.element("time")) {
@@ -1221,6 +1225,30 @@ export class InstrumentReader {
    * @param beginOfMeasure
    */
   private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
+    // Key declarations use their MusicXML source order. The reverse pass below is retained for clef and rhythm removal.
+    for (let i: number = 0; i < this.abstractInstructions.length;) {
+      const instruction: [number, AbstractNotationInstruction, Fraction] = this.abstractInstructions[i];
+      if (!(instruction[1] instanceof KeyInstruction)) {
+        i++;
+        continue;
+      }
+      const staffIndex: number = instruction[0] - 1;
+      const keyInstruction: KeyInstruction = <KeyInstruction>instruction[1];
+      if (!this.activeKeys[staffIndex] || this.activeKeys[staffIndex].Key !== keyInstruction.Key) {
+        this.activeKeys[staffIndex] = keyInstruction;
+        let sourceMeasure: SourceMeasure = this.currentMeasure;
+        if (!this.activeKeysHaveBeenInitialized[staffIndex]) {
+          this.activeKeysHaveBeenInitialized[staffIndex] = true;
+          if (this.currentXmlMeasureIndex > 0) {
+            sourceMeasure = this.musicSheet.SourceMeasures[0];
+          }
+        }
+        if (sourceMeasure) {
+          this.storeInitialKeyInstruction(sourceMeasure, staffIndex, keyInstruction);
+        }
+      }
+      this.abstractInstructions.splice(i, 1);
+    }
     for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
       const instruction: [number, AbstractNotationInstruction, Fraction] = this.abstractInstructions[i];
       const key: number = instruction[0]; // staffNumber
@@ -1354,50 +1382,6 @@ export class InstrumentReader {
             } // else clefinstruction might be processed later (e.g. Haydn Concertante measure 314)
           }
         } else if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1]) {
-          this.abstractInstructions.splice(i, 1);
-        }
-      }
-      if (value instanceof KeyInstruction) {
-        const keyInstruction: KeyInstruction = <KeyInstruction>value;
-        if (!this.activeKey || this.activeKey.Key !== keyInstruction.Key) {
-          this.activeKey = keyInstruction;
-          this.abstractInstructions.splice(i, 1);
-          let sourceMeasure: SourceMeasure;
-          if (!this.activeKeyHasBeenInitialized) {
-            this.activeKeyHasBeenInitialized = true;
-            if (this.currentXmlMeasureIndex > 0) {
-              sourceMeasure = this.musicSheet.SourceMeasures[0];
-            } else {
-              sourceMeasure = this.currentMeasure;
-            }
-          } else {
-            sourceMeasure = this.currentMeasure;
-          }
-          if (sourceMeasure) {
-            for (let j: number = this.inSourceMeasureInstrumentIndex; j < this.inSourceMeasureInstrumentIndex + numberOfStaves; j++) {
-              const newKeyInstruction: KeyInstruction = keyInstruction;
-              if (!sourceMeasure.FirstInstructionsStaffEntries[j]) {
-                const firstStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
-                sourceMeasure.FirstInstructionsStaffEntries[j] = firstStaffEntry;
-                newKeyInstruction.Parent = firstStaffEntry;
-                firstStaffEntry.Instructions.push(newKeyInstruction);
-              } else {
-                const firstStaffEntry: SourceStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[j];
-                newKeyInstruction.Parent = firstStaffEntry;
-                firstStaffEntry.removeFirstInstructionOfTypeKeyInstruction();
-                if (firstStaffEntry.Instructions.length === 0) {
-                  firstStaffEntry.Instructions.push(newKeyInstruction);
-                } else {
-                  if (firstStaffEntry.Instructions[0] instanceof ClefInstruction) {
-                    firstStaffEntry.Instructions.splice(1, 0, newKeyInstruction);
-                  } else {
-                    firstStaffEntry.Instructions.splice(0, 0, newKeyInstruction);
-                  }
-                }
-              }
-            }
-          }
-        } else {
           this.abstractInstructions.splice(i, 1);
         }
       }
