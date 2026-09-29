@@ -63,6 +63,9 @@ export interface IGraphicalSymbolFactory {
 
     createInStaffClef(graphicalStaffEntry: GraphicalStaffEntry, clefInstruction: ClefInstruction): void;
 
+    createInStaffKey(graphicalStaffEntry: GraphicalStaffEntry, key: KeyInstruction,
+                    previousKey: KeyInstruction, clef: ClefInstruction): void;
+
     createChordSymbols(
         sourceStaffEntry: SourceStaffEntry,
         graphicalStaffEntry: GraphicalStaffEntry,

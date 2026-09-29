@@ -2983,6 +2983,21 @@ export abstract class MusicSheetCalculator {
         return undefined;
     }
 
+    private keyForGraphicalMeasure(instruction: KeyInstruction, measure: GraphicalMeasure): KeyInstruction {
+        // Always start from the source spelling so repeated transposition can return to zero (#1383).
+        const key: KeyInstruction = new KeyInstruction(instruction.Parent, instruction.keyTypeOriginal, instruction.Mode);
+        const transposeHalftones: number = measure.getTransposedHalftones();
+        if (transposeHalftones !== 0 && MusicSheetCalculator.transposeCalculator === undefined) {
+            log.info("[OSMD] transpose requested, but TransposeCalculator undefined. Use osmd.TransposeCalculator = new TransposeCalculator()");
+        }
+        if (transposeHalftones !== 0 &&
+            measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
+            MusicSheetCalculator.transposeCalculator) {
+            MusicSheetCalculator.transposeCalculator.transposeKey(key, transposeHalftones);
+        }
+        return key;
+    }
+
     private createGraphicalMeasure(sourceMeasure: SourceMeasure, openTuplets: Tuplet[], openBeams: Beam[],
                                    accidentalCalculator: AccidentalCalculator, activeClefs: ClefInstruction[],
                                    openOctaveShifts: OctaveShiftParams[], openLyricWords: LyricWord[], staffIndex: number,
@@ -3005,22 +3020,7 @@ export abstract class MusicSheetCalculator {
             for (let idx: number = 0, len: number = sourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions.length; idx < len; ++idx) {
                 const instruction: AbstractNotationInstruction = sourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[idx];
                 if (instruction instanceof KeyInstruction) {
-                    // Create a new KeyInstruction using keyTypeOriginal to ensure correct starting point (#1383)
-                    // This ensures that when transpose=0, we get the original key (e.g., C major)
-                    // rather than a previously transposed key (e.g., Db major from transpose=1)
-                    const key: KeyInstruction = new KeyInstruction(instruction.Parent, instruction.keyTypeOriginal, instruction.Mode);
-                    const transposeHalftones: number = measure.getTransposedHalftones();
-                    if (transposeHalftones !== 0 && MusicSheetCalculator.transposeCalculator === undefined) {
-                        log.info("[OSMD] transpose requested, but TransposeCalculator undefined. Use osmd.TransposeCalculator = new TransposeCalculator()");
-                    }
-                    if (transposeHalftones !== 0 &&
-                        measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
-                        MusicSheetCalculator.transposeCalculator) {
-                        MusicSheetCalculator.transposeCalculator.transposeKey(
-                            key, transposeHalftones
-                        );
-                    }
-                    accidentalCalculator.ActiveKeyInstruction = key;
+                    accidentalCalculator.ActiveKeyInstruction = this.keyForGraphicalMeasure(instruction, measure);
                 }
             }
         }
@@ -3088,6 +3088,14 @@ export abstract class MusicSheetCalculator {
                 // check for possible OctaveShift
                 let activeOctaveShift: OctaveShift = this.getActiveOctaveShift(sourceStaffEntry.AbsoluteTimestamp, openOctaveShifts[staffIndex], octaveShifts);
                 let octaveShiftValue: OctaveEnum = activeOctaveShift?.Type ?? OctaveEnum.NONE;
+                for (const instruction of sourceStaffEntry.Instructions) {
+                    if (instruction instanceof KeyInstruction) {
+                        const key: KeyInstruction = this.keyForGraphicalMeasure(instruction, measure);
+                        MusicSheetCalculator.symbolFactory.createInStaffKey(
+                            graphicalStaffEntry, key, accidentalCalculator.ActiveKeyInstruction, activeClefs[staffIndex]);
+                        accidentalCalculator.ActiveKeyInstruction = key;
+                    }
+                }
                 // for each visible Voice create the corresponding GraphicalNotes
                 for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                     const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];

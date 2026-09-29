@@ -32,6 +32,7 @@ import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
 import { VexFlowMultiRestMeasure } from "./VexFlowMultiRestMeasure";
 import { BoundingBox } from "../BoundingBox";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
+import { VexFlowKeySignatureNote } from "./VexFlowKeySignatureNote";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -176,6 +177,26 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
         const vfClefParams: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clefInstruction, "small");
         se.vfClefBefore = new VF.ClefNote(vfClefParams.type, vfClefParams.size, vfClefParams.annotation);
         return;
+    }
+
+    public createInStaffKey(graphicalStaffEntry: GraphicalStaffEntry, key: KeyInstruction,
+                            previousKey: KeyInstruction, clef: ClefInstruction): void {
+        const measure: GraphicalMeasure = graphicalStaffEntry.parentMeasure;
+        const rules: EngravingRules = measure.parentSourceMeasure.Rules;
+        if (!rules.RenderKeySignatures || !measure.ShowKeySignature ||
+            (measure.isTabMeasure && !rules.TabKeySignatureRendered && !rules.TabKeySignatureSpacingAdded)) {
+            return;
+        }
+        const signature: VexFlowKeySignatureNote = new VexFlowKeySignatureNote(
+            VexFlowConverter.keySignature(key), VexFlowConverter.keySignature(previousKey), VexFlowConverter.Clef(clef).type);
+        const color: string = rules.DefaultColorMusic || "#000000";
+        (signature as any).setStyle({fillStyle: color, strokeStyle: color});
+        if (measure.isTabMeasure && !rules.TabKeySignatureRendered) {
+            // Match addKeyAtBegin: reserve width but hide SVG output as well as Canvas ink.
+            (signature as any).setStyle({fillStyle: "#00000000", strokeStyle: "#00000000"});
+            (signature.keySignature as any).hidden = true;
+        }
+        (graphicalStaffEntry as VexFlowStaffEntry).vfKeys.push(signature);
     }
 
     /**

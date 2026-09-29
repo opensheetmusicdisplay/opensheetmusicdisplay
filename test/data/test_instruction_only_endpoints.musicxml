@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work>
+    <work-title>Instruction-only entries and line continuation</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <octave-shift type="down" size="8"/>
+        </direction-type>
+      </direction>
+      <direction placement="below">
+        <direction-type>
+          <pedal type="start" line="yes" sign="no"/>
+        </direction-type>
+      </direction>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+        <notations>
+          <ornaments>
+            <wavy-line type="start" number="1"/>
+          </ornaments>
+        </notations>
+      </note>
+    </measure>
+    <measure number="2">
+      <print new-system="yes"/>
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+      </note>
+      <backup>
+        <duration>3</duration>
+      </backup>
+      <attributes>
+        <key>
+          <fifths>-1</fifths>
+        </key>
+      </attributes>
+      <forward>
+        <duration>3</duration>
+      </forward>
+    </measure>
+    <measure number="3">
+      <forward>
+        <duration>1</duration>
+      </forward>
+      <attributes>
+        <key>
+          <fifths>1</fifths>
+        </key>
+      </attributes>
+      <forward>
+        <duration>1</duration>
+      </forward>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>2</duration>
+        <type>half</type>
+      </note>
+      <backup>
+        <duration>1</duration>
+      </backup>
+      <attributes>
+        <key>
+          <fifths>2</fifths>
+        </key>
+      </attributes>
+      <forward>
+        <duration>1</duration>
+      </forward>
+    </measure>
+    <measure number="4">
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+      </note>
+      <backup>
+        <duration>3</duration>
+      </backup>
+      <attributes>
+        <key>
+          <fifths>3</fifths>
+        </key>
+      </attributes>
+      <forward>
+        <duration>3</duration>
+      </forward>
+    </measure>
+    <measure number="5">
+      <print new-system="yes"/>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+        <notations>
+          <ornaments>
+            <wavy-line type="stop" number="1"/>
+          </ornaments>
+        </notations>
+      </note>
+      <direction placement="above">
+        <direction-type>
+          <octave-shift type="stop" size="8"/>
+        </direction-type>
+      </direction>
+      <direction placement="below">
+        <direction-type>
+          <pedal type="stop" line="yes" sign="no"/>
+        </direction-type>
+      </direction>
+    </measure>
+  </part>
+</score-partwise>

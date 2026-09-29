@@ -651,6 +651,9 @@ export class SourceMeasure {
                 if (staffEntry.ChordContainers.length > 0) {
                     return false;
                 }
+                if (staffEntry.Instructions.some(instruction => instruction instanceof KeyInstruction)) {
+                    return false;
+                }
                 if (staffEntry.ParentStaff.hasLyrics) {
                     visibleLyrics = true;
                 }

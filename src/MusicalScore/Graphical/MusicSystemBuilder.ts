@@ -466,6 +466,8 @@ export class MusicSystemBuilder {
                                 const instruction: AbstractNotationInstruction = staffEntry.Instructions[idx2];
                                 if (instruction instanceof ClefInstruction) {
                                     this.activeClefs[visStaffIdx] = <ClefInstruction>instruction;
+                                } else if (instruction instanceof KeyInstruction) {
+                                    this.activeKeys[visStaffIdx] = instruction;
                                 }
                             }
                         }
@@ -685,6 +687,8 @@ export class MusicSystemBuilder {
                         const abstractNotationInstruction: AbstractNotationInstruction = staffEntry.Instructions[idx2];
                         if (abstractNotationInstruction instanceof ClefInstruction) {
                             this.activeClefs[visStaffIdx] = <ClefInstruction>abstractNotationInstruction;
+                        } else if (abstractNotationInstruction instanceof KeyInstruction) {
+                            this.activeKeys[visStaffIdx] = abstractNotationInstruction;
                         }
                     }
                 }

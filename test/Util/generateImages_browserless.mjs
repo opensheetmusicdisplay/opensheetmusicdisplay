@@ -523,6 +523,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestWedgeMultilineDecrescendo = sampleFilename.includes("test_wedge_multiline_decrescendo");
     const isTestWavyLineMultilineExtraGraphicalMeasure = sampleFilename.includes("test_wavy_line_multiline_extragraphicalmeasure");
     const isTestSlidesStandardAndTabStaff = sampleFilename.includes("test_slides_standard_and_tab_staff");
+    const isTestInstructionOnlyEndpoints = sampleFilename.startsWith("test_instruction_only_");
     const isTestPartAbbreviationsPartlyMissing = sampleFilename.includes("test_part_abbreviations_partly_missing");
     const isTestPartAbbreviationSingleStaff = sampleFilename.includes("test_part_abbreviation_single_staff");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
@@ -607,6 +608,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         isTestWedgeMultilineCrescendo ||
         isTestWedgeMultilineDecrescendo ||
         isTestWavyLineMultilineExtraGraphicalMeasure ||
+        isTestInstructionOnlyEndpoints ||
         isTestSlidesStandardAndTabStaff ||
         isTestPartAbbreviationsPartlyMissing ||
         isTestPartAbbreviationSingleStaff) {

@@ -9,6 +9,7 @@ import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { Note } from "../../VoiceData/Note";
 import { AccidentalEnum } from "../../../Common/DataObjects/Pitch";
 import { BoundingBox } from "../BoundingBox";
+import { VexFlowKeySignatureNote } from "./VexFlowKeySignatureNote";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -18,6 +19,8 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
     // if there is a in-measure clef given before this staffEntry,
     // it will be converted to a VF.ClefNote and assigned to this variable:
     public vfClefBefore: VF.ClefNote;
+    public vfKeys: VexFlowKeySignatureNote[] = [];
+    public vfInStaffInstructionNote: VF.GhostNote;
 
     /**
      * Calculates the staff entry positions from the VexFlow stave information and the tickabels inside the staff.
@@ -26,6 +29,11 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
      */
     public calculateXPosition(): void {
         const stave: VF.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave();
+
+        if (this.graphicalVoiceEntries.length === 0 && this.vfInStaffInstructionNote) {
+            this.PositionAndShape.RelativePosition.x = this.vfInStaffInstructionNote.getAbsoluteX() / unitInPixels;
+            this.PositionAndShape.BorderLeft = -this.vfInStaffInstructionNote.getWidth() / unitInPixels;
+        }
 
         // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
         // The positions are needed for cursor placement and mouse/tap interactions
@@ -78,8 +86,10 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 if (sourceNote.isRest() && sourceNote.Length.RealValue === this.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue) {
                     // whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
                     // see Note.isWholeRest(), which is currently not safe
-                    bboxToAdjust.RelativePosition.x +=
-                        this.parentMeasure.parentSourceMeasure.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
+                    if (gve.vfStaveNote.isCenterAligned()) {
+                        bboxToAdjust.RelativePosition.x +=
+                            this.parentMeasure.parentSourceMeasure.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
+                    }
                     gve.PositionAndShape.BorderLeft = -0.7;
                     gve.PositionAndShape.BorderRight = 0.7;
                 }
