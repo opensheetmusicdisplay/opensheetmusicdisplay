@@ -10,6 +10,7 @@ import { Note } from "../../VoiceData/Note";
 import { AccidentalEnum } from "../../../Common/DataObjects/Pitch";
 import { BoundingBox } from "../BoundingBox";
 import { VexFlowKeySignatureNote } from "./VexFlowKeySignatureNote";
+import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -96,7 +97,10 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                     gve.PositionAndShape.BorderLeft = -0.7;
                     gve.PositionAndShape.BorderRight = 0.7;
                 }
-                if (gve.PositionAndShape.BorderLeft < lastBorderLeft) {
+                // Not for a TAB note: its voice entry has no borders from Vexflow (see applyBordersFromVexflow()), only those of its
+                //   bounding box, which spans its notes, left of it at the centres of the fret numbers (positionTabAndGraceNotes(),
+                //   of the last layout pass). The staff entry stays at the right end of the fret numbers.
+                if (!(gve.vfStaveNote instanceof VF.TabNote) && gve.PositionAndShape.BorderLeft < lastBorderLeft) {
                     lastBorderLeft = gve.PositionAndShape.BorderLeft;
                 }
             }
@@ -105,13 +109,15 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         // TODO sometimes subtracting lastBorderLeft fixes the x-position for lyrics spacing, sometimes it makes it wrong
         //   e.g. wrong for Beethoven Geliebte measure 1 ("auf - dem", distance < width of "auf"), correct for measure 3 ("spä - hend")
         //   this leads to a (lyrics) measure elongation of ~1.3 for measure 1, though it doesn't need any elongation (should be factor 1)
+        this.positionGraceEntries(graceEntries);
+        // before calculating the bounding box, which spans the notes (they would have their positions from the last render)
+        this.positionTabAndGraceNotes();
         // the bounding box without the grace notes (see above)
         const childElements: BoundingBox[] = this.PositionAndShape.ChildElements;
         this.PositionAndShape.ChildElements = childElements.filter(
             (child: BoundingBox) => !graceEntries.some((gve: VexFlowVoiceEntry) => gve.PositionAndShape === child));
         this.PositionAndShape.calculateBoundingBox();
         this.PositionAndShape.ChildElements = childElements;
-        this.positionGraceEntries(graceEntries);
     }
 
     /**
@@ -147,6 +153,47 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             }
             gve.PositionAndShape.RelativePosition.x = x - this.PositionAndShape.RelativePosition.x;
         }
+    }
+
+    /**
+     * Places TAB notes and grace notes where they are drawn, relative to their voice entries: a TAB note at the centre of its
+     * fret number, a grace note at the centre of its note head, e.g. where a click finds them (GraphicalMusicSheet.GetNearestNote()).
+     * Their voice entries are elsewhere. A TAB note's is at the right end of the widest fret number of its chord, which is also the
+     * staff entry's x, e.g. for the cursor (see calculateXPosition()). A grace note's is in the middle of its Vexflow note's width
+     * (see positionGraceEntries()), which includes the flag of an unbeamed grace note with its stem up: at the note head's right edge.
+     * Other notes stay at their voice entries' x, where e.g. slurs start (GraphicalSlur.calculateStartAndEnd()).
+     * The notes' y: see VexFlowMeasure.correctNotePositions().
+     */
+    private positionTabAndGraceNotes(): void {
+        for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
+            const vfNote: any = gve.vfStaveNote;
+            if (!vfNote?.preFormatted || !(vfNote instanceof VF.TabNote || gve.parentVoiceEntry?.IsGrace)) {
+                continue;
+            }
+            // relative to the measure, like the positions of the Vexflow notes here
+            const voiceEntryX: number = this.PositionAndShape.RelativePosition.x + gve.PositionAndShape.RelativePosition.x;
+            for (const note of gve.notes as VexFlowGraphicalNote[]) {
+                const centerX: number = note.sourceNote.isRest() ? undefined : VexFlowStaffEntry.drawnCenterX(vfNote, note);
+                if (centerX !== undefined) {
+                    note.PositionAndShape.RelativePosition.x = centerX / unitInPixels - voiceEntryX;
+                }
+            }
+        }
+    }
+
+    /** The x (in pixels) at which Vexflow draws the centre of the note's head, or of a TAB note's fret number. */
+    private static drawnCenterX(vfNote: any, note: VexFlowGraphicalNote): number {
+        if (vfNote instanceof VF.TabNote) {
+            // TabNote.drawPositions() centres the fret numbers of a chord on the width of its widest fret number
+            return vfNote.getAbsoluteX() + (vfNote as any).glyph.getWidth() / 2;
+        }
+        const noteHead: any = vfNote.note_heads?.[note.vfnoteIndex];
+        if (!noteHead) {
+            return undefined;
+        }
+        // StaveNote.draw() sets this x, from which a displaced note head (e.g. of a second in a chord) is drawn beside the others
+        noteHead.setX(vfNote.getNoteHeadBeginX());
+        return noteHead.getAbsoluteX() + noteHead.getWidth() / 2;
     }
 
     public setMaxAccidentals(): number {

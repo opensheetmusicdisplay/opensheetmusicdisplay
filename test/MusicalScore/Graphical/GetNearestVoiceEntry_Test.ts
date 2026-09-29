@@ -26,6 +26,9 @@ interface DrawnNoteHead {
  *   chord could find a neighbouring note.
  * - Notes are at the heights of their note heads. They were placed below their voice entry's top (e.g. the stem tip of an up-stem
  *   note) by the length of a normal stem, but e.g. grace notes and cue notes have shorter stems, and 32nd notes longer ones.
+ * - A TAB note is at the centre of its fret number, not at the right end of the fret number (its staff entry's x): a click on
+ *   the centre of a fret number could be nearer the right end of the previous one. A grace note is at the centre of its note head,
+ *   not right of it by the width of its flag.
  */
 describe("GetNearestVoiceEntry", () => {
     let container: HTMLElement;
@@ -88,13 +91,18 @@ describe("GetNearestVoiceEntry", () => {
             `in measure ${note.parentVoiceEntry.parentStaffEntry.parentMeasure.MeasureNumber}`;
     }
 
-    /** The centre of the note's drawn note head, or of a TAB note's fret number, in units. */
-    function drawnCenter(note: VexFlowGraphicalNote): PointF2D {
+    /** The box of the note's drawn note head, or of a TAB note's fret number, in pixels (10 per unit). */
+    function drawnBox(note: VexFlowGraphicalNote): DOMRect {
         // the note's own drawing, not the grace notes drawn among its modifiers, in the order of the notes' indices in their Vexflow note
         const group: Element = document.getElementById("vf-" + note.getSVGId());
         const shapes: SVGGraphicsElement[] = Array.from(note.parentVoiceEntry.parentStaffEntry.parentMeasure.isTabMeasure ?
             group.querySelectorAll(":scope > text") : group.querySelectorAll(":scope > .vf-note .vf-notehead"));
-        const box: DOMRect = shapes[note.vfnote[1]].getBBox();
+        return shapes[note.vfnote[1]].getBBox();
+    }
+
+    /** The centre of the note's drawn note head, or of a TAB note's fret number, in units. */
+    function drawnCenter(note: VexFlowGraphicalNote): PointF2D {
+        const box: DOMRect = drawnBox(note);
         return new PointF2D((box.x + box.width / 2) / 10, (box.y + box.height / 2) / 10);
     }
 
@@ -183,6 +191,43 @@ describe("GetNearestVoiceEntry", () => {
                     }
                 }
             }
+        }
+    });
+
+    it("places TAB notes at their fret numbers' centres, not their staff entries (e.g. the cursor), grace notes at their heads", async () => {
+        // TAB chords of fret numbers with one and two digits, a TAB grace note, and grace notes with flags or beamed,
+        //   with their stems up or down, before and after their main notes
+        for (const sampleName of ["BrookeWestSample.mxl", "test_tab_grace_note_simple.musicxml", "OSMD_function_test_GraceNotes.xml",
+                                  "test_grace_notes_after_main_note_1706.musicxml"]) {
+            const sheet: GraphicalMusicSheet = await renderSheet(sampleName);
+            let checkedNotes: number = 0;
+            for (const measure of sheet.MeasureList.flat()) {
+                for (const staffEntry of measure?.staffEntries ?? []) {
+                    let fretNumbersEnd: number = -Infinity; // the right end of the fret numbers of the staff entry's TAB notes
+                    for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                        if (!measure.isTabMeasure && !voiceEntry.parentVoiceEntry.IsGrace) {
+                            continue;
+                        }
+                        for (const note of voiceEntry.notes as VexFlowGraphicalNote[]) {
+                            if (note.sourceNote.isRest()) {
+                                continue;
+                            }
+                            expectAtDrawnCenter(note, sampleName, true);
+                            checkedNotes++;
+                            if (measure.isTabMeasure && !voiceEntry.parentVoiceEntry.IsGrace) {
+                                const box: DOMRect = drawnBox(note);
+                                fretNumbersEnd = Math.max(fretNumbersEnd, (box.x + box.width) / 10);
+                            }
+                        }
+                    }
+                    if (fretNumbersEnd > -Infinity) {
+                        // the staff entry stays at the right end of the fret numbers (by up to 0.08 units in the samples)
+                        expect(Math.abs(staffEntry.PositionAndShape.AbsolutePosition.x - fretNumbersEnd),
+                               `${sampleName}: x of a TAB staff entry in measure ${measure.MeasureNumber}`).to.be.lessThan(0.15);
+                    }
+                }
+            }
+            expect(checkedNotes, `TAB notes or grace notes in ${sampleName}`).to.be.greaterThan(0);
         }
     });
 });
