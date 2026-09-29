@@ -10,6 +10,8 @@ export class RepetitionCalculator {
   private musicSheet: MusicSheet;
   private repetitionInstructions: RepetitionInstruction[] = [];
   private openRepetitions: RepetitionBuildingContainer[] = [];
+  /** The Fine, To Coda and coda signs that no repetition takes: they are added to their measures after the sorting. */
+  private drawnOnlyInstructions: RepetitionInstruction[] = [];
   /** Where a repetition without a start line (forward repeat or segno) starts:
    *  after the last backward jump or ending, or at the start of the movement. */
   private lastRepetitionCommonPartStartIndex: number = 0;
@@ -32,6 +34,7 @@ export class RepetitionCalculator {
     this.repetitionInstructions = repetitionInstructions;
 
     this.openRepetitions.length = 0;
+    this.drawnOnlyInstructions = [];
     this.lastRepetitionCommonPartStartIndex = 0;
     this.movementStartIndex = 0;
 
@@ -164,6 +167,14 @@ export class RepetitionCalculator {
       }
       if (measure.LastRepetitionInstructions.length > 1) {
         measure.LastRepetitionInstructions.sort(RepetitionInstructionComparer.Compare);
+      }
+    }
+    // (after the sorting, which they would change: the comparer doesn't order instructions without a repetition),
+    //   unless a repetition added one of the same kind there, e.g. the Fine that a D.C. al Fine found backwards
+    for (const instruction of this.drawnOnlyInstructions) {
+      const lastInstructions: RepetitionInstruction[] = this.musicSheet.SourceMeasures[instruction.measureIndex].LastRepetitionInstructions;
+      if (!lastInstructions.some(other => other.type === instruction.type)) {
+        lastInstructions.push(instruction);
       }
     }
   }
@@ -341,43 +352,36 @@ export class RepetitionCalculator {
             }
             break;
         case RepetitionInstructionEnum.Fine:
-            if (this.openRepetitions.length === 0) {
-                break;
-            }
-            currentRepetition = this.getCurrentRepetition(true);
-            if (currentRepetition === undefined) {
+            currentRepetition = this.openRepetitions.length > 0 ? this.getCurrentRepetition(true) : undefined;
+            if (currentRepetition === undefined || currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction !== undefined) {
+                // no open repetition takes it (yet), e.g. before the D.C. al Fine that finds it backwards
+                this.addDrawnOnlyInstruction(RepetitionInstructionEnum.Fine);
                 break;
             }
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
             currentRepetition.RepetitonUnderConstruction.FromWords = true;
-            if (currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction === undefined) {
-                currentRepetition.FineFound = true;
-                currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction = currentRepetitionInstruction;
-                currentRepetition.RepetitonUnderConstruction.setEndingStartIndex(2, this.getFineTarget());
-                this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
-            } else {
-                this.currentMeasure.LastRepetitionInstructions.push(new RepetitionInstruction(this.currentMeasureIndex,
-                                                                                              RepetitionInstructionEnum.Fine, AlignmentType.End, undefined));
-            }
+            currentRepetition.FineFound = true;
+            currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction = currentRepetitionInstruction;
+            currentRepetition.RepetitonUnderConstruction.setEndingStartIndex(2, this.getFineTarget());
+            this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
             break;
         case RepetitionInstructionEnum.ToCoda:
-            if (this.openRepetitions.length === 0) {
+            currentRepetition = this.openRepetitions.length > 0 ? this.getCurrentRepetition(true) : undefined;
+            if (currentRepetition === undefined || currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction !== undefined) {
+                // no open repetition takes it (yet), e.g. before the D.C. al Coda that finds it backwards
+                this.addDrawnOnlyInstruction(RepetitionInstructionEnum.ToCoda);
                 break;
             }
-            currentRepetition = this.getCurrentRepetition(true);
-            if (currentRepetition === undefined) {
-                break;
-            }
-            if (currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction === undefined) {
-                currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
-                currentRepetition.RepetitonUnderConstruction.FromWords = true;
-                currentRepetition.ToCodaFound = true;
-                currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction = currentRepetitionInstruction;
-                this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
-            }
+            currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
+            currentRepetition.RepetitonUnderConstruction.FromWords = true;
+            currentRepetition.ToCodaFound = true;
+            currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction = currentRepetitionInstruction;
+            this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
             break;
         case RepetitionInstructionEnum.Coda:
             if (this.openRepetitions.length === 0) {
+                // (a D.C. or D.S. al Coda after it may take it as its To Coda, see removeDrawnOnlyCoda())
+                this.addDrawnOnlyInstruction(RepetitionInstructionEnum.Coda);
                 break;
             }
             currentRepetition = this.getOrCreateCurrentRepetition2(true);
@@ -400,10 +404,10 @@ export class RepetitionCalculator {
                                                 currentRepetition.RepetitonUnderConstruction);
                     this.currentMeasure.LastRepetitionInstructions.push(currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction);
                 } else {
-                    this.currentMeasure.LastRepetitionInstructions.push(new RepetitionInstruction(this.currentMeasureIndex,
-                                                                                                  RepetitionInstructionEnum.Coda,
-                                                                                                  AlignmentType.Begin, undefined));
+                    this.addDrawnOnlyInstruction(RepetitionInstructionEnum.Coda);
                 }
+            } else {
+                this.addDrawnOnlyInstruction(RepetitionInstructionEnum.Coda);
             }
             break;
         case RepetitionInstructionEnum.DaCapo:
@@ -532,6 +536,7 @@ export class RepetitionCalculator {
                         currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction =
                           new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.ToCoda,
                                                     AlignmentType.Begin, currentRepetition.RepetitonUnderConstruction);
+                        this.removeDrawnOnlyCoda(measureIndex); // the coda sign is drawn as the To Coda
                         this.musicSheet.SourceMeasures[measureIndex].LastRepetitionInstructions.
                           splice(0, 0, currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction);
                         currentRepetition.ToCodaFound = true;
@@ -581,6 +586,7 @@ export class RepetitionCalculator {
                         currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction =
                           new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.ToCoda,
                                                     AlignmentType.Begin, currentRepetition.RepetitonUnderConstruction);
+                        this.removeDrawnOnlyCoda(measureIndex); // the coda sign is drawn as the To Coda
                         this.musicSheet.SourceMeasures[measureIndex].LastRepetitionInstructions.
                           splice(0, 0, currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction);
                         currentRepetition.ToCodaFound = true;
@@ -614,6 +620,21 @@ export class RepetitionCalculator {
           }
       }
       return -1;
+  }
+
+  /**
+   * Adds a Fine, To Coda or coda sign that no repetition takes to the current measure, e.g. a Fine without a D.C. al Fine,
+   * so that it is drawn as written. It has no parent repetition: the iterator doesn't jump there.
+   */
+  private addDrawnOnlyInstruction(type: RepetitionInstructionEnum): void {
+      this.drawnOnlyInstructions.push(new RepetitionInstruction(this.currentMeasureIndex, type,
+          type === RepetitionInstructionEnum.Coda ? AlignmentType.Begin : AlignmentType.End, undefined));
+  }
+
+  /** Removes the drawn-only coda sign of a measure, whose coda sign a D.C. or D.S. al Coda takes as its To Coda. */
+  private removeDrawnOnlyCoda(measureIndex: number): void {
+      this.drawnOnlyInstructions = this.drawnOnlyInstructions.filter(instruction =>
+          instruction.type !== RepetitionInstructionEnum.Coda || instruction.measureIndex !== measureIndex);
   }
 
   /**
