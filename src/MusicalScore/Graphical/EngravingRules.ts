@@ -519,14 +519,15 @@ export class EngravingRules {
 
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
     public RenderComposer: boolean;
-    /** Whether to read typed first-page credit words and lay out the remaining words above the first system.
+    /** Whether to read typed first-page credit words and lay out the remaining words above the first system,
+     * when page layout cannot supply their roles. With page layout, the default position-based reader is retained.
      * Default false. Set before loading a score; changing it requires reloading the score. Typed title, subtitle,
      * composer and lyricist credits override metadata; identification rights retain priority over rights credits.
      * This reflows plain first-page words and does not reproduce source coordinates, per-run styling, images or later pages.
      */
     public ReadFirstPageCreditWords: boolean;
     /** Visibility of independent first-page credit labels, set by DrawingParameters.DrawCredits. */
-    public RenderCredits: boolean;
+    public RenderFirstPageCreditWords: boolean;
     public RenderTitle: boolean;
     public RenderSubtitle: boolean;
     public RenderLyricist: boolean;
@@ -1050,7 +1051,7 @@ export class EngravingRules {
         this.MaxPageToDrawNumber = Number.MAX_VALUE;
         this.RenderComposer = true;
         this.ReadFirstPageCreditWords = false;
-        this.RenderCredits = true;
+        this.RenderFirstPageCreditWords = true;
         this.RenderTitle = true;
         this.RenderSubtitle = true;
         this.RenderLyricist = true;

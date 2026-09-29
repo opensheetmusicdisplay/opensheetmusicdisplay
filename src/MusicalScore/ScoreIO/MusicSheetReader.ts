@@ -526,7 +526,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.readTitle(root);
         this.readCopyright(root);
         try {
-            if (this.rules.ReadFirstPageCreditWords) {
+            // With page layout, an untyped credit's position identifies its role: retain the default reader.
+            if (this.rules.ReadFirstPageCreditWords && this.computeSystemYCoordinates(root) === 0) {
                 this.readFirstPageCreditWords(root);
             } else if (!this.musicSheet.Title || !this.musicSheet.Composer || !this.musicSheet.Subtitle) {
                 this.readTitleAndComposerFromCredits(root); // this can also throw an error
@@ -556,6 +557,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         const subtitles: string[] = [];
         const composers: string[] = [];
         const lyricists: string[] = [];
+        const independent: Label[] = [];
         for (const credit of root.elements("credit")) {
             if (Number(credit.attribute("page")?.value ?? "1") !== 1) {
                 continue;
@@ -594,7 +596,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             const alignment: string = words?.attribute("halign")?.value ?? words?.attribute("justify")?.value;
             const labelAlignment: TextAlignmentEnum = alignment === "right" ? TextAlignmentEnum.RightTop :
                 alignment === "center" ? TextAlignmentEnum.CenterTop : TextAlignmentEnum.LeftTop;
-            this.musicSheet.FirstPageCreditWords.push(new Label(text, labelAlignment));
+            independent.push(new Label(text, labelAlignment));
         }
         if (titles.length > 0) {
             this.musicSheet.Title = new Label(titles.join("\n"));
@@ -607,6 +609,16 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
         if (lyricists.length > 0) {
             this.musicSheet.Lyricist = new Label(lyricists.join("\n"));
+        }
+        // Guitar Pro, for example, repeats the title and composer in untyped credits: do not draw them twice.
+        const normalize: (text: string) => string = (text: string): string => text.replace(/\s+/g, " ").trim().toLowerCase();
+        const drawnLines: string[] = [this.musicSheet.Title, this.musicSheet.Subtitle, this.musicSheet.Composer, this.musicSheet.Lyricist]
+            .filter((label: Label): boolean => label !== undefined)
+            .flatMap((label: Label): string[] => label.text.split("\n").map(normalize));
+        for (const label of independent) {
+            if (!label.text.split("\n").every((line: string): boolean => drawnLines.includes(normalize(line)))) {
+                this.musicSheet.FirstPageCreditWords.push(label);
+            }
         }
     }
 

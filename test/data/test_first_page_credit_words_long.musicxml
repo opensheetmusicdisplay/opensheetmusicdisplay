@@ -3,6 +3,9 @@
 <score-partwise version="3.1">
   <movement-title>Credit layout and long instructions</movement-title>
   <credit>
+    <credit-words>Credit layout and long instructions</credit-words>
+  </credit>
+  <credit>
     <credit-type>composer</credit-type>
     <credit-words>First composer&#10;Second composer&#10;Third composer&#10;Fourth composer</credit-words>
   </credit>

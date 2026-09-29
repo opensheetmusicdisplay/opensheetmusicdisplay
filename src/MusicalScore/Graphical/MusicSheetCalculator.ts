@@ -2452,7 +2452,7 @@ export abstract class MusicSheetCalculator {
 
     private calculateFirstPageCreditWordLabels(): void {
         this.graphicalMusicSheet.FirstPageCreditWords = [];
-        if (!this.rules.ReadFirstPageCreditWords || !this.rules.RenderCredits) {
+        if (!this.rules.ReadFirstPageCreditWords || !this.rules.RenderFirstPageCreditWords) {
             return;
         }
         const musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
