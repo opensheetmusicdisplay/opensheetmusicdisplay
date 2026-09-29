@@ -110,6 +110,7 @@ export class LyricsReader {
                             }
                             // add each LyricEntry to currentVoiceEntry
                             if (lyricsEntry) {
+                                lyricsEntry.syllabic = syllabic;
                                 // only add the lyric entry if not another entry has already been given:
                                 if (!currentVoiceEntry.LyricsEntries[currentLyricVerseNumber]) {
                                     currentVoiceEntry.LyricsEntries.setValue(currentLyricVerseNumber, lyricsEntry);
