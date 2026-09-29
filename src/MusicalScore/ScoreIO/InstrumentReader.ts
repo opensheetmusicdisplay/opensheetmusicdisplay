@@ -1079,7 +1079,7 @@ export class InstrumentReader {
       let staffNumber: number;
       const numberAttribute: IXmlAttribute = keyElement.attribute("number");
       if (numberAttribute) {
-        staffNumber = parseInt(numberAttribute.value, 10);
+        staffNumber = /^\+?\d+$/.test(numberAttribute.value.trim()) ? parseInt(numberAttribute.value, 10) : NaN;
         if (isNaN(staffNumber) || staffNumber < 1 || staffNumber > this.instrument.Staves.length) {
           staffNumber = undefined;
         }
