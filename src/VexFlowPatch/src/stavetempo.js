@@ -116,7 +116,7 @@ export class StaveTempo extends StaveModifier {
 
   /**
    * Draw a complex metronome mark: leftNotes = rightNotes (with optional tuplet bracket).
-   * noteEquation: { left: { notes: [{duration, dots, beam}], tuplet? }, right: { ... } }
+   * noteEquation: { left: { notes: [{duration, dots, beam, tied}], tuplet? }, right: { ... } }
    * (added in VexFlowPatch)
    */
   drawNoteEquation(ctx, x, y, scale, noteEquation) {
@@ -142,9 +142,9 @@ export class StaveTempo extends StaveModifier {
   }
 
   /**
-   * Draw a group of notes (with beams connecting flagged notes, and optional tuplet bracket).
+   * Draw a group of notes (with beams, ties to preceding notes, and optional tuplet bracket).
    * @param baseSpacing Base spacing unit — all internal spacing is derived from this.
-   * group: { notes: [{duration, dots, beam}], tuplet?: {actualNotes, bracket, showNumber} }
+   * group: { notes: [{duration, dots, beam, tied}], tuplet?: {actualNotes, bracket, showNumber} }
    * (added in VexFlowPatch)
    */
   drawNoteGroup(ctx, x, y, scale, baseSpacing, group) {
@@ -152,7 +152,7 @@ export class StaveTempo extends StaveModifier {
     const notes = group.notes;
     const tuplet = group.tuplet;
 
-    // Track positions for beams and tuplet bracket
+    // Track positions for beams, ties and tuplet bracket
     const notePositions = []; // [{x, y_top, stemX, code}]
     const beamSegments = []; // groups of notes to beam together
 
@@ -197,6 +197,22 @@ export class StaveTempo extends StaveModifier {
       }
 
       const pos = { x: noteX, y_top: stemTopY, stemX: stemX, code: code };
+      if (note.tied && notePositions.length > 0) {
+        // Stems point up, so connect the notehead centers with a tie below the notes and dots.
+        const previous = notePositions[notePositions.length - 1];
+        const startX = (previous.x + previous.stemX) / 2;
+        const endX = (noteX + stemX) / 2;
+        const midX = (startX + endX) / 2;
+        const tieY = y + 5 * scale;
+        ctx.openGroup('metronometie');
+        ctx.beginPath();
+        ctx.moveTo(startX, tieY);
+        ctx.quadraticCurveTo(midX, tieY + 6 * scale, endX, tieY);
+        ctx.quadraticCurveTo(midX, tieY + 9 * scale, startX, tieY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.closeGroup();
+      }
       notePositions.push(pos);
 
       // Track beam groups

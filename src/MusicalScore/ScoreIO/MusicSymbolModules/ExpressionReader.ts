@@ -616,7 +616,7 @@ export class ExpressionReader {
 
     /** Parse a note equation written with two beat units instead of metronome-note elements, e.g. quarter = dotted quarter
      *  (MusicXML's simpler form of a metric modulation). The first beat unit, with its dots and tied beat units, is the left
-     *  side, the second one the right side. A tie is not drawn, but its beat unit counts for the tempo.
+     *  side, the second one the right side.
      */
     private parseBeatUnitNoteEquation(metronomeNode: IXmlElement, currentMeasure: SourceMeasure, timestampFraction: Fraction): void {
         const leftNotes: MetronomeNote[] = [];
@@ -631,7 +631,7 @@ export class ExpressionReader {
             } else if (child.name === "beat-unit-dot" && notes.length > 0) {
                 notes[notes.length - 1].dots++;
             } else if (child.name === "beat-unit-tied" && child.element("beat-unit")) {
-                notes.push({ type: child.element("beat-unit").value, dots: child.elements("beat-unit-dot").length });
+                notes.push({ type: child.element("beat-unit").value, dots: child.elements("beat-unit-dot").length, tied: true });
             }
         }
         this.addNoteEquation(metronomeNode, { notes: leftNotes }, { notes: rightNotes }, "equals", currentMeasure, timestampFraction);

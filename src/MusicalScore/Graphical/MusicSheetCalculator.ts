@@ -2184,7 +2184,8 @@ export abstract class MusicSheetCalculator {
     private isSameMetronomeNoteGroup(first: MetronomeNoteGroup, second: MetronomeNoteGroup): boolean {
         return first.notes.length === second.notes.length &&
             first.notes.every((note: MetronomeNote, index: number): boolean => note.type === second.notes[index].type &&
-                note.dots === second.notes[index].dots && note.beam === second.notes[index].beam) &&
+                note.dots === second.notes[index].dots && note.beam === second.notes[index].beam &&
+                !!note.tied === !!second.notes[index].tied) &&
             first.tuplet?.actualNotes === second.tuplet?.actualNotes && first.tuplet?.normalNotes === second.tuplet?.normalNotes &&
             first.tuplet?.bracket === second.tuplet?.bracket && first.tuplet?.showNumber === second.tuplet?.showNumber;
     }
