@@ -2,7 +2,7 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>Fin, D.C.</work-title>
+    <work-title>Zur Coda, D.C. bis zur Coda</work-title>
   </work>
   <part-list>
     <score-part id="P1">
@@ -10,7 +10,7 @@
     </score-part>
   </part-list>
   <part id="P1">
-    <!-- The same, in French, as a French songbook prints it: « D.C. » at the end of measure 4 and « Fin » at the end of measure 2, which only the sound elements name. Played 1 2 3 4 1 2. -->
+    <!-- A German plain D.C. with a To Coda before it, which only their sound elements name: « Zur Coda » at the end of measure 2, « D.C. bis zur Coda » at the end of measure 3, the coda in measures 4-5. <sound dacapo="yes"/> can't say "al Coda", so the D.C. is played as the D.C. al Coda it is: 1 2 3 1 2 4 5. -->
     <measure number="1">
       <attributes>
         <divisions>1</divisions>
@@ -48,13 +48,10 @@
       </note>
       <direction placement="above">
         <direction-type>
-          <words font-weight="bold">Fin</words>
+          <words font-weight="bold">Zur Coda</words>
         </direction-type>
-        <sound fine="yes"/>
+        <sound tocoda="coda1"/>
       </direction>
-      <barline location="right">
-        <bar-style>light-heavy</bar-style>
-      </barline>
     </measure>
     <measure number="3">
       <note>
@@ -66,8 +63,23 @@
         <voice>1</voice>
         <type>whole</type>
       </note>
+      <direction placement="above">
+        <direction-type>
+          <words font-weight="bold">D.C. bis zur Coda</words>
+        </direction-type>
+        <sound dacapo="yes"/>
+      </direction>
+      <barline location="right">
+        <bar-style>light-light</bar-style>
+      </barline>
     </measure>
     <measure number="4">
+      <direction placement="above">
+        <direction-type>
+          <coda/>
+        </direction-type>
+        <sound coda="coda1"/>
+      </direction>
       <note>
         <pitch>
           <step>F</step>
@@ -77,12 +89,17 @@
         <voice>1</voice>
         <type>whole</type>
       </note>
-      <direction placement="above">
-        <direction-type>
-          <words font-weight="bold">D.C.</words>
-        </direction-type>
-        <sound dacapo="yes"/>
-      </direction>
+    </measure>
+    <measure number="5">
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
       </barline>

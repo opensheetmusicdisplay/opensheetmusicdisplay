@@ -228,17 +228,20 @@ export class RepetitionCalculator {
   // }
 
   /**
-   * How an instruction is played: as written, except for a D.C. or D.S. with a Fine before it, which goes back
-   * and ends at that Fine, as the D.C. / D.S. al Fine it is. The instruction keeps its type, so its label reads as written.
+   * How an instruction is played: as written, except for a D.C. or D.S. with a Fine or a To Coda before it in its movement,
+   * which goes back and ends at that Fine or jumps at that To Coda, as the D.C. / D.S. al Fine or al Coda it is
+   * (<sound dacapo="yes"/> can't say which). The instruction keeps its type, so its label reads as written.
    */
   private typePlayedAs(instruction: RepetitionInstruction): RepetitionInstructionEnum {
-    const fineBefore: () => boolean = (): boolean =>
-      this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Fine, instruction.measureIndex) >= 0;
+    const before: (type: RepetitionInstructionEnum) => boolean = (type: RepetitionInstructionEnum): boolean =>
+      this.findInstructionInMainListBackwards(type, instruction.measureIndex) >= 0;
     switch (instruction.type) {
       case RepetitionInstructionEnum.DaCapo:
-        return fineBefore() ? RepetitionInstructionEnum.DaCapoAlFine : instruction.type;
+        return before(RepetitionInstructionEnum.Fine) ? RepetitionInstructionEnum.DaCapoAlFine :
+          before(RepetitionInstructionEnum.ToCoda) ? RepetitionInstructionEnum.DaCapoAlCoda : instruction.type;
       case RepetitionInstructionEnum.DalSegno:
-        return fineBefore() ? RepetitionInstructionEnum.DalSegnoAlFine : instruction.type;
+        return before(RepetitionInstructionEnum.Fine) ? RepetitionInstructionEnum.DalSegnoAlFine :
+          before(RepetitionInstructionEnum.ToCoda) ? RepetitionInstructionEnum.DalSegnoAlCoda : instruction.type;
       default:
         return instruction.type;
     }

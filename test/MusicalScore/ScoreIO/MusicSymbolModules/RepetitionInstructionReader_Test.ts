@@ -15,16 +15,18 @@ describe("RepetitionInstructionReader", () => {
         reader.prepareReadingMeasure(undefined, 0);
 
         /**
-         * Lets the reader handle a direction-type node with the given words text.
+         * Lets the reader handle a direction with the given words text, and a sound element if attributes are given.
          * @param wordsText the text content of the words element
+         * @param soundAttributes the attributes of the direction's sound element, e.g. 'fine="yes"'
          * @returns true if the reader handled the words as a repetition instruction
          */
-        function handleWords(wordsText: string): boolean {
+        function handleWords(wordsText: string, soundAttributes?: string): boolean {
             reader.repetitionInstructions.length = 0;
             const doc: Document = new DOMParser().parseFromString(
-                "<direction-type><words>" + wordsText + "</words></direction-type>", "text/xml");
-            const directionTypeNode: IXmlElement = new IXmlElement(doc.documentElement);
-            return reader.handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode, 0);
+                "<direction><direction-type><words>" + wordsText + "</words></direction-type>" +
+                (soundAttributes ? "<sound " + soundAttributes + "/>" : "") + "</direction>", "text/xml");
+            const direction: IXmlElement = new IXmlElement(doc.documentElement);
+            return reader.handleRepetitionInstructionsFromWordsOrSymbols(direction.element("direction-type"), 0, direction.element("sound"));
         }
 
         interface WordsTestCase {
@@ -82,25 +84,6 @@ describe("RepetitionInstructionReader", () => {
             expect(reader.repetitionInstructions[0].type).to.equal(RepetitionInstructionEnum.DaCapoAlFine);
             expect(reader.repetitionInstructions[0].DrawnAsText).to.equal(true);
         });
-    });
-
-    describe("handleRepetitionInstructionsFromWordsOrSymbols with a sound element", () => {
-        const reader: RepetitionInstructionReader = new RepetitionInstructionReader();
-        reader.MusicSheet = new MusicSheet();
-        reader.prepareReadingMeasure(undefined, 0);
-
-        /**
-         * Lets the reader handle a direction with the given words and sound attributes.
-         * @returns true if the reader handled the direction as a repetition instruction
-         */
-        function handleDirection(wordsText: string, soundAttributes: string): boolean {
-            reader.repetitionInstructions.length = 0;
-            const doc: Document = new DOMParser().parseFromString(
-                "<direction><direction-type><words>" + wordsText + "</words></direction-type>" +
-                (soundAttributes ? "<sound " + soundAttributes + "/>" : "") + "</direction>", "text/xml");
-            const direction: IXmlElement = new IXmlElement(doc.documentElement);
-            return reader.handleRepetitionInstructionsFromWordsOrSymbols(direction.element("direction-type"), 0, direction.element("sound"));
-        }
 
         interface SoundTestCase {
             text: string;
@@ -118,16 +101,23 @@ describe("RepetitionInstructionReader", () => {
         ];
         for (const testCase of soundCases) {
             it("reads \"" + testCase.text + "\" with <sound " + testCase.sound + "/> as repetition instruction", () => {
-                expect(handleDirection(testCase.text, testCase.sound), "direction is handled as repetition instruction").to.equal(true);
+                expect(handleWords(testCase.text, testCase.sound), "words are handled as repetition instruction").to.equal(true);
                 expect(reader.repetitionInstructions.length).to.equal(1);
                 expect(reader.repetitionInstructions[0].type).to.equal(testCase.expectedType);
             });
         }
 
+        // a segno read from the sound is a D.S. target, like a segno sign with <sound segno>, so it isn't taken for a D.S.
+        it("marks a segno read from <sound segno> as the target of a D.S.", () => {
+            expect(handleWords("Zeichen", "segno=\"segno2\"")).to.equal(true);
+            expect(reader.repetitionInstructions[0].type).to.equal(RepetitionInstructionEnum.Segno);
+            expect(reader.repetitionInstructions[0].MarkedAsTarget).to.equal(true);
+        });
+
         it("leaves words it doesn't know as text without a sound that names an instruction", () => {
-            expect(handleDirection("Fin", undefined)).to.equal(false);
-            expect(handleDirection("Fin", "tempo=\"100\"")).to.equal(false);
-            expect(handleDirection("Fin", "dacapo=\"no\"")).to.equal(false);
+            expect(handleWords("Fin")).to.equal(false);
+            expect(handleWords("Fin", "tempo=\"100\"")).to.equal(false);
+            expect(handleWords("Fin", "dacapo=\"no\"")).to.equal(false);
             expect(reader.repetitionInstructions.length).to.equal(0);
         });
     });
