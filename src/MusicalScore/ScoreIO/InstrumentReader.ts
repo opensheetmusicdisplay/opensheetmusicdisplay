@@ -219,7 +219,7 @@ export class InstrumentReader {
               throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
             }
           }
-          this.addAbstractInstruction(xmlNode, octavePlusOne, previousNode, currentFraction.clone());
+          this.addAbstractInstruction(xmlNode, octavePlusOne, previousNode, currentFraction.clone(), xmlNodeIndex);
           if (currentFraction.Equals(new Fraction(0, 1)) &&
               this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveAbstractInstructionList(this.instrument.Staves.length, true);
@@ -400,6 +400,7 @@ export class InstrumentReader {
           ) {
             this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !isGraceNote,
                                                         isGraceNote, graceNoteSlash, graceSlur);
+            this.currentStaffEntry.VoiceEntries[this.currentStaffEntry.VoiceEntries.length - 1].NodeIndexXml = xmlNodeIndex;
             // we previously excluded rest notes from a voice's voice entry (!restNote && !isGraceNote),
             //   but there seems to be no reason to. Rest notes also belong to a voice line. See #1612
           }
@@ -963,7 +964,8 @@ export class InstrumentReader {
    * @param attrNode
    * @param guitarPro
    */
-  private addAbstractInstruction(attrNode: IXmlElement, guitarPro: boolean, previousNode: IXmlElement, currentFraction: Fraction): void {
+  private addAbstractInstruction(attrNode: IXmlElement, guitarPro: boolean, previousNode: IXmlElement, currentFraction: Fraction,
+                                 xmlNodeIndex: number): void {
     if (attrNode.element("divisions")) {
       if (attrNode.elements().length === 1) {
         return;
@@ -1118,7 +1120,11 @@ export class InstrumentReader {
           continue;
         }
         const keyInstruction: KeyInstruction = new KeyInstruction(undefined, key, keyEnum);
-        if (currentFraction.RealValue > 0) {
+        keyInstruction.NodeIndexXml = xmlNodeIndex;
+        const staffEntry: SourceStaffEntry = this.currentMeasure.getVerticalContainerByTimestamp(currentFraction)
+          ?.StaffEntries[this.inSourceMeasureInstrumentIndex + staffIndex];
+        const followsGrace: boolean = staffEntry?.VoiceEntries.some((entry: VoiceEntry): boolean => entry.IsGrace);
+        if (currentFraction.RealValue > 0 || followsGrace) {
           if (!this.activeKeysHaveBeenInitialized[staffIndex]) {
             this.createDefaultKeyInstruction(staffIndex);
             this.activeKeysHaveBeenInitialized[staffIndex] = true;

@@ -10,6 +10,7 @@ import { ColoringModes } from "../../../Common/Enums/ColoringModes";
 import { GraphicalNote } from "../GraphicalNote";
 import { EngravingRules } from "../EngravingRules";
 import { NoteHeadShape } from "../../VoiceData/Notehead";
+import { VexFlowKeySignatureNote } from "./VexFlowKeySignatureNote";
 
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     private mVexFlowStaveNote: VF.StemmableNote;
@@ -17,6 +18,9 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     /** A grace note that no main note follows in its staff entry (e.g. the only note of its voice there), drawn as its own
      *  tickable of the voice. Unlike a grace note after its main note (VoiceEntry.GraceAfterMainNote), it keeps its timestamp. */
     public isStandAloneGrace: boolean = false;
+    /** An in-staff declaration immediately following this final stand-alone grace tickable. */
+    public vfInStaffKeyCarrier?: VF.GhostNote;
+    public vfInStaffKeyCarrierKeys?: VexFlowKeySignatureNote[];
 
     constructor(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry, rules?: EngravingRules) {
         super(parentVoiceEntry, parentStaffEntry, rules);

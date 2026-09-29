@@ -7,6 +7,8 @@ export abstract class AbstractNotationInstruction {
     }
 
     protected parent: SourceStaffEntry;
+    /** Position of the MusicXML measure child that declared this instruction. */
+    public NodeIndexXml?: number;
     /** States whether the object should be displayed. False if xmlNode.attribute("print-object").value = "no". */
     private printObject: boolean = true;
 

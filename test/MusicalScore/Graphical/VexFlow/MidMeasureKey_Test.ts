@@ -47,6 +47,10 @@ describe("Mid-measure key rendering", (): void => {
         ));
     }
 
+    function graceNotes(): VexFlowGraphicalNote[] {
+        return notesIn(0).filter((note: VexFlowGraphicalNote): boolean => note.parentVoiceEntry.parentVoiceEntry.IsGrace);
+    }
+
     it("draws the changed key between its notes without redundant accidentals", async (): Promise<void> => {
         await loadScore("test_key_signature_mid_measure.musicxml");
 
@@ -168,7 +172,7 @@ describe("Mid-measure key rendering", (): void => {
     it("draws a key before a beamed grace-note group", async (): Promise<void> => {
         await loadScore("test_key_signature_grace_beam.musicxml");
 
-        const graceNotes: VexFlowGraphicalNote[] = osmd.GraphicSheet.MeasureList[0][0].staffEntries.flatMap(
+        const beamedGraceNotes: VexFlowGraphicalNote[] = osmd.GraphicSheet.MeasureList[0][0].staffEntries.flatMap(
             (entry: GraphicalStaffEntry): VexFlowGraphicalNote[] => entry.graphicalVoiceEntries.flatMap(
                 (voiceEntry): VexFlowGraphicalNote[] => voiceEntry.parentVoiceEntry.IsGrace
                     ? voiceEntry.notes as VexFlowGraphicalNote[] : [],
@@ -176,10 +180,118 @@ describe("Mid-measure key rendering", (): void => {
         );
         expect(keys(), "the key before the grace group is rendered").to.have.length(1);
         const key: SVGGraphicsElement = keys()[0];
-        expect(graceNotes, "the complete grace group is present").to.have.length(2);
-        expect(graceNotes.map((note: VexFlowGraphicalNote): AccidentalEnum => note.DrawnAccidental))
+        expect(beamedGraceNotes, "the complete grace group is present").to.have.length(2);
+        expect(beamedGraceNotes.map((note: VexFlowGraphicalNote): AccidentalEnum => note.DrawnAccidental))
             .to.deep.equal([AccidentalEnum.NONE, AccidentalEnum.NONE]);
         expect(key.getBBox().x + key.getBBox().width, "the key precedes the entire grace group")
-            .to.be.lessThan(graceNotes[0].vfnote[0].getAbsoluteX());
+            .to.be.lessThan(beamedGraceNotes[0].vfnote[0].getAbsoluteX());
+    });
+
+    it("keeps a zero-time key between leading grace notes without moving it to the other voice", async (): Promise<void> => {
+        await loadScore("test_key_signature_leading_grace_order.musicxml");
+
+        const grace: VexFlowGraphicalNote[] = graceNotes();
+        const key: SVGGraphicsElement = keys()[0];
+        const keyX: number = key.getBBox().x;
+        expect(grace, "the four leading grace notes and the independent voice grace note are rendered").to.have.length(5);
+        expect(grace.map((note: VexFlowGraphicalNote): AccidentalEnum => note.DrawnAccidental),
+            "each grace-key segment retains its accidental memory")
+            .to.deep.equal([AccidentalEnum.SHARP, AccidentalEnum.NONE, AccidentalEnum.NATURAL,
+                AccidentalEnum.NONE, AccidentalEnum.NATURAL]);
+        expect(key.getBBox().x, "the key follows the C-major grace segment").to.be.greaterThan(grace[1].vfnote[0].getAbsoluteX());
+        expect(key.getBBox().x + key.getBBox().width, "the key precedes the G-major grace segment")
+            .to.be.lessThan(grace[2].vfnote[0].getAbsoluteX());
+        const main: VexFlowGraphicalNote = notesIn(0).find(
+            (note: VexFlowGraphicalNote): boolean => !note.parentVoiceEntry.parentVoiceEntry.IsGrace &&
+                note.parentVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId === 1,
+        )!;
+        expect(main.DrawnAccidental, "the final G-major grace natural carries to its main note").to.equal(AccidentalEnum.NONE);
+
+        const previous: ITransposeCalculator = osmd.TransposeCalculator;
+        try {
+            osmd.TransposeCalculator = new TransposeCalculator();
+            osmd.Sheet.Transpose = 2;
+            osmd.updateGraphic();
+            osmd.render();
+            const transposedGrace: VexFlowGraphicalNote[] = graceNotes();
+            const transposedKey: SVGGraphicsElement = keys()[keys().length - 1];
+            expect(transposedKey.getBBox().x, "the transposed key still follows its first grace segment")
+                .to.be.greaterThan(transposedGrace[1].vfnote[0].getAbsoluteX());
+            expect(transposedKey.getBBox().x + transposedKey.getBBox().width,
+                "the transposed key still precedes its later grace segment")
+                .to.be.lessThan(transposedGrace[2].vfnote[0].getAbsoluteX());
+
+            osmd.Sheet.Transpose = 0;
+            osmd.updateGraphic();
+            osmd.render();
+            expect(keys()[0].getBBox().x, "updating the graphic restores the original grace-key position").to.equal(keyX);
+        } finally {
+            osmd.TransposeCalculator = previous;
+        }
+    });
+
+    it("keeps zero-time keys inside and after standalone grace notes across a re-render", async (): Promise<void> => {
+        await loadScore("test_key_signature_standalone_grace_order.musicxml");
+
+        const before: VexFlowGraphicalNote[] = graceNotes();
+        const beforeKeyPositions: number[] = keys().map((key: SVGGraphicsElement): number => key.getBBox().x);
+        expect(before.map((note: VexFlowGraphicalNote): AccidentalEnum => note.DrawnAccidental))
+            .to.deep.equal([AccidentalEnum.NONE, AccidentalEnum.NATURAL, AccidentalEnum.NONE]);
+        expect(keys(), "the two in-measure keys and D-major system carry are rendered").to.have.length(3);
+        expect(beforeKeyPositions[0], "the first key follows the first standalone grace note")
+            .to.be.greaterThan(before[0].vfnote[0].getAbsoluteX());
+        expect(beforeKeyPositions[0] + keys()[0].getBBox().width, "the first key precedes the later standalone grace note")
+            .to.be.lessThan(before[1].vfnote[0].getAbsoluteX());
+        expect(beforeKeyPositions[1], "the later key follows the final standalone grace note")
+            .to.be.greaterThan(before[2].vfnote[0].getAbsoluteX());
+        expect(keys()[1].querySelectorAll("path"), "the later key is D major").to.have.length(2);
+        expect(keys()[2].querySelectorAll("path"), "the next system carries D major").to.have.length(2);
+
+        osmd.render();
+        expect(keys().map((key: SVGGraphicsElement): number => key.getBBox().x),
+            "re-rendering preserves both standalone grace-key positions").to.deep.equal(beforeKeyPositions);
+
+        osmd.setOptions({drawFromMeasureNumber: 2});
+        await loadScore("test_key_signature_standalone_grace_order.musicxml");
+        expect(keys(), "the selected later range inherits the final standalone key").to.have.length(1);
+        expect(keys()[0].querySelectorAll("path"), "the selected range carries D major").to.have.length(2);
+    });
+
+    it("keeps numbered grace-key order local to its staff", async (): Promise<void> => {
+        await loadScore("test_staff_specific_grace_keys.musicxml");
+
+        expect(notesIn(0, 0).map((note: VexFlowGraphicalNote): AccidentalEnum => note.DrawnAccidental),
+            "the lower-staff change does not affect the upper F").to.deep.equal([AccidentalEnum.NONE]);
+        const lower: VexFlowGraphicalNote[] = notesIn(0, 1);
+        expect(lower.map((note: VexFlowGraphicalNote): AccidentalEnum => note.DrawnAccidental),
+            "the lower grace is in C, while its main F needs a natural in G")
+            .to.deep.equal([AccidentalEnum.NONE, AccidentalEnum.NATURAL]);
+        expect(keys(), "only the lower-staff G and D signatures are drawn").to.have.length(2);
+        const bounds: DOMRect = keys()[0].getBBox();
+        expect(bounds.x, "the lower key follows its grace note").to.be.greaterThan(lower[0].vfnote[0].getAbsoluteX());
+        expect(bounds.x + bounds.width, "the lower key precedes its main note").to.be.lessThan(lower[1].vfnote[0].getAbsoluteX());
+
+        expect(osmd.Sheet.SourceMeasures[1].getKeyInstruction(1)?.Key,
+            "an upper-staff grace does not turn the lower opening key into an in-staff instruction").to.equal(2);
+        expect(notesIn(1, 0).map((note: VexFlowGraphicalNote): AccidentalEnum => note.DrawnAccidental))
+            .to.deep.equal([AccidentalEnum.NONE, AccidentalEnum.NONE]);
+        expect(notesIn(1, 1).map((note: VexFlowGraphicalNote): AccidentalEnum => note.DrawnAccidental))
+            .to.deep.equal([AccidentalEnum.NONE]);
+    });
+
+    it("places a zero-time key after its final leading grace note and before the main note", async (): Promise<void> => {
+        await loadScore("test_key_signature_after_leading_grace_order.musicxml");
+
+        const [grace]: VexFlowGraphicalNote[] = graceNotes();
+        const main: VexFlowGraphicalNote = notesIn(0).find(
+            (note: VexFlowGraphicalNote): boolean => !note.parentVoiceEntry.parentVoiceEntry.IsGrace,
+        )!;
+        const key: SVGGraphicsElement = keys()[0];
+        expect(grace.DrawnAccidental, "the leading grace note remains in C major").to.equal(AccidentalEnum.NONE);
+        expect(main.DrawnAccidental, "the main F natural cancels the G-major key").to.equal(AccidentalEnum.NATURAL);
+        expect(key.getBBox().x, "the key follows the final leading grace note")
+            .to.be.greaterThan(grace.vfnote[0].getAbsoluteX());
+        expect(key.getBBox().x + key.getBBox().width, "the key precedes the main note")
+            .to.be.lessThan(main.vfnote[0].getAbsoluteX());
     });
 });

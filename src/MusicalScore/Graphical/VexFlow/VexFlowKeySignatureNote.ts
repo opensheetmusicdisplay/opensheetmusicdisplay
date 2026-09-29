@@ -4,7 +4,10 @@ import VF = Vex.Flow;
 /** A key-signature subgroup uses the active clef and follows its parent note's stave. */
 export class VexFlowKeySignatureNote extends VF.KeySigNote {
     private clef: string;
+    public NodeIndexXml?: number;
     public attachedToNote: boolean = false;
+    /** Node index of the stand-alone grace tickable that owns this key, when applicable. */
+    public standAloneGraceOwnerNodeIndex?: number;
 
     /** Reserves real signature width without inventing a source note. */
     public static createCarrier(instructions: VF.Note[], stave: VF.Stave): VF.GhostNote {

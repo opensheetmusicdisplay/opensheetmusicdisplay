@@ -196,6 +196,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
             (signature as any).setStyle({fillStyle: "#00000000", strokeStyle: "#00000000"});
             (signature.keySignature as any).hidden = true;
         }
+        signature.NodeIndexXml = key.NodeIndexXml;
         (graphicalStaffEntry as VexFlowStaffEntry).vfKeys.push(signature);
     }
 

@@ -30,6 +30,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
         const newKeyInstruction: KeyInstruction = new KeyInstruction(keyInstruction.parent, keyInstruction.Key, keyInstruction.Mode);
         // note that newKeyInstruction.keyTypeOriginal is set incorrectly in the constructor, but we fix that here:
         newKeyInstruction.keyTypeOriginal = keyInstruction.keyTypeOriginal;
+        newKeyInstruction.NodeIndexXml = keyInstruction.NodeIndexXml;
         return newKeyInstruction;
     }
 

@@ -46,6 +46,8 @@ export class VoiceEntry {
     }
 
     private parentVoice: Voice;
+    /** Position of this note's MusicXML measure child. */
+    public NodeIndexXml?: number;
     private parentSourceStaffEntry: SourceStaffEntry;
     private timestamp: Fraction;
     private notes: Note[] = [];
