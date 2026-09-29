@@ -298,6 +298,34 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         ).catch(done);
     });
 
+    /**
+     * The page is drawn inside the container's border and padding. It was as wide as the container including them
+     * (offsetWidth), so it stuck out of the container by their width.
+     */
+    it("lays out and draws the page as wide as the container's content box, inside its padding and border", async () => {
+        for (const incremental of [false, true]) {
+            const div: HTMLElement = TestUtils.getDivElement(document);
+            div.style.width = "500px";
+            div.style.padding = "0 10px 0 30px";
+            div.style.border = "5px solid";
+            try {
+                const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+                await osmd.load(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml"));
+                if (incremental) {
+                    osmd.renderNext();
+                    osmd.renderRemaining();
+                } else {
+                    osmd.render();
+                }
+                const renderName: string = incremental ? "renderNext()" : "render()";
+                expect(osmd.Sheet.pageWidth, `page width in units, ${renderName}`).to.equal(50);
+                expect(div.querySelector("svg").getBoundingClientRect().width, `drawn width in pixels, ${renderName}`).to.equal(500);
+            } finally {
+                div.remove();
+            }
+        }
+    });
+
     describe("cursor with hidden instrument", () => {
         let osmd: OpenSheetMusicDisplay;
         beforeEach(() => {

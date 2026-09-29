@@ -291,7 +291,7 @@ export class OpenSheetMusicDisplay {
         }
 
         // Set page width
-        let width: number = this.container.offsetWidth;
+        let width: number = this.getContainerContentWidth();
         if (this.rules.RenderSingleHorizontalStaffline) {
             width = this.rules.SheetMaximumWidth; // set safe maximum (browser limit), will be reduced later
             // reduced later in MusicSheetCalculator.calculatePageLabels (sets sheet.pageWidth to page.PositionAndShape.Size.width before labels)
@@ -675,7 +675,7 @@ export class OpenSheetMusicDisplay {
         this.rules.MinMeasureToDrawIndex = 0;
         this.rules.MaxMeasureToDrawIndex = Math.min(toMeasureIndex, lastSheetMeasureIndex);
 
-        const width: number = this.container.offsetWidth;
+        const width: number = this.getContainerContentWidth();
         this.sheet.pageWidth = width / this.zoom / 10.0;
         this.rules.PageHeight = 100001; // lazy assumes the endless (vertical scroll) page format
 
@@ -976,7 +976,7 @@ export class OpenSheetMusicDisplay {
         this.drawer.skyLineVisible = this.drawSkyLine;
 
         // Set page width
-        let width: number = this.container.offsetWidth;
+        let width: number = this.getContainerContentWidth();
         if (this.rules.RenderSingleHorizontalStaffline) {
             width = (this.EngravingRules.PageLeftMargin + this.graphic.MusicPages[0].PositionAndShape.Size.width + this.EngravingRules.PageRightMargin)
                 * 10 * this.zoom;
@@ -1036,6 +1036,23 @@ export class OpenSheetMusicDisplay {
             this.drawer.Backends.push(backend);
             this.graphic.drawer = this.drawer;
         }
+    }
+
+    /**
+     * Returns the width in pixels of the container's content box, which the page fills.
+     * The page is drawn inside the container's border and padding, so a page as wide as the container's offsetWidth
+     * overflowed the container by their width.
+     * Like offsetWidth, the width includes a vertical scrollbar of the container. clientWidth doesn't: it would change
+     * when createOrRefreshRenderBackend() empties the container and the scrollbar disappears, after render() used it
+     * for the layout. It's also 0 in generateImages_browserless, which only sets offsetWidth.
+     */
+    protected getContainerContentWidth(): number {
+        const style: CSSStyleDeclaration = window.getComputedStyle(this.container);
+        // NaN -> 0: jsdom (generateImages_browserless) returns "medium" for a border that isn't set
+        const pixels: (length: string) => number = (length: string): number => parseFloat(length) || 0;
+        const contentWidth: number = this.container.offsetWidth - pixels(style.borderLeftWidth) - pixels(style.borderRightWidth)
+            - pixels(style.paddingLeft) - pixels(style.paddingRight);
+        return Math.max(0, contentWidth); // e.g. a hidden container: offsetWidth 0
     }
 
     // for now SVG only, see generateImages_browserless (PNG/SVG)
