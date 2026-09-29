@@ -26,9 +26,10 @@ interface DrawnNoteHead {
  *   chord could find a neighbouring note.
  * - Notes are at the heights of their note heads. They were placed below their voice entry's top (e.g. the stem tip of an up-stem
  *   note) by the length of a normal stem, but e.g. grace notes and cue notes have shorter stems, and 32nd notes longer ones.
- * - A TAB note is at the centre of its fret number, not at the right end of the fret number (its staff entry's x): a click on
- *   the centre of a fret number could be nearer the right end of the previous one. A grace note is at the centre of its note head,
- *   not right of it by the width of its flag.
+ * - A note is at the centre of its note head, or of its fret number in a TAB staff, not at its staff entry's x (e.g. for the cursor),
+ *   which can be elsewhere: at the right end of a fret number (a click on the centre of a fret number could be nearer the right end
+ *   of the previous one), at the right edge of a note head with a flag (also of a grace note), between the note heads of a second,
+ *   or at the note of another voice, which Vexflow moves aside to not overlap it.
  * - Rests in a TAB staff aren't found: they aren't drawn, and a click on the fret number of the next note could find the rest.
  */
 describe("GetNearestVoiceEntry", () => {
@@ -185,9 +186,7 @@ describe("GetNearestVoiceEntry", () => {
                 for (const voiceEntry of measure?.staffEntries.flatMap(staffEntry => staffEntry.graphicalVoiceEntries) ?? []) {
                     for (const note of voiceEntry.notes as VexFlowGraphicalNote[]) {
                         if (!note.sourceNote.isRest()) {
-                            // y only: most notes are at their staff entry's x (e.g. for slurs), which isn't always at the note head,
-                            //   e.g. right of it for a note with a flag
-                            expectAtDrawnCenter(note, sampleName, false);
+                            expectAtDrawnCenter(note, sampleName, false); // the x: see the next test
                         }
                     }
                 }
@@ -195,20 +194,18 @@ describe("GetNearestVoiceEntry", () => {
         }
     });
 
-    it("places TAB notes at their fret numbers' centres, not their staff entries (e.g. the cursor), grace notes at their heads", async () => {
-        // TAB chords of fret numbers with one and two digits, a TAB grace note, and grace notes with flags or beamed,
-        //   with their stems up or down, before and after their main notes
+    it("places notes at the centres of their note heads or TAB fret numbers, not at their staff entries (e.g. the cursor)", async () => {
+        // TAB chords of fret numbers with one and two digits, a TAB grace note, grace notes with flags or beamed, with their stems up
+        //   or down, before and after their main notes, and notes with flags, a displaced note head of a second, and notes of two voices
+        //   that Vexflow moves apart
         for (const sampleName of ["BrookeWestSample.mxl", "test_tab_grace_note_simple.musicxml", "OSMD_function_test_GraceNotes.xml",
-                                  "test_grace_notes_after_main_note_1706.musicxml"]) {
+                                  "test_grace_notes_after_main_note_1706.musicxml", "OSMD_Function_Test_Voice_Alignment.musicxml"]) {
             const sheet: GraphicalMusicSheet = await renderSheet(sampleName);
             let checkedNotes: number = 0;
             for (const measure of sheet.MeasureList.flat()) {
                 for (const staffEntry of measure?.staffEntries ?? []) {
                     let fretNumbersEnd: number = -Infinity; // the right end of the fret numbers of the staff entry's TAB notes
                     for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
-                        if (!measure.isTabMeasure && !voiceEntry.parentVoiceEntry.IsGrace) {
-                            continue;
-                        }
                         for (const note of voiceEntry.notes as VexFlowGraphicalNote[]) {
                             if (note.sourceNote.isRest()) {
                                 continue;
@@ -228,7 +225,7 @@ describe("GetNearestVoiceEntry", () => {
                     }
                 }
             }
-            expect(checkedNotes, `TAB notes or grace notes in ${sampleName}`).to.be.greaterThan(0);
+            expect(checkedNotes, `notes in ${sampleName}`).to.be.greaterThan(0);
         }
     });
 
