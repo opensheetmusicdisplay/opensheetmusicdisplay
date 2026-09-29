@@ -24,6 +24,8 @@ interface DrawnNoteHead {
  * - The notes of a TAB chord are on their strings, so GetNearestNote() finds the clicked one. They were all at their voice entry's
  *   position, on the string of its last note: GetNearestNote() found the chord's first note, and a click on another string of the
  *   chord could find a neighbouring note.
+ * - Notes are at the heights of their note heads. They were placed below their voice entry's top (e.g. the stem tip of an up-stem
+ *   note) by the length of a normal stem, but e.g. grace notes and cue notes have shorter stems, and 32nd notes longer ones.
  */
 describe("GetNearestVoiceEntry", () => {
     let container: HTMLElement;
@@ -77,12 +79,35 @@ describe("GetNearestVoiceEntry", () => {
             `in measure ${voiceEntry.parentStaffEntry.parentMeasure.MeasureNumber}`;
     }
 
-    /** A description of a TAB note, or of another note found instead, for assertion messages. */
-    function describeTabNote(note: GraphicalNote): string {
+    /** A description of a note, e.g. a TAB note, or another note found instead, for assertion messages. */
+    function describeGraphicalNote(note: GraphicalNote): string {
         const sourceNote: Note = note.sourceNote;
         const description: string = sourceNote instanceof TabNote ? `string ${sourceNote.StringNumberTab} fret ${sourceNote.FretNumber}` :
             sourceNote.isRest() ? "rest" : `note ${sourceNote.Pitch.ToStringShort(3)}`;
-        return `${description} in measure ${note.parentVoiceEntry.parentStaffEntry.parentMeasure.MeasureNumber}`;
+        return `${sourceNote.IsGraceNote ? "grace " : ""}${description} ` +
+            `in measure ${note.parentVoiceEntry.parentStaffEntry.parentMeasure.MeasureNumber}`;
+    }
+
+    /** The centre of the note's drawn note head, or of a TAB note's fret number, in units. */
+    function drawnCenter(note: VexFlowGraphicalNote): PointF2D {
+        // the note's own drawing, not the grace notes drawn among its modifiers, in the order of the notes' indices in their Vexflow note
+        const group: Element = document.getElementById("vf-" + note.getSVGId());
+        const shapes: SVGGraphicsElement[] = Array.from(note.parentVoiceEntry.parentStaffEntry.parentMeasure.isTabMeasure ?
+            group.querySelectorAll(":scope > text") : group.querySelectorAll(":scope > .vf-note .vf-notehead"));
+        const box: DOMRect = shapes[note.vfnote[1]].getBBox();
+        return new PointF2D((box.x + box.width / 2) / 10, (box.y + box.height / 2) / 10);
+    }
+
+    /** Expects the note's position at the height of its drawn note head (or fret number), and at its centre if checkX is true. */
+    function expectAtDrawnCenter(note: VexFlowGraphicalNote, sampleName: string, checkX: boolean): void {
+        const center: PointF2D = drawnCenter(note);
+        const position: PointF2D = note.PositionAndShape.AbsolutePosition;
+        // the note heads' drawings aren't exactly centred on their positions, e.g. by up to 0.08 units for the fret numbers of a TAB chord
+        const tolerance: number = 0.2;
+        expect(Math.abs(position.y - center.y), `${sampleName}: y of ${describeGraphicalNote(note)}`).to.be.lessThan(tolerance);
+        if (checkX) {
+            expect(Math.abs(position.x - center.x), `${sampleName}: x of ${describeGraphicalNote(note)}`).to.be.lessThan(tolerance);
+        }
     }
 
     /** Expects a click on the note head to find its voice entry. Compared by identity: chai would print the whole object graph. */
@@ -127,14 +152,10 @@ describe("GetNearestVoiceEntry", () => {
                     if (notes[0].sourceNote.isRest()) {
                         continue;
                     }
-                    // the fret numbers drawn by the voice entry's Vexflow note, in the order of its notes' indices in it
-                    const fretNumbers: SVGGraphicsElement[] = Array.from(
-                        document.getElementById("vf-" + notes[0].getSVGId()).querySelectorAll(":scope > text"));
                     for (const note of notes) {
-                        const box: DOMRect = fretNumbers[note.vfnote[1]].getBBox();
-                        const center: PointF2D = new PointF2D((box.x + box.width / 2) / 10, (box.y + box.height / 2) / 10);
-                        const found: GraphicalNote = sheet.GetNearestNote(center, undefined);
-                        expect(found === note, `${sampleName}: ${describeTabNote(note)}, found ${found ? describeTabNote(found) : "nothing"}`)
+                        const found: GraphicalNote = sheet.GetNearestNote(drawnCenter(note), undefined);
+                        expect(found === note,
+                               `${sampleName}: ${describeGraphicalNote(note)}, found ${found ? describeGraphicalNote(found) : "nothing"}`)
                             .to.equal(true);
                     }
                     if (notes.length > 1) {
@@ -143,6 +164,25 @@ describe("GetNearestVoiceEntry", () => {
                 }
             }
             expect(chords, `TAB chords in ${sampleName}`).to.be.greaterThan(0);
+        }
+    });
+
+    it("places notes at the heights of their note heads, also grace notes and cue notes (shorter stems), 32nd notes (longer)", async () => {
+        // grace notes with their stems up and down, cue notes, beamed 32nd notes with their stems up
+        for (const sampleName of ["OSMD_function_test_GraceNotes.xml", "test_clef_change_on_invisible_note_norma_fantasy_1605.musicxml",
+                                  "test_ornament_fingering_beamed_stem_up_bwv847_measure34.musicxml"]) {
+            const sheet: GraphicalMusicSheet = await renderSheet(sampleName);
+            for (const measure of sheet.MeasureList.flat()) {
+                for (const voiceEntry of measure?.staffEntries.flatMap(staffEntry => staffEntry.graphicalVoiceEntries) ?? []) {
+                    for (const note of voiceEntry.notes as VexFlowGraphicalNote[]) {
+                        if (!note.sourceNote.isRest()) {
+                            // y only: most notes are at their staff entry's x (e.g. for slurs), which isn't always at the note head,
+                            //   e.g. right of it for a note with a flag
+                            expectAtDrawnCenter(note, sampleName, false);
+                        }
+                    }
+                }
+            }
         }
     });
 });

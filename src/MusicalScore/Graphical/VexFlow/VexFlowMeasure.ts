@@ -799,12 +799,21 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // this.correctNotePositions(); // now done at the end of draw()
     }
 
-    // correct position / bounding box (note.setIndex() needs to have been called)
+    /**
+     * Places each note at the height of its drawn note head, relative to its voice entry, e.g. where a click finds it
+     * (GraphicalMusicSheet.GetNearestNote()). A voice entry is at the top of its Vexflow note's bounding box (see
+     * VexFlowVoiceEntry.applyBordersFromVexflow()), e.g. the stem tip of a note with its stem up, and stems differ in length:
+     * the stems of grace notes and cue notes are shorter, those of 32nd notes longer.
+     * A note's x: see VexFlowStaffEntry.calculateXPosition(). Called at the end of draw() (note.setIndex() needs to have been called).
+     */
     public correctNotePositions(): void {
         if (this.isTabMeasure) {
             this.correctTabNotePositions();
-            return; // don't do the below y position adaptations meant for non-tab notes
+            return; // TAB notes are on their strings
         }
+        // The note heads' y relative to the top line (the measure's y), from their lines on the stave: the y they got when drawn
+        //   might be from another position of the stave, e.g. SkyBottomLineCalculator moves it, and can call this without drawing.
+        const staveTopY: number = this.stave.getYForLine(0);
         // Iterate this measure's own staff entries. Going through
         // Voice.VoiceEntries instead would walk every entry that voice has in
         // the whole score, from a method that runs once per measure, so each
@@ -812,15 +821,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // measure count, and every pass after the first writes the same value).
         for (const gse of this.staffEntries) {
             for (const gve of gse.graphicalVoiceEntries) {
-                const notes: GraphicalNote[] = gve.notes;
-                if (notes.length === 0) {
-                    continue;
-                }
-                const lastNote: VexFlowGraphicalNote = notes[notes.length - 1] as VexFlowGraphicalNote;
-                if (!lastNote.vfnote) { // notehead() below reads its vfnote[0] with no argument
-                    continue;
-                }
-                for (const graphicalNote of notes) {
+                const voiceEntryY: number = gse.PositionAndShape.RelativePosition.y + gve.PositionAndShape.RelativePosition.y;
+                for (const graphicalNote of gve.notes) {
                     const gNote: VexFlowGraphicalNote = graphicalNote as VexFlowGraphicalNote;
                     if (gNote.sourceNote.isRest()) {
                         continue;
@@ -831,26 +833,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     if (!gNote.vfnote) { // can happen were invisible, then multi rest measure. TODO fix multi rest measure not removed
                         continue;
                     }
-                    const vfnote: VF.StemmableNote = gNote.vfnote[0];
                     // Note: grace notes are now included here (reached via the measure's graphical
                     // staff entries), unlike the old Voice.VoiceEntries walk that skipped them.
-                    let relPosY: number = 0;
-                    if (gNote.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up && vfnote.getDuration() !== "w") {
-                        relPosY += 3.5; // about 3.5 lines too high. this seems to be related to the default stem height, not actual stem height.
-                        // alternate calculation using actual stem height: somehow wildly varying.
-                        // if (notes.length > 1) {
-                        //     const stemHeight: number = vfnote.getStem().getHeight();
-                        //     // relPosY += shortFactor * stemHeight / unitInPixels - 3.5;
-                        //     relPosY += stemHeight / unitInPixels - 3.5; // for some reason this varies in its correctness between similar notes
-                        // } else {
-                        //     relPosY += 3.5;
-                        // }
-                    } else {
-                        relPosY += 0.5; // center-align bbox
+                    const noteHead: any = (gNote.vfnote[0] as any).note_heads?.[gNote.vfnoteIndex];
+                    if (!noteHead) {
+                        continue;
                     }
-                    const line: number = -gNote.notehead(vfnote).line; // vexflow y direction is opposite of osmd's
-                    relPosY += line + lastNote.notehead().line; // don't move for first note: - (-vexline)
-                    gNote.PositionAndShape.RelativePosition.y = relPosY;
+                    const noteHeadY: number = (this.stave.getYForNote(noteHead.getLine()) - staveTopY) / unitInPixels;
+                    gNote.PositionAndShape.RelativePosition.y = noteHeadY - voiceEntryY;
                 }
             }
         }
