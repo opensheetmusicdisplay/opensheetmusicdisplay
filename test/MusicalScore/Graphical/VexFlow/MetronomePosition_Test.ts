@@ -1,6 +1,8 @@
 import {expect} from "chai";
 import {TestUtils} from "../../../Util/TestUtils";
 import {OpenSheetMusicDisplay} from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import {StaffLine} from "../../../../src/MusicalScore/Graphical/StaffLine";
+import {unitInPixels} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 
 describe("Metronome position rendering", (): void => {
     let div: HTMLElement;
@@ -147,5 +149,18 @@ describe("Metronome position rendering", (): void => {
         osmd.setOptions({drawFromMeasureNumber: 2});
         osmd.render();
         expect(marks().length).to.equal(1);
+    });
+
+    it("keeps a note equation inside the right edge of its staffline", async (): Promise<void> => {
+        div.style.width = "300px";
+        osmd.EngravingRules.StretchLastSystemLine = true;
+        await osmd.load(score(note("C") + note("D") + note("E") + note("F") +
+            mark("<beat-unit>quarter</beat-unit><beat-unit>quarter</beat-unit><beat-unit-dot/>")));
+        osmd.render();
+        expect(marks().length).to.equal(1);
+        const staffLine: StaffLine = osmd.GraphicSheet.MeasureList[0][0].ParentStaffLine;
+        const right: number = div.querySelector("svg").getBoundingClientRect().left +
+            (staffLine.PositionAndShape.AbsolutePosition.x + staffLine.PositionAndShape.Size.width) * unitInPixels;
+        expect(marks()[0].right).to.be.at.most(right);
     });
 });

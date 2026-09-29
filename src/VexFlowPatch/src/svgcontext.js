@@ -583,7 +583,7 @@ export class SVGContext {
   }
 
   // ## Text Methods:
-  measureText(text) {
+  measureText(text, useTextAdvance = false) {
     const txt = this.create('text');
     if (typeof (txt.getBBox) !== 'function') {
       return { x: 0, y: 0, width: 0, height: 0 };
@@ -598,6 +598,10 @@ export class SVGContext {
     let bbox = txt.getBBox();
     if (this.ie && text !== '' && this.attributes['font-style'] === 'italic') {
       bbox = this.ieMeasureTextFix(bbox, text);
+    }
+    if (useTextAdvance && typeof txt.getComputedTextLength === 'function') {
+      // Use the text advance, as Canvas measureText().width does, rather than glyph bounds.
+      bbox = { x: bbox.x, y: bbox.y, width: txt.getComputedTextLength(), height: bbox.height };
     }
 
     this.svg.removeChild(txt);
