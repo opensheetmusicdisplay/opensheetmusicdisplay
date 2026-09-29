@@ -4,6 +4,12 @@ export class RepetitionInstructionComparer /*implements IComparer<RepetitionInst
     public static Compare(x: RepetitionInstruction, y: RepetitionInstruction): number {
         if (x.parentRepetition !== undefined && y.parentRepetition) {
             if (x.alignment === AlignmentType.End && y.alignment === AlignmentType.End) {
+                // An instruction before the start of its repetition, e.g. the jump to a first ending that starts the repetition,
+                //   comes after the instructions of the repetitions that end here, e.g. a D.C. and a backward repeat.
+                const xBeforeItsStart: boolean = x.measureIndex < x.parentRepetition.StartIndex;
+                if (xBeforeItsStart !== y.measureIndex < y.parentRepetition.StartIndex) {
+                    return xBeforeItsStart ? 1 : -1;
+                }
                 if (x.parentRepetition.StartIndex < y.parentRepetition.StartIndex) {
                     return 1;
                 }
