@@ -239,20 +239,28 @@ export class RepetitionCalculator {
   // }
 
   /**
-   * How an instruction is played: as written, except for a D.C. or D.S. with a Fine or a To Coda before it in its movement,
-   * which goes back and ends at that Fine or jumps at that To Coda, as the D.C. / D.S. al Fine or al Coda it is
-   * (<sound dacapo="yes"/> can't say which). The instruction keeps its type, so its label reads as written.
+   * How an instruction is played: as written, except for a D.C. or D.S. with a Fine or a To Coda before it in its movement
+   * (for a D.S., after its segno), which goes back and ends at that Fine or jumps at that To Coda, as the D.C. / D.S. al Fine
+   * or al Coda it is (<sound dacapo="yes"/> can't say which). The instruction keeps its type, so its label reads as written.
    */
   private typePlayedAs(instruction: RepetitionInstruction): RepetitionInstructionEnum {
-    const before: (type: RepetitionInstructionEnum) => boolean = (type: RepetitionInstructionEnum): boolean =>
-      this.findInstructionInMainListBackwards(type, instruction.measureIndex) >= 0;
+    const before: (type: RepetitionInstructionEnum, minMeasureIndex?: number) => boolean =
+      (type: RepetitionInstructionEnum, minMeasureIndex?: number): boolean =>
+        this.findInstructionInMainListBackwards(type, instruction.measureIndex, minMeasureIndex) >= 0;
     switch (instruction.type) {
       case RepetitionInstructionEnum.DaCapo:
         return before(RepetitionInstructionEnum.Fine) ? RepetitionInstructionEnum.DaCapoAlFine :
           before(RepetitionInstructionEnum.ToCoda) ? RepetitionInstructionEnum.DaCapoAlCoda : instruction.type;
-      case RepetitionInstructionEnum.DalSegno:
-        return before(RepetitionInstructionEnum.Fine) ? RepetitionInstructionEnum.DalSegnoAlFine :
-          before(RepetitionInstructionEnum.ToCoda) ? RepetitionInstructionEnum.DalSegnoAlCoda : instruction.type;
+      case RepetitionInstructionEnum.DalSegno: {
+        // A Fine or To Coda before the segno isn't reached after the jump.
+        //   Without a segno, the D.S. goes back like a backward repeat without a forward repeat, and plays on to the end.
+        const segnoMeasureIndex: number = this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Segno, instruction.measureIndex);
+        if (segnoMeasureIndex < 0) {
+          return instruction.type;
+        }
+        return before(RepetitionInstructionEnum.Fine, segnoMeasureIndex) ? RepetitionInstructionEnum.DalSegnoAlFine :
+          before(RepetitionInstructionEnum.ToCoda, segnoMeasureIndex) ? RepetitionInstructionEnum.DalSegnoAlCoda : instruction.type;
+      }
       default:
         return instruction.type;
     }
@@ -458,8 +466,10 @@ export class RepetitionCalculator {
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
             this.startAtSegnoBackwards(currentRepetition);
             if (!currentRepetition.FineFound) {
+                // (a Fine before the segno isn't reached after the jump)
                 const fineMeasureIndex: number = this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Fine,
-                                                                                         currentRepetitionInstruction.measureIndex);
+                                                                                         currentRepetitionInstruction.measureIndex,
+                                                                                         currentRepetition.RepetitonUnderConstruction.StartIndex);
                 if (fineMeasureIndex >= 0) {
                     currentRepetition.FineFound = true;
                     currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction =
@@ -520,8 +530,11 @@ export class RepetitionCalculator {
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
             this.startAtSegnoBackwards(currentRepetition);
             if (!currentRepetition.ToCodaFound) {
+                // (a To Coda before the segno isn't reached after the jump)
+                const segnoMeasureIndex: number = currentRepetition.RepetitonUnderConstruction.StartIndex;
                 const toCodaMeasureIndex: number = this.findInstructionInMainListBackwards(RepetitionInstructionEnum.ToCoda,
-                                                                                           currentRepetitionInstruction.measureIndex);
+                                                                                           currentRepetitionInstruction.measureIndex,
+                                                                                           segnoMeasureIndex);
                 if (toCodaMeasureIndex >= 0) {
                     currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction =
                       new RepetitionInstruction(toCodaMeasureIndex, RepetitionInstructionEnum.ToCoda,
@@ -531,7 +544,8 @@ export class RepetitionCalculator {
                     currentRepetition.ToCodaFound = true;
                 } else {
                     const measureIndex: number = this.findInstructionInMainListBackwards(RepetitionInstructionEnum.Coda,
-                                                                                         currentRepetitionInstruction.measureIndex);
+                                                                                         currentRepetitionInstruction.measureIndex,
+                                                                                         segnoMeasureIndex);
                     if (measureIndex >= 0) {
                         currentRepetition.RepetitonUnderConstruction.forwardJumpInstruction =
                           new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.ToCoda,
@@ -610,11 +624,15 @@ export class RepetitionCalculator {
     return true;
   }
 
-  /** Returns the measure index of the last instruction of the given type at or before startMeasureIndex in the current movement, or -1. */
-  private findInstructionInMainListBackwards(instruction: RepetitionInstructionEnum, startMeasureIndex: number): number {
+  /**
+   * Returns the measure index of the last instruction of the given type at or before startMeasureIndex, or -1.
+   * @param minMeasureIndex the first measure to search, by default the start of the current movement
+   */
+  private findInstructionInMainListBackwards(instruction: RepetitionInstructionEnum, startMeasureIndex: number,
+                                             minMeasureIndex: number = this.movementStartIndex): number {
       for (let i: number = this.repetitionInstructions.length - 1; i >= 0; i--) {
           const repetitionInstruction: RepetitionInstruction = this.repetitionInstructions[i];
-          if (repetitionInstruction.measureIndex <= startMeasureIndex && repetitionInstruction.measureIndex >= this.movementStartIndex &&
+          if (repetitionInstruction.measureIndex <= startMeasureIndex && repetitionInstruction.measureIndex >= minMeasureIndex &&
               repetitionInstruction.type === instruction) {
               return repetitionInstruction.measureIndex;
           }
