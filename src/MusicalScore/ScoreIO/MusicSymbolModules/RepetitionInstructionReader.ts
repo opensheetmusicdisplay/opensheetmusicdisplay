@@ -139,6 +139,8 @@ export class RepetitionInstructionReader {
    * @param directionTypeNode the direction-type element (words, segno or coda)
    * @param relativeMeasurePosition the position of the direction in the measure (not used)
    * @param soundNode the direction's sound element, if any: <sound segno="..."> marks a segno as the target of a D.S.
+   *   Its dacapo, dalsegno, fine, tocoda, segno and coda attributes say which instruction the direction is when its words
+   *   don't name one themselves, e.g. "Fin" or "Da Capo bis Ende".
    * @returns true if the direction is (only) a repetition instruction, false if it is drawn as text
    */
   public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number,
@@ -156,10 +158,16 @@ export class RepetitionInstructionReader {
         //   the jump is read for playback, and the words are drawn as they are, as text (not as the instruction's label).
         const named: RegExpMatchArray = words.match(/^[A-Z][a-zA-Z]*\s+(.+)$/);
         type = named ? RepetitionInstructionReader.repetitionInstructionFromWords(named[1].toLowerCase()) : undefined;
-        if (!RepetitionInstructionReader.isJumpFromWords(type)) {
-          return false; // the words are a general text, not (just) a repetition instruction -> render as text (e.g. UnknownExpression)
+        if (RepetitionInstructionReader.isJumpFromWords(type)) {
+          drawnAsText = true;
+        } else {
+          // Words that don't name an instruction, e.g. in a language other than Italian or English:
+          //   the sound says which instruction they are, if any. Otherwise they are a general text -> render as text (e.g. UnknownExpression)
+          type = RepetitionInstructionReader.repetitionInstructionFromSound(soundNode);
+          if (type === undefined) {
+            return false;
+          }
         }
-        drawnAsText = true;
       }
       const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, type);
       newInstruction.DrawnAsText = drawnAsText;
@@ -209,6 +217,29 @@ export class RepetitionInstructionReader {
     ];
     for (const [regEx, type] of instructions) {
       if (StringUtil.StringIsWord(text, regEx, true)) {
+        return type;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Returns the repetition instruction that the sound element's attributes mark, whatever the language of the words,
+   * or undefined if they mark none.
+   * @param soundNode the direction's sound element, if any
+   */
+  private static repetitionInstructionFromSound(soundNode: IXmlElement): RepetitionInstructionEnum {
+    const instructions: [string, RepetitionInstructionEnum][] = [
+      ["dacapo", RepetitionInstructionEnum.DaCapo],
+      ["dalsegno", RepetitionInstructionEnum.DalSegno],
+      ["tocoda", RepetitionInstructionEnum.ToCoda],
+      ["fine", RepetitionInstructionEnum.Fine],
+      ["segno", RepetitionInstructionEnum.Segno],
+      ["coda", RepetitionInstructionEnum.Coda],
+    ];
+    for (const [attributeName, type] of instructions) {
+      const value: string = soundNode?.attribute(attributeName)?.value;
+      if (attributeName === "dacapo" ? value === "yes" : !!value) {
         return type;
       }
     }

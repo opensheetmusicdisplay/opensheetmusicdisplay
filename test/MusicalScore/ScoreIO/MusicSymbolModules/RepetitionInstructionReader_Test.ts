@@ -15,16 +15,18 @@ describe("RepetitionInstructionReader", () => {
         reader.prepareReadingMeasure(undefined, 0);
 
         /**
-         * Lets the reader handle a direction-type node with the given words text.
+         * Lets the reader handle a direction with the given words text, and a sound element if attributes are given.
          * @param wordsText the text content of the words element
+         * @param soundAttributes the attributes of the direction's sound element, e.g. 'fine="yes"'
          * @returns true if the reader handled the words as a repetition instruction
          */
-        function handleWords(wordsText: string): boolean {
+        function handleWords(wordsText: string, soundAttributes?: string): boolean {
             reader.repetitionInstructions.length = 0;
             const doc: Document = new DOMParser().parseFromString(
-                "<direction-type><words>" + wordsText + "</words></direction-type>", "text/xml");
-            const directionTypeNode: IXmlElement = new IXmlElement(doc.documentElement);
-            return reader.handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode, 0);
+                "<direction><direction-type><words>" + wordsText + "</words></direction-type>" +
+                (soundAttributes ? "<sound " + soundAttributes + "/>" : "") + "</direction>", "text/xml");
+            const direction: IXmlElement = new IXmlElement(doc.documentElement);
+            return reader.handleRepetitionInstructionsFromWordsOrSymbols(direction.element("direction-type"), 0, direction.element("sound"));
         }
 
         interface WordsTestCase {
@@ -81,6 +83,42 @@ describe("RepetitionInstructionReader", () => {
             expect(reader.repetitionInstructions.length).to.equal(1);
             expect(reader.repetitionInstructions[0].type).to.equal(RepetitionInstructionEnum.DaCapoAlFine);
             expect(reader.repetitionInstructions[0].DrawnAsText).to.equal(true);
+        });
+
+        interface SoundTestCase {
+            text: string;
+            sound: string;
+            expectedType: RepetitionInstructionEnum;
+        }
+        // words in other languages, which only the sound names
+        const soundCases: SoundTestCase[] = [
+            { text: "Fin", sound: "fine=\"yes\"", expectedType: RepetitionInstructionEnum.Fine },
+            { text: "Da Capo bis Ende", sound: "dacapo=\"yes\"", expectedType: RepetitionInstructionEnum.DaCapo },
+            { text: "Dal Segno bis Ende", sound: "dalsegno=\"segno1\"", expectedType: RepetitionInstructionEnum.DalSegno },
+            { text: "Zur Coda", sound: "tocoda=\"coda1\"", expectedType: RepetitionInstructionEnum.ToCoda },
+            // words that name an instruction still say which one it is
+            { text: "D.C. al Fine", sound: "dacapo=\"yes\"", expectedType: RepetitionInstructionEnum.DaCapoAlFine },
+        ];
+        for (const testCase of soundCases) {
+            it("reads \"" + testCase.text + "\" with <sound " + testCase.sound + "/> as repetition instruction", () => {
+                expect(handleWords(testCase.text, testCase.sound), "words are handled as repetition instruction").to.equal(true);
+                expect(reader.repetitionInstructions.length).to.equal(1);
+                expect(reader.repetitionInstructions[0].type).to.equal(testCase.expectedType);
+            });
+        }
+
+        // a segno read from the sound is a D.S. target, like a segno sign with <sound segno>, so it isn't taken for a D.S.
+        it("marks a segno read from <sound segno> as the target of a D.S.", () => {
+            expect(handleWords("Zeichen", "segno=\"segno2\"")).to.equal(true);
+            expect(reader.repetitionInstructions[0].type).to.equal(RepetitionInstructionEnum.Segno);
+            expect(reader.repetitionInstructions[0].MarkedAsTarget).to.equal(true);
+        });
+
+        it("leaves words it doesn't know as text without a sound that names an instruction", () => {
+            expect(handleWords("Fin")).to.equal(false);
+            expect(handleWords("Fin", "tempo=\"100\"")).to.equal(false);
+            expect(handleWords("Fin", "dacapo=\"no\"")).to.equal(false);
+            expect(reader.repetitionInstructions.length).to.equal(0);
         });
     });
 

@@ -227,9 +227,29 @@ export class RepetitionCalculator {
   //   return true;
   // }
 
+  /**
+   * How an instruction is played: as written, except for a D.C. or D.S. with a Fine or a To Coda before it in its movement,
+   * which goes back and ends at that Fine or jumps at that To Coda, as the D.C. / D.S. al Fine or al Coda it is
+   * (<sound dacapo="yes"/> can't say which). The instruction keeps its type, so its label reads as written.
+   */
+  private typePlayedAs(instruction: RepetitionInstruction): RepetitionInstructionEnum {
+    const before: (type: RepetitionInstructionEnum) => boolean = (type: RepetitionInstructionEnum): boolean =>
+      this.findInstructionInMainListBackwards(type, instruction.measureIndex) >= 0;
+    switch (instruction.type) {
+      case RepetitionInstructionEnum.DaCapo:
+        return before(RepetitionInstructionEnum.Fine) ? RepetitionInstructionEnum.DaCapoAlFine :
+          before(RepetitionInstructionEnum.ToCoda) ? RepetitionInstructionEnum.DaCapoAlCoda : instruction.type;
+      case RepetitionInstructionEnum.DalSegno:
+        return before(RepetitionInstructionEnum.Fine) ? RepetitionInstructionEnum.DalSegnoAlFine :
+          before(RepetitionInstructionEnum.ToCoda) ? RepetitionInstructionEnum.DalSegnoAlCoda : instruction.type;
+      default:
+        return instruction.type;
+    }
+  }
+
   private handleRepetitionInstructions(currentRepetitionInstruction: RepetitionInstruction): boolean {
     let currentRepetition: RepetitionBuildingContainer;
-    switch (currentRepetitionInstruction.type) {
+    switch (this.typePlayedAs(currentRepetitionInstruction)) {
         case RepetitionInstructionEnum.StartLine:
             currentRepetition = this.createNewRepetition(this.currentMeasureIndex);
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;

@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { MusicPartManagerIterator } from "../../../src/MusicalScore/MusicParts/MusicPartManagerIterator";
+import { RepetitionInstruction, RepetitionInstructionEnum } from "../../../src/MusicalScore/VoiceData/Instructions/RepetitionInstruction";
 
 /**
  * The order in which the iterator (cursor and playback) plays the measures of repetitions: repeat signs, endings, D.C.
@@ -89,5 +90,45 @@ describe("MusicPartManagerIterator measure order with repetitions", () => {
             12, 13, 14, 12, 13,
             15, 16, 17,
         ]);
+    });
+
+    /** The types of the repetition instructions drawn at the end of the measure. */
+    function lastInstructionTypes(measureIndex: number): RepetitionInstructionEnum[] {
+        return osmd.Sheet.SourceMeasures[measureIndex].LastRepetitionInstructions.map(
+            (instruction: RepetitionInstruction): RepetitionInstructionEnum => instruction.type);
+    }
+
+    /**
+     * A plain D.C. with a Fine before it goes back to the beginning and ends at the Fine, as a D.C. al Fine does.
+     * It used to play on to the end. It is still a D.C., as written.
+     *
+     * Sample: a Fine at the end of measure 2, a D.C. at the end of measure 4.
+     */
+    it("ends a plain D.C. at the Fine before it", async () => {
+        expect(await playedMeasures("test_repeat_da_capo_with_fine.musicxml")).to.deep.equal([0, 1, 2, 3, 0, 1]);
+        expect(lastInstructionTypes(3)).to.contain(RepetitionInstructionEnum.DaCapo);
+    });
+
+    /**
+     * A Fine written in French, «Fin», is read from its sound element (<sound fine="yes"/>). It used to be plain text,
+     * so the D.C. played on to the end.
+     *
+     * Sample: «Fin» at the end of measure 2, «D.C.» at the end of measure 4.
+     */
+    it("reads a Fine written in French from its sound element", async () => {
+        expect(await playedMeasures("test_repeat_instructions_from_sound_french.musicxml")).to.deep.equal([0, 1, 2, 3, 0, 1]);
+        expect(lastInstructionTypes(1)).to.contain(RepetitionInstructionEnum.Fine);
+    });
+
+    /**
+     * A plain D.C. with a To Coda before it goes back to the beginning and jumps to the coda at the To Coda,
+     * as a D.C. al Coda does: <sound dacapo="yes"/> can't say "al Coda". Both are written in German,
+     * so they are read from their sound elements.
+     *
+     * Sample: «Zur Coda» at the end of measure 2, «D.C. bis zur Coda» at the end of measure 3, the coda in measures 4-5.
+     */
+    it("jumps to the coda at the To Coda before a plain D.C.", async () => {
+        expect(await playedMeasures("test_repeat_da_capo_to_coda_german.musicxml")).to.deep.equal([0, 1, 2, 0, 1, 3, 4]);
+        expect(lastInstructionTypes(2)).to.contain(RepetitionInstructionEnum.DaCapo);
     });
 });
