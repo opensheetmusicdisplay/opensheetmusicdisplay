@@ -45,4 +45,21 @@ describe("VexFlow GraphicalNote", () => {
             done
         );
      });
+
+    it("Can get the SVG element of a TAB note, e.g. to hide it", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        await osmd.load(TestUtils.getScore("test_tab_grace_note_simple.musicxml")); // TAB only: a quarter, a grace note, a half note
+        osmd.render();
+        const notes: VexFlowGraphicalNote[] = osmd.GraphicSheet.MeasureList.flatMap(verticalMeasures => verticalMeasures[0].staffEntries)
+            .flatMap(staffEntry => staffEntry.graphicalVoiceEntries).map(voiceEntry => voiceEntry.notes[0] as VexFlowGraphicalNote)
+            .filter(note => !note.sourceNote.isRest());
+        expect(notes.length).to.equal(3);
+        for (const note of notes) {
+            expect(note.getSVGGElement()?.id, `SVG element of ${note.sourceNote.Pitch.ToStringShort(3)}`).to.equal("vf-" + note.getSVGId());
+        }
+        notes[0].setVisible(false);
+        expect(notes[0].getSVGGElement().getAttribute("visibility")).to.equal("hidden");
+        div.remove();
+    });
 });

@@ -493,8 +493,9 @@ export class TabNote extends StemmableNote {
     this.setRendered();
     const render_stem = this.beam == null && this.render_options.draw_stem;
 
-    // VexFlowPatch: open group for tabnote (with id), so that the SVG DOM has a named element for tabnote, like stavenote
-    this.context.openGroup('tabnote', this.getAttribute('id'), { pointerBBox: true });
+    // VexFlowPatch: open group for tabnote (with id), so that the SVG DOM has a named element for tabnote, like stavenote.
+    //   Also keep it as the 'el' attribute, like stavenote (OSMD's GraphicalNote.getSVGGElement())
+    this.setAttribute('el', this.context.openGroup('tabnote', this.getAttribute('id'), { pointerBBox: true }));
     this.drawPositions();
     this.drawStemThrough();
 
