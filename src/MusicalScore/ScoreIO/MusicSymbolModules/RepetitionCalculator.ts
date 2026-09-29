@@ -276,15 +276,21 @@ export class RepetitionCalculator {
             currentRepetition.RepetitonUnderConstruction.startMarker = currentRepetitionInstruction;
             this.currentMeasure.FirstRepetitionInstructions.push(currentRepetitionInstruction);
             break;
-        case RepetitionInstructionEnum.BackJumpLine:
+        case RepetitionInstructionEnum.BackJumpLine: {
             currentRepetition = this.getOrCreateCurrentRepetition2(false);
             currentRepetitionInstruction.parentRepetition = currentRepetition.RepetitonUnderConstruction;
             currentRepetition.RepetitonUnderConstruction.BackwardJumpInstructions.push(currentRepetitionInstruction);
-            this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
+            // A repeat sign at the barline of a D.C. or D.S. is played first, then the D.C. or D.S. (see isJumpAfterRepeat()):
+            //   it goes before the D.C. or D.S., which is read first (the words come before the barline in the measure).
+            const lastInstructions: RepetitionInstruction[] = this.currentMeasure.LastRepetitionInstructions;
+            const jumpIndex: number = lastInstructions.findIndex(instruction => instruction.parentRepetition?.FromWords &&
+                instruction.parentRepetition.BackwardJumpInstructions.indexOf(instruction) >= 0);
+            lastInstructions.splice(jumpIndex >= 0 ? jumpIndex : lastInstructions.length, 0, currentRepetitionInstruction);
             if (currentRepetition.RepetitonUnderConstruction.EndingParts.length === 0) {
                 this.finalizeRepetition(currentRepetition);
             }
             break;
+        }
         case RepetitionInstructionEnum.Ending:
             // without a forward repeat, the repetition starts after the previous one (or at the start of the movement)
             currentRepetition = this.getOrCreateCurrentRepetition(this.lastRepetitionCommonPartStartIndex);
@@ -559,6 +565,7 @@ export class RepetitionCalculator {
             }
             if (currentRepetition.ToCodaFound) {
                 currentRepetition.WaitingForCoda = true;
+                this.moveBelowOpenRepeats(currentRepetition);
             }
             if (!currentRepetition.RepetitonUnderConstruction.EndingIndexDict.hasOwnProperty(1)) {
                 currentRepetition.RepetitonUnderConstruction.setEndingEndIndex(1, this.currentMeasureIndex);
@@ -609,6 +616,7 @@ export class RepetitionCalculator {
             }
             if (currentRepetition.ToCodaFound) {
                 currentRepetition.WaitingForCoda = true;
+                this.moveBelowOpenRepeats(currentRepetition);
             }
             if (!currentRepetition.RepetitonUnderConstruction.EndingIndexDict.hasOwnProperty(1)) {
                 currentRepetition.RepetitonUnderConstruction.setEndingEndIndex(1, this.currentMeasureIndex);
@@ -647,6 +655,26 @@ export class RepetitionCalculator {
   private addDrawnOnlyInstruction(type: RepetitionInstructionEnum): void {
       this.drawnOnlyInstructions.push(new RepetitionInstruction(this.currentMeasureIndex, type,
           type === RepetitionInstructionEnum.Coda ? AlignmentType.Begin : AlignmentType.End, undefined));
+  }
+
+  /**
+   * Puts a D.C. or D.S. al Coda repetition, which waits for its coda sign, below the open repeats that start within it,
+   * e.g. one whose backward repeat is at the D.C.'s barline: they lie within it, and their backward repeat doesn't close it
+   * before its coda sign is read (see getOrCreateCurrentRepetition2()).
+   */
+  private moveBelowOpenRepeats(repContainer: RepetitionBuildingContainer): void {
+      let index: number = this.openRepetitions.indexOf(repContainer);
+      while (index > 0) {
+          const below: RepetitionBuildingContainer = this.openRepetitions[index - 1];
+          const belowRep: Repetition = below.RepetitonUnderConstruction;
+          if (belowRep.FromWords || belowRep.BackwardJumpInstructions.length > 0 || belowRep.startMarker === undefined ||
+              belowRep.StartIndex < repContainer.RepetitonUnderConstruction.StartIndex) {
+              return;
+          }
+          this.openRepetitions[index - 1] = repContainer;
+          this.openRepetitions[index] = below;
+          index--;
+      }
   }
 
   /** Removes the drawn-only coda sign of a measure, whose coda sign a D.C. or D.S. al Coda takes as its To Coda. */
@@ -702,6 +730,28 @@ export class RepetitionCalculator {
               return false;
       }
   }
+  /**
+   * Whether two repetitions that cover the same measures are two jumps: a D.C. or D.S. from the same barline as a repeat sign,
+   * or from a later measure (e.g. in its last ending). The repeat is played first (see RepetitionInstructionEnum.BackJumpLine
+   * above), then the D.C. or D.S., after which the iterator doesn't take the repeat again, so neither restarts the other.
+   * (The backward repeat that is added at the end of the piece for a forward repeat without one isn't written: it is merged
+   * with a D.C. or D.S. there, as before.)
+   */
+  private isJumpAfterRepeat(currentRep: Repetition, lastRep: Repetition): boolean {
+      const currentJumpIndex: number = currentRep.BackwardJumpInstructions.last().measureIndex;
+      const lastJumpIndex: number = lastRep.BackwardJumpInstructions.last().measureIndex;
+      if (currentRep.FromWords && currentJumpIndex > lastJumpIndex) {
+          return true;
+      }
+      if (currentRep.FromWords === lastRep.FromWords) {
+          return false;
+      }
+      const repeat: Repetition = currentRep.FromWords ? lastRep : currentRep;
+      const jump: Repetition = currentRep.FromWords ? currentRep : lastRep;
+      return this.repetitionInstructions.indexOf(repeat.BackwardJumpInstructions.last()) >= 0 &&
+          jump.BackwardJumpInstructions.last().measureIndex >= repeat.BackwardJumpInstructions.last().measureIndex;
+  }
+
   private finalizeRepetition(repContainer: RepetitionBuildingContainer): void {
       const currentRep: Repetition = repContainer.RepetitonUnderConstruction;
       if (currentRep.BackwardJumpInstructions.length > 0) {
@@ -714,12 +764,10 @@ export class RepetitionCalculator {
           }
           let addRepetition: boolean = true;
           const lastRep: Repetition = this.getLastFinalizedRepetition();
-          // The same repetition read twice, e.g. from a repeat sign and a "D.C." at the end of the same measure.
-          //   A D.C. or D.S. in the last ending of a repetition covers the same measures, but jumps back from a later measure,
-          //   so it is kept. (After the D.C., the iterator doesn't take the repeat again, so neither restarts the other.)
+          // The same repetition read twice is kept once, the one with more endings, e.g. with the Fine of a D.C. al Fine.
+          //   A D.C. or D.S. and a repeat sign that jump back to the same measure are two jumps, see isJumpAfterRepeat().
           if (lastRep !== undefined && currentRep.coversIdenticalMeasures(lastRep) &&
-              !(currentRep.FromWords &&
-                currentRep.BackwardJumpInstructions.last().measureIndex > lastRep.BackwardJumpInstructions.last().measureIndex)) {
+              !this.isJumpAfterRepeat(currentRep, lastRep)) {
               if (currentRep.NumberOfEndings > lastRep.NumberOfEndings) {
                   const index: number = this.musicSheet.Repetitions.indexOf(lastRep, 0);
                   if (index > -1) {
@@ -727,9 +775,10 @@ export class RepetitionCalculator {
                   }
                   lastRep.removeFromRepetitionInstructions();
                   this.musicSheet.Repetitions.push(currentRep);
+              } else {
+                  addRepetition = false;
+                  currentRep.removeFromRepetitionInstructions();
               }
-              addRepetition = false;
-              currentRep.removeFromRepetitionInstructions();
           } else {
               this.musicSheet.Repetitions.push(currentRep);
           }
@@ -816,7 +865,8 @@ export class RepetitionCalculator {
       if (this.openRepetitions.length > 0) {
           const last: RepetitionBuildingContainer = this.openRepetitions.last();
           const lastRep: Repetition = last.RepetitonUnderConstruction;
-          if (lastRep.BackwardJumpInstructions.length > 0) {
+          // (a D.C. or D.S. al Coda stays open until its coda sign, e.g. under a repeat sign at the same barline)
+          if (lastRep.BackwardJumpInstructions.length > 0 && !last.WaitingForCoda) {
             const keys: string[] = Object.keys(lastRep.EndingIndexDict);
             if (keys.length === 0 ||
                 lastRep.EndingIndexDict[keys[keys.length - 1]].part.EndIndex >= 0) {

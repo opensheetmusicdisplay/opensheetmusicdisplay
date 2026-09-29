@@ -131,4 +131,21 @@ describe("MusicPartManagerIterator measure order with repetitions", () => {
         expect(await playedMeasures("test_repeat_da_capo_to_coda_german.musicxml")).to.deep.equal([0, 1, 2, 0, 1, 3, 4]);
         expect(lastInstructionTypes(2)).to.contain(RepetitionInstructionEnum.DaCapo);
     });
+
+    /**
+     * A D.C. or D.S. at the barline of a backward repeat to the same measure is a jump of its own: the repeat is played first,
+     * then the D.C. or D.S. They were merged into one repetition, which lost the repeat, the jump, or both (with a Fine).
+     * A D.S. without a segno goes back like a backward repeat, and a Fine that no jump takes is drawn.
+     *
+     * Sample: four movements, see the comment in the file.
+     */
+    it("plays a repeat and then the D.C. or D.S. at the same barline", async () => {
+        expect(await playedMeasures("test_repeat_jumps_at_repeat_signs.musicxml")).to.deep.equal([
+            0, 1, 0, 1, 0,
+            2, 3, 4, 2, 3, 4, 2, 3, 5, 6,
+            7, 8, 9, 10, 8, 9, 10, 8, 9, 11, 12,
+            13, 14, 15, 13, 14, 15,
+        ]);
+        expect(lastInstructionTypes(14)).to.contain(RepetitionInstructionEnum.Fine);
+    });
 });
