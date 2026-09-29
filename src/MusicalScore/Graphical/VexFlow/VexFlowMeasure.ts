@@ -801,20 +801,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     // correct position / bounding box (note.setIndex() needs to have been called)
     public correctNotePositions(): void {
         if (this.isTabMeasure) {
-            // Measure-scoped, same reasoning as the non-tab branch below: iterating
-            // Voice.VoiceEntries would walk every entry that voice has in the whole
-            // score, from a method that runs once per measure (quadratic in measure count).
-            for (const gse of this.staffEntries) {
-                for (const gve of gse.graphicalVoiceEntries) {
-                    for (const graphicalNote of gve.notes) {
-                        const tabNote: TabNote = graphicalNote.sourceNote as TabNote;
-                        if (tabNote.StringNumberTab >= 0) {
-                            gve.PositionAndShape.RelativePosition.y =
-                                (tabNote.StringNumberTab - 1) * this.rules.TabStaffInterlineHeightForBboxes;
-                        }
-                    }
-                }
-            }
+            this.correctTabNotePositions();
             return; // don't do the below y position adaptations meant for non-tab notes
         }
         // Iterate this measure's own staff entries. Going through
@@ -864,6 +851,35 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     relPosY += line + lastNote.notehead().line; // don't move for first note: - (-vexline)
                     gNote.PositionAndShape.RelativePosition.y = relPosY;
                 }
+            }
+        }
+    }
+
+    /**
+     * Places each note of this TAB measure on its string, where its fret number is drawn.
+     * The voice entry is placed on the string of its last note, and its notes relative to it, at its x (the right end of the widest
+     * fret number, see VexFlowStaffEntry.calculateXPosition()). The voice entry's bounding box spans its notes, e.g. all strings of a chord.
+     */
+    private correctTabNotePositions(): void {
+        const stringY: (note: GraphicalNote) => number = (note: GraphicalNote): number =>
+            ((note.sourceNote as TabNote).StringNumberTab - 1) * this.rules.TabStaffInterlineHeightForBboxes;
+        // Measure-scoped, same reasoning as in correctNotePositions(): iterating Voice.VoiceEntries would walk every entry
+        //   that voice has in the whole score, from a method that runs once per measure (quadratic in measure count).
+        for (const gse of this.staffEntries) {
+            for (const gve of gse.graphicalVoiceEntries) {
+                // rests and invalid tab notes (without string) keep their positions
+                const notesOnStrings: GraphicalNote[] = gve.notes.filter((note: GraphicalNote) => (note.sourceNote as TabNote).StringNumberTab >= 0);
+                if (notesOnStrings.length === 0) {
+                    continue;
+                }
+                const entryY: number = stringY(notesOnStrings[notesOnStrings.length - 1]);
+                gve.PositionAndShape.RelativePosition.y = entryY;
+                for (const note of notesOnStrings) {
+                    note.PositionAndShape.RelativePosition.y = stringY(note) - entryY;
+                }
+                // The box now, not only in BoundingBox.calculateTopBottomBorders() at the end of the layout: slurs are placed before that
+                //   (GraphicalSlur.calculateStartAndEnd()), and a slur on a chord would get this box only on the next render.
+                gve.PositionAndShape.calculateBoundingBox();
             }
         }
     }
