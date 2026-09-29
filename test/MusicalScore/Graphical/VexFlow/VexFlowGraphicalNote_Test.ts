@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import { TabNote } from "../../../../src/MusicalScore/VoiceData/TabNote";
 import { TestUtils } from "../../../Util/TestUtils";
 
 describe("VexFlow GraphicalNote", () => {
@@ -45,4 +46,48 @@ describe("VexFlow GraphicalNote", () => {
             done
         );
      });
+
+    it("Can get the SVG element of a TAB note, e.g. to hide it", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        await osmd.load(TestUtils.getScore("test_tab_grace_note_simple.musicxml")); // TAB only: a quarter, a grace note, a half note
+        osmd.render();
+        const notes: VexFlowGraphicalNote[] = osmd.GraphicSheet.MeasureList.flatMap(verticalMeasures => verticalMeasures[0].staffEntries)
+            .flatMap(staffEntry => staffEntry.graphicalVoiceEntries).map(voiceEntry => voiceEntry.notes[0] as VexFlowGraphicalNote)
+            .filter(note => !note.sourceNote.isRest());
+        expect(notes.length).to.equal(3);
+        for (const note of notes) {
+            expect(note.getSVGGElement()?.id, `SVG element of ${note.sourceNote.Pitch.ToStringShort(3)}`).to.equal("vf-" + note.getSVGId());
+        }
+        notes[0].setVisible(false);
+        expect(notes[0].getSVGGElement().getAttribute("visibility")).to.equal("hidden");
+        div.remove();
+    });
+
+    it("Can color a TAB note: its fret number and its bend", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        await osmd.load(TestUtils.getScore("test_tabs_bend_and_release.musicxml")); // TAB only, one note with bends
+        osmd.render();
+        const notes: VexFlowGraphicalNote[] = osmd.GraphicSheet.MeasureList.flatMap(verticalMeasures => verticalMeasures[0].staffEntries)
+            .flatMap(staffEntry => staffEntry.graphicalVoiceEntries).map(voiceEntry => voiceEntry.notes[0] as VexFlowGraphicalNote)
+            .filter(note => !note.sourceNote.isRest());
+        const bentNote: VexFlowGraphicalNote = notes.find(note => (note.sourceNote as TabNote).BendArray?.length > 0);
+        const otherNote: VexFlowGraphicalNote = notes.find(note => note !== bentNote);
+        expect(Boolean(bentNote && otherNote), "a note with a bend, and another note").to.equal(true);
+
+        bentNote.setColor("#ff0000");
+        const fret: Element = bentNote.getSVGGElement().querySelector(":scope > text");
+        expect(bentNote.getNoteheadSVGs()[0] === fret, "the fret number is the note head").to.equal(true);
+        expect(fret.getAttribute("fill")).to.equal("#ff0000");
+        expect(bentNote.getSVGGElement().querySelector(":scope > rect").getAttribute("fill"), "background of the fret number").to.equal("white");
+        const bend: Element[] = bentNote.getModifierSVGs();
+        const curves: Element[] = bend.filter(shape => shape.getAttribute("fill") === "none");
+        expect(curves.length, "bend curves").to.be.greaterThan(0);
+        expect(curves.every(curve => curve.getAttribute("stroke") === "#ff0000"), "curves stroked in the color").to.equal(true);
+        expect(bend.filter(shape => shape.getAttribute("fill") !== "none").every(shape => shape.getAttribute("fill") === "#ff0000"),
+            "labels and arrows filled with the color").to.equal(true);
+        expect(otherNote.getNoteheadSVGs()[0].getAttribute("fill"), "another note").to.equal("#000000");
+        div.remove();
+    });
 });

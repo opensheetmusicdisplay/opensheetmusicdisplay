@@ -541,11 +541,15 @@ export class GraphicalMusicSheet {
      * @param maxSearchArea The max area we want to search around our point
      * @param searchAreaIncrement The amount we expand our search area for each iteration that we don't find an object of the given type
      * @param shouldBeIncludedTest A callback that determines if the object should be included in our results- return false for no, true for yes
+     * @param distanceTo A callback that returns an object's (squared) distance to the click position, by which the nearest object is chosen.
+     *   By default, the distance of the object's position.
      */
     private GetNearestGraphicalObject<T extends GraphicalObject>(
         clickPosition: PointF2D, className: string = GraphicalObject.name,
         startSearchArea: number = 5, maxSearchArea: number = 20, searchAreaIncrement: number = 5,
-        shouldBeIncludedTest: (objectToTest: T) => boolean = undefined): T {
+        shouldBeIncludedTest: (objectToTest: T) => boolean = undefined,
+        distanceTo: (objectToTest: T) => number = (objectToTest: T): number =>
+            this.CalculateDistance(objectToTest.PositionAndShape.AbsolutePosition, clickPosition)): T {
         const foundEntries: T[] = [];
         //Loop until we find some, or our search area is out of bounds
         while (foundEntries.length === 0 && startSearchArea <= maxSearchArea) {
@@ -585,8 +589,8 @@ export class GraphicalMusicSheet {
             if (closest === undefined) {
                 closest = object;
             } else {
-                const deltaNew: number = this.CalculateDistance(object.PositionAndShape.AbsolutePosition, clickPosition);
-                const deltaOld: number = this.CalculateDistance(closest.PositionAndShape.AbsolutePosition, clickPosition);
+                const deltaNew: number = distanceTo(object);
+                const deltaOld: number = distanceTo(closest);
                 if (deltaNew < deltaOld) {
                     closest = object;
                 }
@@ -598,10 +602,28 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
+    /**
+     * Returns the voice entry with the note (head) nearest to the position, e.g. of a click.
+     * @param clickPosition The position in units
+     */
     public GetNearestVoiceEntry(clickPosition: PointF2D): GraphicalVoiceEntry {
         return this.GetNearestGraphicalObject<GraphicalVoiceEntry>(clickPosition, GraphicalVoiceEntry.name, 5, 20, 5,
                                                                    (object: GraphicalVoiceEntry) =>
-                                                                        object.parentStaffEntry?.relInMeasureTimestamp !== undefined);
+                                                                        object.parentStaffEntry?.relInMeasureTimestamp !== undefined,
+                                                                   (object: GraphicalVoiceEntry) => this.distanceToNearestNote(object, clickPosition));
+    }
+
+    /**
+     * Returns the (squared) distance of the voice entry's nearest note (head) to the position.
+     * The voice entry's own position is the top of its bounding box, e.g. the stem tip of an up-stem note,
+     * which is often farther from a click on its note head than another voice's note head next to it.
+     */
+    private distanceToNearestNote(voiceEntry: GraphicalVoiceEntry, position: PointF2D): number {
+        let distance: number = Infinity;
+        for (const note of voiceEntry.notes) {
+            distance = Math.min(distance, this.CalculateDistance(note.PositionAndShape.AbsolutePosition, position));
+        }
+        return distance;
     }
 
     public GetNearestNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
