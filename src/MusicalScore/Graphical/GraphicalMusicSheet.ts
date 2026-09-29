@@ -609,8 +609,18 @@ export class GraphicalMusicSheet {
     public GetNearestVoiceEntry(clickPosition: PointF2D): GraphicalVoiceEntry {
         return this.GetNearestGraphicalObject<GraphicalVoiceEntry>(clickPosition, GraphicalVoiceEntry.name, 5, 20, 5,
                                                                    (object: GraphicalVoiceEntry) =>
-                                                                        object.parentStaffEntry?.relInMeasureTimestamp !== undefined,
+                                                                        object.parentStaffEntry?.relInMeasureTimestamp !== undefined &&
+                                                                        !GraphicalMusicSheet.isUndrawnTabRest(object),
                                                                    (object: GraphicalVoiceEntry) => this.distanceToNearestNote(object, clickPosition));
+    }
+
+    /**
+     * Whether the voice entry is a rest in a TAB staff, which isn't drawn (see VexFlowTabMeasure), so a click can't be on it.
+     * Its position can be where a fret number of the next note is drawn, and it could be found instead of that note.
+     */
+    private static isUndrawnTabRest(voiceEntry: GraphicalVoiceEntry): boolean {
+        return voiceEntry.parentStaffEntry?.parentMeasure?.isTabMeasure === true &&
+            voiceEntry.notes.every((note: GraphicalNote) => note.sourceNote.isRest());
     }
 
     /**

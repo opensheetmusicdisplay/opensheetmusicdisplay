@@ -29,6 +29,7 @@ interface DrawnNoteHead {
  * - A TAB note is at the centre of its fret number, not at the right end of the fret number (its staff entry's x): a click on
  *   the centre of a fret number could be nearer the right end of the previous one. A grace note is at the centre of its note head,
  *   not right of it by the width of its flag.
+ * - Rests in a TAB staff aren't found: they aren't drawn, and a click on the fret number of the next note could find the rest.
  */
 describe("GetNearestVoiceEntry", () => {
     let container: HTMLElement;
@@ -228,6 +229,28 @@ describe("GetNearestVoiceEntry", () => {
                 }
             }
             expect(checkedNotes, `TAB notes or grace notes in ${sampleName}`).to.be.greaterThan(0);
+        }
+    });
+
+    it("doesn't find the rests of a TAB staff, which aren't drawn", async () => {
+        // a rest's position can be where the fret number of the next note is drawn, and a click there found the rest
+        for (const sampleName of ["test_tabs_4_strings_bass_guitar.musicxml", "OSMD_Function_Test_Tablature_Alleffects.musicxml"]) {
+            const sheet: GraphicalMusicSheet = await renderSheet(sampleName);
+            let tabRests: number = 0;
+            for (const measure of sheet.MeasureList.flat()) {
+                for (const voiceEntry of measure?.isTabMeasure ? measure.staffEntries.flatMap(staffEntry => staffEntry.graphicalVoiceEntries) : []) {
+                    if (!voiceEntry.notes[0].sourceNote.isRest()) {
+                        continue;
+                    }
+                    tabRests++;
+                    const found: GraphicalVoiceEntry = sheet.GetNearestVoiceEntry(voiceEntry.notes[0].PositionAndShape.AbsolutePosition);
+                    const foundTabRest: boolean = found?.parentStaffEntry.parentMeasure.isTabMeasure && found.notes[0].sourceNote.isRest();
+                    expect(found !== undefined && !foundTabRest,
+                           `${sampleName}: a click on the TAB rest in measure ${measure.MeasureNumber} found ${found ? "a TAB rest" : "nothing"}`)
+                        .to.equal(true);
+                }
+            }
+            expect(tabRests, `TAB rests in ${sampleName}`).to.be.greaterThan(0);
         }
     });
 });
