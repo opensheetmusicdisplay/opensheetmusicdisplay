@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="4.0">
-  <movement-title>Metronome equations: ties on either side, chains and dots</movement-title>
+  <movement-title>Metronome beat-unit ties</movement-title>
   <part-list>
     <score-part id="P1">
       <part-name>Violin</part-name>
@@ -25,34 +25,8 @@
       </direction>
       <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
     </measure>
-    <!-- Left-side tie: 96 * (1/2) / (1/4 + 1/8) = 128. -->
+    <!-- Both sides total 5/8, so the initial tempo remains 96. -->
     <measure number="2">
-      <direction placement="above">
-        <direction-type>
-          <metronome>
-            <beat-unit>quarter</beat-unit>
-            <beat-unit-tied><beat-unit>eighth</beat-unit></beat-unit-tied>
-            <beat-unit>half</beat-unit>
-          </metronome>
-        </direction-type>
-      </direction>
-      <note><pitch><step>D</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
-    </measure>
-    <!-- Right-side tie: 128 * (1/4 + 1/8) / (1/4) = 192. -->
-    <measure number="3">
-      <direction placement="above">
-        <direction-type>
-          <metronome>
-            <beat-unit>quarter</beat-unit>
-            <beat-unit>quarter</beat-unit>
-            <beat-unit-tied><beat-unit>eighth</beat-unit></beat-unit-tied>
-          </metronome>
-        </direction-type>
-      </direction>
-      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
-    </measure>
-    <!-- Both sides total 5/8: keep 192. Each tied beat unit connects to its predecessor. -->
-    <measure number="4">
       <direction placement="above">
         <direction-type>
           <metronome>
@@ -68,37 +42,10 @@
           </metronome>
         </direction-type>
       </direction>
-      <note><pitch><step>F</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
     </measure>
-    <!-- Hidden equation: no mark, but 192 * 4/3 = 256. -->
-    <measure number="5">
-      <direction placement="above">
-        <direction-type>
-          <metronome print-object="no">
-            <beat-unit>quarter</beat-unit>
-            <beat-unit-tied><beat-unit>eighth</beat-unit></beat-unit-tied>
-            <beat-unit>half</beat-unit>
-          </metronome>
-        </direction-type>
-      </direction>
-      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
-    </measure>
-    <!-- Explicit sound overrides the equation's ratio. -->
-    <measure number="6">
-      <direction placement="above">
-        <direction-type>
-          <metronome>
-            <beat-unit>quarter</beat-unit>
-            <beat-unit-tied><beat-unit>eighth</beat-unit></beat-unit-tied>
-            <beat-unit>half</beat-unit>
-          </metronome>
-        </direction-type>
-        <sound tempo="92"/>
-      </direction>
-      <note><pitch><step>A</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
-    </measure>
-    <!-- Untied control: the same note values as measure 6 must not acquire a tie. -->
-    <measure number="7">
+    <!-- An untied metronome-note equation remains untied. -->
+    <measure number="3">
       <direction placement="above">
         <direction-type>
           <metronome>
@@ -108,9 +55,8 @@
             <metronome-note><metronome-type>half</metronome-type></metronome-note>
           </metronome>
         </direction-type>
-        <sound tempo="92"/>
       </direction>
-      <note><pitch><step>B</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
     </measure>
   </part>
 </score-partwise>

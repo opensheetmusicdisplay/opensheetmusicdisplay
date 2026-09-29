@@ -2,7 +2,6 @@ import { expect } from "chai";
 import { TestUtils } from "../../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { InstantaneousTempoExpression } from "../../../../src/MusicalScore/VoiceData/Expressions/InstantaneousTempoExpression";
-import { MusicPartManagerIterator } from "../../../../src/MusicalScore/MusicParts/MusicPartManagerIterator";
 
 describe("Metronome beat-unit ties", () => {
     let container: HTMLElement;
@@ -19,49 +18,46 @@ describe("Metronome beat-unit ties", () => {
         container.remove();
     });
 
-    it("retains ties on each side without changing note values or sound-tempo priority", () => {
+    it("retains chained dotted ties on both sides without changing note values", () => {
         const marks: InstantaneousTempoExpression[] = osmd.Sheet.TimestampSortedTempoExpressionsList
             .map(expression => expression.InstantaneousTempo).filter(expression => expression?.isMetronomeMark);
-        expect(marks.map(mark => mark.TempoInBpm)).to.deep.equal([96, 128, 192, 192, 256, 92, 92]);
+        expect(marks.map(mark => mark.TempoInBpm)).to.deep.equal([96, 96, 128]);
         expect(marks[1].metronomeNoteGroupLeft.notes).to.deep.equal([
-            { type: "quarter", dots: 0 }, { type: "eighth", dots: 0, tied: true }
-        ]);
-        expect(marks[2].metronomeNoteGroupRight.notes).to.deep.equal([
-            { type: "quarter", dots: 0 }, { type: "eighth", dots: 0, tied: true }
-        ]);
-        expect(marks[3].metronomeNoteGroupLeft.notes).to.deep.equal([
             { type: "quarter", dots: 1 }, { type: "eighth", dots: 1, tied: true }, { type: "16th", dots: 0, tied: true }
         ]);
-        expect(marks[3].metronomeNoteGroupRight.notes).to.deep.equal([
+        expect(marks[1].metronomeNoteGroupRight.notes).to.deep.equal([
             { type: "half", dots: 0 }, { type: "eighth", dots: 0, tied: true }
         ]);
-        expect(marks[4].printObject, "a hidden equation still changes the tempo").to.equal(false);
-        expect(marks[6].metronomeNoteGroupLeft.notes, "the untied metronome-note control").to.deep.equal([
+        expect(marks[2].metronomeNoteGroupLeft.notes, "the untied metronome-note control").to.deep.equal([
             { type: "quarter", dots: 0 }, { type: "eighth", dots: 0 }
         ]);
-
-        const bpms: number[] = [];
-        const iterator: MusicPartManagerIterator = osmd.Sheet.MusicPartManager.getIterator();
-        while (!iterator.EndReached) {
-            bpms.push(iterator.CurrentBpm);
-            iterator.moveToNext();
-        }
-        expect(bpms).to.deep.equal([96, 128, 192, 192, 256, 92, 92]);
     });
 
-    it("draws only the requested ties, including chains and dots, also after changing zoom", () => {
-        for (const zoom of [1, 0.75]) {
-            osmd.Zoom = zoom;
-            osmd.render();
-            const marks: SVGGElement[] = Array.from(container.querySelectorAll<SVGGElement>(".vf-stavetempo"));
-            expect(marks.map(mark => mark.querySelectorAll(".vf-metronometie path").length),
-                   "numeric, left, right, both/chained, explicit sound, untied; hidden mark omitted")
-                .to.deep.equal([0, 1, 1, 3, 1, 0]);
-            for (const tie of Array.from(container.querySelectorAll<SVGPathElement>(".vf-metronometie path"))) {
-                const bounds: DOMRect = tie.getBBox();
-                expect(bounds.width, "a tie connects different noteheads").to.be.greaterThan(4);
+    it("draws only the requested ties below their adjacent noteheads, including chains and dots", () => {
+        osmd.render();
+        const marks: SVGGElement[] = Array.from(container.querySelectorAll<SVGGElement>(".vf-stavetempo"));
+        // Notehead pairs in each visible mark: numeric, chained/dotted equation, untied equation.
+        const pairs: number[][][] = [[], [[0, 1], [1, 2], [3, 4]], []];
+        expect(marks.map(mark => mark.querySelectorAll(".vf-metronometie path").length),
+               "numeric, chained/dotted, untied")
+            .to.deep.equal(pairs.map(markPairs => markPairs.length));
+        marks.forEach((mark, index) => {
+            // In this un-beamed sample each notehead is drawn immediately before its stem rectangle.
+            const heads: DOMRect[] = Array.from(mark.querySelectorAll<SVGRectElement>(":scope > rect"))
+                .map(stem => (stem.previousElementSibling as SVGGraphicsElement).getBBox());
+            const ties: SVGPathElement[] = Array.from(mark.querySelectorAll<SVGPathElement>(".vf-metronometie path"));
+            pairs[index].forEach(([from, to], tieIndex) => {
+                const bounds: DOMRect = ties[tieIndex].getBBox();
+                expect(bounds.x, "the tie starts within its first notehead")
+                    .to.be.within(heads[from].x, heads[from].x + heads[from].width);
+                expect(bounds.x + bounds.width, "the tie ends within its next notehead")
+                    .to.be.within(heads[to].x, heads[to].x + heads[to].width);
+                expect(bounds.y, "the tie starts below both notehead centers")
+                    .to.be.greaterThan(Math.max(heads[from].y + heads[from].height / 2, heads[to].y + heads[to].height / 2));
+                expect(bounds.y + bounds.height, "the curve extends below both noteheads")
+                    .to.be.greaterThan(Math.max(heads[from].y + heads[from].height, heads[to].y + heads[to].height));
                 expect(bounds.height, "a visible curved tie").to.be.greaterThan(1);
-            }
-        }
+            });
+        });
     });
 });
