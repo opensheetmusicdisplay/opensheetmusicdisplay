@@ -255,16 +255,18 @@ export class ExpressionReader {
 
             dirContentNode = dirNode.element("words");
             if (dirContentNode) {
+                // an exporter may split the words where their formatting changes
+                const text: string = dirNode.elements("words").map((wordsNode: IXmlElement): string => wordsNode.value).join("");
                 if (isTempoInstruction) {
                     this.directionTimestamp = this.readTempoTimestamp(
                         dirContentNode.attribute("default-x") ? undefined : offsetNode, inSourceMeasureCurrentFraction);
                     this.createNewTempoExpressionIfNeeded(currentMeasure);
-                    this.currentMultiTempoExpression.CombinedExpressionsText = dirContentNode.value;
+                    this.currentMultiTempoExpression.CombinedExpressionsText = text;
                     const instantaneousTempoExpression: InstantaneousTempoExpression = new InstantaneousTempoExpression(
-                        dirContentNode.value, this.placement, this.staffNumber, this.soundTempo, this.currentMultiTempoExpression);
+                        text, this.placement, this.staffNumber, this.soundTempo, this.currentMultiTempoExpression);
                     this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
                 } else if (!isDynamicInstruction) {
-                    this.interpretWords(dirContentNode, currentMeasure, timestampFraction);
+                    this.interpretWords(dirContentNode, text, currentMeasure, timestampFraction);
                 }
                 continue;
             }
@@ -752,8 +754,7 @@ export class ExpressionReader {
             }
         }
     }
-    private interpretWords(wordsNode: IXmlElement, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction): void {
-        const text: string = wordsNode.value;
+    private interpretWords(wordsNode: IXmlElement, text: string, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction): void {
         if (currentMeasure.Rules.IgnoreBracketsWords && (
             /^\(\s*\)$/.test(text) || /^\[\s*\]$/.test(text) // (*) and [*]
         )) { // regex: brackets with arbitrary white space in-between

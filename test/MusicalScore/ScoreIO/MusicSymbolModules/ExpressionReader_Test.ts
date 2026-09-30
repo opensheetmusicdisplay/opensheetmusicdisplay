@@ -9,6 +9,7 @@ import { ContDynamicEnum, ContinuousDynamicExpression } from
     "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
+import { MultiTempoExpression, TempoExpressionEntry } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiTempoExpression";
 
 describe("ExpressionReader", () => {
     /** Reads a test/data sample (preprocessed by karma) into a MusicSheet, optionally with custom rules. */
@@ -181,5 +182,15 @@ describe("ExpressionReader", () => {
         it("keeps the direction's offset for a wedge stop after words", () => {
             expect(wedges[2].EndMultiExpression.EndOffsetFraction.RealValue, "offset 1 = a quarter").to.equal(0.25);
         });
+    });
+
+    it("reads all the words of a direction, not only the first", () => {
+        const sheet: MusicSheet = readSheet("test/data/test_direction_words_split.musicxml");
+        const tempoLabels: string[] = sheet.SourceMeasures[0].TempoExpressions.flatMap((tempo: MultiTempoExpression): string[] =>
+            tempo.EntriesList.map((entry: TempoExpressionEntry): string => entry.label));
+        const textLabels: string[] = sheet.SourceMeasures[1].StaffLinkedExpressions[0].flatMap((expression: MultiExpression): string[] =>
+            expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
+        expect(tempoLabels, "tempo direction").to.deep.equal(["Allegro con brio"]);
+        expect(textLabels, "text direction").to.deep.equal(["più f, marcato"]);
     });
 });
