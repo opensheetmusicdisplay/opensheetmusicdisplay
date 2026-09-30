@@ -97,9 +97,14 @@ describe("GetNearestVoiceEntry", () => {
     function drawnBox(note: VexFlowGraphicalNote): DOMRect {
         // the note's own drawing, not the grace notes drawn among its modifiers, in the order of the notes' indices in their Vexflow note
         const group: Element = document.getElementById("vf-" + note.getSVGId());
-        const shapes: SVGGraphicsElement[] = Array.from(note.parentVoiceEntry.parentStaffEntry.parentMeasure.isTabMeasure ?
-            group.querySelectorAll(":scope > text") : group.querySelectorAll(":scope > .vf-note .vf-notehead"));
-        return shapes[note.vfnote[1]].getBBox();
+        if (!note.parentVoiceEntry.parentStaffEntry.parentMeasure.isTabMeasure) {
+            return (group.querySelectorAll(":scope > .vf-note .vf-notehead")[note.vfnote[1]] as SVGGraphicsElement).getBBox();
+        }
+        // a fret number spans the advances of its digits: its box can end further right, by 2 pixels (0.2 units) in Firefox on macOS,
+        //   by 0.6 pixels for a 4 in Chrome
+        const fretNumber: SVGTextElement = group.querySelectorAll(":scope > text")[note.vfnote[1]] as SVGTextElement;
+        const box: DOMRect = fretNumber.getBBox();
+        return new DOMRect(fretNumber.getStartPositionOfChar(0).x, box.y, fretNumber.getComputedTextLength(), box.height);
     }
 
     /** The centre of the note's drawn note head, or of a TAB note's fret number, in units. */
@@ -112,7 +117,7 @@ describe("GetNearestVoiceEntry", () => {
     function expectAtDrawnCenter(note: VexFlowGraphicalNote, sampleName: string, checkX: boolean): void {
         const center: PointF2D = drawnCenter(note);
         const position: PointF2D = note.PositionAndShape.AbsolutePosition;
-        // the note heads' drawings aren't exactly centred on their positions, e.g. by up to 0.08 units for the fret numbers of a TAB chord
+        // the note heads' drawings aren't exactly centred on their positions, e.g. by up to 0.08 units for a note head, 0.06 for a fret number
         const tolerance: number = 0.2;
         expect(Math.abs(position.y - center.y), `${sampleName}: y of ${describeGraphicalNote(note)}`).to.be.lessThan(tolerance);
         if (checkX) {
@@ -219,7 +224,7 @@ describe("GetNearestVoiceEntry", () => {
                         }
                     }
                     if (fretNumbersEnd > -Infinity) {
-                        // the staff entry stays at the right end of the fret numbers (by up to 0.08 units in the samples)
+                        // the staff entry stays at the right end of the fret numbers (by up to 0.07 units in the samples)
                         expect(Math.abs(staffEntry.PositionAndShape.AbsolutePosition.x - fretNumbersEnd),
                                `${sampleName}: x of a TAB staff entry in measure ${measure.MeasureNumber}`).to.be.lessThan(0.15);
                     }
