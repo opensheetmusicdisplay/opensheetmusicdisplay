@@ -600,7 +600,7 @@ export class SVGContext {
       bbox = this.ieMeasureTextFix(bbox, text);
     }
     if (useTextAdvance && typeof txt.getComputedTextLength === 'function') {
-      // Use the text advance, as Canvas measureText().width does, rather than glyph bounds.
+      // VexFlowPatch: use the text advance, as Canvas measureText().width does, rather than glyph bounds.
       bbox = { x: bbox.x, y: bbox.y, width: txt.getComputedTextLength(), height: bbox.height };
     }
 
