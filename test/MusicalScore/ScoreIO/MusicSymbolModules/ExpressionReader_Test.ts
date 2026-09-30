@@ -184,11 +184,13 @@ describe("ExpressionReader", () => {
         });
     });
 
-    it("reads all the words of a tempo direction, not only the first", () => {
-        // <words font-weight="bold">C</words><words font-weight="normal">大调音阶</words> with <sound tempo="120"/>
-        const labels: string[] = readSheet("test/data/test_end_measure_clefs_staffentry_bbox.musicxml").SourceMeasures
-            .flatMap((measure): MultiTempoExpression[] => measure.TempoExpressions)
-            .flatMap((tempo: MultiTempoExpression): string[] => tempo.EntriesList.map((entry: TempoExpressionEntry): string => entry.label));
-        expect(labels).to.deep.equal(["C大调音阶"]);
+    it("reads all the words of a direction, not only the first", () => {
+        const sheet: MusicSheet = readSheet("test/data/test_direction_words_split.musicxml");
+        const tempoLabels: string[] = sheet.SourceMeasures[0].TempoExpressions.flatMap((tempo: MultiTempoExpression): string[] =>
+            tempo.EntriesList.map((entry: TempoExpressionEntry): string => entry.label));
+        const textLabels: string[] = sheet.SourceMeasures[1].StaffLinkedExpressions[0].flatMap((expression: MultiExpression): string[] =>
+            expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
+        expect(tempoLabels, "tempo direction").to.deep.equal(["Allegro con brio"]);
+        expect(textLabels, "text direction").to.deep.equal(["più f, marcato"]);
     });
 });
