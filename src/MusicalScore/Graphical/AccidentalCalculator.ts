@@ -27,21 +27,6 @@ export class AccidentalCalculator {
         this.reactOnKeyInstructionChange();
     }
 
-    /** Copies the current accidental memory for a leading/stand-alone grace sequence at one score time. */
-    public copyForGraceSequence(): AccidentalCalculator {
-        const copy: AccidentalCalculator = new AccidentalCalculator();
-        copy.activeKeyInstruction = this.activeKeyInstruction;
-        copy.Transpose = this.Transpose;
-        for (const key of this.keySignatureNoteAlterationsDict.keys()) {
-            copy.keySignatureNoteAlterationsDict.setValue(key, this.keySignatureNoteAlterationsDict.getValue(key));
-        }
-        copy.currentAlterationsComparedToKeyInstructionList = this.currentAlterationsComparedToKeyInstructionList.slice();
-        for (const key of this.currentInMeasureNoteAlterationsDict.keys()) {
-            copy.currentInMeasureNoteAlterationsDict.setValue(key, this.currentInMeasureNoteAlterationsDict.getValue(key));
-        }
-        return copy;
-    }
-
     /**
      * This method is called after each Measure
      * It clears the in-measure alterations dict for the next measure

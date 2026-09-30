@@ -219,7 +219,7 @@ export class InstrumentReader {
               throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
             }
           }
-          this.addAbstractInstruction(xmlNode, octavePlusOne, previousNode, currentFraction.clone(), xmlNodeIndex);
+          this.addAbstractInstruction(xmlNode, octavePlusOne, previousNode, currentFraction.clone());
           if (currentFraction.Equals(new Fraction(0, 1)) &&
               this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveAbstractInstructionList(this.instrument.Staves.length, true);
@@ -400,7 +400,6 @@ export class InstrumentReader {
           ) {
             this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !isGraceNote,
                                                         isGraceNote, graceNoteSlash, graceSlur);
-            this.currentStaffEntry.VoiceEntries[this.currentStaffEntry.VoiceEntries.length - 1].NodeIndexXml = xmlNodeIndex;
             // we previously excluded rest notes from a voice's voice entry (!restNote && !isGraceNote),
             //   but there seems to be no reason to. Rest notes also belong to a voice line. See #1612
           }
@@ -964,8 +963,7 @@ export class InstrumentReader {
    * @param attrNode
    * @param guitarPro
    */
-  private addAbstractInstruction(attrNode: IXmlElement, guitarPro: boolean, previousNode: IXmlElement, currentFraction: Fraction,
-                                 xmlNodeIndex: number): void {
+  private addAbstractInstruction(attrNode: IXmlElement, guitarPro: boolean, previousNode: IXmlElement, currentFraction: Fraction): void {
     if (attrNode.element("divisions")) {
       if (attrNode.elements().length === 1) {
         return;
@@ -1076,14 +1074,7 @@ export class InstrumentReader {
       if (this.instrument.MidiInstrumentId === MidiInstrument.Percussion) {
         continue;
       }
-      let staffNumber: number;
-      const numberAttribute: IXmlAttribute = keyElement.attribute("number");
-      if (numberAttribute) {
-        staffNumber = /^\+?\d+$/.test(numberAttribute.value.trim()) ? parseInt(numberAttribute.value, 10) : NaN;
-        if (isNaN(staffNumber) || staffNumber < 1 || staffNumber > this.instrument.Staves.length) {
-          staffNumber = undefined;
-        }
-      }
+      const staffNumber: number = parseInt(keyElement.attribute("number")?.value, 10);
       let key: number = 0;
       const keyNode: IXmlElement = keyElement.element("fifths");
       if (keyNode) {
@@ -1116,15 +1107,12 @@ export class InstrumentReader {
         }
       }
       for (let staffIndex: number = 0; staffIndex < this.instrument.Staves.length; staffIndex++) {
-        if (staffNumber !== undefined && staffNumber !== staffIndex + 1) {
+        // A numbered key applies only to its staff, an unnumbered or invalid one to all staves.
+        if (staffNumber >= 1 && staffNumber <= this.instrument.Staves.length && staffNumber !== staffIndex + 1) {
           continue;
         }
         const keyInstruction: KeyInstruction = new KeyInstruction(undefined, key, keyEnum);
-        keyInstruction.NodeIndexXml = xmlNodeIndex;
-        const staffEntry: SourceStaffEntry = this.currentMeasure.getVerticalContainerByTimestamp(currentFraction)
-          ?.StaffEntries[this.inSourceMeasureInstrumentIndex + staffIndex];
-        const followsGrace: boolean = staffEntry?.VoiceEntries.some((entry: VoiceEntry): boolean => entry.IsGrace);
-        if (currentFraction.RealValue > 0 || followsGrace) {
+        if (currentFraction.RealValue > 0) {
           if (!this.activeKeysHaveBeenInitialized[staffIndex]) {
             this.createDefaultKeyInstruction(staffIndex);
             this.activeKeysHaveBeenInitialized[staffIndex] = true;

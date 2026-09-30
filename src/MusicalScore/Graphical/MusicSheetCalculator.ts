@@ -2986,7 +2986,6 @@ export abstract class MusicSheetCalculator {
     private keyForGraphicalMeasure(instruction: KeyInstruction, measure: GraphicalMeasure): KeyInstruction {
         // Always start from the source spelling so repeated transposition can return to zero (#1383).
         const key: KeyInstruction = new KeyInstruction(instruction.Parent, instruction.keyTypeOriginal, instruction.Mode);
-        key.NodeIndexXml = instruction.NodeIndexXml;
         const transposeHalftones: number = measure.getTransposedHalftones();
         if (transposeHalftones !== 0 && MusicSheetCalculator.transposeCalculator === undefined) {
             log.info("[OSMD] transpose requested, but TransposeCalculator undefined. Use osmd.TransposeCalculator = new TransposeCalculator()");
@@ -3089,40 +3088,17 @@ export abstract class MusicSheetCalculator {
                 // check for possible OctaveShift
                 let activeOctaveShift: OctaveShift = this.getActiveOctaveShift(sourceStaffEntry.AbsoluteTimestamp, openOctaveShifts[staffIndex], octaveShifts);
                 let octaveShiftValue: OctaveEnum = activeOctaveShift?.Type ?? OctaveEnum.NONE;
-                const keyInstructions: KeyInstruction[] = sourceStaffEntry.Instructions.filter(
-                    (instruction: AbstractNotationInstruction): boolean => instruction instanceof KeyInstruction,
-                ) as KeyInstruction[];
-                const hasLeadingGrace: boolean = sourceStaffEntry.VoiceEntries.some(
-                    (voiceEntry: VoiceEntry): boolean => voiceEntry.IsGrace && !voiceEntry.GraceAfterMainNote,
-                );
-                const keyAtEntryStart: KeyInstruction = accidentalCalculator.ActiveKeyInstruction;
-                const graceAccidentalCalculator: AccidentalCalculator | undefined = hasLeadingGrace && keyInstructions.length > 0
-                    ? accidentalCalculator.copyForGraceSequence() : undefined;
-                const graphicalKeys: KeyInstruction[] = keyInstructions.map(
-                    (instruction: KeyInstruction): KeyInstruction => this.keyForGraphicalMeasure(instruction, measure),
-                );
-                for (const key of graphicalKeys) {
-                    MusicSheetCalculator.symbolFactory.createInStaffKey(
-                        graphicalStaffEntry, key, accidentalCalculator.ActiveKeyInstruction, activeClefs[staffIndex]);
-                    accidentalCalculator.ActiveKeyInstruction = key;
+                for (const instruction of sourceStaffEntry.Instructions) {
+                    if (instruction instanceof KeyInstruction) {
+                        const key: KeyInstruction = this.keyForGraphicalMeasure(instruction, measure);
+                        MusicSheetCalculator.symbolFactory.createInStaffKey(
+                            graphicalStaffEntry, key, accidentalCalculator.ActiveKeyInstruction, activeClefs[staffIndex]);
+                        accidentalCalculator.ActiveKeyInstruction = key;
+                    }
                 }
-                let keyForLeadingGrace: KeyInstruction = keyAtEntryStart;
-                let nextGraceKeyIndex: number = 0;
                 // for each visible Voice create the corresponding GraphicalNotes
                 for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                     const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
-                    if (hasLeadingGrace && voiceEntry.IsGrace && !voiceEntry.GraceAfterMainNote) {
-                        let keyChangedForGrace: boolean = false;
-                        while (nextGraceKeyIndex < graphicalKeys.length &&
-                            (graphicalKeys[nextGraceKeyIndex].NodeIndexXml ?? -1) <=
-                            (voiceEntry.NodeIndexXml ?? Infinity)) {
-                            keyForLeadingGrace = graphicalKeys[nextGraceKeyIndex++];
-                            keyChangedForGrace = true;
-                        }
-                        if (graceAccidentalCalculator && keyChangedForGrace) {
-                            graceAccidentalCalculator.ActiveKeyInstruction = keyForLeadingGrace;
-                        }
-                    }
                     if (voiceEntry.GraceAfterMainNote) {
                         graceEntriesAfterMainNote.push({ voiceEntry, graphicalStaffEntry, sourceStaffEntry, linkedNotes });
                         continue; // handled after all other entries of the measure, see below
@@ -3137,12 +3113,9 @@ export abstract class MusicSheetCalculator {
                         activeOctaveShift = undefined;
                     }
                     // Normal Notes...
-                    const calculatorForVoiceEntry: AccidentalCalculator = graceAccidentalCalculator !== undefined &&
-                        voiceEntry.IsGrace && !voiceEntry.GraceAfterMainNote && nextGraceKeyIndex < graphicalKeys.length
-                        ? graceAccidentalCalculator : accidentalCalculator;
                     octaveShiftValue = this.handleVoiceEntry(
                         voiceEntry, graphicalStaffEntry,
-                        calculatorForVoiceEntry, openLyricWords,
+                        accidentalCalculator, openLyricWords,
                         activeClefs[staffIndex], openTuplets,
                         openBeams, octaveShiftValue, staffIndex,
                         linkedNotes, sourceStaffEntry

@@ -12,7 +12,6 @@ import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction"
 import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {VexFlowKeySignatureNote} from "./VexFlowKeySignatureNote";
-import {VexFlowGraceNoteGroup} from "./VexFlowGraceNoteGroup";
 import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
@@ -943,11 +942,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     Fraction.plus(this.parentSourceMeasure.AbsoluteTimestamp, this.parentSourceMeasure.Duration);
                 const tickables: VF.Tickable[] = gvEntries.slice(idx, lastGraceIndex + 1).map(
                     (grace: GraphicalVoiceEntry) => (grace as VexFlowVoiceEntry).vfStaveNote);
-                for (const grace of gvEntries.slice(idx, lastGraceIndex + 1) as VexFlowVoiceEntry[]) {
-                    if (grace.vfInStaffKeyCarrier) {
-                        tickables.push(grace.vfInStaffKeyCarrier);
-                    }
-                }
                 if (this.isTabMeasure && nextEntry?.notes[0].sourceNote.isRest() && nextTime.Equals(graceTime)) {
                     // A TAB rest is invisible and cannot carry a GraceNoteGroup. Fit the grace notes and its ghost notes
                     // into the rest's time, so drawing the grace notes before the rest doesn't delay the following notes.
@@ -1629,23 +1623,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         gveGrace.GraceSlash = this.hasGraceSlash(gveGrace, i === 0);
                         const vfStaveNote: StaveNote = VexFlowConverter.StaveNote(gveGrace);
                         gveGrace.vfStaveNote = vfStaveNote;
-                        this.attachInStaffKeys(graphicalStaffEntry, vfStaveNote, gveGrace.parentVoiceEntry.NodeIndexXml);
+                        this.attachInStaffKeys(graphicalStaffEntry, vfStaveNote);
                         graceNotes.push(vfStaveNote);
                     }
-                    const trailingKeys: VexFlowKeySignatureNote[] = graphicalStaffEntry.vfKeys.filter(
-                        (key: VexFlowKeySignatureNote): boolean => !key.attachedToNote &&
-                            (key.NodeIndexXml ?? -1) <= (gve.parentVoiceEntry.NodeIndexXml ?? Infinity),
-                    );
-                    let graceNoteGroup: VF.GraceNoteGroup;
-                    if (trailingKeys.length > 0) {
-                        graceNoteGroup = new VexFlowGraceNoteGroup(graceNotes, graceSlur,
-                            VexFlowKeySignatureNote.createCarrier(trailingKeys, this.stave));
-                        for (const key of trailingKeys) {
-                            key.attachedToNote = true;
-                        }
-                    } else {
-                        graceNoteGroup = new VF.GraceNoteGroup(graceNotes, graceSlur);
-                    }
+                    const graceNoteGroup: VF.GraceNoteGroup = new VF.GraceNoteGroup(graceNotes, graceSlur);
                     let xMargin: number = this.rules.GraceNoteGroupXMargin;
                     if (graceNotes.length > 1) {
                         xMargin /= 3; // prevent overlap. multiple grace notes end up closer to the main note.
@@ -1663,36 +1644,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 voicesWithStandAloneGrace.add(graceGve.parentVoiceEntry.ParentVoice);
                 (graceGve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(graceGve);
                 (graceGve as VexFlowVoiceEntry).isStandAloneGrace = true;
-            }
-            const standaloneGraceEntries: VexFlowVoiceEntry[] = graceGVoiceEntriesBefore as VexFlowVoiceEntry[];
-            for (const key of graphicalStaffEntry.vfKeys) {
-                if (key.attachedToNote || key.NodeIndexXml === undefined) {
-                    continue;
-                }
-                let followingGrace: VexFlowVoiceEntry;
-                for (const grace of standaloneGraceEntries) {
-                    const graceNodeIndex: number = grace.parentVoiceEntry.NodeIndexXml;
-                    if (graceNodeIndex >= key.NodeIndexXml &&
-                        (followingGrace === undefined || graceNodeIndex < followingGrace.parentVoiceEntry.NodeIndexXml)) {
-                        followingGrace = grace;
-                    }
-                }
-                if (followingGrace) {
-                    key.standAloneGraceOwnerNodeIndex = followingGrace.parentVoiceEntry.NodeIndexXml;
-                    continue;
-                }
-                const finalGrace: VexFlowVoiceEntry = standaloneGraceEntries.reduce(
-                    (latest: VexFlowVoiceEntry, grace: VexFlowVoiceEntry): VexFlowVoiceEntry =>
-                        latest === undefined || grace.parentVoiceEntry.NodeIndexXml > latest.parentVoiceEntry.NodeIndexXml ? grace : latest,
-                    undefined,
-                );
-                if (finalGrace && key.NodeIndexXml > finalGrace.parentVoiceEntry.NodeIndexXml) {
-                    const carrierKeys: VexFlowKeySignatureNote[] = finalGrace.vfInStaffKeyCarrierKeys ?? [];
-                    carrierKeys.push(key);
-                    finalGrace.vfInStaffKeyCarrierKeys = carrierKeys;
-                    finalGrace.vfInStaffKeyCarrier = VexFlowKeySignatureNote.createCarrier(carrierKeys, this.stave);
-                    key.attachedToNote = true;
-                }
             }
         }
 
@@ -1787,9 +1738,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
                 // (not for grace notes after their main note, which share its staff entry but are drawn right of it)
                 if (vfse && !voiceEntry.parentVoiceEntry?.GraceAfterMainNote) {
-                    this.attachInStaffKeys(vfse, vexFlowVoiceEntry.vfStaveNote as VF.StaveNote,
-                        voiceEntry.parentVoiceEntry?.IsGrace ? voiceEntry.parentVoiceEntry.NodeIndexXml : undefined,
-                        vexFlowVoiceEntry.isStandAloneGrace ? voiceEntry.parentVoiceEntry.NodeIndexXml : undefined);
+                    this.attachInStaffKeys(vfse, vexFlowVoiceEntry.vfStaveNote as VF.StaveNote);
                 }
                 if (vfse && vfse.vfClefBefore && vfse.vfKeys.length === 0 &&
                     !voiceEntry.parentVoiceEntry?.GraceAfterMainNote && vfse !== staffEntryWithClef) {
@@ -1827,9 +1776,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 this.createArpeggio(voiceEntry);
 
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
-                if (vexFlowVoiceEntry.vfInStaffKeyCarrier) {
-                    this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfInStaffKeyCarrier);
-                }
             }
         }
         this.createInStaffInstructionVoice();
@@ -1844,14 +1790,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     /** Share modifier spacing with the note's accidentals, and keep clef/key order explicit. */
-    private attachInStaffKeys(entry: VexFlowStaffEntry, note: VF.StaveNote, nodeIndex?: number,
-                              standaloneGraceNodeIndex?: number): void {
-        const keys: VexFlowKeySignatureNote[] = entry.vfKeys.filter(
-            (key: VexFlowKeySignatureNote): boolean => !key.attachedToNote &&
-                (nodeIndex === undefined || (key.NodeIndexXml ?? -1) <= nodeIndex) &&
-                (key.standAloneGraceOwnerNodeIndex === undefined ||
-                    key.standAloneGraceOwnerNodeIndex === standaloneGraceNodeIndex),
-        );
+    private attachInStaffKeys(entry: VexFlowStaffEntry, note: VF.StaveNote): void {
+        const keys: VexFlowKeySignatureNote[] = entry.vfKeys.filter(key => !key.attachedToNote);
         if (keys.length === 0) {
             return;
         }
