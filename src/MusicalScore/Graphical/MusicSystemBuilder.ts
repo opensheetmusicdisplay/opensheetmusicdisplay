@@ -12,6 +12,7 @@ import {Instrument} from "../Instrument";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {StaffLine} from "./StaffLine";
 import {GraphicalLine} from "./GraphicalLine";
+import {GraphicalLabel} from "./GraphicalLabel";
 import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {SystemLinesEnum} from "./SystemLinesEnum";
@@ -1281,6 +1282,18 @@ export class MusicSystemBuilder {
                     // if it is the first System on the FIRST page: Add Title height and gap-distance
                     currentYPosition += this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
                                             this.rules.TitleBottomDistance;
+                    }
+                    const credits: GraphicalLabel[] = this.graphicalMusicSheet.FirstPageCreditWords;
+                    if (credits.length > 0) {
+                        const lastCredit: GraphicalLabel = credits[credits.length - 1];
+                        const creditsBottom: number = lastCredit.PositionAndShape.RelativePosition.y +
+                            lastCredit.PositionAndShape.BorderBottom;
+                        const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
+                        const lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
+                        const authorsHeight: number = Math.max(
+                            composer ? composer.PositionAndShape.MarginSize.height + this.rules.SystemComposerDistance : 0,
+                            lyricist ? lyricist.PositionAndShape.MarginSize.height + this.rules.SystemLyricistDistance : 0);
+                        currentYPosition = Math.max(currentYPosition, creditsBottom + authorsHeight + 1);
                     }
 
                     /*

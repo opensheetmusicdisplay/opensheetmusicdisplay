@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <work>
+    <work-title>Metadata title</work-title>
+  </work>
+  <identification>
+    <creator type="composer">Metadata composer</creator>
+    <creator type="lyricist">Metadata lyricist</creator>
+    <rights>Metadata rights</rights>
+  </identification>
+  <credit>
+    <credit-type>title</credit-type>
+    <credit-words>Printed title</credit-words>
+  </credit>
+  <credit>
+    <credit-type>title</credit-type>
+    <credit-words>Second title</credit-words>
+  </credit>
+  <credit>
+    <credit-type>subtitle</credit-type>
+    <credit-words>Printed subtitle&#10;Second subtitle line</credit-words>
+  </credit>
+  <credit>
+    <credit-type>subtitle</credit-type>
+    <credit-words>Third subtitle</credit-words>
+  </credit>
+  <credit>
+    <credit-type>composer</credit-type>
+    <credit-words>Printed composer</credit-words>
+  </credit>
+  <credit>
+    <credit-type>composer</credit-type>
+    <credit-words>Second composer</credit-words>
+  </credit>
+  <credit>
+    <credit-type>lyricist</credit-type>
+    <credit-words>Printed lyricist</credit-words>
+  </credit>
+  <credit>
+    <credit-type>lyricist</credit-type>
+    <credit-words>Second lyricist</credit-words>
+  </credit>
+  <credit>
+    <credit-type>rights</credit-type>
+    <credit-words>Printed rights</credit-words>
+  </credit>
+  <credit page="001">
+    <credit-words justify="center" halign="right">Play twice; </credit-words>
+    <credit-words>second time softly</credit-words>
+  </credit>
+  <credit page="2">
+    <credit-words>Later-page note</credit-words>
+  </credit>
+  <credit>
+    <credit-words>  printed   TITLE&#10;SECOND TITLE  </credit-words>
+  </credit>
+  <credit>
+    <credit-words>Printed subtitle&#10;Second subtitle line&#10;Third subtitle</credit-words>
+  </credit>
+  <credit>
+    <credit-words>Printed composer&#10;Second composer</credit-words>
+  </credit>
+  <credit>
+    <credit-words>Printed lyricist&#10;Second lyricist</credit-words>
+  </credit>
+  <credit>
+    <credit-type>composer</credit-type>
+    <credit-type>rights</credit-type>
+    <credit-words>Ambiguous rights and composer</credit-words>
+  </credit>
+  <credit>
+    <credit-type>title</credit-type>
+    <credit-type>page number</credit-type>
+    <credit-words>Ambiguous title and page number</credit-words>
+  </credit>
+  <credit>
+    <credit-type>arranger</credit-type>
+    <credit-words>Arranged by A. Example</credit-words>
+  </credit>
+  <credit>
+    <credit-type>page number</credit-type>
+    <credit-words>1</credit-words>
+  </credit>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Flute</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+  </part>
+</score-partwise>

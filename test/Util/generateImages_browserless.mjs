@@ -539,6 +539,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     // the second half of a measure split for a system break, see test_grace_notes_only_measure*: systems as in the file
     const isTestGraceNotesOnlyMeasure = sampleFilename.startsWith("test_grace_notes_only_measure");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
+    const isTestFirstPageCreditWords = sampleFilename.startsWith("test_first_page_credit_words");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
     if (isTestEndClefStaffEntryBboxes) {
@@ -644,6 +645,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     if (isTestCopyrightBelowLastSystem) {
         osmdInstance.EngravingRules.RenderCopyright = true; // default false. the copyright (<rights>) is drawn below the last system
         osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true; // the sample's system breaks -> 4 systems regardless of width
+    }
+    if (isTestFirstPageCreditWords) {
+        osmdInstance.EngravingRules.ReadFirstPageCreditWords = true;
     }
     if (isTestOptimizeExtremeLedgerBeams) {
         osmdInstance.EngravingRules.OptimizeExtremeLedgerBeams = true;

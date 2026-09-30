@@ -2456,6 +2456,63 @@ export abstract class MusicSheetCalculator {
         } else if (!this.rules.RenderCopyright) {
             this.graphicalMusicSheet.Copyright = undefined;
         }
+        this.calculateFirstPageCreditWordLabels();
+    }
+
+    private calculateFirstPageCreditWordLabels(): void {
+        this.graphicalMusicSheet.FirstPageCreditWords = [];
+        if (!this.rules.ReadFirstPageCreditWords || !this.rules.RenderFirstPageCreditWords) {
+            return;
+        }
+        const musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
+        const availableWidth: number = musicSheet.pageWidth - this.rules.PageLeftMargin - this.rules.PageRightMargin;
+        let nextY: number = this.rules.RenderTitle ?
+            this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.TitleBottomDistance + 2 :
+            (this.rules.CompactMode ? this.rules.PageTopMarginNarrow : this.rules.PageTopMargin) + 1;
+        const subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
+        if (subtitle && this.rules.RenderTitle && this.rules.RenderSubtitle) {
+            nextY = Math.max(nextY, this.subtitleRelativeY(subtitle) + subtitle.PositionAndShape.BorderBottom +
+                this.rules.TitleBottomDistance + 1);
+        }
+        for (const credit of musicSheet.FirstPageCreditWords) {
+            const wrapped: Label = new Label(this.wrapFirstPageCreditWords(credit, availableWidth), credit.textAlignment,
+                credit.font, credit.print);
+            wrapped.fontFamily = credit.fontFamily;
+            wrapped.fontStyle = credit.fontStyle;
+            const label: GraphicalLabel = new GraphicalLabel(
+                wrapped, this.rules.SheetSubtitleHeight, credit.textAlignment, this.rules);
+            label.Label.IsCreditLabel = true;
+            label.Label.colorDefault = this.rules.DefaultColorTitle;
+            label.setLabelPositionAndShapeBorders();
+            label.PositionAndShape.RelativePosition = new PointF2D(0, nextY);
+            this.graphicalMusicSheet.FirstPageCreditWords.push(label);
+            nextY += label.PositionAndShape.MarginSize.height + 1;
+        }
+    }
+
+    private wrapFirstPageCreditWords(credit: Label, availableWidth: number): string {
+        const fits: (text: string) => boolean = (text: string): boolean => this.rules.SheetSubtitleHeight *
+            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
+                text, credit.font, credit.fontStyle, credit.fontFamily) <= availableWidth;
+        const lines: string[] = [];
+        for (const original of credit.text.split(/\r?\n/)) {
+            let remaining: string[] = Array.from(original);
+            while (remaining.length > 0 && !fits(remaining.join(""))) {
+                let end: number = 1;
+                while (end < remaining.length && fits(remaining.slice(0, end + 1).join(""))) {
+                    end++;
+                }
+                const space: number = remaining.lastIndexOf(" ", end);
+                const cut: number = space > 0 ? space : end;
+                lines.push(remaining.slice(0, cut).join("").trimEnd());
+                remaining = remaining.slice(cut);
+                while (remaining[0] === " ") {
+                    remaining.shift();
+                }
+            }
+            lines.push(remaining.join(""));
+        }
+        return lines.join("\n");
     }
 
     protected checkMeasuresForWholeRestNotes(): void {
@@ -2643,13 +2700,22 @@ export abstract class MusicSheetCalculator {
                 relative.x = title.PositionAndShape.RelativePosition.x; //Math.max(relative.x, title.PositionAndShape.Size.width);
             }
             //relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2; // half of first staffline width
-            relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
-            const lines: number = subtitle.TextLines?.length;
-            if (lines > 1) { // Don't want to affect existing behavior. but this doesn't check bboxes for clip
-                relative.y += subtitle.PositionAndShape.BorderBottom * (lines - 1) / (lines);
-            }
+            relative.y = this.subtitleRelativeY(subtitle);
             subtitle.PositionAndShape.RelativePosition = relative;
             page.Labels.push(subtitle);
+        }
+        for (const credit of this.graphicalMusicSheet.FirstPageCreditWords) {
+            credit.PositionAndShape.Parent = page.PositionAndShape;
+            const alignment: TextAlignmentEnum = credit.Label.textAlignment;
+            let x: number = alignment === TextAlignmentEnum.RightTop ?
+                this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin :
+                alignment === TextAlignmentEnum.CenterTop ?
+                    this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2 : this.rules.PageLeftMargin;
+            if (this.rules.RenderSingleHorizontalStaffline) {
+                x = Math.max(x, this.rules.PageLeftMargin - credit.PositionAndShape.BorderLeft);
+            }
+            credit.PositionAndShape.RelativePosition = new PointF2D(x, credit.PositionAndShape.RelativePosition.y);
+            page.Labels.push(credit);
         }
         // Get the first system, first staffline skybottomcalculator
         // const topStaffline: StaffLine = page.MusicSystems[0].StaffLines[0];
@@ -2752,6 +2818,17 @@ export abstract class MusicSheetCalculator {
             // nothing after calculate() reads pageWidth (the backend sizes from page.Size.width).
             this.graphicalMusicSheet.ParentMusicSheet.pageWidth = layoutPageWidth;
         }
+    }
+
+    /** Subtitle position shared by drawing and first-page credit clearance. */
+    private subtitleRelativeY(subtitle: GraphicalLabel): number {
+        let y: number = this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
+            this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
+        const lines: number = subtitle.TextLines?.length;
+        if (lines > 1) {
+            y += subtitle.PositionAndShape.BorderBottom * (lines - 1) / lines;
+        }
+        return y;
     }
 
     protected createGraphicalTies(): void {

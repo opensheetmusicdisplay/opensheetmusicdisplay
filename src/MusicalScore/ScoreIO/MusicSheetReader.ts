@@ -531,11 +531,14 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.readTitle(root);
         this.readCopyright(root);
         try {
-            if (!this.musicSheet.Title || !this.musicSheet.Composer || !this.musicSheet.Subtitle) {
+            // With page layout, an untyped credit's position identifies its role: retain the default reader.
+            if (this.rules.ReadFirstPageCreditWords && this.computeSystemYCoordinates(root) === 0) {
+                this.readFirstPageCreditWords(root);
+            } else if (!this.musicSheet.Title || !this.musicSheet.Composer || !this.musicSheet.Subtitle) {
                 this.readTitleAndComposerFromCredits(root); // this can also throw an error
             }
         } catch (ex) {
-            log.info("MusicSheetReader.pushSheetLabels", "readTitleAndComposerFromCredits", ex);
+            log.info("MusicSheetReader.pushSheetLabels", "read credits", ex);
         }
         try {
             if (!this.musicSheet.Title) {
@@ -550,6 +553,77 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             }
         } catch (ex) {
             log.info("MusicSheetReader.pushSheetLabels", "read title from file name", ex);
+        }
+    }
+
+    /** Reads first-page credits without inferring a role from position or alignment. */
+    private readFirstPageCreditWords(root: IXmlElement): void {
+        const titles: string[] = [];
+        const subtitles: string[] = [];
+        const composers: string[] = [];
+        const lyricists: string[] = [];
+        const independent: Label[] = [];
+        for (const credit of root.elements("credit")) {
+            if (Number(credit.attribute("page")?.value ?? "1") !== 1) {
+                continue;
+            }
+            const [creditType, creditText] = this.getCreditTypeAndText(credit);
+            const text: string = this.trimString(creditText ?? "");
+            if (!text) {
+                continue;
+            }
+            if (creditType === "page number") {
+                continue;
+            }
+            if (creditType === "rights") {
+                if (!this.musicSheet.Copyright) {
+                    this.musicSheet.Copyright = new Label(text, TextAlignmentEnum.CenterBottom, undefined, true);
+                }
+                continue;
+            }
+            switch (creditType) {
+                case "title":
+                    titles.push(text);
+                    continue;
+                case "subtitle":
+                    subtitles.push(text);
+                    continue;
+                case "composer":
+                    composers.push(text);
+                    continue;
+                case "lyricist":
+                    lyricists.push(text);
+                    continue;
+                default:
+                    break;
+            }
+            const words: IXmlElement = credit.element("credit-words");
+            const alignment: string = words?.attribute("halign")?.value ?? words?.attribute("justify")?.value;
+            const labelAlignment: TextAlignmentEnum = alignment === "right" ? TextAlignmentEnum.RightTop :
+                alignment === "center" ? TextAlignmentEnum.CenterTop : TextAlignmentEnum.LeftTop;
+            independent.push(new Label(text, labelAlignment));
+        }
+        if (titles.length > 0) {
+            this.musicSheet.Title = new Label(titles.join("\n"));
+        }
+        if (subtitles.length > 0) {
+            this.musicSheet.Subtitle = new Label(subtitles.join("\n"));
+        }
+        if (composers.length > 0) {
+            this.musicSheet.Composer = new Label(composers.join("\n"));
+        }
+        if (lyricists.length > 0) {
+            this.musicSheet.Lyricist = new Label(lyricists.join("\n"));
+        }
+        // Guitar Pro, for example, repeats the title and composer in untyped credits: do not draw them twice.
+        const normalize: (text: string) => string = (text: string): string => text.replace(/\s+/g, " ").trim().toLowerCase();
+        const drawnLines: string[] = [this.musicSheet.Title, this.musicSheet.Subtitle, this.musicSheet.Composer, this.musicSheet.Lyricist]
+            .filter((label: Label): boolean => label !== undefined)
+            .flatMap((label: Label): string[] => label.text.split("\n").map(normalize));
+        for (const label of independent) {
+            if (!label.text.split("\n").every((line: string): boolean => drawnLines.includes(normalize(line)))) {
+                this.musicSheet.FirstPageCreditWords.push(label);
+            }
         }
     }
 
@@ -741,16 +815,16 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
     }
 
-    /** The <credit-type> of a credit that gives exactly one, and its text: its <credit-words> joined, as they follow
-     *  one another, as MusicXmlParserPass1::credit() also does in MuseScore's importer. Nothing for another credit,
-     *  or one without text. */
+    /** Joins <credit-words> in document order and returns a type only for exactly one <credit-type>.
+     * Untyped and multi-type credits retain their text without a type.
+     */
     private getCreditTypeAndText(credit: IXmlElement): [string?, string?] {
         const creditTypes: IXmlElement[] = credit.elements("credit-type");
         const text: string = credit.elements("credit-words").map((words: IXmlElement) => words.value).join("");
-        if (creditTypes.length !== 1 || !text.trim()) {
+        if (!text.trim()) {
             return [];
         }
-        return [creditTypes[0].value, text];
+        return [creditTypes.length === 1 ? creditTypes[0].value : undefined, text];
     }
 
     /** @deprecated Old OSMD < 1.8.6 way of parsing composer + subtitles,

@@ -59,6 +59,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private title: Label;
     private subtitle: Label;
     private composer: Label;
+    private firstPageCreditWords: Label[] = [];
     private lyricist: Label;
     private copyright: Label;
     // private languages: Language[] = [];
@@ -236,6 +237,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
     public set Composer(value: Label) {
         this.composer = value;
+    }
+    public get FirstPageCreditWords(): Label[] {
+        return this.firstPageCreditWords;
     }
     public get Lyricist(): Label {
         return this.lyricist;

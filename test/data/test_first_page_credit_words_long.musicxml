@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <movement-title>Credit layout and long instructions</movement-title>
+  <credit>
+    <credit-words>Credit layout and long instructions</credit-words>
+  </credit>
+  <credit>
+    <credit-type>composer</credit-type>
+    <credit-words>First composer&#10;Second composer&#10;Third composer&#10;Fourth composer</credit-words>
+  </credit>
+  <credit>
+    <credit-type>lyricist</credit-type>
+    <credit-words>First lyricist&#10;Second lyricist&#10;Third lyricist</credit-words>
+  </credit>
+  <credit>
+    <credit-words>Play the first time with a light touch, then repeat the passage with a softer tone and keep the pulse steady</credit-words>
+  </credit>
+  <credit>
+    <credit-words justify="right">Repeat the passage with a softer tone, keeping each phrase connected and the pulse steady throughout; allow the final note to fade naturally before continuing to the next passage.</credit-words>
+  </credit>
+  <credit>
+    <credit-words justify="center">Centered instruction with enough words to extend beyond the narrow music system</credit-words>
+  </credit>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Flute</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note><pitch><step>C</step><octave>7</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+  </part>
+</score-partwise>

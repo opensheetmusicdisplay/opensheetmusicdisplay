@@ -81,6 +81,7 @@ export class DrawingParameters {
         this.DrawComposer = true;
         this.DrawLyricist = true;
         this.drawCredits = true;
+        this.rules.RenderFirstPageCreditWords = true;
         this.DrawPartNames = true;
         this.drawHiddenNotes = true;
         this.rules.CompactMode = false;
@@ -157,6 +158,7 @@ export class DrawingParameters {
 
     public set DrawCredits(value: boolean) {
         this.drawCredits = value;
+        this.rules.RenderFirstPageCreditWords = value;
         this.DrawComposer = value;
         this.DrawTitle = value;
         this.DrawSubtitle = value;
