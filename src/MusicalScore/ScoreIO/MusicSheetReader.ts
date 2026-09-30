@@ -141,6 +141,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             throw new MusicSheetReadingException("Undefined root element");
         }
         this.pushSheetLabels(root, path);
+        this.readLyricLanguages(root);
         const partlistNode: IXmlElement = root.element("part-list");
         if (!partlistNode) {
             throw new MusicSheetReadingException("Undefined partListNode");
@@ -556,6 +557,20 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
     }
 
+    /** Reads the default languages of the lyrics, <defaults><lyric-language xml:lang="..."> (MusicSheet.LyricLanguages). */
+    private readLyricLanguages(root: IXmlElement): void {
+        for (const lyricLanguage of root.element("defaults")?.elements("lyric-language") ?? []) {
+            const language: string = lyricLanguage.attribute("xml:lang")?.value;
+            if (language) {
+                this.musicSheet.LyricLanguages.push({
+                    number: lyricLanguage.attribute("number")?.value,
+                    name: lyricLanguage.attribute("name")?.value,
+                    language: language,
+                });
+            }
+        }
+    }
+
     /** Reads first-page credits without inferring a role from position or alignment. */
     private readFirstPageCreditWords(root: IXmlElement): void {
         const titles: string[] = [];
@@ -563,11 +578,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         const composers: string[] = [];
         const lyricists: string[] = [];
         const independent: Label[] = [];
+        const languages: Map<string, string> = new Map(); // the xml:lang of the first credit of each type
         for (const credit of root.elements("credit")) {
             if (Number(credit.attribute("page")?.value ?? "1") !== 1) {
                 continue;
             }
-            const [creditType, creditText] = this.getCreditTypeAndText(credit);
+            const [creditType, creditText, creditLanguage] = this.getCreditTypeTextAndLanguage(credit);
             const text: string = this.trimString(creditText ?? "");
             if (!text) {
                 continue;
@@ -578,8 +594,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             if (creditType === "rights") {
                 if (!this.musicSheet.Copyright) {
                     this.musicSheet.Copyright = new Label(text, TextAlignmentEnum.CenterBottom, undefined, true);
+                    this.musicSheet.Copyright.language = creditLanguage;
                 }
                 continue;
+            }
+            if (!languages.has(creditType)) {
+                languages.set(creditType, creditLanguage);
             }
             switch (creditType) {
                 case "title":
@@ -601,19 +621,25 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             const alignment: string = words?.attribute("halign")?.value ?? words?.attribute("justify")?.value;
             const labelAlignment: TextAlignmentEnum = alignment === "right" ? TextAlignmentEnum.RightTop :
                 alignment === "center" ? TextAlignmentEnum.CenterTop : TextAlignmentEnum.LeftTop;
-            independent.push(new Label(text, labelAlignment));
+            const label: Label = new Label(text, labelAlignment);
+            label.language = creditLanguage;
+            independent.push(label);
         }
         if (titles.length > 0) {
             this.musicSheet.Title = new Label(titles.join("\n"));
+            this.musicSheet.Title.language = languages.get("title");
         }
         if (subtitles.length > 0) {
             this.musicSheet.Subtitle = new Label(subtitles.join("\n"));
+            this.musicSheet.Subtitle.language = languages.get("subtitle");
         }
         if (composers.length > 0) {
             this.musicSheet.Composer = new Label(composers.join("\n"));
+            this.musicSheet.Composer.language = languages.get("composer");
         }
         if (lyricists.length > 0) {
             this.musicSheet.Lyricist = new Label(lyricists.join("\n"));
+            this.musicSheet.Lyricist.language = languages.get("lyricist");
         }
         // Guitar Pro, for example, repeats the title and composer in untyped credits: do not draw them twice.
         const normalize: (text: string) => string = (text: string): string => text.replace(/\s+/g, " ").trim().toLowerCase();
@@ -686,6 +712,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         let finalSubtitle: string = undefined;
         // let possibleTitle: string = undefined;
         let finalComposer: string = undefined;
+        // the xml:lang of the (first) credit of the title, subtitle and composer
+        let titleLanguage: string = undefined;
+        let subtitleLanguage: string = undefined;
+        let composerLanguage: string = undefined;
         const creditElements: IXmlElement[] = root.elements("credit");
         for (let idx: number = 0, len: number = creditElements.length; idx < len; ++idx) {
             const credit: IXmlElement = creditElements[idx];
@@ -693,19 +723,24 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             if (page === "1") {
                 if (systemYCoordinates === 0) {
                     // without page layout, the position of a credit doesn't tell its role: read it by its <credit-type>
-                    const [creditType, creditText] = this.getCreditTypeAndText(credit);
+                    const [creditType, creditText, creditLanguage] = this.getCreditTypeTextAndLanguage(credit);
                     if (creditType === "title") {
                         if (!finalTitle) {
                             finalTitle = creditText;
+                            titleLanguage = creditLanguage;
                         }
                     } else if (creditType === "subtitle") {
+                        subtitleLanguage = finalSubtitle ? subtitleLanguage : creditLanguage;
                         finalSubtitle = finalSubtitle ? finalSubtitle + "\n" + creditText : creditText;
                     } else if (creditType === "composer") {
+                        composerLanguage = finalComposer ? composerLanguage : creditLanguage;
                         finalComposer = finalComposer ? finalComposer + "\n" + creditText : creditText;
                     } else if (creditType === "lyricist" && !this.musicSheet.Lyricist) {
                         this.musicSheet.Lyricist = new Label(this.trimString(creditText));
+                        this.musicSheet.Lyricist.language = creditLanguage;
                     } else if (creditType === "rights" && !this.musicSheet.Copyright) {
                         this.musicSheet.Copyright = new Label(this.trimString(creditText), TextAlignmentEnum.CenterBottom, undefined, true);
+                        this.musicSheet.Copyright.language = creditLanguage;
                     }
                     continue;
                 }
@@ -727,6 +762,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         if (creditChildValue === "Copyright ©") {
                             continue; // this seems to be a MuseScore default, useless
                         }
+                        const creditChildLanguage: string = creditChild.attribute("xml:lang")?.value;
                         const creditJustify: string = creditChild.attribute("justify")?.value;
                         if (creditJustify === "right") {
                             isComposer = true;
@@ -751,6 +787,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                 //     }
                                 // }
                                 finalTitle = creditChildValue;
+                                titleLanguage = creditChildLanguage;
                                 // if (!finalTitle) {
                                 //     finalTitle = creditChild.value;
                                 // } else {
@@ -759,6 +796,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                             } else if (isComposer || creditJustify === "right") {
                                 if (!finalComposer) {
                                     finalComposer = creditChildValue;
+                                    composerLanguage = creditChildLanguage;
                                 } else {
                                     finalComposer += "\n" + creditChildValue;
                                 }
@@ -776,11 +814,13 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                     finalSubtitle += "\n" + creditChildValue;
                                 } else {
                                     finalSubtitle = creditChildValue;
+                                    subtitleLanguage = creditChildLanguage;
                                 }
                                 // }
                             } else if (creditJustify === "left") {
                                 if (!this.musicSheet.Lyricist) {
                                     this.musicSheet.Lyricist = new Label(creditChildValue);
+                                    this.musicSheet.Lyricist.language = creditChildLanguage;
                                 }
                                 break;
                             }
@@ -791,9 +831,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
         if (!this.musicSheet.Title && finalTitle) {
             this.musicSheet.Title = new Label(this.trimString(finalTitle));
+            this.musicSheet.Title.language = titleLanguage;
         }
         if (!this.musicSheet.Subtitle && finalSubtitle) {
             this.musicSheet.Subtitle = new Label(this.trimString(finalSubtitle));
+            this.musicSheet.Subtitle.language = subtitleLanguage;
         }
         if (finalComposer) {
             let overrideSheetComposer: boolean = false;
@@ -811,20 +853,21 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             }
             if (overrideSheetComposer) {
                 this.musicSheet.Composer = new Label(this.trimString(finalComposer));
+                this.musicSheet.Composer.language = composerLanguage;
             }
         }
     }
 
-    /** Joins <credit-words> in document order and returns a type only for exactly one <credit-type>.
-     * Untyped and multi-type credits retain their text without a type.
+    /** Joins <credit-words> in document order and returns a type only for exactly one <credit-type>, and the xml:lang of
+     * the first <credit-words>. Untyped and multi-type credits retain their text without a type.
      */
-    private getCreditTypeAndText(credit: IXmlElement): [string?, string?] {
+    private getCreditTypeTextAndLanguage(credit: IXmlElement): [string?, string?, string?] {
         const creditTypes: IXmlElement[] = credit.elements("credit-type");
         const text: string = credit.elements("credit-words").map((words: IXmlElement) => words.value).join("");
         if (!text.trim()) {
             return [];
         }
-        return [creditTypes.length === 1 ? creditTypes[0].value : undefined, text];
+        return [creditTypes.length === 1 ? creditTypes[0].value : undefined, text, credit.element("credit-words").attribute("xml:lang")?.value];
     }
 
     /** @deprecated Old OSMD < 1.8.6 way of parsing composer + subtitles,

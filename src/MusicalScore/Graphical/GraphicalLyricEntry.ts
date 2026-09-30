@@ -28,6 +28,7 @@ export class GraphicalLyricEntry {
             // lyricsTextAlignment = TextAlignmentAndPlacement.CenterBottom;
         }
         const label: Label = new Label(lyricsEntry.Text);
+        label.language = lyricsEntry.language;
         const rules: EngravingRules = this.graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules;
         this.graphicalLabel = new GraphicalLabel(
             label,
