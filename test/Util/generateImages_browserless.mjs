@@ -704,6 +704,7 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     const isTestTransposeEnharmonic9 = sampleFilename.includes("test_transpose_enharmonic_9");
     const isTestTransposingCsharpMajorToC = sampleFilename.includes("test_transposing_csharp_major_to_c");
     const isTestTransposingGflatMajor = sampleFilename.includes("test_transposing_gflat_major");
+    const isTestTransposingDiatonicSpelling = sampleFilename.includes("test_transposing_diatonic_spelling");
 
     if (isTestOctaveShiftInvisibleInstrument ||
         isTestWordsDirectionLostWhenFirstInstrumentInvisible
@@ -724,6 +725,11 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
         osmdInstance.updateGraphic();
     }
     if (isTestTransposingGflatMajor) {
+        osmdInstance.Sheet.Transpose = -2;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingDiatonicSpelling) {
+        osmdInstance.TransposeCalculator = new OSMD.DiatonicTransposeCalculator();
         osmdInstance.Sheet.Transpose = -2;
         osmdInstance.updateGraphic();
     }
