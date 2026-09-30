@@ -325,6 +325,22 @@ describe("Mid-measure keys", (): void => {
       entry.Instructions.some((instruction: AbstractNotationInstruction): boolean => instruction instanceof KeyInstruction));
   }
 
+  it("applies numbered keys to their staff and unnumbered keys to all staves", (): void => {
+    const score: Document = TestUtils.getScore("test_staff_specific_keys.musicxml");
+    const sheet: MusicSheet = new MusicSheetReader().createMusicSheet(
+      new IXmlElement(TestUtils.getPartWiseElement(score)), "staff-specific keys");
+    expect([0, 1].map((staff: number): number => sheet.SourceMeasures[0].getKeyInstruction(staff).Key))
+      .to.deep.equal([1, -1]);
+    expect([0, 1].map((staff: number): number => sheet.SourceMeasures[1].getKeyInstruction(staff).Key))
+      .to.deep.equal([2, 2]);
+    const changes: KeyInstruction[][] = [0, 1].map((staff: number): KeyInstruction[] =>
+      sheet.SourceMeasures[2].getEntriesPerStaff(staff).flatMap((entry: SourceStaffEntry): KeyInstruction[] =>
+        entry.Instructions.filter((instruction: AbstractNotationInstruction): instruction is KeyInstruction =>
+          instruction instanceof KeyInstruction)));
+    expect(changes.map((keys: KeyInstruction[]): number[] => keys.map((key: KeyInstruction): number => key.Key)))
+      .to.deep.equal([[], [-1]]);
+  });
+
   it("keeps the opening key and owns the change at its exact timestamp", (): void => {
     const doc: Document = TestUtils.getScore("test_key_signature_mid_measure.musicxml");
     const sheet: MusicSheet = new MusicSheetReader().createMusicSheet(
