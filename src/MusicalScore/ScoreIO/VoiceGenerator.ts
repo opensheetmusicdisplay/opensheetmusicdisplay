@@ -350,6 +350,8 @@ export class VoiceGenerator {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
     let accidentalValue: string;
+    let accidentalParentheses: boolean = false;
+    let accidentalBracket: boolean = false;
     let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
     let noteStep: NoteEnum = NoteEnum.C;
     let displayStepUnpitched: NoteEnum = NoteEnum.C;
@@ -407,6 +409,8 @@ export class VoiceGenerator {
           }
         } else if (noteElement.name === "accidental") {
           accidentalValue = noteElement.value;
+          accidentalParentheses = noteElement.attribute("parentheses")?.value === "yes";
+          accidentalBracket = noteElement.attribute("bracket")?.value === "yes";
           if (accidentalValue === "natural") {
             noteAccidental = AccidentalEnum.NATURAL;
             // following accidentals: ambiguous in alter value
@@ -514,6 +518,8 @@ export class VoiceGenerator {
       this.handleTremoloBetweenNotes(tremoloInfo, note);
     }
     note.PlaybackInstrumentId = playbackInstrumentId;
+    note.AccidentalParenthesesXml = accidentalParentheses;
+    note.AccidentalBracketXml = accidentalBracket;
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
