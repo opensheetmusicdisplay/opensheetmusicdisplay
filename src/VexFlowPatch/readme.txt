@@ -119,6 +119,10 @@ tabnote.js (merged Vexflow 3.x):
 Add a context group for each tabnote, so that it can be found in the SVG DOM ("vf-tabnote")
 use scale parameter for x tabnote, offer alternative x note glyph option
 
+tabslide.js (custom fix, vexflow 5 has no font of its own for the slide text anymore):
+set the font of the slide text "sl." with the key family instead of font, so it's drawn in Times (bold italic),
+  instead of in the browser's fallback font for the family "undefined"
+
 textbracket.js (custom fix):
 make sure text bracket doesn't go backwards+overlap (e.g. short octave bracket)
 

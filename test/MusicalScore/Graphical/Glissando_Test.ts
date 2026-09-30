@@ -103,7 +103,7 @@ describe("Slides in a part with a standard and a tab staff", () => {
         }
     });
 
-    it("draws every slide of the tab staff", () => {
+    it("draws every slide of the tab staff, with the text sl. in Times", () => {
         osmd.render();
         const tabSlides: VexFlowGlissando[] = [];
         for (const system of osmd.GraphicSheet.MusicPages[0].MusicSystems) {
@@ -116,6 +116,12 @@ describe("Slides in a part with a standard and a tab staff", () => {
         expect(tabSlides.length, "three slides, none continued into the next system").to.equal(3);
         for (const slide of tabSlides) {
             expect(slide.vfTie, "drawn as a tab slide").to.not.equal(undefined);
+        }
+        // VexFlow's TabSlide set its font with the key font instead of family, so "sl." was drawn in the family "undefined"
+        const slideTexts: Element[] = Array.from(container.querySelectorAll("text")).filter(text => text.textContent === "sl.");
+        expect(slideTexts.length, "a text sl. at each slide").to.equal(3);
+        for (const text of slideTexts) {
+            expect(text.getAttribute("font-family"), "font of the text sl.").to.equal("Times");
         }
     });
 });
