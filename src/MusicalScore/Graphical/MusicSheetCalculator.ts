@@ -859,11 +859,11 @@ export abstract class MusicSheetCalculator {
             }
         }
 
-        const gue: GraphicalUnknownExpression = new GraphicalUnknownExpression(
+        // registers itself in staffLine.AbstractExpressions (pushing it there again drew the words twice)
+        new GraphicalUnknownExpression(
             staffLine, graphLabel, placement, measures[staffIndex]?.parentSourceMeasure, multiExpression);
         //    multiExpression); // TODO would be nice to hand over and save reference to original expression,
         //                         but MultiExpression is not an AbstractExpression.
-        staffLine.AbstractExpressions.push(gue);
         }
     }
 
