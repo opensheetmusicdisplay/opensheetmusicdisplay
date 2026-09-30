@@ -667,6 +667,7 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     const isTestWordsDirectionLostWhenFirstInstrumentInvisible = sampleFilename.includes("test_words_direction_lost_when_first_instrument_invisible");
     const isTestTransposeEnharmonic9 = sampleFilename.includes("test_transpose_enharmonic_9");
     const isTestTransposingCsharpMajorToC = sampleFilename.includes("test_transposing_csharp_major_to_c");
+    const isTestTransposingGflatMajor = sampleFilename.includes("test_transposing_gflat_major");
 
     if (isTestOctaveShiftInvisibleInstrument ||
         isTestWordsDirectionLostWhenFirstInstrumentInvisible
@@ -684,6 +685,10 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestTransposingCsharpMajorToC) {
         osmdInstance.Sheet.Transpose = -1;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingGflatMajor) {
+        osmdInstance.Sheet.Transpose = -2;
         osmdInstance.updateGraphic();
     }
 
