@@ -94,6 +94,8 @@ keep the leading space of the vf-bpm text in SVG (xml:space="preserve"), so that
 
 stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
+renderText(): set the font before measuring the text (e.g. H, P, sl. of tab ties and slides) to center it, instead of
+  measuring it in the context's current font (custom fix, vexflow 5 still measures first)
 
 stavevolta.js (merged Vexflow 3.x):
 Fix the length of voltas for first measures in a system

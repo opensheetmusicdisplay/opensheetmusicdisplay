@@ -124,11 +124,13 @@ export class StaveTie extends Element {
 
   renderText(first_x_px, last_x_px) {
     if (!this.text) return;
+    // VexFlowPatch: set the font before measuring the text, which was measured in the context's current font,
+    //   left over from what was drawn before (e.g. a canvas' default 10px sans-serif), and not centered.
+    this.context.save();
+    this.context.setFont(this.font.family, this.font.size, this.font.style);
     let center_x = (first_x_px + last_x_px) / 2;
     center_x -= this.context.measureText(this.text).width / 2;
 
-    this.context.save();
-    this.context.setFont(this.font.family, this.font.size, this.font.style);
     this.context.fillText(
       this.text,
       center_x + this.render_options.text_shift_x,
