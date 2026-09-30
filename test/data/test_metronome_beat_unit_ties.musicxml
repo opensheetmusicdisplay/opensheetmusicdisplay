@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="4.0">
-  <movement-title>Metronome beat-unit ties</movement-title>
+  <movement-title>Metronome ties</movement-title>
   <part-list>
     <score-part id="P1">
       <part-name>Violin</part-name>
@@ -57,6 +57,20 @@
         </direction-type>
       </direction>
       <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+    <!-- A tie in the metronome-note form: quarter = 5/16, so 128 becomes 160. -->
+    <measure number="4">
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <metronome-note><metronome-type>quarter</metronome-type></metronome-note>
+            <metronome-relation>equals</metronome-relation>
+            <metronome-note><metronome-type>eighth</metronome-type><metronome-tied type="start"/></metronome-note>
+            <metronome-note><metronome-type>eighth</metronome-type><metronome-dot/><metronome-tied type="stop"/></metronome-note>
+          </metronome>
+        </direction-type>
+      </direction>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
     </measure>
   </part>
 </score-partwise>

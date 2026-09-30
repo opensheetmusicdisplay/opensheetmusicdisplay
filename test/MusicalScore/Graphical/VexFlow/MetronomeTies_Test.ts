@@ -3,7 +3,7 @@ import { TestUtils } from "../../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { InstantaneousTempoExpression } from "../../../../src/MusicalScore/VoiceData/Expressions/InstantaneousTempoExpression";
 
-describe("Metronome beat-unit ties", () => {
+describe("Metronome ties", () => {
     let container: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
 
@@ -21,7 +21,7 @@ describe("Metronome beat-unit ties", () => {
     it("retains chained dotted ties on both sides without changing note values", () => {
         const marks: InstantaneousTempoExpression[] = osmd.Sheet.TimestampSortedTempoExpressionsList
             .map(expression => expression.InstantaneousTempo).filter(expression => expression?.isMetronomeMark);
-        expect(marks.map(mark => mark.TempoInBpm)).to.deep.equal([96, 96, 128]);
+        expect(marks.map(mark => mark.TempoInBpm)).to.deep.equal([96, 96, 128, 160]);
         expect(marks[1].metronomeNoteGroupLeft.notes).to.deep.equal([
             { type: "quarter", dots: 1 }, { type: "eighth", dots: 1, tied: true }, { type: "16th", dots: 0, tied: true }
         ]);
@@ -31,15 +31,18 @@ describe("Metronome beat-unit ties", () => {
         expect(marks[2].metronomeNoteGroupLeft.notes, "the untied metronome-note control").to.deep.equal([
             { type: "quarter", dots: 0 }, { type: "eighth", dots: 0 }
         ]);
+        expect(marks[3].metronomeNoteGroupRight.notes, "ties in the metronome-note form").to.deep.equal([
+            { type: "eighth", dots: 0 }, { type: "eighth", dots: 1, tied: true }
+        ]);
     });
 
     it("draws only the requested ties below their adjacent noteheads, including chains and dots", () => {
         osmd.render();
         const marks: SVGGElement[] = Array.from(container.querySelectorAll<SVGGElement>(".vf-stavetempo"));
-        // Notehead pairs in each visible mark: numeric, chained/dotted equation, untied equation.
-        const pairs: number[][][] = [[], [[0, 1], [1, 2], [3, 4]], []];
+        // Notehead pairs: numeric, beat-unit ties, untied equation, metronome-note tie.
+        const pairs: number[][][] = [[], [[0, 1], [1, 2], [3, 4]], [], [[1, 2]]];
         expect(marks.map(mark => mark.querySelectorAll(".vf-metronometie path").length),
-               "numeric, chained/dotted, untied")
+               "numeric, beat-unit ties, untied, metronome-note tie")
             .to.deep.equal(pairs.map(markPairs => markPairs.length));
         marks.forEach((mark, index) => {
             // In this un-beamed sample each notehead is drawn immediately before its stem rectangle.

@@ -554,10 +554,12 @@ export class ExpressionReader {
         let leftTuplet: MetronomeTuplet | undefined;
         let rightTuplet: MetronomeTuplet | undefined;
         let passedRelation: boolean = false;
+        let tieStarted: boolean = false;
 
         for (const child of allChildren) {
             if (child.name === "metronome-relation") {
                 passedRelation = true;
+                tieStarted = false;
                 continue;
             }
             if (child.name !== "metronome-note") {
@@ -575,6 +577,13 @@ export class ExpressionReader {
             if (beamEl) {
                 note.beam = beamEl.value; // "begin", "continue", "end"
             }
+            // Tied to the preceding note if this tie stops or the preceding one starts: a note has only one
+            //   metronome-tied, so the middle note of a chain has either.
+            const tiedType: string = child.element("metronome-tied")?.attribute("type")?.value;
+            if (tiedType === "stop" || tieStarted) {
+                note.tied = true;
+            }
+            tieStarted = tiedType === "start";
 
             // Parse tuplet start/stop
             const tupletEl: IXmlElement = child.element("metronome-tuplet");

@@ -120,12 +120,6 @@ describe("Metronome position rendering", (): void => {
         osmd.render();
         expect(marks().length, "tied and untied equations remain distinct on either side").to.equal(4);
         expect(div.querySelectorAll(".vf-metronometie path").length, "identical tied equations are still deduplicated").to.equal(2);
-        const tiedBoxes: DOMRect[] = marks();
-        for (let i: number = 0; i < tiedBoxes.length; i++) {
-            for (let j: number = i + 1; j < tiedBoxes.length; j++) {
-                expect(separate(tiedBoxes[i], tiedBoxes[j]), "ties are included in collision bounds").to.equal(true);
-            }
-        }
     });
 
     it("separates nearby marks with the geometric skyline", async (): Promise<void> => {

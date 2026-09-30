@@ -198,10 +198,11 @@ export class StaveTempo extends StaveModifier {
 
       const pos = { x: noteX, y_top: stemTopY, stemX: stemX, code: code };
       if (note.tied && notePositions.length > 0) {
-        // Stems point up, so connect the notehead centers with a tie below the notes and dots.
+        // Stems point up, so connect the notehead centers with a tie below the notes and dots,
+        //   stopping a little short of both centers, so that chained ties don't touch.
         const previous = notePositions[notePositions.length - 1];
-        const startX = (previous.x + previous.stemX) / 2;
-        const endX = (noteX + stemX) / 2;
+        const startX = (previous.x + previous.stemX) / 2 + scale;
+        const endX = (noteX + stemX) / 2 - scale;
         const midX = (startX + endX) / 2;
         const tieY = y + 5 * scale;
         ctx.openGroup('metronometie');
