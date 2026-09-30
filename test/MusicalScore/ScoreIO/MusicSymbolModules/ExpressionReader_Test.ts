@@ -9,6 +9,7 @@ import { ContDynamicEnum, ContinuousDynamicExpression } from
     "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
+import { MultiTempoExpression, TempoExpressionEntry } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiTempoExpression";
 
 describe("ExpressionReader", () => {
     /** Reads a test/data sample (preprocessed by karma) into a MusicSheet, optionally with custom rules. */
@@ -181,5 +182,13 @@ describe("ExpressionReader", () => {
         it("keeps the direction's offset for a wedge stop after words", () => {
             expect(wedges[2].EndMultiExpression.EndOffsetFraction.RealValue, "offset 1 = a quarter").to.equal(0.25);
         });
+    });
+
+    it("reads all the words of a tempo direction, not only the first", () => {
+        // <words font-weight="bold">C</words><words font-weight="normal">大调音阶</words> with <sound tempo="120"/>
+        const labels: string[] = readSheet("test/data/test_end_measure_clefs_staffentry_bbox.musicxml").SourceMeasures
+            .flatMap((measure): MultiTempoExpression[] => measure.TempoExpressions)
+            .flatMap((tempo: MultiTempoExpression): string[] => tempo.EntriesList.map((entry: TempoExpressionEntry): string => entry.label));
+        expect(labels).to.deep.equal(["C大调音阶"]);
     });
 });
