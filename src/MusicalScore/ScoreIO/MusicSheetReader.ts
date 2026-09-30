@@ -937,10 +937,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         let instrumentId: number = 0;
         const instrumentDict: { [_: string]: Instrument } = {};
         let currentGroup: InstrumentalGroup;
+        // Groups nest by the parts they span, in whatever order the part-list gives their starts and stops.
+        const entryArray: IXmlElement[] = this.orderPartGroupsByNesting(entryList);
         // The reader builds a nesting tree; crossing numbered groups cannot be named reliably.
-        const canAssignGroupNames: boolean = this.groupNumbersAreProperlyNested(entryList);
+        const canAssignGroupNames: boolean = this.groupNumbersAreProperlyNested(entryArray);
         try {
-            const entryArray: IXmlElement[] = entryList;
             for (let idx: number = 0, len: number = entryArray.length; idx < len; ++idx) {
                 const node: IXmlElement = entryArray[idx];
                 if (node.name === "score-part") {
@@ -1127,6 +1128,57 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             }
         }
         return numbers.length === 0;
+    }
+
+    /**
+     * Returns the part-list entries with the part-group starts and stops between two parts in nesting order:
+     * stops before starts, an inner group's stop first, an outer group's start first.
+     * The part-list may give them in any order, e.g. Finale starts a bracket after a brace starting at the same part.
+     * Groups whose parts overlap stay crossed.
+     */
+    private orderPartGroupsByNesting(entryList: IXmlElement[]): IXmlElement[] {
+        const firstPart: number[] = []; // by entry index, for starts and stops: the group's first part
+        const lastPart: number[] = []; // for starts: the group's last part
+        const startIndex: number[] = []; // for stops: the entry index of the group's start
+        const openStarts: { [groupNumber: string]: number } = {};
+        let parts: number = 0;
+        entryList.forEach((entry: IXmlElement, index: number): void => {
+            if (entry.name === "score-part") {
+                parts++;
+            } else if (entry.name === "part-group") {
+                const groupNumber: string = entry.attribute("number")?.value ?? "1";
+                const start: number = openStarts[groupNumber];
+                if (entry.attribute("type")?.value === "start") {
+                    openStarts[groupNumber] = index;
+                    firstPart[index] = parts;
+                } else if (entry.attribute("type")?.value === "stop" && start !== undefined) {
+                    delete openStarts[groupNumber];
+                    firstPart[index] = firstPart[start];
+                    lastPart[start] = parts - 1;
+                    startIndex[index] = start;
+                }
+            }
+        });
+        const isStop: (index: number) => boolean = (index: number): boolean => entryList[index].attribute("type")?.value === "stop";
+        const order: number[] = entryList.map((entry: IXmlElement, index: number): number => index);
+        for (let runStart: number = 0; runStart < order.length; runStart++) {
+            let runEnd: number = runStart;
+            while (runEnd < order.length && entryList[runEnd].name === "part-group") {
+                runEnd++;
+            }
+            const run: number[] = order.slice(runStart, runEnd).sort((a: number, b: number): number => {
+                if (isStop(a) !== isStop(b)) {
+                    return isStop(a) ? -1 : 1;
+                }
+                if (isStop(a)) { // the group that started last stops first
+                    return (firstPart[b] ?? -1) - (firstPart[a] ?? -1) || (startIndex[b] ?? -1) - (startIndex[a] ?? -1);
+                }
+                return (lastPart[b] ?? parts) - (lastPart[a] ?? parts) || a - b; // the group that stops last starts first
+            });
+            order.splice(runStart, run.length, ...run);
+            runStart = runEnd;
+        }
+        return order.map((index: number): IXmlElement => entryList[index]);
     }
 
     /**

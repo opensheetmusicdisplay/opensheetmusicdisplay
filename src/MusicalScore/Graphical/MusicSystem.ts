@@ -357,17 +357,20 @@ export abstract class MusicSystem extends GraphicalObject {
             labelX += columnWidth;
             hasPreviousColumn = true;
         }
-        const partLabels: GraphicalLabel[] = this.labels.values().filter((label: GraphicalLabel): boolean =>
-            label.Label.print && !!label.Label.text?.trim());
-        if (hasPreviousColumn && partLabels.length > 0) {
-            labelX += originalSystemLabelsRightMargin;
-        }
-        let partColumnWidth: number = 0;
-        for (const label of partLabels) {
-            label.PositionAndShape.RelativePosition = new PointF2D(labelX, 0);
-            partColumnWidth = Math.max(partColumnWidth, label.PositionAndShape.Size.width);
-        }
-        this.maxLabelLength = labelX + partColumnWidth;
+        // Only the labels of parts in a named group start after the group columns, so a group name takes room only
+        //   beside its own parts (e.g. "Horns in F" before "1 2" fits within the width of "Bass Clarinet in Bb").
+        const groupedPartX: number = hasPreviousColumn ? labelX + originalSystemLabelsRightMargin : 0;
+        const labeledGroups: InstrumentalGroup[] = Array.from(this.groupLabels.keys());
+        this.maxLabelLength = labelX;
+        this.labels.forEach((instrument: Instrument, label: GraphicalLabel): void => {
+            if (!label.Label.print || !label.Label.text?.trim()) {
+                return;
+            }
+            const x: number = labeledGroups.some((group: InstrumentalGroup): boolean => this.instrumentBelongsToGroup(instrument, group))
+                ? groupedPartX : 0;
+            label.PositionAndShape.RelativePosition = new PointF2D(x, 0);
+            this.maxLabelLength = Math.max(this.maxLabelLength, x + label.PositionAndShape.Size.width);
+        });
         if (this.maxLabelLength > 0) {
             systemLabelsRightMargin = originalSystemLabelsRightMargin;
         }

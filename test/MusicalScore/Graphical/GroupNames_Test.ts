@@ -106,6 +106,8 @@ describe("Part group names", (): void => {
         const piano: SVGTextElement = renderedLabel("Piano");
         expect(piano, "the group name remains visible").to.not.equal(undefined);
         expect(renderedText()).to.not.include("Pno.");
+        expect(renderedLabel("Harp").getBoundingClientRect().left, "a part outside the group keeps its label at the left edge")
+            .to.be.closeTo(piano.getBoundingClientRect().left, 1);
         const groupOnlyStart: number = staffStartX(0);
         expect(groupOnlyStart, "the group label reserves the only label column").to.be.greaterThan(0);
 

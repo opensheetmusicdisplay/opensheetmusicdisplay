@@ -26,8 +26,8 @@
       <part-name>Lower</part-name>
       <part-abbreviation>Lo.</part-abbreviation>
     </score-part>
-    <part-group type="stop" number="2"/>
     <part-group type="stop" number="1"/>
+    <part-group type="stop" number="2"/>
   </part-list>
   <part id="P1">
     <measure number="1">
