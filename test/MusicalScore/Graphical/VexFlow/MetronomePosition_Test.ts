@@ -19,7 +19,34 @@ describe("Metronome position rendering", (): void => {
 
     function marks(): DOMRect[] {
         return Array.from(div.querySelectorAll<SVGGraphicsElement>(".vf-stavetempo"))
-            .map((element: SVGGraphicsElement): DOMRect => element.getBoundingClientRect());
+            .map((element: SVGGraphicsElement): DOMRect => inkBox(element));
+    }
+
+    /** The box of what is drawn: the paths and rects, and the glyphs of the texts. getBoundingClientRect() of an SVG text
+     *  also covers the font's ascent and descent, which depend on the installed fonts: with the Linux fonts for times and
+     *  Times New Roman, the box of the mark's " = 88" reached into the box of "Presto" below it, although the drawn mark
+     *  ends 7 px above the drawn text. */
+    function inkBox(element: SVGGraphicsElement): DOMRect {
+        const boxes: DOMRect[] = Array.from(element.querySelectorAll<SVGGraphicsElement>("path, rect, text"))
+            .concat(element.matches("path, rect, text") ? [element] : [])
+            .map((part: SVGGraphicsElement): DOMRect => part instanceof SVGTextElement ? glyphBox(part) : part.getBoundingClientRect());
+        const left: number = Math.min(...boxes.map((box: DOMRect): number => box.left));
+        const top: number = Math.min(...boxes.map((box: DOMRect): number => box.top));
+        const right: number = Math.max(...boxes.map((box: DOMRect): number => box.right));
+        const bottom: number = Math.max(...boxes.map((box: DOMRect): number => box.bottom));
+        return new DOMRect(left, top, right - left, bottom - top);
+    }
+
+    /** The box of a text's glyphs, measured on a canvas in the font the browser draws the text in. */
+    function glyphBox(text: SVGTextElement): DOMRect {
+        const style: CSSStyleDeclaration = getComputedStyle(text);
+        const context: CanvasRenderingContext2D = document.createElement("canvas").getContext("2d");
+        context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        const metrics: TextMetrics = context.measureText(text.textContent);
+        // x and y are the start of the baseline
+        const start: DOMPoint = new DOMPoint(Number(text.getAttribute("x")), Number(text.getAttribute("y"))).matrixTransform(text.getScreenCTM());
+        return new DOMRect(start.x - metrics.actualBoundingBoxLeft, start.y - metrics.actualBoundingBoxAscent,
+            metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight, metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent);
     }
 
     function separate(first: DOMRect, second: DOMRect): boolean {
@@ -142,7 +169,7 @@ describe("Metronome position rendering", (): void => {
                 .find((element: SVGGraphicsElement): boolean => element.textContent.trim() === label);
             expect(text).to.not.equal(undefined);
             expect(marks().length).to.be.greaterThan(0);
-            expect(separate(marks()[0], text.getBoundingClientRect())).to.equal(true);
+            expect(separate(marks()[0], inkBox(text)), `mark clear of "${label}"`).to.equal(true);
         }
     });
 
