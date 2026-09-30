@@ -285,7 +285,7 @@ describe("GetNearestVoiceEntry", () => {
                 const foundVoiceEntry: GraphicalVoiceEntry = sheet.GetNearestVoiceEntry(position, false, pageToSearch);
                 const foundNote: GraphicalNote = sheet.GetNearestNote(position, undefined, pageToSearch);
                 const foundStaffEntry: GraphicalStaffEntry = sheet.GetNearestStaffEntry(position, pageToSearch);
-                const foundMeasure: GraphicalMeasure = sheet.GetNearestObject<GraphicalMeasure>(position, GraphicalMeasure.name, pageToSearch);
+                const foundMeasure: GraphicalMeasure = sheet.GetNearestObject(position, GraphicalMeasure, pageToSearch);
                 if (pageToSearch === page) {
                     expect(foundVoiceEntry === voiceEntry, `${onPage}: voice entry`).to.equal(true);
                     expect(foundNote === note, `${onPage}: note`).to.equal(true);

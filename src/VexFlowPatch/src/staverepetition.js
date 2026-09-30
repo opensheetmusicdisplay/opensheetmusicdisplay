@@ -42,6 +42,8 @@ export class Repetition extends StaveModifier {
   getCategory() { return Repetition.CATEGORY; }
   setShiftX(x) { this.x_shift = x; return this; }
   setShiftY(y) { this.y_shift = y; return this; }
+  // VexFlowPatch: a text drawn instead of the type's text and coda glyph, e.g. the words "D.C. senza replica" for a D.C.
+  setText(text) { this.text = text; return this; }
 
   setX(x) { 
     this.x = x; return this;
@@ -109,6 +111,11 @@ export class Repetition extends StaveModifier {
 
   drawSymbolText(stave, x, text, draw_coda) {
     const ctx = stave.checkContext();
+    // VexFlowPatch: the text set by setText(), placed like the type's text
+    if (this.text) {
+      text = this.text;
+      draw_coda = false;
+    }
 
     ctx.save();
     ctx.setFont(this.font.family, this.font.size, this.font.weight);
@@ -128,7 +135,10 @@ export class Repetition extends StaveModifier {
       symbol_x = text_x + ctx.measureText(text).width + 12;
     }
     if (this.xShiftAsPercentOfStaveWidth) {
-      const extraShiftX = stave.width * this.xShiftAsPercentOfStaveWidth;
+      // VexFlowPatch: at most up to the end of the stave (its end barline): in a wide measure, the text went past it,
+      //   up to off the page
+      const textEndX = text_x + ctx.measureText(text).width;
+      const extraShiftX = Math.max(0, Math.min(stave.width * this.xShiftAsPercentOfStaveWidth, stave.getX() + stave.width - textEndX));
       if (
         this.symbol_type === Repetition.type.DC_AL_FINE ||
         this.symbol_type === Repetition.type.FINE ||

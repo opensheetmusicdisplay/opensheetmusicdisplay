@@ -514,6 +514,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         if (instruction) {
             const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
+            if (repetitionInstruction.Words) {
+                (repetition as any).setText(repetitionInstruction.Words); // drawn instead of the label, e.g. "D.C. senza replica"
+            }
             const stafflineMeasures: GraphicalMeasure[] = this.ParentStaffLine?.Measures;
             if (!stafflineMeasures || stafflineMeasures[stafflineMeasures.length - 1] === this) {
                 // only shift end instructions like Fine to the right in the last measure of the staffline,
