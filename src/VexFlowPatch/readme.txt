@@ -91,6 +91,7 @@ stavetempo.js (custom addition):
 open a context group for vf-stavetempo, and one for its subgroup vf-bpm (for just the "= 150" text node)
 add drawNoteEquation() and drawNoteGroup() for complex metronome marks (note equations like swing: 8th+8th = quarter+8th under triplet bracket)
 keep the leading space of the vf-bpm text in SVG (xml:space="preserve"), so that SVG shows "= 150" as far from the note as canvas
+measure the "=" and the tuplet numbers of note equations by their text advance, as the layout does (canvas measureText())
 
 stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
@@ -110,6 +111,7 @@ Add manual flag rendering variable so we can choose not to render flags if notes
 svgcontext.js (custom addition, probably not necessary for vexflow 4):
 able to add extra attributes (like svg node id) to a stroke (e.g. stem)
 fix rect() always using black color, ignoring attributes.stroke (ctx strokeStlye) -> fix defaultColorMusic ignored
+measureText(text, true) returns the text advance (getComputedTextLength()) as the width, like canvas measureText(), instead of the bounding box
 
 tables.js (custom addition):
 add inverted triangle notehead ('TI')

@@ -133,7 +133,7 @@ export class StaveTempo extends StaveModifier {
     ctx.setFont(font.family, font.size, 'bold');
     x += 1.5 * baseSpacing;
     ctx.fillText('=', x, y);
-    x += ctx.measureText('=').width + 1.5 * baseSpacing;
+    x += ctx.measureText('=', true).width + 1.5 * baseSpacing;
 
     // Draw right note group (with optional tuplet)
     x = this.drawNoteGroup(ctx, x, y, scale, baseSpacing, noteEquation.right);
@@ -289,7 +289,7 @@ export class StaveTempo extends StaveModifier {
           : `${tuplet.actualNotes}`;
 
         ctx.setFont(this.font.family, this.font.size - 3, 'bold');
-        const numberWidth = ctx.measureText(numberText).width;
+        const numberWidth = ctx.measureText(numberText, true).width;
         const gapHalf = numberWidth / 2 + 2 * scale;
 
         // Line to gap
@@ -313,7 +313,7 @@ export class StaveTempo extends StaveModifier {
           ? `${tuplet.actualNotes}:${tuplet.normalNotes}`
           : `${tuplet.actualNotes}`;
         ctx.setFont(this.font.family, this.font.size - 3, 'bold');
-        const numberWidth = ctx.measureText(numberText).width;
+        const numberWidth = ctx.measureText(numberText, true).width;
         ctx.fillText(numberText, midX - numberWidth / 2, bracketY - 1 * scale);
       }
     }
