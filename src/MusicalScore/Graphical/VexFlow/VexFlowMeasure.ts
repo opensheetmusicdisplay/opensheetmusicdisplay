@@ -1762,7 +1762,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                                 this.createFingerings(voiceEntry);
                         } // else created in MusicSheetCalculator.calculateFingerings() as Labels
                     }
-                    if (voiceEntry.parentVoiceEntry) {
+                    if (voiceEntry.parentVoiceEntry && this.rules.RenderStringNumbersClassical) {
                         this.createStringNumber(voiceEntry);
                     }
 
@@ -1778,7 +1778,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
             if (this.rules.RenderFingerings) {
                 this.createFingerings(graceGVoiceEntry);
             }
-            this.createStringNumber(graceGVoiceEntry);
+            if (this.rules.RenderStringNumbersClassical) {
+                this.createStringNumber(graceGVoiceEntry);
+            }
             this.createArpeggio(graceGVoiceEntry);
         }
         this.createArticulations();
@@ -1993,9 +1995,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     protected createStringNumber(voiceEntry: GraphicalVoiceEntry): void {
-        if (!this.rules.RenderStringNumbersClassical) {
-            return;
-        }
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
         voiceEntry.notes.forEach((note, stringIndex) => {
             const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
