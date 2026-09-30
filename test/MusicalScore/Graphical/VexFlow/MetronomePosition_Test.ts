@@ -109,6 +109,17 @@ describe("Metronome position rendering", (): void => {
         osmd.render();
         expect(marks().length).to.equal(2);
         expect(separate(marks()[0], marks()[1])).to.equal(true);
+
+        const untied: string = left + "<metronome-note><metronome-type>eighth</metronome-type></metronome-note>";
+        const tied: string = "<beat-unit>quarter</beat-unit><beat-unit-tied><beat-unit>eighth</beat-unit></beat-unit-tied>";
+        const quarter: string = "<beat-unit>quarter</beat-unit>";
+        const leftTie: string = mark(tied + quarter);
+        const rightTie: string = mark(quarter + tied);
+        await osmd.load(score(mark(untied + equals + left) + leftTie + leftTie +
+            mark(left + equals + untied) + rightTie + rightTie + note("C", 4, "whole")));
+        osmd.render();
+        expect(marks().length, "tied and untied equations remain distinct on either side").to.equal(4);
+        expect(div.querySelectorAll(".vf-metronometie path").length, "identical tied equations are still deduplicated").to.equal(2);
     });
 
     it("separates nearby marks with the geometric skyline", async (): Promise<void> => {

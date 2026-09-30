@@ -1529,6 +1529,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           duration: vfDuration,
           dots: note.dots,
           beam: note.beam,
+          tied: note.tied,
         };
       });
       const result: any = { notes };

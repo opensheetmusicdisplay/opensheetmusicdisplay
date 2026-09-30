@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <movement-title>Metronome ties</movement-title>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Violin</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>96</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="96"/>
+      </direction>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+    <!-- Both sides total 5/8, so the initial tempo remains 96. -->
+    <measure number="2">
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <beat-unit-dot/>
+            <beat-unit-tied>
+              <beat-unit>eighth</beat-unit>
+              <beat-unit-dot/>
+            </beat-unit-tied>
+            <beat-unit-tied><beat-unit>16th</beat-unit></beat-unit-tied>
+            <beat-unit>half</beat-unit>
+            <beat-unit-tied><beat-unit>eighth</beat-unit></beat-unit-tied>
+          </metronome>
+        </direction-type>
+      </direction>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+    <!-- An untied metronome-note equation remains untied. -->
+    <measure number="3">
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <metronome-note><metronome-type>quarter</metronome-type></metronome-note>
+            <metronome-note><metronome-type>eighth</metronome-type></metronome-note>
+            <metronome-relation>equals</metronome-relation>
+            <metronome-note><metronome-type>half</metronome-type></metronome-note>
+          </metronome>
+        </direction-type>
+      </direction>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+    <!-- A tie in the metronome-note form: quarter = 5/16, so 128 becomes 160. -->
+    <measure number="4">
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <metronome-note><metronome-type>quarter</metronome-type></metronome-note>
+            <metronome-relation>equals</metronome-relation>
+            <metronome-note><metronome-type>eighth</metronome-type><metronome-tied type="start"/></metronome-note>
+            <metronome-note><metronome-type>eighth</metronome-type><metronome-dot/><metronome-tied type="stop"/></metronome-note>
+          </metronome>
+        </direction-type>
+      </direction>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+  </part>
+</score-partwise>

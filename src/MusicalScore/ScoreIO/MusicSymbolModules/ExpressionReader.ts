@@ -554,10 +554,12 @@ export class ExpressionReader {
         let leftTuplet: MetronomeTuplet | undefined;
         let rightTuplet: MetronomeTuplet | undefined;
         let passedRelation: boolean = false;
+        let tieStarted: boolean = false;
 
         for (const child of allChildren) {
             if (child.name === "metronome-relation") {
                 passedRelation = true;
+                tieStarted = false;
                 continue;
             }
             if (child.name !== "metronome-note") {
@@ -575,6 +577,13 @@ export class ExpressionReader {
             if (beamEl) {
                 note.beam = beamEl.value; // "begin", "continue", "end"
             }
+            // Tied to the preceding note if this tie stops or the preceding one starts: a note has only one
+            //   metronome-tied, so the middle note of a chain has either.
+            const tiedType: string = child.element("metronome-tied")?.attribute("type")?.value;
+            if (tiedType === "stop" || tieStarted) {
+                note.tied = true;
+            }
+            tieStarted = tiedType === "start";
 
             // Parse tuplet start/stop
             const tupletEl: IXmlElement = child.element("metronome-tuplet");
@@ -616,7 +625,7 @@ export class ExpressionReader {
 
     /** Parse a note equation written with two beat units instead of metronome-note elements, e.g. quarter = dotted quarter
      *  (MusicXML's simpler form of a metric modulation). The first beat unit, with its dots and tied beat units, is the left
-     *  side, the second one the right side. A tie is not drawn, but its beat unit counts for the tempo.
+     *  side, the second one the right side.
      */
     private parseBeatUnitNoteEquation(metronomeNode: IXmlElement, currentMeasure: SourceMeasure, timestampFraction: Fraction): void {
         const leftNotes: MetronomeNote[] = [];
@@ -631,7 +640,7 @@ export class ExpressionReader {
             } else if (child.name === "beat-unit-dot" && notes.length > 0) {
                 notes[notes.length - 1].dots++;
             } else if (child.name === "beat-unit-tied" && child.element("beat-unit")) {
-                notes.push({ type: child.element("beat-unit").value, dots: child.elements("beat-unit-dot").length });
+                notes.push({ type: child.element("beat-unit").value, dots: child.elements("beat-unit-dot").length, tied: true });
             }
         }
         this.addNoteEquation(metronomeNode, { notes: leftNotes }, { notes: rightNotes }, "equals", currentMeasure, timestampFraction);

@@ -12,6 +12,8 @@ export interface MetronomeNote {
     dots: number;
     /** Beam state for this note: "begin", "continue", "end", or undefined */
     beam?: string;
+    /** Whether this note is tied to the preceding note in the same group. */
+    tied?: boolean;
 }
 
 /** Tuplet bracket information for a group of metronome notes. */
