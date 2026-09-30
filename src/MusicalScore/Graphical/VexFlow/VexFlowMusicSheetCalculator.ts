@@ -2599,8 +2599,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (type === repetitionTypes.DC || type === repetitionTypes.DC_AL_FINE || type === repetitionTypes.DS ||
           type === repetitionTypes.DS_AL_FINE || type === repetitionTypes.FINE) {
         // these are additionally shifted to the right (only in the staffline's last measure, see addWordRepetition()),
-        //   see xShiftAsPercentOfStaveWidth in staverepetition.js
-        startX += measureWidth * ((repetition as any).xShiftAsPercentOfStaveWidth ?? 0);
+        //   at most up to the measure's end, see xShiftAsPercentOfStaveWidth in staverepetition.js
+        const shift: number = measureWidth * ((repetition as any).xShiftAsPercentOfStaveWidth ?? 0);
+        startX += Math.max(0, Math.min(shift, measureStartX + measureWidth - (startX + textWidthUnits)));
       }
       endX = startX + textWidthUnits;
       if (hasCodaGlyphAfterText) {

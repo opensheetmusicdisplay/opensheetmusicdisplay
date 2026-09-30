@@ -135,7 +135,10 @@ export class Repetition extends StaveModifier {
       symbol_x = text_x + ctx.measureText(text).width + 12;
     }
     if (this.xShiftAsPercentOfStaveWidth) {
-      const extraShiftX = stave.width * this.xShiftAsPercentOfStaveWidth;
+      // VexFlowPatch: at most up to the end of the stave (its end barline): in a wide measure, the text went past it,
+      //   up to off the page
+      const textEndX = text_x + ctx.measureText(text).width;
+      const extraShiftX = Math.max(0, Math.min(stave.width * this.xShiftAsPercentOfStaveWidth, stave.getX() + stave.width - textEndX));
       if (
         this.symbol_type === Repetition.type.DC_AL_FINE ||
         this.symbol_type === Repetition.type.FINE ||
