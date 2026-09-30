@@ -851,6 +851,7 @@ export abstract class MusicSheetCalculator {
         if (this.rules.ExpressionsUseXMLColor && colorXML) {
             graphLabel.ColorXML = colorXML;
         }
+        graphLabel.Label.language = multiExpression.EntriesList[0]?.expression.language;
         if (this.rules.PlaceWordsInsideStafflineFromXml) {
             if (defaultYXml < 0 && defaultYXml > -50) { // within staffline
                 let newY: number = defaultYXml / 10; // OSMD units
@@ -2128,6 +2129,7 @@ export abstract class MusicSheetCalculator {
                 if (entry.Expression.ColorXML && this.rules.ExpressionsUseXMLColor) {
                     graphLabel.ColorXML = entry.Expression.ColorXML;
                 }
+                graphLabel.Label.language = entry.Expression.language;
 
                 if (entry.Expression instanceof InstantaneousTempoExpression) {
                     // registers itself in staffLine.AbstractExpressions, which is what isTempoMarkingAlreadyRendered() checks
@@ -2480,6 +2482,7 @@ export abstract class MusicSheetCalculator {
                 credit.font, credit.print);
             wrapped.fontFamily = credit.fontFamily;
             wrapped.fontStyle = credit.fontStyle;
+            wrapped.language = credit.language;
             const label: GraphicalLabel = new GraphicalLabel(
                 wrapped, this.rules.SheetSubtitleHeight, credit.textAlignment, this.rules);
             label.Label.IsCreditLabel = true;

@@ -264,6 +264,7 @@ export class ExpressionReader {
                     this.currentMultiTempoExpression.CombinedExpressionsText = text;
                     const instantaneousTempoExpression: InstantaneousTempoExpression = new InstantaneousTempoExpression(
                         text, this.placement, this.staffNumber, this.soundTempo, this.currentMultiTempoExpression);
+                    instantaneousTempoExpression.language = dirContentNode.attribute("xml:lang")?.value;
                     this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
                 } else if (!isDynamicInstruction) {
                     this.interpretWords(dirContentNode, text, currentMeasure, timestampFraction);
@@ -785,6 +786,7 @@ export class ExpressionReader {
         if (colorAttr) {
             fontColor = colorAttr.value;
         }
+        const language: string = wordsNode.attribute("xml:lang")?.value;
         let defaultYXml: number;
         if (currentMeasure.Rules.PlaceWordsInsideStafflineFromXml) {
             const defaultYString: string = wordsNode.attribute("default-y")?.value;
@@ -799,7 +801,7 @@ export class ExpressionReader {
             if (this.checkIfWordsNodeIsRepetitionInstruction(text)) {
                 return;
             }
-            this.fillMultiOrTempoExpression(text, currentMeasure, inSourceMeasureCurrentFraction, fontStyle, fontColor, defaultYXml);
+            this.fillMultiOrTempoExpression(text, currentMeasure, inSourceMeasureCurrentFraction, fontStyle, fontColor, defaultYXml, language);
         }
     }
     private readNumber(node: IXmlElement): number {
@@ -930,7 +932,7 @@ export class ExpressionReader {
         }
     }
     private fillMultiOrTempoExpression(inputString: string, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction,
-        fontStyle: FontStyles, fontColor: string, defaultYXml: number = undefined): void {
+        fontStyle: FontStyles, fontColor: string, defaultYXml: number = undefined, language: string = undefined): void {
         if (!inputString) {
             return;
         }
@@ -939,7 +941,8 @@ export class ExpressionReader {
         //const splitStrings: string[] = tmpInputString.split(/([\s,\r\n]and[\s,\r\n]|[\s,\r\n]und[\s,\r\n]|[\s,\r\n]e[\s,\r\n]|[\s,\r\n])+/g);
 
         //for (const splitStr of splitStrings) {
-        this.createExpressionFromString("", tmpInputString, currentMeasure, inSourceMeasureCurrentFraction, inputString, fontStyle, fontColor, defaultYXml);
+        this.createExpressionFromString("", tmpInputString, currentMeasure, inSourceMeasureCurrentFraction, inputString, fontStyle, fontColor,
+                                        defaultYXml, language);
         //}
     }
     /*
@@ -974,7 +977,8 @@ export class ExpressionReader {
                                        currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction, inputString: string,
                                        fontStyle: FontStyles,
                                        fontColor: string,
-                                       defaultYXml: number = undefined): boolean {
+                                       defaultYXml: number = undefined,
+                                       language: string = undefined): boolean {
         const isInstantaneousTempo: boolean = InstantaneousTempoExpression.isInputStringInstantaneousTempo(stringTrimmed);
         const isContinuousTempo: boolean = ContinuousTempoExpression.isInputStringContinuousTempo(stringTrimmed);
         if (isInstantaneousTempo || isContinuousTempo) {
@@ -998,6 +1002,7 @@ export class ExpressionReader {
                                                                                                                       this.soundTempo,
                                                                                                                       this.currentMultiTempoExpression);
                 instantaneousTempoExpression.ColorXML = fontColor;
+                instantaneousTempoExpression.language = language;
                 this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, prefix);
                 return true;
             }
@@ -1008,6 +1013,7 @@ export class ExpressionReader {
                     this.staffNumber,
                     this.currentMultiTempoExpression);
                 continuousTempoExpression.ColorXML = fontColor;
+                continuousTempoExpression.language = language;
                 this.currentMultiTempoExpression.addExpression(continuousTempoExpression, prefix);
                 return true;
             }
@@ -1039,6 +1045,7 @@ export class ExpressionReader {
                     -1,
                     stringTrimmed);
             continuousDynamicExpression.ColorXML = fontColor;
+            continuousDynamicExpression.language = language;
             const openWordContinuousDynamic: MultiExpression = this.getMultiExpression;
             if (openWordContinuousDynamic) {
                 this.closeOpenContinuousDynamic(openWordContinuousDynamic.StartingContinuousDynamic, currentMeasure, inSourceMeasureCurrentFraction);
@@ -1058,6 +1065,7 @@ export class ExpressionReader {
             const moodExpression: MoodExpression = new MoodExpression(stringTrimmed, this.placement, this.staffNumber);
             moodExpression.fontStyle = fontStyle;
             moodExpression.ColorXML = fontColor;
+            moodExpression.language = language;
             multiExpression.addExpression(moodExpression, prefix);
             return true;
         }
@@ -1092,6 +1100,7 @@ export class ExpressionReader {
             stringTrimmed, this.placement, textAlignment, this.staffNumber);
         unknownExpression.fontStyle = fontStyle;
         unknownExpression.ColorXML = fontColor;
+        unknownExpression.language = language;
         unknownExpression.defaultYXml = defaultYXml;
         unknownExpression.parentMeasure = currentMeasure;
         unknownMultiExpression.addExpression(unknownExpression, prefix);

@@ -113,9 +113,13 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
     public renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                       heightInPixel: number, screenPosition: PointF2D,
-                      color: string = undefined, fontFamily: string = undefined): Node {
+                      color: string = undefined, fontFamily: string = undefined, language: string = undefined): Node {
         this.ctx.save();
         const node: Node = this.ctx.openGroup("text");
+        if (language) {
+            // xml:lang (rather than lang) is also understood by SVG 1.1 tools, e.g. for exported SVG files
+            (node as Element).setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:lang", language);
+        }
 
         if (color) {
             this.ctx.attributes.fill = color;
