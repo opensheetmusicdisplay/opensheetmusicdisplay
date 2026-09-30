@@ -2482,9 +2482,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param measureIndex
    */
   protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction, measureIndex: number): void {
-    if (repetitionInstruction.DrawnAsText) {
-      return; // its words are drawn as text (expression)
-    }
     // find first visible StaffLine
     let uppermostMeasure: VexFlowMeasure = undefined;
     const measures: VexFlowMeasure[] = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
@@ -2562,6 +2559,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       default:
         text = ""; // segno/coda glyphs without text
         break;
+    }
+    // the words of the score, drawn instead of the text and coda glyph (see RepetitionInstruction.Words, addWordRepetition())
+    const words: string = (repetition as any).text;
+    if (words) {
+      text = words;
+      hasCodaGlyphAfterText = false;
     }
     const fontHeightUnits: number = 1.6; // staverepetition.js draws the text with a 12pt (16px) font
     let textWidthUnits: number = 0;
