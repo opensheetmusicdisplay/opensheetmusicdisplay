@@ -558,23 +558,25 @@ export class VexFlowConverter {
                 }
 
                 let addPadding: boolean = false;
+                const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
+                // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
+                const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
+                const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
+                const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
+                const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
+                // each verse has its own syllable here, and a later verse's syllable can be longer than the first verse's,
+                //   so take the padding the widest-reaching verse needs, not the first one above the threshold.
                 for (const lyricsEntry of lyricsEntries) {
-                    const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
                     // letters like i and l take less space, so we should use the visual width and not number of characters
                     let currentLyricsWidth: number = lyricsEntry.GraphicalLabel.PositionAndShape.Size.width;
                     if (lyricsEntry.hasDashFromLyricWord()) {
                         currentLyricsWidth += 0.5;
                     }
                     if (currentLyricsWidth > widthThreshold) {
-                        padding += currentLyricsWidth - widthThreshold;
                         // if (currentLyricsWidth > 4) {
                         //     padding *= 1.15; // only maybe needed if LyricsXPaddingFactorForLongLyrics < 1
                         // }
-                        // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
-                        const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
-                        const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
-                        const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
-                        const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
+                        let verseExistingPadding: number = extraExistingPadding;
                         // The regular reduction compensates for the natural buffer between the last note
                         // and the bar line. If this lyric is a multi-syllable mid-word continuation
                         // (a dash trails to the next syllable in the next measure), that buffer is much
@@ -583,22 +585,22 @@ export class VexFlowConverter {
                         // to add some extra padding without over-padding.
                         const isCrossMeasureMidWord: boolean = isLastNoteInMeasure && lyricsEntry.hasDashFromLyricWord();
                         if (isLastNoteInMeasure) {
-                            extraExistingPadding += isCrossMeasureMidWord
+                            verseExistingPadding += isCrossMeasureMidWord
                                 ? rules.LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord
                                 : rules.LyricsXPaddingReductionForLastNoteInMeasure;
                         }
                         if (!hasShortNotes) {
-                            extraExistingPadding += rules.LyricsXPaddingReductionForLongNotes; // quarter or longer notes need less padding
+                            verseExistingPadding += rules.LyricsXPaddingReductionForLongNotes; // quarter or longer notes need less padding
                         }
                         if (rules.LyricsXPaddingForLastNoteInMeasure || !isLastNoteInMeasure) {
-                            if (currentLyricsWidth > widthThreshold + extraExistingPadding) {
+                            if (currentLyricsWidth > widthThreshold + verseExistingPadding) {
                                 addPadding = true;
-                                padding -= extraExistingPadding; // we don't need to add the e.g. 1.2 we already get from measure end padding
+                                // we don't need to add the e.g. 1.2 we already get from measure end padding
                                 // for last note in the measure, this is usually not necessary,
                                 //   but in rare samples with quite long text on the last note it is.
+                                padding = Math.max(padding, currentLyricsWidth - widthThreshold - verseExistingPadding);
                             }
                         }
-                        break; // TODO take the max padding across verses
                     }
                     // for situations unlikely to cause overlap we shouldn't add padding,
                     //   e.g. Brooke West sample (OSMD Function Test Chord Symbols) - width ~3.1 in measure 11 on 'ling', no padding needed.
