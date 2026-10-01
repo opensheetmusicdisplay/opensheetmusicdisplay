@@ -1582,6 +1582,10 @@ export class OpenSheetMusicDisplay {
                     }
                 }
             }
+            // remove the cursors whose options were removed, e.g. by setOptions() with fewer cursorsOptions
+            for (const removedCursor of this.cursors.splice(this.cursorsOptions.length)) {
+                removedCursor?.Dispose(); // also removes its image
+            }
         } else { // disable cursor
             this.cursors.forEach(cursor => {
                 cursor.hide();

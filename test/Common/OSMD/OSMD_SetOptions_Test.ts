@@ -2,7 +2,8 @@ import { expect } from "chai";
 import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { EngravingRules } from "../../../src/MusicalScore/Graphical/EngravingRules";
-import { CursorType } from "../../../src/OpenSheetMusicDisplay/OSMDOptions";
+import { CursorOptions, CursorType } from "../../../src/OpenSheetMusicDisplay/OSMDOptions";
+import { Cursor } from "../../../src/OpenSheetMusicDisplay/Cursor";
 
 /** osmd.setOptions(): an option that is given is applied, also when it's false, and an option that is left out is kept. */
 describe("OSMD setOptions", () => {
@@ -42,6 +43,32 @@ describe("OSMD setOptions", () => {
             await osmdWithStandardCursor.load(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml"));
             osmdWithStandardCursor.render();
             expect(cursorsOf(osmdWithStandardCursor), "a new OSMD").to.equal(`0 ${osmdWithStandardCursor.EngravingRules.DefaultColorCursor}`);
+        } finally {
+            container.remove();
+        }
+    });
+
+    it("removes the cursors that new cursorsOptions leave out", async () => {
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        try {
+            const standard: CursorOptions = { type: CursorType.Standard, color: "#33e02f", alpha: 0.5, follow: true };
+            const thinLeft: CursorOptions = { type: CursorType.ThinLeft, color: "#ff0000", alpha: 0.5, follow: false };
+            const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, { autoResize: false, cursorsOptions: [standard, thinLeft] });
+            await osmd.load(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml"));
+            osmd.render();
+            osmd.setOptions({ cursorsOptions: [standard] });
+            osmd.render();
+            expect(osmd.cursors.length, "cursors after render()").to.equal(1);
+
+            // also without rendering again, where the removed cursor's image was still shown on the page
+            osmd.setOptions({ cursorsOptions: [standard, thinLeft] });
+            osmd.render();
+            const removedCursor: Cursor = osmd.cursors[1];
+            removedCursor.show();
+            osmd.setOptions({ cursorsOptions: [standard] });
+            osmd.enableOrDisableCursors(true);
+            expect(osmd.cursors.length, "cursors after enableOrDisableCursors()").to.equal(1);
+            expect(removedCursor.cursorElement.isConnected, "the removed cursor's image on the page").to.equal(false);
         } finally {
             container.remove();
         }
