@@ -456,7 +456,7 @@ export class Cursor {
         const newPageNumber: number = page.PageNumber;
         if (newPageNumber !== this.currentPageNumber) {
           this.container.removeChild(this.cursorElement);
-          this.container = document.getElementById("osmdCanvasPage" + newPageNumber);
+          this.container = this.getPageElement(newPageNumber);
           this.container.appendChild(this.cursorElement);
           // TODO maybe store this.pageCurrentlyAttachedTo, though right now it isn't necessary
           // alternative to remove/append:
@@ -466,6 +466,14 @@ export class Cursor {
       }
     }
     return 1;
+  }
+
+  /** Returns the element (div) of this OSMD instance's page with the given number, which the cursor is attached to on that page.
+   *  Found through the instance's backends, not by the element's id "osmdCanvasPage" + page number: every OSMD instance
+   *  on a web page gives its pages the same ids, so document.getElementById() can return another instance's page.
+   */
+  private getPageElement(pageNumber: number): HTMLElement {
+    return this.openSheetMusicDisplay.Drawer.Backends[pageNumber - 1]?.getInnerElement();
   }
 
   public get SkipInvisibleNotes(): boolean {
