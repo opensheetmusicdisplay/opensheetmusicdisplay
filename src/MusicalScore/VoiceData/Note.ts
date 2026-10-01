@@ -99,6 +99,14 @@ export class Note {
      * because Note.Notehead is undefined for normal Noteheads to save space and time.
      */
     private noteheadColorXml: string;
+    /** Whether the accidental given in XML is in parentheses (<accidental parentheses="yes">),
+     * usually a cautionary (courtesy) accidental. Drawn in parentheses, see VexFlowConverter.StaveNote().
+     */
+    public AccidentalParenthesesXml: boolean;
+    /** Whether the accidental given in XML is in brackets (<accidental bracket="yes">),
+     * e.g. an editorial accidental. Drawn in parentheses, see VexFlowConverter.StaveNote().
+     */
+    public AccidentalBracketXml: boolean;
     /** Color of the notehead currently set/desired for next render. RGB Hexadecimal, like #00FF00.
      * Needs to be stored here and not in Note.Notehead,
      * because Note.Notehead is undefined for normal Noteheads to save space and time.
