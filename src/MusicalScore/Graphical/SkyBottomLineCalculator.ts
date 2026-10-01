@@ -634,17 +634,30 @@ export class SkyBottomLineCalculator {
      * This method updates the StaffLine Borders with the Sky- and BottomLines Min- and MaxValues.
      */
     public updateStaffLineBorders(): void {
-        this.mStaffLineParent.PositionAndShape.BorderTop = this.getSkyLineMin();
-        this.mStaffLineParent.PositionAndShape.BorderMarginTop = this.getSkyLineMin();
-        this.mStaffLineParent.PositionAndShape.BorderBottom = this.getBottomLineMax();
-        this.mStaffLineParent.PositionAndShape.BorderMarginBottom = this.getBottomLineMax();
+        const skyLineMin: number = this.getSkyLineMin();
+        const bottomLineMax: number = this.getBottomLineMax();
+        this.mStaffLineParent.PositionAndShape.BorderTop = skyLineMin;
+        this.mStaffLineParent.PositionAndShape.BorderMarginTop = skyLineMin;
+        this.mStaffLineParent.PositionAndShape.BorderBottom = bottomLineMax;
+        this.mStaffLineParent.PositionAndShape.BorderMarginBottom = bottomLineMax;
     }
 
     /**
-     * This method finds the minimum value of the SkyLine.
+     * This method finds the minimum value of the SkyLine, ignoring NaN values.
+     * A loop of Math.min(min, value) gives the same result as Math.min(...this.SkyLine.filter(s => !isNaN(s)))
+     * (including -0 before 0, and Infinity for no values), without copying the line and spreading it into the arguments
+     * of a call, which is slow for lines of thousands of values and fails for very long ones.
+     * @returns the minimum
      */
     public getSkyLineMin(): number {
-        return Math.min(...this.SkyLine.filter(s => !isNaN(s)));
+        const skyLine: number[] = this.SkyLine;
+        let min: number = Number.POSITIVE_INFINITY;
+        for (let i: number = 0; i < skyLine.length; i++) {
+            if (!isNaN(skyLine[i])) {
+                min = Math.min(min, skyLine[i]);
+            }
+        }
+        return min;
     }
 
     public getSkyLineMinAtPoint(point: number): number {
@@ -662,10 +675,18 @@ export class SkyBottomLineCalculator {
     }
 
     /**
-     * This method finds the maximum value of the BottomLine.
+     * This method finds the maximum value of the BottomLine, ignoring NaN values (a loop, see getSkyLineMin()).
+     * @returns the maximum
      */
     public getBottomLineMax(): number {
-        return Math.max(...this.BottomLine.filter(s => !isNaN(s)));
+        const bottomLine: number[] = this.BottomLine;
+        let max: number = Number.NEGATIVE_INFINITY;
+        for (let i: number = 0; i < bottomLine.length; i++) {
+            if (!isNaN(bottomLine[i])) {
+                max = Math.max(max, bottomLine[i]);
+            }
+        }
+        return max;
     }
 
     public getBottomLineMaxAtPoint(point: number): number {
