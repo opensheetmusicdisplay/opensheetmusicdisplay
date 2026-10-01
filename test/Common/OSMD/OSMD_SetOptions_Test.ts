@@ -46,4 +46,18 @@ describe("OSMD setOptions", () => {
             container.remove();
         }
     });
+
+    it("keeps the onXMLRead function when it is left out", async () => {
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        try {
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+            let xmlReads: number = 0;
+            osmd.setOptions({ onXMLRead: (xml: string): string => { xmlReads++; return xml; } });
+            osmd.setOptions({ drawTitle: false });
+            await osmd.load(new XMLSerializer().serializeToString(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml")));
+            expect(xmlReads, "calls of the onXMLRead function").to.equal(1);
+        } finally {
+            container.remove();
+        }
+    });
 });

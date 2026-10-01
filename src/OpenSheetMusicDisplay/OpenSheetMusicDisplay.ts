@@ -99,8 +99,9 @@ export class OpenSheetMusicDisplay {
     /** A function that is executed when the XML has been read.
      * The return value will be used as the actual XML OSMD parses,
      * so you can make modifications to the xml that OSMD will use.
-     * Note that this is (re-)set on osmd.setOptions as `{return xml}`, unless you specify the function in the options. */
-    public OnXMLRead: (xml: string) => string;
+     * By default it returns the XML unchanged. It can also be set by the onXMLRead option,
+     * and osmd.setOptions() keeps it when the option is left out. */
+    public OnXMLRead: (xml: string) => string = (xml: string): string => xml;
 
     /**
      * Load a MusicXML file
@@ -1104,7 +1105,6 @@ export class OpenSheetMusicDisplay {
                 + "\n" + "example usage: osmd.setOptions({drawCredits: false, drawPartNames: false})");
             return;
         }
-        this.OnXMLRead = function(xml): string {return xml;};
         if (options.onXMLRead) {
             this.OnXMLRead = options.onXMLRead;
         }
