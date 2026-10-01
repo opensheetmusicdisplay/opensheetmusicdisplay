@@ -175,7 +175,8 @@ export class EngravingRules {
     /** Not always a symbol, can also be text (RepetitionInstruction). Keeping the name for backwards compatibility. */
     public RepetitionSymbolsYOffset: number;
     /** Adds a percent of the stave's width (e.g. 0.4 = 40%) to the x position of end instructions like Fine or D.C. al fine.
-     *  Only applied in the last measure of a staffline, so that the instruction is not shifted into the next measure. */
+     *  Only applied in the last measure of a staffline, so that the instruction is not shifted into the next measure,
+     *  and at most up to the measure's end barline, so that it isn't shifted off the page in a wide measure. */
     public RepetitionEndInstructionXShiftAsPercentOfStaveWidth: number;
     public RehearsalMarkXOffset: number;
     public RehearsalMarkXOffsetDefault: number;
@@ -533,6 +534,8 @@ export class EngravingRules {
     public RenderLyricist: boolean;
     public RenderCopyright: boolean;
     public RenderPartNames: boolean;
+    /** Whether to render part-group names and abbreviations. Requires RenderPartNames. Default true. */
+    public RenderPartGroupNames: boolean;
     public RenderPartAbbreviations: boolean;
     /** Whether to render part abbreviations on systems with only one staff.
      *  Requires RenderPartNames and RenderPartAbbreviations. Default false.
@@ -618,6 +621,11 @@ export class EngravingRules {
      * but were inserted as a words element in the MusicXML, which can't be matched to the note anymore,
      * and would otherwise just be placed somewhere else. See OSMD Issue 1251. */
     public IgnoreBracketsWords: boolean;
+    /** Whether to draw cautionary accidentals (<accidental cautionary="yes">) in parentheses when the XML gives
+     *  neither parentheses nor bracket, as MuseScore reads them. Default false: only accidentals with parentheses="yes"
+     *  or bracket="yes" are drawn in parentheses, as parentheses take space. Read in load().
+     */
+    public RenderCautionaryAccidentalsInParentheses: boolean;
     public PlaceWordsInsideStafflineFromXml: boolean;
     public PlaceWordsInsideStafflineYOffset: number;
     // public PositionMarcatoCloseToNote: boolean;
@@ -1061,6 +1069,7 @@ export class EngravingRules {
         this.RenderLyricist = true;
         this.RenderCopyright = false;
         this.RenderPartNames = true;
+        this.RenderPartGroupNames = true;
         this.RenderPartAbbreviations = true;
         this.RenderPartAbbreviationsForSingleStaff = false;
         this.LazyConsistentGraphic = false;
@@ -1103,6 +1112,7 @@ export class EngravingRules {
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
         this.IgnoreBracketsWords = true;
+        this.RenderCautionaryAccidentalsInParentheses = false;
         this.PlaceWordsInsideStafflineFromXml = false;
         this.PlaceWordsInsideStafflineYOffset = 0.9;
         // this.PositionMarcatoCloseToNote = true;

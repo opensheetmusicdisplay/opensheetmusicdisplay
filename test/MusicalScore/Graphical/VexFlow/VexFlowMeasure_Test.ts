@@ -1458,12 +1458,14 @@ describe("VexFlow Measure", () => {
    // Rendering doesn't mark stand-alone grace notes as grace notes after their main note, whose accidentals are calculated after
    //   the other notes of the measure. So after updateGraphic() (e.g. for a transposition), the sharp stays on the grace note F#5
    //   of voice 2 at the third beat, not on the grace note F#5 after the whole note of voice 1, and nothing moves.
+   //   Only the grace note of voice 2 has an accidental in the XML: one given for voice 1 would be drawn as a courtesy accidental.
    it("Keeps the accidental and the position of a stand-alone grace note after updateGraphic()", (done: Mocha.Done) => {
-      const graceFSharp: (voice: number) => string = (voice: number): string =>
-         `<note><grace/>${xmlPitch("F", 5, 1)}<voice>${voice}</voice><type>eighth</type><accidental>sharp</accidental></note>`;
+      const graceFSharp: (voice: number, accidental: string) => string = (voice: number, accidental: string): string =>
+         `<note><grace/>${xmlPitch("F", 5, 1)}<voice>${voice}</voice><type>eighth</type>${accidental}</note>`;
       const xml: string = scoreWithMeasure(
-         `<note>${xmlPitch("C", 5)}<duration>4</duration><voice>1</voice><type>whole</type></note>${graceFSharp(1)}
-         <backup><duration>4</duration></backup><forward><duration>2</duration><voice>2</voice></forward>${graceFSharp(2)}`);
+         `<note>${xmlPitch("C", 5)}<duration>4</duration><voice>1</voice><type>whole</type></note>${graceFSharp(1, "")}
+         <backup><duration>4</duration></backup><forward><duration>2</duration><voice>2</voice></forward>
+         ${graceFSharp(2, "<accidental>sharp</accidental>")}`);
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const layout: () => { sharp: boolean, x: number }[] = (): { sharp: boolean, x: number }[] =>
          [voiceEntryAt(osmd, 0, 1, true), voiceEntryAt(osmd, 0.5, 2, true)].map((gve: VexFlowVoiceEntry) => ({

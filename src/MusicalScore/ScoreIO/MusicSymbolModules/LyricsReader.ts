@@ -3,7 +3,7 @@ import {VoiceEntry} from "../../VoiceData/VoiceEntry";
 import {IXmlElement} from "../../../Common/FileIO/Xml";
 import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
-import {MusicSheet} from "../../MusicSheet";
+import {LyricLanguage, MusicSheet} from "../../MusicSheet";
 
 export class LyricsReader {
     private openLyricWords: { [_: number]: LyricWord } = {};
@@ -110,6 +110,7 @@ export class LyricsReader {
                             }
                             // add each LyricEntry to currentVoiceEntry
                             if (lyricsEntry) {
+                                lyricsEntry.language = this.readLanguage(lyricNode, currentLyricVerseNumber);
                                 // only add the lyric entry if not another entry has already been given:
                                 if (!currentVoiceEntry.LyricsEntries[currentLyricVerseNumber]) {
                                     currentVoiceEntry.LyricsEntries.setValue(currentLyricVerseNumber, lyricsEntry);
@@ -132,5 +133,23 @@ export class LyricsReader {
                 }
             }
         }
+    }
+
+    /**
+     * Returns the language of a lyric: the xml:lang of its text, else the sheet's default language for its number or name,
+     * else the sheet's default language for all lyrics (MusicSheet.LyricLanguages, from <defaults><lyric-language>).
+     */
+    private readLanguage(lyricNode: IXmlElement, verseNumber: string): string {
+        const language: string = lyricNode.element("text")?.attribute("xml:lang")?.value;
+        if (language) {
+            return language;
+        }
+        const name: string = lyricNode.attribute("name")?.value;
+        const defaults: LyricLanguage[] = this.musicSheet.LyricLanguages;
+        const lyricDefault: LyricLanguage =
+            defaults.find((entry: LyricLanguage): boolean => entry.number !== undefined && entry.number === verseNumber ||
+                entry.name !== undefined && entry.name === name) ??
+            defaults.find((entry: LyricLanguage): boolean => entry.number === undefined && entry.name === undefined);
+        return lyricDefault?.language;
     }
 }

@@ -1230,12 +1230,33 @@ export class MusicSystemBuilder {
         return systemY + snappedStafflineY - firstStafflineY;
     }
 
+    /** The top border of a page's first system (from its skyline), by which all systems of the page are moved down after the
+     *  page layout, see MusicSheetCalculator.calculateMusicSystems(). The page layout includes this move when checking
+     *  whether a system still fits above the bottom margin.
+     *  Rounded to whole pixels to keep the staff line positions snapped by snapSystemYToCrispStaffLines(),
+     *  or to the half-pixel grid if not snapping. */
+    public pageTopBorder(firstSystem: MusicSystem): number {
+        const top: number = firstSystem.PositionAndShape.BorderTop;
+        return this.rules.SnapStafflinesToCrispPixels ? Math.round(top * 10) / 10 : Math.round(top * 20) / 20;
+    }
+
+    /** Room below the last system of page 1, where calculatePageLabels places the copyright. */
+    private copyrightHeightBelowSystems(): number {
+        const copyright: GraphicalLabel = this.graphicalMusicSheet.Copyright;
+        if (!copyright || !this.rules.RenderCopyright || copyright.Label.text.trim() === "") {
+            return 0;
+        }
+        return this.rules.SheetCopyrightMargin + copyright.PositionAndShape.BorderBottom - copyright.PositionAndShape.BorderTop;
+    }
+
     /** Calculates the relative Positions of all MusicSystems.
      *
      */
     protected calculateMusicSystemsRelativePositions(): void {
         let currentPage: GraphicalMusicPage = this.createMusicPage();
         let currentYPosition: number = 0;
+        let pageTopBorder: number = 0;
+        let pageFooterHeight: number = 0;
         // xPosition is always fixed
         let currentSystem: MusicSystem = this.musicSystems[0];
         let timesPageCouldntFitSingleSystem: number = 0;
@@ -1246,6 +1267,8 @@ export class MusicSystemBuilder {
                 // if this is the first system on the current page:
                 // take top margins into account
                 this.addSystemToPage(currentPage, currentSystem);
+                pageTopBorder = this.pageTopBorder(currentSystem);
+                pageFooterHeight = this.graphicalMusicSheet.MusicPages.length === 1 ? this.copyrightHeightBelowSystems() : 0;
                 if (this.rules.CompactMode) {
                     currentYPosition = this.rules.PageTopMarginNarrow;
                 } else {
@@ -1316,7 +1339,8 @@ export class MusicSystemBuilder {
                                                                 currentYPosition);
                 currentSystem.PositionAndShape.RelativePosition = relativePosition;
                 // check if the first system doesn't even fit on the page -> would lead to truncation at bottom end:
-                if (currentYPosition + currentSystem.PositionAndShape.BorderBottom > this.rules.PageHeight - this.rules.PageBottomMargin) {
+                if (currentYPosition - pageTopBorder + currentSystem.PositionAndShape.BorderBottom + pageFooterHeight >
+                    this.rules.PageHeight - this.rules.PageBottomMargin) {
                     // can't fit single system on page, maybe PageFormat too small
                     timesPageCouldntFitSingleSystem++;
                     if (timesPageCouldntFitSingleSystem <= 4) { // only warn once with detailed info
@@ -1347,9 +1371,9 @@ export class MusicSystemBuilder {
                 newYPosition = this.snapSystemYToCrispStaffLines(currentSystem, newYPosition);
 
                 // calculate the needed height for placing the current system on the page,
-                // to see if it still fits:
+                // including the later shift down by -pageTopBorder and the copyright below page 1:
                 const currSystemBottomYPos: number =    newYPosition +
-                                                        currentSystem.PositionAndShape.BorderMarginBottom;
+                                                        currentSystem.PositionAndShape.BorderMarginBottom - pageTopBorder + pageFooterHeight;
                 const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && previousSystem.breaksPage;
                 if (!doXmlPageBreak &&
                     (currSystemBottomYPos < this.rules.PageHeight - this.rules.PageBottomMargin)) {

@@ -250,6 +250,26 @@ export class VexFlowConverter {
     }
 
     /**
+     * Adds an accidental to the key (note) of the given index of a VexFlow note.
+     * @param inParentheses Draw the accidental in parentheses (a cautionary accidental).
+     *   For an accidental made of two signs, only the one next to the notehead gets them,
+     *   as VexFlow draws parentheses around a single accidental sign.
+     */
+    private static addAccidental(vfnote: VF.StaveNote, index: number, type: string, inParentheses: boolean = false): void {
+        const accidental: VF.Accidental = new VF.Accidental(type);
+        if (inParentheses) {
+            // setAsCautionary() also makes the accidental smaller (font_scale 28 instead of 38).
+            //   An accidental in parentheses keeps the size of the note's other accidentals.
+            const fontScale: number = (accidental as any).render_options.font_scale;
+            accidental.setAsCautionary();
+            (accidental as any).render_options.font_scale = fontScale;
+            (accidental as any).reset(); // recreate the accidental and parentheses glyphs with the font scale
+        }
+        // for grace notes, this makes the accidental smaller, including its parentheses (Accidental.setNote())
+        vfnote.addAccidental(index, accidental);
+    }
+
+    /**
      * Convert a GraphicalVoiceEntry to a VexFlow StaveNote
      * @param gve the GraphicalVoiceEntry which can hold a note or a chord on the staff belonging to one voice
      * @returns {VF.StaveNote}
@@ -558,23 +578,25 @@ export class VexFlowConverter {
                 }
 
                 let addPadding: boolean = false;
+                const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
+                // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
+                const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
+                const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
+                const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
+                const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
+                // each verse has its own syllable here, and a later verse's syllable can be longer than the first verse's,
+                //   so take the padding the widest-reaching verse needs, not the first one above the threshold.
                 for (const lyricsEntry of lyricsEntries) {
-                    const widthThreshold: number = rules.LyricsXPaddingWidthThreshold;
                     // letters like i and l take less space, so we should use the visual width and not number of characters
                     let currentLyricsWidth: number = lyricsEntry.GraphicalLabel.PositionAndShape.Size.width;
                     if (lyricsEntry.hasDashFromLyricWord()) {
                         currentLyricsWidth += 0.5;
                     }
                     if (currentLyricsWidth > widthThreshold) {
-                        padding += currentLyricsWidth - widthThreshold;
                         // if (currentLyricsWidth > 4) {
                         //     padding *= 1.15; // only maybe needed if LyricsXPaddingFactorForLongLyrics < 1
                         // }
-                        // check if we need padding because next staff entry also has long lyrics or it's the last note in the measure
-                        const currentStaffEntry: GraphicalStaffEntry = gve.parentStaffEntry;
-                        const measureStaffEntries: GraphicalStaffEntry[] = currentStaffEntry.parentMeasure.staffEntries;
-                        const currentStaffEntryIndex: number = measureStaffEntries.indexOf(currentStaffEntry);
-                        const isLastNoteInMeasure: boolean = currentStaffEntryIndex === measureStaffEntries.length - 1;
+                        let verseExistingPadding: number = extraExistingPadding;
                         // The regular reduction compensates for the natural buffer between the last note
                         // and the bar line. If this lyric is a multi-syllable mid-word continuation
                         // (a dash trails to the next syllable in the next measure), that buffer is much
@@ -583,22 +605,22 @@ export class VexFlowConverter {
                         // to add some extra padding without over-padding.
                         const isCrossMeasureMidWord: boolean = isLastNoteInMeasure && lyricsEntry.hasDashFromLyricWord();
                         if (isLastNoteInMeasure) {
-                            extraExistingPadding += isCrossMeasureMidWord
+                            verseExistingPadding += isCrossMeasureMidWord
                                 ? rules.LyricsXPaddingReductionForLastNoteInMeasureCrossMeasureMidWord
                                 : rules.LyricsXPaddingReductionForLastNoteInMeasure;
                         }
                         if (!hasShortNotes) {
-                            extraExistingPadding += rules.LyricsXPaddingReductionForLongNotes; // quarter or longer notes need less padding
+                            verseExistingPadding += rules.LyricsXPaddingReductionForLongNotes; // quarter or longer notes need less padding
                         }
                         if (rules.LyricsXPaddingForLastNoteInMeasure || !isLastNoteInMeasure) {
-                            if (currentLyricsWidth > widthThreshold + extraExistingPadding) {
+                            if (currentLyricsWidth > widthThreshold + verseExistingPadding) {
                                 addPadding = true;
-                                padding -= extraExistingPadding; // we don't need to add the e.g. 1.2 we already get from measure end padding
+                                // we don't need to add the e.g. 1.2 we already get from measure end padding
                                 // for last note in the measure, this is usually not necessary,
                                 //   but in rare samples with quite long text on the last note it is.
+                                padding = Math.max(padding, currentLyricsWidth - widthThreshold - verseExistingPadding);
                             }
                         }
-                        break; // TODO take the max padding across verses
                     }
                     // for situations unlikely to cause overlap we shouldn't add padding,
                     //   e.g. Brooke West sample (OSMD Function Test Chord Symbols) - width ~3.1 in measure 11 on 'ling', no padding needed.
@@ -686,23 +708,27 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
+                // <accidental parentheses="yes"> or bracket="yes", e.g. a cautionary accidental.
+                //   VexFlow has no brackets for accidentals, so bracketed ones are drawn in parentheses too.
+                const sourceNote: Note = notes[i].sourceNote;
+                const inParentheses: boolean = sourceNote.AccidentalParenthesesXml || sourceNote.AccidentalBracketXml;
                 if (accidentals[i] === "sharp-sharp") { // two separate sharp signs, not the double-sharp cross
-                    vfnote.addAccidental(i, new VF.Accidental("#"));
-                    vfnote.addAccidental(i, new VF.Accidental("#"));
+                    VexFlowConverter.addAccidental(vfnote, i, "#", inParentheses);
+                    VexFlowConverter.addAccidental(vfnote, i, "#");
                 } else if (accidentals[i] === "natural-sharp") { // natural sign, then sharp sign (the first accidental added is drawn next to the notehead)
-                    vfnote.addAccidental(i, new VF.Accidental("#"));
-                    vfnote.addAccidental(i, new VF.Accidental("n"));
+                    VexFlowConverter.addAccidental(vfnote, i, "#", inParentheses);
+                    VexFlowConverter.addAccidental(vfnote, i, "n");
                 } else if (accidentals[i] === "natural-flat") { // natural sign, then flat sign
-                    vfnote.addAccidental(i, new VF.Accidental("b"));
-                    vfnote.addAccidental(i, new VF.Accidental("n"));
+                    VexFlowConverter.addAccidental(vfnote, i, "b", inParentheses);
+                    VexFlowConverter.addAccidental(vfnote, i, "n");
                 } else if (accidentals[i] === "###") { // triple sharp
-                    vfnote.addAccidental(i, new VF.Accidental("##"));
-                    vfnote.addAccidental(i, new VF.Accidental("#"));
+                    VexFlowConverter.addAccidental(vfnote, i, "##", inParentheses);
+                    VexFlowConverter.addAccidental(vfnote, i, "#");
                 } else if (accidentals[i] === "bbs") { // triple flat
-                    vfnote.addAccidental(i, new VF.Accidental("bb"));
-                    vfnote.addAccidental(i, new VF.Accidental("b"));
+                    VexFlowConverter.addAccidental(vfnote, i, "bb", inParentheses);
+                    VexFlowConverter.addAccidental(vfnote, i, "b");
                 } else {
-                    vfnote.addAccidental(i, new VF.Accidental(accidentals[i])); // normal accidental
+                    VexFlowConverter.addAccidental(vfnote, i, accidentals[i], inParentheses); // normal accidental
                 }
             }
 

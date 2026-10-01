@@ -26,6 +26,7 @@ import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import { MusicSheetDrawer } from "./MusicSheetDrawer";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalObject } from "./GraphicalObject";
+import { ClassType } from "../Interfaces/AClassHierarchyTrackable";
 // import { VexFlowMusicSheetDrawer } from "./VexFlow/VexFlowMusicSheetDrawer";
 // import { SvgVexFlowBackend } from "./VexFlow/SvgVexFlowBackend"; // causes build problem with npm start
 
@@ -545,21 +546,25 @@ export class GraphicalMusicSheet {
     /**
      * Generic method to find graphical objects on the sheet at a given location.
      * @param clickPosition Position in units where we are searching on the sheet
-     * @param className String representation of the class we want to find. Must extend GraphicalObject
+     * @param classOrName The class we want to find, e.g. GraphicalVoiceEntry. Must extend GraphicalObject.
+     *   Or its name, which is unreliable in minified builds (see AClassHierarchyTrackable.isInstanceOfClass()).
      * @param startSearchArea The area in units around our point to look for our graphical object, default 5
      * @param maxSearchArea The max area we want to search around our point
      * @param searchAreaIncrement The amount we expand our search area for each iteration that we don't find an object of the given type
      * @param shouldBeIncludedTest A callback that determines if the object should be included in our results- return false for no, true for yes
      * @param distanceTo A callback that returns an object's (squared) distance to the click position, by which the nearest object is chosen.
      *   By default, the distance of the object's position.
+     * @param page The page to search, or undefined for all pages (see pagesToSearch()).
      */
     private GetNearestGraphicalObject<T extends GraphicalObject>(
-        clickPosition: PointF2D, className: string = GraphicalObject.name,
+        clickPosition: PointF2D, classOrName: ClassType | string = GraphicalObject,
         startSearchArea: number = 5, maxSearchArea: number = 20, searchAreaIncrement: number = 5,
         shouldBeIncludedTest: (objectToTest: T) => boolean = undefined,
         distanceTo: (objectToTest: T) => number = (objectToTest: T): number =>
-            this.CalculateDistance(objectToTest.PositionAndShape.AbsolutePosition, clickPosition)): T {
+            this.CalculateDistance(objectToTest.PositionAndShape.AbsolutePosition, clickPosition),
+        page?: GraphicalMusicPage): T {
         const foundEntries: T[] = [];
+        const pages: GraphicalMusicPage[] = this.pagesToSearch(page);
         //Loop until we find some, or our search area is out of bounds
         while (foundEntries.length === 0 && startSearchArea <= maxSearchArea) {
             //Prepare search area
@@ -571,9 +576,9 @@ export class GraphicalMusicSheet {
             region.AbsolutePosition = new PointF2D(clickPosition.x, clickPosition.y);
             region.calculateAbsolutePosition();
             //Loop through music pages
-            for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
-                const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
-                const entries: T[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<T>(region, false, className);
+            for (let idx: number = 0, len: number = pages.length; idx < len; ++idx) {
+                const graphicalMusicPage: GraphicalMusicPage = pages[idx];
+                const entries: T[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<T>(region, false, classOrName);
                 //If we have no entries on this page, skip to next (if exists)
                 if (!entries || entries.length === 0) {
                     continue;
@@ -612,15 +617,44 @@ export class GraphicalMusicSheet {
     }
 
     /**
+     * Returns the pages to search for the objects at a position: the given page, or all pages.
+     * Each page has its own coordinates: with a page format (EngravingRules.PageFormat), each page is drawn on its own canvas (SVG),
+     * from its top left (see GraphicalMusicPage.setMusicPageAbsolutePosition()). So a position, e.g. of a click on a page,
+     * is on every page, and the nearest object of all pages can be on another page, e.g. in the first system there.
+     */
+    private pagesToSearch(page: GraphicalMusicPage): GraphicalMusicPage[] {
+        return page ? [page] : this.MusicPages;
+    }
+
+    /**
      * Returns the voice entry with the note (head) nearest to the position, e.g. of a click.
      * @param clickPosition The position in units
+     * @param ignoreGraceNotes Whether to skip voice entries of grace notes
+     * @param page The page to search, e.g. the one clicked on: each page has its own coordinates, so the position is on every page.
+     *   By default, all pages.
      */
-    public GetNearestVoiceEntry(clickPosition: PointF2D): GraphicalVoiceEntry {
-        return this.GetNearestGraphicalObject<GraphicalVoiceEntry>(clickPosition, GraphicalVoiceEntry.name, 5, 20, 5,
-                                                                   (object: GraphicalVoiceEntry) =>
-                                                                        object.parentStaffEntry?.relInMeasureTimestamp !== undefined &&
-                                                                        !GraphicalMusicSheet.isUndrawnTabRest(object),
-                                                                   (object: GraphicalVoiceEntry) => this.distanceToNearestNote(object, clickPosition));
+    public GetNearestVoiceEntry(clickPosition: PointF2D, ignoreGraceNotes: boolean = false, page?: GraphicalMusicPage): GraphicalVoiceEntry {
+        function shouldBeIncluded(gve: GraphicalVoiceEntry): boolean {
+            if (!gve.parentStaffEntry?.relInMeasureTimestamp || GraphicalMusicSheet.isUndrawnTabRest(gve)) {
+                return false;
+            }
+            if (ignoreGraceNotes) {
+                let isGraceOnly: boolean = true;
+                for (const note of gve.notes) {
+                    if (!note.sourceNote.IsGraceNote) {
+                        isGraceOnly = false;
+                        break;
+                    }
+                }
+                if (isGraceOnly) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return this.GetNearestGraphicalObject<GraphicalVoiceEntry>(
+            clickPosition, GraphicalVoiceEntry, 5, 20, 5,
+            shouldBeIncluded, (gve: GraphicalVoiceEntry) => this.distanceToNearestNote(gve, clickPosition), page);
     }
 
     /**
@@ -645,8 +679,15 @@ export class GraphicalMusicSheet {
         return distance;
     }
 
-    public GetNearestNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
-        const nearestVoiceEntry: GraphicalVoiceEntry = this.GetNearestVoiceEntry(clickPosition);
+    /**
+     * Returns the note (head) nearest to the position, e.g. of a click: the nearest note of the nearest voice entry.
+     * @param clickPosition The position in units
+     * @param maxClickDist Unused
+     * @param page The page to search, e.g. the one clicked on: each page has its own coordinates, so the position is on every page.
+     *   By default, all pages.
+     */
+    public GetNearestNote(clickPosition: PointF2D, maxClickDist: PointF2D, page?: GraphicalMusicPage): GraphicalNote {
+        const nearestVoiceEntry: GraphicalVoiceEntry = this.GetNearestVoiceEntry(clickPosition, false, page);
         if (!nearestVoiceEntry) {
             return undefined;
         }
@@ -729,7 +770,13 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
-    public GetNearestStaffEntry(clickPosition: PointF2D): GraphicalStaffEntry {
+    /**
+     * Returns the staff entry nearest to the position, e.g. of a click.
+     * @param clickPosition The position in units
+     * @param page The page to search, e.g. the one clicked on: each page has its own coordinates, so the position is on every page.
+     *   By default, all pages.
+     */
+    public GetNearestStaffEntry(clickPosition: PointF2D, page?: GraphicalMusicPage): GraphicalStaffEntry {
         const initialSearchArea: number = 10;
         const foundEntries: GraphicalStaffEntry[] = [];
         // Prepare search area
@@ -740,11 +787,12 @@ export class GraphicalMusicSheet {
         region.BorderBottom = clickPosition.y + initialSearchArea;
         region.AbsolutePosition = new PointF2D(0, 0);
         // Search for StaffEntries in region
-        for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
-            const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
+        const pages: GraphicalMusicPage[] = this.pagesToSearch(page);
+        for (let idx: number = 0, len: number = pages.length; idx < len; ++idx) {
+            const graphicalMusicPage: GraphicalMusicPage = pages[idx];
             const entries: GraphicalStaffEntry[] = graphicalMusicPage.PositionAndShape.
-                getObjectsInRegion<GraphicalStaffEntry>(region, false, GraphicalStaffEntry.name);
-                // note that "GraphicalStaffEntry" instead of GraphicalStaffEntry.name doesn't work with minified builds
+                getObjectsInRegion<GraphicalStaffEntry>(region, false, GraphicalStaffEntry);
+                // note: the class, not its name (GraphicalStaffEntry.name): minified builds can give other classes the same name
             if (!entries || entries.length === 0) {
                 continue;
             } else {
@@ -780,10 +828,14 @@ export class GraphicalMusicSheet {
     }
 
     /** Returns nearest object of type T near clickPosition.
-     * E.g. GetNearestObject<GraphicalMeasure>(pos, GraphicalMeasure.name) returns the nearest measure.
+     * E.g. GetNearestObject(pos, GraphicalMeasure) returns the nearest measure.
      * Note that there is also GetNearestStaffEntry(), which has a bit more specific code for staff entries.
+     * @param classOrName The class of the object, e.g. GraphicalMeasure. Or its name (e.g. GraphicalMeasure.name), which is unreliable
+     *   in minified builds: they can give other classes the same name, e.g. GraphicalNote (see AClassHierarchyTrackable.isInstanceOfClass()).
+     * @param page The page to search, e.g. the one clicked on: each page has its own coordinates, so the position is on every page.
+     *   By default, all pages.
      * */
-    public GetNearestObject<T extends GraphicalObject>(clickPosition: PointF2D, className: string): T {
+    public GetNearestObject<T extends GraphicalObject>(clickPosition: PointF2D, classOrName: ClassType<T> | string, page?: GraphicalMusicPage): T {
         const initialSearchArea: number = 10;
         const foundEntries: T[] = [];
         // Prepare search area
@@ -794,9 +846,10 @@ export class GraphicalMusicSheet {
         region.BorderBottom = clickPosition.y + initialSearchArea;
         region.AbsolutePosition = new PointF2D(0, 0);
         // Search for StaffEntries in region
-        for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
-            const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
-            const entries: T[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<T>(region, false, className);
+        const pages: GraphicalMusicPage[] = this.pagesToSearch(page);
+        for (let idx: number = 0, len: number = pages.length; idx < len; ++idx) {
+            const graphicalMusicPage: GraphicalMusicPage = pages[idx];
+            const entries: T[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<T>(region, false, classOrName);
             if (!entries || entries.length === 0) {
                 continue;
             } else {
