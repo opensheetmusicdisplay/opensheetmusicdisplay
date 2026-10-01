@@ -23,6 +23,10 @@ export class IXmlElement {
     private attributeFieldsKnown: boolean = false;
     private hasElementsOfElement: boolean = false;
     private hasElementsKnown: boolean = false;
+    // The child elements and their lower-cased node names, from the second lookup of child elements on (see childList()).
+    private childElements: Element[] = undefined;
+    private childNames: string[] = undefined;
+    private childLookups: number = 0;
 
     /**
      * Wraps 'elem' Element in a IXmlElement
@@ -133,6 +137,16 @@ export class IXmlElement {
      * @returns {IXmlElement}
      */
     public element(elementName: string): IXmlElement {
+        const children: Element[] = this.childList();
+        if (children) {
+            const names: string[] = this.childNames;
+            for (let i: number = 0; i < names.length; i++) {
+                if (names[i] === elementName) {
+                    return new IXmlElement(children[i], elementName);
+                }
+            }
+            return undefined;
+        }
         for (let node: Element = this.elem.firstElementChild; node; node = node.nextElementSibling) {
             if (node.nodeName.toLowerCase() === elementName) {
                 // A match means elementName IS the lower-cased node name, so it
@@ -153,6 +167,18 @@ export class IXmlElement {
         if (!nameUnset) {
             nodeName = nodeName.toLowerCase();
         }
+        const children: Element[] = this.childList();
+        if (children) {
+            const names: string[] = this.childNames;
+            for (let i: number = 0; i < children.length; i++) {
+                if (nameUnset) {
+                    ret.push(new IXmlElement(children[i], names[i]));
+                } else if (names[i] === nodeName) {
+                    ret.push(new IXmlElement(children[i], nodeName));
+                }
+            }
+            return ret;
+        }
         for (let node: Element = this.elem.firstElementChild; node; node = node.nextElementSibling) {
             if (nameUnset) {
                 ret.push(new IXmlElement(node));
@@ -172,22 +198,63 @@ export class IXmlElement {
      */
     public combinedElement(elementName: string): IXmlElement {
         let firstNode: Element;
-        for (let otherNode: Element = this.elem.firstElementChild; otherNode; otherNode = otherNode.nextElementSibling) {
-            if (otherNode.nodeName.toLowerCase() !== elementName) {
-                continue;
-            }
+        const combine: (otherNode: Element) => void = (otherNode: Element): void => {
             if (!firstNode) {
                 firstNode = otherNode;
-                continue;
+                return;
             }
             const childNodes: NodeList = otherNode.childNodes;
             for (let j: number = 0, numChildNodes: number = childNodes.length; j < numChildNodes; j += 1) {
                 const childNode: Node = childNodes[j];
                 firstNode.appendChild(childNode.cloneNode(true));
             }
+        };
+        // (appending to the first node doesn't change this element's child elements, so the cached list stays valid)
+        const children: Element[] = this.childList();
+        if (children) {
+            const names: string[] = this.childNames;
+            for (let i: number = 0; i < children.length; i++) {
+                if (names[i] === elementName) {
+                    combine(children[i]);
+                }
+            }
+        } else {
+            for (let otherNode: Element = this.elem.firstElementChild; otherNode; otherNode = otherNode.nextElementSibling) {
+                if (otherNode.nodeName.toLowerCase() === elementName) {
+                    combine(otherNode);
+                }
+            }
         }
         if (firstNode) {
             return new IXmlElement(firstNode, elementName);
         }
+    }
+
+    /**
+     * The child elements of the element, for a wrapper that is looked up in repeatedly (e.g. a note, about 10 times when
+     * reading a score): scanning this list with their names is much faster than walking the child elements in the DOM for
+     * every lookup, especially for the many lookups of names that aren't there. Read at the second lookup (most wrappers are
+     * looked up in once, which walks the DOM as before), and read again if the element has another last child element,
+     * i.e. if child elements were appended, like combinedElement() appends to the first element with a name.
+     * @returns the child elements (with their names in childNames), or undefined for a first lookup, which walks the DOM
+     */
+    private childList(): Element[] {
+        if (this.childElements) {
+            const last: Element = this.childElements.length > 0 ? this.childElements[this.childElements.length - 1] : null;
+            if (this.elem.lastElementChild === last) {
+                return this.childElements;
+            }
+        } else if (++this.childLookups < 2) {
+            return undefined;
+        }
+        const elements: Element[] = [];
+        const names: string[] = [];
+        for (let node: Element = this.elem.firstElementChild; node; node = node.nextElementSibling) {
+            elements.push(node);
+            names.push(node.nodeName.toLowerCase());
+        }
+        this.childElements = elements;
+        this.childNames = names;
+        return elements;
     }
 }
