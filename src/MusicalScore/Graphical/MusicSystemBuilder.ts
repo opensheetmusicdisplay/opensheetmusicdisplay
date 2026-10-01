@@ -1230,8 +1230,11 @@ export class MusicSystemBuilder {
         return systemY + snappedStafflineY - firstStafflineY;
     }
 
-    /** The first system's top border, by which all systems are shifted after page layout.
-     *  Use the same rounding for the fit check and the shift to preserve crisp staff lines. */
+    /** The top border of a page's first system (from its skyline), by which all systems of the page are moved down after the
+     *  page layout, see MusicSheetCalculator.calculateMusicSystems(). The page layout includes this move when checking
+     *  whether a system still fits above the bottom margin.
+     *  Rounded to whole pixels to keep the staff line positions snapped by snapSystemYToCrispStaffLines(),
+     *  or to the half-pixel grid if not snapping. */
     public pageTopBorder(firstSystem: MusicSystem): number {
         const top: number = firstSystem.PositionAndShape.BorderTop;
         return this.rules.SnapStafflinesToCrispPixels ? Math.round(top * 10) / 10 : Math.round(top * 20) / 20;
