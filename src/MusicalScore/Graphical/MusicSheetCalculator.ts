@@ -3898,6 +3898,7 @@ export abstract class MusicSheetCalculator {
         let anyVerseEndStaffLine: StaffLine = undefined;
         let foundAnyVerseSyllable: boolean = false;
         let foundOwnVerseSyllable: boolean = false;
+        let measure: GraphicalMeasure = startStaffEntry.parentMeasure;
         let index: number = startStaffEntry.parentVerticalContainer.Index + 1;
         for (; index < containers.length; ++index) {
             const gse: GraphicalStaffEntry = containers[index].StaffEntries[staffIndex];
@@ -3908,6 +3909,13 @@ export abstract class MusicSheetCalculator {
             //   which could otherwise now be extended over its rests while another voice sings another verse.
             if (gse.hasOnlyRests() || this.voiceRestsInStaffEntry(gse, voice)) {
                 break;
+            }
+            // The verse skips a measure in which its voice sings only other verses, e.g. a first ending sung only in verse 1.
+            if (gse.parentMeasure !== measure) {
+                measure = gse.parentMeasure;
+                if (this.isSungOnlyInOtherVerses(measure, verseNumber, voice)) {
+                    break;
+                }
             }
             if (this.hasLyricsOfVerse(gse, verseNumber)) {
                 foundOwnVerseSyllable = true;
@@ -3983,6 +3991,13 @@ export abstract class MusicSheetCalculator {
 
     private hasLyricsOfVerse(staffEntry: GraphicalStaffEntry, verseNumber: string): boolean {
         return staffEntry.LyricsEntries.some(entry => entry.LyricsEntry.VerseNumber === verseNumber);
+    }
+
+    /** Whether the voice has syllables of other verses in the measure, but none of the given verse. */
+    private isSungOnlyInOtherVerses(measure: GraphicalMeasure, verseNumber: string, voice: Voice): boolean {
+        const voiceLyrics: GraphicalLyricEntry[] = measure.staffEntries.flatMap(staffEntry => staffEntry.LyricsEntries)
+            .filter(lyricEntry => lyricEntry.LyricsEntry.Parent?.ParentVoice === voice);
+        return voiceLyrics.length > 0 && !voiceLyrics.some(lyricEntry => lyricEntry.LyricsEntry.VerseNumber === verseNumber);
     }
 
     /** Whether the verse has a syllable in or after the given vertical container. */

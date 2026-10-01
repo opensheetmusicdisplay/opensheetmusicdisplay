@@ -9,7 +9,8 @@ import { GraphicalLine } from "../../../src/MusicalScore/Graphical/GraphicalLine
  * The extend line (underscore) of a syllable ends before the next syllable of its own verse,
  * not before a syllable of another verse, e.g. a verse 1 melisma where verse 2 has a syllable on each note.
  * A verse that isn't sung again ends its extend before the next syllable of any verse, instead of at the end of the piece.
- * The extend also ends before a rest of its voice when another voice goes on singing another verse.
+ * The extend also ends before a rest of its voice when another voice goes on singing another verse,
+ * and before a measure in which its voice sings only other verses, e.g. a first ending sung only in verse 1.
  * test_lyrics_extend_verses.musicxml has one case per measure, see the comment in the file.
  */
 describe("Lyrics extend lines with several verses", () => {
@@ -74,6 +75,15 @@ describe("Lyrics extend lines with several verses", () => {
         expect(lines.length, "extend lines of measure 1, staff 2").to.be.greaterThan(0);
         for (const line of lines) {
             expect(line.End.x).to.be.closeTo(staffEntryEndX(1, 1, 1), 0.001);
+        }
+    });
+
+    it("ends the extend before a measure in which its voice sings only other verses, e.g. a first ending", () => {
+        const lines: GraphicalLine[] = extendLinesStartingIn(3);
+        expect(lines.length, "extend lines of measure 3").to.be.greaterThan(0);
+        for (const line of lines) {
+            // not through measure 4, up to where verse 3 goes on in measure 5
+            expect(line.End.x).to.be.closeTo(staffEntryEndX(3, 3), 0.001);
         }
     });
 });

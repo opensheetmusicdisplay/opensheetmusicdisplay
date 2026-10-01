@@ -3,6 +3,7 @@
 <!-- Extend lines with several verses.
      P1 m1: verse 1 holds "Joy" over three notes (extend) while verse 2 has a syllable on each of them.
      P1 m2: verse 2 ends with an extend on "ye" and isn't sung again, while verse 1 goes on.
+     P1 m3-m5: verse 3 holds "Lo" over m3 (extend), m4 is sung only in verse 1 (e.g. a first ending), verse 3 goes on in m5.
      P2 m1: voice 1 holds "Hold" (verse 1, extend) over two notes, then rests while voice 2 sings verse 2. -->
 <score-partwise version="4.0">
   <work><work-title>test_lyrics_extend_verses</work-title></work>
@@ -25,10 +26,19 @@
       <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>song</text></lyric></note>
     </measure>
     <measure number="3">
-      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>of</text></lyric></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>of</text></lyric><lyric number="3"><syllabic>single</syllabic><text>Lo</text><extend/></lyric></note>
       <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>the</text></lyric></note>
       <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>new</text></lyric></note>
       <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>day</text></lyric></note>
+    </measure>
+    <measure number="4">
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>a</text></lyric></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>new</text></lyric></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>song</text></lyric></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>we</text></lyric></note>
+    </measure>
+    <measure number="5">
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>sing</text></lyric><lyric number="3"><syllabic>single</syllabic><text>now</text></lyric></note>
     </measure>
   </part>
   <part id="P2">
@@ -55,6 +65,12 @@
       <note><pitch><step>D</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>the</text></lyric></note>
       <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>end</text></lyric></note>
       <note><rest/><duration>1</duration><voice>1</voice><type>quarter</type></note>
+    </measure>
+    <measure number="4">
+      <note><rest measure="yes"/><duration>4</duration><voice>1</voice></note>
+    </measure>
+    <measure number="5">
+      <note><rest measure="yes"/><duration>4</duration><voice>1</voice></note>
     </measure>
   </part>
 </score-partwise>
