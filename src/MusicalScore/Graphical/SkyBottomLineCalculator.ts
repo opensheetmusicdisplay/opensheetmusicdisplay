@@ -8,7 +8,7 @@ import log from "loglevel";
 import { BoundingBox } from "./BoundingBox";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
-import { GeometricSkyBottomLineContext } from "./GeometricSkyBottomLineContext";
+import { GeometricSkyBottomLineCaches, GeometricSkyBottomLineContext } from "./GeometricSkyBottomLineContext";
 /**
  * This class calculates and holds the skyline and bottom line information.
  * It also has functions to update areas of the two lines if new elements are
@@ -52,8 +52,6 @@ export class SkyBottomLineCalculator {
             }
         }
 
-        const arrayLength: number = Math.max(Math.ceil(this.StaffLineParent.PositionAndShape.Size.width * this.SamplingUnit), 1);
-
         // Concatenate the per-measure sky/bottom line arrays (device-pixel resolution) into one array
         // per line for the whole staffline. Preallocate and index-fill instead of push(...skyLine):
         // the spread turns each measure's array into individual call arguments (allocating and, for
@@ -72,6 +70,18 @@ export class SkyBottomLineCalculator {
                 writeIndex++;
             }
         }
+        this.setLinesFromConcatenated(skyLineConcat, bottomLineConcat, concatLength);
+    }
+
+    /**
+     * Sets the sky- and bottom lines of mStaffLineParent from the lines of all its measures, one after the other
+     * (device-pixel resolution): subsampled to the sampling unit and remapped to units relative to the staffline.
+     * @param skyLineConcat the skylines of the measures
+     * @param bottomLineConcat the bottom lines of the measures
+     * @param concatLength the length of the lines of the measures in the arrays
+     */
+    private setLinesFromConcatenated(skyLineConcat: ArrayLike<number>, bottomLineConcat: ArrayLike<number>, concatLength: number): void {
+        const arrayLength: number = Math.max(Math.ceil(this.StaffLineParent.PositionAndShape.Size.width * this.SamplingUnit), 1);
 
         // Subsampling:
         // The pixel width is bigger than the measure size in units. So we split the array into
@@ -260,13 +270,18 @@ export class SkyBottomLineCalculator {
      */
     private calculateLinesGeometric(lastMeasureFormats?: Map<SourceMeasure, IVerticalMeasureFormat>): void {
         const samplingUnit: number = this.mRules.SamplingUnit;
-        const results: SkyBottomLineCalculationResult[] = [];
+        const caches: GeometricSkyBottomLineCaches = this.mRules.GeometricSkyBottomLineCaches;
 
         // The virtual rendering context, replacing the temporary canvas of the raster method. Reused for all measures.
         // The caches (text measurements, flattened glyph outlines) live in the EngravingRules,
         // so they persist across stafflines and renders (per OSMD instance, no static state).
-        const geometricContext: GeometricSkyBottomLineContext =
-            new GeometricSkyBottomLineContext(0, 300, this.mRules.GeometricSkyBottomLineCaches);
+        const geometricContext: GeometricSkyBottomLineContext = new GeometricSkyBottomLineContext(0, 300, caches);
+        // The lines of all measures, one after the other, as updateLines() concatenates them (NaN where nothing was drawn, like
+        //   undefined in a new array: drawn columns are never NaN). In buffers reused for all stafflines, instead of two new arrays
+        //   per measure and their concatenation per staffline.
+        let skyLine: Float64Array = caches.skyLineBuffer;
+        let bottomLine: Float64Array = caches.bottomLineBuffer;
+        let length: number = 0;
         // search through all Measures
         for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
             // Prepare the measure (normalize positions, format at the skyline-canvas width). Extracted so
@@ -281,29 +296,56 @@ export class SkyBottomLineCalculator {
             }
 
             const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * samplingUnit), 1);
-            // copyExtentsInto() writes one entry per pixel column, usually far beyond measureArrayLength (sampling units):
-            // allocate the length the arrays end up with right away, instead of growing them by writing past their end.
+            // copyExtentsInto() writes one entry per pixel column, usually far beyond measureArrayLength (sampling units),
+            // up to the drawn length: the length of the measure's lines.
             const arrayLength: number = Math.max(measureArrayLength, geometricContext.getDrawnLength());
-            const tmpSkyLine: number[] = new Array(arrayLength);
-            const tmpBottomLine: number[] = new Array(arrayLength);
-            geometricContext.copyExtentsInto(tmpSkyLine, tmpBottomLine);
+            if (length + arrayLength > skyLine.length) {
+                const capacity: number = Math.max(length + arrayLength, 2 * skyLine.length);
+                const grownSkyLine: Float64Array = new Float64Array(capacity);
+                const grownBottomLine: Float64Array = new Float64Array(capacity);
+                grownSkyLine.set(skyLine.subarray(0, length));
+                grownBottomLine.set(bottomLine.subarray(0, length));
+                skyLine = grownSkyLine;
+                bottomLine = grownBottomLine;
+            }
+            skyLine.fill(NaN, length, length + arrayLength);
+            bottomLine.fill(NaN, length, length + arrayLength);
+            geometricContext.copyExtentsIntoBuffers(skyLine, bottomLine, length);
 
             // fill columns where nothing was drawn, like in the raster method:
-            for (let idx: number = 0; idx < tmpSkyLine.length; idx++) {
-                if (tmpSkyLine[idx] === undefined) {
-                    tmpSkyLine[idx] = Math.max(this.findPreviousValidNumber(idx, tmpSkyLine), this.findNextValidNumber(idx, tmpSkyLine));
-                }
-            }
-            for (let idx: number = 0; idx < tmpBottomLine.length; idx++) {
-                if (tmpBottomLine[idx] === undefined) {
-                    tmpBottomLine[idx] = Math.max(this.findPreviousValidNumber(idx, tmpBottomLine), this.findNextValidNumber(idx, tmpBottomLine));
-                }
-            }
-
-            results.push(new SkyBottomLineCalculationResult(tmpSkyLine, tmpBottomLine));
+            SkyBottomLineCalculator.fillUndrawnColumns(skyLine, length, length + arrayLength);
+            SkyBottomLineCalculator.fillUndrawnColumns(bottomLine, length, length + arrayLength);
+            length += arrayLength;
         }
+        caches.skyLineBuffer = skyLine;
+        caches.bottomLineBuffer = bottomLine;
 
-        this.updateLines(results);
+        this.setLinesFromConcatenated(skyLine, bottomLine, length);
+    }
+
+    /**
+     * Fills the columns of a measure's line where nothing was drawn (NaN) like calculateLines() fills them (undefined) for the
+     * raster method, one after the other, each with the maximum of the value before it in the measure (findPreviousValidNumber(),
+     * the filled value of the previous column, or 0) and the next drawn value (findNextValidNumber(), or 0):
+     * so all columns of a run of undrawn columns get the same value.
+     * @param line the lines of the measures, one after the other
+     * @param start the index of the measure's first column
+     * @param end the index after the measure's last column
+     */
+    private static fillUndrawnColumns(line: Float64Array, start: number, end: number): void {
+        for (let idx: number = start; idx < end; idx++) {
+            if (!isNaN(line[idx])) {
+                continue;
+            }
+            let runEnd: number = idx + 1;
+            while (runEnd < end && isNaN(line[runEnd])) {
+                runEnd++;
+            }
+            const value: number = Math.max(idx > start ? line[idx - 1] : 0, runEnd < end ? line[runEnd] : 0);
+            for (; idx < runEnd; idx++) {
+                line[idx] = value;
+            }
+        }
     }
 
     /** The per-measure side effects the geometric skyline calc applies before measuring extents: normalize

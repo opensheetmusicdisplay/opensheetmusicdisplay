@@ -150,6 +150,25 @@ export class GeometricSkyBottomLineContext {
     }
 
     /**
+     * Like copyExtentsInto(), into typed arrays from an offset on (see SkyBottomLineCalculator.calculateLinesGeometric()).
+     * A separate method, so that each method's array accesses only see one kind of array (fast in JavaScript engines).
+     * @param skyLine the skyline buffer
+     * @param bottomLine the bottom line buffer
+     * @param offset the index of column 0 in the buffers
+     */
+    public copyExtentsIntoBuffers(skyLine: Float64Array, bottomLine: Float64Array, offset: number): void {
+        const fullWidthMinY: number = this.fullWidthMinY;
+        const fullWidthMaxY: number = this.fullWidthMaxY;
+        for (let x: number = 0; x < this.width; x++) {
+            const minY: number = this.minY[x] < fullWidthMinY ? this.minY[x] : fullWidthMinY;
+            if (minY !== Number.POSITIVE_INFINITY) {
+                skyLine[offset + x] = minY;
+                bottomLine[offset + x] = this.maxY[x] > fullWidthMaxY ? this.maxY[x] : fullWidthMaxY;
+            }
+        }
+    }
+
+    /**
      * Returns the length that copyExtentsInto() extends an array to: one past the last column where something was drawn.
      * Allocating the arrays with (at least) this length avoids growing them by writing past their end, which is slow.
      * @returns The index of the last drawn column + 1, or 0 if nothing was drawn.
@@ -1157,6 +1176,10 @@ export class GeometricSkyBottomLineCaches {
     public characterProbeCanvas: HTMLCanvasElement;
     public characterProbeContext: CanvasRenderingContext2D;
     public characterProbeCreationFailed: boolean = false;
+    /** The sky- and bottom lines of all measures of a staffline, one after the other, before subsampling them
+     *  (reused for all stafflines, see SkyBottomLineCalculator.calculateLinesGeometric()). */
+    public skyLineBuffer: Float64Array = new Float64Array(0);
+    public bottomLineBuffer: Float64Array = new Float64Array(0);
 }
 
 /** The flattened line segments of a glyph outline at one scale (see GeometricSkyBottomLineCaches.glyphSegments). */
