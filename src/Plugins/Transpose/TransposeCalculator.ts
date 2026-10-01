@@ -94,10 +94,13 @@ export class TransposeCalculator implements ITransposeCalculator {
             return;
         }
 
-        // Normalize rare key signatures (e.g., 7 sharps or 7 flats) to enharmonic equivalents present in mapping.
+        // Normalize key signatures missing from the mapping to their enharmonic equivalents:
+        //   7 sharps (C# major) -> 5 flats, 7 flats (Cb major) -> 5 sharps,
+        //   and 6 flats (Gb major) -> 6 sharps (F# major), since the mapping only holds F# for that pitch.
+        //   Without this, Gb major wasn't found and was transposed as if it were C major (e.g. Gb -2 -> Bb instead of E).
         if (keyTypeForMapping > 6) {
             keyTypeForMapping -= 12;
-        } else if (keyTypeForMapping < -6) {
+        } else if (keyTypeForMapping <= -6) {
             keyTypeForMapping += 12;
         }
 
