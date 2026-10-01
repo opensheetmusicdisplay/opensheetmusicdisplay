@@ -43,6 +43,14 @@ import { TabNote } from "../../VoiceData/TabNote";
 
 // type StemmableNote = VF.StemmableNote;
 
+/** A format of the voices of a vertical measure (see VexFlowMeasure.format()). */
+export interface IVerticalMeasureFormat {
+    /** The format function, shared by the measures of the vertical measure (see VexFlowMeasure.formatVoices). */
+    formatVoices: (width: number, parent: VexFlowMeasure) => void;
+    /** The width the voices were justified to, in pixels. */
+    justifyWidth: number;
+}
+
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, sourceMeasure?: SourceMeasure, staffLine?: StaffLine) {
         super(staff, sourceMeasure, staffLine);
@@ -792,17 +800,53 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
     }
 
-    // this currently formats multiple measures, see VexFlowMusicSheetCalculator.formatMeasures()
-    public format(): void {
+    /**
+     * Formats the voices of this measure's vertical measure, i.e. of all its staves (see VexFlowMusicSheetCalculator.formatMeasures()),
+     * to the width of this measure's stave.
+     * @param lastFormats For a series of formats, like the skyline calculation's (see SkyBottomLineCalculator), which formats every
+     *   measure, and so each vertical measure once per staff: the last format of each vertical measure in the series.
+     *   A format that would just repeat the last one of its vertical measure is skipped: it would compute the same result again
+     *   (see isRepeatedFormat()). Without lastFormats, the measure is always formatted.
+     */
+    public format(lastFormats?: Map<SourceMeasure, IVerticalMeasureFormat>): void {
         // If this is the first stave in the vertical measure, call the format
         // method to set the width of all the voices
         if (this.formatVoices) {
+            if (lastFormats && this.isRepeatedFormat(lastFormats)) {
+                return;
+            }
             // set the width of the voices to the current measure width:
             // (The width of the voices does not include the instructions (StaveModifiers))
             this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels, this);
         }
 
         // this.correctNotePositions(); // now done at the end of draw()
+    }
+
+    /**
+     * Whether formatting this measure now would repeat the last format of its vertical measure in lastFormats: the same format
+     * function (shared by the vertical measure's staves, unless they align rests differently) to the same width. The staves of
+     * a vertical measure have the same width and aligned note start x (see Stave.formatBegModifiers()), so that's the rule,
+     * and the repeated format would compute the same result, leaving the voices as they are. Otherwise, records this format
+     * in lastFormats as the vertical measure's last one.
+     * Never a repeat if the vertical measure has tablature: a tab note re-measures its width with the stave's current context
+     * when it's drawn (TabNote.setStave()), which can change the result of the next format.
+     * @param lastFormats the last format of each vertical measure in a series of formats.
+     * @returns true if the format would be a repeat (and can be skipped), false if it was recorded as the last format.
+     */
+    private isRepeatedFormat(lastFormats: Map<SourceMeasure, IVerticalMeasureFormat>): boolean {
+        const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
+        if (!sourceMeasure || sourceMeasure.VerticalMeasureList.some(measure => measure?.isTabMeasure)) {
+            return false;
+        }
+        const stave: VF.Stave = this.getVFStave();
+        const justifyWidth: number = stave.getNoteEndX() - stave.getNoteStartX() - 10; // the width VF.Formatter.formatToStave() formats to
+        const lastFormat: IVerticalMeasureFormat = lastFormats.get(sourceMeasure);
+        if (lastFormat?.formatVoices === this.formatVoices && lastFormat.justifyWidth === justifyWidth) {
+            return true;
+        }
+        lastFormats.set(sourceMeasure, {formatVoices: this.formatVoices, justifyWidth: justifyWidth});
+        return false;
     }
 
     /**

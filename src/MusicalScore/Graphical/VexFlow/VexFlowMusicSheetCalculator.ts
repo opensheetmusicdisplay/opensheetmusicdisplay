@@ -25,7 +25,7 @@ import { LyricWord } from "../../VoiceData/Lyrics/LyricsWord";
 import { OrnamentContainer, OrnamentEnum } from "../../VoiceData/OrnamentContainer";
 import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
-import { VexFlowMeasure } from "./VexFlowMeasure";
+import { IVerticalMeasureFormat, VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
 import Vex from "vexflow";
 import VF = Vex.Flow;
@@ -2671,6 +2671,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const lazyCache: boolean = this.rules.LazyConsistentGraphic && this.rules.UseGeometricSkyBottomLineCalculation;
     const staffLinesToCompute: StaffLine[] = lazyCache ? [] : allStaffLines;
     const toCache: { key: string, staffLine: StaffLine }[] = [];
+    // The geometric calculation formats every measure, i.e. each vertical measure once per staff, which mostly just repeats
+    //   the same format: shared across the stafflines, this record of each vertical measure's last format skips the repeats.
+    const lastMeasureFormats: Map<SourceMeasure, IVerticalMeasureFormat> = new Map<SourceMeasure, IVerticalMeasureFormat>();
     if (lazyCache) {
       const lastSystemIndex: number = this.musicSystems.length - 1;
       for (let si: number = 0; si < this.musicSystems.length; si++) {
@@ -2684,7 +2687,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             // Replay the skyline calc's per-measure side effects (the VexFlow formatter is not idempotent,
             // so skipping them would shift later passes by ~1px), then reuse the verified byte-identical
             // cached lines instead of re-measuring extents (the expensive part).
-            staffLine.SkyBottomLineCalculator.applyGeometricSkylineSideEffectsOnly();
+            staffLine.SkyBottomLineCalculator.applyGeometricSkylineSideEffectsOnly(lastMeasureFormats);
             staffLine.SkyBottomLineCalculator.setLinesDirectly(cached.sky.slice(), cached.bottom.slice());
           } else {
             staffLinesToCompute.push(staffLine);
@@ -2696,7 +2699,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
 
-    this.computeSkyBottomLinesFor(staffLinesToCompute);
+    this.computeSkyBottomLinesFor(staffLinesToCompute, lastMeasureFormats);
 
     for (const entry of toCache) {
       this.skyBottomLineCache.set(entry.key, { sky: entry.staffLine.SkyLine.slice(), bottom: entry.staffLine.BottomLine.slice() });
@@ -2705,15 +2708,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   /** Compute (not reuse) the sky/bottom lines for the given staff lines: geometric, or the batched /
    *  per-staff-line path. This is the original calculateSkyBottomLines body, extracted so the lazy reuse
-   *  path can feed it just the staff lines that actually need computing. */
-  private computeSkyBottomLinesFor(staffLines: StaffLine[]): void {
+   *  path can feed it just the staff lines that actually need computing.
+   *  lastMeasureFormats: for the geometric calculation, see SkyBottomLineCalculator.calculateLines(). */
+  private computeSkyBottomLinesFor(staffLines: StaffLine[], lastMeasureFormats: Map<SourceMeasure, IVerticalMeasureFormat>): void {
     if (staffLines.length === 0) {
       return;
     }
     if (this.rules.UseGeometricSkyBottomLineCalculation) {
       // geometric calculation doesn't need batching: no canvas allocation or pixel readback (getImageData) is involved
       for (const staffLine of staffLines) {
-        staffLine.SkyBottomLineCalculator.calculateLines();
+        staffLine.SkyBottomLineCalculator.calculateLines(lastMeasureFormats);
       }
       return;
     }
