@@ -296,15 +296,19 @@ export class SVGContext {
   // ### Drawing helper methods:
 
   applyAttributes(element, attributes) {
+    // VexFlowPatch: a plain loop and setAttribute() instead of Object.keys().forEach() and setAttributeNS(null, ...).
+    // Every drawn SVG element passes through here, and setAttributeNS is slower in browsers (it validates the qualified
+    // name for a namespace). For these unprefixed names on new SVG elements (no lowercasing outside the HTML namespace)
+    // both create the same attributes in the same order, so the SVG output is unchanged.
     const attrNamesToIgnore = attrNamesToIgnoreMap[element.nodeName];
-    Object
-      .keys(attributes)
-      .forEach(propertyName => {
-        if (attrNamesToIgnore && attrNamesToIgnore[propertyName]) {
-          return;
-        }
-        element.setAttributeNS(null, propertyName, attributes[propertyName]);
-      });
+    const propertyNames = Object.keys(attributes);
+    for (let i = 0; i < propertyNames.length; i++) {
+      const propertyName = propertyNames[i];
+      if (attrNamesToIgnore && attrNamesToIgnore[propertyName]) {
+        continue;
+      }
+      element.setAttribute(propertyName, attributes[propertyName]);
+    }
 
     return element;
   }
