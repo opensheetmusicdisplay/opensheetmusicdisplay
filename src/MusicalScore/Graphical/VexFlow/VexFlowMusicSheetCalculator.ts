@@ -1406,6 +1406,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     mark.setShiftX(xShift);
     // Measure first, so that the existing reservation below is not treated as notation under this mark.
     this.prepareMetronomePlacement(vfMeasure, metronomeExpression, mark, index, xShift, yShift);
+    vfMeasure.hasMetronomeMark = true;
     if (skyline && timestamp.RealValue <= 0) {
       // Retain the established space above a mark at the beginning of a measure.
       skyline[0] = Math.min(skyline[0], -4.5 + yShift);
