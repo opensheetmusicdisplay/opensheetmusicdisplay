@@ -573,6 +573,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestMeasureNumbersOnlyAtSystemStart = sampleFilename.includes("test_measure_numbers_only_at_system_start");
     // the second half of a measure split for a system break, see test_grace_notes_only_measure*: systems as in the file
     const isTestGraceNotesOnlyMeasure = sampleFilename.startsWith("test_grace_notes_only_measure");
+    // a word continued in the next system, see test_lyrics_dash_continued_in_next_system: systems as in the file
+    const isTestLyricsDashContinuedInNextSystem = sampleFilename.startsWith("test_lyrics_dash_continued_in_next_system");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestFirstPageCreditWords = sampleFilename.startsWith("test_first_page_credit_words");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
@@ -600,7 +602,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawFromMeasureNumber: drawFromMeasureNumber,
         drawUpToMeasureNumber: drawUpToMeasureNumber,
         drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
-        newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure,
+        newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure ||
+            isTestLyricsDashContinuedInNextSystem,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
