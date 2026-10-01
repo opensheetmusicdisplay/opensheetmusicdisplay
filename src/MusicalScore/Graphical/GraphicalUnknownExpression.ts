@@ -26,11 +26,11 @@ export class GraphicalUnknownExpression extends AbstractGraphicalExpression {
         switch (this.Placement) {
             case PlacementEnum.Above:
                 const yValueAbove: number = this.label.PositionAndShape.BorderMarginTop + this.label.PositionAndShape.RelativePosition.y;
-                skyBottomLineCalculator.updateSkyLineInRange(left, right, yValueAbove);
+                skyBottomLineCalculator.updateSkyLineWithLabel(left, right, yValueAbove);
                 break;
             case PlacementEnum.Below:
                 const yValueBelow: number = this.label.PositionAndShape.BorderMarginBottom + this.label.PositionAndShape.RelativePosition.y;
-                skyBottomLineCalculator.updateBottomLineInRange(left, right, yValueBelow);
+                skyBottomLineCalculator.updateBottomLineWithLabel(left, right, yValueBelow);
                 break;
             default:
                 log.error("Placement for GraphicalUnknownExpression is unknown");

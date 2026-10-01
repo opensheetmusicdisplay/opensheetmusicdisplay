@@ -97,7 +97,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
                     } // else covered with the log.warn above
                 } else {
                     const yValue: number = box.BorderMarginTop + box.RelativePosition.y;
-                    skyBottomLineCalculator.updateSkyLineInRange(left, right, yValue);
+                    skyBottomLineCalculator.updateSkyLineWithLabel(left, right, yValue);
                 }
                 break;
             case PlacementEnum.Below:
@@ -110,7 +110,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
                     } // else covered with the log.warn above
                 } else {
                     const yValue: number = box.BorderMarginBottom + box.RelativePosition.y;
-                    skyBottomLineCalculator.updateBottomLineInRange(left, right, yValue);
+                    skyBottomLineCalculator.updateBottomLineWithLabel(left, right, yValue);
                 }
                 break;
             default:
