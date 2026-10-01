@@ -1585,10 +1585,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       let minBottomY: number; // undefined -> no clamping in StaveSection.draw (VexFlowPatch)
       const staffLine: StaffLine = gMeasure.ParentStaffLine;
       if (staffLine) {
-        // x-footprint of the rehearsal mark box at the measure start (absolute units, as the skyline is
-        //   indexed). xOffset/fontSize are in px; the label width is a conservative estimate.
-        let start: number = gMeasure.PositionAndShape.AbsolutePosition.x;
-        let end: number = start + (xOffset + rehearsalExpression.label.length * fontSize * 0.6 + fontSize) / unitInPixels;
+        // x-footprint of the rehearsal mark box (absolute units, as the skyline is indexed): VexFlow draws it after the
+        //   clef, key and time signature (Stave.getModifierXShift()), xOffset further, at least 18 px wide (StaveSection.draw()).
+        //   xOffset/fontSize are in px; the label width is a conservative estimate.
+        let start: number = gMeasure.PositionAndShape.AbsolutePosition.x + (vfStave.getModifierXShift(0) + xOffset) / unitInPixels;
+        let end: number = start + Math.max(18, rehearsalExpression.label.length * fontSize * 0.6 + fontSize) / unitInPixels;
         // also clear an Above chord symbol in the measure: it is placed (calculateChordSymbols, earlier)
         //   against the skyline and can sit right where the mark goes, possibly beyond the mark's footprint.
         const chord: GraphicalChordSymbolContainer = this.rules.RehearsalMarkAboveChordSymbol
