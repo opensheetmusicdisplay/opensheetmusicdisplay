@@ -50,6 +50,11 @@ export class AlignmentManager {
                     groups.push(tmpList);
                     tmpList = new Array<AbstractGraphicalExpression>();
                 }
+            } else {
+                // A group only has expressions of one placement, see yIdeal below.
+                //   Otherwise e.g. two close expressions above the staff and the next two below it formed one group.
+                groups.push(tmpList);
+                tmpList = new Array<AbstractGraphicalExpression>();
             }
         }
         // If expressions are colliding at end, we need to add them too
@@ -57,10 +62,14 @@ export class AlignmentManager {
 
         for (const aes of groups) {
             if (aes.length > 0) {
-                // Get the median y position and shift all group members to that position
+                // Shift all group members to the y position of the member farthest from the staff:
+                //   the highest one above the staff, the lowest one below it.
+                //   Each one was placed at the sky/bottom line, so moving away from the staff keeps it clear of the notes,
+                //   while moving towards the staff (e.g. to the lowest one above it) put expressions onto the notes.
                 const centerYs: number[] = aes.map(expr => expr.PositionAndShape.Center.y);
                 // TODO this may not give the right position for wedges (GraphicalContinuousDynamic, !isVerbal())
-                const yIdeal: number = Math.max(...centerYs);
+                const isAbove: boolean = aes[0].SourceExpression?.Placement === PlacementEnum.Above;
+                const yIdeal: number = isAbove ? Math.min(...centerYs) : Math.max(...centerYs);
                 // for (const ae of aes) { // debug
                 //     if (ae.PositionAndShape.Center.y > 6) {
                 //         // dynamic positioned at edge of skybottomline
