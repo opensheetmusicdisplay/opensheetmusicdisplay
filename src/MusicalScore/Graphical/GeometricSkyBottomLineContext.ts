@@ -127,6 +127,20 @@ export class GeometricSkyBottomLineContext {
         }
     }
 
+    /**
+     * Returns the length that copyExtentsInto() extends an array to: one past the last column where something was drawn.
+     * Allocating the arrays with (at least) this length avoids growing them by writing past their end, which is slow.
+     * @returns The index of the last drawn column + 1, or 0 if nothing was drawn.
+     */
+    public getDrawnLength(): number {
+        for (let x: number = this.width - 1; x >= 0; x--) {
+            if (this.minY[x] !== Number.POSITIVE_INFINITY) {
+                return x + 1;
+            }
+        }
+        return 0;
+    }
+
     //#region path building
 
     public beginPath(): void {

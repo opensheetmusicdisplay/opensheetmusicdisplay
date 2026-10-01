@@ -277,8 +277,11 @@ export class SkyBottomLineCalculator {
             }
 
             const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * samplingUnit), 1);
-            const tmpSkyLine: number[] = new Array(measureArrayLength);
-            const tmpBottomLine: number[] = new Array(measureArrayLength);
+            // copyExtentsInto() writes one entry per pixel column, usually far beyond measureArrayLength (sampling units):
+            // allocate the length the arrays end up with right away, instead of growing them by writing past their end.
+            const arrayLength: number = Math.max(measureArrayLength, geometricContext.getDrawnLength());
+            const tmpSkyLine: number[] = new Array(arrayLength);
+            const tmpBottomLine: number[] = new Array(arrayLength);
             geometricContext.copyExtentsInto(tmpSkyLine, tmpBottomLine);
 
             // fill columns where nothing was drawn, like in the raster method:
