@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<!-- Extend lines with several verses.
+     P1 m1: verse 1 holds "Joy" over three notes (extend) while verse 2 has a syllable on each of them.
+     P1 m2: verse 2 ends with an extend on "ye" and isn't sung again, while verse 1 goes on.
+     P1 m3-m5: verse 3 holds "Lo" over m3 (extend), m4 is sung only in verse 1 (e.g. a first ending), verse 3 goes on in m5.
+     P2 m1: voice 1 holds "Hold" (verse 1, extend) over two notes, then rests while voice 2 sings verse 2. -->
+<score-partwise version="4.0">
+  <work><work-title>test_lyrics_extend_verses</work-title></work>
+  <part-list>
+    <score-part id="P1"><part-name>Voice</part-name></score-part>
+    <score-part id="P2"><part-name>Voices</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>Joy</text><extend/></lyric><lyric number="2"><syllabic>single</syllabic><text>Praise</text></lyric></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="2"><syllabic>single</syllabic><text>the</text></lyric></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="2"><syllabic>single</syllabic><text>Lord</text></lyric></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>to</text></lyric><lyric number="2"><syllabic>single</syllabic><text>all</text></lyric></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>sing</text></lyric><lyric number="2"><syllabic>single</syllabic><text>ye</text><extend/></lyric></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>the</text></lyric></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>song</text></lyric></note>
+    </measure>
+    <measure number="3">
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>of</text></lyric><lyric number="3"><syllabic>single</syllabic><text>Lo</text><extend/></lyric></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>the</text></lyric></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>new</text></lyric></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>day</text></lyric></note>
+    </measure>
+    <measure number="4">
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>a</text></lyric></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>new</text></lyric></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>song</text></lyric></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>we</text></lyric></note>
+    </measure>
+    <measure number="5">
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>sing</text></lyric><lyric number="3"><syllabic>single</syllabic><text>now</text></lyric></note>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>Hold</text><extend/></lyric></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><rest><display-step>E</display-step><display-octave>5</display-octave></rest><duration>1</duration><voice>1</voice><type>quarter</type></note>
+      <note><rest><display-step>E</display-step><display-octave>5</display-octave></rest><duration>1</duration><voice>1</voice><type>quarter</type></note>
+      <backup><duration>4</duration></backup>
+      <note><pitch><step>A</step><octave>3</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem><lyric number="2"><syllabic>single</syllabic><text>one</text></lyric></note>
+      <note><pitch><step>A</step><octave>3</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem><lyric number="2"><syllabic>single</syllabic><text>two</text></lyric></note>
+      <note><pitch><step>A</step><octave>3</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem><lyric number="2"><syllabic>single</syllabic><text>three</text></lyric></note>
+      <note><pitch><step>A</step><octave>3</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem><lyric number="2"><syllabic>single</syllabic><text>four</text></lyric></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>and</text></lyric></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>then</text></lyric></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>sing</text></lyric></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>on</text></lyric></note>
+    </measure>
+    <measure number="3">
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>to</text></lyric></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>the</text></lyric></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><lyric number="1"><syllabic>single</syllabic><text>end</text></lyric></note>
+      <note><rest/><duration>1</duration><voice>1</voice><type>quarter</type></note>
+    </measure>
+    <measure number="4">
+      <note><rest measure="yes"/><duration>4</duration><voice>1</voice></note>
+    </measure>
+    <measure number="5">
+      <note><rest measure="yes"/><duration>4</duration><voice>1</voice></note>
+    </measure>
+  </part>
+</score-partwise>

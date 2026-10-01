@@ -3886,24 +3886,55 @@ export abstract class MusicSheetCalculator {
             // but skip rather than crash if some upstream parsing left a staff entry without a container
             return;
         }
-        for (let index: number = startStaffEntry.parentVerticalContainer.Index + 1;
-            index < this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length;
-            ++index) {
-            const gse: GraphicalStaffEntry = this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers[index].StaffEntries[staffIndex];
+        // The extend ends before the next syllable of its own verse (or a rest).
+        //   Syllables of other verses don't end it, e.g. when verse 2 has a syllable on each note of a verse 1 melisma.
+        const verseNumber: string = lyricEntry.LyricsEntry.VerseNumber;
+        const voice: Voice = lyricEntry.LyricsEntry.Parent?.ParentVoice;
+        const containers: VerticalGraphicalStaffEntryContainer[] = this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers;
+        // where the extend would end at the next syllable of any verse, in case its own verse isn't sung again
+        let anyVerseEndStaffEntry: GraphicalStaffEntry = undefined;
+        let anyVerseEndStaffLine: StaffLine = undefined;
+        let foundAnyVerseSyllable: boolean = false;
+        let foundOwnVerseSyllable: boolean = false;
+        let measure: GraphicalMeasure = startStaffEntry.parentMeasure;
+        let index: number = startStaffEntry.parentVerticalContainer.Index + 1;
+        for (; index < containers.length; ++index) {
+            const gse: GraphicalStaffEntry = containers[index].StaffEntries[staffIndex];
             if (!gse) {
                 continue;
             }
-            if (gse.hasOnlyRests()) {
+            // hasOnlyRests() is only true if all voices rest, so also check the voice of the syllable,
+            //   which could otherwise now be extended over its rests while another voice sings another verse.
+            if (gse.hasOnlyRests() || this.voiceRestsInStaffEntry(gse, voice)) {
                 break;
             }
-            if (gse.LyricsEntries.length > 0) {
+            // The verse skips a measure in which its voice sings only other verses, e.g. a first ending sung only in verse 1.
+            if (gse.parentMeasure !== measure) {
+                measure = gse.parentMeasure;
+                if (this.isSungOnlyInOtherVerses(measure, verseNumber, voice)) {
+                    break;
+                }
+            }
+            if (this.hasLyricsOfVerse(gse, verseNumber)) {
+                foundOwnVerseSyllable = true;
                 break;
+            }
+            if (!foundAnyVerseSyllable && gse.LyricsEntries.length > 0) {
+                foundAnyVerseSyllable = true;
+                anyVerseEndStaffEntry = endStaffEntry;
+                anyVerseEndStaffLine = endStaffLine;
             }
             endStaffEntry = gse;
             endStaffLine = endStaffEntry.parentMeasure.ParentStaffLine;
             if (!endStaffLine) {
                 endStaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
             }
+        }
+        // If the verse isn't sung again (e.g. it ends before the other verses do),
+        //   end the extend at the next syllable of any verse, like before, instead of drawing it to the end of the piece.
+        if (!foundOwnVerseSyllable && foundAnyVerseSyllable && !this.isVerseSungFrom(index, staffIndex, verseNumber)) {
+            endStaffEntry = anyVerseEndStaffEntry;
+            endStaffLine = anyVerseEndStaffLine;
         }
         if (!endStaffEntry || !endStaffLine) {
             return;
@@ -3954,6 +3985,38 @@ export abstract class MusicSheetCalculator {
                 this.calculateSingleLyricWordWithUnderscore(endStaffLine, secondStartX, secondEndX, startY);
             }
         }
+    }
+
+    private hasLyricsOfVerse(staffEntry: GraphicalStaffEntry, verseNumber: string): boolean {
+        return staffEntry.LyricsEntries.some(entry => entry.LyricsEntry.VerseNumber === verseNumber);
+    }
+
+    /** Whether the voice has syllables of other verses in the measure, but none of the given verse. */
+    private isSungOnlyInOtherVerses(measure: GraphicalMeasure, verseNumber: string, voice: Voice): boolean {
+        const voiceLyrics: GraphicalLyricEntry[] = measure.staffEntries.flatMap(staffEntry => staffEntry.LyricsEntries)
+            .filter(lyricEntry => lyricEntry.LyricsEntry.Parent?.ParentVoice === voice);
+        return voiceLyrics.length > 0 && !voiceLyrics.some(lyricEntry => lyricEntry.LyricsEntry.VerseNumber === verseNumber);
+    }
+
+    /** Whether the verse has a syllable in or after the given vertical container. */
+    private isVerseSungFrom(containerIndex: number, staffIndex: number, verseNumber: string): boolean {
+        const containers: VerticalGraphicalStaffEntryContainer[] = this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers;
+        for (let index: number = containerIndex; index < containers.length; ++index) {
+            const gse: GraphicalStaffEntry = containers[index].StaffEntries[staffIndex];
+            if (gse && this.hasLyricsOfVerse(gse, verseNumber)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Whether the voice has only rests in the staff entry. False if the voice has no notes there. */
+    private voiceRestsInStaffEntry(staffEntry: GraphicalStaffEntry, voice: Voice): boolean {
+        if (!voice) {
+            return false;
+        }
+        const voiceEntries: VoiceEntry[] = staffEntry.sourceStaffEntry.VoiceEntries.filter(voiceEntry => voiceEntry.ParentVoice === voice);
+        return voiceEntries.length > 0 && voiceEntries.every(voiceEntry => voiceEntry.Notes.every(note => note.isRest()));
     }
 
     /**
