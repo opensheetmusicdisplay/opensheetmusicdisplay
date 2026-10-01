@@ -62,6 +62,14 @@ export class GeometricSkyBottomLineContext {
     private fullWidthMinY: number = Number.POSITIVE_INFINITY;
     /** Maximum y of the horizontal strokes that cover every column of the measure, see fullWidthMinY. -Infinity = no such stroke. */
     private fullWidthMaxY: number = Number.NEGATIVE_INFINITY;
+    /** Top of the covered band: drawing that lies within [coveredBandTop, coveredBandBottom] can't change any column's extents,
+     *  because every column already extends at least that far up and down (see updateCoveredBand()), so it's not merged.
+     *  +Infinity = no band (yet). */
+    private coveredBandTop: number = Number.POSITIVE_INFINITY;
+    /** Bottom of the covered band, see coveredBandTop. -Infinity = no band (yet). */
+    private coveredBandBottom: number = Number.NEGATIVE_INFINITY;
+    /** Whether updateCoveredBand() was called for the current measure. */
+    private coveredBandUpdated: boolean = false;
     private width: number = 0;
 
     // current drawing state
@@ -107,6 +115,7 @@ export class GeometricSkyBottomLineContext {
         this.maxY.fill(Number.NEGATIVE_INFINITY, 0, this.width);
         this.fullWidthMinY = Number.POSITIVE_INFINITY;
         this.fullWidthMaxY = Number.NEGATIVE_INFINITY;
+        this.resetCoveredBand();
         this.canvas.width = this.width;
         this.canvas.height = height;
         this.translateX = 0;
@@ -345,9 +354,19 @@ export class GeometricSkyBottomLineContext {
         if (this.fillTransparent) {
             return;
         }
+        if (!this.coveredBandUpdated) {
+            this.updateCoveredBand();
+        }
+        const bandTop: number = this.coveredBandTop;
+        const bandBottom: number = this.coveredBandBottom;
         const segments: number[] = this.pathSegments;
         for (let i: number = 0; i < segments.length; i += 4) {
-            this.mergeSegment(segments[i], segments[i + 1], segments[i + 2], segments[i + 3]);
+            const y0: number = segments[i + 1];
+            const y1: number = segments[i + 3];
+            if (y0 >= bandTop && y1 >= bandTop && y0 <= bandBottom && y1 <= bandBottom) {
+                continue; // within the covered band: can't change any column
+            }
+            this.mergeSegment(segments[i], y0, segments[i + 2], y1);
         }
     }
 
@@ -355,16 +374,28 @@ export class GeometricSkyBottomLineContext {
         if (this.strokeTransparent || !(this.currentLineWidth > 0)) {
             return;
         }
+        // (no updateCoveredBand() here: the stave lines are strokes, drawn first, and the band only exists once they are merged)
         const halfWidth: number = this.currentLineWidth * (Math.abs(this.scaleX) + Math.abs(this.scaleY)) / 4;
+        const bandTop: number = this.coveredBandTop;
+        const bandBottom: number = this.coveredBandBottom;
         const segments: number[] = this.pathSegments;
         for (let i: number = 0; i < segments.length; i += 4) {
-            this.mergeStrokedSegment(segments[i], segments[i + 1], segments[i + 2], segments[i + 3], halfWidth);
+            const y0: number = segments[i + 1];
+            const y1: number = segments[i + 3];
+            // the stroke rectangle extends at most halfWidth above and below the segment
+            if (y0 - halfWidth >= bandTop && y1 - halfWidth >= bandTop && y0 + halfWidth <= bandBottom && y1 + halfWidth <= bandBottom) {
+                continue; // within the covered band: can't change any column
+            }
+            this.mergeStrokedSegment(segments[i], y0, segments[i + 2], y1, halfWidth);
         }
     }
 
     public fillRect(x: number, y: number, width: number, height: number): void {
         if (this.fillTransparent) {
             return;
+        }
+        if (!this.coveredBandUpdated) {
+            this.updateCoveredBand();
         }
         let left: number = this.deviceX(x);
         let top: number = this.deviceY(y);
@@ -400,6 +431,9 @@ export class GeometricSkyBottomLineContext {
     public fillText(text: string, x: number, y: number): void {
         if (this.fillTransparent || !text) {
             return;
+        }
+        if (!this.coveredBandUpdated) {
+            this.updateCoveredBand();
         }
         let pen: number = this.deviceX(x);
         const baseline: number = this.deviceY(y);
@@ -456,11 +490,23 @@ export class GeometricSkyBottomLineContext {
         if (!isFinite(deviceX) || !isFinite(deviceY) || !isFinite(scale)) {
             return true; // canvas ignores non-finite coordinates
         }
-        const segments: Float64Array = this.getGlyphSegments(outline as string[], scale);
-        for (let i: number = 0; i < segments.length; i += 4) {
-            this.mergeSegment(
-                segments[i] + deviceX, segments[i + 1] + deviceY,
-                segments[i + 2] + deviceX, segments[i + 3] + deviceY);
+        if (!this.coveredBandUpdated) {
+            this.updateCoveredBand();
+        }
+        const bandTop: number = this.coveredBandTop;
+        const bandBottom: number = this.coveredBandBottom;
+        const glyphSegments: IGlyphSegments = this.getGlyphSegments(outline as string[], scale);
+        // (rounding is monotonic, so every segment's y + deviceY lies within the glyph's minY + deviceY and maxY + deviceY)
+        if (!(glyphSegments.minY + deviceY >= bandTop && glyphSegments.maxY + deviceY <= bandBottom)) { // else within the covered band
+            const segments: Float64Array = glyphSegments.segments;
+            for (let i: number = 0; i < segments.length; i += 4) {
+                const y0: number = segments[i + 1] + deviceY;
+                const y1: number = segments[i + 3] + deviceY;
+                if (y0 >= bandTop && y1 >= bandTop && y0 <= bandBottom && y1 <= bandBottom) {
+                    continue; // within the covered band: can't change any column
+                }
+                this.mergeSegment(segments[i] + deviceX, y0, segments[i + 2] + deviceX, y1);
+            }
         }
         this.beginPath(); // the normal path would have cleared the current path, mirror that
         return true;
@@ -582,6 +628,7 @@ export class GeometricSkyBottomLineContext {
         this.maxY.fill(Number.NEGATIVE_INFINITY, 0, this.width);
         this.fullWidthMinY = Number.POSITIVE_INFINITY;
         this.fullWidthMaxY = Number.NEGATIVE_INFINITY;
+        this.resetCoveredBand();
     }
 
     public openGroup(cls?: string, id?: string, attrs?: object): undefined {
@@ -642,6 +689,49 @@ export class GeometricSkyBottomLineContext {
 
     private deviceY(y: number): number {
         return y * this.scaleY + this.translateY;
+    }
+
+    /** Empties the covered band (see coveredBandTop), e.g. for a new measure. */
+    private resetCoveredBand(): void {
+        this.coveredBandTop = Number.POSITIVE_INFINITY;
+        this.coveredBandBottom = Number.NEGATIVE_INFINITY;
+        this.coveredBandUpdated = false;
+    }
+
+    /**
+     * Computes the covered band: the y range from the lowest column top to the highest column bottom drawn so far.
+     * Every column already extends at least that far up and down, and the extents only grow, so drawing that lies within
+     * the band can't change any column anymore and doesn't need to be merged - e.g. the note heads, rests and accidentals
+     * between the stave lines, a large part of the merging work. Called once per measure, at its first fill:
+     * the stave lines are drawn before anything else (in VexFlow's Stave.draw()), so by then they span the band.
+     * Without a column that was drawn into, there is no band.
+     * The band is shrunk by a tiny margin, which covers the rounding errors of interpolating within a segment
+     * (see mergeSegment()): drawing within the band never merges a value outside of it.
+     */
+    private updateCoveredBand(): void {
+        this.coveredBandUpdated = true;
+        if (this.width === 0) {
+            return;
+        }
+        let lowestTop: number = Number.NEGATIVE_INFINITY;
+        let highestBottom: number = Number.POSITIVE_INFINITY;
+        for (let x: number = 0; x < this.width; x++) {
+            const top: number = this.minY[x] < this.fullWidthMinY ? this.minY[x] : this.fullWidthMinY;
+            if (top === Number.POSITIVE_INFINITY) {
+                return; // nothing drawn in this column yet
+            }
+            if (top > lowestTop) {
+                lowestTop = top;
+            }
+            const bottom: number = this.maxY[x] > this.fullWidthMaxY ? this.maxY[x] : this.fullWidthMaxY;
+            if (bottom < highestBottom) {
+                highestBottom = bottom;
+            }
+        }
+        // the rounding errors of mergeSegment's interpolation are a few units in the last place of y, far below this margin
+        const margin: number = 1e-9 * (1 + Math.abs(lowestTop) + Math.abs(highestBottom));
+        this.coveredBandTop = lowestTop + margin;
+        this.coveredBandBottom = highestBottom - margin; // (an empty band if lowestTop + margin > highestBottom - margin)
     }
 
     private flatteningSegments(controlPolygonLength: number): number {
@@ -770,6 +860,9 @@ export class GeometricSkyBottomLineContext {
         if (!(right > left)) {
             return; // zero or negative width: nothing is drawn
         }
+        if (top >= this.coveredBandTop && bottom <= this.coveredBandBottom) {
+            return; // within the covered band: can't change any column
+        }
         const firstColumn: number = Math.max(0, Math.floor(left));
         const lastColumn: number = Math.min(this.width - 1, Math.ceil(right) - 1);
         for (let column: number = firstColumn; column <= lastColumn; column++) {
@@ -794,18 +887,25 @@ export class GeometricSkyBottomLineContext {
 
     /** Returns the cached flattened segments for a glyph outline at the given scale,
      *  computing them on first use (see drawCachedGlyphOutline()). */
-    private getGlyphSegments(outline: string[], scale: number): Float64Array {
-        let segmentsByScale: Map<number, Float64Array> = this.caches.glyphSegments.get(outline);
+    private getGlyphSegments(outline: string[], scale: number): IGlyphSegments {
+        let segmentsByScale: Map<number, IGlyphSegments> = this.caches.glyphSegments.get(outline);
         if (!segmentsByScale) {
-            segmentsByScale = new Map<number, Float64Array>();
+            segmentsByScale = new Map<number, IGlyphSegments>();
             this.caches.glyphSegments.set(outline, segmentsByScale);
         }
-        let segments: Float64Array = segmentsByScale.get(scale);
-        if (!segments) {
-            segments = this.computeGlyphSegments(outline, scale);
-            segmentsByScale.set(scale, segments);
+        let glyphSegments: IGlyphSegments = segmentsByScale.get(scale);
+        if (!glyphSegments) {
+            const segments: Float64Array = this.computeGlyphSegments(outline, scale);
+            let minY: number = Number.POSITIVE_INFINITY;
+            let maxY: number = Number.NEGATIVE_INFINITY;
+            for (let i: number = 1; i < segments.length; i += 2) { // the y coordinates
+                minY = Math.min(minY, segments[i]);
+                maxY = Math.max(maxY, segments[i]);
+            }
+            glyphSegments = {segments, minY, maxY};
+            segmentsByScale.set(scale, glyphSegments);
         }
-        return segments;
+        return glyphSegments;
     }
 
     /** Flattens a glyph outline at the given scale into line segments relative to the glyph origin,
@@ -1045,11 +1145,11 @@ export class GeometricSkyBottomLineCaches {
     /** Character ink extents, cached by font + character (see measureCharacter()). */
     public characterExtents: Map<string, ICharacterExtents> = new Map<string, ICharacterExtents>();
     /** Flattened line segments of glyph outlines (quadruples x0,y0,x1,y1, relative to the glyph
-     *  origin, already scaled and y-inverted), cached per outline (by reference) and scale, see
+     *  origin, already scaled and y-inverted) and their y range, cached per outline (by reference) and scale, see
      *  drawCachedGlyphOutline(). VexFlow caches the outline arrays on its font glyph entries,
      *  so they are stable keys that live as long as the font. */
-    public glyphSegments: WeakMap<object, Map<number, Float64Array>> =
-        new WeakMap<object, Map<number, Float64Array>>();
+    public glyphSegments: WeakMap<object, Map<number, IGlyphSegments>> =
+        new WeakMap<object, Map<number, IGlyphSegments>>();
     /** Scratch context used to flatten glyph outlines (reused, see computeGlyphSegments()). */
     public glyphSegmentsScratch: GeometricSkyBottomLineContext;
     /** Tiny hidden canvas used to probe the exact rasterized ink extents of single characters
@@ -1057,6 +1157,16 @@ export class GeometricSkyBottomLineCaches {
     public characterProbeCanvas: HTMLCanvasElement;
     public characterProbeContext: CanvasRenderingContext2D;
     public characterProbeCreationFailed: boolean = false;
+}
+
+/** The flattened line segments of a glyph outline at one scale (see GeometricSkyBottomLineCaches.glyphSegments). */
+export interface IGlyphSegments {
+    /** Quadruples x0,y0,x1,y1, relative to the glyph origin. */
+    segments: Float64Array;
+    /** Minimum y of the segments. */
+    minY: number;
+    /** Maximum y of the segments. */
+    maxY: number;
 }
 
 /** Ink extents of a single character, in px for the font it was measured with.
