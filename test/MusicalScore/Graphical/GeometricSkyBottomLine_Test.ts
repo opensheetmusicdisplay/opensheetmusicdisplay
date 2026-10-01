@@ -11,14 +11,15 @@ import { TestUtils } from "../../Util/TestUtils";
 describe("GeometricSkyBottomLineCalculation", () => {
     interface ICapturedLine { sky: number[], bottom: number[] }
     // capture the lines directly after they are calculated (before later layout steps update them),
-    // by wrapping SkyBottomLineCalculator.updateLines, which both calculation methods call with their results.
+    // by wrapping SkyBottomLineCalculator.setLinesFromConcatenated, which both calculation methods call with their results
+    // (the raster method via updateLines()).
     let capture: ICapturedLine[];
-    const originalUpdateLines: any = (SkyBottomLineCalculator.prototype as any).updateLines;
+    const originalSetLines: any = (SkyBottomLineCalculator.prototype as any).setLinesFromConcatenated;
     let savedOverflowY: string;
 
     before((): void => {
-        (SkyBottomLineCalculator.prototype as any).updateLines = function (results: any): void {
-            originalUpdateLines.call(this, results);
+        (SkyBottomLineCalculator.prototype as any).setLinesFromConcatenated = function (...args: any[]): void {
+            originalSetLines.apply(this, args);
             if (capture) {
                 capture.push({ sky: [...this.SkyLine], bottom: [...this.BottomLine] });
             }
@@ -38,7 +39,7 @@ describe("GeometricSkyBottomLineCalculation", () => {
     });
 
     after((): void => {
-        (SkyBottomLineCalculator.prototype as any).updateLines = originalUpdateLines;
+        (SkyBottomLineCalculator.prototype as any).setLinesFromConcatenated = originalSetLines;
         document.documentElement.style.overflowY = savedOverflowY;
     });
 
