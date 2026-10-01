@@ -31,7 +31,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
 
     public getCanvasSize(): number {
-        return document.getElementById("osmdCanvasPage" + this.graphicalMusicPage.PageNumber)?.offsetHeight;
+        return this.inner?.offsetHeight;
     }
 
     public initialize(container: HTMLElement, zoom: number): void {

@@ -74,6 +74,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public vfTies: VF.StaveTie[] = [];
     /** The repetition instructions given as words or symbols (coda, dal segno..) */
     public vfRepetitionWords: VF.Repetition[] = [];
+    /** Whether a metronome mark is drawn on this staff measure (they are drawn on the first visible staff). */
+    public hasMetronomeMark: boolean = false;
     /** The VexFlow Stave (= one measure in a staffline) */
     protected stave!: VF.Stave;
     /** VexFlow StaveConnectors (vertical lines) */
@@ -128,6 +130,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         (this.stave as any).MeasureNumber = this.MeasureNumber; // for debug info. vexflow automatically uses stave.measure for rendering measure numbers
         // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
+        this.hasMetronomeMark = false;
         this.vfRepetitionWords = []; // the modifiers were discarded with the old stave above, so don't keep stale entries
 
         if (this.ParentStaff) {

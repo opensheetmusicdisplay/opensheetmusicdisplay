@@ -431,11 +431,7 @@ export abstract class MusicSheetDrawer {
             }
         }
 
-        if (this.rules.RenderLyrics) {
-            if (staffLine.LyricsDashes.length > 0) {
-                this.drawDashes(staffLine.LyricsDashes);
-            }
-        }
+        // the lyric dashes are drawn with the lyric lines (extends) after the staff line, in drawMusicSystem()
         this.drawOctaveShifts(staffLine);
 
         this.drawPedals(staffLine);

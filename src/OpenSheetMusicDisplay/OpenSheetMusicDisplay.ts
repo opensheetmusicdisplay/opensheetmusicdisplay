@@ -69,7 +69,7 @@ export class OpenSheetMusicDisplay {
     }
 
     /** Options from which OSMD creates cursors in enableOrDisableCursors(). */
-    public cursorsOptions: CursorOptions[] = [];
+    public cursorsOptions: CursorOptions[]; // set in the constructor (setOptions())
     public cursors: Cursor[] = [];
     public get cursor(): Cursor { // lowercase for backwards compatibility since cursor -> cursors change
         return this.cursors[0];
@@ -99,8 +99,9 @@ export class OpenSheetMusicDisplay {
     /** A function that is executed when the XML has been read.
      * The return value will be used as the actual XML OSMD parses,
      * so you can make modifications to the xml that OSMD will use.
-     * Note that this is (re-)set on osmd.setOptions as `{return xml}`, unless you specify the function in the options. */
-    public OnXMLRead: (xml: string) => string;
+     * By default it returns the XML unchanged. It can also be set by the onXMLRead option,
+     * and osmd.setOptions() keeps it when the option is left out. */
+    public OnXMLRead: (xml: string) => string = (xml: string): string => xml;
 
     /**
      * Load a MusicXML file
@@ -1104,7 +1105,6 @@ export class OpenSheetMusicDisplay {
                 + "\n" + "example usage: osmd.setOptions({drawCredits: false, drawPartNames: false})");
             return;
         }
-        this.OnXMLRead = function(xml): string {return xml;};
         if (options.onXMLRead) {
             this.OnXMLRead = options.onXMLRead;
         }
@@ -1333,7 +1333,8 @@ export class OpenSheetMusicDisplay {
         }
         if (options.cursorsOptions !== undefined) {
             this.cursorsOptions = options.cursorsOptions;
-        } else {
+        } else if (!this.cursorsOptions) {
+            // the standard cursor, in the constructor. Later calls keep the cursors, like the other options that are left out.
             this.cursorsOptions = [{
                 type: CursorType.Standard,
                 color: this.EngravingRules.DefaultColorCursor,
@@ -1580,6 +1581,10 @@ export class OpenSheetMusicDisplay {
                         this.cursors[i].update();
                     }
                 }
+            }
+            // remove the cursors whose options were removed, e.g. by setOptions() with fewer cursorsOptions
+            for (const removedCursor of this.cursors.splice(this.cursorsOptions.length)) {
+                removedCursor?.Dispose(); // also removes its image
             }
         } else { // disable cursor
             this.cursors.forEach(cursor => {

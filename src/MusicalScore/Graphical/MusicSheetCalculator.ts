@@ -49,7 +49,6 @@ import { Staff } from "../VoiceData/Staff";
 import { OctaveShift } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { NoteHeadShape } from "../VoiceData/Notehead";
 import log from "loglevel";
-import { Dictionary } from "typescript-collections";
 import { GraphicalLyricEntry } from "./GraphicalLyricEntry";
 import { GraphicalLyricWord } from "./GraphicalLyricWord";
 import { GraphicalLine } from "./GraphicalLine";
@@ -3695,7 +3694,7 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateLyricsPosition(): void {
-        const lyricStaffEntriesDict: Dictionary<StaffLine, GraphicalStaffEntry[]> = new Dictionary<StaffLine, GraphicalStaffEntry[]>();
+        const lyricStaffEntriesMap: Map<StaffLine, GraphicalStaffEntry[]> = new Map<StaffLine, GraphicalStaffEntry[]>();
         // sort the lyriceVerseNumbers for every Instrument that has Lyrics
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.ParentMusicSheet.Instruments.length; idx < len; ++idx) {
             const instrument: Instrument = this.graphicalMusicSheet.ParentMusicSheet.Instruments[idx];
@@ -3710,17 +3709,13 @@ export abstract class MusicSheetCalculator {
                 const staffLine: StaffLine = musicSystem.StaffLines[idx3];
                 const lyricsStaffEntries: GraphicalStaffEntry[] =
                     this.calculateSingleStaffLineLyricsPosition(staffLine, staffLine.ParentStaff.ParentInstrument.LyricVersesNumbers);
-                lyricStaffEntriesDict.setValue(staffLine, lyricsStaffEntries);
-                this.calculateLyricsExtendsAndDashes(lyricStaffEntriesDict.getValue(staffLine));
+                lyricStaffEntriesMap.set(staffLine, lyricsStaffEntries);
             }
         }
-        // then fill in the lyric word dashes and lyrics extends/underscores
-        for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
-            const musicSystem: MusicSystem = this.musicSystems[idx2];
-            for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                this.calculateLyricsExtendsAndDashes(lyricStaffEntriesDict.getValue(staffLine));
-            }
+        // then fill in the lyric word dashes and lyrics extends/underscores, once per staff line.
+        //   Only after all lyrics are positioned: the dashes of a word continued in the next system take the y of its next syllable.
+        for (const lyricsStaffEntries of lyricStaffEntriesMap.values()) {
+            this.calculateLyricsExtendsAndDashes(lyricsStaffEntries);
         }
     }
 
