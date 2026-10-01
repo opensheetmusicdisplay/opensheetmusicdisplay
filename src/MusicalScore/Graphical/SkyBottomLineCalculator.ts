@@ -1,7 +1,8 @@
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
-import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
+import { IVerticalMeasureFormat, VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
+import { SourceMeasure } from "../VoiceData/SourceMeasure";
 import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 import log from "loglevel";
 import { BoundingBox } from "./BoundingBox";
@@ -143,10 +144,12 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method calculates the Sky- and BottomLines for a StaffLine.
+     * @param lastMeasureFormats For the geometric calculation of several stafflines: the last format of each vertical measure in it,
+     *   so that the stafflines of a vertical measure don't repeat its format (see VexFlowMeasure.format()).
      */
-    public calculateLines(): void {
+    public calculateLines(lastMeasureFormats?: Map<SourceMeasure, IVerticalMeasureFormat>): void {
         if (this.mRules.UseGeometricSkyBottomLineCalculation) {
-            this.calculateLinesGeometric();
+            this.calculateLinesGeometric(lastMeasureFormats);
             return;
         }
         const samplingUnit: number = this.mRules.SamplingUnit;
@@ -253,8 +256,9 @@ export class SkyBottomLineCalculator {
      * of the VexFlow draw calls of each measure, instead of drawing each measure on a canvas
      * and reading back its pixels (see calculateLines()), which is much slower (see #937).
      * Same flow as calculateLines(), with the canvas replaced by a GeometricSkyBottomLineContext.
+     * @param lastMeasureFormats see calculateLines()
      */
-    private calculateLinesGeometric(): void {
+    private calculateLinesGeometric(lastMeasureFormats?: Map<SourceMeasure, IVerticalMeasureFormat>): void {
         const samplingUnit: number = this.mRules.SamplingUnit;
         const results: SkyBottomLineCalculationResult[] = [];
 
@@ -267,7 +271,7 @@ export class SkyBottomLineCalculator {
         for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
             // Prepare the measure (normalize positions, format at the skyline-canvas width). Extracted so
             // the lazy skyline reuse can replay these exact side effects without re-measuring extents.
-            const width: number = this.prepareMeasureForGeometricSkyline(measure);
+            const width: number = this.prepareMeasureForGeometricSkyline(measure, lastMeasureFormats);
             geometricContext.initialize(width);
             try {
                 measure.draw(geometricContext as any);
@@ -305,8 +309,9 @@ export class SkyBottomLineCalculator {
     /** The per-measure side effects the geometric skyline calc applies before measuring extents: normalize
      *  absolute positions, bump the stave Y, and format the measure at the truncated skyline-canvas width.
      *  Later layout passes read this state (the VexFlow formatter is not idempotent), so the lazy skyline
-     *  reuse must replay it via applyGeometricSkylineSideEffectsOnly. Returns the skyline-canvas width. */
-    private prepareMeasureForGeometricSkyline(measure: VexFlowMeasure): number {
+     *  reuse must replay it via applyGeometricSkylineSideEffectsOnly. Returns the skyline-canvas width.
+     *  lastMeasureFormats: see calculateLines(). */
+    private prepareMeasureForGeometricSkyline(measure: VexFlowMeasure, lastMeasureFormats?: Map<SourceMeasure, IVerticalMeasureFormat>): number {
         // must calculate first AbsolutePositions
         measure.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
 
@@ -337,7 +342,7 @@ export class SkyBottomLineCalculator {
         // redundant because it should know the canvas but somehow it doesn't.
         // Maybe I am overlooking something but for now this does the trick
         vsStaff.setWidth(width);
-        measure.format();
+        measure.format(lastMeasureFormats);
         vsStaff.setWidth(oldMeasureWidth);
         return width;
     }
@@ -345,8 +350,9 @@ export class SkyBottomLineCalculator {
     /** Replay the geometric skyline calc's per-measure side effects WITHOUT the expensive extent
      *  measurement, so lazy rendering can reuse cached sky/bottom lines while leaving the measures in the exact
      *  state a normal render would. (calculateLinesGeometric does correctNotePositions inside measure.draw;
-     *  here we call it directly since the draw is skipped.) No-op for the non-default raster skyline path. */
-    public applyGeometricSkylineSideEffectsOnly(): void {
+     *  here we call it directly since the draw is skipped.) No-op for the non-default raster skyline path.
+     *  lastMeasureFormats: see calculateLines(). */
+    public applyGeometricSkylineSideEffectsOnly(lastMeasureFormats?: Map<SourceMeasure, IVerticalMeasureFormat>): void {
         if (!this.mRules.UseGeometricSkyBottomLineCalculation) {
             return;
         }
@@ -354,7 +360,7 @@ export class SkyBottomLineCalculator {
             if (!measure) {
                 continue;
             }
-            this.prepareMeasureForGeometricSkyline(measure);
+            this.prepareMeasureForGeometricSkyline(measure, lastMeasureFormats);
             measure.correctNotePositions();
         }
     }
