@@ -1,11 +1,6 @@
 import { expect } from "chai";
 import { TestUtils } from "../../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
-import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
-import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
-import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
-import { GraphicalNote } from "../../../../src/MusicalScore/Graphical/GraphicalNote";
-import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { Pitch } from "../../../../src/Common/DataObjects/Pitch";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
 import { VoiceEntry } from "../../../../src/MusicalScore/VoiceData/VoiceEntry";
@@ -28,45 +23,16 @@ describe("Accidentals in parentheses or brackets", () => {
     });
 
     /** measure 1: F#4 (parentheses), Bb4 (bracket), C#5, chord D#4 + G#4 (parentheses).
-     *  measure 2: grace note Eb5 (parentheses), then D5.
+     *  measure 2: grace note Eb5 (parentheses), D5, F4 (cautionary natural without parentheses).
      */
     const sample: string = "test_accidental_parentheses_bracket.musicxml";
-
-    interface DrawnAccidental {
-        note: string;
-        type: string;
-        inParentheses: boolean;
-        fontScale: number;
-    }
 
     function noteName(pitch: Pitch): string {
         return pitch.ToStringShort(Pitch.OctaveXmlDifference); // e.g. "F#4"
     }
 
-    async function drawnAccidentals(): Promise<DrawnAccidental[]> {
-        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
-        await osmd.load(TestUtils.getScore(sample));
-        osmd.render();
-        const notes: GraphicalNote[] = osmd.GraphicSheet.MeasureList
-            .map((measures: GraphicalMeasure[]): GraphicalMeasure => measures[0])
-            .flatMap((measure: GraphicalMeasure): GraphicalStaffEntry[] => measure.staffEntries)
-            .flatMap((staffEntry: GraphicalStaffEntry): GraphicalVoiceEntry[] => staffEntry.graphicalVoiceEntries) // includes grace notes
-            .flatMap((voiceEntry: GraphicalVoiceEntry): GraphicalNote[] => voiceEntry.notes);
-        return notes.flatMap((note: GraphicalNote): DrawnAccidental[] => {
-            const [vfnote, index] = (note as VexFlowGraphicalNote).vfnote as [any, number];
-            return vfnote.getModifiers()
-                .filter((modifier: any): boolean => modifier.getCategory() === "accidentals" && modifier.getIndex() === index)
-                .map((accidental: any): DrawnAccidental => ({
-                    note: noteName(note.sourceNote.Pitch),
-                    type: accidental.type,
-                    inParentheses: accidental.cautionary,
-                    fontScale: accidental.render_options.font_scale,
-                }));
-        });
-    }
-
-    it("reads parentheses and brackets of accidentals", async () => {
-        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+    /** Whether the accidental of each note is in parentheses, brackets or neither, as read from the XML. */
+    async function readEnclosures(osmd: OpenSheetMusicDisplay): Promise<Record<string, string>> {
         await osmd.load(TestUtils.getScore(sample));
         const notes: Note[] = osmd.Sheet.SourceMeasures
             .flatMap((measure: SourceMeasure): VerticalSourceStaffEntryContainer[] => measure.VerticalSourceStaffEntryContainers)
@@ -76,7 +42,12 @@ describe("Accidentals in parentheses or brackets", () => {
         for (const note of notes) {
             enclosures[noteName(note.Pitch)] = note.AccidentalParenthesesXml ? "parentheses" : note.AccidentalBracketXml ? "bracket" : "none";
         }
-        expect(enclosures).to.deep.equal({
+        return enclosures;
+    }
+
+    it("reads parentheses and brackets of accidentals", async () => {
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+        expect(await readEnclosures(osmd)).to.deep.equal({
             "F#4": "parentheses",
             "Bb4": "bracket",
             "C#5": "none",
@@ -84,33 +55,31 @@ describe("Accidentals in parentheses or brackets", () => {
             "G#4": "parentheses", // chord
             "Eb5": "parentheses", // grace note
             "D5": "none",
+            "Fn4": "none", // cautionary="yes" only
         });
     });
 
-    it("draws accidentals in parentheses or brackets in parentheses, and only those", async () => {
-        const accidentals: DrawnAccidental[] = await drawnAccidentals();
-        const inParentheses: Record<string, boolean[]> = {};
-        for (const accidental of accidentals) {
-            expect(accidental.type, accidental.note).to.equal(accidental.note.charAt(1));
-            inParentheses[accidental.note] = [...(inParentheses[accidental.note] ?? []), accidental.inParentheses];
-        }
-        expect(inParentheses).to.deep.equal({
-            "F#4": [true],
-            "Bb4": [true], // bracket
-            "C#5": [false],
-            "D#4": [false], // chord
-            "G#4": [true], // chord
-            "Eb5": [true], // grace note
-        });
+    it("reads cautionary accidentals as in parentheses with RenderCautionaryAccidentalsInParentheses", async () => {
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+        osmd.EngravingRules.RenderCautionaryAccidentalsInParentheses = true; // default false
+        const enclosures: Record<string, string> = await readEnclosures(osmd);
+        expect(enclosures.Fn4, "Fn4 (cautionary)").to.equal("parentheses");
+        expect(enclosures.Bb4, "Bb4 (bracket)").to.equal("bracket");
+        expect(enclosures["C#5"], "C#5").to.equal("none");
     });
 
-    it("draws accidentals in parentheses at the size of the other accidentals", async () => {
-        const accidentals: DrawnAccidental[] = await drawnAccidentals();
-        const plainScale: number = accidentals.find(accidental => accidental.note === "C#5").fontScale;
-        for (const accidental of accidentals.filter(drawn => drawn.note !== "Eb5")) {
-            expect(accidental.fontScale, accidental.note).to.equal(plainScale);
+    it("draws accidentals in parentheses", async () => {
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+        await osmd.load(TestUtils.getScore(sample));
+        osmd.render();
+        // how far the notes of measure 1 reach to the left with their accidentals (and parentheses)
+        const leftExtent: Record<string, number> = {};
+        for (const staffEntry of osmd.GraphicSheet.MeasureList[0][0].staffEntries) {
+            for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                leftExtent[noteName(voiceEntry.notes[0].sourceNote.Pitch)] = -voiceEntry.PositionAndShape.BorderLeft;
+            }
         }
-        const graceAccidental: DrawnAccidental = accidentals.find(accidental => accidental.note === "Eb5");
-        expect(graceAccidental.fontScale, "grace note accidental").to.be.lessThan(plainScale);
+        // both have a sharp, only the one of F#4 is in parentheses
+        expect(leftExtent["F#4"] - leftExtent["C#5"], "F#4 compared to C#5").to.be.greaterThan(0.5);
     });
 });

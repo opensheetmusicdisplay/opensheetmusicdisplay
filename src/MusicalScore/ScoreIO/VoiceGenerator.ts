@@ -409,8 +409,13 @@ export class VoiceGenerator {
           }
         } else if (noteElement.name === "accidental") {
           accidentalValue = noteElement.value;
-          accidentalParentheses = noteElement.attribute("parentheses")?.value === "yes";
-          accidentalBracket = noteElement.attribute("bracket")?.value === "yes";
+          const parenthesesXml: string = noteElement.attribute("parentheses")?.value;
+          const bracketXml: string = noteElement.attribute("bracket")?.value;
+          accidentalParentheses = parenthesesXml === "yes";
+          accidentalBracket = bracketXml === "yes";
+          if (parenthesesXml === undefined && bracketXml === undefined && this.musicSheet.Rules.RenderCautionaryAccidentalsInParentheses) {
+            accidentalParentheses = noteElement.attribute("cautionary")?.value === "yes"; // as MuseScore reads it
+          }
           if (accidentalValue === "natural") {
             noteAccidental = AccidentalEnum.NATURAL;
             // following accidentals: ambiguous in alter value

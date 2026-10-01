@@ -64,9 +64,16 @@
       </note>
       <note>
         <pitch><step>D</step><octave>5</octave></pitch>
-        <duration>4</duration>
+        <duration>2</duration>
         <voice>1</voice>
-        <type>whole</type>
+        <type>half</type>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <accidental cautionary="yes">natural</accidental>
       </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>

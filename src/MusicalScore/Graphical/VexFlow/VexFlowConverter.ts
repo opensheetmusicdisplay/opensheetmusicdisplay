@@ -258,9 +258,8 @@ export class VexFlowConverter {
     private static addAccidental(vfnote: VF.StaveNote, index: number, type: string, inParentheses: boolean = false): void {
         const accidental: VF.Accidental = new VF.Accidental(type);
         if (inParentheses) {
-            // setAsCautionary() also makes the accidental smaller (font_scale 28 instead of 38),
-            //   which VexFlow meant for courtesy accidentals at the end of a staff.
-            //   A cautionary accidental next to a note keeps the size of the note's other accidentals.
+            // setAsCautionary() also makes the accidental smaller (font_scale 28 instead of 38).
+            //   An accidental in parentheses keeps the size of the note's other accidentals.
             const fontScale: number = (accidental as any).render_options.font_scale;
             accidental.setAsCautionary();
             (accidental as any).render_options.font_scale = fontScale;
