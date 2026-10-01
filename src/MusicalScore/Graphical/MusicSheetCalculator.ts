@@ -1027,10 +1027,11 @@ export abstract class MusicSheetCalculator {
         if (!this.leadSheet) {
             // calculate all Instantaneous/Continuous Dynamics Expressions
             this.calculateDynamicExpressions();
+            // Calculate the alignment of close dynamics, before the words are placed:
+            //   it moves dynamics away from the staff, where words placed before could be.
+            this.calculateExpressionAlignements();
             // calculate all Mood and Unknown Expression
             this.calculateMoodAndUnknownExpressions();
-            // Calculate the alignment of close expressions
-            this.calculateExpressionAlignements();
             // calculate all OctaveShifts
             this.calculateOctaveShifts();
             if (this.rules.RenderPedals) {
@@ -1448,9 +1449,11 @@ export abstract class MusicSheetCalculator {
     protected calculateGraphicalVerbalContinuousDynamic(graphicalContinuousDynamic: GraphicalContinuousDynamicExpression,
                                                         startPosInStaffline: PointF2D): void {
         // if ContinuousDynamicExpression is given from words
-        const graphLabel: GraphicalLabel = graphicalContinuousDynamic.Label;
-        const left: number = startPosInStaffline.x + graphLabel.PositionAndShape.BorderMarginLeft;
-        const right: number = startPosInStaffline.x + graphLabel.PositionAndShape.BorderMarginRight;
+        // The label is at (0, 0) in the expression's box (see VexFlowContinuousDynamicExpression), so the box is positioned,
+        //   like the box of an instantaneous dynamic: the alignment of close dynamics compares and moves the boxes.
+        const box: BoundingBox = graphicalContinuousDynamic.PositionAndShape;
+        const left: number = startPosInStaffline.x + box.BorderMarginLeft;
+        const right: number = startPosInStaffline.x + box.BorderMarginRight;
         // placement always below the currentStaffLine, with the exception of Voice Instrument (-> above)
         const placement: PlacementEnum = graphicalContinuousDynamic.ContinuousDynamic.Placement;
         const staffLine: StaffLine = graphicalContinuousDynamic.ParentStaffLine;
@@ -1459,11 +1462,13 @@ export abstract class MusicSheetCalculator {
         let drawingHeight: number;
         if (placement === PlacementEnum.Below) {
             drawingHeight = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);    // Bottom line
-            graphLabel.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - graphLabel.PositionAndShape.BorderMarginTop);
+            box.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - box.BorderMarginTop);
         } else {
             drawingHeight = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
-            graphLabel.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - graphLabel.PositionAndShape.BorderMarginBottom);
+            box.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - box.BorderMarginBottom);
         }
+        // so that the dynamics placed after it don't overlap it (instantaneous dynamics and wedges update it when placed too)
+        graphicalContinuousDynamic.updateSkyBottomLine();
     }
 
    /**
