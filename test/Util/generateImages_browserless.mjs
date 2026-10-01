@@ -708,9 +708,10 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     const isTestTransposingCsharpMajorToC = sampleFilename.includes("test_transposing_csharp_major_to_c");
     const isTestTransposingGflatMajor = sampleFilename.includes("test_transposing_gflat_major");
     const isTestTransposingIntervalSpelling = sampleFilename.includes("test_transposing_interval_spelling");
+    const isTestTransposingIntervalChordSpelling = sampleFilename.includes("test_transposing_interval_chord_spelling");
     // osmd.TransposeCalculator is static, shared by all samples: set it for each sample,
-    //   so that the samples after test_transposing_interval_spelling (in directory order) don't use its calculator.
-    osmdInstance.TransposeCalculator = isTestTransposingIntervalSpelling ?
+    //   so that the samples after the interval samples (in directory order) don't use their calculator.
+    osmdInstance.TransposeCalculator = isTestTransposingIntervalSpelling || isTestTransposingIntervalChordSpelling ?
         new OSMD.IntervalTransposeCalculator() : new OSMD.TransposeCalculator();
 
     if (isTestOctaveShiftInvisibleInstrument ||
@@ -737,6 +738,10 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestTransposingIntervalSpelling) {
         osmdInstance.Sheet.Transpose = -2;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingIntervalChordSpelling) {
+        osmdInstance.Sheet.Transpose = 1;
         osmdInstance.updateGraphic();
     }
 
