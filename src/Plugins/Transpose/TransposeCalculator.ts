@@ -16,6 +16,11 @@ export class TransposeCalculator implements ITransposeCalculator {
             //   e.g. OSMD_function_test_chord_symbols measure 2 showed D#7 instead of Eb7,
             //   just because sharps fit the key signature better.
         }
+        if (halftones % 12 === 0) {
+            // Transposing by octaves keeps the key signature (see transposeKey()) and the spelling,
+            //   which the rules below would change, e.g. the leading tone C# of D minor to Db, as the key has flats.
+            return new Pitch(pitch.FundamentalNote, pitch.Octave + halftones / 12, pitch.Accidental);
+        }
 
         let transposedFundamentalNote: NoteEnum = NoteEnum.C;
         let transposedOctave: number = 0;

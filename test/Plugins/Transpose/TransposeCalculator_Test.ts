@@ -3,13 +3,26 @@ import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TransposeCalculator } from "../../../src/Plugins/Transpose/TransposeCalculator";
 import { ITransposeCalculator } from "../../../src/MusicalScore/Interfaces/ITransposeCalculator";
-import { KeyInstruction } from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
+import { KeyEnum, KeyInstruction } from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
 import { GraphicalChordSymbolContainer } from "../../../src/MusicalScore/Graphical/GraphicalChordSymbolContainer";
 import { AccidentalEnum, NoteEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
 
 describe("TransposeCalculator", (): void => {
+    describe("transposePitch", (): void => {
+        it("keeps the spelling when transposing by octaves, e.g. the leading tone C# of D minor", (): void => {
+            const calculator: TransposeCalculator = new TransposeCalculator();
+            for (const halftones of [12, -24]) {
+                const key: KeyInstruction = new KeyInstruction(undefined, -1, KeyEnum.minor);
+                calculator.transposeKey(key, halftones);
+                const transposed: Pitch = calculator.transposePitch(new Pitch(NoteEnum.C, 1, AccidentalEnum.SHARP), key, halftones);
+                expect(transposed.ToString(), `by ${halftones} halftones`)
+                    .to.equal(new Pitch(NoteEnum.C, 1 + halftones / 12, AccidentalEnum.SHARP).ToString());
+            }
+        });
+    });
+
     describe("with a score", (): void => {
         let div: HTMLElement;
         let osmd: OpenSheetMusicDisplay;
