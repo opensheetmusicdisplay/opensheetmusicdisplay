@@ -621,6 +621,11 @@ export class EngravingRules {
      * but were inserted as a words element in the MusicXML, which can't be matched to the note anymore,
      * and would otherwise just be placed somewhere else. See OSMD Issue 1251. */
     public IgnoreBracketsWords: boolean;
+    /** Whether to draw cautionary accidentals (<accidental cautionary="yes">) in parentheses when the XML gives
+     *  neither parentheses nor bracket, as MuseScore reads them. Default false: only accidentals with parentheses="yes"
+     *  or bracket="yes" are drawn in parentheses, as parentheses take space. Read in load().
+     */
+    public RenderCautionaryAccidentalsInParentheses: boolean;
     public PlaceWordsInsideStafflineFromXml: boolean;
     public PlaceWordsInsideStafflineYOffset: number;
     // public PositionMarcatoCloseToNote: boolean;
@@ -1107,6 +1112,7 @@ export class EngravingRules {
         this.RestoreCursorAfterRerender = true;
         this.StretchLastSystemLine = false;
         this.IgnoreBracketsWords = true;
+        this.RenderCautionaryAccidentalsInParentheses = false;
         this.PlaceWordsInsideStafflineFromXml = false;
         this.PlaceWordsInsideStafflineYOffset = 0.9;
         // this.PositionMarcatoCloseToNote = true;
