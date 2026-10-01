@@ -175,7 +175,8 @@ export class EngravingRules {
     /** Not always a symbol, can also be text (RepetitionInstruction). Keeping the name for backwards compatibility. */
     public RepetitionSymbolsYOffset: number;
     /** Adds a percent of the stave's width (e.g. 0.4 = 40%) to the x position of end instructions like Fine or D.C. al fine.
-     *  Only applied in the last measure of a staffline, so that the instruction is not shifted into the next measure. */
+     *  Only applied in the last measure of a staffline, so that the instruction is not shifted into the next measure,
+     *  and at most up to the measure's end barline, so that it isn't shifted off the page in a wide measure. */
     public RepetitionEndInstructionXShiftAsPercentOfStaveWidth: number;
     public RehearsalMarkXOffset: number;
     public RehearsalMarkXOffsetDefault: number;
@@ -533,6 +534,8 @@ export class EngravingRules {
     public RenderLyricist: boolean;
     public RenderCopyright: boolean;
     public RenderPartNames: boolean;
+    /** Whether to render part-group names and abbreviations. Requires RenderPartNames. Default true. */
+    public RenderPartGroupNames: boolean;
     public RenderPartAbbreviations: boolean;
     /** Whether to render part abbreviations on systems with only one staff.
      *  Requires RenderPartNames and RenderPartAbbreviations. Default false.
@@ -1061,6 +1064,7 @@ export class EngravingRules {
         this.RenderLyricist = true;
         this.RenderCopyright = false;
         this.RenderPartNames = true;
+        this.RenderPartGroupNames = true;
         this.RenderPartAbbreviations = true;
         this.RenderPartAbbreviationsForSingleStaff = false;
         this.LazyConsistentGraphic = false;

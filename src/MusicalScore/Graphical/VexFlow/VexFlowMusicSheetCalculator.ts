@@ -2482,9 +2482,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param measureIndex
    */
   protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction, measureIndex: number): void {
-    if (repetitionInstruction.DrawnAsText) {
-      return; // its words are drawn as text (expression)
-    }
     // find first visible StaffLine
     let uppermostMeasure: VexFlowMeasure = undefined;
     const measures: VexFlowMeasure[] = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
@@ -2563,6 +2560,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         text = ""; // segno/coda glyphs without text
         break;
     }
+    // the words of the score, drawn instead of the text and coda glyph (see RepetitionInstruction.Words, addWordRepetition())
+    const words: string = (repetition as any).text;
+    if (words) {
+      text = words;
+      hasCodaGlyphAfterText = false;
+    }
     const fontHeightUnits: number = 1.6; // staverepetition.js draws the text with a 12pt (16px) font
     let textWidthUnits: number = 0;
     if (text.length > 0) {
@@ -2596,8 +2599,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (type === repetitionTypes.DC || type === repetitionTypes.DC_AL_FINE || type === repetitionTypes.DS ||
           type === repetitionTypes.DS_AL_FINE || type === repetitionTypes.FINE) {
         // these are additionally shifted to the right (only in the staffline's last measure, see addWordRepetition()),
-        //   see xShiftAsPercentOfStaveWidth in staverepetition.js
-        startX += measureWidth * ((repetition as any).xShiftAsPercentOfStaveWidth ?? 0);
+        //   at most up to the measure's end, see xShiftAsPercentOfStaveWidth in staverepetition.js
+        const shift: number = measureWidth * ((repetition as any).xShiftAsPercentOfStaveWidth ?? 0);
+        startX += Math.max(0, Math.min(shift, measureStartX + measureWidth - (startX + textWidthUnits)));
       }
       endX = startX + textWidthUnits;
       if (hasCodaGlyphAfterText) {

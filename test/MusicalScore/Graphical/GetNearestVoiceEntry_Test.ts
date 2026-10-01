@@ -5,6 +5,9 @@ import { GraphicalMusicSheet } from "../../../src/MusicalScore/Graphical/Graphic
 import { GraphicalVoiceEntry } from "../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
 import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
+import { GraphicalMusicPage } from "../../../src/MusicalScore/Graphical/GraphicalMusicPage";
+import { GraphicalMeasure } from "../../../src/MusicalScore/Graphical/GraphicalMeasure";
+import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { Note } from "../../../src/MusicalScore/VoiceData/Note";
 import { TabNote } from "../../../src/MusicalScore/VoiceData/TabNote";
 import { PointF2D } from "../../../src/Common/DataObjects/PointF2D";
@@ -31,6 +34,8 @@ interface DrawnNoteHead {
  *   of the previous one), at the right edge of a note head with a flag (also of a grace note), between the note heads of a second,
  *   or at the note of another voice, which Vexflow moves aside to not overlap it.
  * - Rests in a TAB staff aren't found: they aren't drawn, and a click on the fret number of the next note could find the rest.
+ * - The search can be limited to a page, e.g. the one clicked on: with a page format, each page has its own coordinates, so a position
+ *   is on every page, and the nearest object of all pages can be on another page.
  */
 describe("GetNearestVoiceEntry", () => {
     let container: HTMLElement;
@@ -253,6 +258,49 @@ describe("GetNearestVoiceEntry", () => {
                 }
             }
             expect(tabRests, `TAB rests in ${sampleName}`).to.be.greaterThan(0);
+        }
+    });
+
+    /** The page the measure is drawn on. */
+    function pageOf(measure: GraphicalMeasure): GraphicalMusicPage {
+        return measure.ParentStaffLine.ParentMusicSystem.Parent;
+    }
+
+    it("searches only the given page (a page format: each page has its own coordinates)", async () => {
+        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, { autoResize: false, pageFormat: "A5_L" });
+        await osmd.load(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml"));
+        osmd.render();
+        const sheet: GraphicalMusicSheet = osmd.GraphicSheet;
+        const pages: GraphicalMusicPage[] = sheet.MusicPages;
+        expect(pages.length, "pages").to.be.greaterThan(1);
+        for (const page of pages) {
+            // the page's first note: on the other pages, the position is e.g. in their first system too
+            const firstMeasure: GraphicalMeasure = page.MusicSystems[0].StaffLines[0].Measures[0];
+            const staffEntry: GraphicalStaffEntry = firstMeasure.staffEntries[0];
+            const voiceEntry: GraphicalVoiceEntry = staffEntry.graphicalVoiceEntries[0];
+            const note: GraphicalNote = voiceEntry.notes[0];
+            const position: PointF2D = note.PositionAndShape.AbsolutePosition;
+            for (const pageToSearch of pages) {
+                const onPage: string = `the first note of page ${page.PageNumber}, searched on page ${pageToSearch.PageNumber}`;
+                const foundVoiceEntry: GraphicalVoiceEntry = sheet.GetNearestVoiceEntry(position, false, pageToSearch);
+                const foundNote: GraphicalNote = sheet.GetNearestNote(position, undefined, pageToSearch);
+                const foundStaffEntry: GraphicalStaffEntry = sheet.GetNearestStaffEntry(position, pageToSearch);
+                const foundMeasure: GraphicalMeasure = sheet.GetNearestObject(position, GraphicalMeasure, pageToSearch);
+                if (pageToSearch === page) {
+                    expect(foundVoiceEntry === voiceEntry, `${onPage}: voice entry`).to.equal(true);
+                    expect(foundNote === note, `${onPage}: note`).to.equal(true);
+                    expect(foundStaffEntry === staffEntry, `${onPage}: staff entry`).to.equal(true);
+                    expect(foundMeasure === firstMeasure, `${onPage}: measure`).to.equal(true);
+                } else {
+                    // found on the page searched, or nothing
+                    expect(!foundVoiceEntry || pageOf(foundVoiceEntry.parentStaffEntry.parentMeasure) === pageToSearch,
+                           `${onPage}: voice entry on page ${pageOf(foundVoiceEntry?.parentStaffEntry.parentMeasure)?.PageNumber}`).to.equal(true);
+                    expect(!foundNote || pageOf(foundNote.parentVoiceEntry.parentStaffEntry.parentMeasure) === pageToSearch,
+                           `${onPage}: note`).to.equal(true);
+                    expect(!foundStaffEntry || pageOf(foundStaffEntry.parentMeasure) === pageToSearch, `${onPage}: staff entry`).to.equal(true);
+                    expect(!foundMeasure || pageOf(foundMeasure) === pageToSearch, `${onPage}: measure`).to.equal(true);
+                }
+            }
         }
     });
 });

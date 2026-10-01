@@ -912,8 +912,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             const currLine: {text: string, xOffset: number, width: number} = graphicalLabel.TextLines[i];
             const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
             const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
-            const newNode: Node =
-                this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
+            const newNode: Node = this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color,
+                                                          graphicalLabel.Label.fontFamily, graphicalLabel.Label.language);
             if (!node) {
                 node = newNode;
             } else {

@@ -18,6 +18,8 @@ export class LyricsEntry {
     private verseNumber: string;
     private syllableIndex: number;
     public extend: boolean;
+    /** The language of the text: its xml:lang or the sheet's default for the lyric (MusicSheet.LyricLanguages), see Label.language. */
+    public language: string;
 
     public get Text(): string {
         return this.text;

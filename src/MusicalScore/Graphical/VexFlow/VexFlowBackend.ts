@@ -92,9 +92,13 @@ public abstract getContext(): Vex.IRenderContext;
   public abstract free(): void;
 
   public abstract translate(x: number, y: number): void;
+  /**
+   * Renders a text to the screen.
+   * @param language the language of the text as a BCP 47 tag (e.g. "ja"), for the browser's choice of fonts (see Label.language)
+   */
   public abstract renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                              heightInPixel: number, screenPosition: PointF2D,
-                             color?: string, fontFamily?: string): Node;
+                             color?: string, fontFamily?: string, language?: string): Node;
   /**
    * Renders a rectangle with the given style to the screen.
    * It is given in screen coordinates.

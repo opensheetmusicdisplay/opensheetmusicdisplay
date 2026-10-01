@@ -22,6 +22,16 @@ import { PlaybackSettings } from "../Common/DataObjects/PlaybackSettings";
 
 // FIXME Andrea: Commented out some unnecessary/not-ported-yet code, have a look at (*)
 
+/** A default language of lyrics, from MusicXML's <defaults><lyric-language xml:lang="..." number="..." name="...">. */
+export interface LyricLanguage {
+    /** The lyric number it's for (undefined: any number, unless a name is given) */
+    number?: string;
+    /** The lyric name it's for (undefined: any name, unless a number is given) */
+    name?: string;
+    /** The language as a BCP 47 tag, e.g. "ja", see Label.language */
+    language: string;
+}
+
 /**
  * This is the representation of a complete piece of sheet music.
  * It includes the contents of a MusicXML file after the reading.
@@ -89,6 +99,8 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public MeasureWidthFactor: number = 1.0;
     /** Ignore tempo instructions like metronome numbers, e.g. because a bpm was set in the UI */
     public IgnoreTempoInstructions: boolean = false;
+    /** The default languages of the lyrics. A lyric's own xml:lang comes first, see LyricsEntry.language. */
+    public LyricLanguages: LyricLanguage[] = [];
 
     /**
      * Get the global index within the music sheet for this staff.
