@@ -851,6 +851,7 @@ export abstract class MusicSheetCalculator {
         if (this.rules.ExpressionsUseXMLColor && colorXML) {
             graphLabel.ColorXML = colorXML;
         }
+        graphLabel.Label.language = multiExpression.EntriesList[0]?.expression.language;
         if (this.rules.PlaceWordsInsideStafflineFromXml) {
             if (defaultYXml < 0 && defaultYXml > -50) { // within staffline
                 let newY: number = defaultYXml / 10; // OSMD units
@@ -2128,6 +2129,7 @@ export abstract class MusicSheetCalculator {
                 if (entry.Expression.ColorXML && this.rules.ExpressionsUseXMLColor) {
                     graphLabel.ColorXML = entry.Expression.ColorXML;
                 }
+                graphLabel.Label.language = entry.Expression.language;
 
                 if (entry.Expression instanceof InstantaneousTempoExpression) {
                     // registers itself in staffLine.AbstractExpressions, which is what isTempoMarkingAlreadyRendered() checks
@@ -2480,6 +2482,7 @@ export abstract class MusicSheetCalculator {
                 credit.font, credit.print);
             wrapped.fontFamily = credit.fontFamily;
             wrapped.fontStyle = credit.fontStyle;
+            wrapped.language = credit.language;
             const label: GraphicalLabel = new GraphicalLabel(
                 wrapped, this.rules.SheetSubtitleHeight, credit.textAlignment, this.rules);
             label.Label.IsCreditLabel = true;
@@ -2657,8 +2660,9 @@ export abstract class MusicSheetCalculator {
         // fix width of SVG, sheet and horizontal scroll bar being too long (~32767 = SheetMaximumWidth) for single line scores
         if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
-            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures, whose bounding boxes somehow get messed up otherwise
-            // note: "GraphicalMeasure" instead of GraphicalMeasure.name doesn't work with minified builds (they change class names)
+            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure]); // ignore measures, whose bounding boxes somehow get messed up otherwise
+            // note: the class, not its name: minified builds change class names, and give other classes the same name,
+            //   e.g. GraphicalNote, GraphicalLabel, so their bounding boxes were ignored too
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().
@@ -2805,7 +2809,7 @@ export abstract class MusicSheetCalculator {
         //   (and fix SVG and horizontal scroll bar width)
         if (this.rules.RenderSingleHorizontalStaffline) {
             //page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width + this.rules.PageRightMargin;
-            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure.name]); // ignore measures, whose bounding boxes somehow get messed up otherwise
+            page.PositionAndShape.calculateBoundingBox([GraphicalMeasure]); // ignore measures, whose bounding boxes somehow get messed up otherwise
             // note: calculateBoundingBox by default changes measure.PositionAndShape.Size.width for some reason,
             //   inaccurate for RenderSingleHorizontalStaffline, e.g. the cursor type 3 that highlights the whole measure will get wrong width
             //   correct width was set previously via MusicSystemBuilder.setMeasureWidth().

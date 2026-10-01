@@ -4,6 +4,8 @@ export class AbstractExpression {
     protected placement: PlacementEnum;
     public parentMeasure: SourceMeasure; // could be undefined
     public ColorXML: string;
+    /** The xml:lang of the expression's words, see Label.language. */
+    public language: string;
 
     constructor(placement: PlacementEnum) {
         this.placement = placement;

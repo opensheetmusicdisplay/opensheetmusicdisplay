@@ -65,8 +65,12 @@ export class RepetitionInstruction /*implements IComparable*/ {
     public parentRepetition: Repetition;
     /** How many times this should be repeated */
     public Times: number;
-    /** Whether the instruction was read from words that are drawn as text, e.g. "Menuetto D.C.": the instruction itself isn't drawn. */
-    public DrawnAsText: boolean = false;
+    /**
+     * The words of the score, drawn instead of the instruction's label (e.g. "D.C."), where the label goes,
+     * as they say more than the label or say it in another language, e.g. "D.C. senza replica", "Menuetto D.C. al Fine" or "Fin".
+     * Undefined for words that only name the instruction (e.g. "Da Capo", drawn as "D.C."), and for a segno or coda sign.
+     */
+    public Words: string;
     /** Whether the MusicXML marks this segno as the target of a D.S. (<sound segno="...">): it is never taken for a D.S. itself. */
     public MarkedAsTarget: boolean = false;
 

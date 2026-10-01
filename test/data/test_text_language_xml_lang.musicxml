@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<!-- Texts in Japanese and Chinese: kanji like 海 and 青 have different glyphs in Japanese and Chinese fonts, which a browser
+     picks by the text's language, drawn as the SVG text's xml:lang. The lyrics say "the sea is blue" three times: verse 1 in
+     Japanese (the default language of all lyrics), verse 2 in Chinese (the default of lyric number 2), verse 3 in English
+     (the texts' own xml:lang). -->
+<score-partwise version="4.0">
+  <defaults>
+    <lyric-language xml:lang="ja"/>
+    <lyric-language number="2" xml:lang="zh-CN"/>
+  </defaults>
+  <credit page="1">
+    <credit-type>title</credit-type>
+    <credit-words justify="center" valign="top" xml:lang="ja">今日の海</credit-words>
+  </credit>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voice</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <words xml:lang="ja">静かに</words>
+        </direction-type>
+      </direction>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>海</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>海</text>
+        </lyric>
+        <lyric number="3">
+          <syllabic>single</syllabic>
+          <text xml:lang="en">The</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>は</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>是</text>
+        </lyric>
+        <lyric number="3">
+          <syllabic>single</syllabic>
+          <text xml:lang="en">sea</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>青</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>蓝</text>
+        </lyric>
+        <lyric number="3">
+          <syllabic>single</syllabic>
+          <text xml:lang="en">is</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>い</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>的</text>
+        </lyric>
+        <lyric number="3">
+          <syllabic>single</syllabic>
+          <text xml:lang="en">blue</text>
+        </lyric>
+      </note>
+    </measure>
+    <measure number="2">
+      <direction placement="above">
+        <direction-type>
+          <words xml:lang="zh-CN">安静地</words>
+        </direction-type>
+      </direction>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+      </barline>
+    </measure>
+  </part>
+</score-partwise>

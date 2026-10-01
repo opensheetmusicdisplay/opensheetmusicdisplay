@@ -140,8 +140,8 @@ export class RepetitionInstructionReader {
    * @param relativeMeasurePosition the position of the direction in the measure (not used)
    * @param soundNode the direction's sound element, if any: <sound segno="..."> marks a segno as the target of a D.S.
    *   Its dacapo, dalsegno, fine, tocoda, segno and coda attributes say which instruction the direction is when its words
-   *   don't name one themselves, e.g. "Fin" or "Da Capo bis Ende".
-   * @returns true if the direction is (only) a repetition instruction, false if it is drawn as text
+   *   don't name one themselves, e.g. "Fin", "Da Capo bis Ende" or "D.C. senza replica".
+   * @returns true if the direction is a repetition instruction, false if it is drawn as text
    */
   public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number,
                                                         soundNode?: IXmlElement): boolean {
@@ -152,28 +152,31 @@ export class RepetitionInstructionReader {
       // Measure positions aren't adjusted by the relative position in the measure (relativeMeasurePosition):
       //   the instruction belongs to the measure it's written in (see test_staverepetitions_coda_etc_positioning.musicxml).
       let type: RepetitionInstructionEnum = RepetitionInstructionReader.repetitionInstructionFromWords(words.toLowerCase());
-      let drawnAsText: boolean = false;
+      // the words drawn instead of the instruction's label, if they say more than it or say it in another language
+      let drawnWords: string = undefined;
       if (type === undefined) {
-        // A D.C. or D.S. after a capitalized word, usually the section to play again, e.g. "Menuetto D.C." after a trio:
-        //   the jump is read for playback, and the words are drawn as they are, as text (not as the instruction's label).
+        // A D.C. or D.S. after a capitalized word, usually the section to play again, e.g. "Menuetto D.C." after a trio
         const named: RegExpMatchArray = words.match(/^[A-Z][a-zA-Z]*\s+(.+)$/);
         type = named ? RepetitionInstructionReader.repetitionInstructionFromWords(named[1].toLowerCase()) : undefined;
-        if (RepetitionInstructionReader.isJumpFromWords(type)) {
-          drawnAsText = true;
-        } else {
-          // Words that don't name an instruction, e.g. in a language other than Italian or English:
-          //   the sound says which instruction they are, if any. Otherwise they are a general text -> render as text (e.g. UnknownExpression)
+        if (!RepetitionInstructionReader.isJumpFromWords(type)) {
+          // Words that don't name an instruction, e.g. in a language other than Italian or English, or with more words, e.g.
+          //   "D.C. senza replica": the sound says which instruction they are, if any.
+          //   Otherwise they are a general text -> render as text (e.g. UnknownExpression)
           type = RepetitionInstructionReader.repetitionInstructionFromSound(soundNode);
           if (type === undefined) {
             return false;
           }
         }
+        // (a segno or coda sign is drawn as the sign)
+        if (words.length > 0 && type !== RepetitionInstructionEnum.Segno && type !== RepetitionInstructionEnum.Coda) {
+          drawnWords = words.replace(/\s+/g, " "); // drawn in one line
+        }
       }
       const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, type);
-      newInstruction.DrawnAsText = drawnAsText;
+      newInstruction.Words = drawnWords;
       newInstruction.MarkedAsTarget = type === RepetitionInstructionEnum.Segno && !!soundNode?.attribute("segno");
       this.addInstruction(this.repetitionInstructions, newInstruction);
-      return !drawnAsText;
+      return true;
     } else if (directionTypeNode.element("segno")) {
       // if (relativeMeasurePosition > 0.5) {
       //   measureIndex++;
