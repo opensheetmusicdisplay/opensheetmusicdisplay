@@ -56,6 +56,12 @@ export class GeometricSkyBottomLineContext {
     private minY: Float64Array = new Float64Array(0);
     /** Maximum drawn y per pixel column (the bottom-line, in device pixels). -Infinity = column untouched. */
     private maxY: Float64Array = new Float64Array(0);
+    /** Minimum y of the horizontal strokes that cover every column of the measure, like the stave lines (see mergeHorizontalStroke()).
+     *  Kept as a single value instead of being merged into every column, applied to all columns in copyExtentsInto().
+     *  +Infinity = no such stroke. */
+    private fullWidthMinY: number = Number.POSITIVE_INFINITY;
+    /** Maximum y of the horizontal strokes that cover every column of the measure, see fullWidthMinY. -Infinity = no such stroke. */
+    private fullWidthMaxY: number = Number.NEGATIVE_INFINITY;
     private width: number = 0;
 
     // current drawing state
@@ -99,6 +105,8 @@ export class GeometricSkyBottomLineContext {
         }
         this.minY.fill(Number.POSITIVE_INFINITY, 0, this.width);
         this.maxY.fill(Number.NEGATIVE_INFINITY, 0, this.width);
+        this.fullWidthMinY = Number.POSITIVE_INFINITY;
+        this.fullWidthMaxY = Number.NEGATIVE_INFINITY;
         this.canvas.width = this.width;
         this.canvas.height = height;
         this.translateX = 0;
@@ -119,10 +127,15 @@ export class GeometricSkyBottomLineContext {
      * columns where nothing was drawn are left undefined.
      */
     public copyExtentsInto(skyLine: number[], bottomLine: number[]): void {
+        // The strokes that cover every column (fullWidthMinY/MaxY) are merged in here, after the rest.
+        // The result is the same as merging them in drawing order: min and max select exact values, in any order.
+        const fullWidthMinY: number = this.fullWidthMinY;
+        const fullWidthMaxY: number = this.fullWidthMaxY;
         for (let x: number = 0; x < this.width; x++) {
-            if (this.minY[x] !== Number.POSITIVE_INFINITY) {
-                skyLine[x] = this.minY[x];
-                bottomLine[x] = this.maxY[x];
+            const minY: number = this.minY[x] < fullWidthMinY ? this.minY[x] : fullWidthMinY;
+            if (minY !== Number.POSITIVE_INFINITY) {
+                skyLine[x] = minY;
+                bottomLine[x] = this.maxY[x] > fullWidthMaxY ? this.maxY[x] : fullWidthMaxY;
             }
         }
     }
@@ -133,6 +146,9 @@ export class GeometricSkyBottomLineContext {
      * @returns The index of the last drawn column + 1, or 0 if nothing was drawn.
      */
     public getDrawnLength(): number {
+        if (this.fullWidthMinY !== Number.POSITIVE_INFINITY) {
+            return this.width; // a stroke covers every column
+        }
         for (let x: number = this.width - 1; x >= 0; x--) {
             if (this.minY[x] !== Number.POSITIVE_INFINITY) {
                 return x + 1;
@@ -564,6 +580,8 @@ export class GeometricSkyBottomLineContext {
     public clear(): void {
         this.minY.fill(Number.POSITIVE_INFINITY, 0, this.width);
         this.maxY.fill(Number.NEGATIVE_INFINITY, 0, this.width);
+        this.fullWidthMinY = Number.POSITIVE_INFINITY;
+        this.fullWidthMaxY = Number.NEGATIVE_INFINITY;
     }
 
     public openGroup(cls?: string, id?: string, attrs?: object): undefined {
@@ -707,10 +725,44 @@ export class GeometricSkyBottomLineContext {
         // outline of the stroke rectangle: the segment offset by +/- halfWidth along its normal
         const normalX: number = -dy / length * halfWidth;
         const normalY: number = dx / length * halfWidth;
+        if (dy === 0) {
+            // horizontal (e.g. a stave line): normalX is -0, so the rectangle's edges lie exactly at x0, x1, y0 + normalY and y0 - normalY
+            this.mergeHorizontalStroke(x0, x1, y0 + normalY, y0 - normalY);
+            return;
+        }
         this.mergeSegment(x0 + normalX, y0 + normalY, x1 + normalX, y1 + normalY);
         this.mergeSegment(x1 + normalX, y1 + normalY, x1 - normalX, y1 - normalY);
         this.mergeSegment(x1 - normalX, y1 - normalY, x0 - normalX, y0 - normalY);
         this.mergeSegment(x0 - normalX, y0 - normalY, x0 + normalX, y0 + normalY);
+    }
+
+    /**
+     * Merges the stroke rectangle of a horizontal line segment, with the same result as merging its four edges
+     * (see mergeStrokedSegment()), which give every column they touch both y values: the columns of the horizontal edges
+     * plus those of the vertical edges at non-integer x are exactly the columns mergeColumns() fills.
+     * A stroke covering every column of the measure, like a stave line, is only recorded in fullWidthMinY/fullWidthMaxY
+     * instead of being merged into each column (stave lines would otherwise be a large part of the merging work).
+     * @param x0 x of one end of the segment, in device pixels.
+     * @param x1 x of the other end of the segment.
+     * @param yEdge0 y of one horizontal edge of the stroke rectangle.
+     * @param yEdge1 y of the other horizontal edge.
+     */
+    private mergeHorizontalStroke(x0: number, x1: number, yEdge0: number, yEdge1: number): void {
+        const left: number = Math.min(x0, x1);
+        const right: number = Math.max(x0, x1);
+        const top: number = Math.min(yEdge0, yEdge1);
+        const bottom: number = Math.max(yEdge0, yEdge1);
+        if (Math.floor(left) <= 0 && Math.ceil(right) - 1 >= this.width - 1) {
+            // covers every column (mergeColumns would fill all of [0, width)), see copyExtentsInto()
+            if (top < this.fullWidthMinY) {
+                this.fullWidthMinY = top;
+            }
+            if (bottom > this.fullWidthMaxY) {
+                this.fullWidthMaxY = bottom;
+            }
+            return;
+        }
+        this.mergeColumns(left, right, top, bottom);
     }
 
     /** Merges the vertical range [top, bottom] into all columns intersecting [left, right) (device coordinates). */
