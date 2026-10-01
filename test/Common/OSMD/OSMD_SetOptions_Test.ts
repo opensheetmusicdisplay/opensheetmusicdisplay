@@ -2,6 +2,8 @@ import { expect } from "chai";
 import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { EngravingRules } from "../../../src/MusicalScore/Graphical/EngravingRules";
+import { CursorOptions, CursorType } from "../../../src/OpenSheetMusicDisplay/OSMDOptions";
+import { Cursor } from "../../../src/OpenSheetMusicDisplay/Cursor";
 
 /** osmd.setOptions(): an option that is given is applied, also when it's false, and an option that is left out is kept. */
 describe("OSMD setOptions", () => {
@@ -14,5 +16,75 @@ describe("OSMD setOptions", () => {
             .to.deep.equal([true, true, true]);
         osmd.setOptions({ tupletsRatioed: false, tupletsBracketed: false, tripletsBracketed: false });
         expect([rules.TupletsRatioed, rules.TupletsBracketed, rules.TripletsBracketed]).to.deep.equal([false, false, false]);
+    });
+
+    it("keeps the cursors when cursorsOptions is left out, and gives a new OSMD the standard cursor", async () => {
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        try {
+            /** The type and color of each cursor. */
+            const cursorsOf: (instance: OpenSheetMusicDisplay) => string = (instance: OpenSheetMusicDisplay): string =>
+                instance.cursors.map(cursor => `${cursor.CursorOptions.type} ${cursor.CursorOptions.color}`).join(", ");
+            const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, {
+                autoResize: false,
+                cursorsOptions: [
+                    { type: CursorType.CurrentArea, color: "#2bb8cd", alpha: 0.6, follow: true },
+                    { type: CursorType.ThinLeft, color: "#ff0000", alpha: 0.5, follow: false },
+                ],
+            });
+            await osmd.load(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml"));
+            osmd.render();
+            osmd.cursorsOptions[0].color = "#123456"; // an option changed in place
+            osmd.setOptions({ darkMode: true });
+            osmd.render();
+            expect(cursorsOf(osmd), "after setOptions() without cursorsOptions").to.equal("3 #123456, 1 #ff0000");
+
+            container.innerHTML = "";
+            const osmdWithStandardCursor: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+            await osmdWithStandardCursor.load(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml"));
+            osmdWithStandardCursor.render();
+            expect(cursorsOf(osmdWithStandardCursor), "a new OSMD").to.equal(`0 ${osmdWithStandardCursor.EngravingRules.DefaultColorCursor}`);
+        } finally {
+            container.remove();
+        }
+    });
+
+    it("removes the cursors that new cursorsOptions leave out", async () => {
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        try {
+            const standard: CursorOptions = { type: CursorType.Standard, color: "#33e02f", alpha: 0.5, follow: true };
+            const thinLeft: CursorOptions = { type: CursorType.ThinLeft, color: "#ff0000", alpha: 0.5, follow: false };
+            const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, { autoResize: false, cursorsOptions: [standard, thinLeft] });
+            await osmd.load(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml"));
+            osmd.render();
+            osmd.setOptions({ cursorsOptions: [standard] });
+            osmd.render();
+            expect(osmd.cursors.length, "cursors after render()").to.equal(1);
+
+            // also without rendering again, where the removed cursor's image was still shown on the page
+            osmd.setOptions({ cursorsOptions: [standard, thinLeft] });
+            osmd.render();
+            const removedCursor: Cursor = osmd.cursors[1];
+            removedCursor.show();
+            osmd.setOptions({ cursorsOptions: [standard] });
+            osmd.enableOrDisableCursors(true);
+            expect(osmd.cursors.length, "cursors after enableOrDisableCursors()").to.equal(1);
+            expect(removedCursor.cursorElement.isConnected, "the removed cursor's image on the page").to.equal(false);
+        } finally {
+            container.remove();
+        }
+    });
+
+    it("keeps the onXMLRead function when it is left out", async () => {
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        try {
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+            let xmlReads: number = 0;
+            osmd.setOptions({ onXMLRead: (xml: string): string => { xmlReads++; return xml; } });
+            osmd.setOptions({ drawTitle: false });
+            await osmd.load(new XMLSerializer().serializeToString(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml")));
+            expect(xmlReads, "calls of the onXMLRead function").to.equal(1);
+        } finally {
+            container.remove();
+        }
     });
 });

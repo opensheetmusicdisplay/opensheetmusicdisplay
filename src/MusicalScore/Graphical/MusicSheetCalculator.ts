@@ -49,7 +49,6 @@ import { Staff } from "../VoiceData/Staff";
 import { OctaveShift } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { NoteHeadShape } from "../VoiceData/Notehead";
 import log from "loglevel";
-import { Dictionary } from "typescript-collections";
 import { GraphicalLyricEntry } from "./GraphicalLyricEntry";
 import { GraphicalLyricWord } from "./GraphicalLyricWord";
 import { GraphicalLine } from "./GraphicalLine";
@@ -1461,10 +1460,10 @@ export abstract class MusicSheetCalculator {
 
         let drawingHeight: number;
         if (placement === PlacementEnum.Below) {
-            drawingHeight = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);    // Bottom line
+            drawingHeight = skyBottomLineCalculator.getBottomLineMaxForLabel(left, right);    // Bottom line
             box.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - box.BorderMarginTop);
         } else {
-            drawingHeight = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
+            drawingHeight = skyBottomLineCalculator.getSkyLineMinForLabel(left, right);
             box.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - box.BorderMarginBottom);
         }
         // so that the dynamics placed after it don't overlap it (instantaneous dynamics and wedges update it when placed too)
@@ -1910,7 +1909,7 @@ export abstract class MusicSheetCalculator {
 
         // calculate yPosition according to Placement
         if (graphicalInstantaneousDynamic.Placement === PlacementEnum.Above) {
-            const skyLineValue: number = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
+            const skyLineValue: number = skyBottomLineCalculator.getSkyLineMinForLabel(left, right);
 
             // if StaffLine part of multiStaff Instrument and not the first one, ideal yPosition middle of distance between Staves
             if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== staffLine.ParentStaff.ParentInstrument.Staves[0]) {
@@ -1931,7 +1930,7 @@ export abstract class MusicSheetCalculator {
 
             graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, yPosition);
         } else if (graphicalInstantaneousDynamic.Placement === PlacementEnum.Below) {
-            const bottomLineValue: number = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);
+            const bottomLineValue: number = skyBottomLineCalculator.getBottomLineMaxForLabel(left, right);
             // if StaffLine part of multiStaff Instrument and not the last one, ideal yPosition middle of distance between Staves
             const lastStaff: Staff = staffLine.ParentStaff.ParentInstrument.Staves[staffLine.ParentStaff.ParentInstrument.Staves.length - 1];
             if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== lastStaff) {
@@ -2021,9 +2020,9 @@ export abstract class MusicSheetCalculator {
         let drawingHeight: number;
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
         if (placement === PlacementEnum.Below) {
-            drawingHeight = skyBottomLineCalculator.getBottomLineMaxInRange(left, right) + yPadding;
+            drawingHeight = skyBottomLineCalculator.getBottomLineMaxForLabel(left, right) + yPadding;
         } else {
-            drawingHeight = skyBottomLineCalculator.getSkyLineMinInRange(left, right) - yPadding;
+            drawingHeight = skyBottomLineCalculator.getSkyLineMinForLabel(left, right) - yPadding;
         }
 
         // set RelativePosition
@@ -2031,9 +2030,9 @@ export abstract class MusicSheetCalculator {
 
         // update Sky- BottomLine
         if (placement === PlacementEnum.Below) {
-            skyBottomLineCalculator.updateBottomLineInRange(left, right, graphLabel.PositionAndShape.BorderMarginBottom + drawingHeight);
+            skyBottomLineCalculator.updateBottomLineWithLabel(left, right, graphLabel.PositionAndShape.BorderMarginBottom + drawingHeight);
         } else {
-            skyBottomLineCalculator.updateSkyLineInRange(left, right, graphLabel.PositionAndShape.BorderMarginTop + drawingHeight);
+            skyBottomLineCalculator.updateSkyLineWithLabel(left, right, graphLabel.PositionAndShape.BorderMarginTop + drawingHeight);
         }
         return graphLabel;
     }
@@ -3695,7 +3694,7 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateLyricsPosition(): void {
-        const lyricStaffEntriesDict: Dictionary<StaffLine, GraphicalStaffEntry[]> = new Dictionary<StaffLine, GraphicalStaffEntry[]>();
+        const lyricStaffEntriesMap: Map<StaffLine, GraphicalStaffEntry[]> = new Map<StaffLine, GraphicalStaffEntry[]>();
         // sort the lyriceVerseNumbers for every Instrument that has Lyrics
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.ParentMusicSheet.Instruments.length; idx < len; ++idx) {
             const instrument: Instrument = this.graphicalMusicSheet.ParentMusicSheet.Instruments[idx];
@@ -3710,17 +3709,13 @@ export abstract class MusicSheetCalculator {
                 const staffLine: StaffLine = musicSystem.StaffLines[idx3];
                 const lyricsStaffEntries: GraphicalStaffEntry[] =
                     this.calculateSingleStaffLineLyricsPosition(staffLine, staffLine.ParentStaff.ParentInstrument.LyricVersesNumbers);
-                lyricStaffEntriesDict.setValue(staffLine, lyricsStaffEntries);
-                this.calculateLyricsExtendsAndDashes(lyricStaffEntriesDict.getValue(staffLine));
+                lyricStaffEntriesMap.set(staffLine, lyricsStaffEntries);
             }
         }
-        // then fill in the lyric word dashes and lyrics extends/underscores
-        for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
-            const musicSystem: MusicSystem = this.musicSystems[idx2];
-            for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                this.calculateLyricsExtendsAndDashes(lyricStaffEntriesDict.getValue(staffLine));
-            }
+        // then fill in the lyric word dashes and lyrics extends/underscores, once per staff line.
+        //   Only after all lyrics are positioned: the dashes of a word continued in the next system take the y of its next syllable.
+        for (const lyricsStaffEntries of lyricStaffEntriesMap.values()) {
+            this.calculateLyricsExtendsAndDashes(lyricsStaffEntries);
         }
     }
 

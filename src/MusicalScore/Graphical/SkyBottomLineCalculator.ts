@@ -514,6 +514,53 @@ export class SkyBottomLineCalculator {
     }
 
     /**
+     * Updates the SkyLine with a label's box, e.g. a dynamic's, from its left to its right margin (relative to the staffline):
+     *   only in the samples the box covers completely. A label placed later reads every sample its box touches
+     *   (getSkyLineMinForLabel()), so labels whose boxes don't overlap don't read each other.
+     * With updateSkyLineInRange() and getSkyLineMinInRange(), which round outward to the samples (1 / SamplingUnit wide),
+     *   a label next to another one, e.g. a p right after "dim.", was placed further from the staff than it
+     *   when both touched the same sample. The margins keep a label clear of what is in a sample it covers only partially.
+     * @param left Left margin of the box
+     * @param right Right margin of the box
+     * @param value Top margin of the box
+     */
+    public updateSkyLineWithLabel(left: number, right: number, value: number): void {
+        this.updateInRangeOfCoveredSamples(this.mSkyLine, left, right, value);
+    }
+
+    /**
+     * Updates the BottomLine with a label's box, e.g. a dynamic's, from its left to its right margin (relative to the staffline):
+     *   only in the samples the box covers completely. See updateSkyLineWithLabel().
+     * @param left Left margin of the box
+     * @param right Right margin of the box
+     * @param value Bottom margin of the box
+     */
+    public updateBottomLineWithLabel(left: number, right: number, value: number): void {
+        this.updateInRangeOfCoveredSamples(this.mBottomLine, left, right, value);
+    }
+
+    /**
+     * Returns the SkyLine's minimum for a label's box, e.g. a dynamic's, from its left to its right margin (relative to the staffline):
+     *   in every sample the box touches. Unlike getSkyLineMinInRange(), not also in the sample after the box.
+     *   See updateSkyLineWithLabel().
+     * @param left Left margin of the box
+     * @param right Right margin of the box
+     */
+    public getSkyLineMinForLabel(left: number, right: number): number {
+        return this.getExtremeInTouchedSamples(this.mSkyLine, left, right, true);
+    }
+
+    /**
+     * Returns the BottomLine's maximum for a label's box, e.g. a dynamic's, from its left to its right margin (relative to the staffline):
+     *   in every sample the box touches. See getSkyLineMinForLabel().
+     * @param left Left margin of the box
+     * @param right Right margin of the box
+     */
+    public getBottomLineMaxForLabel(left: number, right: number): number {
+        return this.getExtremeInTouchedSamples(this.mBottomLine, left, right, false);
+    }
+
+    /**
      * Resets a SkyLine in a range to its original value
      * @param startIndex Start index of the range
      * @param endIndex End index of the range (excluding)
@@ -748,6 +795,45 @@ export class SkyBottomLineCalculator {
         for (let i: number = startIndex; i < endIndex; i++) {
             array[i] = Math.abs(value) > Math.abs(array[i]) ? value : array[i];
         }
+    }
+
+    /**
+     * Updates an array in the samples the range covers completely (see updateSkyLineWithLabel()), like updateInRange():
+     *   only where the value is further from the staff. A range that covers no sample completely updates the sample of its center.
+     * @param array Sky or bottom line
+     * @param start Start of the range (relative to the staffline)
+     * @param end End of the range
+     * @param value Value to fill in
+     */
+    private updateInRangeOfCoveredSamples(array: number[], start: number, end: number, value: number): void {
+        let startIndex: number = Math.ceil(start * this.SamplingUnit);
+        let endIndex: number = Math.floor(end * this.SamplingUnit); // excluding
+        if (endIndex <= startIndex) {
+            startIndex = Math.floor((start + end) / 2 * this.SamplingUnit);
+            endIndex = startIndex + 1;
+        }
+        startIndex = Math.max(startIndex, 0);
+        endIndex = Math.min(endIndex, array.length);
+        for (let i: number = startIndex; i < endIndex; i++) {
+            array[i] = Math.abs(value) > Math.abs(array[i]) ? value : array[i];
+        }
+    }
+
+    /**
+     * Returns the minimum or maximum of an array in the samples the range touches, at least one.
+     * @param array Sky or bottom line
+     * @param start Start of the range (relative to the staffline)
+     * @param end End of the range
+     * @param minimum Whether to return the minimum (sky line) or the maximum (bottom line)
+     */
+    private getExtremeInTouchedSamples(array: number[], start: number, end: number, minimum: boolean): number {
+        const startIndex: number = Math.min(Math.max(Math.floor(start * this.SamplingUnit), 0), array.length - 1);
+        const endIndex: number = Math.max(Math.min(Math.ceil(end * this.SamplingUnit), array.length), startIndex + 1); // excluding
+        let extreme: number = array[startIndex];
+        for (let i: number = startIndex + 1; i < endIndex; i++) {
+            extreme = minimum ? Math.min(extreme, array[i]) : Math.max(extreme, array[i]);
+        }
+        return extreme;
     }
 
     /**
