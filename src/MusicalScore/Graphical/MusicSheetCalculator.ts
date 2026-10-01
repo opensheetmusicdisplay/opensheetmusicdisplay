@@ -1027,10 +1027,11 @@ export abstract class MusicSheetCalculator {
         if (!this.leadSheet) {
             // calculate all Instantaneous/Continuous Dynamics Expressions
             this.calculateDynamicExpressions();
+            // Calculate the alignment of close dynamics, before the words are placed:
+            //   it moves dynamics away from the staff, where words placed before could be.
+            this.calculateExpressionAlignements();
             // calculate all Mood and Unknown Expression
             this.calculateMoodAndUnknownExpressions();
-            // Calculate the alignment of close expressions
-            this.calculateExpressionAlignements();
             // calculate all OctaveShifts
             this.calculateOctaveShifts();
             if (this.rules.RenderPedals) {
