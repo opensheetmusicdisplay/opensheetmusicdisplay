@@ -59,9 +59,9 @@ describe("Lyrics x-padding with several verses", () => {
             for (let i: number = 1; i < systemEntries.length; i++) {
                 const previous: BoundingBox = systemEntries[i - 1].GraphicalLabel.PositionAndShape;
                 const current: BoundingBox = systemEntries[i].GraphicalLabel.PositionAndShape;
-                expect(previous.AbsolutePosition.x + previous.BorderRight,
-                    `"${systemEntries[i - 1].LyricsEntry.Text}" ends before "${systemEntries[i].LyricsEntry.Text}" starts`)
-                    .to.be.at.most(current.AbsolutePosition.x + current.BorderLeft);
+                const gap: number = current.AbsolutePosition.x + current.BorderLeft - (previous.AbsolutePosition.x + previous.BorderRight);
+                expect(gap, `gap between "${systemEntries[i - 1].LyricsEntry.Text}" and "${systemEntries[i].LyricsEntry.Text}"`)
+                    .to.be.at.least(osmd.EngravingRules.HorizontalBetweenLyricsDistance);
             }
         }
     });
