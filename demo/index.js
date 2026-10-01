@@ -6,7 +6,7 @@ import * as jsPDF  from '../node_modules/jspdf/dist/jspdf.es.min';
 //   whose UMD wrapper then looks for a global jspdf and crashes. The ES build imports "jspdf", which resolves to the same jspdf.es.min.js.
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.es.min';
 import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculator';
-import { DiatonicTransposeCalculator } from '../src/Plugins/Transpose/DiatonicTransposeCalculator';
+import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTransposeCalculator';
 
 /*jslint browser:true */
 (function () {
@@ -118,7 +118,7 @@ import { DiatonicTransposeCalculator } from '../src/Plugins/Transpose/DiatonicTr
         darkModeBtn,
         transpose,
         transposeBtn,
-        transposeDiatonicCheckbox,
+        transposeIntervalCheckbox,
         versionDiv,
         // Music Braille demo option elements (see the "Music Braille" section at the bottom of this file)
         brailleContainer,
@@ -281,7 +281,7 @@ import { DiatonicTransposeCalculator } from '../src/Plugins/Transpose/DiatonicTr
         darkModeBtn = document.getElementById("dark-mode-btn");
         transpose = document.getElementById('transpose');
         transposeBtn = document.getElementById('transpose-btn');
-        transposeDiatonicCheckbox = document.getElementById('transpose-diatonic-checkbox');
+        transposeIntervalCheckbox = document.getElementById('transpose-interval-checkbox');
         versionDiv = document.getElementById('versionDiv');
         zoomControlsButtons = document.getElementById('zoomControlsButtons')
 
@@ -783,8 +783,8 @@ import { DiatonicTransposeCalculator } from '../src/Plugins/Transpose/DiatonicTr
             transposeBtn.onclick = function(){
                 var transposeValue = parseInt(transpose.value);
                 // "Keep note spelling": transpose by interval, so e.g. A# in C major stays G# (not Ab) when transposing to Bb major
-                openSheetMusicDisplay.TransposeCalculator = transposeDiatonicCheckbox && transposeDiatonicCheckbox.checked ?
-                    new DiatonicTransposeCalculator() : new TransposeCalculator();
+                openSheetMusicDisplay.TransposeCalculator = transposeIntervalCheckbox && transposeIntervalCheckbox.checked ?
+                    new IntervalTransposeCalculator() : new TransposeCalculator();
                 openSheetMusicDisplay.Sheet.Transpose = transposeValue;
                 openSheetMusicDisplay.updateGraphic();
                 rerender();

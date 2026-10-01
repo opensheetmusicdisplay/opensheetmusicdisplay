@@ -2,10 +2,10 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="4.0">
   <work>
-    <work-title>Transposing diatonic spelling test</work-title>
+    <work-title>Transposing by interval test</work-title>
   </work>
   <!-- C major with chromatic passing notes A# and D# (leading tones to B and E) and the chord symbols Ebmaj7 and F#m7b5.
-       Transposed by -2 with the DiatonicTransposeCalculator the result is Bb major with G# C# Bb and Dbmaj7 Em7b5,
+       Transposed by -2 with the IntervalTransposeCalculator the result is Bb major with G# C# Bb and Dbmaj7 Em7b5,
        as an engraver would write it. The default TransposeCalculator spells the passing notes Ab and Db,
        because the transposed key has flats. -->
   <part-list>

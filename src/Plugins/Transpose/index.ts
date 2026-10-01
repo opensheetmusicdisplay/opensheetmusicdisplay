@@ -1,2 +1,2 @@
 export * from "./TransposeCalculator";
-export * from "./DiatonicTransposeCalculator";
+export * from "./IntervalTransposeCalculator";

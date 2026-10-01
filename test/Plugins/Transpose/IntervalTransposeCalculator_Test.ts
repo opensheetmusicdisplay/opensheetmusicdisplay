@@ -1,16 +1,17 @@
 import { expect } from "chai";
 import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
-import { DiatonicTransposeCalculator } from "../../../src/Plugins/Transpose/DiatonicTransposeCalculator";
+import { IntervalTransposeCalculator } from "../../../src/Plugins/Transpose/IntervalTransposeCalculator";
 import { TransposeCalculator } from "../../../src/Plugins/Transpose/TransposeCalculator";
 import { ITransposeCalculator } from "../../../src/MusicalScore/Interfaces/ITransposeCalculator";
 import { KeyInstruction } from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
+import { GraphicalChordSymbolContainer } from "../../../src/MusicalScore/Graphical/GraphicalChordSymbolContainer";
 import { AccidentalEnum, NoteEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
 
-describe("DiatonicTransposeCalculator", (): void => {
-    const calculator: DiatonicTransposeCalculator = new DiatonicTransposeCalculator();
+describe("IntervalTransposeCalculator", (): void => {
+    const calculator: IntervalTransposeCalculator = new IntervalTransposeCalculator();
 
     /** A key instruction as the calculator receives it from OSMD: transposed Key, original keyTypeOriginal. */
     function transposedKey(fifths: number, transpose: number): KeyInstruction {
@@ -34,52 +35,7 @@ describe("DiatonicTransposeCalculator", (): void => {
         return pitches.map((pitch: Pitch): string => name(calculator.transposePitch(pitch, key, transpose)));
     }
 
-    describe("letterSteps", (): void => {
-        it("follows the tonic letters of the original and transposed key signatures", (): void => {
-            expect(DiatonicTransposeCalculator.letterSteps(0, -2, -2), "C -> Bb, whole tone down").to.equal(-1);
-            expect(DiatonicTransposeCalculator.letterSteps(0, 2, 2), "C -> D, whole tone up").to.equal(1);
-            expect(DiatonicTransposeCalculator.letterSteps(0, -5, 1), "C -> Db, halftone up").to.equal(1);
-            expect(DiatonicTransposeCalculator.letterSteps(0, 5, -1), "C -> B, halftone down").to.equal(-1);
-            expect(DiatonicTransposeCalculator.letterSteps(0, 6, 6), "C -> F#, tritone up").to.equal(3);
-            expect(DiatonicTransposeCalculator.letterSteps(0, 6, -6), "C -> F#, tritone down").to.equal(-4);
-            expect(DiatonicTransposeCalculator.letterSteps(2, -3, 1), "D -> Eb").to.equal(1);
-            expect(DiatonicTransposeCalculator.letterSteps(-3, 2, -1), "Eb -> D").to.equal(-1);
-        });
-
-        it("counts octaves", (): void => {
-            expect(DiatonicTransposeCalculator.letterSteps(0, 0, 12)).to.equal(7);
-            expect(DiatonicTransposeCalculator.letterSteps(0, 0, -12)).to.equal(-7);
-            expect(DiatonicTransposeCalculator.letterSteps(0, -2, 10), "C -> Bb, minor seventh up").to.equal(6);
-            expect(DiatonicTransposeCalculator.letterSteps(0, -2, -14), "C -> Bb, ninth down").to.equal(-8);
-        });
-    });
-
-    describe("spell", (): void => {
-        it("moves letter, octave and alteration", (): void => {
-            expect(DiatonicTransposeCalculator.spell({letter: 5, octave: 4, alter: 1}, -2, -1), "A#4 -> G#4")
-                .to.deep.equal({letter: 4, octave: 4, alter: 1});
-            expect(DiatonicTransposeCalculator.spell({letter: 0, octave: 5, alter: 0}, -2, -1), "C5 -> Bb4")
-                .to.deep.equal({letter: 6, octave: 4, alter: -1});
-            expect(DiatonicTransposeCalculator.spell({letter: 6, octave: 4, alter: 0}, 1, 1), "B4 -> C5")
-                .to.deep.equal({letter: 0, octave: 5, alter: 0});
-        });
-
-        it("gives up beyond double accidentals and on microtones", (): void => {
-            expect(DiatonicTransposeCalculator.spell({letter: 6, octave: 4, alter: 2}, 6, 3), "B##4 + tritone -> E###").to.equal(undefined);
-            expect(DiatonicTransposeCalculator.spell({letter: 0, octave: 4, alter: 0.5}, -2, -1)).to.equal(undefined);
-        });
-    });
-
     describe("transposePitch", (): void => {
-        it("keeps the spelling of chromatic notes relative to the key (C major -> Bb major)", (): void => {
-            expect(transposed(0, -2,
-                new Pitch(NoteEnum.A, 4, AccidentalEnum.SHARP),
-                new Pitch(NoteEnum.D, 5, AccidentalEnum.SHARP),
-                new Pitch(NoteEnum.C, 5, AccidentalEnum.NONE),
-                new Pitch(NoteEnum.B, 4, AccidentalEnum.FLAT),
-            )).to.deep.equal(["G#4", "C#5", "Bb4", "Ab4"]);
-        });
-
         it("keeps sharps sharp and flats flat when moving between sharp and flat keys", (): void => {
             expect(transposed(2, 1, // D major -> Eb major
                 new Pitch(NoteEnum.F, 4, AccidentalEnum.SHARP),
@@ -94,7 +50,7 @@ describe("DiatonicTransposeCalculator", (): void => {
             )).to.deep.equal(["G4", "Bb4", "D#5"]);
         });
 
-        it("transposing back restores the original spelling", (): void => {
+        it("transposing there and back restores the original spelling", (): void => {
             // (as long as no note needs the fallback, which isn't reversible: e.g. F## a halftone up from Ab major to A major
             //   would be F###, so the default calculator spells it G#, and G# a halftone down is G)
             const pitches: Pitch[] = [
@@ -116,16 +72,25 @@ describe("DiatonicTransposeCalculator", (): void => {
             }
         });
 
-        it("returns the same pitch object for 0 halftones, like the default calculator", (): void => {
-            const pitch: Pitch = new Pitch(NoteEnum.E, 4, AccidentalEnum.FLAT);
-            expect(calculator.transposePitch(pitch, transposedKey(0, 0), 0)).to.equal(pitch);
+        it("transposes by the given halftones, not by those of the key (chord symbols with a transposed instrument)", (): void => {
+            // the chord symbol is transposed by Sheet.Transpose (-2), its key by Sheet.Transpose + Instrument.Transpose (0)
+            const key: KeyInstruction = transposedKey(0, 0);
+            expect(name(calculator.transposePitch(new Pitch(NoteEnum.F, 1, AccidentalEnum.SHARP), key, -2)), "F#m7b5 -> Em7b5")
+                .to.equal("E1");
+            expect(name(calculator.transposePitch(new Pitch(NoteEnum.F, 1, AccidentalEnum.SHARP), transposedKey(0, 2), 3)), "F#m7b5 -> Am7b5")
+                .to.equal("A1");
         });
 
-        it("falls back to the default calculator when the interval can't be spelled", (): void => {
-            const pitch: Pitch = new Pitch(NoteEnum.B, 4, AccidentalEnum.DOUBLESHARP);
+        it("falls back to the default calculator for intervals it can't spell and for microtones", (): void => {
+            const fallback: TransposeCalculator = new TransposeCalculator();
             const key: KeyInstruction = transposedKey(0, 6);
-            expect(name(calculator.transposePitch(pitch, key, 6)))
-                .to.equal(name(new TransposeCalculator().transposePitch(pitch, key, 6)));
+            for (const pitch of [
+                new Pitch(NoteEnum.B, 4, AccidentalEnum.DOUBLESHARP), // B## a tritone up from C to F# major would be E###
+                new Pitch(NoteEnum.C, 4, AccidentalEnum.QUARTERTONESHARP),
+            ]) {
+                expect(calculator.transposePitch(pitch, key, 6).ToString(), name(pitch))
+                    .to.equal(fallback.transposePitch(pitch, key, 6).ToString());
+            }
         });
     });
 
@@ -139,7 +104,7 @@ describe("DiatonicTransposeCalculator", (): void => {
             div.style.width = "800px";
             osmd = TestUtils.createOpenSheetMusicDisplay(div);
             previousCalculator = osmd.TransposeCalculator;
-            osmd.TransposeCalculator = new DiatonicTransposeCalculator();
+            osmd.TransposeCalculator = new IntervalTransposeCalculator();
         });
 
         afterEach((): void => {
@@ -154,19 +119,23 @@ describe("DiatonicTransposeCalculator", (): void => {
             osmd.render();
         }
 
+        function staffEntries(): GraphicalStaffEntry[] {
+            return osmd.GraphicSheet.MeasureList.flatMap((measures): GraphicalStaffEntry[] => measures[0].staffEntries);
+        }
+
         function noteNames(): string[] {
-            return osmd.GraphicSheet.MeasureList.flatMap((measures): GraphicalNote[] => measures[0].staffEntries
+            return staffEntries()
                 .flatMap((entry: GraphicalStaffEntry): GraphicalNote[] => entry.graphicalVoiceEntries.flatMap(
                     (voiceEntry): GraphicalNote[] => voiceEntry.notes,
-                )))
+                ))
                 .map((note: GraphicalNote): Pitch => note.sourceNote.TransposedPitch ?? note.sourceNote.Pitch)
                 .map((pitch: Pitch): string => name(pitch).replace(/-?\d+$/, "")); // without the octave (OSMD's octave 1 is MusicXML's 4)
         }
 
         function chordTexts(): string[] {
-            return Array.from(div.querySelectorAll("text"))
-                .map((text: SVGTextElement): string => text.textContent)
-                .filter((text: string): boolean => /^[A-G]/.test(text));
+            return staffEntries()
+                .flatMap((entry: GraphicalStaffEntry): GraphicalChordSymbolContainer[] => entry.graphicalChordContainers)
+                .map((chord: GraphicalChordSymbolContainer): string => chord.GraphicalLabel.Label.text);
         }
 
         function firstKey(): number {
@@ -175,7 +144,7 @@ describe("DiatonicTransposeCalculator", (): void => {
         }
 
         it("spells notes and chord symbols by interval, and restores them when transposing back", async (): Promise<void> => {
-            await osmd.load(TestUtils.getScore("test_transposing_diatonic_spelling.musicxml"));
+            await osmd.load(TestUtils.getScore("test_transposing_interval_spelling.musicxml"));
             osmd.render();
             expect(chordTexts()).to.deep.equal(["Ebmaj7", "F#m7b5"]);
 
@@ -192,6 +161,14 @@ describe("DiatonicTransposeCalculator", (): void => {
             expect(firstKey()).to.equal(0);
             expect(noteNames()).to.deep.equal(["A#", "B", "D#", "E", "C", "Bb", "C"]);
             expect(chordTexts()).to.deep.equal(["Ebmaj7", "F#m7b5"]);
+        });
+
+        it("transposes chord symbols by Sheet.Transpose when the instrument is transposed as well", async (): Promise<void> => {
+            await osmd.load(TestUtils.getScore("test_transposing_interval_spelling.musicxml"));
+            osmd.Sheet.Instruments[0].Transpose = 2;
+            transposeTo(-2);
+            expect(noteNames(), "the notes are transposed by -2 + 2").to.deep.equal(["A#", "B", "D#", "E", "C", "Bb", "C"]);
+            expect(chordTexts(), "the chords by -2 only").to.deep.equal(["Dbmaj7", "Em7b5"]);
         });
     });
 });
