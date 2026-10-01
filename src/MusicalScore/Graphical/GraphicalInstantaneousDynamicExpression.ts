@@ -24,11 +24,11 @@ export class GraphicalInstantaneousDynamicExpression extends AbstractGraphicalEx
         switch (this.Placement) {
             case PlacementEnum.Above:
                 yValue = this.PositionAndShape.RelativePosition.y + this.PositionAndShape.BorderMarginTop;
-                skyBottomLineCalculator.updateSkyLineInRange(left, right, yValue);
+                skyBottomLineCalculator.updateSkyLineWithLabel(left, right, yValue);
                 break;
             case PlacementEnum.Below:
                 yValue = this.PositionAndShape.RelativePosition.y + this.PositionAndShape.BorderMarginBottom;
-                skyBottomLineCalculator.updateBottomLineInRange(left, right, yValue);
+                skyBottomLineCalculator.updateBottomLineWithLabel(left, right, yValue);
                 break;
             default:
                 log.error("Placement for GraphicalInstantaneousDynamicExpression is unknown");

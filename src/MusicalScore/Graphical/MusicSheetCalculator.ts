@@ -1461,10 +1461,10 @@ export abstract class MusicSheetCalculator {
 
         let drawingHeight: number;
         if (placement === PlacementEnum.Below) {
-            drawingHeight = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);    // Bottom line
+            drawingHeight = skyBottomLineCalculator.getBottomLineMaxForLabel(left, right);    // Bottom line
             box.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - box.BorderMarginTop);
         } else {
-            drawingHeight = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
+            drawingHeight = skyBottomLineCalculator.getSkyLineMinForLabel(left, right);
             box.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - box.BorderMarginBottom);
         }
         // so that the dynamics placed after it don't overlap it (instantaneous dynamics and wedges update it when placed too)
@@ -1910,7 +1910,7 @@ export abstract class MusicSheetCalculator {
 
         // calculate yPosition according to Placement
         if (graphicalInstantaneousDynamic.Placement === PlacementEnum.Above) {
-            const skyLineValue: number = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
+            const skyLineValue: number = skyBottomLineCalculator.getSkyLineMinForLabel(left, right);
 
             // if StaffLine part of multiStaff Instrument and not the first one, ideal yPosition middle of distance between Staves
             if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== staffLine.ParentStaff.ParentInstrument.Staves[0]) {
@@ -1931,7 +1931,7 @@ export abstract class MusicSheetCalculator {
 
             graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, yPosition);
         } else if (graphicalInstantaneousDynamic.Placement === PlacementEnum.Below) {
-            const bottomLineValue: number = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);
+            const bottomLineValue: number = skyBottomLineCalculator.getBottomLineMaxForLabel(left, right);
             // if StaffLine part of multiStaff Instrument and not the last one, ideal yPosition middle of distance between Staves
             const lastStaff: Staff = staffLine.ParentStaff.ParentInstrument.Staves[staffLine.ParentStaff.ParentInstrument.Staves.length - 1];
             if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== lastStaff) {
@@ -2021,9 +2021,9 @@ export abstract class MusicSheetCalculator {
         let drawingHeight: number;
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
         if (placement === PlacementEnum.Below) {
-            drawingHeight = skyBottomLineCalculator.getBottomLineMaxInRange(left, right) + yPadding;
+            drawingHeight = skyBottomLineCalculator.getBottomLineMaxForLabel(left, right) + yPadding;
         } else {
-            drawingHeight = skyBottomLineCalculator.getSkyLineMinInRange(left, right) - yPadding;
+            drawingHeight = skyBottomLineCalculator.getSkyLineMinForLabel(left, right) - yPadding;
         }
 
         // set RelativePosition
@@ -2031,9 +2031,9 @@ export abstract class MusicSheetCalculator {
 
         // update Sky- BottomLine
         if (placement === PlacementEnum.Below) {
-            skyBottomLineCalculator.updateBottomLineInRange(left, right, graphLabel.PositionAndShape.BorderMarginBottom + drawingHeight);
+            skyBottomLineCalculator.updateBottomLineWithLabel(left, right, graphLabel.PositionAndShape.BorderMarginBottom + drawingHeight);
         } else {
-            skyBottomLineCalculator.updateSkyLineInRange(left, right, graphLabel.PositionAndShape.BorderMarginTop + drawingHeight);
+            skyBottomLineCalculator.updateSkyLineWithLabel(left, right, graphLabel.PositionAndShape.BorderMarginTop + drawingHeight);
         }
         return graphLabel;
     }
