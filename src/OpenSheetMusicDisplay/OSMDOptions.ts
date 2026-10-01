@@ -262,7 +262,8 @@ export interface IOSMDOptions {
      */
     autoGenerateMultipleRestMeasuresFromRestMeasures?: boolean;
     /**
-     * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used.
+     * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used,
+     * or with osmd.setOptions(), the cursors set before are kept.
      */
     cursorsOptions?: CursorOptions[];
     /**

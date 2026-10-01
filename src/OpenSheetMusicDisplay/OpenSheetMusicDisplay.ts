@@ -69,7 +69,7 @@ export class OpenSheetMusicDisplay {
     }
 
     /** Options from which OSMD creates cursors in enableOrDisableCursors(). */
-    public cursorsOptions: CursorOptions[] = [];
+    public cursorsOptions: CursorOptions[]; // set in the constructor (setOptions())
     public cursors: Cursor[] = [];
     public get cursor(): Cursor { // lowercase for backwards compatibility since cursor -> cursors change
         return this.cursors[0];
@@ -1333,7 +1333,8 @@ export class OpenSheetMusicDisplay {
         }
         if (options.cursorsOptions !== undefined) {
             this.cursorsOptions = options.cursorsOptions;
-        } else {
+        } else if (!this.cursorsOptions) {
+            // the standard cursor, in the constructor. Later calls keep the cursors, like the other options that are left out.
             this.cursorsOptions = [{
                 type: CursorType.Standard,
                 color: this.EngravingRules.DefaultColorCursor,
