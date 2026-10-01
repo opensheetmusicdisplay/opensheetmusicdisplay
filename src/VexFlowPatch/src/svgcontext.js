@@ -182,9 +182,11 @@ export class SVGContext {
     // Assumes size first, splits on space -- which is presently
     // how all existing modules are calling this.
     const fontArray = font.split(' ');
+    // VexFlowPatch: the family is everything after the size, e.g. "Times New Roman" in "10pt Times New Roman", not only "Times"
+    const family = fontArray.slice(1).join(' ');
 
-    this.attributes['font-family'] = fontArray[1];
-    this.state['font-family'] = fontArray[1];
+    this.attributes['font-family'] = family;
+    this.state['font-family'] = family;
 
     this.attributes['font-size'] = fontArray[0];
     this.state['font-size'] = fontArray[0];
