@@ -5,6 +5,7 @@ import { AbstractGraphicalExpression } from "../AbstractGraphicalExpression";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
 import { EngravingRules } from "../EngravingRules";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
+import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
 
 export class AlignmentManager {
     private parentStaffline: StaffLine;
@@ -40,7 +41,7 @@ export class AlignmentManager {
                 //         console.log("here");
                 //     }
                 const dist: PointF2D = this.getDistance(currentExpression.PositionAndShape, nextExpression.PositionAndShape);
-                if (Math.abs(dist.x) < this.rules.DynamicExpressionMaxDistance) {
+                if (Math.abs(dist.x) < this.rules.DynamicExpressionMaxDistance && !this.textsOverlap(currentExpression, nextExpression)) {
                     // Prevent last found expression to be added twice. e.g. p<f as three close expressions
                     if (tmpList.indexOf(currentExpression) === -1) {
                         tmpList.push(currentExpression);
@@ -81,14 +82,14 @@ export class AlignmentManager {
                 for (let exprIdx: number = 0; exprIdx < aes.length; exprIdx++) {
                     const expr: AbstractGraphicalExpression = aes[exprIdx];
                     const centerOffset: number = centerYs[exprIdx] - yIdeal;
-                    // TODO centerOffset is way too big sometimes, like 7.0 in An die Ferne Geliebte (measure 10, dim.)
                     // FIXME: Expressions should not behave differently.
+                    // TODO: The 0.8 are because the letters are a bit too far done
+                    const shift: number = this.limitShift(expr, expr instanceof VexFlowContinuousDynamicExpression ? -centerOffset : -centerOffset * 0.8, aes);
                     if (expr instanceof VexFlowContinuousDynamicExpression) {
-                        (expr as VexFlowContinuousDynamicExpression).shiftYPosition(-centerOffset);
+                        (expr as VexFlowContinuousDynamicExpression).shiftYPosition(shift);
                         (expr as VexFlowContinuousDynamicExpression).calcPsi();
                     } else {
-                        // TODO: The 0.8 are because the letters are a bit too far done
-                        expr.PositionAndShape.RelativePosition.y -= centerOffset * 0.8;
+                        expr.PositionAndShape.RelativePosition.y += shift;
                         // note: verbal GraphicalContinuousDynamicExpressions have a label, nonverbal ones don't.
                         // take care to update and take the right bounding box for skyline.
                         expr.PositionAndShape.calculateBoundingBox();
@@ -109,6 +110,63 @@ export class AlignmentManager {
                 }
             }
         }
+    }
+
+    /**
+     * Whether two expressions that aren't wedges overlap horizontally, comparing their text without the margins.
+     * Aligning them would draw one on the other, e.g. "p cresc." from one direction: "cresc." starts at the p's center and
+     * is placed below it. A wedge is squeezed away from its neighbors in the group instead, see alignDynamicExpressions().
+     * @param a First expression
+     * @param b Second expression
+     */
+    private textsOverlap(a: AbstractGraphicalExpression, b: AbstractGraphicalExpression): boolean {
+        if (this.isWedge(a) || this.isWedge(b)) {
+            return false;
+        }
+        // the borders of an instantaneous or verbal dynamic's box are its label's borders (at (0, 0) in the box)
+        const boxA: BoundingBox = a.PositionAndShape;
+        const boxB: BoundingBox = b.PositionAndShape;
+        return boxA.RelativePosition.x + boxA.BorderLeft < boxB.RelativePosition.x + boxB.BorderRight &&
+            boxB.RelativePosition.x + boxB.BorderLeft < boxA.RelativePosition.x + boxA.BorderRight;
+    }
+
+    /**
+     * Limits the shift of a group member away from the staff, so that it stops at an expression placed further out at the same
+     * x that isn't in the group, e.g. at the "dim." placed above the ff of "ff dim." when the ff moves up to an expression before it.
+     * @param expression The group member
+     * @param shiftY The shift towards the group's y position (negative: up)
+     * @param group The members of the group, which move together
+     */
+    private limitShift(expression: AbstractGraphicalExpression, shiftY: number, group: AbstractGraphicalExpression[]): number {
+        const box: BoundingBox = expression.PositionAndShape;
+        const left: number = box.RelativePosition.x + box.BorderMarginLeft;
+        const right: number = box.RelativePosition.x + box.BorderMarginRight;
+        let limitedShift: number = shiftY;
+        for (const other of this.parentStaffline.AbstractExpressions) {
+            const otherBox: BoundingBox = other.PositionAndShape;
+            if (group.includes(other) ||
+                otherBox.RelativePosition.x + otherBox.BorderMarginRight <= left || otherBox.RelativePosition.x + otherBox.BorderMarginLeft >= right) {
+                continue;
+            }
+            // the space between the member and the other expression, if the other one is in the direction of the shift
+            if (shiftY < 0) {
+                const space: number = box.RelativePosition.y + box.BorderMarginTop - (otherBox.RelativePosition.y + otherBox.BorderMarginBottom);
+                if (space >= 0) {
+                    limitedShift = Math.max(limitedShift, -space);
+                }
+            } else if (shiftY > 0) {
+                const space: number = otherBox.RelativePosition.y + otherBox.BorderMarginTop - (box.RelativePosition.y + box.BorderMarginBottom);
+                if (space >= 0) {
+                    limitedShift = Math.min(limitedShift, space);
+                }
+            }
+        }
+        return limitedShift;
+    }
+
+    /** Whether the expression is a crescendo or decrescendo wedge (a continuous dynamic without text). */
+    private isWedge(expression: AbstractGraphicalExpression): boolean {
+        return expression instanceof GraphicalContinuousDynamicExpression && !expression.IsVerbal;
     }
 
     /**
