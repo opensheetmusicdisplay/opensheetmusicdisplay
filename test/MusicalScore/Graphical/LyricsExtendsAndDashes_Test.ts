@@ -10,6 +10,7 @@ import { GraphicalLyricEntry } from "../../../src/MusicalScore/Graphical/Graphic
  * for all staff lines: the second pass calculated the last staff line's extends and dashes once per staff line,
  * drawn on top of each other. The other staff lines only had a first pass, which ran before the lyrics of the
  * following systems were positioned.
+ * Also, the drawer drew every dash twice: in drawStaffLine() and again in drawMusicSystem().
  */
 describe("Lyrics extend lines and dashes", () => {
     let container: HTMLElement;
@@ -26,7 +27,7 @@ describe("Lyrics extend lines and dashes", () => {
         return osmd.GraphicSheet.MusicPages.flatMap(page => page.MusicSystems).flatMap(system => system.StaffLines);
     }
 
-    it("are calculated once per staff line", async () => {
+    it("are calculated and drawn once per staff line", async () => {
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
         await osmd.load(TestUtils.getScore("test_notations_nodes_dorico_say_something.musicxml"));
         osmd.render();
@@ -40,6 +41,9 @@ describe("Lyrics extend lines and dashes", () => {
                 .map(position => `${position.x},${position.y}`);
             expect(new Set(dashes).size, `different dashes in staff ${index + 1}`).to.equal(dashes.length);
         });
+        const dashCount: number = staffLines.reduce((count, staffLine) => count + staffLine.LyricsDashes.length, 0);
+        expect(dashCount, "dashes in the sample").to.be.greaterThan(0);
+        expect(container.querySelectorAll(".dash").length, "dashes drawn").to.equal(dashCount);
     });
 
     it("puts the dashes of a word continued in the next system on that system's lyrics line", async () => {
