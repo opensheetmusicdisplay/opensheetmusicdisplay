@@ -371,13 +371,21 @@ export class BoundingBox {
         this.yBordersHaveBeenSet = true;
     }
 
-    public calculateTopBottomBorders(): void {
+    /**
+     * Calculates the top and bottom borders (and margins) of this bounding box from those of its child elements.
+     * @param recursive whether to calculate those of the child elements first, recursively (default).
+     *   false only recalculates this bounding box, when the borders below it are up to date
+     *   (repeating the calculation for an unchanged child element gives the same borders).
+     */
+    public calculateTopBottomBorders(recursive: boolean = true): void {
         if (this.childElements.length === 0) {
             return;
         }
-        for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
-            const childElement: BoundingBox = this.ChildElements[idx];
-            childElement.calculateTopBottomBorders();
+        if (recursive) {
+            for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
+                const childElement: BoundingBox = this.ChildElements[idx];
+                childElement.calculateTopBottomBorders();
+            }
         }
         let minTop: number = Number.MAX_VALUE;
         let maxBottom: number = Number.MIN_VALUE;
