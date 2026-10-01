@@ -9,13 +9,20 @@ export type IXmlAttribute = Attr;
  */
 export class IXmlElement {
     public name: string;
-    public value: string;
-    public hasAttributes: boolean = false;
-    public firstAttribute: IXmlAttribute;
-    public hasElements: boolean;
 
-    private attrs: IXmlAttribute[];
+    private attrs: IXmlAttribute[] = undefined;
     private elem: Element;
+    // value, hasAttributes, firstAttribute and hasElements are read from the element when they are first used
+    //   (or set), not for every wrapper: most wrappers (~80% when reading a score) are only used for their name,
+    //   attributes or child elements, and each of these reads is a call into the DOM.
+    //   (All fields are initialized here, so that all wrappers have the same shape for the JavaScript engine.)
+    private valueOfElement: string = undefined;
+    private valueKnown: boolean = false;
+    private hasAttributesOfElement: boolean = false;
+    private firstAttributeOfElement: IXmlAttribute = undefined;
+    private attributeFieldsKnown: boolean = false;
+    private hasElementsOfElement: boolean = false;
+    private hasElementsKnown: boolean = false;
 
     /**
      * Wraps 'elem' Element in a IXmlElement
@@ -29,18 +36,69 @@ export class IXmlElement {
         }
         this.elem = elem;
         this.name = knownName !== undefined ? knownName : elem.nodeName.toLowerCase();
+    }
 
-        if (elem.hasAttributes()) {
-            this.hasAttributes = true;
-            this.firstAttribute = elem.attributes[0];
+    /** The text of the element if it only contains one text node, otherwise "". */
+    public get value(): string {
+        if (!this.valueKnown) {
+            const first: Node = this.elem.firstChild;
+            this.valueOfElement = first && !first.nextSibling && first.nodeType === Node.TEXT_NODE ? first.nodeValue : "";
+            this.valueKnown = true;
         }
-        this.hasElements = elem.hasChildNodes();
-        // Look for a value
-        const first: Node = elem.firstChild;
-        if (first && !first.nextSibling && first.nodeType === Node.TEXT_NODE) {
-            this.value = first.nodeValue;
-        } else {
-            this.value = "";
+        return this.valueOfElement;
+    }
+
+    public set value(value: string) {
+        this.valueOfElement = value;
+        this.valueKnown = true;
+    }
+
+    /** Whether the element has attributes. */
+    public get hasAttributes(): boolean {
+        this.readAttributeFields();
+        return this.hasAttributesOfElement;
+    }
+
+    public set hasAttributes(value: boolean) {
+        this.readAttributeFields();
+        this.hasAttributesOfElement = value;
+    }
+
+    /** The first attribute of the element, undefined if it has none. */
+    public get firstAttribute(): IXmlAttribute {
+        this.readAttributeFields();
+        return this.firstAttributeOfElement;
+    }
+
+    public set firstAttribute(value: IXmlAttribute) {
+        this.readAttributeFields();
+        this.firstAttributeOfElement = value;
+    }
+
+    /** Whether the element has child nodes (of any kind, e.g. also text). */
+    public get hasElements(): boolean {
+        if (!this.hasElementsKnown) {
+            this.hasElementsOfElement = this.elem.hasChildNodes();
+            this.hasElementsKnown = true;
+        }
+        return this.hasElementsOfElement;
+    }
+
+    public set hasElements(value: boolean) {
+        this.hasElementsOfElement = value;
+        this.hasElementsKnown = true;
+    }
+
+    /** Reads hasAttributes and firstAttribute from the element, if not done yet. */
+    private readAttributeFields(): void {
+        if (this.attributeFieldsKnown) {
+            return;
+        }
+        this.attributeFieldsKnown = true;
+        this.hasAttributesOfElement = false;
+        if (this.elem.hasAttributes()) {
+            this.hasAttributesOfElement = true;
+            this.firstAttributeOfElement = this.elem.attributes[0];
         }
     }
 
