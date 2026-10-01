@@ -3614,6 +3614,8 @@ export abstract class MusicSheetCalculator {
                             if (fingering.fontFamily) {
                                 label.fontFamily = fingering.fontFamily;
                             }
+                            // before reading the skyline in the label's margin box: a new label has no borders (a range of no width)
+                            gLabel.setLabelPositionAndShapeBorders();
                             const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
                             const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
                             let skybottomFurthest: number = undefined;
@@ -3636,7 +3638,6 @@ export abstract class MusicSheetCalculator {
                             }
                             gLabel.PositionAndShape.RelativePosition.y += skybottomFurthest + yShift;
                             gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX;
-                            gLabel.setLabelPositionAndShapeBorders();
                             gLabel.PositionAndShape.calculateBoundingBox();
                             gLabel.sourceNote = fingering.sourceNote;
                             gse.FingeringEntries.push(gLabel);

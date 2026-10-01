@@ -19,6 +19,7 @@ import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/Grap
 import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { GraphicalLabel } from "../../../../src/MusicalScore/Graphical/GraphicalLabel";
+import { BoundingBox } from "../../../../src/MusicalScore/Graphical/BoundingBox";
 import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
@@ -836,6 +837,54 @@ describe("VexFlow Measure", () => {
          // bass staff (Below placement): highest note's fingering closest to the staff, i.e. at the top of the stack
          expect(fingeringTextsTopToBottom(1, 0), "bass staff, beat 1").to.deep.equal(["1", "3", "5"]);
          expect(fingeringTextsTopToBottom(1, 1), "bass staff, beat 3").to.deep.equal(["2", "4", "5"]);
+         done();
+      }).catch(done);
+   });
+
+   // A fingering is placed from the sky line (above the staff) or the bottom line (below) in the range of its label's margin box.
+   // Before fix: that range was read before the label's borders were set, so it had no width: only the samples at the note's x,
+   // which missed a stem beside the note head. E.g. here the 1 of beat 3 (treble staff) was drawn on voice 1's stem,
+   // the 1 of beat 1 (bass staff) on voice 6's stem.
+   it("Places fingerings clear of the stems under their labels", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_fingering_two_voices_pitch_order.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         let stemsUnderLabels: number = 0;
+         for (const staffIndex of [0, 1]) {
+            const above: boolean = staffIndex === 0; // fingerings above the treble staff, below the bass staff
+            for (const staffEntry of osmd.GraphicSheet.findGraphicalMeasure(0, staffIndex).staffEntries) {
+               for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                  // the drawn stem, in the page's units like the fingerings' boxes
+                  const stem: SVGGElement = (voiceEntry.notes[0] as VexFlowGraphicalNote).getSVGGElement().querySelector(".vf-stem");
+                  const stemBox: DOMRect = stem.getBBox();
+                  const stemLeft: number = stemBox.x / unitInPixels;
+                  const stemRight: number = (stemBox.x + stemBox.width) / unitInPixels;
+                  for (const fingering of staffEntry.FingeringEntries) {
+                     const box: BoundingBox = fingering.PositionAndShape;
+                     if (stemRight < box.AbsolutePosition.x + box.BorderMarginLeft || stemLeft > box.AbsolutePosition.x + box.BorderMarginRight) {
+                        continue;
+                     }
+                     stemsUnderLabels++;
+                     const description: string = `staff ${staffIndex + 1}, fingering ${fingering.Label.text}`;
+                     // (a tolerance of 1 pixel. The fingerings overlapped the stems by about a staff space.)
+                     if (above) {
+                        expect(box.AbsolutePosition.y + box.BorderBottom, `${description} must be above the stem`)
+                           .to.be.at.most(stemBox.y / unitInPixels + 0.1);
+                     } else {
+                        expect(box.AbsolutePosition.y + box.BorderTop, `${description} must be below the stem`)
+                           .to.be.at.least((stemBox.y + stemBox.height) / unitInPixels - 0.1);
+                     }
+                  }
+               }
+            }
+         }
+         expect(stemsUnderLabels, "stems under fingering labels").to.be.at.least(2);
          done();
       }).catch(done);
    });
