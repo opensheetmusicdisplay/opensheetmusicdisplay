@@ -707,6 +707,7 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     const isTestTransposeEnharmonic9 = sampleFilename.includes("test_transpose_enharmonic_9");
     const isTestTransposingCsharpMajorToC = sampleFilename.includes("test_transposing_csharp_major_to_c");
     const isTestTransposingGflatMajor = sampleFilename.includes("test_transposing_gflat_major");
+    const isTestTransposingFsharpMajorEsharp = sampleFilename.includes("test_transposing_fsharp_major_e_sharp");
     const isTestTransposingIntervalSpelling = sampleFilename.includes("test_transposing_interval_spelling");
     // osmd.TransposeCalculator is static, shared by all samples: set it for each sample,
     //   so that the samples after test_transposing_interval_spelling (in directory order) don't use its calculator.
@@ -733,6 +734,10 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestTransposingGflatMajor) {
         osmdInstance.Sheet.Transpose = -2;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingFsharpMajorEsharp) {
+        osmdInstance.Sheet.Transpose = 6;
         osmdInstance.updateGraphic();
     }
     if (isTestTransposingIntervalSpelling) {
