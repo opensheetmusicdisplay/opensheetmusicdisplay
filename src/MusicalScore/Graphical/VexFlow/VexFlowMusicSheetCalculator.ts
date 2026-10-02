@@ -1178,6 +1178,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       vfEndNote = endNote.vfnote[0];
       endNoteIndexInTie = endNote.vfnote[1];
     }
+    // in a standard staff, e.g. given in the XML for the start note (a TabTie always curves upwards)
+    const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote?.sourceNote);
 
     if (tieIsAtSystemBreak) {
       // split tie into two ties.
@@ -1189,7 +1191,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           first_indices: [startNoteIndexInTie],
           first_note: vfStartNote
         };
-        const vfTie1: VF.StaveTie = isTab ? new VF.TabTie(notes, tie.Tie.Type) : new VF.StaveTie(notes);
+        const vfTie1: VF.StaveTie = isTab ? new VF.TabTie(notes, tie.Tie.Type) : this.createStaveTie(notes, tieDirection);
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
       }
@@ -1199,7 +1201,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           last_indices: [endNoteIndexInTie],
           last_note: vfEndNote
         };
-        const vfTie2: VF.StaveTie = isTab ? new VF.TabTie(notes) : new VF.StaveTie(notes);
+        const vfTie2: VF.StaveTie = isTab ? new VF.TabTie(notes) : this.createStaveTie(notes, tieDirection);
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure2.addStaveTie(vfTie2, tie);
       }
@@ -1238,24 +1240,34 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
 
         } else { // not Tab (guitar), normal StaveTie
-          vfTie = new VF.StaveTie({
+          vfTie = this.createStaveTie({
             first_indices: [startNoteIndexInTie],
             first_note: vfStartNote,
             last_indices: [endNoteIndexInTie],
             last_note: vfEndNote
-          });
-          const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote.sourceNote);
-          if (tieDirection === PlacementEnum.Below) {
-            vfTie.setDirection(1); // + is down in vexflow
-          } else if (tieDirection === PlacementEnum.Above) {
-            vfTie.setDirection(-1);
-          }
+          }, tieDirection);
         }
 
         const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure.addStaveTie(vfTie, tie);
       }
     }
+  }
+
+  /**
+   * Creates a Vexflow tie in a standard staff, curved in the given direction.
+   * @param notes The notes of the tie (or of the part of a tie across a system break), see VF.StaveTie.
+   * @param direction The direction, e.g. from the XML. Without one, Vexflow takes it from the stem direction of the notes.
+   * @returns The Vexflow tie.
+   */
+  private createStaveTie(notes: any, direction: PlacementEnum): VF.StaveTie {
+    const vfTie: VF.StaveTie = new VF.StaveTie(notes);
+    if (direction === PlacementEnum.Below) {
+      (vfTie as any).setDirection(1); // + is down in vexflow
+    } else if (direction === PlacementEnum.Above) {
+      (vfTie as any).setDirection(-1);
+    }
+    return vfTie;
   }
 
   protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {

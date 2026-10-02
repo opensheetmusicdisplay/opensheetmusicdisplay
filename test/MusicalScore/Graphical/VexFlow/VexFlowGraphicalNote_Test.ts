@@ -316,4 +316,43 @@ describe("VexFlow GraphicalNote", () => {
         expect(measureNotes(osmd, 0, 0).map(note => note.getTieSVGs().length), "the tie starting at each note").to.deep.equal([1, 1, 1, 0]);
         div.remove();
     });
+
+    it("Draws a tie across a system break in the direction given in the XML or for its voice, like in one system", async () => {
+        const backup: string = "<backup><duration>4</duration></backup>";
+        const cases: [string, string[], number, boolean[]][] = [
+            ["over, notes with stems up", [tiedNote("E4", 4, false, "over"), tiedNote("E4", 4, true)], 1, [true, true]],
+            ["under, notes with stems down", [tiedNote("C5", 4, false, "under"), tiedNote("C5", 4, true)], 1, [false, false]],
+            // below by default in a second voice (MusicSheetCalculator.setTieDirections(), #1262), though its stems are down
+            ["second voice", [tiedNote("G5", 4, false) + backup + tiedNote("C5", 4, false, "", 2),
+                tiedNote("G5", 4, false) + backup + tiedNote("C5", 4, true, undefined, 2)], 2, [false, false]],
+        ];
+        for (const [name, measures, voiceId, upwards] of cases) {
+            const div: HTMLElement = TestUtils.getDivElement(document);
+            const osmd: OpenSheetMusicDisplay = await renderMeasures(div, measures, true);
+            const tieStart: VexFlowGraphicalNote = osmd.GraphicSheet.MeasureList[0][0].staffEntries[0].graphicalVoiceEntries
+                .find(voiceEntry => voiceEntry.parentVoiceEntry.ParentVoice.VoiceId === voiceId).notes[0] as VexFlowGraphicalNote;
+            const parts: HTMLElement[] = tieStart.getTieSVGs();
+            expect(parts.length, `${name}: premise, a part in each system`).to.equal(2);
+            expect(parts.map(curvesUpwards), `${name}: the parts curved upwards`).to.deep.equal(upwards);
+            div.remove();
+        }
+    });
+
+    it("Draws each tie of tied notes in the direction given at its start note, which holds for the following ties", async () => {
+        const cases: [string, string, string[], boolean[]][] = [
+            ["under, then over", "C5", ["under", "over"], [false, true]],
+            ["over, then under, then none", "C5", ["over", "under", ""], [true, false, false]],
+            ["over, then none, notes with stems up", "E4", ["over", ""], [true, true]],
+        ];
+        for (const [name, pitch, orientations, upwards] of cases) {
+            const notes: string[] = orientations.map((orientation: string, i: number) => tiedNote(pitch, 1, i > 0, orientation));
+            notes.push(tiedNote(pitch, 4 - orientations.length, true));
+            const div: HTMLElement = TestUtils.getDivElement(document);
+            const osmd: OpenSheetMusicDisplay = await renderMeasures(div, [notes.join("")], false);
+            const ties: HTMLElement[] = measureNotes(osmd, 0, 0).slice(0, -1).flatMap(note => note.getTieSVGs());
+            expect(ties.length, `${name}: premise, a tie from each note to the next`).to.equal(orientations.length);
+            expect(ties.map(curvesUpwards), `${name}: the ties curved upwards`).to.deep.equal(upwards);
+            div.remove();
+        }
+    });
 });

@@ -2219,9 +2219,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // The tie's SVG group is named after its start note, so that the note finds it (VexFlowGraphicalNote.getTieSVGs()).
         //   Vexflow takes the id from the tie's first note, which the part of a tie continued in the next system doesn't have.
         (stavetie as any).setStartNoteId((graphicalTie.StartNote as VexFlowGraphicalNote)?.getSVGId());
-        if (graphicalTie.Tie.TieDirection === PlacementEnum.Below) {
-            (stavetie as any).setDirection(1);
-        }
     }
 }
 
