@@ -2859,14 +2859,7 @@ export abstract class MusicSheetCalculator {
                                     if (note === note.NoteTie.Notes.last()) {
                                         continue; // nothing to do on last note. don't create last tie twice.
                                     }
-                                    if (startStaffEntry) {
-                                        for (const gTie of startStaffEntry.GraphicalTies) {
-                                            if (gTie.Tie === tie) {
-                                                continue; // don't handle the same tie on the same startStaffEntry twice
-                                            }
-                                        }
-                                    }
-                                    this.handleTie(tie, startStaffEntry, staffIndex, measureIndex);
+                                    this.handleTie(tie, startStaffEntry, staffIndex, measureIndex, tie.Notes.indexOf(note));
                                 }
                             }
                         }
@@ -2877,7 +2870,17 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    private handleTie(tie: Tie, startGraphicalStaffEntry: GraphicalStaffEntry, staffIndex: number, measureIndex: number): void {
+    /**
+     * Creates the graphical ties of a tie from the given note onwards, one from each note to the next.
+     * @param tie The tie.
+     * @param startGraphicalStaffEntry The staff entry of the note.
+     * @param staffIndex The index of the staff.
+     * @param measureIndex The index of the measure.
+     * @param startNoteIndex The index of the note in tie.Notes. The graphical ties before it were created with the earlier notes
+     *   (createGraphicalTies() calls this for each note of a tie but the last), and would be drawn twice if created again.
+     */
+    private handleTie(tie: Tie, startGraphicalStaffEntry: GraphicalStaffEntry, staffIndex: number, measureIndex: number,
+                      startNoteIndex: number): void {
         if (!startGraphicalStaffEntry) {
             // console.log('tie not found in measure number ' + measureIndex - 1);
             return;
@@ -2888,7 +2891,7 @@ export abstract class MusicSheetCalculator {
         let startNote: GraphicalNote = undefined;
         let endGse: GraphicalStaffEntry = undefined;
         let endNote: GraphicalNote = undefined;
-        for (let i: number = 1; i < tie.Notes.length; i++) {
+        for (let i: number = startNoteIndex + 1; i < tie.Notes.length; i++) {
             startNote = startGse.findTieGraphicalNoteFromNote(tie.Notes[i - 1]);
             endGse = this.graphicalMusicSheet.GetGraphicalFromSourceStaffEntry(tie.Notes[i].ParentStaffEntry);
             if (!endGse) {

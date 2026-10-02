@@ -282,4 +282,38 @@ describe("VexFlow GraphicalNote", () => {
         }
         div.remove();
     });
+
+    /** A note of the given pitch (e.g. "C5") and length in quarters (1, 2 or 4), tied from the previous note if tiedFromPrevious,
+     *  and to the next note if tieOrientation is given: "over", "under", or "" for none. */
+    function tiedNote(pitch: string, quarters: number, tiedFromPrevious: boolean, tieOrientation?: string, voice: number = 1): string {
+        const type: string = quarters === 4 ? "whole" : quarters === 2 ? "half" : "quarter";
+        const stop: string = tiedFromPrevious ? "<tied type='stop'/>" : "";
+        const start: string = tieOrientation === undefined ? "" : `<tied type="start"${tieOrientation ? ` orientation="${tieOrientation}"` : ""}/>`;
+        return `<note><pitch><step>${pitch[0]}</step><octave>${pitch[1]}</octave></pitch><duration>${quarters}</duration>` +
+            `<voice>${voice}</voice><type>${type}</type><notations>${stop}${start}</notations></note>`;
+    }
+
+    /** Renders a score of one staff (treble clef, 4/4) with the given measures, each starting a new system if systemBreaks. */
+    async function renderMeasures(div: HTMLElement, measures: string[], systemBreaks: boolean): Promise<OpenSheetMusicDisplay> {
+        const attributes: string = "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+            "<clef><sign>G</sign><line>2</line></clef></attributes>";
+        const measuresXml: string = measures.map((content: string, i: number) => `<measure number="${i + 1}">` +
+            (i === 0 ? attributes : systemBreaks ? "<print new-system='yes'/>" : "") + content + "</measure>").join("");
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        await osmd.load(new DOMParser().parseFromString("<score-partwise version='4.0'><part-list><score-part id='P1'>" +
+            `<part-name>Piano</part-name></score-part></part-list><part id="P1">${measuresXml}</part></score-partwise>`, "application/xml"));
+        osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
+        osmd.render();
+        const systemCount: number = new Set(osmd.GraphicSheet.MeasureList.map(verticalMeasures => verticalMeasures[0].ParentMusicSystem)).size;
+        expect(systemCount, "premise: the systems").to.equal(systemBreaks ? measures.length : 1);
+        return osmd;
+    }
+
+    it("Draws each tie of tied notes once", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = await renderMeasures(div, [tiedNote("C5", 1, false, "") + tiedNote("C5", 1, true, "") +
+            tiedNote("C5", 1, true, "") + tiedNote("C5", 1, true)], false); // four tied quarters
+        expect(measureNotes(osmd, 0, 0).map(note => note.getTieSVGs().length), "the tie starting at each note").to.deep.equal([1, 1, 1, 0]);
+        div.remove();
+    });
 });
