@@ -90,4 +90,55 @@ describe("VexFlow GraphicalNote", () => {
         expect(otherNote.getNoteheadSVGs()[0].getAttribute("fill"), "another note").to.equal("#000000");
         div.remove();
     });
+
+    /** The notes of a measure in a staff, one per staff entry (the slides sample has one voice and no chords). */
+    function measureNotes(osmd: OpenSheetMusicDisplay, measureIndex: number, staffIndex: number): VexFlowGraphicalNote[] {
+        return osmd.GraphicSheet.MeasureList[measureIndex][staffIndex].staffEntries
+            .map(staffEntry => staffEntry.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
+    }
+    const isHidden: (element: Element) => boolean = (element: Element) => element.getAttribute("visibility") === "hidden";
+    const staves: [number, string][] = [[0, "standard staff"], [1, "TAB staff"]];
+
+    // A guitar part with a standard and a TAB staff, with the same slides. Measure 3 starts with a slide from E to F#.
+    it("Hides the slides starting at a note with setVisible(), in a standard and a TAB staff", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        await osmd.load(TestUtils.getScore("test_slides_standard_and_tab_staff.musicxml"));
+        osmd.render();
+        for (const [staffIndex, staff] of staves) {
+            const [slideStart, slideEnd] = measureNotes(osmd, 2, staffIndex);
+            const slides: HTMLElement[] = slideStart.getGlissandoSVGs();
+            expect(slides.length, `${staff}: the slide of measure 3`).to.equal(1);
+            expect(slides[0].textContent, `${staff}: the line, and the label in TAB`).to.equal(staffIndex === 1 ? "sl." : "");
+            expect(slideEnd.getGlissandoSVGs().length, `${staff}: the slide belongs to its start note`).to.equal(0);
+
+            slideEnd.setVisible(false);
+            expect(isHidden(slides[0]), `${staff}: hiding the end note keeps the slide, like a tie or slur`).to.equal(false);
+            slideStart.setVisible(false, { applyToGlissandi: false });
+            expect(isHidden(slides[0]), `${staff}: applyToGlissandi: false`).to.equal(false);
+            slideStart.setVisible(false);
+            expect(isHidden(slides[0]), `${staff}: hidden with its start note`).to.equal(true);
+            slideStart.setVisible(true);
+            expect(isHidden(slides[0]), `${staff}: shown again`).to.equal(false);
+        }
+        div.remove();
+    });
+
+    // The same sample with one measure per system: the slide from the last note of measure 1 is drawn in two parts.
+    it("Hides both parts of a slide across a system break with its start note", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        await osmd.load(TestUtils.getScore("test_slides_standard_and_tab_staff.musicxml"));
+        osmd.EngravingRules.RenderXMeasuresPerLineAkaSystem = 1;
+        osmd.render();
+        for (const [staffIndex, staff] of staves) {
+            const slideStart: VexFlowGraphicalNote = measureNotes(osmd, 0, staffIndex)[3];
+            const parts: HTMLElement[] = slideStart.getGlissandoSVGs();
+            expect(parts.length, `${staff}: a part in each system`).to.equal(2);
+            expect(parts[0].closest(".staffline") === parts[1].closest(".staffline"), `${staff}: parts in the same system`).to.equal(false);
+            slideStart.setVisible(false);
+            expect(parts.every(isHidden), `${staff}: both parts hidden`).to.equal(true);
+        }
+        div.remove();
+    });
 });

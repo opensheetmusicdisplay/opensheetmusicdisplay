@@ -201,6 +201,17 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (!gGliss.StaffLine.ParentStaff.isTab) {
             gGliss.calculateLine(this.rules);
         }
+        const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;
+        if (!gGliss.Line && !vfTie) {
+            return;
+        }
+        // Draw the glissando in a group with an id from its start note, like a slur or tie, so that the note can find it,
+        //   e.g. to hide it (VexFlowGraphicalNote.getGlissandoSVGs()). In a TAB staff, the group holds the line and the label "sl."
+        //   that the Vexflow TabSlide draws. The part of a glissando continued in the next system gets the id too,
+        //   unlike a Vexflow tie, which would take it from its first note, missing there.
+        const context: IRenderContext = this.backend.getContext();
+        const startNoteId: string = (this.rules.GNote(gGliss.Glissando.StartNote) as VexFlowGraphicalNote)?.getSVGId();
+        context.openGroup("glissando", startNoteId ? `${startNoteId}-glissando` : undefined);
         if (gGliss.Line) {
             const newStart: PointF2D = new PointF2D(gGliss.Line.Start.x + abs.x, gGliss.Line.Start.y);
             const newEnd: PointF2D = new PointF2D(gGliss.Line.End.x + abs.x, gGliss.Line.End.y);
@@ -208,13 +219,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             //   because unfortunately RelativePosition seems imprecise.
             gGliss.Line.SVGElement = this.drawLine(newStart, newEnd, gGliss.Color, gGliss.Width);
         } else {
-            const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;
-            if (vfTie) {
-                const context: IRenderContext = this.backend.getContext();
-                vfTie.setContext(context);
-                vfTie.draw();
-            }
+            vfTie.setContext(context);
+            vfTie.draw();
         }
+        context.closeGroup();
     }
 
     private drawSlur(graphicalSlur: GraphicalSlur, abs: PointF2D): void {

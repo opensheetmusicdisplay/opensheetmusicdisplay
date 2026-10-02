@@ -123,12 +123,13 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     }
 
     /** Toggle visibility of the note, making it and its stem and beams invisible for `false`.
-     * By default, this will also hide the note's slurs and ties (see visibilityOptions).
+     * By default, this will also hide the note's slurs, ties and glissandi, e.g. slides (see visibilityOptions).
      * (This only works with the default SVG backend, not with the Canvas backend/renderer)
      * To get a GraphicalNote from a Note, use osmd.EngravingRules.GNote(note).
      */
     public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {}): void {
         const applyToBeams: boolean = visibilityOptions.applyToBeams ?? true; // default option if not given
+        const applyToGlissandi: boolean = visibilityOptions.applyToGlissandi ?? true;
         const applyToLedgerLines: boolean = visibilityOptions.applyToLedgerLines ?? true;
         const applyToNotehead: boolean = visibilityOptions.applyToNotehead ?? true;
         const applyToSlurs: boolean = visibilityOptions.applyToSlurs ?? true;
@@ -163,6 +164,11 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         if (applyToSlurs) {
             for (const slur of this.getSlurSVGs()) {
                 slur?.setAttribute(visibilityAttribute, visibilityString);
+            }
+        }
+        if (applyToGlissandi) {
+            for (const glissando of this.getGlissandoSVGs()) {
+                glissando?.setAttribute(visibilityAttribute, visibilityString);
             }
         }
 
@@ -256,6 +262,18 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             slurSVGs.push(slur);
         }
         return slurSVGs;
+    }
+
+    /** Gets the SVG groups of the glissandi and slides starting at this note: each with the line, and in a TAB staff the label "sl.".
+     *  A glissando across a system break has a group in each system (see VexFlowMusicSheetDrawer.drawGlissando()). */
+    public getGlissandoSVGs(): HTMLElement[] {
+        const glissandoSVGs: HTMLElement[] = [];
+        const glissandi: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${this.getSVGId()}-glissando']`);
+        // like the slurs, the two groups of a glissando across a system break have the same id.
+        for (const glissando of glissandi) {
+            glissandoSVGs.push(glissando);
+        }
+        return glissandoSVGs;
     }
 
     /** Gets the SVG elements of the note heads, e.g. the paths of a chord's heads, or the fret numbers of a TAB note (and its chord). */
