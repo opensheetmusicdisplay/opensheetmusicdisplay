@@ -124,13 +124,20 @@ describe("VexFlow GraphicalNote", () => {
         div.remove();
     });
 
-    // The same sample with one measure per system: the slide from the last note of measure 1 is drawn in two parts.
+    // The same sample with a system break before measure 2: the slide from the last note of measure 1 is drawn in two parts.
     it("Hides both parts of a slide across a system break with its start note", async () => {
+        const score: Document = TestUtils.getScore("test_slides_standard_and_tab_staff.musicxml").cloneNode(true) as Document;
+        const measure2: Element = score.querySelector("measure[number='2']");
+        const newSystem: Element = score.createElement("print");
+        newSystem.setAttribute("new-system", "yes");
+        measure2.insertBefore(newSystem, measure2.firstChild);
         const div: HTMLElement = TestUtils.getDivElement(document);
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
-        await osmd.load(TestUtils.getScore("test_slides_standard_and_tab_staff.musicxml"));
-        osmd.EngravingRules.RenderXMeasuresPerLineAkaSystem = 1;
+        await osmd.load(score);
+        osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
         osmd.render();
+        expect(osmd.GraphicSheet.MeasureList[1][0].ParentMusicSystem === osmd.GraphicSheet.MeasureList[0][0].ParentMusicSystem,
+            "premise: measure 2 starts a new system").to.equal(false);
         for (const [staffIndex, staff] of staves) {
             const slideStart: VexFlowGraphicalNote = measureNotes(osmd, 0, staffIndex)[3];
             const parts: HTMLElement[] = slideStart.getGlissandoSVGs();
