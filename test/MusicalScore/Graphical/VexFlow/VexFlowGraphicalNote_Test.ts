@@ -1,6 +1,7 @@
 import { expect } from "chai";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
+import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TabNote } from "../../../../src/MusicalScore/VoiceData/TabNote";
@@ -149,20 +150,28 @@ describe("VexFlow GraphicalNote", () => {
         div.remove();
     });
 
-    // A half note tied across the barline to measure 2, with a system break before measure 2: the tie is drawn in two parts.
-    it("Hides both parts of a tie across a system break with its start note", async () => {
+    /** Renders a half note tied across the barline to measure 2, after a half rest (test_tie_enharmonic_spelling_1694).
+     *  With a system break before measure 2, the tie is drawn in two parts, one in each system. */
+    async function renderTiedHalfNote(div: HTMLElement, systemBreak: boolean): Promise<OpenSheetMusicDisplay> {
         const score: Document = TestUtils.getScore("test_tie_enharmonic_spelling_1694.musicxml").cloneNode(true) as Document;
-        const measure2: Element = score.querySelector("measure[number='2']");
-        const newSystem: Element = score.createElement("print");
-        newSystem.setAttribute("new-system", "yes");
-        measure2.insertBefore(newSystem, measure2.firstChild);
-        const div: HTMLElement = TestUtils.getDivElement(document);
+        if (systemBreak) {
+            const measure2: Element = score.querySelector("measure[number='2']");
+            const newSystem: Element = score.createElement("print");
+            newSystem.setAttribute("new-system", "yes");
+            measure2.insertBefore(newSystem, measure2.firstChild);
+        }
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
         await osmd.load(score);
         osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
         osmd.render();
         expect(osmd.GraphicSheet.MeasureList[1][0].ParentMusicSystem === osmd.GraphicSheet.MeasureList[0][0].ParentMusicSystem,
-            "premise: measure 2 starts a new system").to.equal(false);
+            systemBreak ? "premise: measure 2 starts a new system" : "premise: one system").to.equal(!systemBreak);
+        return osmd;
+    }
+
+    it("Hides both parts of a tie across a system break with its start note", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = await renderTiedHalfNote(div, true);
         const tieStart: VexFlowGraphicalNote = measureNotes(osmd, 0, 0)[1]; // after a half rest
         const tieEnd: VexFlowGraphicalNote = measureNotes(osmd, 1, 0)[0];
         const parts: HTMLElement[] = tieStart.getTieSVGs();
@@ -175,5 +184,20 @@ describe("VexFlow GraphicalNote", () => {
         tieStart.setVisible(false);
         expect(parts.every(isHidden), "both parts hidden").to.equal(true);
         div.remove();
+    });
+
+    it("Gets the SVG groups of a tie's parts from its GraphicalTie, in one system and across a system break", async () => {
+        for (const systemBreak of [false, true]) {
+            const tie: string = systemBreak ? "tie across a system break" : "tie in one system";
+            const div: HTMLElement = TestUtils.getDivElement(document);
+            const osmd: OpenSheetMusicDisplay = await renderTiedHalfNote(div, systemBreak);
+            const graphicalTie: GraphicalTie = osmd.GraphicSheet.MeasureList[0][0].staffEntries[1].GraphicalTies[0];
+            const parts: HTMLElement[] = (graphicalTie.StartNote as VexFlowGraphicalNote).getTieSVGs(); // in the order of the systems
+            expect(parts.length, `${tie}: premise, the parts the start note finds`).to.equal(systemBreak ? 2 : 1);
+            expect(graphicalTie.vfTies.length, `${tie}: a Vexflow tie for each part`).to.equal(parts.length);
+            expect(graphicalTie.SVGElements, `${tie}: the SVG groups of its parts, in order`).to.have.ordered.members(parts);
+            expect(graphicalTie.SVGElement === parts[0], `${tie}: SVGElement, the part in the first system`).to.equal(true);
+            div.remove();
+        }
     });
 });

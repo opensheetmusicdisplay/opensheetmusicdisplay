@@ -2207,7 +2207,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     public addStaveTie(stavetie: VF.StaveTie, graphicalTie: GraphicalTie): void {
         this.vfTies.push(stavetie);
-        graphicalTie.vfTie = stavetie;
+        // a tie across a system break is added in two parts, the part in the first system first (layoutGraphicalTie())
+        graphicalTie.vfTies.push(stavetie);
+        graphicalTie.vfTie = graphicalTie.vfTies[0];
         // The tie's SVG group is named after its start note, so that the note finds it (VexFlowGraphicalNote.getTieSVGs()).
         //   Vexflow takes the id from the tie's first note, which the part of a tie continued in the next system doesn't have.
         (stavetie as any).setStartNoteId((graphicalTie.StartNote as VexFlowGraphicalNote)?.getSVGId());
