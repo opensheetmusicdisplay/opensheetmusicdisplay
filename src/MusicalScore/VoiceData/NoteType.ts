@@ -14,7 +14,9 @@ export enum NoteType {
     _64th,
     _32nd,
     _16th,
+    /** Misspelled name of EIGHTH (same value), kept for compatibility. */
     EIGTH,
+    EIGHTH = EIGTH, // same value, so QUARTER etc. keep their values (= their index in NoteTypeHandler.NoteTypeXmlValues)
     QUARTER,
     HALF,
     WHOLE,
@@ -25,7 +27,7 @@ export enum NoteType {
 
 export class NoteTypeHandler {
     public static NoteTypeXmlValues: string[] = ["", "1024th", "512th", "256th", "128th", "64th", "32nd", "16th",
-        "eigth", "quarter", "half", "whole", "breve", "long", "maxima"];
+        "eighth", "quarter", "half", "whole", "breve", "long", "maxima"];
     // alternative to array: use switch/case
 
 
