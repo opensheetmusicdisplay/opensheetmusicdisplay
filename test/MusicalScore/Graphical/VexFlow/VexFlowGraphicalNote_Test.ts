@@ -91,7 +91,7 @@ describe("VexFlow GraphicalNote", () => {
         div.remove();
     });
 
-    /** The notes of a measure in a staff, one per staff entry (the slides sample has one voice and no chords). */
+    /** The notes of a measure in a staff, one per staff entry (the samples used with it have one voice and no chords). */
     function measureNotes(osmd: OpenSheetMusicDisplay, measureIndex: number, staffIndex: number): VexFlowGraphicalNote[] {
         return osmd.GraphicSheet.MeasureList[measureIndex][staffIndex].staffEntries
             .map(staffEntry => staffEntry.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
@@ -146,6 +146,34 @@ describe("VexFlow GraphicalNote", () => {
             slideStart.setVisible(false);
             expect(parts.every(isHidden), `${staff}: both parts hidden`).to.equal(true);
         }
+        div.remove();
+    });
+
+    // A half note tied across the barline to measure 2, with a system break before measure 2: the tie is drawn in two parts.
+    it("Hides both parts of a tie across a system break with its start note", async () => {
+        const score: Document = TestUtils.getScore("test_tie_enharmonic_spelling_1694.musicxml").cloneNode(true) as Document;
+        const measure2: Element = score.querySelector("measure[number='2']");
+        const newSystem: Element = score.createElement("print");
+        newSystem.setAttribute("new-system", "yes");
+        measure2.insertBefore(newSystem, measure2.firstChild);
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        await osmd.load(score);
+        osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
+        osmd.render();
+        expect(osmd.GraphicSheet.MeasureList[1][0].ParentMusicSystem === osmd.GraphicSheet.MeasureList[0][0].ParentMusicSystem,
+            "premise: measure 2 starts a new system").to.equal(false);
+        const tieStart: VexFlowGraphicalNote = measureNotes(osmd, 0, 0)[1]; // after a half rest
+        const tieEnd: VexFlowGraphicalNote = measureNotes(osmd, 1, 0)[0];
+        const parts: HTMLElement[] = tieStart.getTieSVGs();
+        expect(parts.length, "a part in each system").to.equal(2);
+        expect(parts[0].closest(".staffline") === parts[1].closest(".staffline"), "parts in the same system").to.equal(false);
+        expect(tieEnd.getTieSVGs().length, "the tie belongs to its start note").to.equal(0);
+
+        tieEnd.setVisible(false);
+        expect(parts.some(isHidden), "hiding the end note keeps the tie").to.equal(false);
+        tieStart.setVisible(false);
+        expect(parts.every(isHidden), "both parts hidden").to.equal(true);
         div.remove();
     });
 });

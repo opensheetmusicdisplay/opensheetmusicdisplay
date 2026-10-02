@@ -242,10 +242,15 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return ledgerSVGs;
     }
 
-    /** Gets the SVG path elements of the note's tie curves. */
+    /** Gets the SVG groups of the ties starting at this note, each with the tie's curve.
+     *  A tie across a system break has a group in each system (see VexFlowMeasure.addStaveTie()). */
     public getTieSVGs(): HTMLElement[] {
         const tieSVGs: HTMLElement[] = [];
-        const ties: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${this.getSVGId()}-tie']`);
+        const svgId: string = this.getSVGId();
+        if (!svgId) {
+            return tieSVGs; // no Vexflow note, e.g. in a multi-rest measure
+        }
+        const ties: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${svgId}-tie']`);
         // TODO multiple ties have the same id sometimes, DOM elements are not supposed to have the same id, this is invalid HTML. But it works.
         for (const tie of ties) {
             tieSVGs.push(tie);
