@@ -231,4 +231,23 @@ describe("VexFlow GraphicalNote", () => {
             div.remove();
         }
     });
+
+    // A TAB staff with a hammer-on from note 1 to 2, and a pull-off from note 3 to 4.
+    it("Hides and colors the label of a hammer-on or pull-off with its tie", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        await osmd.load(TestUtils.getScore("OSMD_Function_Test_Tablature_Hammeron_Pulloff.musicxml"));
+        osmd.render();
+        const notes: VexFlowGraphicalNote[] = measureNotes(osmd, 0, 0);
+        for (const [noteIndex, label] of [[0, "H"], [2, "P"]] as [number, string][]) {
+            const tie: HTMLElement = notes[noteIndex].getTieSVGs()[0];
+            const text: Element = tie?.querySelector("text");
+            expect(text?.textContent, `${label}: in the tie's group`).to.equal(label);
+            notes[noteIndex].setColor("#ff0000", { applyToTies: true });
+            expect(text.getAttribute("fill"), `${label}: colored with the tie`).to.equal("#ff0000");
+            notes[noteIndex].setVisible(false);
+            expect(isHidden(tie), `${label}: hidden with the tie`).to.equal(true);
+        }
+        div.remove();
+    });
 });

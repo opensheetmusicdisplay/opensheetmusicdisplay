@@ -766,6 +766,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
             tie.setContext(ctx);
             tie.draw();
+            // Vexflow draws the text of a tie, e.g. "H" of a hammer-on in a TAB staff (TabTie), after the tie's SVG group:
+            //   move it into the group, so that hiding or coloring the tie includes it (VexFlowGraphicalNote.setVisible(), setColor()).
+            const group: Element = (tie as any).getAttribute("el"); // undefined without SVG
+            if (group?.nextSibling?.nodeName === "text") {
+                group.appendChild(group.nextSibling);
+            }
         }
     }
 
