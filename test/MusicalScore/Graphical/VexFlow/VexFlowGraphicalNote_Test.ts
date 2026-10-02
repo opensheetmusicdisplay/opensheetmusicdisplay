@@ -124,8 +124,37 @@ describe("VexFlow GraphicalNote", () => {
         div.remove();
     });
 
+    /** The colors of a glissando's shapes: the stroke of each line, then the fill of each label ("sl." in a TAB staff). */
+    function glissandoColors(glissando: Element): string[] {
+        return [...Array.from(glissando.querySelectorAll("path")).map(line => line.getAttribute("stroke")),
+            ...Array.from(glissando.querySelectorAll("text")).map(label => label.getAttribute("fill"))];
+    }
+
+    it("Colors the slides starting at a note with setColor() and applyToGlissandi, in a standard and a TAB staff", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        await osmd.load(TestUtils.getScore("test_slides_standard_and_tab_staff.musicxml"));
+        osmd.render();
+        const color: string = "#ff0000";
+        for (const [staffIndex, staff] of staves) {
+            const [slideStart, slideEnd] = measureNotes(osmd, 2, staffIndex);
+            const slide: HTMLElement = slideStart.getGlissandoSVGs()[0];
+            const drawnColors: string[] = glissandoColors(slide);
+            expect(drawnColors.length, `${staff}: the line, and the label in TAB`).to.equal(staffIndex === 1 ? 2 : 1);
+            expect(drawnColors.every(drawnColor => drawnColor.startsWith("#000000")), `${staff}: drawn in black`).to.equal(true);
+
+            slideEnd.setColor(color, { applyToGlissandi: true });
+            expect(glissandoColors(slide), `${staff}: coloring the end note doesn't color the slide, like a tie or slur`).to.deep.equal(drawnColors);
+            slideStart.setColor(color);
+            expect(glissandoColors(slide), `${staff}: not colored by default`).to.deep.equal(drawnColors);
+            slideStart.setColor(color, { applyToGlissandi: true });
+            expect(glissandoColors(slide), `${staff}: colored with its start note`).to.deep.equal(drawnColors.map(() => color));
+        }
+        div.remove();
+    });
+
     // The same sample with a system break before measure 2: the slide from the last note of measure 1 is drawn in two parts.
-    it("Hides both parts of a slide across a system break with its start note", async () => {
+    it("Colors and hides both parts of a slide across a system break with its start note", async () => {
         const score: Document = TestUtils.getScore("test_slides_standard_and_tab_staff.musicxml").cloneNode(true) as Document;
         const measure2: Element = score.querySelector("measure[number='2']");
         const newSystem: Element = score.createElement("print");
@@ -143,6 +172,8 @@ describe("VexFlow GraphicalNote", () => {
             const parts: HTMLElement[] = slideStart.getGlissandoSVGs();
             expect(parts.length, `${staff}: a part in each system`).to.equal(2);
             expect(parts[0].closest(".staffline") === parts[1].closest(".staffline"), `${staff}: parts in the same system`).to.equal(false);
+            slideStart.setColor("#ff0000", { applyToGlissandi: true });
+            expect(parts.every(part => glissandoColors(part).every(partColor => partColor === "#ff0000")), `${staff}: both parts colored`).to.equal(true);
             slideStart.setVisible(false);
             expect(parts.every(isHidden), `${staff}: both parts hidden`).to.equal(true);
         }

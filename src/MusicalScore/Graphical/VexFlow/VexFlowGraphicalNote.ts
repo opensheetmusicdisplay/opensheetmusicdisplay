@@ -365,8 +365,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return { frets, modifiers };
     }
 
-    /** Colors the paths of a group, e.g. of a note head, or a single shape of a TAB note: its fill,
-     *  or its stroke if it's only a line, like the curve of a bend. */
+    /** Colors the paths of a group, e.g. of a note head, or a single shape, e.g. of a TAB note or a glissando: its fill,
+     *  or its stroke if it's only a line, like the curve of a bend or the line of a slide. */
     private static colorShapes(element: Element, color: string): void {
         if (element.children.length > 0) {
             for (const path of element.children) {
@@ -386,6 +386,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public setColor(color: string, coloringOptions: ColoringOptions = {}): void {
         const applyToBeams: boolean = coloringOptions.applyToBeams ?? false; // default if option not given
         const applyToFlag: boolean = coloringOptions.applyToFlag ?? true;
+        const applyToGlissandi: boolean = coloringOptions.applyToGlissandi ?? false;
         const applyToLedgerLines: boolean = coloringOptions.applyToLedgerLines ?? false;
         const applyToLyrics: boolean = coloringOptions.applyToLyrics ?? false;
         const applyToModifiers: boolean = coloringOptions.applyToModifiers ?? true;
@@ -411,6 +412,16 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             if (flag) {
                 for (const flagPath of flag.children) {
                     flagPath.setAttribute("fill", color);
+                }
+            }
+        }
+
+        if (applyToGlissandi) {
+            for (const glissando of this.getGlissandoSVGs()) {
+                // each shape of the group: the lines need their stroke colored, the label "sl." in a TAB staff its fill.
+                //   (the line in a standard staff is in a group of its own, see SvgVexFlowBackend.renderLine())
+                for (const shape of glissando.querySelectorAll("path, text")) {
+                    VexFlowGraphicalNote.colorShapes(shape, color);
                 }
             }
         }
