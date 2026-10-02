@@ -6,6 +6,8 @@ import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/Vex
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TabNote } from "../../../../src/MusicalScore/VoiceData/TabNote";
 import { TestUtils } from "../../../Util/TestUtils";
+import Vex from "vexflow";
+import VF = Vex.Flow;
 
 describe("VexFlow GraphicalNote", () => {
     it("Can get SVG elements for note, stem and beam", (done: Mocha.Done) => {
@@ -247,6 +249,36 @@ describe("VexFlow GraphicalNote", () => {
             expect(text.getAttribute("fill"), `${label}: colored with the tie`).to.equal("#ff0000");
             notes[noteIndex].setVisible(false);
             expect(isHidden(tie), `${label}: hidden with the tie`).to.equal(true);
+        }
+        div.remove();
+    });
+
+    /** Whether the curve of a tie's SVG group bends upwards: its path's first control point is above its start
+     *  (Vexflow's StaveTie.renderTie() draws "M<start x> <start y>Q<control x> <control y>,..."). */
+    function curvesUpwards(tie: Element): boolean {
+        const [, startY, controlY] = tie.querySelector("path").getAttribute("d").match(/^M\S+ (\S+)Q\S+ (\S+),/).map(Number);
+        return controlY < startY;
+    }
+
+    // A TAB staff with a hammer-on, a pull-off and a tie, each from the last note of measure 1, 2 and 3 to the first note
+    //   of the next measure, which starts a new system.
+    it("Draws a hammer-on, pull-off or tie across a system break in a TAB staff as a TAB tie, labeled in the first system", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        await osmd.load(TestUtils.getScore("test_tab_hammer-on_pull-off_tie_across_system_breaks.musicxml"));
+        osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
+        osmd.render();
+        const systemCount: number = new Set(osmd.GraphicSheet.MeasureList.map(verticalMeasures => verticalMeasures[0].ParentMusicSystem)).size;
+        expect(systemCount, "premise: each measure starts a new system").to.equal(4);
+        for (const [measureIndex, label] of [[0, "H"], [1, "P"], [2, ""]] as [number, string][]) {
+            const name: string = `${label ? label : "tie"} from measure ${measureIndex + 1}`;
+            const tieStart: VexFlowGraphicalNote = measureNotes(osmd, measureIndex, 0)[1];
+            const graphicalTie: GraphicalTie = tieStart.parentVoiceEntry.parentStaffEntry.GraphicalTies[0];
+            expect(graphicalTie.vfTies.map(vfTie => vfTie instanceof VF.TabTie), `${name}: a TAB tie for each part`).to.deep.equal([true, true]);
+            const parts: HTMLElement[] = tieStart.getTieSVGs();
+            expect(parts.length, `${name}: a part in each system`).to.equal(2);
+            expect(parts.map(part => part.textContent), `${name}: the label in the first system only`).to.deep.equal([label, ""]);
+            expect(parts.every(curvesUpwards), `${name}: both parts curved upwards`).to.equal(true);
         }
         div.remove();
     });

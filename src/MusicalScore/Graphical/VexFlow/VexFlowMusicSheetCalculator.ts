@@ -1180,21 +1180,26 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     if (tieIsAtSystemBreak) {
-      // split tie into two ties:
+      // split tie into two ties.
+      // In a TAB staff, TabTies like in one system (see below), but only the part in the first system gets the label
+      //   of a hammer-on or pull-off ("H" or "P"), like in MuseScore: it isn't repeated in the next system.
+      //   (notes: any, because the typings of TabTie want both notes, though a TabTie draws a part with one, like a StaveTie)
       if (vfStartNote) { // first_note or last_note must be not null in Vexflow
-        const vfTie1: VF.StaveTie = new VF.StaveTie({
+        const notes: any = {
           first_indices: [startNoteIndexInTie],
           first_note: vfStartNote
-        });
+        };
+        const vfTie1: VF.StaveTie = isTab ? new VF.TabTie(notes, tie.Tie.Type) : new VF.StaveTie(notes);
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
       }
 
       if (vfEndNote) {
-        const vfTie2: VF.StaveTie = new VF.StaveTie({
+        const notes: any = {
           last_indices: [endNoteIndexInTie],
           last_note: vfEndNote
-        });
+        };
+        const vfTie2: VF.StaveTie = isTab ? new VF.TabTie(notes) : new VF.StaveTie(notes);
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure2.addStaveTie(vfTie2, tie);
       }

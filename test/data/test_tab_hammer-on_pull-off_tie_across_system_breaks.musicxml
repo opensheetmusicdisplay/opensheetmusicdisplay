@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <work>
+    <work-title>test_tab_hammer-on_pull-off_tie_across_system_breaks</work-title>
+  </work>
+  <identification>
+    <encoding>
+      <software>hand-written for OpenSheetMusicDisplay</software>
+      <encoding-date>2026-10-02</encoding-date>
+    </encoding>
+    <miscellaneous>
+      <miscellaneous-field name="comment">A guitar tablature staff with a hammer-on, a pull-off and a tie, each from the last note
+        of a measure to the first note of the next measure, which starts a new system (print new-system="yes",
+        drawn with the OSMD option newSystemFromXML). Each is drawn in two parts, one in each system, curved upwards like a tab tie
+        in one system. The labels H (hammer-on) and P (pull-off) are drawn above the part in the first system only.</miscellaneous-field>
+    </miscellaneous>
+  </identification>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Guitar</part-name>
+      <part-abbreviation>Gtr.</part-abbreviation>
+      <score-instrument id="P1-I1">
+        <instrument-name>Acoustic Guitar (steel)</instrument-name>
+        <instrument-sound>pluck.guitar</instrument-sound>
+      </score-instrument>
+      <midi-instrument id="P1-I1">
+        <midi-channel>1</midi-channel>
+        <midi-program>26</midi-program>
+        <volume>80</volume>
+        <pan>0</pan>
+      </midi-instrument>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>2</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <staves>1</staves>
+        <clef number="1">
+          <sign>TAB</sign>
+          <line>5</line>
+        </clef>
+        <staff-details number="1">
+          <staff-lines>6</staff-lines>
+          <staff-tuning line="1">
+            <tuning-step>E</tuning-step>
+            <tuning-octave>2</tuning-octave>
+          </staff-tuning>
+          <staff-tuning line="2">
+            <tuning-step>A</tuning-step>
+            <tuning-octave>2</tuning-octave>
+          </staff-tuning>
+          <staff-tuning line="3">
+            <tuning-step>D</tuning-step>
+            <tuning-octave>3</tuning-octave>
+          </staff-tuning>
+          <staff-tuning line="4">
+            <tuning-step>G</tuning-step>
+            <tuning-octave>3</tuning-octave>
+          </staff-tuning>
+          <staff-tuning line="5">
+            <tuning-step>B</tuning-step>
+            <tuning-octave>3</tuning-octave>
+          </staff-tuning>
+          <staff-tuning line="6">
+            <tuning-step>E</tuning-step>
+            <tuning-octave>4</tuning-octave>
+          </staff-tuning>
+        </staff-details>
+        <transpose>
+          <diatonic>0</diatonic>
+          <chromatic>0</chromatic>
+          <octave-change>-1</octave-change>
+        </transpose>
+      </attributes>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>0</fret>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            <hammer-on number="1" type="start">H</hammer-on>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <measure number="2">
+      <print new-system="yes"/>
+      <note>
+        <pitch>
+          <step>F</step>
+          <alter>1</alter>
+          <octave>3</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>4</fret>
+            <hammer-on number="1" type="stop"/>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>3</fret>
+            <pull-off number="1" type="start">P</pull-off>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <measure number="3">
+      <print new-system="yes"/>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>1</fret>
+            <pull-off number="1" type="stop"/>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <tie type="start"/>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <notations>
+          <tied type="start"/>
+          <technical>
+            <string>1</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <measure number="4">
+      <print new-system="yes"/>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <tie type="stop"/>
+        <voice>1</voice>
+        <type>half</type>
+        <staff>1</staff>
+        <notations>
+          <tied type="stop"/>
+          <technical>
+            <string>1</string>
+            <fret>3</fret>
+          </technical>
+        </notations>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+      </barline>
+    </measure>
+  </part>
+</score-partwise>
