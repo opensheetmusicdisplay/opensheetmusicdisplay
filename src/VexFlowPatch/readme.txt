@@ -95,6 +95,8 @@ measure the "=" and the tuplet numbers of note equations by their text advance, 
 
 stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
+name the group after the note the tie starts at ("<id>-tie"), set with setStartNoteId(), by default the first note:
+  the part of a tie continued in the next system has no first note, and was named "vf-undefined-tie" (custom addition)
 renderText(): set the font before measuring the text (e.g. H, P, sl. of tab ties and slides) to center it, instead of
   measuring it in the context's current font (custom fix, vexflow 5 still measures first)
 

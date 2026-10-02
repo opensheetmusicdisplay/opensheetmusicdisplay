@@ -1174,7 +1174,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     let beamHasQuarterNoteOrLonger: boolean = false;
                     for (const note of beam[0].Notes) {
                         if (note.Length.RealValue >= new Fraction(1, 4).RealValue
-                            // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eigth)
+                            // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eighth)
                             && (!note.TypeLength || note.TypeLength.RealValue > 0.125)) {
                             beamHasQuarterNoteOrLonger = true;
                             break;
@@ -1329,7 +1329,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (noteTuplet) {
                     // check if there are quarter notes or longer in the tuplet, then don't beam.
                     // (TODO: check for consecutiveBeamableNotes inside tuplets like for non-tuplet notes above
-                    //   e.g quarter eigth eighth -> beam the two eigth notes)
+                    //   e.g quarter eighth eighth -> beam the two eighth notes)
                     let tupletContainsUnbeamableNote: boolean = false;
                     for (const notes of noteTuplet.Notes) {
                         for (const note of notes) {
@@ -2207,7 +2207,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     public addStaveTie(stavetie: VF.StaveTie, graphicalTie: GraphicalTie): void {
         this.vfTies.push(stavetie);
-        graphicalTie.vfTie = stavetie;
+        // a tie across a system break is added in two parts, the part in the first system first (layoutGraphicalTie())
+        graphicalTie.vfTies.push(stavetie);
+        graphicalTie.vfTie = graphicalTie.vfTies[0];
+        // The tie's SVG group is named after its start note, so that the note finds it (VexFlowGraphicalNote.getTieSVGs()).
+        //   Vexflow takes the id from the tie's first note, which the part of a tie continued in the next system doesn't have.
+        (stavetie as any).setStartNoteId((graphicalTie.StartNote as VexFlowGraphicalNote)?.getSVGId());
         if (graphicalTie.Tie.TieDirection === PlacementEnum.Below) {
             (stavetie as any).setDirection(1);
         }
