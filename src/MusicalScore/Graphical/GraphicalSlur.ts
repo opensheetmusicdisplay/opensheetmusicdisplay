@@ -930,7 +930,8 @@ export class GraphicalSlur extends GraphicalCurve {
             const box: BoundingBox = fingering.PositionAndShape; // relative to the staffline, see calculateFingerings()
             const [near, far] = this.getOutwardExtent(box);
             for (let i: number = 0; i <= 100; i++) {
-                const point: PointF2D = this.calculateCurvePointAtIndex(i / 100);
+                // (calculateCurvePointAtIndex(1) is not the end point, but (0, 0))
+                const point: PointF2D = i < 100 ? this.calculateCurvePointAtIndex(i / 100) : this.bezierEndPt;
                 if (point.x >= Math.max(fromX, box.RelativePosition.x + box.BorderLeft) &&
                     point.x <= Math.min(toX, box.RelativePosition.x + box.BorderRight) &&
                     point.y * outward > near - margin && point.y * outward < far + margin) {
