@@ -17,6 +17,8 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     private initialParent: BoundingBox;
     /** The relative position before the first layout calculation, see resetPosition(). */
     private initialRelativePosition: PointF2D;
+    /** The relative position of the label before the first layout calculation, see resetPosition(). */
+    private initialLabelRelativePosition: PointF2D;
 
     constructor(chordSymbolContainer: ChordSymbolContainer, parent: BoundingBox, textHeight: number,
                 keyInstruction: KeyInstruction, transposeHalftones: number, rules: EngravingRules) {
@@ -35,18 +37,21 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
 
     /**
      * Puts the chord symbol back where it was before the first layout calculation, called before each calculation.
-     * MusicSheetCalculator.calculateChordSymbols() moves the chord symbol, and moves a chord symbol that isn't over a note
-     * from its staff entry to its measure (parent), but the layout reads both before that, e.g. for the y-alignment of the
-     * chord symbols of a staffline, and for the measure width needed for the chord symbols.
-     * Without the reset, a re-render would read the previous render's position and parent there, where the first render
-     * read the initial ones, and place the chord symbols differently than the first render.
-     * The first call takes the snapshot of the initial position and parent.
+     * MusicSheetCalculator.calculateChordSymbols() moves the chord symbol and its label, and moves a chord symbol that isn't
+     * over a note from its staff entry to its measure (parent), but the layout reads them before that, e.g. for the
+     * y-alignment of the chord symbols of a staffline, for the measure width needed for the chord symbols, and for the
+     * bounding boxes, whose top and bottom borders only grow (BoundingBox.calculateTopBottomBorders()).
+     * Without the reset, a re-render would read the previous render's positions, parent and borders there, where the first
+     * render read the initial ones, and place the chord symbols (or e.g. the composer above them) differently.
+     * The first call takes the snapshot of the initial positions and parent.
      */
     public resetPosition(): void {
         const boundingBox: BoundingBox = this.PositionAndShape;
+        const labelPosition: PointF2D = this.graphicalLabel.PositionAndShape.RelativePosition;
         if (!this.initialParent) {
             this.initialParent = boundingBox.Parent;
             this.initialRelativePosition = new PointF2D(boundingBox.RelativePosition.x, boundingBox.RelativePosition.y);
+            this.initialLabelRelativePosition = new PointF2D(labelPosition.x, labelPosition.y);
             return;
         }
         if (boundingBox.Parent !== this.initialParent) {
@@ -54,6 +59,11 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         }
         boundingBox.RelativePosition.x = this.initialRelativePosition.x;
         boundingBox.RelativePosition.y = this.initialRelativePosition.y;
+        labelPosition.x = this.initialLabelRelativePosition.x;
+        labelPosition.y = this.initialLabelRelativePosition.y;
+        // the borders as calculated at the creation: the page's calculateTopBottomBorders() extends them by the label's
+        //   borders at its calculated position, not shrinking them back for a lower label in the next render
+        boundingBox.calculateBoundingBox();
     }
     private calculateLabel(textHeight: number, transposeHalftones: number, keyInstruction: KeyInstruction): void {
         const text: string = ChordSymbolContainer.calculateChordText(this.chordSymbolContainer, transposeHalftones, keyInstruction);

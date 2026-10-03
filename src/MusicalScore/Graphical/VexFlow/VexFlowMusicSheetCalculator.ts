@@ -537,6 +537,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   back. Restore the x_shift it had before the first render (usually 0, VexFlowConverter shifts whole
       //   rests), snapshotted on the first render, and the dots' 0 - otherwise notes that aren't staggered
       //   anymore, e.g. after PrintObject changed hiddenUnisonBaseHead (below), would stay shifted.
+      // - delayXShift of delayed ornaments (e.g. a turn between two notes): Ornament.draw() calculates it from the
+      //   distance to the next note on its first draw and keeps it. Unset it, so that the next draw calculates it
+      //   for the current layout - otherwise the turn kept its distance of the previous layout, e.g. after a resize.
       for (const voice of voices) {
         for (const tickable of voice.getTickables()) {
           const note: any = tickable as any;
@@ -548,6 +551,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             for (const modifier of note.modifiers ?? []) {
               if (modifier.getCategory?.() === "dots") {
                 modifier.setYShift(0);
+              } else if (modifier.getCategory?.() === "ornaments") {
+                modifier.delayXShift = undefined; // a delayed ornament (e.g. turn) caches its x shift on its first draw
               }
             }
           }
