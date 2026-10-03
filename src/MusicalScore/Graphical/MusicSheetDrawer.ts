@@ -51,9 +51,9 @@ export abstract class MusicSheetDrawer {
     public skyLineVisible: boolean = false;
     public bottomLineVisible: boolean = false;
 
-    /** Lazy rendering: when >= 0, drawPage() draws only the systems of (the first) page whose
-     *  index is within [LazyDrawSystemsFromIndex, LazyDrawSystemsToIndexExcl), leaving the
-     *  already-drawn systems above untouched in the shared backend. -1 (default) draws every system.
+    /** Lazy rendering: when >= 0, drawPage() draws only the systems whose index, counted through the systems of
+     *  all pages, is within [LazyDrawSystemsFromIndex, LazyDrawSystemsToIndexExcl), leaving the
+     *  already-drawn systems above untouched in the shared backends. -1 (default) draws every system.
      *  Set by OpenSheetMusicDisplay.renderAppend() before each appended batch; reset to -1 after. */
     public LazyDrawSystemsFromIndex: number = -1;
     public LazyDrawSystemsToIndexExcl: number = Number.POSITIVE_INFINITY;
@@ -572,11 +572,13 @@ export abstract class MusicSheetDrawer {
         }
 
         const lazySelective: boolean = this.LazyDrawSystemsFromIndex >= 0;
+        // Lazy: the index of the page's first system, counted through the systems of all pages
+        const firstSystemIndex: number = lazySelective ? this.systemCountBefore(page) : 0;
         for (let sysIdx: number = 0; sysIdx < page.MusicSystems.length; sysIdx++) {
             // Lazy: skip systems already drawn in a previous batch (below FromIndex) and the
             // deferred last system of this batch (at/above ToIndexExcl), so each system is drawn once,
             // in its final stable position. See OpenSheetMusicDisplay.renderAppend().
-            if (lazySelective && (sysIdx < this.LazyDrawSystemsFromIndex || sysIdx >= this.LazyDrawSystemsToIndexExcl)) {
+            if (!this.lazyDrawsSystem(firstSystemIndex + sysIdx)) {
                 continue;
             }
             const system: MusicSystem = page.MusicSystems[sysIdx];
@@ -598,16 +600,17 @@ export abstract class MusicSheetDrawer {
             this.LazyDrawToXUnits = Number.POSITIVE_INFINITY;
         }
         // Page labels: the title block (title, subtitle, composer, lyricist) sits above the first system, the
-        // copyright below the last one. A lazy (incremental) render draws each with the batch that draws the
+        // copyright below the last one of the page. A lazy (incremental) render draws each with the batch that draws the
         // system it is anchored to: the title block with the batch drawing the first system (the first batch, or a
         // reconciliation batch redrawing everything) -- a continuation batch (FromIndex > 0) must not redraw it on
-        // top of the already-drawn block -- and the copyright only with the batch drawing the last system, the
-        // final one. Every earlier batch holds its last system back, and the copyright's anchor, the last system of
-        // the still-growing layout, moves down with each appended batch: a copyright drawn earlier would be left
-        // behind in the middle of the score, since the drawn text isn't moved along (and couldn't be on a Canvas) (#1710).
+        // top of the already-drawn block -- and the copyright only with the batch drawing the page's last system, the
+        // final one (or the one completing the page before a page break). Every earlier batch holds its last system back,
+        // and the copyright's anchor, the last system of the still-growing layout, moves down with each appended batch:
+        // a copyright drawn earlier would be left behind in the middle of the score, since the drawn text isn't moved
+        // along (and couldn't be on a Canvas) (#1710).
         if (page === page.Parent.MusicPages[0] && !this.LazySkipPageLabels) {
-            const drawsFirstSystem: boolean = !lazySelective || this.LazyDrawSystemsFromIndex === 0;
-            const drawsLastSystem: boolean = !lazySelective || this.LazyDrawSystemsToIndexExcl >= page.MusicSystems.length;
+            const drawsFirstSystem: boolean = this.lazyDrawsSystem(firstSystemIndex);
+            const drawsLastSystem: boolean = this.lazyDrawsSystem(firstSystemIndex + page.MusicSystems.length - 1);
             // Page labels span the full page width and are drawn once, in full. Under lazy-horizontal this is
             // the final batch; open the x-window so labels left of its frontier aren't dropped. No-op otherwise.
             const savedForcePageLabels: boolean = this.LazyForcePageLabels;
@@ -626,6 +629,35 @@ export abstract class MusicSheetDrawer {
         if (this.drawableBoundingBoxElement && !this.LazySkipPageLabels) {
             this.drawBoundingBoxes(page.PositionAndShape, 0, this.drawableBoundingBoxElement);
         }
+    }
+
+    /**
+     * Lazy rendering: whether drawPage() draws the system with the given index (see LazyDrawSystemsFromIndex).
+     * @param systemIndex the index of the system, counted through the systems of all pages
+     * @returns true if the system is in the draw range of the batch, or if the render isn't lazy
+     */
+    protected lazyDrawsSystem(systemIndex: number): boolean {
+        if (this.LazyDrawSystemsFromIndex < 0) {
+            return true;
+        }
+        return systemIndex >= this.LazyDrawSystemsFromIndex && systemIndex < this.LazyDrawSystemsToIndexExcl;
+    }
+
+    /**
+     * Lazy rendering: the index of the page's first system, counted through the systems of all pages: the number of systems
+     * on the pages before it.
+     * @param page the page
+     * @returns the number of systems before the page
+     */
+    private systemCountBefore(page: GraphicalMusicPage): number {
+        let count: number = 0;
+        for (const previousPage of page.Parent.MusicPages) {
+            if (previousPage === page) {
+                break;
+            }
+            count += previousPage.MusicSystems.length;
+        }
+        return count;
     }
 
     /**

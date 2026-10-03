@@ -1,9 +1,23 @@
 import { expect } from "chai";
-import { IRenderNextResult, OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import { IRenderNextOptions, IRenderNextResult, OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { GraphicalMusicPage } from "../../../src/MusicalScore/Graphical/GraphicalMusicPage";
 import { MusicSystem } from "../../../src/MusicalScore/Graphical/MusicSystem";
 import { unitInPixels } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import { TestUtils } from "../../Util/TestUtils";
+
+/** What is drawn in an SVG, independent of the order and grouping of the elements (each batch of an incremental render
+ *  draws into groups of its own): the size of the SVG and its paths, rectangles and texts with their positions, sorted.
+ *  The numbers are rounded to 0.1 pixels: the browser measures texts like the fret numbers of a TAB staff a few
+ *  millionths of a pixel differently when the SVG has another size, as it has while an incremental render grows it. */
+function drawnElementsOf(svg: SVGSVGElement): string[] {
+    const elements: string[] = [`svg ${svg.getAttribute("width")} x ${svg.getAttribute("height")}`];
+    for (const element of Array.from(svg.querySelectorAll("path, rect, text"))) {
+        const attributes: string[] = ["d", "x", "y", "width", "height"].map((name: string): string => element.getAttribute(name));
+        elements.push(`${element.tagName} ${attributes.join(" ")} ${element.textContent}`);
+    }
+    const round: (numberText: string) => string = (numberText: string): string => Number(numberText).toFixed(1).replace(/^-0\.0$/, "0.0");
+    return elements.map((element: string): string => element.replace(/-?\d+\.\d+/g, round)).sort();
+}
 
 describe("OpenSheetMusicDisplay incremental rendering (renderNext)", () => {
     // 16 measures with a system break every 4 measures (4 systems), a title, a composer and a <rights> element (copyright)
@@ -118,20 +132,11 @@ describe("OpenSheetMusicDisplay incremental rendering of a single horizontal sta
             .map((path: Element): string => path.getAttribute("d")).sort();
     }
 
-    /** What is drawn, independent of the order and grouping of the elements (each batch draws into groups of its own):
-     *  the size of the SVG and its paths, rectangles and texts with their positions, sorted. The numbers are rounded to
-     *  0.1 pixels: the browser measures texts like the fret numbers of a TAB staff a few millionths of a pixel differently
-     *  when the SVG has another width, as it has while the incremental render grows it. */
+    /** What is drawn in the SVG, see drawnElementsOf(). */
     function drawnElements(): string[] {
         const svgs: NodeListOf<SVGSVGElement> = container.querySelectorAll("svg");
         expect(svgs.length, "one SVG in the container").to.equal(1);
-        const elements: string[] = [`svg ${svgs[0].getAttribute("width")} x ${svgs[0].getAttribute("height")}`];
-        for (const element of Array.from(svgs[0].querySelectorAll("path, rect, text"))) {
-            const attributes: string[] = ["d", "x", "y", "width", "height"].map((name: string): string => element.getAttribute(name));
-            elements.push(`${element.tagName} ${attributes.join(" ")} ${element.textContent}`);
-        }
-        const round: (numberText: string) => string = (numberText: string): string => Number(numberText).toFixed(1).replace(/^-0\.0$/, "0.0");
-        return elements.map((element: string): string => element.replace(/-?\d+\.\d+/g, round)).sort();
+        return drawnElementsOf(svgs[0]);
     }
 
     /** Renders the loaded sheet incrementally, with the given number of measures per batch, until it is complete.
@@ -205,5 +210,58 @@ describe("OpenSheetMusicDisplay incremental rendering of a single horizontal sta
         const elementsOfRender: string[] = drawnElements();
         renderNextUntilDone(1);
         expect(drawnElements()).to.deep.equal(elementsOfRender);
+    });
+});
+
+describe("OpenSheetMusicDisplay incremental rendering of the endless page in batches (renderNext)", () => {
+    // Each batch lays out the sheet from its first measure and draws the systems that are complete: in batches of a few systems
+    //   or measures, the sheet has to be drawn as in one batch, which draws all systems of the sheet's layout at once like render().
+    let container: HTMLElement;
+    let osmd: OpenSheetMusicDisplay;
+
+    beforeEach((): void => {
+        container = TestUtils.getDivElement(document);
+        osmd = TestUtils.createOpenSheetMusicDisplay(container); // autoResize: false
+    });
+
+    afterEach((): void => {
+        document.body.removeChild(container);
+    });
+
+    /** What is drawn on each page (one SVG each), see drawnElementsOf(). */
+    function drawnPages(): string[][] {
+        return Array.from(container.querySelectorAll("svg")).map((svg: SVGSVGElement): string[] => drawnElementsOf(svg));
+    }
+
+    /** Renders the loaded sheet incrementally in one batch, from the start. */
+    function renderNextInOneBatch(): void {
+        osmd.resetIncrementalRendering();
+        expect(osmd.renderNext({ measures: osmd.Sheet.SourceMeasures.length }).done, "done in one batch").to.equal(true);
+    }
+
+    /** Renders the loaded sheet incrementally with the given batch options from the start until it is complete.
+     *  Returns the number of batches. */
+    function renderNextUntilDone(options: IRenderNextOptions): number {
+        osmd.resetIncrementalRendering();
+        let batches: number = 1;
+        let result: IRenderNextResult = osmd.renderNext(options);
+        while (!result.done && batches < 100) {
+            result = osmd.renderNext(options);
+            batches++;
+        }
+        expect(result.done, "incremental render complete").to.equal(true);
+        return batches;
+    }
+
+    it("renders a sheet with several pages, each into an SVG of its own", async () => {
+        // page breaks from the XML: 3 pages. The batch whose layout reached a page not laid out by the first batch failed with a
+        //   TypeError: only the pages of the first batch had a backend.
+        osmd.setOptions({ newPageFromXML: true });
+        await osmd.load(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml"));
+        renderNextInOneBatch();
+        expect(container.querySelectorAll("svg").length, "pages").to.equal(3);
+        const pagesInOneBatch: string[][] = drawnPages();
+        expect(renderNextUntilDone({ systems: 1 }), "batches").to.be.greaterThan(2);
+        expect(drawnPages()).to.deep.equal(pagesInOneBatch);
     });
 });
