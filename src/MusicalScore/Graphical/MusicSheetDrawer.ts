@@ -60,12 +60,15 @@ export abstract class MusicSheetDrawer {
     /** Lazy horizontal rendering (RenderSingleHorizontalStaffline): draw only graphical objects whose right
      *  edge x (in OSMD units) lies in (LazyDrawFromXUnits, LazyDrawToXUnits] -- the measures and spanning
      *  elements that first entered the drawn frontier this batch. ±Infinity (default) draws everything.
-     *  Set by OpenSheetMusicDisplay.renderAppendGrowingHorizontal() per batch; reset after. */
+     *  Set by drawPage() for each system from LazyDrawSystemWindows; reset after. */
     public LazyDrawFromXUnits: number = Number.NEGATIVE_INFINITY;
     public LazyDrawToXUnits: number = Number.POSITIVE_INFINITY;
+    /** Lazy horizontal rendering: when set, drawPage() draws only the systems in this map, each with its own draw
+     *  x-window (see LazyDrawFromXUnits): a batch can reach several systems, e.g. after forced system breaks.
+     *  Set by OpenSheetMusicDisplay.renderAppendGrowingHorizontal() per batch; reset after. */
+    public LazyDrawSystemWindows: Map<MusicSystem, { fromX: number, toX: number }> = undefined;
     /** Lazy horizontal rendering: when true, drawPage() skips the page-level labels (title/credits). They are
-     *  drawn once, on the final batch, when the page has reached its full width and they sit at their final
-     *  (re-centered) positions -- drawing them earlier would place them under a still-growing page. */
+     *  drawn once, on the final batch, when the page is drawn to its full width. */
     public LazySkipPageLabels: boolean = false;
     /** Lazy horizontal rendering: when true, drawLabel() ignores the x-window gate. Scoped (set/restored) to
      *  the page-label loop in drawPage(), since those labels span the full page width and must all be drawn
@@ -177,10 +180,10 @@ export abstract class MusicSheetDrawer {
         return this.lazyDrawsAtX(psh.AbsolutePosition.x + psh.BorderRight);
     }
     /** Lazy horizontal rendering: whether to draw the once-only left-edge system elements (instrument braces
-     *  and group brackets). True for non-lazy and for the first lazy-horizontal batch, which owns the left edge
-     *  (LazyDrawFromXUnits is -Infinity); false for continuation batches, so a single-system score's brace
-     *  isn't redrawn on top of itself every batch. (Vertical lazy keeps the x-window at ±Infinity and draws
-     *  each system's brace once via the per-system gate, so this stays true there.) */
+     *  and group brackets). True for non-lazy and for a system's first lazy-horizontal batch, which owns its left
+     *  edge (LazyDrawFromXUnits is -Infinity); false for continuation batches, so a system's brace isn't redrawn
+     *  on top of itself every batch. (Vertical lazy keeps the x-window at ±Infinity and draws each system's brace
+     *  once via the per-system gate, so this stays true there.) */
     protected lazyDrawsLeftEdgeOnce(): boolean {
         return this.LazyDrawFromXUnits === Number.NEGATIVE_INFINITY;
     }
@@ -573,9 +576,22 @@ export abstract class MusicSheetDrawer {
                 continue;
             }
             const system: MusicSystem = page.MusicSystems[sysIdx];
+            // Lazy horizontal: only the systems the batch reaches, each in its own x-window.
+            if (this.LazyDrawSystemWindows) {
+                const xWindow: { fromX: number, toX: number } = this.LazyDrawSystemWindows.get(system);
+                if (!xWindow) {
+                    continue;
+                }
+                this.LazyDrawFromXUnits = xWindow.fromX;
+                this.LazyDrawToXUnits = xWindow.toX;
+            }
             if (this.isVisible(system.PositionAndShape)) {
                 this.drawMusicSystem(system);
             }
+        }
+        if (this.LazyDrawSystemWindows) {
+            this.LazyDrawFromXUnits = Number.NEGATIVE_INFINITY;
+            this.LazyDrawToXUnits = Number.POSITIVE_INFINITY;
         }
         // Page labels: the title block (title, subtitle, composer, lyricist) sits above the first system, the
         // copyright below the last one. A lazy (incremental) render draws each with the batch that draws the

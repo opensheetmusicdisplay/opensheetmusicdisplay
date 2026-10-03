@@ -98,16 +98,14 @@ describe("OpenSheetMusicDisplay incremental rendering (renderNext)", () => {
 });
 
 describe("OpenSheetMusicDisplay incremental rendering of a single horizontal staffline (renderNext)", () => {
-    // two staves with lyric extenders: the whole score is laid out once, and each batch draws the measures entering its x-window
-    const sampleFilename: string = "test_lyrics_extend_verses.musicxml";
+    // the whole score is laid out once, and each batch draws the measures entering its x-window
     let container: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
 
-    beforeEach((done: Mocha.Done): void => {
+    beforeEach((): void => {
         container = TestUtils.getDivElement(document);
         osmd = TestUtils.createOpenSheetMusicDisplay(container); // autoResize: false
         osmd.setOptions({ renderSingleHorizontalStaffline: true });
-        osmd.load(TestUtils.getScore(sampleFilename)).then((): void => done(), done);
     });
 
     afterEach((): void => {
@@ -120,18 +118,67 @@ describe("OpenSheetMusicDisplay incremental rendering of a single horizontal sta
             .map((path: Element): string => path.getAttribute("d")).sort();
     }
 
-    it("draws each lyric extender once, where render() draws it", () => {
-        osmd.render();
-        const linesOfRender: string[] = drawnLines();
-        expect(linesOfRender.length, "lyric extenders drawn").to.be.greaterThan(0);
+    /** What is drawn, independent of the order and grouping of the elements (each batch draws into groups of its own):
+     *  the size of the SVG and its paths, rectangles and texts with their positions, sorted. The numbers are rounded to
+     *  0.1 pixels: the browser measures texts like the fret numbers of a TAB staff a few millionths of a pixel differently
+     *  when the SVG has another width, as it has while the incremental render grows it. */
+    function drawnElements(): string[] {
+        const svgs: NodeListOf<SVGSVGElement> = container.querySelectorAll("svg");
+        expect(svgs.length, "one SVG in the container").to.equal(1);
+        const elements: string[] = [`svg ${svgs[0].getAttribute("width")} x ${svgs[0].getAttribute("height")}`];
+        for (const element of Array.from(svgs[0].querySelectorAll("path, rect, text"))) {
+            const attributes: string[] = ["d", "x", "y", "width", "height"].map((name: string): string => element.getAttribute(name));
+            elements.push(`${element.tagName} ${attributes.join(" ")} ${element.textContent}`);
+        }
+        const round: (numberText: string) => string = (numberText: string): string => Number(numberText).toFixed(1).replace(/^-0\.0$/, "0.0");
+        return elements.map((element: string): string => element.replace(/-?\d+\.\d+/g, round)).sort();
+    }
+
+    /** Renders the loaded sheet incrementally, with the given number of measures per batch, until it is complete.
+     *  Returns the number of batches. */
+    function renderNextUntilDone(measures: number): number {
         let batches: number = 1;
-        let result: IRenderNextResult = osmd.renderNext({ measures: 1 });
+        let result: IRenderNextResult = osmd.renderNext({ measures });
         while (!result.done && batches < 50) {
-            result = osmd.renderNext({ measures: 1 });
+            result = osmd.renderNext({ measures });
             batches++;
         }
         expect(result.done, "incremental render complete").to.equal(true);
-        expect(batches, "several batches").to.be.greaterThan(1);
+        return batches;
+    }
+
+    it("draws each lyric extender once, where render() draws it", async () => {
+        await osmd.load(TestUtils.getScore("test_lyrics_extend_verses.musicxml")); // two staves with lyric extenders
+        osmd.render();
+        const linesOfRender: string[] = drawnLines();
+        expect(linesOfRender.length, "lyric extenders drawn").to.be.greaterThan(0);
+        expect(renderNextUntilDone(1), "several batches").to.be.greaterThan(1);
         expect(drawnLines()).to.deep.equal(linesOfRender);
+    });
+
+    it("renders a single-staff sheet in batches of any size, and draws it like render()", async () => {
+        // one staff, 4 measures with lyrics. A batch used to lay out only the measures up to its own: with one measure per batch,
+        //   no batch drew anything, and with two, the second batch drew its staffline lower than the first one.
+        await osmd.load(TestUtils.getScore("test_Braille_Lyrics_Simple.musicxml"));
+        osmd.render();
+        const elementsOfRender: string[] = drawnElements();
+        for (const measures of [1, 2]) {
+            osmd.resetIncrementalRendering(); // start again
+            expect(renderNextUntilDone(measures), `batches of ${measures} measures`).to.equal(4 / measures);
+            expect(drawnElements(), `batches of ${measures} measures`).to.deep.equal(elementsOfRender);
+        }
+    });
+
+    it("renders a staffline broken into several systems, and draws it like render()", async () => {
+        // two staves, 6 measures in 3 systems (system breaks from the XML), with a trill line across all of them, and extra
+        //   measures at the ends of the first two systems for the key and time changes in the next one. The batches used to
+        //   stop at the end of the first system, or fail there with a TypeError.
+        osmd.setOptions({ newSystemFromXML: true });
+        await osmd.load(TestUtils.getScore("test_wavy_line_multiline_extragraphicalmeasure.musicxml"));
+        osmd.render();
+        expect(osmd.GraphicSheet.MusicPages[0].MusicSystems.length, "systems").to.equal(3);
+        const elementsOfRender: string[] = drawnElements();
+        expect(renderNextUntilDone(2), "batches").to.equal(3);
+        expect(drawnElements()).to.deep.equal(elementsOfRender);
     });
 });
