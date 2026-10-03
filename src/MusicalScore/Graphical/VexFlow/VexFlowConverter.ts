@@ -270,6 +270,29 @@ export class VexFlowConverter {
     }
 
     /**
+     * Whether a rest that is moved above (or below) the notes of the other voices of its staff entry would be moved towards
+     * the staff of a note's voice, i.e. past a cross-staff note from that staff. MusicXML files usually number the voices of a part
+     * with several staves by staff: 1-4 on the upper staff, 5-8 on the lower one, so voices 1 and 5 are the upper voices.
+     * E.g. the notes of voice 1 that reach down into the lower staff are above the lower staff's voice 5,
+     * so voice 5's rest doesn't go above them, between the staves. Neither does voice 2's rest go below the notes of voice 5
+     * that reach up into the upper staff.
+     * @param restVoiceId the voice of the rest
+     * @param noteVoiceId the voice of a note in the rest's staff entry
+     * @param restAbove whether the rest is moved above the other voices' notes (upper voice), or else below them
+     * @param numberOfStaves the number of staves of the part
+     * @returns true if the note's voice belongs to another staff of the part, on the side the rest would be moved to
+     */
+    private static restMovesTowardsStaffOfVoice(restVoiceId: number, noteVoiceId: number, restAbove: boolean, numberOfStaves: number): boolean {
+        const restVoiceStaffIndex: number = Math.floor((restVoiceId - 1) / 4);
+        const noteVoiceStaffIndex: number = Math.floor((noteVoiceId - 1) / 4);
+        const isStaffIndex: (index: number) => boolean = (index: number): boolean => index >= 0 && index < numberOfStaves; // false for NaN
+        if (!isStaffIndex(restVoiceStaffIndex) || !isStaffIndex(noteVoiceStaffIndex) || noteVoiceStaffIndex === restVoiceStaffIndex) {
+            return false; // same staff, or voice numbers that don't follow the numbering by staff
+        }
+        return (noteVoiceStaffIndex < restVoiceStaffIndex) === restAbove;
+    }
+
+    /**
      * Convert a GraphicalVoiceEntry to a VexFlow StaveNote
      * @param gve the GraphicalVoiceEntry which can hold a note or a chord on the staff belonging to one voice
      * @returns {VF.StaveNote}
@@ -383,6 +406,9 @@ export class VexFlowConverter {
                     const staffGves: GraphicalVoiceEntry[] = note.parentVoiceEntry.parentStaffEntry.graphicalVoiceEntries;
                     //Find all visible voice entries (don't want invisible rests/notes causing visible shift)
                     const restVoiceId: number = note.parentVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId;
+                    const isUpperVoiceRest: boolean = restVoiceId === 1 || restVoiceId === 5;
+                    const lineShiftDirection: number = isUpperVoiceRest ? 1 : -1; // voice 1: put rest above (-y). other voices: below
+                    const numberOfStaves: number = note.sourceNote.ParentStaff.ParentInstrument.Staves.length;
                     let maxHalftone: number;
                     let linesShift: number;
                     for (const staffGve of staffGves) {
@@ -390,11 +416,16 @@ export class VexFlowConverter {
                             if (gveNote === note || gveNote.sourceNote.isRest() || !gveNote.sourceNote.PrintObject) {
                                 continue;
                             }
+                            // A cross-staff note doesn't move the rest towards the staff of its voice (see restMovesTowardsStaffOfVoice()).
+                            //   Like in MuseScore, the rest stays at its position then, and VexFlow's StaveNote.format() still moves it
+                            //   a line away if it overlaps the note.
+                            const noteVoiceId: number = gveNote.parentVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId;
+                            if (VexFlowConverter.restMovesTowardsStaffOfVoice(restVoiceId, noteVoiceId, isUpperVoiceRest, numberOfStaves)) {
+                                continue;
+                            }
                             // unfortunately, we don't have functional note bounding boxes at this point,
                             //   so we have to infer the note positions and sizes manually.
                             const wantedStemDirection: StemDirectionType = gveNote.parentVoiceEntry.parentVoiceEntry.WantedStemDirection;
-                            const isUpperVoiceRest: boolean = restVoiceId === 1 || restVoiceId === 5;
-                            const lineShiftDirection: number = isUpperVoiceRest ? 1 : -1; // voice 1: put rest above (-y). other voices: below
                             const gveNotePitch: Pitch = gveNote.sourceNote.Pitch;
                             const noteHalftone: number = gveNotePitch.getHalfTone();
                             const newHigh: boolean = lineShiftDirection === 1 && noteHalftone > maxHalftone;
