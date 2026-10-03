@@ -101,12 +101,14 @@ function listPngs(dir, prefix) {
 }
 
 /**
- * Decodes a PNG file into raw RGBA pixel data via node-canvas.
- * @param {string} file absolute or relative path to a PNG
+ * Decodes a PNG into raw RGBA pixel data via node-canvas.
+ * Takes the file's content rather than its path: node-canvas opens a path itself, which fails on Windows for paths
+ * longer than 260 characters (e.g. a long sample name in a deep folder), where Node's fs reads the file fine.
+ * @param {Buffer} png the content of a PNG file
  * @returns {Promise<{ w: number, h: number, data: Uint8ClampedArray }>} pixel buffer
  */
-async function decode(file) {
-    const img = await loadImage(file);
+async function decode(png) {
+    const img = await loadImage(png);
     const c = createCanvas(img.width, img.height);
     const ctx = c.getContext("2d");
     ctx.drawImage(img, 0, 0);
@@ -176,8 +178,8 @@ async function diffImage(name, writeImages) {
         return { name: base, diffPixels: 0, total: 0, region: "-" };
     }
 
-    const blessed = await decode(blessedPath);
-    const current = await decode(currentPath);
+    const blessed = await decode(bufBlessed);
+    const current = await decode(bufCurrent);
 
     // Dimensions differ => layout changed size; cannot overlay pixel-for-pixel.
     if (blessed.w !== current.w || blessed.h !== current.h) {
