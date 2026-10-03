@@ -32,10 +32,9 @@ describe("Lyrics extend lines with several verses", () => {
         return osmd.GraphicSheet.MeasureList[measureNumber - 1][staffIndex];
     }
 
-    /** The absolute x of a measure (the drawer moves the lyric lines from staff line to absolute coordinates). */
+    /** The x of a measure relative to its staff line, like the coordinates of the lyric lines. */
     function measureX(measureNumber: number, staffIndex: number = 0): number {
-        const measure: GraphicalMeasure = graphicalMeasure(measureNumber, staffIndex);
-        return measure.ParentStaffLine.PositionAndShape.AbsolutePosition.x + measure.PositionAndShape.RelativePosition.x;
+        return graphicalMeasure(measureNumber, staffIndex).PositionAndShape.RelativePosition.x;
     }
 
     /** The right end of a staff entry, where an extend line ending on it ends. */

@@ -449,17 +449,22 @@ export abstract class MusicSheetDrawer {
         }
     }
 
+    /**
+     * Draws the lyric lines (extenders, e.g. "dich___") of a staff line.
+     * They are positioned relative to the staff line (see MusicSheetCalculator.calculateLyricExtend()),
+     * because the staff lines are spaced vertically only after the lyrics are positioned.
+     * They are drawn at their absolute position without changing them, so that drawing the laid-out sheet again
+     * (e.g. in an incremental render) draws them at the same position.
+     * @param lyricLines the lyric lines of the staff line
+     * @param staffLine the staff line the lyric lines are positioned relative to
+     */
     protected drawLyricLines(lyricLines: GraphicalLine[], staffLine: StaffLine): void {
-        staffLine.LyricLines.forEach(lyricLine => {
-            // TODO maybe we should put this in the calculation (MusicSheetCalculator.calculateLyricExtend)
-            // then we can also remove staffLine argument
-            // but same addition doesn't work in calculateLyricExtend, because y-spacing happens after lyrics positioning
-            lyricLine.Start.y += staffLine.PositionAndShape.AbsolutePosition.y;
-            lyricLine.End.y += staffLine.PositionAndShape.AbsolutePosition.y;
-            lyricLine.Start.x += staffLine.PositionAndShape.AbsolutePosition.x;
-            lyricLine.End.x += staffLine.PositionAndShape.AbsolutePosition.x;
-            this.drawGraphicalLine(lyricLine, this.rules.LyricUnderscoreLineWidth, lyricLine.colorHex);
-        });
+        const staffLinePosition: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
+        for (const lyricLine of lyricLines) {
+            const start: PointF2D = new PointF2D(lyricLine.Start.x + staffLinePosition.x, lyricLine.Start.y + staffLinePosition.y);
+            const end: PointF2D = new PointF2D(lyricLine.End.x + staffLinePosition.x, lyricLine.End.y + staffLinePosition.y);
+            this.drawGraphicalLine(new GraphicalLine(start, end, lyricLine.Width), this.rules.LyricUnderscoreLineWidth, lyricLine.colorHex);
+        }
     }
 
     protected drawExpressions(staffline: StaffLine): void {

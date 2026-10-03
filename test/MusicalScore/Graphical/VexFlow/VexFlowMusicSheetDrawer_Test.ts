@@ -10,13 +10,15 @@ import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {VexFlowBackend} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowBackend";
 import {CanvasVexFlowBackend} from "../../../../src/MusicalScore/Graphical/VexFlow/CanvasVexFlowBackend";
 import {OpenSheetMusicDisplay} from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import {StaffLine} from "../../../../src/MusicalScore/Graphical/StaffLine";
 
 describe("VexFlow Music Sheet Drawer", () => {
 
     /**
      * Drawing the laid-out sheet again, without a new layout (e.g. an incremental render, or an image export into another
      * backend), has to draw everything at the same position. Drawing used to change the positions of some elements:
-     * the texts of repetition instructions at the end of a measure (e.g. D.C.) alternated between two positions.
+     * the texts of repetition instructions at the end of a measure (e.g. D.C.) alternated between two positions,
+     * and lyric extenders moved by their staff line's position on every draw.
      */
     describe("drawing the laid-out sheet again", () => {
         let container: HTMLElement;
@@ -58,6 +60,13 @@ describe("VexFlow Music Sheet Drawer", () => {
         it("draws the text of a repetition instruction at the end of a measure (e.g. D.C. al Coda) at the same position", async () => {
             const { firstDraw, secondDraw } = await renderAndDrawAgain("test_repeat_da_capo_al_coda_after_repeat.musicxml");
             expect(firstDraw, "D.C. al drawn").to.contain(">D.C. al<");
+            expect(differingElements(firstDraw, secondDraw)).to.deep.equal([]);
+        });
+
+        it("draws lyric extenders at the same position", async () => {
+            const { firstDraw, secondDraw } = await renderAndDrawAgain("test_lyrics_extend_verses.musicxml");
+            const staffLines: StaffLine[] = osmd.GraphicSheet.MusicPages[0].MusicSystems.flatMap(system => system.StaffLines);
+            expect(staffLines.some(staffLine => staffLine.LyricLines.length > 0), "lyric extenders laid out").to.equal(true);
             expect(differingElements(firstDraw, secondDraw)).to.deep.equal([]);
         });
     });
