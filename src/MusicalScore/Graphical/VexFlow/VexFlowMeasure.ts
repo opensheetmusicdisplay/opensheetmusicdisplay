@@ -809,6 +809,20 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     /**
+     * Does what draw() does to the notes besides drawing them: the beams extend their notes' stems (see postFormatBeams()),
+     * and the notes are placed at their note heads (see correctNotePositions()). For the lazy reuse of a skyline
+     * (SkyBottomLineCalculator.applyGeometricSkylineSideEffectsOnly()), which skips the draw of the skyline calculation:
+     * the beams would extend the stems when the measure is drawn instead, at the stave's final position rather than the
+     * skyline calculation's, so a few stems and beams would end a few trillionths of a pixel off where render() draws them.
+     */
+    public applyDrawSideEffects(): void {
+        if (!this.MeasureRepeat) { // draw() draws the repeat sign instead of the notes then, see drawNotes()
+            this.postFormatBeams();
+        }
+        this.correctNotePositions();
+    }
+
+    /**
      * Formats the voices of this measure's vertical measure, i.e. of all its staves (see VexFlowMusicSheetCalculator.formatMeasures()),
      * to the width of this measure's stave.
      * @param lastFormats For a series of formats, like the skyline calculation's (see SkyBottomLineCalculator), which formats every

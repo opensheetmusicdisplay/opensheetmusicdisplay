@@ -303,4 +303,19 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
             expect(drawnPages(), sampleFilename).to.deep.equal(pagesInOneBatch);
         }
     });
+
+    it("draws the stems and beams exactly where one batch draws them", async () => {
+        // A batch's layout reuses the sky and bottom lines of the systems an earlier one calculated. Its beams then extended the
+        //   stems only when drawn, at the systems' final position instead of where the skyline calculation draws them, as in
+        //   render(): a few stems and beams ended a few trillionths of a pixel off. The comparison isn't rounded here.
+        container.style.width = "1440px";
+        await osmd.load(TestUtils.getScore("Dichterliebe01.xml"));
+        const stemsAndBeams: () => string[] = (): string[] => Array.from(container.querySelectorAll("path.vf-stem, g.vf-beam path"))
+            .map((path: Element): string => path.getAttribute("d")).sort();
+        renderNextInOneBatch();
+        const stemsAndBeamsInOneBatch: string[] = stemsAndBeams();
+        expect(stemsAndBeamsInOneBatch.length, "stems and beams").to.be.greaterThan(100);
+        expect(renderNextUntilDone({ systems: 1 }), "batches").to.be.greaterThan(2);
+        expect(stemsAndBeams()).to.deep.equal(stemsAndBeamsInOneBatch);
+    });
 });
