@@ -81,6 +81,7 @@ staverepetition.js (fixed vexflow 4):
 add TO_CODA enum to type() and draw()
 fix x-positioning for TO_CODA and DS_AL_CODA in drawSymbolText()
 fix y-shift
+don't change x_shift in drawSymbolText(): every further draw of the stave moved the end texts (e.g. D.C.), alternating
 
 stavesection.js (half-fixed vexflow 4.x, collision, box not removable):
 stavesection.draw():
