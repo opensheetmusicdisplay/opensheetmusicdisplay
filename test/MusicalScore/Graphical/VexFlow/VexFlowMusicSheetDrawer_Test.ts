@@ -16,9 +16,10 @@ describe("VexFlow Music Sheet Drawer", () => {
 
     /**
      * Drawing the laid-out sheet again, without a new layout (e.g. an incremental render, or an image export into another
-     * backend), has to draw everything at the same position. Drawing used to change the positions of some elements:
+     * backend), has to draw everything the same way. Drawing used to change the positions of some elements:
      * the texts of repetition instructions at the end of a measure (e.g. D.C.) alternated between two positions,
-     * and lyric extenders moved by their staff line's position on every draw.
+     * and lyric extenders moved by their staff line's position on every draw. And after a rectangle, every element got
+     * the attribute fill-opacity="1", so in the next draw also the elements drawn before the rectangle in the first one.
      */
     describe("drawing the laid-out sheet again", () => {
         let container: HTMLElement;
@@ -67,6 +68,13 @@ describe("VexFlow Music Sheet Drawer", () => {
             const { firstDraw, secondDraw } = await renderAndDrawAgain("test_lyrics_extend_verses.musicxml");
             const staffLines: StaffLine[] = osmd.GraphicSheet.MusicPages[0].MusicSystems.flatMap(system => system.StaffLines);
             expect(staffLines.some(staffLine => staffLine.LyricLines.length > 0), "lyric extenders laid out").to.equal(true);
+            expect(differingElements(firstDraw, secondDraw)).to.deep.equal([]);
+        });
+
+        it("draws the same SVG again after drawing rectangles (here the bounding boxes of the debug drawing)", async () => {
+            osmd.setDrawBoundingBox("VexFlowMeasure", false);
+            const { firstDraw, secondDraw } = await renderAndDrawAgain("MuzioClementi_SonatinaOpus36No1_Part1.xml");
+            expect(firstDraw, "bounding boxes drawn").to.contain("fill-opacity=\"0.5\"");
             expect(differingElements(firstDraw, secondDraw)).to.deep.equal([]);
         });
     });
