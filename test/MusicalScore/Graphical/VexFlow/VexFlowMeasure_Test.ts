@@ -945,6 +945,67 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // A measure makes no VexFlow tuplet for a tuplet with fewer than two notes to draw in it, e.g. a cross-staff tuplet with
+   //   one note in the staff, or a tuplet with invisible rests. draw() pairs the measure's tuplets with its VexFlow tuplets
+   //   by index, so each VexFlow tuplet after such a tuplet showed or hid its number as decided for the tuplet before its own.
+   // In test_tuplet_crossstaff_first_triplet_number, voice 1 plays four triplets without brackets, the first one with its
+   //   first two notes on the lower staff, and the default rules show the numbers of the first two triplets only. The upper
+   //   staff showed the 3rd triplet's number too, as it got the 2nd triplet's decision. The same with the first two notes as
+   //   invisible rests on the upper staff.
+   for (const [variant, invisibleRests] of [
+      ["a cross-staff tuplet with one note in the staff", false],
+      ["a tuplet with invisible rests", true],
+   ] as [string, boolean][]) {
+      it(`Shows the tuplet numbers decided for the tuplets after ${variant}`, async () => {
+         let score: Document = TestUtils.getScore("test_tuplet_crossstaff_first_triplet_number.musicxml");
+         if (invisibleRests) {
+            score = score.cloneNode(true) as Document;
+            for (const note of Array.from(score.getElementsByTagName("note")).slice(0, 2)) {
+               note.setAttribute("print-object", "no");
+               note.replaceChild(score.createElement("rest"), note.getElementsByTagName("pitch")[0]);
+               note.getElementsByTagName("staff")[0].textContent = "1";
+            }
+         }
+         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+         await osmd.load(score);
+         osmd.render();
+         const triplets: Tuplet[] = [];
+         for (const voiceEntry of osmd.Sheet.Instruments[0].Voices[0].VoiceEntries) {
+            if (!triplets.includes(voiceEntry.Notes[0].NoteTuplet)) {
+               triplets.push(voiceEntry.Notes[0].NoteTuplet);
+            }
+         }
+         expect(triplets.length, "triplets of voice 1").to.equal(4);
+         expect(triplets.map((tuplet: Tuplet) => tuplet.RenderTupletNumber), "numbers to show").to.deep.equal([true, true, false, false]);
+         const [upperMeasure, lowerMeasure] = osmd.GraphicSheet.MeasureList[0];
+         const drawnNotes: (tuplet: Tuplet, measure: GraphicalMeasure) => Note[] = (tuplet: Tuplet, measure: GraphicalMeasure): Note[] =>
+            tuplet.Notes.flat().filter((note: Note) => note.PrintObject && note.ParentStaff === measure.ParentStaff);
+         expect(drawnNotes(triplets[0], upperMeasure).length, "notes of the first triplet drawn on the upper staff").to.equal(1);
+
+         // The indices of the triplets with a number drawn in the measure. The numbers are the glyphs (filled paths) in the
+         //   measure's SVG group that belong to no note, beam, clef, key or time signature, which have groups of their own
+         //   (the staff lines are stroked). A number is centered over the triplet's notes in the staff.
+         const numberedTriplets: (measure: GraphicalMeasure) => number[] = (measure: GraphicalMeasure): number[] => {
+            const measureGroup: Element = (measure.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote)
+               .getSVGGElement().closest("g.vf-measure");
+            const numbers: Element[] = Array.from(measureGroup.querySelectorAll("path[stroke='none']")).filter((path: Element) =>
+               !path.closest("g.vf-stavenote, g.vf-beam, g.vf-clef, g.vf-keysignature, g.vf-timesignature"));
+            return numbers.map((tupletNumber: Element) => {
+               const numberBox: DOMRect = (tupletNumber as SVGGraphicsElement).getBBox();
+               const centerX: number = numberBox.x + numberBox.width / 2;
+               return triplets.findIndex((tuplet: Tuplet) => {
+                  const noteBoxes: DOMRect[] = drawnNotes(tuplet, measure).map((note: Note) =>
+                     (osmd.EngravingRules.GNote(note) as VexFlowGraphicalNote).getSVGGElement().getBBox());
+                  return noteBoxes.length > 0 && Math.min(...noteBoxes.map((box: DOMRect) => box.x)) <= centerX &&
+                     centerX <= Math.max(...noteBoxes.map((box: DOMRect) => box.x + box.width));
+               });
+            });
+         };
+         expect(numberedTriplets(upperMeasure), "triplets with a number on the upper staff").to.deep.equal([1]);
+         expect(numberedTriplets(lowerMeasure), "triplets with a number on the lower staff").to.deep.equal(invisibleRests ? [] : [0]);
+      });
+   }
+
    // Non-regression test for EngravingRules.SlurFlattenToObstacle (issue #1466). Long/steep slurs otherwise arc far
    // above the notes they span; the apex is capped to a small margin above the highest spanned object. This checks
    // that the highest slur arc is meaningfully lower with the flattening on than off.

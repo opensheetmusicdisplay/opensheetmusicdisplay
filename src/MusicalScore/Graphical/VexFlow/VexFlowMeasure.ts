@@ -739,7 +739,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     for (let i: number = 0; i < this.tuplets[voiceID].length; i++) {
                         const tuplet: Tuplet = this.tuplets[voiceID][i][0];
                         const vftuplet: VF.Tuplet = this.vftuplets[voiceID][i];
-                        if (!vftuplet) { // see #1330, potentially to be investigated. why undefined?
+                        if (!vftuplet) {
+                            // finalizeTuplets() makes no VexFlow tuplet for a tuplet with fewer than two notes to draw in this measure,
+                            //   e.g. a cross-staff tuplet with one note in this staff, or a tuplet with invisible rests.
                             continue;
                         }
                         if (!tuplet.RenderTupletNumber ||
@@ -1612,7 +1614,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         });
                       vftuplets.push(vftuplet);
                     } else {
-                        log.debug("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");
+                        // Fewer than two notes to draw in this measure, e.g. a cross-staff tuplet with one note in this staff, or a tuplet
+                        //   with invisible rests (MusicSheetCalculator adds a hidden note to its tuplet only if it shares its notehead with
+                        //   a visible unison note). No VexFlow tuplet for it, but keep its place in the list, so that
+                        //   this.vftuplets[voiceID][i] stays the VexFlow tuplet of this.tuplets[voiceID][i], as draw() pairs them.
+                        vftuplets.push(undefined);
                     }
                 }
             }
