@@ -7,9 +7,11 @@
 // This version needs only Node.js and node-canvas (already an OSMD dependency, also used
 // by generateImages_browserless.mjs and test/performance/compareImages.mjs).
 //
-// It produces the SAME diff/ output folder as the bash script:
+// It produces the SAME diff/ output folder as the bash script, plus diffs.txt:
 //   diff/results.txt              - every compared image with its diff value, biggest change on top
-//   diff/warnings.txt             - images present in only one of blessed/ or current/
+//   diff/diffs.txt                - what to look at: only the changed samples (with their diff region),
+//                                   then the warnings, like the console summary (empty if neither)
+//   diff/warnings.txt             - images present in only one of blessed/ or current/, or that could not be compared
 //   diff/<name>.png               - red-highlight diff image (only for changed samples)
 //   diff/<name>_Blessed.png       - copy of the blessed (old / reference) image
 //   diff/<name>_Current.png       - copy of the current (new) image
@@ -64,6 +66,7 @@ const BLESSED = Path.join(BUILDFOLDER, "blessed");
 const CURRENT = Path.join(BUILDFOLDER, "current");
 const DIFF = Path.join(BUILDFOLDER, "diff");
 const RESULTS = Path.join(DIFF, "results.txt");
+const DIFFS = Path.join(DIFF, "diffs.txt");
 const WARNINGS = Path.join(DIFF, "warnings.txt");
 
 // A pixel counts as "changed" when any channel differs by more than this.
@@ -155,6 +158,28 @@ function progressBar(done, total) {
     process.stdout.write(`\rProgress : [${bar}] ${pct}%`);
 }
 
+/**
+ * Writes lines to a text file, one per line (an empty file for no lines).
+ * @param {string} file path of the file to write
+ * @param {string[]} lines lines to write
+ */
+function writeLines(file, lines) {
+    FS.writeFileSync(file, lines.join("\n") + (lines.length ? "\n" : ""));
+}
+
+/**
+ * Describes a changed sample, as listed in the console summary and in diffs.txt.
+ * @param {{ name: string, diffPixels: number, total: number, region: string, note?: string }} r result of diffImage()
+ * @returns {string} e.g. "test_chord_whole_rest_overlap.musicxml_1: 1930 px (0.3385%) region x111-1246 y188-281"
+ */
+function formatChange(r) {
+    if (r.note) {
+        return `${r.name}: ${r.diffPixels} px [${r.note}: ${r.region}]`;
+    }
+    const pct = r.total > 0 ? (100 * r.diffPixels / r.total).toFixed(4) : "?";
+    return `${r.name}: ${r.diffPixels} px (${pct}%) region ${r.region}`;
+}
+
 // ---------------------------------------------------------------------------
 // Core comparison
 // ---------------------------------------------------------------------------
@@ -203,7 +228,7 @@ async function diffImage(name, writeImages) {
         }
         return {
             name: base, diffPixels: total, total,
-            region: `SIZE ${blessed.w}x${blessed.h} -> ${current.w}x${current.h}`,
+            region: `${blessed.w}x${blessed.h} -> ${current.w}x${current.h}`,
             note: "dimensions differ",
         };
     }
@@ -353,17 +378,30 @@ async function main() {
     // ---- sort: biggest change first, then alphabetical (deterministic) ----
     compared.sort((x, y) => (y.diffPixels - x.diffPixels) || x.name.localeCompare(y.name));
 
-    // ---- write results.txt (every compared image, mirroring the bash "<name> <value>" format) ----
-    const resultLines = compared.map((r) => `${r.name} ${r.diffPixels}`);
-    FS.writeFileSync(RESULTS, resultLines.join("\n") + (resultLines.length ? "\n" : ""));
-    FS.writeFileSync(WARNINGS, warnings.join("\n") + (warnings.length ? "\n" : ""));
+    // ---- write results.txt (every compared image, mirroring the bash "<name> <value>" format) and warnings.txt ----
+    writeLines(RESULTS, compared.map((r) => `${r.name} ${r.diffPixels}`));
+    writeLines(WARNINGS, warnings);
+
+    // ---- write diffs.txt: what to look at, the changed samples first, then the warnings ----
+    const fails = compared.filter((r) => r.diffPixels > 0);
+    const changedLines = fails.map(formatChange);
+    const diffsLines = [];
+    if (fails.length > 0) {
+        diffsLines.push(`${fails.length} changed sample(s):`, ...changedLines.map((line) => `  ${line}`));
+    }
+    if (warnings.length > 0) {
+        if (diffsLines.length > 0) {
+            diffsLines.push(""); // blank line between the two lists
+        }
+        diffsLines.push(`${warnings.length} warning(s):`, ...warnings.map((w) => `  ${w.trim()}`));
+    }
+    writeLines(DIFFS, diffsLines);
 
     // ---- console summary ----
-    const fails = compared.filter((r) => r.diffPixels > 0);
-
-    console.log(`\nResults stored in ${RESULTS}`);
+    console.log(`\nResults stored in ${RESULTS} (all samples, biggest change first),`);
+    console.log(`changed samples and warnings in ${DIFFS}.`);
     console.log(`All samples with a pixel difference are copied into ${DIFF}`);
-    console.log(`(as <name>.png diff, <name>_Blessed.png and <name>_Current.png), sorted by number of differing pixels.\n`);
+    console.log(`(as <name>.png diff, <name>_Blessed.png and <name>_Current.png).\n`);
 
     if (warnings.length > 0) {
         const MAX_SHOWN = 15;
@@ -375,10 +413,8 @@ async function main() {
     }
     if (fails.length > 0) {
         console.log(`You have ${fails.length} changed sample(s):`);
-        for (const r of fails) {
-            const pct = r.total > 0 ? (100 * r.diffPixels / r.total).toFixed(4) : "?";
-            const extra = r.note ? ` [${r.note}]` : ` (${pct}%) region ${r.region}`;
-            console.log(`  ${r.name}: ${r.diffPixels} px${extra}`);
+        for (const line of changedLines) {
+            console.log(`  ${line}`);
         }
         if (Number.isFinite(MAX_DIFF_IMAGES) && fails.length > MAX_DIFF_IMAGES) {
             console.log(`(image files written for the first ${MAX_DIFF_IMAGES} changes only; raise MAX_DIFF_IMAGES to write more.)`);
