@@ -463,6 +463,9 @@ export abstract class MusicSheetDrawer {
         for (const lyricLine of lyricLines) {
             const start: PointF2D = new PointF2D(lyricLine.Start.x + staffLinePosition.x, lyricLine.Start.y + staffLinePosition.y);
             const end: PointF2D = new PointF2D(lyricLine.End.x + staffLinePosition.x, lyricLine.End.y + staffLinePosition.y);
+            if (!this.lazyDrawsAtX(Math.max(start.x, end.x))) {
+                continue; // lazy horizontal: drawn once, with the batch that draws its end (like the lyric dashes)
+            }
             this.drawGraphicalLine(new GraphicalLine(start, end, lyricLine.Width), this.rules.LyricUnderscoreLineWidth, lyricLine.colorHex);
         }
     }

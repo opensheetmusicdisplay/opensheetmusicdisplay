@@ -96,3 +96,42 @@ describe("OpenSheetMusicDisplay incremental rendering (renderNext)", () => {
         expect(Math.abs(gapIncremental - gapNormal), "same distance below the last system").to.be.lessThan(1.5);
     });
 });
+
+describe("OpenSheetMusicDisplay incremental rendering of a single horizontal staffline (renderNext)", () => {
+    // two staves with lyric extenders: the whole score is laid out once, and each batch draws the measures entering its x-window
+    const sampleFilename: string = "test_lyrics_extend_verses.musicxml";
+    let container: HTMLElement;
+    let osmd: OpenSheetMusicDisplay;
+
+    beforeEach((done: Mocha.Done): void => {
+        container = TestUtils.getDivElement(document);
+        osmd = TestUtils.createOpenSheetMusicDisplay(container); // autoResize: false
+        osmd.setOptions({ renderSingleHorizontalStaffline: true });
+        osmd.load(TestUtils.getScore(sampleFilename)).then((): void => done(), done);
+    });
+
+    afterEach((): void => {
+        document.body.removeChild(container);
+    });
+
+    /** The path data of the lines drawn in the SVG, e.g. lyric extenders, sorted. */
+    function drawnLines(): string[] {
+        return Array.from(container.querySelectorAll("svg g.vf-line path"))
+            .map((path: Element): string => path.getAttribute("d")).sort();
+    }
+
+    it("draws each lyric extender once, where render() draws it", () => {
+        osmd.render();
+        const linesOfRender: string[] = drawnLines();
+        expect(linesOfRender.length, "lyric extenders drawn").to.be.greaterThan(0);
+        let batches: number = 1;
+        let result: IRenderNextResult = osmd.renderNext({ measures: 1 });
+        while (!result.done && batches < 50) {
+            result = osmd.renderNext({ measures: 1 });
+            batches++;
+        }
+        expect(result.done, "incremental render complete").to.equal(true);
+        expect(batches, "several batches").to.be.greaterThan(1);
+        expect(drawnLines()).to.deep.equal(linesOfRender);
+    });
+});
