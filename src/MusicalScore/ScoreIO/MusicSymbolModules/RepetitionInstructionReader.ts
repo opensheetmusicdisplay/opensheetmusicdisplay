@@ -148,7 +148,8 @@ export class RepetitionInstructionReader {
     const wordsNode: IXmlElement = directionTypeNode.element("words");
     const measureIndex: number = this.currentMeasureIndex;
     if (wordsNode) {
-      const words: string = wordsNode.value.trim();
+      // An exporter may split the words where their formatting changes.
+      const words: string = directionTypeNode.elements("words").map((node: IXmlElement): string => node.value).join("").trim();
       // Measure positions aren't adjusted by the relative position in the measure (relativeMeasurePosition):
       //   the instruction belongs to the measure it's written in (see test_staverepetitions_coda_etc_positioning.musicxml).
       let type: RepetitionInstructionEnum = RepetitionInstructionReader.repetitionInstructionFromWords(words.toLowerCase());
