@@ -36,6 +36,7 @@ import { GraphicalGlissando } from "../GraphicalGlissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { SvgVexFlowBackend } from "./SvgVexFlowBackend";
+import { VexFlowConverter } from "./VexFlowConverter";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { TremoloBetweenNotes } from "../../VoiceData/Note";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
@@ -801,6 +802,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 if (this.rules.DefaultColorMusic) {
                     (textBracket as any).render_options.color = this.rules.DefaultColorMusic;
                 }
+                VexFlowConverter.setVexFlowTextFontFamily((textBracket as any).font, this.rules);
                 textBracket.setContext(ctx);
                 try {
                     textBracket.draw();
