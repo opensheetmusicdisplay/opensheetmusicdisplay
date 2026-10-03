@@ -564,7 +564,7 @@ export class EngravingRules {
      *  A whole repeat unit stays written out if it spans systems or the draw range, its reference is not visible,
      *  or it contains clef/key/time changes, grace notes, lyrics/extenders, trill lines, multi-rests,
      *  connections outside the unit or to another staff, or a slur with an unattached end.
-     *  TAB staves and incremental renderNext() remain written out. */
+     *  TAB staves remain written out. */
     public RenderMeasureRepeats: boolean;
     public RenderRehearsalMarks: boolean;
     public RenderClefsAtBeginningOfStaffline: boolean;

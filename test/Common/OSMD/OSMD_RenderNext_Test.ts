@@ -275,4 +275,17 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
         expect(renderNextUntilDone({ systems: 1 }), "batches").to.be.greaterThan(1);
         expect(drawnPages()).to.deep.equal(pagesInOneBatch);
     });
+
+    it("draws measure repeats", async () => {
+        // repeat signs for one and two measures (EngravingRules.RenderMeasureRepeats), in 3 systems. Incremental rendering used to
+        //   draw the notes instead, also in one batch.
+        await osmd.load(TestUtils.getScore("test_measure_repeat_drums.musicxml"));
+        osmd.EngravingRules.RenderXMeasuresPerLineAkaSystem = 4;
+        renderNextInOneBatch();
+        const pagesInOneBatch: string[][] = drawnPages();
+        expect(renderNextUntilDone({ systems: 1 }), "batches").to.be.greaterThan(1);
+        expect(osmd.GraphicSheet.MusicPages[0].MusicSystems.length, "systems").to.equal(3);
+        expect(container.querySelectorAll("g.vf-measure-repeat").length, "repeat signs").to.equal(3);
+        expect(drawnPages()).to.deep.equal(pagesInOneBatch);
+    });
 });
