@@ -169,6 +169,21 @@ export class StaveNote extends StemmableNote {
 
     const voices = notesList.length;
 
+    // VexFlowPatch: the three-voice code below takes notesList[0] for the upper voice, [1] for the middle
+    //   and [2] for the lower, and only staggers the middle one. But the notes come in the order their voices
+    //   were added, i.e. by voice number in OSMD, which needn't follow pitch: with voice 1 = C4, voice 2 = C3
+    //   and voice 3 = Bb3, the C3 was tested as the middle voice and the Bb3 was drawn over the C4.
+    //   So put three notes in pitch order first, by the centre of each chord (stable: equal pitches keep
+    //   voice order). Rests keep voice order: their position comes from their voice, and the rest cases
+    //   below are written for it.
+    if (voices === 3 && !notesList.some(n => n.isrest)) {
+      const centre = n => {
+        const props = n.note.getKeyProps(); // sorted by line, lowest first
+        return (props[0].line + props[props.length - 1].line) / 2;
+      };
+      notesList.sort((a, b) => centre(b) - centre(a));
+    }
+
     let noteU = notesList[0];
     const noteM = voices > 2 ? notesList[1] : null;
     let noteL = voices > 2 ? notesList[2] : notesList[1];
