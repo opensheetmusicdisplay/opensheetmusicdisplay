@@ -1230,18 +1230,22 @@ export abstract class MusicSheetCalculator {
                                 yShift *= -1;
                             }
                             const gLabel: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
+                            // update the sky (bottom) line up to the label where it is drawn, with its yShift (e.g. a larger ChordSymbolYOffset):
+                            //   to the top (bottom) of its text, without its margin, like for fingerings. With the default ChordSymbolYOffset,
+                            //   the yShift is as large as the margin, so that's where the offset plus BorderMarginTop (BorderMarginBottom) is,
+                            //   to the last bit with yShift added to the border first (the y positions of the systems are rounded to pixels).
                             if (placement === PlacementEnum.Below) {
                                 gLabel.PositionAndShape.RelativePosition.y = chordMaximumOffset + yShift;
                                 gLabel.setLabelPositionAndShapeBorders();
                                 gLabel.PositionAndShape.calculateBoundingBox();
                                 skybottomcalculator.updateBottomLineInRange(start, end,
-                                    chordMaximumOffset + gLabel.PositionAndShape.BorderMarginBottom +
+                                    chordMaximumOffset + (yShift + gLabel.PositionAndShape.BorderBottom) +
                                     this.rules.ChordSymbolBottomMargin); // TODO somehow off without margin for I numeral
                             } else {
                                 gLabel.PositionAndShape.RelativePosition.y = chordMinimumOffset + yShift;
                                 gLabel.setLabelPositionAndShapeBorders();
                                 gLabel.PositionAndShape.calculateBoundingBox();
-                                skybottomcalculator.updateSkyLineInRange(start, end, chordMinimumOffset + gLabel.PositionAndShape.BorderMarginTop);
+                                skybottomcalculator.updateSkyLineInRange(start, end, chordMinimumOffset + (yShift + gLabel.PositionAndShape.BorderTop));
                             }
                         }
                     }
