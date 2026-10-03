@@ -39,8 +39,9 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
      * Puts the chord symbol back where it was before the first layout calculation, called before each calculation.
      * MusicSheetCalculator.calculateChordSymbols() moves the chord symbol and its label, and moves a chord symbol that isn't
      * over a note from its staff entry to its measure (parent), but the layout reads them before that, e.g. for the
-     * y-alignment of the chord symbols of a staffline, for the measure width needed for the chord symbols, and for the
-     * bounding boxes, whose top and bottom borders only grow (BoundingBox.calculateTopBottomBorders()).
+     * measure width needed for the chord symbols, for their x positions (MusicSheetCalculator.calculateChordSymbolsXPositions(),
+     * e.g. after the begin instructions of the measure), and for the bounding boxes, whose top and bottom borders only grow
+     * (BoundingBox.calculateTopBottomBorders()).
      * Without the reset, a re-render would read the previous render's positions, parent and borders there, where the first
      * render read the initial ones, and place the chord symbols (or e.g. the composer above them) differently.
      * The first call takes the snapshot of the initial positions and parent.
