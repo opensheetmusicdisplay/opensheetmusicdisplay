@@ -39,6 +39,24 @@ describe("Re-rendering a loaded sheet", (): void => {
     }
 
     /**
+     * The rendered pages (SVG backend) as SVG texts, with the ids of the VexFlow elements numbered by first appearance:
+     * VexFlow numbers the ids of its elements (vf-auto...) with a counter, which continues for the elements created
+     * during a re-render.
+     * @returns one SVG text per page
+     */
+    function pageSvgs(): string[] {
+        return Array.from(div.querySelectorAll("svg")).map((svg: SVGSVGElement): string => {
+            const ids: Map<string, string> = new Map<string, string>();
+            return svg.outerHTML.replace(/vf-auto\d+/g, (id: string): string => {
+                if (!ids.has(id)) {
+                    ids.set(id, "vf-id" + ids.size);
+                }
+                return ids.get(id);
+            });
+        });
+    }
+
+    /**
      * Expects the same page images, without printing the (long) data URLs if they differ.
      * @param actual the page images to check
      * @param expected the expected page images
@@ -64,6 +82,43 @@ describe("Re-rendering a loaded sheet", (): void => {
             expectSameImages(pageImages(), firstRender, "second render");
         });
     }
+
+    // The dot of a dotted rest below a dotted note on a line at the same time moved up by a staff space with every render
+    //   (VexFlow's Dot.format() adds to the vertical position of the dot of a rest, and runs twice per render).
+    it("renders the dots of dotted rests below dotted notes again like the first time", async (): Promise<void> => {
+        const dottedQuarter: (pitchOrRest: string, voice: number) => string = (pitchOrRest: string, voice: number): string =>
+            `<note>${pitchOrRest}<duration>3</duration><voice>${voice}</voice><type>quarter</type><dot/></note>`;
+        const pitch: (step: string, octave: number) => string = (step: string, octave: number): string =>
+            `<pitch><step>${step}</step><octave>${octave}</octave></pitch>`;
+        await osmd.load(`<?xml version="1.0" encoding="UTF-8"?>
+            <score-partwise version="3.1">
+              <part-list><score-part id="P1"><part-name>Voices</part-name></score-part></part-list>
+              <part id="P1">
+                <measure number="1">
+                  <attributes><divisions>2</divisions><time><beats>3</beats><beat-type>4</beat-type></time>
+                    <clef><sign>G</sign><line>2</line></clef></attributes>
+                  ${dottedQuarter(pitch("D", 5), 1)}${dottedQuarter(pitch("B", 4), 1)}
+                  <backup><duration>6</duration></backup>
+                  ${dottedQuarter("<rest/>", 2)}${dottedQuarter("<rest/>", 2)}
+                </measure>
+              </part>
+            </score-partwise>`);
+        osmd.render();
+        const firstRender: string[] = pageImages();
+        osmd.render();
+        expectSameImages(pageImages(), firstRender, "second render");
+    });
+
+    // test_voice_gaps_of_a_whole_note_or_more: the same for the invisible dotted whole rest in measure 4, whose dot
+    //   is drawn transparent, i.e. only the SVG shows it.
+    it("renders the dot of an invisible dotted rest again like the first time (SVG)", async (): Promise<void> => {
+        osmd.setOptions({ backend: "svg" });
+        await load("test_voice_gaps_of_a_whole_note_or_more.musicxml");
+        osmd.render();
+        const firstRender: string[] = pageSvgs();
+        osmd.render();
+        expectSameImages(pageSvgs(), firstRender, "second render");
+    });
 
     // OSMD_function_test_Ornaments: delayed turns (between two notes), which keep the x position of the first layout.
     // test_quarter_accidentals, test_lyrics_unused_space_issue1272: lyrics, which are included in the bounding box of their

@@ -537,6 +537,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   back. Restore the x_shift it had before the first render (usually 0, VexFlowConverter shifts whole
       //   rests), snapshotted on the first render, and the dots' 0 - otherwise notes that aren't staggered
       //   anymore, e.g. after PrintObject changed hiddenUnisonBaseHead (below), would stay shifted.
+      // - dot_shiftY of augmentation dots: Dot.format() sets it for the dot of a note, but adds to it for the dot of
+      //   a rest (whose value starts at the rest glyph's dot position), e.g. half a staff space up after a dotted note
+      //   on a line at the same time, on each of the two formats of a render. Restore the value it had before the
+      //   first render, snapshotted on the first render - otherwise the dot of e.g. a dotted rest below a dotted note
+      //   moved up by a staff space with every re-render.
       // - delayXShift of delayed ornaments (e.g. a turn between two notes): Ornament.draw() calculates it from the
       //   distance to the next note on its first draw and keeps it. Unset it, so that the next draw calculates it
       //   for the current layout - otherwise the turn kept its distance of the previous layout, e.g. after a resize.
@@ -546,11 +551,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           note.center_x_shift = 0;
           if (note.osmdInitialXShift === undefined) {
             note.osmdInitialXShift = note.x_shift ?? 0; // first render: snapshot
+            for (const modifier of note.modifiers ?? []) {
+              if (modifier.getCategory?.() === "dots") {
+                modifier.osmdInitialDotShiftY = modifier.dot_shiftY; // first render: snapshot
+              }
+            }
           } else {
             note.x_shift = note.osmdInitialXShift;
             for (const modifier of note.modifiers ?? []) {
               if (modifier.getCategory?.() === "dots") {
                 modifier.setYShift(0);
+                if (modifier.osmdInitialDotShiftY !== undefined) {
+                  modifier.setDotShiftY(modifier.osmdInitialDotShiftY);
+                }
               } else if (modifier.getCategory?.() === "ornaments") {
                 modifier.delayXShift = undefined; // a delayed ornament (e.g. turn) caches its x shift on its first draw
               }
