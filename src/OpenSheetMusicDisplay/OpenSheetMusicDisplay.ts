@@ -18,6 +18,7 @@ import { ColoringModes } from "../Common/Enums/ColoringModes";
 import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions, CursorType } from "./OSMDOptions";
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
+import { ContinuousDynamicExpression } from "../MusicalScore/VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { Dictionary } from "typescript-collections";
 import { AutoColorSet } from "../MusicalScore/Graphical/DrawingEnums";
 import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage";
@@ -681,13 +682,32 @@ export class OpenSheetMusicDisplay {
         // minNewSystems + 1 systems total); otherwise this batch only grew the current last system. Extend the
         // prefix by a batch span and retry until enough systems appear or the sheet ends. minNewSystems is 1 in
         // measures mode (the batch's other complete systems are drawn too) and `targetNewSystems` in systems mode.
+        // Then also until the wedges and octave shifts reaching into the systems to draw end in a complete system (see
+        // lazySpannerEndInLastSystem()), without drawing the systems this adds.
         let systems: MusicSystem[] = this.lazyLaidOutSystems();
         const minNewSystems: number = targetNewSystems ?? 1;
         const extendStep: number = Math.max(4, toMeasureIndex - fromMeasureIndex + 1);
+        // Hold the last (unstretched, not-yet-stable) system unless this is the final batch, where the last
+        // system is the sheet's true last system and never changes again. In systems mode, also cap the draw at
+        // `targetNewSystems` new systems (the layout may hold a few more from the last extend step), so each
+        // batch advances by exactly that many whole systems; any extra are re-laid-out and drawn next batch.
+        const nonFinalDrawToIdxExcl: (layoutSystemCount: number) => number = (layoutSystemCount: number): number =>
+            targetNewSystems !== undefined ? Math.min(layoutSystemCount - 1, this.lazyDrawnSystemCount + targetNewSystems) : layoutSystemCount - 1;
+        let drawToIdxExclCap: number; // the draw range end once the layout has enough systems
         let extendedTo: number = this.rules.MaxMeasureToDrawIndex;
-        while (systems.length > 0 && extendedTo < lastSheetMeasureIndex &&
-               systems.length < this.lazyDrawnSystemCount + minNewSystems + 1) {
-            extendedTo = Math.min(extendedTo + extendStep, lastSheetMeasureIndex);
+        while (systems.length > 0 && extendedTo < lastSheetMeasureIndex) {
+            let extendTo: number = extendedTo + extendStep;
+            if (systems.length >= this.lazyDrawnSystemCount + minNewSystems + 1) {
+                if (drawToIdxExclCap === undefined) {
+                    drawToIdxExclCap = nonFinalDrawToIdxExcl(systems.length);
+                }
+                const spannerEndIndex: number = this.lazySpannerEndInLastSystem(systems, drawToIdxExclCap);
+                if (spannerEndIndex < 0) {
+                    break; // long enough
+                }
+                extendTo = Math.max(extendTo, spannerEndIndex + 1);
+            }
+            extendedTo = Math.min(extendTo, lastSheetMeasureIndex);
             this.rules.MaxMeasureToDrawIndex = extendedTo;
             this.graphic.reCalculate();
             systems = this.lazyLaidOutSystems();
@@ -714,18 +734,7 @@ export class OpenSheetMusicDisplay {
         // Recreating the backend erases everything, so a recreate batch redraws from system 0.
         const recreateBackend: boolean = clearFirst || someDrawnSystemMoved;
         const drawFromIdx: number = recreateBackend ? 0 : this.lazyDrawnSystemCount;
-        // Hold the last (unstretched, not-yet-stable) system unless this is the final batch, where the last
-        // system is the sheet's true last system and never changes again. In systems mode, also cap the draw at
-        // `targetNewSystems` new systems (the layout may hold a few more from the last extend step), so each
-        // batch advances by exactly that many whole systems; any extra are re-laid-out and drawn next batch.
-        let drawToIdxExcl: number;
-        if (finalBatch) {
-            drawToIdxExcl = systemCount;
-        } else if (targetNewSystems !== undefined) {
-            drawToIdxExcl = Math.min(systemCount - 1, this.lazyDrawnSystemCount + targetNewSystems);
-        } else {
-            drawToIdxExcl = systemCount - 1;
-        }
+        const drawToIdxExcl: number = finalBatch ? systemCount : Math.min(nonFinalDrawToIdxExcl(systemCount), drawToIdxExclCap ?? systemCount);
         if (drawToIdxExcl <= drawFromIdx) {
             this.lazyDrawnSystemCount = Math.max(this.lazyDrawnSystemCount, drawToIdxExcl);
             return lastSheetMeasureIndex + 1; // no new complete system (only happens at the very end)
@@ -833,6 +842,39 @@ export class OpenSheetMusicDisplay {
         // Continue at the deferred (held) system's first source measure.
         const heldMeasures: GraphicalMeasure[] = systems[drawToIdxExcl].StaffLines[0].Measures;
         return this.sheet.SourceMeasures.indexOf(heldMeasures[0].parentSourceMeasure);
+    }
+
+    /**
+     * Lazy rendering: where the furthest wedge or octave shift ends that reaches into the systems a batch draws and ends in the
+     * last system of its layout, or beyond. Such a wedge or octave shift needs a longer layout: their parts depend on the system
+     * they end in, e.g. a wedge's parts after the first are placed at its last system's bottom line, and an octave shift ends at
+     * a note there. The last system still grows (and is stretched once complete), and the end can be beyond the layout, where a
+     * wedge isn't calculated at all, so the systems drawn now would be drawn with other or without these parts. They aren't
+     * drawn again. A wedge or octave shift without an end is ignored, and so is a verbal continuous dynamic like "cresc.",
+     * which is drawn at its start only (see GraphicalContinuousDynamicExpression.IsVerbal).
+     * @param systems the systems of the layout, in order
+     * @param drawToIdxExcl the index of the first system the batch doesn't draw
+     * @returns the source-measure index of the furthest end in the last system or beyond, or -1 if there is none
+     */
+    private lazySpannerEndInLastSystem(systems: MusicSystem[], drawToIdxExcl: number): number {
+        const firstMeasureIndex: (system: MusicSystem) => number =
+            (system: MusicSystem): number => system.StaffLines[0].Measures[0].parentSourceMeasure.measureListIndex;
+        const firstUndrawnMeasureIndex: number = firstMeasureIndex(systems[drawToIdxExcl]);
+        let endIndex: number = -1;
+        for (let measureIndex: number = 0; measureIndex < firstUndrawnMeasureIndex; measureIndex++) {
+            for (const staffExpressions of this.sheet.SourceMeasures[measureIndex].StaffLinkedExpressions) {
+                for (const multiExpression of staffExpressions) {
+                    const wedge: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
+                    const isVerbal: boolean = wedge?.Label?.length > 0;
+                    for (const end of [isVerbal ? undefined : wedge?.EndMultiExpression, multiExpression.OctaveShiftStart?.ParentEndMultiExpression]) {
+                        if (end) {
+                            endIndex = Math.max(endIndex, end.SourceMeasureParent.measureListIndex);
+                        }
+                    }
+                }
+            }
+        }
+        return endIndex >= firstMeasureIndex(systems[systems.length - 1]) ? endIndex : -1;
     }
 
     /**

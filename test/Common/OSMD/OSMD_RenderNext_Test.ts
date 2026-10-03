@@ -288,4 +288,19 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
         expect(container.querySelectorAll("g.vf-measure-repeat").length, "repeat signs").to.equal(3);
         expect(drawnPages()).to.deep.equal(pagesInOneBatch);
     });
+
+    it("draws wedges and octave shifts continued in the next systems", async () => {
+        // a crescendo through 4 systems, and an 8vb that ends in a system where the bass staff has no notes yet. The batches
+        //   drew the systems before such a wedge's or octave shift's end without it: the batch's layout didn't reach the end.
+        //   (Now the layout of the first batch reaches the end of the crescendo, in the last system, so it is the only batch.)
+        osmd.setOptions({ newSystemFromXML: true });
+        for (const [sampleFilename, measures] of [["test_wedge_multiline_crescendo.musicxml", 2],
+                                                 ["test_grace_notes_only_measure_spanners.musicxml", 1]] as [string, number][]) {
+            await osmd.load(TestUtils.getScore(sampleFilename));
+            renderNextInOneBatch();
+            const pagesInOneBatch: string[][] = drawnPages();
+            renderNextUntilDone({ measures });
+            expect(drawnPages(), sampleFilename).to.deep.equal(pagesInOneBatch);
+        }
+    });
 });
