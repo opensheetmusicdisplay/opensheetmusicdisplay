@@ -30,12 +30,20 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         const boundingBox: any = staveNote.getBoundingBox();
         const modifierWidth: number = staveNote.getNoteHeadBeginX() - boundingBox.x;
 
-        this.PositionAndShape.RelativePosition.y = boundingBox.y / unitInPixels;
-        this.PositionAndShape.BorderTop = 0;
-        this.PositionAndShape.BorderBottom = boundingBox.h / unitInPixels;
+        this.applyVerticalBordersFromVexflow(boundingBox);
         const halfStavenoteWidth: number = (staveNote.width - ((staveNote as any).paddingRight ?? 0)) / 2;
         this.PositionAndShape.BorderLeft = -(modifierWidth + halfStavenoteWidth) / unitInPixels; // Left of our X origin is the modifier
         this.PositionAndShape.BorderRight = (boundingBox.w - modifierWidth) / unitInPixels; // Right of x origin is the note
+    }
+
+    /** Sets the vertical extent of this voice entry to the one of its Vexflow note: from the top to the bottom of its bounding box,
+     *  e.g. from the stem tip of a note with its stem up. See VexFlowMeasure.updateBeamedVoiceEntryBorders().
+     *  @param staveTopY The y of the stave's top line where the note's bounding box was measured (0 in calculateXPosition()).
+     */
+    public applyVerticalBordersFromVexflow(boundingBox: any, staveTopY: number = 0): void {
+        this.PositionAndShape.RelativePosition.y = (boundingBox.y - staveTopY) / unitInPixels;
+        this.PositionAndShape.BorderTop = 0;
+        this.PositionAndShape.BorderBottom = boundingBox.h / unitInPixels;
     }
 
     public set vfStaveNote(value: VF.StemmableNote) {
