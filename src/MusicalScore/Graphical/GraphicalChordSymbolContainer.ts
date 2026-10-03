@@ -13,6 +13,10 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     private chordSymbolContainer: ChordSymbolContainer;
     private graphicalLabel: GraphicalLabel;
     private rules: EngravingRules;
+    /** The parent bounding box before the first layout calculation, see resetPosition(). */
+    private initialParent: BoundingBox;
+    /** The relative position before the first layout calculation, see resetPosition(). */
+    private initialRelativePosition: PointF2D;
 
     constructor(chordSymbolContainer: ChordSymbolContainer, parent: BoundingBox, textHeight: number,
                 keyInstruction: KeyInstruction, transposeHalftones: number, rules: EngravingRules) {
@@ -27,6 +31,29 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     }
     public get GraphicalLabel(): GraphicalLabel {
         return this.graphicalLabel;
+    }
+
+    /**
+     * Puts the chord symbol back where it was before the first layout calculation, called before each calculation.
+     * MusicSheetCalculator.calculateChordSymbols() moves the chord symbol, and moves a chord symbol that isn't over a note
+     * from its staff entry to its measure (parent), but the layout reads both before that, e.g. for the y-alignment of the
+     * chord symbols of a staffline, and for the measure width needed for the chord symbols.
+     * Without the reset, a re-render would read the previous render's position and parent there, where the first render
+     * read the initial ones, and place the chord symbols differently than the first render.
+     * The first call takes the snapshot of the initial position and parent.
+     */
+    public resetPosition(): void {
+        const boundingBox: BoundingBox = this.PositionAndShape;
+        if (!this.initialParent) {
+            this.initialParent = boundingBox.Parent;
+            this.initialRelativePosition = new PointF2D(boundingBox.RelativePosition.x, boundingBox.RelativePosition.y);
+            return;
+        }
+        if (boundingBox.Parent !== this.initialParent) {
+            boundingBox.Parent = this.initialParent;
+        }
+        boundingBox.RelativePosition.x = this.initialRelativePosition.x;
+        boundingBox.RelativePosition.y = this.initialRelativePosition.y;
     }
     private calculateLabel(textHeight: number, transposeHalftones: number, keyInstruction: KeyInstruction): void {
         const text: string = ChordSymbolContainer.calculateChordText(this.chordSymbolContainer, transposeHalftones, keyInstruction);

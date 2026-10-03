@@ -521,6 +521,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   setStemLength() during a render. Restore the value it had before the first render
       //   (usually none - but e.g. the tremolo-between-notes stem lengthening of VexFlowConverter
       //   sets it at creation, which must survive), snapshotted on the first render.
+      // - stem direction and renderFlag: the same voice-collision handling turns the stem of one of two
+      //   unison notes with stems in the same direction down (setStemDirection()) after lengthening the
+      //   other one's stem, and hides the flag of one of two colliding notes (renderFlag), but never
+      //   back. Restore both as snapshotted on the first render - otherwise a re-render would find the
+      //   stems in different directions, not lengthen the other stem, and e.g. slope its beam differently.
       // - rest positions: StaveNote.format()'s shiftRestVertical() moves colliding rests
       //   *relative* to their current line (possibly several times during the first render's
       //   format passes), and the moved line persists on the VexFlow note - so a re-render
@@ -548,8 +553,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
           if (note.osmdInitialStemExtensionOverride === undefined) {
             note.osmdInitialStemExtensionOverride = note.stemExtensionOverride ?? null; // first render: snapshot
+            note.osmdInitialStemDirection = note.getStemDirection?.();
+            note.osmdInitialRenderFlag = note.renderFlag;
           } else {
             note.stemExtensionOverride = note.osmdInitialStemExtensionOverride;
+            if (note.osmdInitialRenderFlag !== undefined) {
+              note.renderFlag = note.osmdInitialRenderFlag;
+            }
+            if (note.osmdInitialStemDirection !== undefined && note.getStemDirection() !== note.osmdInitialStemDirection) {
+              const beam: VF.Beam = note.beam; // setStemDirection() detaches the note from its beam, which the formatting reads
+              note.setStemDirection(note.osmdInitialStemDirection);
+              note.beam = beam;
+            }
             if (note.isRest?.()) {
               note.shiftRestVerticalDisabled = true; // re-render: freeze rest at its current position
             }

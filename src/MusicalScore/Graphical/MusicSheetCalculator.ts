@@ -895,6 +895,17 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
+        // Put the chord symbols back where they were before the first calculation: the layout reads their positions
+        //   before it calculates them (see GraphicalChordSymbolContainer.resetPosition()).
+        for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
+            for (const graphicalMeasure of graphicalMeasures) {
+                for (const graphicalStaffEntry of graphicalMeasure?.staffEntries ?? []) {
+                    for (const graphicalChordContainer of graphicalStaffEntry.graphicalChordContainers) {
+                        graphicalChordContainer.resetPosition();
+                    }
+                }
+            }
+        }
         return;
     }
 
