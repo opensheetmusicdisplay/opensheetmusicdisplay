@@ -625,8 +625,10 @@ export abstract class MusicSheetDrawer {
             this.LazyForcePageLabels = savedForcePageLabels;
         }
         // Draw bounding boxes for debug purposes. This has to be at the end because only
-        // then all the calculations and recalculations are done
-        if (this.drawableBoundingBoxElement && !this.LazySkipPageLabels) {
+        // then all the calculations and recalculations are done. A lazy (incremental) render draws them, for all pages,
+        // with the batch drawing the sheet's last system, the final one: they would be drawn again by every batch,
+        // also those of the systems that aren't drawn yet, which can still move.
+        if (this.drawableBoundingBoxElement && !this.LazySkipPageLabels && (!lazySelective || this.lazyDrawsSystem(this.lastSystemIndex(page)))) {
             this.drawBoundingBoxes(page.PositionAndShape, 0, this.drawableBoundingBoxElement);
         }
     }
@@ -658,6 +660,18 @@ export abstract class MusicSheetDrawer {
             count += previousPage.MusicSystems.length;
         }
         return count;
+    }
+
+    /**
+     * Lazy rendering: the index of the sheet's last drawn system (on the last page drawn, see EngravingRules.MaxPageToDrawNumber),
+     * counted through the systems of all pages.
+     * @param page a page of the sheet
+     * @returns the index of the last system
+     */
+    private lastSystemIndex(page: GraphicalMusicPage): number {
+        const pages: GraphicalMusicPage[] = page.Parent.MusicPages;
+        const lastPage: GraphicalMusicPage = pages[Math.min(pages.length, this.rules.MaxPageToDrawNumber) - 1];
+        return this.systemCountBefore(lastPage) + lastPage.MusicSystems.length - 1;
     }
 
     /**

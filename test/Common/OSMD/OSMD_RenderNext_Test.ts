@@ -264,4 +264,15 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
         expect(renderNextUntilDone({ systems: 1 }), "batches").to.be.greaterThan(2);
         expect(drawnPages()).to.deep.equal(pagesInOneBatch);
     });
+
+    it("draws the bounding boxes of the debug drawing once", async () => {
+        // every batch used to draw the bounding boxes of the whole layout again, also of the systems not drawn yet
+        osmd.setDrawBoundingBox("VexFlowMeasure", false);
+        osmd.setOptions({ newSystemFromXML: true });
+        await osmd.load(TestUtils.getScore("test_renderNext_copyright_below_last_system_1710.musicxml")); // 4 systems
+        renderNextInOneBatch();
+        const pagesInOneBatch: string[][] = drawnPages();
+        expect(renderNextUntilDone({ systems: 1 }), "batches").to.be.greaterThan(1);
+        expect(drawnPages()).to.deep.equal(pagesInOneBatch);
+    });
 });
