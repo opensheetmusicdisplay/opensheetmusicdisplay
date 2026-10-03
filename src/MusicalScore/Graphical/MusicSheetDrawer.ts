@@ -67,12 +67,14 @@ export abstract class MusicSheetDrawer {
      *  x-window (see LazyDrawFromXUnits): a batch can reach several systems, e.g. after forced system breaks.
      *  Set by OpenSheetMusicDisplay.renderAppendGrowingHorizontal() per batch; reset after. */
     public LazyDrawSystemWindows: Map<MusicSystem, { fromX: number, toX: number }> = undefined;
-    /** Lazy horizontal rendering: when true, drawPage() skips the page-level labels (title/credits). They are
-     *  drawn once, on the final batch, when the page is drawn to its full width. */
+    /** Lazy horizontal rendering: when true, drawPage() skips the page-level labels (title/credits) and the
+     *  bounding boxes (see drawableBoundingBoxElement). They are drawn once, on the final batch, when the
+     *  page is drawn to its full width. */
     public LazySkipPageLabels: boolean = false;
     /** Lazy horizontal rendering: when true, drawLabel() ignores the x-window gate. Scoped (set/restored) to
      *  the page-label loop in drawPage(), since those labels span the full page width and must all be drawn
-     *  even though their left edges lie behind the final batch's frontier. */
+     *  even though their left edges lie behind the final batch's frontier, and to the labels of a measure's
+     *  staff entries (see VexFlowMusicSheetDrawer.drawMeasure()), which are drawn with their measure. */
     public LazyForcePageLabels: boolean = false;
 
     protected rules: EngravingRules;
@@ -179,11 +181,12 @@ export abstract class MusicSheetDrawer {
     protected lazyDrawsObject(psh: BoundingBox): boolean {
         return this.lazyDrawsAtX(psh.AbsolutePosition.x + psh.BorderRight);
     }
-    /** Lazy horizontal rendering: whether to draw the once-only left-edge system elements (instrument braces
-     *  and group brackets). True for non-lazy and for a system's first lazy-horizontal batch, which owns its left
-     *  edge (LazyDrawFromXUnits is -Infinity); false for continuation batches, so a system's brace isn't redrawn
-     *  on top of itself every batch. (Vertical lazy keeps the x-window at ±Infinity and draws each system's brace
-     *  once via the per-system gate, so this stays true there.) */
+    /** Lazy horizontal rendering: whether to draw the once-only system elements (instrument braces and group
+     *  brackets at the left edge, and the sky and bottom lines of the stafflines, see skyLineVisible). True for
+     *  non-lazy and for a system's first lazy-horizontal batch, which owns its left edge (LazyDrawFromXUnits is
+     *  -Infinity); false for continuation batches, so a system's brace isn't redrawn on top of itself every
+     *  batch. (Vertical lazy keeps the x-window at ±Infinity and draws each system's brace once via the
+     *  per-system gate, so this stays true there.) */
     protected lazyDrawsLeftEdgeOnce(): boolean {
         return this.LazyDrawFromXUnits === Number.NEGATIVE_INFINITY;
     }
@@ -443,11 +446,12 @@ export abstract class MusicSheetDrawer {
 
         this.drawExpressions(staffLine);
 
-        if (this.skyLineVisible) {
+        // (lazy horizontal: the staffline's whole lines, once, by the first batch reaching it)
+        if (this.skyLineVisible && this.lazyDrawsLeftEdgeOnce()) {
             this.drawSkyLine(staffLine);
         }
 
-        if (this.bottomLineVisible) {
+        if (this.bottomLineVisible && this.lazyDrawsLeftEdgeOnce()) {
             this.drawBottomLine(staffLine);
         }
     }
@@ -619,7 +623,7 @@ export abstract class MusicSheetDrawer {
         }
         // Draw bounding boxes for debug purposes. This has to be at the end because only
         // then all the calculations and recalculations are done
-        if (this.drawableBoundingBoxElement) {
+        if (this.drawableBoundingBoxElement && !this.LazySkipPageLabels) {
             this.drawBoundingBoxes(page.PositionAndShape, 0, this.drawableBoundingBoxElement);
         }
     }

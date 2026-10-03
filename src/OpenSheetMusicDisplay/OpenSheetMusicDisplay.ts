@@ -914,8 +914,8 @@ export class OpenSheetMusicDisplay {
         if (this.drawingParameters.drawCursors) {
             this.graphic.Cursors.length = 0;
         }
-        // The page labels (title/credits) are drawn with the final batch, when the page is drawn to its full width;
-        // drawPage() then opens the x-window so none are dropped (see drawPage).
+        // The page labels (title/credits) and bounding boxes are drawn with the final batch, when the page is drawn to its
+        // full width; drawPage() then opens the x-window so none are dropped (see drawPage).
         this.drawer.LazyDrawSystemWindows = windows;
         this.drawer.LazySkipPageLabels = !finalBatch;
         this.drawer.drawSheet(this.graphic);

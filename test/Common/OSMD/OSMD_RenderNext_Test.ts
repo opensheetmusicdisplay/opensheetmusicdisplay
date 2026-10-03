@@ -181,4 +181,29 @@ describe("OpenSheetMusicDisplay incremental rendering of a single horizontal sta
         expect(renderNextUntilDone(2), "batches").to.equal(3);
         expect(drawnElements()).to.deep.equal(elementsOfRender);
     });
+
+    it("draws each glissando once, and labels also where they reach into the next measure, like render()", async () => {
+        // slides in a standard and a TAB staff, in 2 systems, used to be drawn again by every batch reaching their system, and
+        //   chord symbols wider than their measures by none
+        osmd.setOptions({ newSystemFromXML: true });
+        for (const sampleFilename of ["test_slides_standard_and_tab_staff.musicxml", "test_chord_symbols_overlap_narrow_measure_1688.musicxml"]) {
+            await osmd.load(TestUtils.getScore(sampleFilename));
+            osmd.render();
+            const elementsOfRender: string[] = drawnElements();
+            renderNextUntilDone(1);
+            expect(drawnElements(), sampleFilename).to.deep.equal(elementsOfRender);
+        }
+    });
+
+    it("draws the sky and bottom lines and the bounding boxes of the debug drawing once, like render()", async () => {
+        osmd.DrawSkyLine = true;
+        osmd.DrawBottomLine = true;
+        osmd.setDrawBoundingBox("VexFlowMeasure", false);
+        osmd.setOptions({ newSystemFromXML: true });
+        await osmd.load(TestUtils.getScore("test_wavy_line_multiline_extragraphicalmeasure.musicxml")); // 3 systems
+        osmd.render();
+        const elementsOfRender: string[] = drawnElements();
+        renderNextUntilDone(1);
+        expect(drawnElements()).to.deep.equal(elementsOfRender);
+    });
 });
