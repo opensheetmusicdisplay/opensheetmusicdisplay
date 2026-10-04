@@ -3413,14 +3413,19 @@ export abstract class MusicSheetCalculator {
                 if (!measure) {
                     continue;
                 }
+                const staff: Staff = measure.ParentStaff;
+                if (staffIsPercussionArray[idx2]) {
+                    // undo the one-line layout of a previous calculation, in case the rules changed (setOptions(), updateGraphic())
+                    staff.StafflineCount = staff.xmlStafflineCount ?? 5;
+                }
                 //This property is active...
                 if (this.rules.PercussionOneLineCutoff > 0 && !this.rules.PercussionUseCajon2NoteSystem) {
                     //We have a percussion clef, check to see if this property applies...
                     if (staffIsPercussionArray[idx2]) {
-                        //-1 means always trigger, or we are under the cutoff number specified
-                        if (this.rules.PercussionOneLineCutoff === -1 ||
+                        const keepsXmlLines: boolean = staff.xmlStafflineCount !== undefined && this.rules.PercussionKeepXMLStafflineCount;
+                        if (!keepsXmlLines &&
                             MusicSheetCalculator.stafflineNoteCalculator.getStafflineUniquePositionCount(idx2) < this.rules.PercussionOneLineCutoff) {
-                            measure.ParentStaff.StafflineCount = 1;
+                            staff.StafflineCount = 1;
                         }
                     }
                 }

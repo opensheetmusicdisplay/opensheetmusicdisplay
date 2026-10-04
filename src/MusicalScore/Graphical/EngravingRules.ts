@@ -85,9 +85,14 @@ export class EngravingRules {
     public ClefLeftMargin: number;
     public ClefRightMargin: number;
     /** How many unique note positions a percussion score needs to have to not be rendered on one line.
-     * To always use 5 lines for percussion, set this to 0. (works unless the XML says <staff-lines>1)
+     * Set this to 0 to disable one-line reduction and percussion note positioning, or -1 to keep the note positioning.
+     * A staff whose XML gives the number of lines (<staff-lines>) keeps it, unless PercussionKeepXMLStafflineCount is false.
      */
     public PercussionOneLineCutoff: number;
+    /** Whether a percussion staff whose XML gives the number of lines (<staff-lines>) keeps it. Default true.
+     * If false, PercussionOneLineCutoff also draws such a staff on one line, e.g. a snare drum with <staff-lines>5.
+     */
+    public PercussionKeepXMLStafflineCount: boolean;
     public PercussionForceVoicesOneLineCutoff: number;
     public PercussionUseXMLDisplayStep: boolean;
     public PercussionXMLDisplayStepNoteValueShift: number;
@@ -748,6 +753,7 @@ export class EngravingRules {
         this.ClefLeftMargin = 0.5;
         this.ClefRightMargin = 0.75;
         this.PercussionOneLineCutoff = 3; // percussion parts with <3 unique note positions rendered on one line
+        this.PercussionKeepXMLStafflineCount = true;
         this.PercussionForceVoicesOneLineCutoff = 1;
         this.PercussionUseXMLDisplayStep = true;
         this.PercussionXMLDisplayStepNoteValueShift = 0;

@@ -70,17 +70,18 @@ export abstract class StaffLine extends GraphicalObject {
                     break;
             }
         } else {
+            // offsets from the top line of a five-line staff, see VexFlowMeasure.setLineNumber(): 2-4 lines end at G4 (3)
             switch (this.ParentStaff.StafflineCount) {
                 case 4:
-                    this.bottomLineOffset = 1;
+                    this.bottomLineOffset = 3;
                     break;
                 case 3:
                     this.topLineOffset = 1;
-                    this.bottomLineOffset = 1;
+                    this.bottomLineOffset = 3;
                     break;
                 case 2:
                     this.topLineOffset = 2;
-                    this.bottomLineOffset = 1;
+                    this.bottomLineOffset = 3;
                     break;
                 case 1:
                     this.topLineOffset = 2;
