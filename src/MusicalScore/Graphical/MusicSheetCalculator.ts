@@ -213,9 +213,7 @@ export abstract class MusicSheetCalculator {
                 const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
                 // console.log(sourceMeasure.MeasureNumber + " can be reduced: " + sourceMeasure.canBeReducedToMultiRest());
                 const canBeReduced: boolean = !sourceMeasure.isReducedToMultiRest && sourceMeasure.canBeReducedToMultiRest();
-                // A multirest only shows the key and time signature its first measure starts with,
-                //   so a measure that starts with a key or time change ends the sequence before it (and can begin the next one).
-                if (multiRestCount > 0 && (!canBeReduced || sourceMeasure.hasBeginInstructions())) {
+                if (multiRestCount > 0 && (!canBeReduced || this.multiRestSequenceEndsBefore(sourceMeasure))) {
                     if (multiRestCount > 1) { //Actual multirest sequence just happened. Process
                         beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
                         //regen graphical measures for this source measure
@@ -273,6 +271,16 @@ export abstract class MusicSheetCalculator {
         this.handleStaffEntries(staffIsPercussionArray);
         this.calculateVerticalContainersList();
         this.setIndicesToVerticalGraphicalContainers();
+    }
+
+    /**
+     * Whether a sequence of rest measures that becomes a multiple rest measure (AutoGenerateMultipleRestMeasuresFromRestMeasures)
+     * ends before the given rest measure, which can begin the next sequence.
+     * A multiple rest measure only shows what its first measure begins with,
+     * so the sequence ends before a key change or a time signature, and before a rehearsal mark.
+     */
+    private multiRestSequenceEndsBefore(sourceMeasure: SourceMeasure): boolean {
+        return sourceMeasure.hasBeginInstructions() || sourceMeasure.rehearsalExpression !== undefined;
     }
 
     /**
