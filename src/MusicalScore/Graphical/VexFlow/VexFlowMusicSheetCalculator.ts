@@ -1227,6 +1227,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           first_note: vfStartNote
         };
         const vfTie1: VF.StaveTie = isTab ? new VF.TabTie(notes, tie.Tie.Type) : this.createStaveTie(notes, tieDirection);
+        VexFlowConverter.setVexFlowTextFontFamily((vfTie1 as any).font, this.rules); // e.g. "H" for a hammer-on
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
       }

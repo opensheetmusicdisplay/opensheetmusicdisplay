@@ -36,6 +36,7 @@ describe("VexFlowTextFontFamily", (): void => {
         osmd.EngravingRules.DefaultFontFamily = family; // so that every text on the page is in that family
         // VexFlow draws fingerings placed left of the notes, and those placed above or below them as string numbers
         osmd.EngravingRules.FingeringPosition = PlacementEnum.Left;
+        osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = true; // for the system breaks of the last sample
         const samples: [string, string[]][] = [
             ["test_rehearsal_marks_simple_one_measure.musicxml", ["A"]], // rehearsal mark
             ["test_repeat_da_capo_in_second_ending.musicxml", ["2", "D.C."]], // ending, repetition instruction
@@ -44,6 +45,7 @@ describe("VexFlowTextFontFamily", (): void => {
             ["test_fingering_Simple_Chords_Treble_Bass.musicxml", ["1", "5"]], // fingerings left and above/below
             ["test_grace_note_modifiers_once.musicxml", ["II"]], // string number
             ["OSMD_Function_Test_Tablature_Alleffects.musicxml", ["5", "Full", "H", "sl."]], // tab fret number, bend, hammer-on, slide
+            ["test_tab_hammer-on_pull-off_tie_across_system_breaks.musicxml", ["H", "P"]], // hammer-on, pull-off across a system break
         ];
         for (const [sample, vexFlowTexts] of samples) {
             await osmd.load(TestUtils.getScore(sample));
@@ -61,6 +63,9 @@ describe("VexFlowTextFontFamily", (): void => {
         await osmd.load(TestUtils.getScore("test_repeat_da_capo_al_coda_after_repeat.musicxml"));
         osmd.render();
         expect(Number(text("D.C. al").getAttribute("y"))).to.be.lessThan(Number(text("To").getAttribute("y")));
+        // a custom ITextMeasurer without the optional computeTextWidthInCssFont() (load() sets OSMD's own again)
+        MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont = undefined;
+        expect((): void => osmd.render()).not.to.throw();
 
         // A bend reserves its text width plus 3px, with the text in the middle (VexFlow's Bend.updateWidth()),
         //   so the texts of two consecutive bends are 3px apart. Compared by the text advance, which is what is measured.
@@ -69,12 +74,5 @@ describe("VexFlowTextFontFamily", (): void => {
         const full: SVGTextElement = text("Full");
         const gap: number = Number(text("1/4").getAttribute("x")) - Number(full.getAttribute("x")) - full.getComputedTextLength();
         expect(gap).to.be.closeTo(3, 0.2);
-    });
-
-    it("places repetition instructions with a text measurer that doesn't implement computeTextWidthInCssFont()", async (): Promise<void> => {
-        await osmd.load(TestUtils.getScore("test_repeat_da_capo_al_coda_after_repeat.musicxml"));
-        // like a custom ITextMeasurer written before the optional method was added, set after load(), which sets OSMD's own
-        MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont = undefined;
-        expect((): void => osmd.render()).not.to.throw();
     });
 });
