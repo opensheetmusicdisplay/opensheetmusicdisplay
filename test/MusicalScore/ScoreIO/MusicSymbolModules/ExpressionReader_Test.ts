@@ -10,6 +10,7 @@ import { ContDynamicEnum, ContinuousDynamicExpression } from
 import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { MultiTempoExpression, TempoExpressionEntry } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiTempoExpression";
+import { RepetitionInstructionEnum } from "../../../../src/MusicalScore/VoiceData/Instructions/RepetitionInstruction";
 
 describe("ExpressionReader", () => {
     /** Reads a test/data sample (preprocessed by karma) into a MusicSheet, optionally with custom rules. */
@@ -192,5 +193,7 @@ describe("ExpressionReader", () => {
             expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
         expect(tempoLabels, "tempo direction").to.deep.equal(["Allegro con brio"]);
         expect(textLabels, "text direction").to.deep.equal(["più f, marcato"]);
+        expect(sheet.SourceMeasures[1].LastRepetitionInstructions.map(instruction => instruction.type), "repetition direction")
+            .to.deep.equal([RepetitionInstructionEnum.DaCapo]);
     });
 });
