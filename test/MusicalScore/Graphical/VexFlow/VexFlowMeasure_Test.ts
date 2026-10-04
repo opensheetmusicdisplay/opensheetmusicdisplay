@@ -889,6 +889,47 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // A fingering above or below the staff is centred on its note's head, also where Vexflow moves a voice's notes aside from
+   // another voice's notes, e.g. the lower of two voices a second apart (beat 1: voice 2's C5 right of voice 1's D5).
+   // Before fix: the fingerings of a staff entry were all at its x, the middle of the voice entry reaching the farthest right,
+   // so the 4 of the D5 was drawn above the C5. The fingerings of a chord stay in one column (beat 3: C5-D5 in voice 1,
+   // whose D5 is drawn right of the stem), above the heads that aren't displaced: before fix, they were above the stem.
+   it("Centres each fingering on the head of its note, also of a voice moved aside", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_fingering_voices_moved_aside.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const staffEntries: GraphicalStaffEntry[] = osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries;
+         function fingering(staffEntry: GraphicalStaffEntry, text: string): GraphicalLabel {
+            return staffEntry.FingeringEntries.find((label: GraphicalLabel) => label.Label.text === text);
+         }
+         /** The x of the centre of the drawn note head of the fingering's note. */
+         function noteX(label: GraphicalLabel): number {
+            return osmd.EngravingRules.GNote(label.sourceNote).PositionAndShape.AbsolutePosition.x;
+         }
+
+         const d5Fingering: GraphicalLabel = fingering(staffEntries[0], "4");
+         const c5Fingering: GraphicalLabel = fingering(staffEntries[0], "3");
+         expect(noteX(c5Fingering) - noteX(d5Fingering), "beat 1: the C5 is drawn right of the D5").to.be.above(0.5);
+         expect(d5Fingering.PositionAndShape.AbsolutePosition.x, "beat 1: the 4 above the D5").to.be.closeTo(noteX(d5Fingering), 0.001);
+         expect(c5Fingering.PositionAndShape.AbsolutePosition.x, "beat 1: the 3 above the C5").to.be.closeTo(noteX(c5Fingering), 0.001);
+
+         const chordC5Fingering: GraphicalLabel = fingering(staffEntries[1], "1");
+         const chordD5Fingering: GraphicalLabel = fingering(staffEntries[1], "2");
+         expect(noteX(chordD5Fingering) - noteX(chordC5Fingering), "beat 3: the D5 is drawn right of the C5").to.be.above(0.5);
+         expect(chordC5Fingering.PositionAndShape.AbsolutePosition.x, "beat 3: the 1 above the C5")
+            .to.be.closeTo(noteX(chordC5Fingering), 0.001);
+         expect(chordD5Fingering.PositionAndShape.AbsolutePosition.x, "beat 3: the 2 in the column of the 1")
+            .to.be.closeTo(chordC5Fingering.PositionAndShape.AbsolutePosition.x, 0.001);
+         done();
+      }).catch(done);
+   });
+
    // A fingering label is stacked in the pitch order of its note, which is not the order the
    // fingerings were read in, so the label's index in FingeringEntries says nothing about which
    // note it belongs to. GraphicalLabel.sourceNote carries that link, letting a consumer find the

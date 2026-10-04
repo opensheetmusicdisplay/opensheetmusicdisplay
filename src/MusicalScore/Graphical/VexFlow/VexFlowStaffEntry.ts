@@ -170,9 +170,11 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
      *   moves aside so that the voices' notes don't overlap (x shift),
      * - at the right end of the widest fret number of a TAB chord.
      * The notes' y: see VexFlowMeasure.correctNotePositions().
+     * Also sets the centre of the voice entries' note heads (GraphicalVoiceEntry.noteHeadsCenterX).
      */
     private positionNotesAtNoteHeads(): void {
         for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
+            gve.noteHeadsCenterX = undefined;
             const vfNote: any = gve.vfStaveNote;
             if (!vfNote?.preFormatted) {
                 continue;
@@ -183,6 +185,11 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 const centerX: number = note.sourceNote.isRest() ? undefined : VexFlowStaffEntry.drawnCenterX(vfNote, note);
                 if (centerX !== undefined) {
                     note.PositionAndShape.RelativePosition.x = centerX / unitInPixels - voiceEntryX;
+                    // the centre of the heads not displaced beside the others (Vexflow doesn't displace the first head it draws,
+                    //   so every chord has such heads)
+                    if (gve.noteHeadsCenterX === undefined && !vfNote.note_heads?.[note.vfnoteIndex]?.isDisplaced()) {
+                        gve.noteHeadsCenterX = note.PositionAndShape.RelativePosition.x;
+                    }
                 }
             }
         }

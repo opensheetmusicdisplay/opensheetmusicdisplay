@@ -27,6 +27,13 @@ export class GraphicalVoiceEntry extends GraphicalObject {
     public parentVoiceEntry: VoiceEntry;
     public parentStaffEntry: GraphicalStaffEntry;
     public notes: GraphicalNote[];
+    /** The x of the centre of the note heads, relative to the voice entry like the positions of its notes: where they are
+     *  drawn, including the shift of all of them aside from another voice's notes, but not the shift of a single head
+     *  beside the others (e.g. of a second in a chord), so the same for all notes of a chord. The fingerings of the notes
+     *  are centred on it (see MusicSheetCalculator.calculateFingerings()).
+     *  Set with the positions of the notes (see VexFlowStaffEntry.positionNotesAtNoteHeads()), undefined e.g. for a rest.
+     */
+    public noteHeadsCenterX: number;
     /** Contains octave shifts affecting this voice entry, caused by octave brackets. */
     public octaveShiftValue: OctaveEnum;
     protected rules: EngravingRules;
