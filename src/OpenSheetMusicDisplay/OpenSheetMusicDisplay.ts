@@ -250,6 +250,11 @@ export class OpenSheetMusicDisplay {
     private lazyIncrementalActive: boolean = false;
     /** Incremental rendering: source-measure index where the next batch continues (the drawn frontier). */
     private lazyNextSourceIndex: number = 0;
+    /** Incremental rendering of the endless page: the width in pixels all batches of the session lay the sheet out at, the
+     *  container's content width when the first batch read it (like render() reads it once). A batch reading the width again
+     *  laid its systems out narrower than the ones drawn before when the container had become narrower in between, e.g. by
+     *  the vertical scrollbar the page gets once the first batch makes it longer than the window. */
+    private lazyLayoutWidth: number = 0;
     /** Incremental rendering: the draw-measure range the lazy layout mutates, saved on begin and restored on
      *  reset, so a later normal render() isn't left limited to the last batch's draw range. */
     private lazySavedMinMeasureToDrawIndex: number = 0;
@@ -377,6 +382,8 @@ export class OpenSheetMusicDisplay {
      * or the first after load(), render() or resetIncrementalRendering() -- starts a fresh session: it
      * clears the container and lays the score out from the first measure. Each later call appends the next
      * batch. Returns progress; once `done` is true the whole sheet is rendered and further calls are no-ops.
+     * Like render(), a session lays the sheet out at the container's width when it starts: to adapt it to a new
+     * width, e.g. after a resize, start a new session.
      * Page labels are drawn with the batch that finalizes their position: the title block (title, subtitle,
      * composer, lyricist) with the first batch, the copyright (below the last system) with the final batch.
      *
@@ -664,6 +671,7 @@ export class OpenSheetMusicDisplay {
             this.lazyDrawnSystemCount = 0;
             this.lazyDrawnSystemPositions = [];
             this.graphic.GetCalculator?.clearSkyBottomLineCache(); // fresh lazy session: drop reused sky/bottom lines
+            this.lazyLayoutWidth = this.getContainerContentWidth();
         }
         const lastSheetMeasureIndex: number = this.sheet.SourceMeasures.length - 1;
 
@@ -672,8 +680,7 @@ export class OpenSheetMusicDisplay {
         this.rules.MinMeasureToDrawIndex = 0;
         this.rules.MaxMeasureToDrawIndex = Math.min(toMeasureIndex, lastSheetMeasureIndex);
 
-        const width: number = this.getContainerContentWidth();
-        this.sheet.pageWidth = width / this.zoom / 10.0;
+        this.sheet.pageWidth = this.lazyLayoutWidth / this.zoom / 10.0; // the session's width, see lazyLayoutWidth
         this.rules.PageHeight = 100001; // lazy assumes the endless (vertical scroll) page format
 
         this.graphic.reCalculate();
@@ -742,8 +749,9 @@ export class OpenSheetMusicDisplay {
 
         // createOrRefreshRenderBackend rebuilds the drawer (resetting the lazy draw window), so it must
         // run BEFORE setting that window below. A purely-appending batch keeps the existing backends.
+        // The backends are as wide as the layout, also when the container's width has changed since the first batch.
         if (recreateBackend) {
-            this.createOrRefreshRenderBackend();
+            this.createOrRefreshRenderBackend(this.lazyLayoutWidth);
         }
         // A backend per page, like render(): a batch whose layout reaches a new page adds one for it. Grow each backend to fit
         // through the last system we draw on its page. Once all of a page's systems are drawn (on the final batch, or before
@@ -1019,7 +1027,12 @@ export class OpenSheetMusicDisplay {
         return measures[drawToIdxExcl].parentSourceMeasure.measureListIndex;
     }
 
-    protected createOrRefreshRenderBackend(): void {
+    /**
+     * Removes the backends (SVG or canvas) from the container and creates a new one for each page drawn.
+     * @param pageWidth the width of the pages in pixels. By default the container's content width, read after removing the
+     *  backends. An incremental render passes the width all its batches lay the sheet out at (see lazyLayoutWidth).
+     */
+    protected createOrRefreshRenderBackend(pageWidth?: number): void {
         // console.log("[OSMD] createOrRefreshRenderBackend()");
 
         // Remove old backends
@@ -1045,7 +1058,7 @@ export class OpenSheetMusicDisplay {
         this.drawer.skyLineVisible = this.drawSkyLine;
 
         // Set page width
-        let width: number = this.getContainerContentWidth();
+        let width: number = pageWidth ?? this.getContainerContentWidth();
         if (this.rules.RenderSingleHorizontalStaffline) {
             width = (this.EngravingRules.PageLeftMargin + this.graphic.MusicPages[0].PositionAndShape.Size.width + this.EngravingRules.PageRightMargin)
                 * 10 * this.zoom;

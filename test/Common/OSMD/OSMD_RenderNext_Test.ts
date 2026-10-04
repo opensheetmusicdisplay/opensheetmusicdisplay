@@ -246,12 +246,13 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
         expect(osmd.renderNext({ measures: osmd.Sheet.SourceMeasures.length }).done, "done in one batch").to.equal(true);
     }
 
-    /** Renders the loaded sheet incrementally with the given batch options from the start until it is complete.
-     *  Returns the number of batches. */
-    function renderNextUntilDone(options: IRenderNextOptions): number {
+    /** Renders the loaded sheet incrementally with the given batch options from the start until it is complete, calling
+     *  afterFirstBatch (if given) after the first batch. Returns the number of batches. */
+    function renderNextUntilDone(options: IRenderNextOptions, afterFirstBatch?: () => void): number {
         osmd.resetIncrementalRendering();
         let batches: number = 1;
         let result: IRenderNextResult = osmd.renderNext(options);
+        afterFirstBatch?.();
         while (!result.done && batches < 100) {
             result = osmd.renderNext(options);
             batches++;
@@ -327,5 +328,20 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
         expect(stemsAndBeamsInOneBatch.length, "stems and beams").to.be.greaterThan(100);
         expect(renderNextUntilDone({ systems: 1 }), "batches").to.be.greaterThan(2);
         expect(stemsAndBeams()).to.deep.equal(stemsAndBeamsInOneBatch);
+    });
+
+    it("lays out all batches at the width of the first one", async () => {
+        // Each batch used to read the container's width. When the container got narrower after the first batch, e.g. by the
+        //   vertical scrollbar of the page the first batch made longer than the window (Chrome on Windows), the later batches laid
+        //   out their systems narrower than the ones drawn before, and the batches that draw all systems again because an earlier
+        //   one moved (some of this sample's) made the SVG narrower.
+        await osmd.load(TestUtils.getScore("Dichterliebe01.xml"));
+        renderNextInOneBatch();
+        const pagesInOneBatch: string[][] = drawnPages();
+        const narrower: () => void = (): void => {
+            container.style.width = "1425px"; // 15 pixels narrower, like with a vertical scrollbar
+        };
+        expect(renderNextUntilDone({ systems: 1 }, narrower), "batches").to.be.greaterThan(2);
+        expect(drawnPages()).to.deep.equal(pagesInOneBatch);
     });
 });
