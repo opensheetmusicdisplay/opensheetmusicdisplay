@@ -30,19 +30,13 @@ export class VexFlowVibratoBracket extends GraphicalWavyLine {
      * @param graphicalStaffEntry the staff entry that holds the start note
      */
      public setStartNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
-        if (!graphicalStaffEntry) {
-            // e.g. an empty measure in the drawing range, or an IsExtraGraphicalMeasure, has no staff entries
-            return false;
+        const vve: VexFlowVoiceEntry = this.findNoteVoiceEntry(graphicalStaffEntry);
+        if (!vve) {
+            return false; // couldn't find a startNote
         }
-        for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
-            const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
-            if (vve?.vfStaveNote) {
-                this.startNote = vve.vfStaveNote;
-                this.startVfVoiceEntry = vve;
-                return true;
-            }
-        }
-        return false; // couldn't find a startNote
+        this.startNote = vve.vfStaveNote;
+        this.startVfVoiceEntry = vve;
+        return true;
     }
 
     /**
@@ -50,24 +44,42 @@ export class VexFlowVibratoBracket extends GraphicalWavyLine {
      * @param graphicalStaffEntry the staff entry that holds the end note
      */
     public setEndNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
+        const vve: VexFlowVoiceEntry = this.findNoteVoiceEntry(graphicalStaffEntry);
+        if (!vve) {
+            return false; // couldn't find an endNote
+        }
+        this.endNote = vve.vfStaveNote;
+        this.endVfVoiceEntry = vve;
+        const parentMeasureStaffEntries: GraphicalStaffEntry[] = vve.parentStaffEntry.parentMeasure.staffEntries;
+        const lastStaffEntry: GraphicalStaffEntry = parentMeasureStaffEntries[parentMeasureStaffEntries.length - 1];
+        //If this is the last staff entry of the stave (measure), render line to end of measure
+        this.toEndOfStopStave = (lastStaffEntry === vve.parentStaffEntry);
+        return true;
+    }
+
+    /**
+     * Finds the voice entry of the note in a staff entry that the wavy line attaches to: the first one with a Vexflow note,
+     * preferring a main note to a grace note. Grace notes before their main note share its staff entry and come first,
+     * e.g. an acciaccatura before a trill, but the trill mark and its wavy line belong to the main note.
+     * @param graphicalStaffEntry the staff entry that holds the note
+     */
+    private findNoteVoiceEntry(graphicalStaffEntry: GraphicalStaffEntry): VexFlowVoiceEntry {
         if (!graphicalStaffEntry) {
             // e.g. an empty measure in the drawing range, or an IsExtraGraphicalMeasure, has no staff entries
-            return false;
+            return undefined;
         }
-        // this is duplicate code from setStartNote, but if we make one general method, we add a lot of branching.
+        let firstGraceVoiceEntry: VexFlowVoiceEntry;
         for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
             const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
-            if (vve?.vfStaveNote) {
-                this.endNote = vve.vfStaveNote;
-                this.endVfVoiceEntry = vve;
-                const parentMeasureStaffEntries: GraphicalStaffEntry[] = this.endVfVoiceEntry.parentStaffEntry.parentMeasure.staffEntries;
-                const lastStaffEntry: GraphicalStaffEntry = parentMeasureStaffEntries[parentMeasureStaffEntries.length - 1];
-                //If this is the last staff entry of the stave (measure), render line to end of measure
-                this.toEndOfStopStave = (lastStaffEntry === this.endVfVoiceEntry.parentStaffEntry);
-                return true;
+            if (!vve?.vfStaveNote) {
+                continue;
             }
+            if (!vve.parentVoiceEntry.IsGrace) {
+                return vve;
+            }
+            firstGraceVoiceEntry ??= vve; // used if the staff entry has only grace notes
         }
-        return false; // couldn't find an endNote
+        return firstGraceVoiceEntry;
     }
 
     public CalculateBoundingBox(): void {
