@@ -146,6 +146,8 @@ downstem flag glyph (v9a): rotate and shift the flag so that it suits the stem b
 
 vibratobracket.js: (custom option):
 add option vibratobracket.toEndOfStopStave: Render to the end of the stop note, instead of before it
+add option vibratobracket.stopBeforeNote: Render up to this note, in front of its modifiers, e.g. to the note after the stop note
+render to the end of the stop note without the width left of it (modifiers like accidentals and grace notes, displaced note heads)
 
 Currently, we are using a heavily improved and customized version of Vexflow 1.2.93,
 because of some formatter advantages compared to Vexflow 3.x versions, see this issue:

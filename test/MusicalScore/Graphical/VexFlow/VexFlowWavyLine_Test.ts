@@ -1,9 +1,11 @@
 import { expect } from "chai";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
+import { Pitch } from "../../../../src/Common/DataObjects/Pitch";
 import { BoundingBox } from "../../../../src/MusicalScore/Graphical/BoundingBox";
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { MusicSystem } from "../../../../src/MusicalScore/Graphical/MusicSystem";
 import { VexFlowVibratoBracket } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVibratoBracket";
+import { VexFlowVoiceEntry } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
 import { WavyLine } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/WavyLine";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../../Util/TestUtils";
@@ -112,6 +114,67 @@ describe("Wavy line across systems", () => {
             "1: Violin I m.1-2", "1: Violin II m.1-2",
             "2: Violin I m.4-4", "2: Violin II m.4-4",
             "3: Violin I m.5-6", "3: Violin II m.5-6",
+        ]);
+    });
+});
+
+/**
+ * Trill lines on notes with grace notes (osmd-extended issue 112, from Dolet for Sibelius). A grace note before a main note
+ * shares its staff entry and comes first in it: the wavy line was attached to the grace note, so it was drawn from the
+ * grace note on, before or through the trill mark of the main note.
+ * A trill line over one note, which Dolet writes as trill-mark, wavy-line start and wavy-line stop on the note, ended at the
+ * end of the note, before the end of its trill mark, where its wavy line starts: it was drawn as a stub or not at all.
+ */
+describe("Wavy line of a trill on a note with grace notes", () => {
+    /** 4/4, flute. m.1: grace note C5, B4 quarter with a trill line over it, C5 dotted half.
+     *  m.2: D5 half, C5 quarter, B4 quarter with a trill line over it, followed by its Nachschlag: grace notes A4 B4.
+     *  m.3: grace note D5, C5 quarter with a trill line up to the B4 quarter after grace note C5, A4 half. */
+    const sampleFilename: string = "test_wavy_line_trill_grace_notes.musicxml";
+    let container: HTMLElement;
+    let osmd: OpenSheetMusicDisplay;
+
+    beforeEach(() => {
+        container = TestUtils.getDivElement(document);
+        osmd = TestUtils.createOpenSheetMusicDisplay(container);
+    });
+    afterEach(() => {
+        container.remove();
+    });
+
+    /** e.g. "B4", or "grace A4" */
+    function noteName(voiceEntry: VexFlowVoiceEntry): string {
+        const pitch: Pitch = voiceEntry.notes[0].sourceNote.Pitch;
+        return `${voiceEntry.parentVoiceEntry.IsGrace ? "grace " : ""}${Pitch.getNoteEnumString(pitch.FundamentalNote)}${pitch.Octave + 3}`;
+    }
+
+    /** "m.<measure> <start note>-<end note>, <where it ends>" for each drawn wavy line */
+    function wavyLines(): string[] {
+        const lines: string[] = [];
+        for (const system of osmd.GraphicSheet.MusicPages[0].MusicSystems) {
+            for (const staffLine of system.StaffLines) {
+                for (const bracket of staffLine.WavyLines as VexFlowVibratoBracket[]) {
+                    let end: string = "at the end of the end note";
+                    if (bracket.ToEndOfStopStave) {
+                        end = "at the end of the measure";
+                    } else if (bracket.nextVfVoiceEntry) {
+                        end = `in front of ${noteName(bracket.nextVfVoiceEntry)}`;
+                    }
+                    const measureNumber: number = bracket.startVfVoiceEntry.parentStaffEntry.parentMeasure.MeasureNumber;
+                    lines.push(`m.${measureNumber} ${noteName(bracket.startVfVoiceEntry)}-${noteName(bracket.endVfVoiceEntry)}, ${end}`);
+                }
+            }
+        }
+        return lines;
+    }
+
+    it("is attached to the trilled main notes, and covers the whole note it starts and stops at", async () => {
+        await osmd.load(TestUtils.getScore(sampleFilename));
+        osmd.render();
+        const lines: string[] = wavyLines();
+        expect(lines, lines.join("; ")).to.deep.equal([
+            "m.1 B4-B4, in front of C5", // was "m.1 grace C5-grace C5, at the end of the end note"
+            "m.2 B4-B4, in front of grace A4", // over the Nachschlag until the end of the measure before
+            "m.3 C5-B4, at the end of the end note", // was "m.3 grace D5-grace C5, ...", from grace note to grace note
         ]);
     });
 });

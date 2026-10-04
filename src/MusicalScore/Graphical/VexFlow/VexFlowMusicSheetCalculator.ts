@@ -2222,6 +2222,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           this.calculateWavyLineSkyBottomLine(graphicalWavyLine.startVfVoiceEntry, graphicalWavyLine.endVfVoiceEntry, graphicalWavyLine, startStaffLine);
       } else {
         graphicalWavyLine.setEndNote(endStaffEntry);
+        if (wavyLine.ParentEndMultiExpression === wavyLine.ParentStartMultiExpression) {
+          // it starts and stops at the same note, e.g. a trill line over one note from Dolet for Sibelius or MuseScore:
+          //   trill-mark, wavy-line start and wavy-line stop
+          graphicalWavyLine.coverEndNoteDuration();
+        }
         graphicalWavyLine.CalculateBoundingBox();
         this.calculateWavyLineSkyBottomLine(graphicalWavyLine.startVfVoiceEntry, graphicalWavyLine.endVfVoiceEntry, graphicalWavyLine, startStaffLine);
       }
@@ -2276,6 +2281,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //vexflow backs off by 1 unit (10 pixels) from stave edge
       stopX = endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.AbsolutePosition.x +
         endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.BorderRight - 1;
+    } else if (vfVibratoBracket.nextVfVoiceEntry) {
+      //Up to the next note, in front of its modifiers (in its bounding box). Vexflow backs off by 0.5 units (5 pixels)
+      const nextNoteBox: BoundingBox = vfVibratoBracket.nextVfVoiceEntry.PositionAndShape;
+      stopX = nextNoteBox.AbsolutePosition.x + nextNoteBox.BorderLeft - 0.5;
     } else {
       stopX = endVfVoiceEntry.PositionAndShape.AbsolutePosition.x + endVfVoiceEntry.PositionAndShape.BorderRight;
       //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
