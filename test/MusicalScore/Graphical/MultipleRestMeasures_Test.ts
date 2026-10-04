@@ -80,4 +80,22 @@ describe("Multiple rest measures generated from rest measures", () => {
         const measuresPerSystem: number[] = osmd.GraphicSheet.MusicPages[0].MusicSystems.map(system => system.StaffLines[0].Measures.length);
         expect(measuresPerSystem, "measures 1, 2-3, 4-5, 6-7 in the first system, 8-9 and 10 in the second").to.deep.equal([4, 2]);
     });
+
+    /**
+     * test_multiple_rest_measures_auto_xml_breaks.musicxml: measures 2-7 are whole-measure rests, measure 4 begins a new system in the XML,
+     * measure 6 a new page. The layout can't break within a multiple rest measure, so with newSystemFromXML and newPageFromXML,
+     * measures 2-3, 4-5 and 6-7 become multiple rest measures. Without these options, measures 2-7 become one.
+     */
+    it("begins a new multiple rest measure at a system or page break from the XML that the layout follows", async () => {
+        let restMeasureCounts: number[] = await renderSample("test_multiple_rest_measures_auto_xml_breaks.musicxml");
+        expect(restMeasureCounts, "measures per multiple rest measure without the breaks, for measures 1-8").to.deep.equal([0, 6, 0, 0, 0, 0, 0, 0]);
+
+        osmd.setOptions({ newSystemFromXML: true, newPageFromXML: true });
+        restMeasureCounts = await renderSample("test_multiple_rest_measures_auto_xml_breaks.musicxml");
+        expect(restMeasureCounts, "measures per multiple rest measure with the breaks, for measures 1-8").to.deep.equal([0, 2, 0, 2, 0, 2, 0, 0]);
+        // per page, the measure numbers of the first measures of its systems
+        const systemStarts: number[][] = osmd.GraphicSheet.MusicPages.map(page =>
+            page.MusicSystems.map(system => system.StaffLines[0].Measures[0].MeasureNumber));
+        expect(systemStarts, "measures 1 and 4 begin the systems of page 1, measure 6 the one of page 2").to.deep.equal([[1, 4], [6]]);
+    });
 });

@@ -278,7 +278,8 @@ export abstract class MusicSheetCalculator {
      * Whether a sequence of rest measures that becomes a multiple rest measure (AutoGenerateMultipleRestMeasuresFromRestMeasures)
      * ends before the given rest measure, which can begin the next sequence.
      * A multiple rest measure only shows what its first measure begins with and the barline its last measure ends with,
-     * so the sequence ends before a key change or a time signature, and before a rehearsal mark,
+     * so the sequence ends before a key change or a time signature, a rehearsal mark, and a system or page break from the XML
+     * that the layout follows (see MusicSystemBuilder.buildMusicSystems()),
      * and after a double, final or heavy-heavy barline. (The other barline styles are drawn like a regular one,
      * see VexFlowMeasure.addMeasureLine().)
      * @param previousMeasure the last measure of the sequence
@@ -286,6 +287,8 @@ export abstract class MusicSheetCalculator {
     private multiRestSequenceEndsBefore(sourceMeasure: SourceMeasure, previousMeasure: SourceMeasure): boolean {
         const barline: SystemLinesEnum = previousMeasure.endingBarStyleEnum;
         return sourceMeasure.hasBeginInstructions() || sourceMeasure.rehearsalExpression !== undefined ||
+            this.rules.NewSystemAtXMLNewSystemAttribute && sourceMeasure.printNewSystemXml ||
+            (this.rules.NewPageAtXMLNewPageAttribute || this.rules.NewSystemAtXMLNewPageAttribute) && sourceMeasure.printNewPageXml ||
             barline === SystemLinesEnum.DoubleThin || barline === SystemLinesEnum.ThinBold || barline === SystemLinesEnum.DoubleBold;
     }
 
