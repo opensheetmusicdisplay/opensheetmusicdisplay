@@ -84,7 +84,10 @@ export class VibratoBracket extends Element {
         stop_x = this.stopBeforeNote.getAbsoluteX() - metrics.modLeftPx - metrics.extraLeftPx - 5;
       } else {
         // VexFlowPatch: Render to the end of the stop note, instead of before it
-        stop_x = this.stop.getAbsoluteX() + this.stop.getWidth();
+        //   getWidth() also counts what is left of the note: modifiers like accidentals, grace notes and the left half of a fermata,
+        //   also of the staff's other notes at this position, and note heads displaced to the left
+        const metrics = this.stop.getMetrics();
+        stop_x = this.stop.getAbsoluteX() + this.stop.getWidth() - metrics.modLeftPx - metrics.extraLeftPx;
       }
     } else {
       stop_x = this.start.getStave().getTieEndX() - 10;
