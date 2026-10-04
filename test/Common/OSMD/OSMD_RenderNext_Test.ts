@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { IRenderNextOptions, IRenderNextResult, OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import { GraphicalMeasure } from "../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { GraphicalMusicPage } from "../../../src/MusicalScore/Graphical/GraphicalMusicPage";
 import { MusicSystem } from "../../../src/MusicalScore/Graphical/MusicSystem";
 import { unitInPixels } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
@@ -221,6 +222,12 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
 
     beforeEach((): void => {
         container = TestUtils.getDivElement(document);
+        // The sheet is laid out at the container's width. A container as wide as the window (e.g. 727 pixels in ChromeHeadless,
+        //   1350 in FirefoxHeadless) gets narrower once the page has a vertical scrollbar (e.g. 15 pixels in Chrome on Windows):
+        //   then the one batch and the batches of a test were laid out at different widths, unless the containers earlier tests
+        //   left in the page made it long enough for the scrollbar already. A fixed width makes the layout the same in every
+        //   browser, independent of earlier tests.
+        container.style.width = "1440px";
         osmd = TestUtils.createOpenSheetMusicDisplay(container); // autoResize: false
     });
 
@@ -277,14 +284,18 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
     });
 
     it("draws measure repeats", async () => {
-        // repeat signs for one and two measures (EngravingRules.RenderMeasureRepeats), in 3 systems. Incremental rendering used to
-        //   draw the notes instead, also in one batch.
+        // repeat signs for one and two measures (EngravingRules.RenderMeasureRepeats), in 3 systems of up to 4 measures. Incremental
+        //   rendering used to draw the notes instead, also in one batch.
         await osmd.load(TestUtils.getScore("test_measure_repeat_drums.musicxml"));
         osmd.EngravingRules.RenderXMeasuresPerLineAkaSystem = 4;
         renderNextInOneBatch();
         const pagesInOneBatch: string[][] = drawnPages();
         expect(renderNextUntilDone({ systems: 1 }), "batches").to.be.greaterThan(1);
-        expect(osmd.GraphicSheet.MusicPages[0].MusicSystems.length, "systems").to.equal(3);
+        // RenderXMeasuresPerLineAkaSystem is a maximum: in a narrower container, e.g. with 2 measures in the first system, measures 6
+        //   and 7 can be in different systems, and a unit split by a system break stays written out (also with render()).
+        const measureNumbersOfSystems: number[][] = osmd.GraphicSheet.MusicPages[0].MusicSystems.map((system: MusicSystem): number[] =>
+            system.StaffLines[0].Measures.map((measure: GraphicalMeasure): number => measure.MeasureNumber));
+        expect(measureNumbersOfSystems, "measures of the systems").to.deep.equal([[1, 2, 3, 4], [5, 6, 7, 8], [9]]);
         expect(container.querySelectorAll("g.vf-measure-repeat").length, "repeat signs").to.equal(3);
         expect(drawnPages()).to.deep.equal(pagesInOneBatch);
     });
@@ -308,7 +319,6 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
         // A batch's layout reuses the sky and bottom lines of the systems an earlier one calculated. Its beams then extended the
         //   stems only when drawn, at the systems' final position instead of where the skyline calculation draws them, as in
         //   render(): a few stems and beams ended a few trillionths of a pixel off. The comparison isn't rounded here.
-        container.style.width = "1440px";
         await osmd.load(TestUtils.getScore("Dichterliebe01.xml"));
         const stemsAndBeams: () => string[] = (): string[] => Array.from(container.querySelectorAll("path.vf-stem, g.vf-beam path"))
             .map((path: Element): string => path.getAttribute("d")).sort();
