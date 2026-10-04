@@ -212,7 +212,26 @@ export abstract class MusicSheetCalculator {
             for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {
                 const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
                 // console.log(sourceMeasure.MeasureNumber + " can be reduced: " + sourceMeasure.canBeReducedToMultiRest());
-                if (!sourceMeasure.isReducedToMultiRest && sourceMeasure.canBeReducedToMultiRest()) {
+                const canBeReduced: boolean = !sourceMeasure.isReducedToMultiRest && sourceMeasure.canBeReducedToMultiRest();
+                // A multirest only shows the key and time signature its first measure starts with,
+                //   so a measure that starts with a key or time change ends the sequence before it (and can begin the next one).
+                if (multiRestCount > 0 && (!canBeReduced || sourceMeasure.hasBeginInstructions())) {
+                    if (multiRestCount > 1) { //Actual multirest sequence just happened. Process
+                        beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
+                        //regen graphical measures for this source measure
+                        const graphicalMeasures: GraphicalMeasure[] = this.createGraphicalMeasuresForSourceMeasure(
+                            beginMultiRestMeasure,
+                            accidentalCalculators,
+                            lyricWords,
+                            openOctaveShifts,
+                            activeClefs
+                        );
+                        measureList[beginMultiRestMeasure.measureListIndex] = graphicalMeasures;
+                    } //else had a potential multirest sequence, but didn't pan out. only one measure was rests
+                    multiRestCount = 0;
+                    beginMultiRestMeasure = undefined;
+                }
+                if (canBeReduced) {
                     //we've already been initialized, we are in the midst of a multirest sequence
                     if (multiRestCount > 0) {
                         beginMultiRestMeasure.isReducedToMultiRest = true;
@@ -227,24 +246,6 @@ export abstract class MusicSheetCalculator {
                     } else { //else this is the (potential) beginning
                         beginMultiRestMeasure = sourceMeasure;
                         multiRestCount = 1;
-                    }
-                } else { //not multirest measure
-                    if (multiRestCount > 1) { //Actual multirest sequence just happened. Process
-                        beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
-                        //regen graphical measures for this source measure
-                        const graphicalMeasures: GraphicalMeasure[] = this.createGraphicalMeasuresForSourceMeasure(
-                            beginMultiRestMeasure,
-                            accidentalCalculators,
-                            lyricWords,
-                            openOctaveShifts,
-                            activeClefs
-                        );
-                        measureList[beginMultiRestMeasure.measureListIndex] = graphicalMeasures;
-                        multiRestCount = 0;
-                        beginMultiRestMeasure = undefined;
-                    } else { //had a potential multirest sequence, but didn't pan out. only one measure was rests
-                        multiRestCount = 0;
-                        beginMultiRestMeasure = undefined;
                     }
                 }
             }
