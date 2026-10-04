@@ -137,7 +137,7 @@ export class RepetitionInstructionReader {
   /**
    * Reads a repetition instruction (e.g. D.S., Fine, a segno sign) from a direction.
    * @param directionTypeNode the direction-type element (words, segno or coda)
-   * @param relativeMeasurePosition the position of the direction in the measure (not used)
+   * @param relativeMeasurePosition the position of the direction in the measure: a jump at 0 may be taken at the barline before
    * @param soundNode the direction's sound element, if any: <sound segno="..."> marks a segno as the target of a D.S.
    *   Its dacapo, dalsegno, fine, tocoda, segno and coda attributes say which instruction the direction is when its words
    *   don't name one themselves, e.g. "Fin", "Da Capo bis Ende" or "D.C. senza replica".
@@ -151,7 +151,9 @@ export class RepetitionInstructionReader {
       // An exporter may split the words where their formatting changes.
       const words: string = directionTypeNode.elements("words").map((node: IXmlElement): string => node.value).join("").trim();
       // Measure positions aren't adjusted by the relative position in the measure (relativeMeasurePosition):
-      //   the instruction belongs to the measure it's written in (see test_staverepetitions_coda_etc_positioning.musicxml).
+      //   the instruction belongs to the measure it's written in (see test_staverepetitions_coda_etc_positioning.musicxml),
+      //   unless it is a jump at the very start of the measure that a sound element there states: the sound takes it at the
+      //   barline before (#1766).
       let type: RepetitionInstructionEnum = RepetitionInstructionReader.repetitionInstructionFromWords(words.toLowerCase());
       // the words drawn instead of the instruction's label, if they say more than it or say it in another language
       let drawnWords: string = undefined;
@@ -173,7 +175,10 @@ export class RepetitionInstructionReader {
           drawnWords = words.replace(/\s+/g, " "); // drawn in one line
         }
       }
-      const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, type);
+      const soundType: RepetitionInstructionEnum = RepetitionInstructionReader.soundTypeOfJump(type);
+      const atBarlineBefore: boolean = relativeMeasurePosition === 0 && measureIndex > 0 && soundType !== undefined &&
+        this.isStatedAtMeasureStart(soundType);
+      const newInstruction: RepetitionInstruction = new RepetitionInstruction(atBarlineBefore ? measureIndex - 1 : measureIndex, type);
       newInstruction.Words = drawnWords;
       newInstruction.MarkedAsTarget = type === RepetitionInstructionEnum.Segno && !!soundNode?.attribute("segno");
       this.addInstruction(this.repetitionInstructions, newInstruction);
@@ -248,6 +253,52 @@ export class RepetitionInstructionReader {
       }
     }
     return undefined;
+  }
+
+  /**
+   * Returns the instruction a sound element states for the jump (see repetitionInstructionFromSound), e.g. a D.S. for a
+   * D.S. al Coda, or undefined if the instruction isn't a jump: a segno or coda sign marks where the music lands.
+   */
+  private static soundTypeOfJump(type: RepetitionInstructionEnum): RepetitionInstructionEnum {
+    switch (type) {
+      case RepetitionInstructionEnum.DaCapo:
+      case RepetitionInstructionEnum.DaCapoAlFine:
+      case RepetitionInstructionEnum.DaCapoAlCoda:
+        return RepetitionInstructionEnum.DaCapo;
+      case RepetitionInstructionEnum.DalSegno:
+      case RepetitionInstructionEnum.DalSegnoAlFine:
+      case RepetitionInstructionEnum.DalSegnoAlCoda:
+        return RepetitionInstructionEnum.DalSegno;
+      case RepetitionInstructionEnum.ToCoda:
+      case RepetitionInstructionEnum.Fine:
+        return type;
+      default:
+        return undefined;
+    }
+  }
+
+  /** Whether a sound element at the start of the current measure (before its first note or forward), in any part,
+   *  states the instruction (see repetitionInstructionFromSound). */
+  private isStatedAtMeasureStart(type: RepetitionInstructionEnum): boolean {
+    for (const partMeasures of this.xmlMeasureList) {
+      for (const node of partMeasures?.[this.currentMeasureIndex]?.elements() ?? []) {
+        if (node.name === "note" || node.name === "forward") {
+          break;
+        }
+        const sounds: IXmlElement[] = node.name === "direction" ? node.elements("sound") : node.name === "sound" ? [node] : [];
+        const directionOffset: IXmlElement = node.name === "direction" ? node.element("offset") : undefined;
+        if (sounds.some((sound: IXmlElement): boolean => {
+          // A sound's offset overrides a playback direction offset; a visual-only offset does not move the sound.
+          const offset: IXmlElement = sound.element("offset") ??
+            (directionOffset?.attribute("sound")?.value === "yes" ? directionOffset : undefined);
+          return (offset === undefined || Number(offset.value) === 0) &&
+            RepetitionInstructionReader.repetitionInstructionFromSound(sound) === type;
+        })) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /** Whether the instruction type is a D.C. or D.S. (with or without al Fine / al Coda). */

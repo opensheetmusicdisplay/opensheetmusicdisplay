@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work>
+    <work-title>To Coda and D.S. al Coda at the start of a measure</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Upper</part-name>
+    </score-part>
+    <score-part id="P2">
+      <part-name>Lower</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!-- Segno in measure 1, To Coda at the start of measure 2, coda sign and D.S. al Coda at the start of measure 3.
+         The To Coda's sound is in its direction here; the D.S.'s is directly in the lower part's measure 3.
+         The jumps act at the preceding barlines: 1 2 1 3. -->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <segno/>
+        </direction-type>
+        <sound segno="s"/>
+      </direction>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <direction placement="above">
+        <direction-type>
+          <words>To Coda</words>
+        </direction-type>
+        <sound tocoda="c"/>
+      </direction>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="3">
+      <direction placement="above">
+        <direction-type>
+          <coda/>
+        </direction-type>
+        <sound coda="c"/>
+      </direction>
+      <direction placement="above">
+        <direction-type>
+          <words>D.S. al Coda</words>
+        </direction-type>
+      </direction>
+      <note>
+        <pitch>
+          <step>F</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+      </barline>
+    </measure>
+  </part>
+  <part id="P2">
+    <!-- Only the D.S. sound is needed in this part. -->
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="3">
+      <sound dalsegno="s"/>
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+      </barline>
+    </measure>
+  </part>
+</score-partwise>
