@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work>
+    <work-title>Multiple rest measures at double and final barlines test</work-title>
+  </work>
+  <!-- Measures 2-9 are whole-measure rests, which OSMD combines into multiple rest measures (AutoGenerateMultipleRestMeasuresFromRestMeasures).
+       A multiple rest measure only shows the barline of its last measure, so a double barline (measure 3), a heavy-heavy barline (measure 5)
+       and a final barline (measure 7, the end of the first movement) each end one: measures 2-3, 4-5, 6-7 and 8-9 become
+       multiple rest measures, ending with these barlines. Before, measures 2-9 became one multiple rest measure with a regular barline. -->
+  <part-list>
+    <score-part id="P1">
+      <part-name>Flute</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths><mode>major</mode></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="2">
+      <note><rest measure="yes"/><duration>4</duration></note>
+    </measure>
+    <measure number="3">
+      <note><rest measure="yes"/><duration>4</duration></note>
+      <barline location="right"><bar-style>light-light</bar-style></barline>
+    </measure>
+    <measure number="4">
+      <note><rest measure="yes"/><duration>4</duration></note>
+    </measure>
+    <measure number="5">
+      <note><rest measure="yes"/><duration>4</duration></note>
+      <barline location="right"><bar-style>heavy-heavy</bar-style></barline>
+    </measure>
+    <measure number="6">
+      <note><rest measure="yes"/><duration>4</duration></note>
+    </measure>
+    <measure number="7">
+      <note><rest measure="yes"/><duration>4</duration></note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+    <measure number="8">
+      <note><rest measure="yes"/><duration>4</duration></note>
+    </measure>
+    <measure number="9">
+      <note><rest measure="yes"/><duration>4</duration></note>
+    </measure>
+    <measure number="10">
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><type>whole</type></note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+</score-partwise>

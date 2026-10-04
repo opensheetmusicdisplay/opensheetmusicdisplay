@@ -85,7 +85,8 @@ export class MusicSystemBuilder {
                 graphicalMeasures[idx].resetLayout();
             }
             const sourceMeasure: SourceMeasure = graphicalMeasures[0].parentSourceMeasure;
-            const sourceMeasureEndsPart: boolean = sourceMeasure.HasEndLine;
+            // a multiple rest measure ends a part where its last measure does, with a final barline
+            const sourceMeasureEndsPart: boolean = this.getLastMeasureOfMultiRest(sourceMeasure).HasEndLine;
             const sourceMeasureBreaksSystem: boolean = sourceMeasureEndsPart && this.rules.NewPartAndSystemAfterFinalBarline;
             const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
             sourceMeasure.IsSystemStartMeasure = isSystemStartMeasure;
@@ -819,23 +820,21 @@ export class MusicSystemBuilder {
         return SystemLinesEnum.None;
     }
 
-    protected getMeasureEndLine(): SystemLinesEnum {
-        let sourceMeasure: SourceMeasure = undefined;
-        try {
-            sourceMeasure = this.measureList[this.measureListIndex][0].parentSourceMeasure;
-            if (this.rules.RenderMultipleRestMeasures && sourceMeasure.multipleRestMeasures > 1) {
-                const newIndex: number = Math.min(
-                    this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, // safety check
-                    sourceMeasure.measureListIndex + sourceMeasure.multipleRestMeasures - 1
-                    // check the bar line of the last sourcemeasure in the multiple measure rest sequence
-                );
-                sourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[newIndex];
-                // sourceMeasure = this.measureList[this.measureListIndex + sourceMeasure.multipleRestMeasures - 1][0].parentSourceMeasure;
-                //    this will be possible when the other GraphicalMeasures in the measureList aren't undefined anymore
-            }
-        } finally {
-            // do nothing
+    /**
+     * Returns the last measure of the multiple rest measure that the given measure begins, which has its barline,
+     * or the given measure if it doesn't begin one.
+     */
+    protected getLastMeasureOfMultiRest(sourceMeasure: SourceMeasure): SourceMeasure {
+        if (!this.rules.RenderMultipleRestMeasures || !(sourceMeasure?.multipleRestMeasures > 1)) {
+            return sourceMeasure;
         }
+        const sourceMeasures: SourceMeasure[] = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures;
+        // (the other GraphicalMeasures of a multiple rest measure in the measureList are undefined)
+        return sourceMeasures[Math.min(sourceMeasures.length - 1, sourceMeasure.measureListIndex + sourceMeasure.multipleRestMeasures - 1)];
+    }
+
+    protected getMeasureEndLine(): SystemLinesEnum {
+        const sourceMeasure: SourceMeasure = this.getLastMeasureOfMultiRest(this.measureList[this.measureListIndex][0]?.parentSourceMeasure);
 
         if (this.nextMeasureBeginsLineRepetition() && this.thisMeasureEndsLineRepetition()) {
             return SystemLinesEnum.DotsBoldBoldDots;

@@ -24,6 +24,7 @@ import { RepetitionInstruction, RepetitionInstructionEnum, AlignmentType } from 
 import { MultiExpression, MultiExpressionEntry } from "../VoiceData/Expressions/MultiExpression";
 import { StaffEntryLink } from "../VoiceData/StaffEntryLink";
 import { MusicSystemBuilder } from "./MusicSystemBuilder";
+import { SystemLinesEnum } from "./SystemLinesEnum";
 import { MultiTempoExpression } from "../VoiceData/Expressions/MultiTempoExpression";
 import { Repetition } from "../MusicSource/Repetition";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
@@ -213,7 +214,7 @@ export abstract class MusicSheetCalculator {
                 const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
                 // console.log(sourceMeasure.MeasureNumber + " can be reduced: " + sourceMeasure.canBeReducedToMultiRest());
                 const canBeReduced: boolean = !sourceMeasure.isReducedToMultiRest && sourceMeasure.canBeReducedToMultiRest();
-                if (multiRestCount > 0 && (!canBeReduced || this.multiRestSequenceEndsBefore(sourceMeasure))) {
+                if (multiRestCount > 0 && (!canBeReduced || this.multiRestSequenceEndsBefore(sourceMeasure, musicSheet.SourceMeasures[idx - 1]))) {
                     if (multiRestCount > 1) { //Actual multirest sequence just happened. Process
                         beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
                         //regen graphical measures for this source measure
@@ -276,11 +277,16 @@ export abstract class MusicSheetCalculator {
     /**
      * Whether a sequence of rest measures that becomes a multiple rest measure (AutoGenerateMultipleRestMeasuresFromRestMeasures)
      * ends before the given rest measure, which can begin the next sequence.
-     * A multiple rest measure only shows what its first measure begins with,
-     * so the sequence ends before a key change or a time signature, and before a rehearsal mark.
+     * A multiple rest measure only shows what its first measure begins with and the barline its last measure ends with,
+     * so the sequence ends before a key change or a time signature, and before a rehearsal mark,
+     * and after a double, final or heavy-heavy barline. (The other barline styles are drawn like a regular one,
+     * see VexFlowMeasure.addMeasureLine().)
+     * @param previousMeasure the last measure of the sequence
      */
-    private multiRestSequenceEndsBefore(sourceMeasure: SourceMeasure): boolean {
-        return sourceMeasure.hasBeginInstructions() || sourceMeasure.rehearsalExpression !== undefined;
+    private multiRestSequenceEndsBefore(sourceMeasure: SourceMeasure, previousMeasure: SourceMeasure): boolean {
+        const barline: SystemLinesEnum = previousMeasure.endingBarStyleEnum;
+        return sourceMeasure.hasBeginInstructions() || sourceMeasure.rehearsalExpression !== undefined ||
+            barline === SystemLinesEnum.DoubleThin || barline === SystemLinesEnum.ThinBold || barline === SystemLinesEnum.DoubleBold;
     }
 
     /**

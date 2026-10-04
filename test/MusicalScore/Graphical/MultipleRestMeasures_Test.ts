@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import { SystemLinePosition } from "../../../src/MusicalScore/Graphical/SystemLinePosition";
+import { SystemLinesEnum } from "../../../src/MusicalScore/Graphical/SystemLinesEnum";
 
 describe("Multiple rest measures generated from rest measures", () => {
     let container: HTMLElement;
@@ -53,5 +55,29 @@ describe("Multiple rest measures generated from rest measures", () => {
         const rehearsalMarks: [string, string][] = Array.from(container.querySelectorAll(".vf-measure text"))
             .map((text): [string, string] => [text.closest(".vf-measure").id, text.textContent]);
         expect(rehearsalMarks, "A in measure 1, B in measure 4").to.deep.equal([["1", "A"], ["4", "B"]]);
+    });
+
+    /**
+     * test_multiple_rest_measures_auto_barlines.musicxml: measures 2-9 are whole-measure rests, measure 3 ends with a double barline,
+     * measure 5 with a heavy-heavy one and measure 7 with a final barline (the end of the first movement).
+     * A multiple rest measure only shows the barline of its last measure, so measures 2-3, 4-5, 6-7 and 8-9 become multiple rest measures.
+     */
+    it("ends a multiple rest measure with a double or final barline, and begins a new part after the final barline", async () => {
+        osmd.EngravingRules.NewPartAndSystemAfterFinalBarline = false; // one system, measure numbers 1-10 (read when loading)
+        const restMeasureCounts: number[] = await renderSample("test_multiple_rest_measures_auto_barlines.musicxml");
+        expect(restMeasureCounts, "measures per multiple rest measure, for measures 1-10").to.deep.equal([0, 2, 0, 2, 0, 2, 0, 2, 0, 0]);
+        // [measure number, barline] of the barlines at the measure ends
+        const endBarlines: [number, SystemLinesEnum][] = osmd.GraphicSheet.MusicPages[0].MusicSystems[0].SystemLines
+            .filter(line => line.linePosition === SystemLinePosition.MeasureEnd)
+            .map((line): [number, SystemLinesEnum] => [line.topMeasure.MeasureNumber, line.lineType]);
+        expect(endBarlines, "barlines after measures 1, 2-3, 4-5, 6-7, 8-9 and 10").to.deep.equal([
+            [1, SystemLinesEnum.SingleThin], [2, SystemLinesEnum.DoubleThin], [4, SystemLinesEnum.DoubleBold],
+            [6, SystemLinesEnum.ThinBold], [8, SystemLinesEnum.SingleThin], [10, SystemLinesEnum.ThinBold]]);
+
+        // the second movement begins a new system when the multiple rest measure 6-7 ends the first one with its final barline
+        osmd.EngravingRules.NewPartAndSystemAfterFinalBarline = true; // (read when loading)
+        await renderSample("test_multiple_rest_measures_auto_barlines.musicxml");
+        const measuresPerSystem: number[] = osmd.GraphicSheet.MusicPages[0].MusicSystems.map(system => system.StaffLines[0].Measures.length);
+        expect(measuresPerSystem, "measures 1, 2-3, 4-5, 6-7 in the first system, 8-9 and 10 in the second").to.deep.equal([4, 2]);
     });
 });
