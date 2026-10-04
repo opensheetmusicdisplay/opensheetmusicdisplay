@@ -115,6 +115,7 @@ svgcontext.js (custom addition, probably not necessary for vexflow 4):
 able to add extra attributes (like svg node id) to a stroke (e.g. stem)
 fix rect() always using black color, ignoring attributes.stroke (ctx strokeStlye) -> fix defaultColorMusic ignored
 measureText(text, true) returns the text advance (getComputedTextLength()) as the width, like canvas measureText(), instead of the bounding box
+setRawFont(): use the whole family after the size (e.g. "Times New Roman" in "10pt Times New Roman"), not only its first word
 
 tables.js (custom addition):
 add inverted triangle notehead ('TI')

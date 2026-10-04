@@ -35,6 +35,7 @@ import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { Staff } from "../../VoiceData/Staff";
 import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
+import { MusicSheetCalculator } from "../MusicSheetCalculator";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -1165,6 +1166,7 @@ export class VexFlowConverter {
         } else {
             vfnote = new VF.TabNote(tabNoteStruct);
         }
+        (vfnote as any).render_options.font = VexFlowConverter.vexFlowTextCssFont((vfnote as any).render_options.font, rules);
         if (isXNotehead) {
             // (vfnote as any).render_options.fretScale = rules.TabXNoteheadScale; // doesn't work, is overwritten later
             (vfnote as any).render_options.scale = rules.TabXNoteheadScale; // VexFlowPatch
@@ -1181,11 +1183,9 @@ export class VexFlowConverter {
         }
 
         tabPhrases.forEach(function(phrase: { type: number, text: string, width: number }): void {
-            if (phrase.type === VF.Bend.UP) {
-                vfnote.addModifier (new VF.Bend(phrase.text, false));
-            } else {
-                vfnote.addModifier (new VF.Bend(phrase.text, true));
-            }
+            const bend: VF.Bend = new VF.Bend(phrase.text, phrase.type !== VF.Bend.UP);
+            VexFlowConverter.setVexFlowTextFontOfBend(bend, rules);
+            vfnote.addModifier(bend);
         });
 
         return vfnote;
@@ -1416,6 +1416,47 @@ export class VexFlowConverter {
         }
 
         return style + " " + weight + " " + Math.floor(fontSize) + "px " + family;
+    }
+
+    /**
+     * Sets EngravingRules.VexFlowTextFontFamily, if given, as the family of a font that VexFlow draws a text in,
+     * e.g. a rehearsal mark's. The size, weight and style stay VexFlow's.
+     */
+    public static setVexFlowTextFontFamily(font: { family: string }, rules: EngravingRules): void {
+        if (rules.VexFlowTextFontFamily) {
+            font.family = rules.VexFlowTextFontFamily;
+        }
+    }
+
+    /**
+     * Draws the text of a bend in EngravingRules.VexFlowTextFontFamily, if given.
+     * VexFlow sizes a bend by an estimate of its text width (7px per character, which fits its 10pt Arial),
+     * so the bend is widened where its text is wider in that family, as VexFlow's Bend.updateWidth() would size it,
+     * if the TextMeasurer can measure it (see ITextMeasurer.computeTextWidthInCssFont()).
+     */
+    private static setVexFlowTextFontOfBend(bend: VF.Bend, rules: EngravingRules): void {
+        if (!rules.VexFlowTextFontFamily) {
+            return;
+        }
+        const font: string = VexFlowConverter.vexFlowTextCssFont((bend as any).font, rules);
+        (bend as any).setFont(font);
+        if (!MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont) {
+            return;
+        }
+        for (const part of (bend as any).phrase) {
+            const textWidth: number = MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont(part.text, font);
+            part.width = Math.max(part.width, textWidth + 3);
+            part.draw_width = part.width / 2;
+        }
+        (bend as any).updateWidth();
+    }
+
+    /** Like setVexFlowTextFontFamily(), for the CSS fonts like "10pt Arial" that VexFlow uses for tab fret numbers and bends. */
+    public static vexFlowTextCssFont(cssFont: string, rules: EngravingRules): string {
+        if (!rules.VexFlowTextFontFamily) {
+            return cssFont;
+        }
+        return `${cssFont.split(" ")[0]} ${rules.VexFlowTextFontFamily}`;
     }
 
     /**

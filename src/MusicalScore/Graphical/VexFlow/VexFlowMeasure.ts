@@ -525,6 +525,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         if (instruction) {
             const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
+            VexFlowConverter.setVexFlowTextFontFamily((repetition as any).font, this.rules);
             if (repetitionInstruction.Words) {
                 (repetition as any).setText(repetitionInstruction.Words); // drawn instead of the label, e.g. "D.C. senza replica"
             }
@@ -646,6 +647,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             //convert to VF units (pixels)
             vexFlowVoltaHeight *= 10;
             this.stave.setVoltaType(voltaType, repetitionInstruction.endingIndices[0], vexFlowVoltaHeight);
+            const volta: VF.StaveModifier = this.stave.getModifiers().last();
+            VexFlowConverter.setVexFlowTextFontFamily((volta as any).font, this.rules);
             skyBottomLineCalculator.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
         }
     }
@@ -2106,6 +2109,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
 
             const fretFinger: VF.FretHandFinger = new VF.FretHandFinger(fingering.value);
+            VexFlowConverter.setVexFlowTextFontFamily((fretFinger as any).font, this.rules);
             fretFinger.setPosition(modifierPosition);
             fretFinger.setOffsetX(offsetX);
             if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
@@ -2120,6 +2124,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     fretFinger.setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
                 } else if (!this.rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
                     const stringNumber: VF.StringNumber = new VF.StringNumber(fingering.value);
+                    VexFlowConverter.setVexFlowTextFontFamily((stringNumber as any).font, this.rules);
                     stringNumber.radius = 0; // hack to remove the circle around the number
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
@@ -2167,6 +2172,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         // leave stringNumber as is, warning not really necessary
                 }
                 const vfStringNumber: VF.StringNumber = new VF.StringNumber(stringNumber);
+                VexFlowConverter.setVexFlowTextFontFamily((vfStringNumber as any).font, this.rules);
                 // Remove circle from string number. Not needed for
                 // disambiguation from fingerings since we use Roman
                 // Numerals for RenderStringNumbersClassical

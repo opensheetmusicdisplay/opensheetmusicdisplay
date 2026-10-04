@@ -1227,6 +1227,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           first_note: vfStartNote
         };
         const vfTie1: VF.StaveTie = isTab ? new VF.TabTie(notes, tie.Tie.Type) : this.createStaveTie(notes, tieDirection);
+        VexFlowConverter.setVexFlowTextFontFamily((vfTie1 as any).font, this.rules); // e.g. "H" for a hammer-on
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
       }
@@ -1273,6 +1274,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               tie.Tie.Type
             );
           }
+          VexFlowConverter.setVexFlowTextFontFamily(vfTie.font, this.rules); // e.g. "H" for a hammer-on
 
         } else { // not Tab (guitar), normal StaveTie
           vfTie = this.createStaveTie({
@@ -1442,6 +1444,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     const index: number = vfStave.getModifiers().length - 1;
     const mark: VF.StaveTempo = vfStave.getModifiers()[index] as VF.StaveTempo;
+    VexFlowConverter.setVexFlowTextFontFamily((mark as any).font, this.rules);
     let xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
     if (timestamp.RealValue > 0) {
       // Within the measure, place the mark at its time, like other expressions.
@@ -1669,6 +1672,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       // fontSize and minBottomY are extra arguments from VexFlowPatch (stave.js / stavesection.js)
       (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize, minBottomY);
+      const section: VF.StaveModifier = vfStave.getModifiers().last();
+      VexFlowConverter.setVexFlowTextFontFamily((section as any).font, this.rules);
       return; // only draw one rehearsal mark at top (visible) instrument
     }
   }
@@ -2631,7 +2636,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     const fontHeightUnits: number = 1.6; // staverepetition.js draws the text with a 12pt (16px) font
     let textWidthUnits: number = 0;
-    if (text.length > 0) {
+    if (text.length > 0 && this.rules.VexFlowTextFontFamily && MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont) {
+      // measure in the CSS font that staverepetition.js draws with, whose family can also be a generic family or a list
+      const measureFontSize: number = 20;
+      textWidthUnits = MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont(
+        text, `italic bold ${measureFontSize}px ${this.rules.VexFlowTextFontFamily}`) / measureFontSize * fontHeightUnits;
+    } else if (text.length > 0) {
       // measure with the same font family string ("times") that staverepetition.js draws with,
       //   so that the measured width matches the drawn width even if the font falls back to another one
       textWidthUnits = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
@@ -3262,6 +3272,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               },
               slideDirection
             );
+            VexFlowConverter.setVexFlowTextFontFamily((vfTie as any).font, this.rules);
 
             const startMeasure: VexFlowMeasure = (vfStartNote?.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
             if (startMeasure) {

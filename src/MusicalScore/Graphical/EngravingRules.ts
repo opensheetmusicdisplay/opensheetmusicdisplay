@@ -509,6 +509,14 @@ export class EngravingRules {
     public DefaultColorTitle: string;
     public DefaultColorCursor: string;
     public DefaultFontFamily: string;
+    /** Font family of the texts that VexFlow draws in fonts of its own: rehearsal marks, ending numbers, the text of
+     *  metronome marks, repetition instructions like "D.C. al Fine", octave shift texts like "8va", fingerings left or right
+     *  of notes and of grace notes, string numbers, and in tabs the fret numbers, bends, and the texts of hammer-ons,
+     *  pull-offs and slides.
+     *  If undefined, these keep VexFlow's fonts (e.g. bold sans-serif for rehearsal marks, Times for repetition instructions).
+     *  Their size, weight and style don't change. Set it e.g. to DefaultFontFamily to draw all texts in the same font.
+     *  Set before loading a score: fingerings, string numbers, tab fret numbers and bends are created when loading. */
+    public VexFlowTextFontFamily: string;
     public DefaultFontStyle: FontStyles;
     public DefaultVexFlowNoteFont: string;
     public MaxMeasureToDrawIndex: number;
@@ -1059,6 +1067,7 @@ export class EngravingRules {
         this.applyDefaultColorMusic("#000000"); // black. undefined is only black if a note's color hasn't been changed before.
         this.DefaultColorCursor = "#33e02f"; // green
         this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
+        this.VexFlowTextFontFamily = undefined; // if undefined, VexFlow's fonts
         this.DefaultFontStyle = FontStyles.Regular;
         this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
         this.MaxMeasureToDrawIndex = Number.MAX_VALUE;
