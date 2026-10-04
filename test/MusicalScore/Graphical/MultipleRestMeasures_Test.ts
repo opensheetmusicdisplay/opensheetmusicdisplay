@@ -98,4 +98,18 @@ describe("Multiple rest measures generated from rest measures", () => {
             page.MusicSystems.map(system => system.StaffLines[0].Measures[0].MeasureNumber));
         expect(systemStarts, "measures 1 and 4 begin the systems of page 1, measure 6 the one of page 2").to.deep.equal([[1, 4], [6]]);
     });
+
+    /**
+     * test_multiple_rest_measures_auto_first_measure.musicxml: measures 1-3 are whole-measure rests, and measures 1-4 are repeated.
+     * The start markers of the repetitions in measure 1 aren't drawn, so measures 1-3 become a multiple rest measure.
+     */
+    it("begins a multiple rest measure at the first measure, and draws the clef, key and time signature there", async () => {
+        const restMeasureCounts: number[] = await renderSample("test_multiple_rest_measures_auto_first_measure.musicxml");
+        expect(restMeasureCounts, "measures per multiple rest measure, for measures 1-5").to.deep.equal([3, 0, 0, 0, 0]);
+        // the measure numbers of the clefs, key signatures and time signatures drawn, without the number of the multiple rest measure
+        const beginInstructions: string[][] = [".vf-clef", ".vf-keysignature", ".vf-timesignature"].map(selector =>
+            Array.from(container.querySelectorAll(selector)).filter(element => !element.closest(".vf-multirest"))
+                .map(element => element.closest(".vf-measure").id));
+        expect(beginInstructions, "the clef, G major and 4/4 in measure 1").to.deep.equal([["1"], ["1"], ["1"]]);
+    });
 });
