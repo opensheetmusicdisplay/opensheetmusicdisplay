@@ -223,9 +223,9 @@ export interface IOSMDOptions {
      *       </score-instrument>
      *       ...
      *   Would render with 1 line on the staff, since we only have 2 note positions.
-     *   A staff whose MusicXML gives the number of lines (<staff-lines>) keeps it.
-     *   If this value is 0, the feature is turned off.
-     *   The value -1 was meant to render all percussion clefs as a single line, but has no effect.
+     *   A staff whose MusicXML gives the number of lines (<staff-lines>) keeps it, unless EngravingRules.PercussionKeepXMLStafflineCount is false.
+     *   If this value is 0, one-line reduction and percussion note positioning are turned off.
+     *   If this value is -1, one-line reduction is turned off, but notes are still placed by display-step.
      */
     percussionOneLineCutoff?: number;
     /** This property is only active if the above property is active (percussionOneLineCutoff)

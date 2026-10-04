@@ -222,7 +222,7 @@ export class InstrumentReader {
               }
               const staff: Staff = this.instrument.Staves[staffNumber - 1];
               staff.StafflineCount = parseInt(staffLinesNode.value, 10);
-              staff.hasXmlStafflineCount = !isNaN(staff.StafflineCount);
+              staff.xmlStafflineCount = isNaN(staff.StafflineCount) ? undefined : staff.StafflineCount;
             }
           }
           // check multi measure rest

@@ -1,14 +1,11 @@
 import { expect } from "chai";
 import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
-import { VexFlowMeasure } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
-import { StaffLine } from "../../../../src/MusicalScore/Graphical/StaffLine";
+import { BoundingBox } from "../../../../src/MusicalScore/Graphical/BoundingBox";
 import { AbstractGraphicalExpression } from "../../../../src/MusicalScore/Graphical/AbstractGraphicalExpression";
 import { GraphicalInstantaneousDynamicExpression } from "../../../../src/MusicalScore/Graphical/GraphicalInstantaneousDynamicExpression";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../../Util/TestUtils";
-import Vex from "vexflow";
-import VF = Vex.Flow;
 
 describe("VexflowStafflineNoteCalculator", () => {
     // #1726: a percussion clef in measure 3 must not reposition the notes of the G clef measures 1-2.
@@ -45,8 +42,8 @@ describe("VexflowStafflineNoteCalculator", () => {
 // Percussion staves: tom-toms (3 lines), temple blocks (4), a cymbal without <staff-lines>, and two-staff parts of 5 over 1 and 2 over 5 lines.
 //   The 2-4 line staves have a p below them; the two-staff parts also check the 1- and 5-line cases.
 //   Measure 2 is a whole-measure rest in every part.
-//   MusicXML places unpitched notes as in treble clef, E4 on the bottom line. Lines are counted as VexFlow does,
-//   from the bottom line of a five-line staff (E4 = 1, G4 = 2, B4 = 3).
+//   MusicXML places unpitched notes as in treble clef, E4 on the bottom line. Positions are in spaces below the top line
+//   of a five-line staff (F5 = 0, B4 = 2, E4 = 4), like StaffLine.TopLineOffset: 2-4 lines end at G4 (3), see VexFlowMeasure.setLineNumber().
 describe("Percussion staff lines given in MusicXML", () => {
     let osmd: OpenSheetMusicDisplay;
     beforeEach(async () => {
@@ -54,62 +51,46 @@ describe("Percussion staff lines given in MusicXML", () => {
         await osmd.load(TestUtils.getScore("test_percussion_explicit_staff_lines.musicxml"));
     });
 
-    /** The VexFlow lines drawn for a staff, from the bottom up */
-    function drawnLines(staff: number): number[] {
-        const options: { num_lines?: number, line_config?: { visible?: boolean }[] } =
-            (osmd.GraphicSheet.MeasureList[0][staff] as VexFlowMeasure).getVFStave().options;
-        const lines: number[] = [];
-        for (let index: number = 0; index < options.num_lines; index++) {
-            if (options.line_config[index]?.visible !== false) {
-                lines.push(5 - index);
-            }
-        }
-        return lines.sort();
+    function lineCounts(): number[] {
+        return osmd.GraphicSheet.MeasureList[0].map(measure => measure.ParentStaff.StafflineCount);
     }
 
-    /** The VexFlow line of each note (or rest) of a staff in a measure */
-    function noteLines(staff: number, measure: number = 0): number[] {
-        return osmd.GraphicSheet.MeasureList[measure][staff].staffEntries.map(entry =>
-            ((entry.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote).vfnote[0] as VF.StaveNote).getKeyProps()[0].line);
+    /** The position of a box on a staff, in spaces below the top line of a five-line staff */
+    function positionOnStaff(box: BoundingBox, staff: number): number {
+        return box.AbsolutePosition.y - osmd.GraphicSheet.MeasureList[0][staff].ParentStaffLine.PositionAndShape.AbsolutePosition.y;
     }
 
-    /** Staves with 1 to 4 lines and, for each note, the drawn line it belongs on (0: lowest), from E4, G4, B4 and D5 */
-    const linesOfNotes: [number, number[]][] = [
-        [0, [2, 1, 0]], [1, [3, 2, 1, 0]], // one-staff parts
-        [4, [0]], [5, [1, 0]], // the 1-line staff below 5 lines, the 2-line staff above 5 lines
-    ];
-    function expectNotesOnTheirLines(message: string): void {
-        expect(linesOfNotes.map(([staff]) => noteLines(staff)), message).to.deep.equal(
-            linesOfNotes.map(([staff, lineIndices]) => lineIndices.map(index => drawnLines(staff)[index])));
+    /** The positions of the notes of a staff in measure 1 */
+    function notePositions(staff: number): number[] {
+        return osmd.GraphicSheet.MeasureList[0][staff].staffEntries.map(entry =>
+            positionOnStaff(entry.graphicalVoiceEntries[0].notes[0].PositionAndShape, staff));
     }
 
-    it("keeps the given staff lines and places notes, rests and dynamics relative to them", () => {
+    it("keeps the given staff lines and positions, and takes changed rules with updateGraphic()", () => {
         osmd.render();
-        expect([0, 1, 3, 4, 5, 6].map(staff => drawnLines(staff).length), "the given lines")
-            .to.deep.equal([3, 4, 5, 1, 2, 5]);
-        expect(drawnLines(2), "the suspended cymbal (no <staff-lines>) on one line").to.deep.equal([3]);
-        expectNotesOnTheirLines("E4, G4, B4 and D5 on the first to fourth drawn line");
-        expect([3, 6].map(staff => noteLines(staff)), "the five-line staves of the two-staff parts keep their positions (C5, F4)")
-            .to.deep.equal([[3.5, 1.5], [1.5, 3.5]]);
+        expect(lineCounts(), "the given lines, and the suspended cymbal (no <staff-lines>) on one line").to.deep.equal([3, 4, 1, 5, 1, 2, 5]);
+        // the lines of a 3-line staff are at 1, 2 and 3, those of a 4-line staff at 0 to 3, a 2-line staff at 2 and 3, and a 1-line staff at 2
+        expect([0, 1, 4, 5].map(notePositions), "E4, G4, B4 and D5 on the first to fourth line from the bottom")
+            .to.deep.equal([[1, 2, 3], [0, 1, 2, 3], [2], [2, 3]]);
+        expect([3, 6].map(notePositions), "the five-line staves of the two-staff parts keep their positions (C5, F4)")
+            .to.deep.equal([[1.5, 3.5], [3.5, 1.5]]);
+        const rest: BoundingBox = osmd.GraphicSheet.MeasureList[1][5].staffEntries[0].graphicalVoiceEntries[0].PositionAndShape;
+        expect(positionOnStaff(rest, 5) + rest.BorderBottom, "the whole-measure rest of the 2-line staff isn't above it").to.be.above(2);
         for (const staff of [0, 1, 5]) {
-            expect(drawnLines(staff), `the whole-measure rest of the ${drawnLines(staff).length}-line staff hangs from a drawn line`)
-                .to.include(noteLines(staff, 1)[0]);
-            const staffLine: StaffLine = osmd.GraphicSheet.MeasureList[0][staff].ParentStaffLine;
-            const dynamic: AbstractGraphicalExpression = staffLine.AbstractExpressions.find(
+            const dynamic: AbstractGraphicalExpression = osmd.GraphicSheet.MeasureList[0][staff].ParentStaffLine.AbstractExpressions.find(
                 expression => expression instanceof GraphicalInstantaneousDynamicExpression);
-            // 2-4 lines end at G4, 3 spaces below the top line of a five-line staff (see VexFlowMeasure.setLineNumber())
-            const lowestLineY: number = staffLine.PositionAndShape.AbsolutePosition.y + 3;
-            expect(dynamic.PositionAndShape.AbsolutePosition.y + dynamic.PositionAndShape.BorderTop,
-                `the top of the p below the ${drawnLines(staff).length}-line staff`).to.be.at.least(lowestLineY);
+            expect(positionOnStaff(dynamic.PositionAndShape, staff) + dynamic.PositionAndShape.BorderTop,
+                `the top of the p below the ${lineCounts()[staff]}-line staff`).to.be.at.least(3);
         }
-    });
-
-    it("draws a staff that the cutoff drew on one line on five lines again after setting PercussionOneLineCutoff to 0", () => {
+        osmd.EngravingRules.PercussionKeepXMLStafflineCount = false;
+        osmd.updateGraphic();
         osmd.render();
-        expect(drawnLines(2).length, "the suspended cymbal on one line").to.equal(1);
+        expect(lineCounts(), "the cutoff also draws the staves with <staff-lines> and fewer than 3 note positions on one line")
+            .to.deep.equal([3, 4, 1, 1, 1, 1, 1]);
+        osmd.EngravingRules.PercussionKeepXMLStafflineCount = true;
         osmd.setOptions({ percussionOneLineCutoff: 0 });
         osmd.updateGraphic();
         osmd.render();
-        expect(drawnLines(2).length, "the suspended cymbal is drawn on five lines again").to.equal(5);
+        expect(lineCounts(), "the given lines again, and the suspended cymbal on five lines").to.deep.equal([3, 4, 5, 5, 1, 2, 5]);
     });
 });
