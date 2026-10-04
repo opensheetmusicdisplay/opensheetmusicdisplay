@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for the tuplet numbers after a cross-staff tuplet.
+    A two-staff piano part in 4/4. Voice 1 plays four beamed eighth triplets without
+    brackets (bracket="no"). The first triplet has its first two notes on the lower
+    staff and its third note on the upper staff, the other three triplets are on the
+    upper staff. Voice 5 has a whole-measure rest on the lower staff.
+    With the default rules (TupletNumberLimitConsecutiveRepetitions,
+    TupletNumberMaxConsecutiveRepetitions = 2), the numbers of the first two triplets
+    are shown and those of the 3rd and 4th triplets are hidden: the lower staff shows
+    the first triplet's 3, the upper staff only the 2nd triplet's 3.
+    Before the fix, the upper staff showed the 3rd triplet's 3 too: the upper staff's
+    measure makes no VexFlow tuplet for the first triplet, which has only one note there,
+    and drawing paired each of the following VexFlow tuplets with the tuplet before it,
+    so the 3rd triplet got the 2nd triplet's decision to show its number.
+  -->
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>3</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <staves>2</staves>
+        <clef number="1"><sign>G</sign><line>2</line></clef>
+        <clef number="2"><sign>F</sign><line>4</line></clef>
+      </attributes>
+
+      <!-- Voice 1, triplet 1: the first two notes on the lower staff, the third on the upper staff -->
+      <note>
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>up</stem><staff>2</staff>
+        <beam number="1">begin</beam>
+        <notations><tuplet type="start" bracket="no"/></notations>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>up</stem><staff>2</staff>
+        <beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>down</stem><staff>1</staff>
+        <beam number="1">end</beam>
+        <notations><tuplet type="stop"/></notations>
+      </note>
+
+      <!-- Voice 1, triplets 2 to 4: on the upper staff -->
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>down</stem><staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations><tuplet type="start" bracket="no"/></notations>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>down</stem><staff>1</staff>
+        <beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>down</stem><staff>1</staff>
+        <beam number="1">end</beam>
+        <notations><tuplet type="stop"/></notations>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>down</stem><staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations><tuplet type="start" bracket="no"/></notations>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>down</stem><staff>1</staff>
+        <beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>down</stem><staff>1</staff>
+        <beam number="1">end</beam>
+        <notations><tuplet type="stop"/></notations>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>down</stem><staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations><tuplet type="start" bracket="no"/></notations>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>down</stem><staff>1</staff>
+        <beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
+        <stem>down</stem><staff>1</staff>
+        <beam number="1">end</beam>
+        <notations><tuplet type="stop"/></notations>
+      </note>
+
+      <backup><duration>12</duration></backup>
+
+      <!-- Voice 5: a whole-measure rest on the lower staff -->
+      <note>
+        <rest measure="yes"/>
+        <duration>12</duration><voice>5</voice><staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

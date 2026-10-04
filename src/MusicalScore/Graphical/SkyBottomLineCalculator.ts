@@ -1,13 +1,14 @@
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
-import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
+import { IVerticalMeasureFormat, VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
+import { SourceMeasure } from "../VoiceData/SourceMeasure";
 import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 import log from "loglevel";
 import { BoundingBox } from "./BoundingBox";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
-import { GeometricSkyBottomLineContext } from "./GeometricSkyBottomLineContext";
+import { GeometricSkyBottomLineCaches, GeometricSkyBottomLineContext } from "./GeometricSkyBottomLineContext";
 /**
  * This class calculates and holds the skyline and bottom line information.
  * It also has functions to update areas of the two lines if new elements are
@@ -51,8 +52,6 @@ export class SkyBottomLineCalculator {
             }
         }
 
-        const arrayLength: number = Math.max(Math.ceil(this.StaffLineParent.PositionAndShape.Size.width * this.SamplingUnit), 1);
-
         // Concatenate the per-measure sky/bottom line arrays (device-pixel resolution) into one array
         // per line for the whole staffline. Preallocate and index-fill instead of push(...skyLine):
         // the spread turns each measure's array into individual call arguments (allocating and, for
@@ -71,6 +70,18 @@ export class SkyBottomLineCalculator {
                 writeIndex++;
             }
         }
+        this.setLinesFromConcatenated(skyLineConcat, bottomLineConcat, concatLength);
+    }
+
+    /**
+     * Sets the sky- and bottom lines of mStaffLineParent from the lines of all its measures, one after the other
+     * (device-pixel resolution): subsampled to the sampling unit and remapped to units relative to the staffline.
+     * @param skyLineConcat the skylines of the measures
+     * @param bottomLineConcat the bottom lines of the measures
+     * @param concatLength the length of the lines of the measures in the arrays
+     */
+    private setLinesFromConcatenated(skyLineConcat: ArrayLike<number>, bottomLineConcat: ArrayLike<number>, concatLength: number): void {
+        const arrayLength: number = Math.max(Math.ceil(this.StaffLineParent.PositionAndShape.Size.width * this.SamplingUnit), 1);
 
         // Subsampling:
         // The pixel width is bigger than the measure size in units. So we split the array into
@@ -143,10 +154,12 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method calculates the Sky- and BottomLines for a StaffLine.
+     * @param lastMeasureFormats For the geometric calculation of several stafflines: the last format of each vertical measure in it,
+     *   so that the stafflines of a vertical measure don't repeat its format (see VexFlowMeasure.format()).
      */
-    public calculateLines(): void {
+    public calculateLines(lastMeasureFormats?: Map<SourceMeasure, IVerticalMeasureFormat>): void {
         if (this.mRules.UseGeometricSkyBottomLineCalculation) {
-            this.calculateLinesGeometric();
+            this.calculateLinesGeometric(lastMeasureFormats);
             return;
         }
         const samplingUnit: number = this.mRules.SamplingUnit;
@@ -253,21 +266,27 @@ export class SkyBottomLineCalculator {
      * of the VexFlow draw calls of each measure, instead of drawing each measure on a canvas
      * and reading back its pixels (see calculateLines()), which is much slower (see #937).
      * Same flow as calculateLines(), with the canvas replaced by a GeometricSkyBottomLineContext.
+     * @param lastMeasureFormats see calculateLines()
      */
-    private calculateLinesGeometric(): void {
+    private calculateLinesGeometric(lastMeasureFormats?: Map<SourceMeasure, IVerticalMeasureFormat>): void {
         const samplingUnit: number = this.mRules.SamplingUnit;
-        const results: SkyBottomLineCalculationResult[] = [];
+        const caches: GeometricSkyBottomLineCaches = this.mRules.GeometricSkyBottomLineCaches;
 
         // The virtual rendering context, replacing the temporary canvas of the raster method. Reused for all measures.
         // The caches (text measurements, flattened glyph outlines) live in the EngravingRules,
         // so they persist across stafflines and renders (per OSMD instance, no static state).
-        const geometricContext: GeometricSkyBottomLineContext =
-            new GeometricSkyBottomLineContext(0, 300, this.mRules.GeometricSkyBottomLineCaches);
+        const geometricContext: GeometricSkyBottomLineContext = new GeometricSkyBottomLineContext(0, 300, caches);
+        // The lines of all measures, one after the other, as updateLines() concatenates them (NaN where nothing was drawn, like
+        //   undefined in a new array: drawn columns are never NaN). In buffers reused for all stafflines, instead of two new arrays
+        //   per measure and their concatenation per staffline.
+        let skyLine: Float64Array = caches.skyLineBuffer;
+        let bottomLine: Float64Array = caches.bottomLineBuffer;
+        let length: number = 0;
         // search through all Measures
         for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
             // Prepare the measure (normalize positions, format at the skyline-canvas width). Extracted so
             // the lazy skyline reuse can replay these exact side effects without re-measuring extents.
-            const width: number = this.prepareMeasureForGeometricSkyline(measure);
+            const width: number = this.prepareMeasureForGeometricSkyline(measure, lastMeasureFormats);
             geometricContext.initialize(width);
             try {
                 measure.draw(geometricContext as any);
@@ -277,33 +296,64 @@ export class SkyBottomLineCalculator {
             }
 
             const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * samplingUnit), 1);
-            const tmpSkyLine: number[] = new Array(measureArrayLength);
-            const tmpBottomLine: number[] = new Array(measureArrayLength);
-            geometricContext.copyExtentsInto(tmpSkyLine, tmpBottomLine);
+            // copyExtentsInto() writes one entry per pixel column, usually far beyond measureArrayLength (sampling units),
+            // up to the drawn length: the length of the measure's lines.
+            const arrayLength: number = Math.max(measureArrayLength, geometricContext.getDrawnLength());
+            if (length + arrayLength > skyLine.length) {
+                const capacity: number = Math.max(length + arrayLength, 2 * skyLine.length);
+                const grownSkyLine: Float64Array = new Float64Array(capacity);
+                const grownBottomLine: Float64Array = new Float64Array(capacity);
+                grownSkyLine.set(skyLine.subarray(0, length));
+                grownBottomLine.set(bottomLine.subarray(0, length));
+                skyLine = grownSkyLine;
+                bottomLine = grownBottomLine;
+            }
+            skyLine.fill(NaN, length, length + arrayLength);
+            bottomLine.fill(NaN, length, length + arrayLength);
+            geometricContext.copyExtentsIntoBuffers(skyLine, bottomLine, length);
 
             // fill columns where nothing was drawn, like in the raster method:
-            for (let idx: number = 0; idx < tmpSkyLine.length; idx++) {
-                if (tmpSkyLine[idx] === undefined) {
-                    tmpSkyLine[idx] = Math.max(this.findPreviousValidNumber(idx, tmpSkyLine), this.findNextValidNumber(idx, tmpSkyLine));
-                }
-            }
-            for (let idx: number = 0; idx < tmpBottomLine.length; idx++) {
-                if (tmpBottomLine[idx] === undefined) {
-                    tmpBottomLine[idx] = Math.max(this.findPreviousValidNumber(idx, tmpBottomLine), this.findNextValidNumber(idx, tmpBottomLine));
-                }
-            }
-
-            results.push(new SkyBottomLineCalculationResult(tmpSkyLine, tmpBottomLine));
+            SkyBottomLineCalculator.fillUndrawnColumns(skyLine, length, length + arrayLength);
+            SkyBottomLineCalculator.fillUndrawnColumns(bottomLine, length, length + arrayLength);
+            length += arrayLength;
         }
+        caches.skyLineBuffer = skyLine;
+        caches.bottomLineBuffer = bottomLine;
 
-        this.updateLines(results);
+        this.setLinesFromConcatenated(skyLine, bottomLine, length);
+    }
+
+    /**
+     * Fills the columns of a measure's line where nothing was drawn (NaN) like calculateLines() fills them (undefined) for the
+     * raster method, one after the other, each with the maximum of the value before it in the measure (findPreviousValidNumber(),
+     * the filled value of the previous column, or 0) and the next drawn value (findNextValidNumber(), or 0):
+     * so all columns of a run of undrawn columns get the same value.
+     * @param line the lines of the measures, one after the other
+     * @param start the index of the measure's first column
+     * @param end the index after the measure's last column
+     */
+    private static fillUndrawnColumns(line: Float64Array, start: number, end: number): void {
+        for (let idx: number = start; idx < end; idx++) {
+            if (!isNaN(line[idx])) {
+                continue;
+            }
+            let runEnd: number = idx + 1;
+            while (runEnd < end && isNaN(line[runEnd])) {
+                runEnd++;
+            }
+            const value: number = Math.max(idx > start ? line[idx - 1] : 0, runEnd < end ? line[runEnd] : 0);
+            for (; idx < runEnd; idx++) {
+                line[idx] = value;
+            }
+        }
     }
 
     /** The per-measure side effects the geometric skyline calc applies before measuring extents: normalize
      *  absolute positions, bump the stave Y, and format the measure at the truncated skyline-canvas width.
      *  Later layout passes read this state (the VexFlow formatter is not idempotent), so the lazy skyline
-     *  reuse must replay it via applyGeometricSkylineSideEffectsOnly. Returns the skyline-canvas width. */
-    private prepareMeasureForGeometricSkyline(measure: VexFlowMeasure): number {
+     *  reuse must replay it via applyGeometricSkylineSideEffectsOnly. Returns the skyline-canvas width.
+     *  lastMeasureFormats: see calculateLines(). */
+    private prepareMeasureForGeometricSkyline(measure: VexFlowMeasure, lastMeasureFormats?: Map<SourceMeasure, IVerticalMeasureFormat>): number {
         // must calculate first AbsolutePositions
         measure.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
 
@@ -334,16 +384,18 @@ export class SkyBottomLineCalculator {
         // redundant because it should know the canvas but somehow it doesn't.
         // Maybe I am overlooking something but for now this does the trick
         vsStaff.setWidth(width);
-        measure.format();
+        measure.format(lastMeasureFormats);
         vsStaff.setWidth(oldMeasureWidth);
         return width;
     }
 
     /** Replay the geometric skyline calc's per-measure side effects WITHOUT the expensive extent
      *  measurement, so lazy rendering can reuse cached sky/bottom lines while leaving the measures in the exact
-     *  state a normal render would. (calculateLinesGeometric does correctNotePositions inside measure.draw;
-     *  here we call it directly since the draw is skipped.) No-op for the non-default raster skyline path. */
-    public applyGeometricSkylineSideEffectsOnly(): void {
+     *  state a normal render would. (calculateLinesGeometric extends the beamed stems and does correctNotePositions
+     *  inside measure.draw; here we do both directly since the draw is skipped, see VexFlowMeasure.applyDrawSideEffects().)
+     *  No-op for the non-default raster skyline path.
+     *  lastMeasureFormats: see calculateLines(). */
+    public applyGeometricSkylineSideEffectsOnly(lastMeasureFormats?: Map<SourceMeasure, IVerticalMeasureFormat>): void {
         if (!this.mRules.UseGeometricSkyBottomLineCalculation) {
             return;
         }
@@ -351,8 +403,8 @@ export class SkyBottomLineCalculator {
             if (!measure) {
                 continue;
             }
-            this.prepareMeasureForGeometricSkyline(measure);
-            measure.correctNotePositions();
+            this.prepareMeasureForGeometricSkyline(measure, lastMeasureFormats);
+            measure.applyDrawSideEffects();
         }
     }
 
@@ -505,6 +557,53 @@ export class SkyBottomLineCalculator {
     }
 
     /**
+     * Updates the SkyLine with a label's box, e.g. a dynamic's, from its left to its right margin (relative to the staffline):
+     *   only in the samples the box covers completely. A label placed later reads every sample its box touches
+     *   (getSkyLineMinForLabel()), so labels whose boxes don't overlap don't read each other.
+     * With updateSkyLineInRange() and getSkyLineMinInRange(), which round outward to the samples (1 / SamplingUnit wide),
+     *   a label next to another one, e.g. a p right after "dim.", was placed further from the staff than it
+     *   when both touched the same sample. The margins keep a label clear of what is in a sample it covers only partially.
+     * @param left Left margin of the box
+     * @param right Right margin of the box
+     * @param value Top margin of the box
+     */
+    public updateSkyLineWithLabel(left: number, right: number, value: number): void {
+        this.updateInRangeOfCoveredSamples(this.mSkyLine, left, right, value);
+    }
+
+    /**
+     * Updates the BottomLine with a label's box, e.g. a dynamic's, from its left to its right margin (relative to the staffline):
+     *   only in the samples the box covers completely. See updateSkyLineWithLabel().
+     * @param left Left margin of the box
+     * @param right Right margin of the box
+     * @param value Bottom margin of the box
+     */
+    public updateBottomLineWithLabel(left: number, right: number, value: number): void {
+        this.updateInRangeOfCoveredSamples(this.mBottomLine, left, right, value);
+    }
+
+    /**
+     * Returns the SkyLine's minimum for a label's box, e.g. a dynamic's, from its left to its right margin (relative to the staffline):
+     *   in every sample the box touches. Unlike getSkyLineMinInRange(), not also in the sample after the box.
+     *   See updateSkyLineWithLabel().
+     * @param left Left margin of the box
+     * @param right Right margin of the box
+     */
+    public getSkyLineMinForLabel(left: number, right: number): number {
+        return this.getExtremeInTouchedSamples(this.mSkyLine, left, right, true);
+    }
+
+    /**
+     * Returns the BottomLine's maximum for a label's box, e.g. a dynamic's, from its left to its right margin (relative to the staffline):
+     *   in every sample the box touches. See getSkyLineMinForLabel().
+     * @param left Left margin of the box
+     * @param right Right margin of the box
+     */
+    public getBottomLineMaxForLabel(left: number, right: number): number {
+        return this.getExtremeInTouchedSamples(this.mBottomLine, left, right, false);
+    }
+
+    /**
      * Resets a SkyLine in a range to its original value
      * @param startIndex Start index of the range
      * @param endIndex End index of the range (excluding)
@@ -578,17 +677,30 @@ export class SkyBottomLineCalculator {
      * This method updates the StaffLine Borders with the Sky- and BottomLines Min- and MaxValues.
      */
     public updateStaffLineBorders(): void {
-        this.mStaffLineParent.PositionAndShape.BorderTop = this.getSkyLineMin();
-        this.mStaffLineParent.PositionAndShape.BorderMarginTop = this.getSkyLineMin();
-        this.mStaffLineParent.PositionAndShape.BorderBottom = this.getBottomLineMax();
-        this.mStaffLineParent.PositionAndShape.BorderMarginBottom = this.getBottomLineMax();
+        const skyLineMin: number = this.getSkyLineMin();
+        const bottomLineMax: number = this.getBottomLineMax();
+        this.mStaffLineParent.PositionAndShape.BorderTop = skyLineMin;
+        this.mStaffLineParent.PositionAndShape.BorderMarginTop = skyLineMin;
+        this.mStaffLineParent.PositionAndShape.BorderBottom = bottomLineMax;
+        this.mStaffLineParent.PositionAndShape.BorderMarginBottom = bottomLineMax;
     }
 
     /**
-     * This method finds the minimum value of the SkyLine.
+     * This method finds the minimum value of the SkyLine, ignoring NaN values.
+     * A loop of Math.min(min, value) gives the same result as Math.min(...this.SkyLine.filter(s => !isNaN(s)))
+     * (including -0 before 0, and Infinity for no values), without copying the line and spreading it into the arguments
+     * of a call, which is slow for lines of thousands of values and fails for very long ones.
+     * @returns the minimum
      */
     public getSkyLineMin(): number {
-        return Math.min(...this.SkyLine.filter(s => !isNaN(s)));
+        const skyLine: number[] = this.SkyLine;
+        let min: number = Number.POSITIVE_INFINITY;
+        for (let i: number = 0; i < skyLine.length; i++) {
+            if (!isNaN(skyLine[i])) {
+                min = Math.min(min, skyLine[i]);
+            }
+        }
+        return min;
     }
 
     public getSkyLineMinAtPoint(point: number): number {
@@ -606,10 +718,18 @@ export class SkyBottomLineCalculator {
     }
 
     /**
-     * This method finds the maximum value of the BottomLine.
+     * This method finds the maximum value of the BottomLine, ignoring NaN values (a loop, see getSkyLineMin()).
+     * @returns the maximum
      */
     public getBottomLineMax(): number {
-        return Math.max(...this.BottomLine.filter(s => !isNaN(s)));
+        const bottomLine: number[] = this.BottomLine;
+        let max: number = Number.NEGATIVE_INFINITY;
+        for (let i: number = 0; i < bottomLine.length; i++) {
+            if (!isNaN(bottomLine[i])) {
+                max = Math.max(max, bottomLine[i]);
+            }
+        }
+        return max;
     }
 
     public getBottomLineMaxAtPoint(point: number): number {
@@ -739,6 +859,45 @@ export class SkyBottomLineCalculator {
         for (let i: number = startIndex; i < endIndex; i++) {
             array[i] = Math.abs(value) > Math.abs(array[i]) ? value : array[i];
         }
+    }
+
+    /**
+     * Updates an array in the samples the range covers completely (see updateSkyLineWithLabel()), like updateInRange():
+     *   only where the value is further from the staff. A range that covers no sample completely updates the sample of its center.
+     * @param array Sky or bottom line
+     * @param start Start of the range (relative to the staffline)
+     * @param end End of the range
+     * @param value Value to fill in
+     */
+    private updateInRangeOfCoveredSamples(array: number[], start: number, end: number, value: number): void {
+        let startIndex: number = Math.ceil(start * this.SamplingUnit);
+        let endIndex: number = Math.floor(end * this.SamplingUnit); // excluding
+        if (endIndex <= startIndex) {
+            startIndex = Math.floor((start + end) / 2 * this.SamplingUnit);
+            endIndex = startIndex + 1;
+        }
+        startIndex = Math.max(startIndex, 0);
+        endIndex = Math.min(endIndex, array.length);
+        for (let i: number = startIndex; i < endIndex; i++) {
+            array[i] = Math.abs(value) > Math.abs(array[i]) ? value : array[i];
+        }
+    }
+
+    /**
+     * Returns the minimum or maximum of an array in the samples the range touches, at least one.
+     * @param array Sky or bottom line
+     * @param start Start of the range (relative to the staffline)
+     * @param end End of the range
+     * @param minimum Whether to return the minimum (sky line) or the maximum (bottom line)
+     */
+    private getExtremeInTouchedSamples(array: number[], start: number, end: number, minimum: boolean): number {
+        const startIndex: number = Math.min(Math.max(Math.floor(start * this.SamplingUnit), 0), array.length - 1);
+        const endIndex: number = Math.max(Math.min(Math.ceil(end * this.SamplingUnit), array.length), startIndex + 1); // excluding
+        let extreme: number = array[startIndex];
+        for (let i: number = startIndex + 1; i < endIndex; i++) {
+            extreme = minimum ? Math.min(extreme, array[i]) : Math.max(extreme, array[i]);
+        }
+        return extreme;
     }
 
     /**

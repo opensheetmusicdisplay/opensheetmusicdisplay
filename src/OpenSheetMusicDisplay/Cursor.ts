@@ -146,6 +146,12 @@ export class Cursor {
       return;
     }
     this.updateCurrentPage(); // attach cursor to new page DOM if necessary
+    if (!this.getPageElement(this.currentPageNumber)) {
+      // the page isn't drawn, e.g. after drawUpToPageNumber, so the cursor can't be shown there.
+      //   It still moves (e.g. for NotesUnderCursor()), and is shown again on a drawn page.
+      this.cursorElement.style.display = "none";
+      return;
+    }
 
     // this.graphic?.Cursors?.length = 0;
     const iterator: MusicPartManagerIterator = this.iterator;
@@ -455,17 +461,37 @@ export class Cursor {
         //   so we do need to use gt, not gte here.
         const newPageNumber: number = page.PageNumber;
         if (newPageNumber !== this.currentPageNumber) {
-          this.container.removeChild(this.cursorElement);
-          this.container = document.getElementById("osmdCanvasPage" + newPageNumber);
-          this.container.appendChild(this.cursorElement);
-          // TODO maybe store this.pageCurrentlyAttachedTo, though right now it isn't necessary
-          // alternative to remove/append:
-          // this.openSheetMusicDisplay.enableOrDisableCursor(true);
+          this.attachToPage(newPageNumber);
         }
         return this.currentPageNumber = newPageNumber;
       }
     }
     return 1;
+  }
+
+  /** Moves the cursor element to the element of the page with the given number (see getPageElement()), if the page is drawn.
+   *  A page that isn't drawn, e.g. after drawUpToPageNumber, has no element: the cursor element stays where it is,
+   *  and update() hides it.
+   */
+  private attachToPage(pageNumber: number): void {
+    const pageElement: HTMLElement = this.getPageElement(pageNumber);
+    if (!pageElement) {
+      return;
+    }
+    this.container.removeChild(this.cursorElement);
+    this.container = pageElement;
+    this.container.appendChild(this.cursorElement);
+    // TODO maybe store this.pageCurrentlyAttachedTo, though right now it isn't necessary
+    // alternative to remove/append:
+    // this.openSheetMusicDisplay.enableOrDisableCursor(true);
+  }
+
+  /** Returns the element (div) of this OSMD instance's page with the given number, which the cursor is attached to on that page.
+   *  Found through the instance's backends, not by the element's id "osmdCanvasPage" + page number: every OSMD instance
+   *  on a web page gives its pages the same ids, so document.getElementById() can return another instance's page.
+   */
+  private getPageElement(pageNumber: number): HTMLElement {
+    return this.openSheetMusicDisplay.Drawer.Backends[pageNumber - 1]?.getInnerElement();
   }
 
   public get SkipInvisibleNotes(): boolean {

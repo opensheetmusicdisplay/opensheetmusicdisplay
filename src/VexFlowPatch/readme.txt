@@ -81,6 +81,7 @@ staverepetition.js (fixed vexflow 4):
 add TO_CODA enum to type() and draw()
 fix x-positioning for TO_CODA and DS_AL_CODA in drawSymbolText()
 fix y-shift
+don't change x_shift in drawSymbolText(): every further draw of the stave moved the end texts (e.g. D.C.), alternating
 
 stavesection.js (half-fixed vexflow 4.x, collision, box not removable):
 stavesection.draw():
@@ -95,6 +96,8 @@ measure the "=" and the tuplet numbers of note equations by their text advance, 
 
 stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
+name the group after the note the tie starts at ("<id>-tie"), set with setStartNoteId(), by default the first note:
+  the part of a tie continued in the next system has no first note, and was named "vf-undefined-tie" (custom addition)
 renderText(): set the font before measuring the text (e.g. H, P, sl. of tab ties and slides) to center it, instead of
   measuring it in the context's current font (custom fix, vexflow 5 still measures first)
 

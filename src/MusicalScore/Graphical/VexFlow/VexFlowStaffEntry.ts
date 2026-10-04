@@ -113,11 +113,15 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         // before calculating the bounding box, which spans the notes (they would have their positions from the last render)
         this.positionNotesAtNoteHeads();
         // the bounding box without the grace notes (see above)
-        const childElements: BoundingBox[] = this.PositionAndShape.ChildElements;
-        this.PositionAndShape.ChildElements = childElements.filter(
-            (child: BoundingBox) => !graceEntries.some((gve: VexFlowVoiceEntry) => gve.PositionAndShape === child));
-        this.PositionAndShape.calculateBoundingBox();
-        this.PositionAndShape.ChildElements = childElements;
+        if (graceEntries.length === 0) {
+            this.PositionAndShape.calculateBoundingBox(); // (no copy of the child elements without them needed, for every staff entry)
+        } else {
+            const childElements: BoundingBox[] = this.PositionAndShape.ChildElements;
+            this.PositionAndShape.ChildElements = childElements.filter(
+                (child: BoundingBox) => !graceEntries.some((gve: VexFlowVoiceEntry) => gve.PositionAndShape === child));
+            this.PositionAndShape.calculateBoundingBox();
+            this.PositionAndShape.ChildElements = childElements;
+        }
     }
 
     /**
