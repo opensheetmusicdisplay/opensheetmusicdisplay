@@ -154,7 +154,7 @@
       </note>
     </measure>
     <measure number="3">
-      <!-- beat 1: ornaments above and below, beat 3: breath marks, which stay at the time of their notes -->
+      <!-- beat 1: ornaments above both notes, on two text lines, beat 3: breath marks, which stay at the time of their notes -->
       <note>
         <pitch>
           <step>D</step>
@@ -199,7 +199,7 @@
         <stem>down</stem>
         <notations>
           <ornaments>
-            <inverted-mordent placement="below"/>
+            <mordent/>
           </ornaments>
         </notations>
       </note>

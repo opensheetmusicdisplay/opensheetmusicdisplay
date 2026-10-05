@@ -50,6 +50,8 @@ add stem_up_y_shift and stem_down_y_shift to shift notehead (independent of stem
 ornament.js (custom addition):
 respect Modifier.Position.BELOW in draw() (placement="below" in MusicXML)
 setUpperAccidental() and setLowerAccidental() also take a list of accidentals, drawn side by side (e.g. sharp-sharp)
+count the text line of an ornament from the outermost of the notes at its time with ornaments on its side, i.e. of all
+  voices in the staff, not only from its own note, so that the ornaments of two voices don't overlap
 
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
