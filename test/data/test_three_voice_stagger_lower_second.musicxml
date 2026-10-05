@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for staggering three voices where only the middle and the lower note collide.
+    Voice 1 is a C5, stem up, well clear of the others. Below it, two stems-down voices are a second
+    apart: A4 and G4. As for two voices a second apart, the lower note (G4) should be the one moved
+    to the right, and the A4 should stay on the beat under the C5.
+    Beat 1 numbers the voices top-middle-bottom (voice 2 = A4, voice 3 = G4), beat 3 top-bottom-middle
+    (voice 2 = G4, voice 3 = A4). Both should give the same layout.
+  -->
+  <part-list>
+    <score-part id="P1"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+
+      <!-- Voice 1 (upper): C5, C5 -->
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+
+      <backup><duration>4</duration></backup>
+
+      <!-- Voice 2: A4 (middle), then G4 (lower) -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>half</type><stem>down</stem></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>half</type><stem>down</stem></note>
+
+      <backup><duration>4</duration></backup>
+
+      <!-- Voice 3: G4 (lower), then A4 (middle) -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>3</voice><type>half</type><stem>down</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>3</voice><type>half</type><stem>down</stem></note>
+    </measure>
+  </part>
+</score-partwise>

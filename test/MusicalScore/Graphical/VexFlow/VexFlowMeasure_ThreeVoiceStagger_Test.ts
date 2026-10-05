@@ -69,4 +69,19 @@ describe("VexFlow Measure - Three-Voice Stagger", () => {
       done();
    });
 
+   it("Should stagger the lower note when only the middle and the lower note collide, whatever the voice numbers", (done: Mocha.Done) => {
+      // Voice 1 = C5 (stem up). Below it, A4 and G4 (both stems down) a second apart:
+      // beat 1 has the A4 in voice 2 and the G4 in voice 3, beat 3 the other way round.
+      const measure: VexFlowMeasure = firstMeasure("test_three_voice_stagger_lower_second.musicxml");
+      for (const [timestamp, middle, lower] of [[0, 2, 3], [0.5, 3, 2]]) {
+         const gves: VexFlowVoiceEntry[] = voiceEntriesAt(measure, timestamp);
+         expect(gves.length).to.equal(3, `the beat at ${timestamp} should have three voices`);
+         expect(noteX(gves, lower) - noteX(gves, 1)).to.be.greaterThan(1,
+            `the G4 of voice ${lower} collides with the A4 a second above, so it must be staggered`);
+         expect(noteX(gves, middle)).to.be.closeTo(noteX(gves, 1), 0.01,
+            `the A4 of voice ${middle} stays on the beat under the C5`);
+      }
+      done();
+   });
+
 });
