@@ -668,8 +668,10 @@ export abstract class MusicSheetCalculator {
                     // if more than one LyricEntry in StaffEntry, find minMarginLeft, maxMarginRight of all corresponding Labels
                     for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
                         const lyricsEntryLabel: GraphicalLabel = staffEntry.LyricsEntries[i].GraphicalLabel;
-                        minMarginLeft = Math.min(minMarginLeft, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginLeft);
-                        maxMarginRight = Math.max(maxMarginRight, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginRight);
+                        // where the label is, relative to its staff entry: e.g. left-aligned lyrics start 1 unit left of it (GraphicalLyricEntry)
+                        const labelX: number = staffEntryPositionX + lyricsEntryLabel.PositionAndShape.RelativePosition.x;
+                        minMarginLeft = Math.min(minMarginLeft, labelX + lyricsEntryLabel.PositionAndShape.BorderMarginLeft);
+                        maxMarginRight = Math.max(maxMarginRight, labelX + lyricsEntryLabel.PositionAndShape.BorderMarginRight);
                     }
 
                     // check BottomLine in this range and take the maximum between the two values
