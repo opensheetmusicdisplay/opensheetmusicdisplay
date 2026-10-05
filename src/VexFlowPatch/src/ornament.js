@@ -85,7 +85,9 @@ export class Ornament extends Modifier {
     let width = 0;
     for (let i = 0; i < ornaments.length; ++i) {
       const ornament = ornaments[i];
-      const increment = 2;
+      // VexFlowPatch: the accidental marks take text lines too (10: a staff space, as in Articulation.format()), so that the
+      //   next ornament isn't drawn over them
+      const increment = 2 + Math.ceil(ornament.getAccidentalsHeight() / 10);
 
       width = Math.max(ornament.getWidth(), width);
 
@@ -135,6 +137,18 @@ export class Ornament extends Modifier {
   }
 
   getCategory() { return Ornament.CATEGORY; }
+
+  // VexFlowPatch: the height of the ornament's accidental marks below and above its glyph, with their paddings
+  getAccidentalsHeight() {
+    let height = 0;
+    if (this.accidentalLower) {
+      height += this.accidentalLower.getMetrics().height + this.render_options.accidentalLowerPadding;
+    }
+    if (this.accidentalUpper) {
+      height += this.accidentalUpper.getMetrics().height + this.render_options.accidentalUpperPadding;
+    }
+    return height;
+  }
 
   // Set whether the ornament is to be delayed
   setDelayed(delayed) { this.delayed = delayed; return this; }
@@ -236,13 +250,7 @@ export class Ornament extends Modifier {
       for (const note of otherNotes) {
         bottomBaseY = Math.max(bottomBaseY, getBottomBaseY(note));
       }
-      let height = this.glyph.getMetrics().height;
-      if (this.accidentalLower) {
-        height += this.accidentalLower.getMetrics().height + this.render_options.accidentalLowerPadding;
-      }
-      if (this.accidentalUpper) {
-        height += this.accidentalUpper.getMetrics().height + this.render_options.accidentalUpperPadding;
-      }
+      const height = this.glyph.getMetrics().height + this.getAccidentalsHeight();
       glyphY = Math.max(stave.getYForBottomText(this.text_line), bottomBaseY + spacing * this.text_line) + height;
     }
     glyphY += this.y_shift;

@@ -54,6 +54,7 @@ respect Modifier.Position.BELOW in draw() (placement="below" in MusicXML)
 setUpperAccidental() and setLowerAccidental() also take a list of accidentals, drawn side by side (e.g. sharp-sharp)
 count the text line of an ornament from the outermost of the notes at its time with ornaments or articulations on its side,
   i.e. of all voices in the staff, not only from its own note, so that the ornaments of two voices don't overlap
+format(): an ornament's accidental marks take text lines too, so that the ornament stacked on it isn't drawn beside them
 
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
