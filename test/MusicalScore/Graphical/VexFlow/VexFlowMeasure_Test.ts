@@ -19,6 +19,7 @@ import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/Grap
 import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { GraphicalLabel } from "../../../../src/MusicalScore/Graphical/GraphicalLabel";
+import { BoundingBox } from "../../../../src/MusicalScore/Graphical/BoundingBox";
 import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
@@ -836,6 +837,105 @@ describe("VexFlow Measure", () => {
          // bass staff (Below placement): highest note's fingering closest to the staff, i.e. at the top of the stack
          expect(fingeringTextsTopToBottom(1, 0), "bass staff, beat 1").to.deep.equal(["1", "3", "5"]);
          expect(fingeringTextsTopToBottom(1, 1), "bass staff, beat 3").to.deep.equal(["2", "4", "5"]);
+         done();
+      }).catch(done);
+   });
+
+   // A fingering is placed from the sky line (above the staff) or the bottom line (below) in the range of its label's margin box.
+   // Before fix: that range was read before the label's borders were set, so it had no width: only the samples at the note's x,
+   // which missed a stem beside the note head. E.g. here the 1 of beat 3 (treble staff) was drawn on voice 1's stem,
+   // the 1 of beat 1 (bass staff) on voice 6's stem.
+   it("Places fingerings clear of the stems under their labels", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_fingering_two_voices_pitch_order.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         let stemsUnderLabels: number = 0;
+         for (const staffIndex of [0, 1]) {
+            const above: boolean = staffIndex === 0; // fingerings above the treble staff, below the bass staff
+            for (const staffEntry of osmd.GraphicSheet.findGraphicalMeasure(0, staffIndex).staffEntries) {
+               for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                  // the drawn stem, in the page's units like the fingerings' boxes
+                  const stem: SVGGElement = (voiceEntry.notes[0] as VexFlowGraphicalNote).getSVGGElement().querySelector(".vf-stem");
+                  const stemBox: DOMRect = stem.getBBox();
+                  const stemLeft: number = stemBox.x / unitInPixels;
+                  const stemRight: number = (stemBox.x + stemBox.width) / unitInPixels;
+                  for (const fingering of staffEntry.FingeringEntries) {
+                     const box: BoundingBox = fingering.PositionAndShape;
+                     if (stemRight < box.AbsolutePosition.x + box.BorderMarginLeft || stemLeft > box.AbsolutePosition.x + box.BorderMarginRight) {
+                        continue;
+                     }
+                     stemsUnderLabels++;
+                     const description: string = `staff ${staffIndex + 1}, fingering ${fingering.Label.text}`;
+                     // (a tolerance of 1 pixel. The fingerings overlapped the stems by about a staff space.)
+                     if (above) {
+                        expect(box.AbsolutePosition.y + box.BorderBottom, `${description} must be above the stem`)
+                           .to.be.at.most(stemBox.y / unitInPixels + 0.1);
+                     } else {
+                        expect(box.AbsolutePosition.y + box.BorderTop, `${description} must be below the stem`)
+                           .to.be.at.least((stemBox.y + stemBox.height) / unitInPixels - 0.1);
+                     }
+                  }
+               }
+            }
+         }
+         expect(stemsUnderLabels, "stems under fingering labels").to.be.at.least(2);
+         done();
+      }).catch(done);
+   });
+
+   // A fingering above or below the staff is centred on its note's head, also where Vexflow moves a voice's notes aside from
+   // another voice's notes, e.g. the lower of two voices a second apart (m1 beat 1: voice 2's C5 right of voice 1's D5).
+   // Before fix: the fingerings of a staff entry were all at its x, the middle of the voice entry reaching the farthest right,
+   // so the 4 of the D5 was drawn above the C5. The fingerings of a chord stay in one column (m1 beat 3: C5-D5 in voice 1,
+   // whose D5 is drawn right of the stem), above the heads that aren't displaced: before fix, they were above the stem.
+   // So do the fingerings of voices drawn in one column (m2: a half note beside a whole note), centred on the wider head.
+   it("Centres each fingering on the head of its note, also of a voice moved aside", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_fingering_voices_moved_aside.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const staffEntries: GraphicalStaffEntry[] = osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries;
+         function fingering(staffEntry: GraphicalStaffEntry, text: string): GraphicalLabel {
+            return staffEntry.FingeringEntries.find((label: GraphicalLabel) => label.Label.text === text);
+         }
+         /** The x of the centre of the drawn note head of the fingering's note. */
+         function noteX(label: GraphicalLabel): number {
+            return osmd.EngravingRules.GNote(label.sourceNote).PositionAndShape.AbsolutePosition.x;
+         }
+
+         const d5Fingering: GraphicalLabel = fingering(staffEntries[0], "4");
+         const c5Fingering: GraphicalLabel = fingering(staffEntries[0], "3");
+         expect(noteX(c5Fingering) - noteX(d5Fingering), "beat 1: the C5 is drawn right of the D5").to.be.above(0.5);
+         expect(d5Fingering.PositionAndShape.AbsolutePosition.x, "beat 1: the 4 above the D5").to.be.closeTo(noteX(d5Fingering), 0.001);
+         expect(c5Fingering.PositionAndShape.AbsolutePosition.x, "beat 1: the 3 above the C5").to.be.closeTo(noteX(c5Fingering), 0.001);
+
+         const chordC5Fingering: GraphicalLabel = fingering(staffEntries[1], "1");
+         const chordD5Fingering: GraphicalLabel = fingering(staffEntries[1], "2");
+         expect(noteX(chordD5Fingering) - noteX(chordC5Fingering), "beat 3: the D5 is drawn right of the C5").to.be.above(0.5);
+         expect(chordC5Fingering.PositionAndShape.AbsolutePosition.x, "beat 3: the 1 above the C5")
+            .to.be.closeTo(noteX(chordC5Fingering), 0.001);
+         expect(chordD5Fingering.PositionAndShape.AbsolutePosition.x, "beat 3: the 2 in the column of the 1")
+            .to.be.closeTo(chordC5Fingering.PositionAndShape.AbsolutePosition.x, 0.001);
+
+         const columnEntry: GraphicalStaffEntry = osmd.GraphicSheet.findGraphicalMeasure(1, 0).staffEntries[0];
+         const halfNoteFingering: GraphicalLabel = fingering(columnEntry, "5");
+         const wholeNoteFingering: GraphicalLabel = fingering(columnEntry, "1");
+         expect(noteX(wholeNoteFingering) - noteX(halfNoteFingering), "m2: the whole note's head is wider").to.be.above(0.1);
+         expect(halfNoteFingering.PositionAndShape.AbsolutePosition.x, "m2: the 5 of the half note in the column of the 1")
+            .to.be.closeTo(wholeNoteFingering.PositionAndShape.AbsolutePosition.x, 0.001);
+         expect(wholeNoteFingering.PositionAndShape.AbsolutePosition.x, "m2: the 1 above the whole note")
+            .to.be.closeTo(noteX(wholeNoteFingering), 0.001);
          done();
       }).catch(done);
    });
