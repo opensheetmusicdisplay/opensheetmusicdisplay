@@ -3553,10 +3553,11 @@ export abstract class MusicSheetCalculator {
                         const staffEntryPositionX: number = gse.PositionAndShape.RelativePosition.x +
                             measure.PositionAndShape.RelativePosition.x;
                         const fingerings: TechnicalInstruction[] = [];
-                        // the x of each fingering (relative to the staff line, like staffEntryPositionX): the centre of its voice entry's
-                        //   note heads, not the staff entry's x, which is the middle of the voice entry reaching the farthest right (e.g. moved
-                        //   aside from another voice's notes, or with a flag). So a fingering follows its note, and the fingerings of a chord
-                        //   stay in one column, also where a second displaces a note head beside the others.
+                        // the x of each fingering (relative to the staff line, like staffEntryPositionX): the centre of the column of note
+                        //   heads its note is drawn in (GraphicalVoiceEntry.noteHeadsCenterX), not the staff entry's x, which is the middle of
+                        //   the voice entry reaching the farthest right (e.g. moved aside from another voice's notes, or with a flag). So a
+                        //   fingering follows its note, and the fingerings of a chord, or of voices drawn in one column, stand in one column,
+                        //   also where a second displaces a note head beside the others.
                         const fingeringPositionsX: Map<TechnicalInstruction, number> = new Map<TechnicalInstruction, number>();
                         for (const voiceEntry of gse.graphicalVoiceEntries) {
                             if (voiceEntry.parentVoiceEntry.IsGrace) {

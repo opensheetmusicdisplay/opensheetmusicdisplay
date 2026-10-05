@@ -170,9 +170,13 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
      *   moves aside so that the voices' notes don't overlap (x shift),
      * - at the right end of the widest fret number of a TAB chord.
      * The notes' y: see VexFlowMeasure.correctNotePositions().
-     * Also sets the centre of the voice entries' note heads (GraphicalVoiceEntry.noteHeadsCenterX).
+     * Also sets the centre of the column of note heads of each voice entry (GraphicalVoiceEntry.noteHeadsCenterX).
      */
     private positionNotesAtNoteHeads(): void {
+        // the note heads of each voice entry that aren't displaced beside the others (Vexflow doesn't displace the first head it
+        //   draws, so every chord has such heads): their left edge and the width of the widest one, in pixels, relative to the
+        //   measure like the positions of the Vexflow notes here
+        const headColumns: { gve: VexFlowVoiceEntry, voiceEntryX: number, left: number, width: number }[] = [];
         for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
             gve.noteHeadsCenterX = undefined;
             const vfNote: any = gve.vfStaveNote;
@@ -181,25 +185,40 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             }
             // relative to the measure, like the positions of the Vexflow notes here
             const voiceEntryX: number = this.PositionAndShape.RelativePosition.x + gve.PositionAndShape.RelativePosition.x;
+            let headColumn: { gve: VexFlowVoiceEntry, voiceEntryX: number, left: number, width: number };
             for (const note of gve.notes as VexFlowGraphicalNote[]) {
-                const centerX: number = note.sourceNote.isRest() ? undefined : VexFlowStaffEntry.drawnCenterX(vfNote, note);
-                if (centerX !== undefined) {
-                    note.PositionAndShape.RelativePosition.x = centerX / unitInPixels - voiceEntryX;
-                    // the centre of the heads not displaced beside the others (Vexflow doesn't displace the first head it draws,
-                    //   so every chord has such heads)
-                    if (gve.noteHeadsCenterX === undefined && !vfNote.note_heads?.[note.vfnoteIndex]?.isDisplaced()) {
-                        gve.noteHeadsCenterX = note.PositionAndShape.RelativePosition.x;
+                const head: { x: number, width: number } = note.sourceNote.isRest() ? undefined : VexFlowStaffEntry.drawnHead(vfNote, note);
+                if (head === undefined) {
+                    continue;
+                }
+                note.PositionAndShape.RelativePosition.x = (head.x + head.width / 2) / unitInPixels - voiceEntryX;
+                if (!vfNote.note_heads?.[note.vfnoteIndex]?.isDisplaced()) {
+                    if (!headColumn) {
+                        headColumn = { gve, voiceEntryX, left: head.x, width: head.width };
+                        headColumns.push(headColumn);
                     }
+                    headColumn.width = Math.max(headColumn.width, head.width);
                 }
             }
         }
+        // The heads of voices that aren't moved aside from each other are drawn in one column, aligned at their left edges,
+        //   e.g. a whole note and a quarter note: its centre is that of its widest head. (Voices moved apart are about a head apart.)
+        for (const headColumn of headColumns) {
+            let width: number = headColumn.width;
+            for (const other of headColumns) {
+                if (Math.abs(other.left - headColumn.left) < 1) {
+                    width = Math.max(width, other.width);
+                }
+            }
+            headColumn.gve.noteHeadsCenterX = (headColumn.left + width / 2) / unitInPixels - headColumn.voiceEntryX;
+        }
     }
 
-    /** The x (in pixels) at which Vexflow draws the centre of the note's head, or of a TAB note's fret number. */
-    private static drawnCenterX(vfNote: any, note: VexFlowGraphicalNote): number {
+    /** The x (in pixels) at which Vexflow draws the note's head, or a TAB note's fret number, and its width. */
+    private static drawnHead(vfNote: any, note: VexFlowGraphicalNote): { x: number, width: number } {
         if (vfNote instanceof VF.TabNote) {
             // TabNote.drawPositions() centres the fret numbers of a chord on the width of its widest fret number
-            return vfNote.getAbsoluteX() + (vfNote as any).glyph.getWidth() / 2;
+            return { x: vfNote.getAbsoluteX(), width: (vfNote as any).glyph.getWidth() };
         }
         const noteHead: any = vfNote.note_heads?.[note.vfnoteIndex];
         if (!noteHead) {
@@ -207,7 +226,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         }
         // StaveNote.draw() sets this x, from which a displaced note head (e.g. of a second in a chord) is drawn beside the others
         noteHead.setX(vfNote.getNoteHeadBeginX());
-        return noteHead.getAbsoluteX() + noteHead.getWidth() / 2;
+        return { x: noteHead.getAbsoluteX(), width: noteHead.getWidth() };
     }
 
     public setMaxAccidentals(): number {

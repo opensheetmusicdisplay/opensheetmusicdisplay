@@ -890,10 +890,11 @@ describe("VexFlow Measure", () => {
    });
 
    // A fingering above or below the staff is centred on its note's head, also where Vexflow moves a voice's notes aside from
-   // another voice's notes, e.g. the lower of two voices a second apart (beat 1: voice 2's C5 right of voice 1's D5).
+   // another voice's notes, e.g. the lower of two voices a second apart (m1 beat 1: voice 2's C5 right of voice 1's D5).
    // Before fix: the fingerings of a staff entry were all at its x, the middle of the voice entry reaching the farthest right,
-   // so the 4 of the D5 was drawn above the C5. The fingerings of a chord stay in one column (beat 3: C5-D5 in voice 1,
+   // so the 4 of the D5 was drawn above the C5. The fingerings of a chord stay in one column (m1 beat 3: C5-D5 in voice 1,
    // whose D5 is drawn right of the stem), above the heads that aren't displaced: before fix, they were above the stem.
+   // So do the fingerings of voices drawn in one column (m2: a half note beside a whole note), centred on the wider head.
    it("Centres each fingering on the head of its note, also of a voice moved aside", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_fingering_voices_moved_aside.musicxml");
       if (!score) {
@@ -926,6 +927,15 @@ describe("VexFlow Measure", () => {
             .to.be.closeTo(noteX(chordC5Fingering), 0.001);
          expect(chordD5Fingering.PositionAndShape.AbsolutePosition.x, "beat 3: the 2 in the column of the 1")
             .to.be.closeTo(chordC5Fingering.PositionAndShape.AbsolutePosition.x, 0.001);
+
+         const columnEntry: GraphicalStaffEntry = osmd.GraphicSheet.findGraphicalMeasure(1, 0).staffEntries[0];
+         const halfNoteFingering: GraphicalLabel = fingering(columnEntry, "5");
+         const wholeNoteFingering: GraphicalLabel = fingering(columnEntry, "1");
+         expect(noteX(wholeNoteFingering) - noteX(halfNoteFingering), "m2: the whole note's head is wider").to.be.above(0.1);
+         expect(halfNoteFingering.PositionAndShape.AbsolutePosition.x, "m2: the 5 of the half note in the column of the 1")
+            .to.be.closeTo(wholeNoteFingering.PositionAndShape.AbsolutePosition.x, 0.001);
+         expect(wholeNoteFingering.PositionAndShape.AbsolutePosition.x, "m2: the 1 above the whole note")
+            .to.be.closeTo(noteX(wholeNoteFingering), 0.001);
          done();
       }).catch(done);
    });
