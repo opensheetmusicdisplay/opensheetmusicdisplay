@@ -940,6 +940,52 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // Vexflow moves the C5 of voice 2 right of the D5 of voice 1, a second above (its x shift, see StaveNote.format()).
+   // Before fix, the marks above or below a note were drawn at its unmoved x (StaveNote.getModifierStartXY() left out the
+   // x shift): the accent of the C5 on the head of the D5, and the tremolo strokes of the C5 left of its stem.
+   it("Draws the articulations and tremolos of a voice moved aside at its notes", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_articulations_voices_moved_aside.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         /** The note of the voice on the measure's first beat. */
+         function noteOnBeat1(measureIndex: number, voiceId: number): VexFlowGraphicalNote {
+            return osmd.GraphicSheet.findGraphicalMeasure(measureIndex, 0).staffEntries[0].graphicalVoiceEntries
+               .find((gve: GraphicalVoiceEntry) => gve.parentVoiceEntry.ParentVoice.VoiceId === voiceId).notes[0] as VexFlowGraphicalNote;
+         }
+         /** The drawn box of the note's only mark, in units like the note's position. */
+         function markBox(note: VexFlowGraphicalNote): { left: number, right: number } {
+            const box: DOMRect = (note.getSVGGElement().querySelector(".vf-modifiers") as SVGGElement).getBBox();
+            return { left: box.x / unitInPixels, right: (box.x + box.width) / unitInPixels };
+         }
+
+         // m1: the accents, centered on their note heads (the note's x is the center of its drawn head)
+         const d5: VexFlowGraphicalNote = noteOnBeat1(0, 1);
+         const c5: VexFlowGraphicalNote = noteOnBeat1(0, 2);
+         expect(c5.PositionAndShape.AbsolutePosition.x - d5.PositionAndShape.AbsolutePosition.x, "m1: the C5 is drawn right of the D5")
+            .to.be.above(0.5);
+         for (const [note, name] of [[d5, "D5"], [c5, "C5"]] as [VexFlowGraphicalNote, string][]) {
+            const accent: { left: number, right: number } = markBox(note);
+            expect((accent.left + accent.right) / 2, `m1: the accent of the ${name} on its head`)
+               .to.be.closeTo(note.PositionAndShape.AbsolutePosition.x, 0.1);
+         }
+
+         // m2: the tremolo strokes of the C5 cross its stem
+         const tremoloNote: VexFlowGraphicalNote = noteOnBeat1(1, 2);
+         const tremolo: { left: number, right: number } = markBox(tremoloNote);
+         const stemBox: DOMRect = (tremoloNote.getSVGGElement().querySelector(".vf-stem") as SVGGElement).getBBox();
+         const stemX: number = (stemBox.x + stemBox.width / 2) / unitInPixels;
+         expect(stemX, "m2: the stem of the C5 between the left and the right end of its tremolo strokes")
+            .to.be.within(tremolo.left, tremolo.right);
+         done();
+      }).catch(done);
+   });
+
    // A fingering label is stacked in the pitch order of its note, which is not the order the
    // fingerings were read in, so the label's index in FingeringEntries says nothing about which
    // note it belongs to. GraphicalLabel.sourceNote carries that link, letting a consumer find the

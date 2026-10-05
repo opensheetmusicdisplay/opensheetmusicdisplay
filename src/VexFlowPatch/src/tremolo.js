@@ -43,7 +43,9 @@ export class Tremolo extends Modifier {
     // VexFlowPatch: add y_spacing_scale
     this.y_spacing = 4 * stemDirection * this.y_spacing_scale;
     const start = this.note.getModifierStartXY(this.position, this.index);
-    let x = start.x;
+    // VexFlowPatch: the strokes cross the stem, which moves with a note moved aside from another voice's note (x_shift),
+    //   but getModifierStartXY() has no case for the CENTER position (undefined here), so it gives the unmoved x.
+    let x = start.x + this.note.getXShift();
     let y = this.note.stem.getExtents().topY;
     let scale = this.note.getCategory() === 'gracenotes' ? GraceNote.SCALE : 1;
     // VexFlowPatch: add extra stroke scale

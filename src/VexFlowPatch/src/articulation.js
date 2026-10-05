@@ -279,6 +279,11 @@ export class Articulation extends Modifier {
     let { x } = note.getModifierStartXY(position, index);
     // VexFlowPatch: breath mark support
     if (this.type === 'abr') { // breath mark
+      // placed by the distance to the next note's time (tick context), so not moved with a note moved aside from another
+      //   voice's note (its x_shift, which getModifierStartXY() adds): that brought it closer to the next note, e.g. onto its stem
+      if (isStaveNote(note)) {
+        x -= note.getXShift();
+      }
       let delayXShift = 0;
       // delay code similar to ornament.js delayed variable handling
       const noteTickContext = note.getTickContext();
