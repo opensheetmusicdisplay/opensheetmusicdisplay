@@ -81,29 +81,6 @@ describe("IntervalTransposeCalculator", (): void => {
                 .to.equal("A1");
         });
 
-        it("spells chord symbols without double accidentals and Fb, Cb, E# or B# by default, and notes with them", (): void => {
-            const key: KeyInstruction = transposedKey(2, 1); // D major -> Eb major
-            const chord: (pitch: Pitch) => string = (pitch: Pitch): string => name(calculator.transposePitch(pitch, key, 1, true));
-            const note: (pitch: Pitch) => string = (pitch: Pitch): string => name(calculator.transposePitch(pitch, key, 1));
-            const eFlat: Pitch = new Pitch(NoteEnum.E, 1, AccidentalEnum.FLAT);
-            const aFlat: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.FLAT);
-            const dFlat: Pitch = new Pitch(NoteEnum.D, 1, AccidentalEnum.FLAT);
-            const bFlat: Pitch = new Pitch(NoteEnum.B, 1, AccidentalEnum.FLAT);
-            expect([eFlat, aFlat, dFlat, bFlat].map(chord), "Ebmaj7 Ab7 /Db Bbm7 -> Emaj7 A7 /D Bm7").to.deep.equal(["E1", "A1", "D1", "B1"]);
-            expect([eFlat, aFlat, dFlat, bFlat].map(note), "the notes by interval").to.deep.equal(["Fb1", "Bbb1", "Ebb1", "Cb2"]);
-            expect(chord(new Pitch(NoteEnum.G, 1, AccidentalEnum.NONE)), "G -> Ab stays Ab").to.equal("Ab1");
-
-            calculator.SimpleChordSymbolSpelling = false;
-            calculator.AvoidDoubleAccidentals = true;
-            try {
-                expect([eFlat, aFlat, dFlat, bFlat].map(chord), "the chords by interval").to.deep.equal(["Fb1", "Bbb1", "Ebb1", "Cb2"]);
-                expect([eFlat, aFlat, dFlat, bFlat].map(note), "the notes without double accidentals").to.deep.equal(["Fb1", "A1", "D1", "Cb2"]);
-            } finally {
-                calculator.SimpleChordSymbolSpelling = true;
-                calculator.AvoidDoubleAccidentals = false;
-            }
-        });
-
         it("falls back to the default calculator for intervals it can't spell and for microtones", (): void => {
             const fallback: TransposeCalculator = new TransposeCalculator();
             const key: KeyInstruction = transposedKey(0, 6);
@@ -192,11 +169,13 @@ describe("IntervalTransposeCalculator", (): void => {
             expect(firstKey(), "Eb major").to.equal(-3);
             expect(chordTexts()).to.deep.equal(["Emaj7", "A7", "Bm7/D"]);
             expect(noteNames(), "the notes keep the interval spelling").to.deep.equal(["Eb", "Bbb", "Cb", "Bb"]);
+            transposeTo(2);
+            expect(chordTexts(), "E major: by interval, not A#7 and Cm7/D#").to.deep.equal(["Fmaj7", "Bb7", "Cm7/Eb"]);
 
             (osmd.TransposeCalculator as IntervalTransposeCalculator).SimpleChordSymbolSpelling = false;
             (osmd.TransposeCalculator as IntervalTransposeCalculator).AvoidDoubleAccidentals = true;
             transposeTo(1);
-            expect(chordTexts()).to.deep.equal(["Fbmaj7", "Bbb7", "Cbm7/Ebb"]);
+            expect(chordTexts(), "by interval, without double accidentals").to.deep.equal(["Fbmaj7", "A7", "Cbm7/D"]);
             expect(noteNames()).to.deep.equal(["Eb", "A", "Cb", "Bb"]);
         });
 

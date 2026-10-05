@@ -38,11 +38,11 @@ interface SpelledPitch {
  *   osmd.Sheet.Transpose = -2;
  */
 export class IntervalTransposeCalculator implements ITransposeCalculator {
-    /** Spell chord symbol roots and basses without double sharps/flats and without Fb, Cb, E# and B#, like the default
-     * calculator does, e.g. Ebmaj7 in D major transposed by +1 as Emaj7 instead of Fbmaj7. The notes keep their interval spelling.
-     * Default: true. */
+    /** Spell a chord symbol root or bass that the interval would spell with a double sharp/flat or as Fb, Cb, E# or B#
+     * like the default calculator does, e.g. Ebmaj7 in D major transposed by +1 as Emaj7 instead of Fbmaj7.
+     * The notes keep their interval spelling. Default: true. */
     public SimpleChordSymbolSpelling: boolean = true;
-    /** Spell a note that the interval would spell with a double sharp/flat like the default calculator does instead,
+    /** Spell a note or chord symbol that the interval would spell with a double sharp/flat like the default calculator does instead,
      * e.g. Ab in C major transposed by +1 (Db major) as A instead of Bbb.
      * Default: false, i.e. double sharps/flats are used (like MuseScore with "Use double sharps and flats"). */
     public AvoidDoubleAccidentals: boolean = false;
@@ -66,7 +66,8 @@ export class IntervalTransposeCalculator implements ITransposeCalculator {
     /** @param chordSymbol true for the root or bass of a chord symbol, which is spelled simply if SimpleChordSymbolSpelling is set */
     public transposePitch(pitch: Pitch, currentKeyInstruction: KeyInstruction, halftones: number, chordSymbol: boolean = false): Pitch {
         if (chordSymbol) {
-            return this.transposeByInterval(pitch, currentKeyInstruction, halftones, this.SimpleChordSymbolSpelling, this.SimpleChordSymbolSpelling);
+            return this.transposeByInterval(pitch, currentKeyInstruction, halftones,
+                this.SimpleChordSymbolSpelling || this.AvoidDoubleAccidentals, this.SimpleChordSymbolSpelling);
         }
         return this.transposeByInterval(pitch, currentKeyInstruction, halftones, this.AvoidDoubleAccidentals, false);
     }
