@@ -7,13 +7,12 @@ import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphica
 import {TestUtils} from "../../../Util/TestUtils";
 import {VexFlowMeasure} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import {VexFlowVoiceEntry} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
+import {GraphicalStaffEntry} from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import {expect} from "chai";
 
 describe("VexFlow Measure - Three-Voice Stagger", () => {
 
-   const path: string = "test_three_voice_stagger_middle_by_pitch_traumerei_measure23.musicxml";
-
-   function firstMeasure(): VexFlowMeasure {
+   function firstMeasure(path: string): VexFlowMeasure {
       const score: Document = TestUtils.getScore(path);
       expect(score).to.not.be.undefined;
       const partwise: Element = TestUtils.getPartWiseElement(score);
@@ -26,22 +25,47 @@ describe("VexFlow Measure - Three-Voice Stagger", () => {
       return gms.MeasureList[0][0] as VexFlowMeasure;
    }
 
-   // x-shift applied to a note's notehead within its ModifierContext.
-   function xShift(gve: VexFlowVoiceEntry): number {
-      return (gve.vfStaveNote as unknown as { x_shift: number }).x_shift;
+   function voiceEntriesAt(measure: VexFlowMeasure, timestampRealValue: number): VexFlowVoiceEntry[] {
+      const staffEntry: GraphicalStaffEntry = measure.staffEntries.find(
+         (se) => Math.abs(se.sourceStaffEntry.Timestamp.RealValue - timestampRealValue) < 1e-6);
+      expect(staffEntry, `expected a staff entry at timestamp ${timestampRealValue}`).to.not.be.undefined;
+      return staffEntry.graphicalVoiceEntries as VexFlowVoiceEntry[];
    }
 
-   it("Should stagger the middle note by pitch, not by voice number", (done: Mocha.Done) => {
-      const measure: VexFlowMeasure = firstMeasure();
-      // Beat 1: voice 1 = C4 (upper), voice 2 = C3 (lower), voice 3 = Bb3 (middle, a second below C4).
-      const gves: VexFlowVoiceEntry[] = measure.staffEntries[0].graphicalVoiceEntries as VexFlowVoiceEntry[];
+   // x of the centre of the voice's note head, where it is drawn (a staggered note is drawn about a note head further right)
+   function noteX(gves: VexFlowVoiceEntry[], voiceId: number): number {
+      const gve: VexFlowVoiceEntry = gves.find((g) => g.parentVoiceEntry.ParentVoice.VoiceId === voiceId);
+      expect(gve, `voice ${voiceId} should be present`).to.not.be.undefined;
+      return gve.notes[0].PositionAndShape.AbsolutePosition.x;
+   }
+
+   it("Should not stagger a unison between two voices in a three-voice stave", (done: Mocha.Done) => {
+      // Beat 1: voices 1 and 2 both play G4 (unison); voice 3 is a B3, a sixth below.
+      const gves: VexFlowVoiceEntry[] = voiceEntriesAt(firstMeasure("test_three_voice_unison_alignment.musicxml"), 0);
       expect(gves.length).to.equal(3, "beat 1 should have three voices");
-      const byVoice: (id: number) => VexFlowVoiceEntry =
-         (id: number) => gves.find((g) => g.parentVoiceEntry.ParentVoice.VoiceId === id);
-      expect(xShift(byVoice(3))).to.be.greaterThan(0,
+      for (const voiceId of [2, 3]) {
+         expect(noteX(gves, voiceId)).to.be.closeTo(noteX(gves, 1), 0.01,
+            "unison/non-colliding notes should share their horizontal position (no stagger)");
+      }
+      done();
+   });
+
+   it("Should still stagger a genuine second-interval collision in a three-voice stave", (done: Mocha.Done) => {
+      // Beat 2: voice 1 = A4, voice 2 = G4 (a second below) -> genuine collision.
+      const gves: VexFlowVoiceEntry[] = voiceEntriesAt(firstMeasure("test_three_voice_unison_alignment.musicxml"), 0.25);
+      expect(noteX(gves, 2) - noteX(gves, 1)).to.be.greaterThan(1,
+         "a second-interval collision must still be staggered (noteheads cannot overlap)");
+      done();
+   });
+
+   it("Should stagger the middle note by pitch, not by voice number", (done: Mocha.Done) => {
+      // Beat 1: voice 1 = C4 (upper), voice 2 = C3 (lower), voice 3 = Bb3 (middle, a second below C4).
+      const gves: VexFlowVoiceEntry[] = voiceEntriesAt(
+         firstMeasure("test_three_voice_stagger_middle_by_pitch_traumerei_measure23.musicxml"), 0);
+      expect(gves.length).to.equal(3, "beat 1 should have three voices");
+      expect(noteX(gves, 3) - noteX(gves, 1)).to.be.greaterThan(1,
          "the Bb3 of voice 3 collides with the C4 of voice 1 a second above, so it must be staggered");
-      expect(xShift(byVoice(1))).to.equal(0, "the upper voice stays in place");
-      expect(xShift(byVoice(2))).to.equal(0, "the lower voice stays in place");
+      expect(noteX(gves, 2)).to.be.closeTo(noteX(gves, 1), 0.01, "the upper and the lower voice stay in place");
       done();
    });
 
