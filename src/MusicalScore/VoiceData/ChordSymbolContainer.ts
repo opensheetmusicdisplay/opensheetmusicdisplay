@@ -59,7 +59,8 @@ export class ChordSymbolContainer {
             transposedRootPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                 chordSymbol.RootPitch,
                 keyInstruction,
-                transposeHalftones
+                transposeHalftones,
+                true // chord symbol: a calculator can spell it differently from notes
             );
         }
         if (chordSymbol.ChordKind === ChordSymbolEnum.none) {
@@ -151,7 +152,8 @@ export class ChordSymbolContainer {
                 transposedBassPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                     chordSymbol.BassPitch,
                     keyInstruction,
-                    transposeHalftones
+                    transposeHalftones,
+                    true
                 );
             }
             text += "/";
