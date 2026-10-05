@@ -155,17 +155,19 @@ export class Ornament extends Modifier {
     return this;
   }
 
-  // VexFlowPatch: the other notes at this time with ornaments on the side of this one: those of the other voices in the staff,
-  //   which share this ornament's ModifierContext, and so the text lines that format() gave its ornaments
+  // VexFlowPatch: the other notes at this time with ornaments or articulations on the side of this one: those of the other
+  //   voices in the staff, which share this ornament's ModifierContext, and so the text lines that format() gave them (the
+  //   articulations first, see ModifierContext.PREFORMAT, so an ornament is stacked outside the articulations of other notes)
   getOtherNotesOnSameSide() {
     const isTabNote = note => note.getCategory() === 'tabnotes';
     if (isTabNote(this.note)) {
       return [];
     }
-    const ornaments = this.getModifierContext()?.getModifiers(Ornament.CATEGORY) ?? [];
-    return ornaments
-      .filter(ornament => ornament.getPosition() === this.position && ornament.note !== this.note && !isTabNote(ornament.note))
-      .map(ornament => ornament.note);
+    const context = this.getModifierContext();
+    const modifiers = [...(context?.getModifiers('articulations') ?? []), ...(context?.getModifiers(Ornament.CATEGORY) ?? [])];
+    return modifiers
+      .filter(modifier => modifier.getPosition() === this.position && modifier.note !== this.note && !isTabNote(modifier.note))
+      .map(modifier => modifier.note);
   }
 
   // Render ornament in position next to note.

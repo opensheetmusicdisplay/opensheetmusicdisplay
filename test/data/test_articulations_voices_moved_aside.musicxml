@@ -218,6 +218,36 @@
           </articulations>
         </notations>
       </note>
+    </measure>
+    <measure number="4">
+      <!-- fermatas above both notes, on two text lines -->
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <fermata type="upright"/>
+        </notations>
+      </note>
+      <backup>
+        <duration>4</duration>
+      </backup>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>2</voice>
+        <type>whole</type>
+        <notations>
+          <fermata type="upright"/>
+        </notations>
+      </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
       </barline>

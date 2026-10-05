@@ -14,6 +14,8 @@ articulation.js (custom addition):
 respect modifier.y_shift (y_shift affects y position of rendering)
 breath mark support
 keep a breath mark at the time of its note: not moved with the note's x_shift (which getModifierStartXY() adds, see stavenote.js)
+count the text line of an articulation also from the bases of the articulations on its side of the other voices' notes at
+  its time (getTextLineBaseY(), with the move out of the staff), so that the articulations of two voices don't overlap
 
 beam.js (custom addition):
 fix beam slopes changing on each re-render (render() call)
@@ -50,8 +52,8 @@ add stem_up_y_shift and stem_down_y_shift to shift notehead (independent of stem
 ornament.js (custom addition):
 respect Modifier.Position.BELOW in draw() (placement="below" in MusicXML)
 setUpperAccidental() and setLowerAccidental() also take a list of accidentals, drawn side by side (e.g. sharp-sharp)
-count the text line of an ornament from the outermost of the notes at its time with ornaments on its side, i.e. of all
-  voices in the staff, not only from its own note, so that the ornaments of two voices don't overlap
+count the text line of an ornament from the outermost of the notes at its time with ornaments or articulations on its side,
+  i.e. of all voices in the staff, not only from its own note, so that the ornaments of two voices don't overlap
 
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.

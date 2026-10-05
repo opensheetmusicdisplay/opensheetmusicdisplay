@@ -945,7 +945,9 @@ describe("VexFlow Measure", () => {
    // x shift): the accent of the C5 on the head of the D5, and the tremolo strokes of the C5 left of its stem. And the
    // mordent of the C5, on the text line above the trill of the D5, was drawn at the trill's height, over it: each ornament
    // counted its text line from its own note, the mordent from the head of the C5, the trill from the stem tip of the D5.
-   it("Draws the marks of a voice moved aside at its notes, and stacks the ornaments of both voices", (done: Mocha.Done) => {
+   // Likewise the fermatas of two whole notes, the one of the C5 from its head, the one of the D5 from the line above the
+   // staff that it was moved to.
+   it("Draws the marks of a voice moved aside at its notes, and stacks the marks of both voices", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_articulations_voices_moved_aside.musicxml");
       if (!score) {
          done(new Error("Score file not found"));
@@ -995,6 +997,12 @@ describe("VexFlow Measure", () => {
          expect((mordent.left + mordent.right) / 2, "m3: the mordent of the C5 above its head")
             .to.be.closeTo(mordentNote.PositionAndShape.AbsolutePosition.x, 0.1);
          expect(mordent.bottom, "m3: the bottom of the mordent of the C5 above the top of the trill of the D5").to.be.at.most(trill.top);
+
+         // m4: the fermata of the C5 above the fermata of the D5 (whole notes: both moved out of the staff)
+         const d5Fermata: Box = markBox(noteOnBeat1(3, 1));
+         const c5Fermata: Box = markBox(noteOnBeat1(3, 2));
+         expect(c5Fermata.bottom, "m4: the bottom of the fermata of the C5 above the top of the fermata of the D5")
+            .to.be.at.most(d5Fermata.top);
          done();
       }).catch(done);
    });
