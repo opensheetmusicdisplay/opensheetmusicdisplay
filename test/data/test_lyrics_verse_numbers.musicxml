@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<!-- Lyrics whose text starts with a verse number, as written by e.g. MuseScore: MusicXML has no element for the number.
+  Measure 1, upper staff: verse 1 starts with "1. ", verse 2 with the wide (full-width) digit and period of Japanese text.
+  Verse 3 starts a note later, with a short lyric, which is moved right like the other short lyrics (LyricsExtraXShiftForShortLyrics).
+  The number is left of the lyric, which starts at its note like the lyrics of the other notes, and the notes are evenly spaced.
+  Measure 2: "2. lah" in the upper staff is a later lyric of its verse, it starts with the number at the note.
+  "1. lah" in the lower staff is the first lyric of the verse in that staff, with the number left of it. -->
+<score-partwise version="4.0">
+  <work>
+    <work-title>Lyrics with verse numbers</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voices</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <staves>2</staves>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>1. lah</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>２．ら</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>lah</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>ら</text>
+        </lyric>
+        <lyric number="3">
+          <syllabic>single</syllabic>
+          <text>3. I</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>lah</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>ら</text>
+        </lyric>
+        <lyric number="3">
+          <syllabic>single</syllabic>
+          <text>I</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>lah</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>ら</text>
+        </lyric>
+        <lyric number="3">
+          <syllabic>single</syllabic>
+          <text>I</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>4</duration>
+      </backup>
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>2. lah</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>4</duration>
+      </backup>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>4</duration>
+        <voice>5</voice>
+        <type>whole</type>
+        <staff>2</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>1. lah</text>
+        </lyric>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+      </barline>
+    </measure>
+  </part>
+</score-partwise>

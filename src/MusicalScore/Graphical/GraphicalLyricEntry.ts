@@ -4,13 +4,20 @@ import {GraphicalLabel} from "./GraphicalLabel";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {Label} from "../Label";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
-import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
+import {TextAlignment, TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import { EngravingRules } from "./EngravingRules";
+import { BoundingBox } from "./BoundingBox";
+import { MusicSheetCalculator } from "./MusicSheetCalculator";
+import { SourceStaffEntry } from "../VoiceData/SourceStaffEntry";
+import { Staff } from "../VoiceData/Staff";
+import { VoiceEntry } from "../VoiceData/VoiceEntry";
 
 /**
  * The graphical counterpart of a [[LyricsEntry]]
  */
 export class GraphicalLyricEntry {
+    /** A number at the start of a lyric's text, with its punctuation and what else is before the first letter: "1. " in "1. Si". */
+    private static readonly leadingNumber: RegExp = /^\p{Nd}+\p{P}[^\p{Nd}\p{L}]*(?=\p{L})/u;
     private lyricsEntry: LyricsEntry;
     private graphicalLyricWord: GraphicalLyricWord;
     private graphicalLabel: GraphicalLabel;
@@ -42,6 +49,7 @@ export class GraphicalLyricEntry {
         this.graphicalLabel.Label.colorDefault = rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0, staffHeight);
         this.graphicalLabel.setLabelPositionAndShapeBorders(); // needed to have Size.width
+        this.moveLeadingNumberLeftOfLyric(rules);
         if (this.graphicalLabel.PositionAndShape.Size.width < rules.LyricsExtraXShiftForShortLyricsWidthThreshold) {
             this.graphicalLabel.PositionAndShape.RelativePosition.x += rules.LyricsExtraXShiftForShortLyrics;
             this.graphicalLabel.CenteringXShift = rules.LyricsExtraXShiftForShortLyrics;
@@ -49,6 +57,52 @@ export class GraphicalLyricEntry {
         if (lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
             this.graphicalLabel.PositionAndShape.RelativePosition.x -= 1; // make lyrics optically left-aligned
         }
+    }
+
+    /**
+     * Aligns the first lyric of a verse whose text starts with the verse number, e.g. "1. Si", like a lyric without one, if
+     * lyrics are left-aligned: the number is left of where the lyric starts, instead of the lyric being right of that by the number.
+     * MusicXML has no element for such a number, it is part of the lyric's text.
+     * The label's box is the lyric without the number, so it is spaced like a lyric without one: no lyrics of its verse are
+     * before it. The box's left margin reaches to the number, which keeps the number clear of what is above it.
+     */
+    private moveLeadingNumberLeftOfLyric(rules: EngravingRules): void {
+        const label: Label = this.graphicalLabel.Label;
+        if (!rules.LyricsVerseNumberLeftOfLyric || !TextAlignment.IsLeft(label.textAlignment)) {
+            return;
+        }
+        const leadingNumber: string = GraphicalLyricEntry.leadingNumber.exec(this.graphicalLabel.TextLines?.[0].text ?? "")?.[0];
+        if (!leadingNumber || !this.isFirstOfVerseInStaff()) {
+            return;
+        }
+        const numberWidth: number = label.fontHeight *
+            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(leadingNumber, label.font, label.fontStyle, label.fontFamily);
+        const box: BoundingBox = this.graphicalLabel.PositionAndShape;
+        box.BorderRight -= numberWidth;
+        box.BorderMarginRight -= numberWidth;
+        box.BorderMarginLeft -= numberWidth;
+        for (const line of this.graphicalLabel.TextLines) {
+            line.xOffset -= numberWidth;
+        }
+    }
+
+    /** Whether no lyric of this lyric's verse is before it in its staff. */
+    private isFirstOfVerseInStaff(): boolean {
+        const staffEntry: SourceStaffEntry = this.lyricsEntry.Parent.ParentSourceStaffEntry;
+        const staff: Staff = staffEntry.ParentStaff;
+        for (const measure of staff.ParentInstrument.GetMusicSheet.SourceMeasures) {
+            for (const container of measure.VerticalSourceStaffEntryContainers) {
+                const earlier: SourceStaffEntry = container.StaffEntries[staff.idInMusicSheet];
+                if (earlier?.AbsoluteTimestamp.lt(staffEntry.AbsoluteTimestamp) && earlier.VoiceEntries.some(
+                    (voiceEntry: VoiceEntry) => voiceEntry.LyricsEntries.containsKey(this.lyricsEntry.VerseNumber))) {
+                    return false;
+                }
+            }
+            if (measure === staffEntry.VerticalContainerParent.ParentMeasure) {
+                break;
+            }
+        }
+        return true;
     }
 
     /**
