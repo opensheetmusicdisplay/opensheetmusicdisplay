@@ -886,6 +886,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             this.correctTabNotePositions();
             return; // TAB notes are on their strings
         }
+        this.updateBeamedVoiceEntryBorders(); // before placing the notes relative to their voice entries
         // The note heads' y relative to the top line (the measure's y), from their lines on the stave: the y they got when drawn
         //   might be from another position of the stave, e.g. SkyBottomLineCalculator moves it, and can call this without drawing.
         const staveTopY: number = this.stave.getYForLine(0);
@@ -917,6 +918,28 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const noteHeadY: number = (this.stave.getYForNote(noteHead.getLine()) - staveTopY) / unitInPixels;
                     gNote.PositionAndShape.RelativePosition.y = noteHeadY - voiceEntryY;
                 }
+            }
+        }
+    }
+
+    /**
+     * Gives the voice entries of beamed notes the vertical borders of their stems as drawn, i.e. reaching the beam.
+     * A voice entry gets its bounding box from its Vexflow note in VexFlowStaffEntry.calculateXPosition()
+     * (VexFlowVoiceEntry.applyBordersFromVexflow()), before the beams extend their notes' stems to reach them
+     * (postFormatBeams(), in draw() or applyDrawSideEffects()). So a beamed note's voice entry ended at its unextended stem tip,
+     * short of the beam, and a slur on the stem side, which starts and ends at the voice entry's border
+     * (GraphicalSlur.calculateStartAndEnd()), started on the stem under the beam and crossed the beam and what is above it,
+     * e.g. a fingering (test_slur_above_beamed_stem_up_fingering_traumerei_measure3).
+     */
+    private updateBeamedVoiceEntryBorders(): void {
+        const staveTopY: number = this.stave.getYForLine(0); // the notes are on the stave where it is now, see correctNotePositions()
+        for (const gse of this.staffEntries) {
+            for (const gve of gse.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
+                const vfStaveNote: any = gve.vfStaveNote;
+                if (!vfStaveNote?.beam || !vfStaveNote.preFormatted || !vfStaveNote.getNoteHeadBeginX || gve.notes[0]?.sourceNote.isRest()) {
+                    continue; // (like applyBordersFromVexflow(), not for a TabNote, and rest positions are already fine, see below)
+                }
+                gve.applyVerticalBordersFromVexflow(vfStaveNote.getBoundingBox(), staveTopY);
             }
         }
     }
