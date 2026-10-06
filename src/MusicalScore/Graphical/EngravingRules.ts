@@ -279,8 +279,9 @@ export class EngravingRules {
      */
     public LyricsAlignmentStandard: TextAlignmentEnum;
     public LyricsHeight: number;
-    /** Whether to re-link lyric word chains split across voices of the same instrument
-     * after reading, so that dashes are drawn between their syllables. */
+    /** Whether to re-link lyric word chains split across voices of the same staff
+     * after reading, so that dashes are drawn between their syllables.
+     * Set before loading a score: the words are linked when loading. */
     public RelinkLyricWordsAcrossVoices: boolean;
     public LyricsYOffsetToStaffHeight: number;
     public LyricsYMarginToBottomLine: number;
