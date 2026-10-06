@@ -5,7 +5,10 @@
      Verse 1 sings "The ri-sing glo-ry": while voice 1 holds a whole note on "The",
      voice 2 carries the "ri" (begin) syllable; the "sing" (end) syllable is carried
      by the next voice-1 note. Without cross-voice re-linking no dash is drawn
-     between "ri" and "sing". "glo-ry" stays within voice 1 as a control word. -->
+     between "ri" and "sing". "glo-ry" stays within voice 1 as a control word; its "ry"
+     is marked single, as some exporters write a last syllable, which still ends the word.
+     The tenor (voice 5) sings the same words in the lower staff, in its own voice:
+     its words are complete, and words are only re-linked within a staff. -->
 <score-partwise version="3.1">
   <part-list>
     <score-part id="P1">
@@ -18,13 +21,16 @@
         <divisions>2</divisions>
         <key><fifths>0</fifths></key>
         <time><beats>4</beats><beat-type>4</beat-type></time>
-        <clef><sign>G</sign><line>2</line></clef>
+        <staves>2</staves>
+        <clef number="1"><sign>G</sign><line>2</line></clef>
+        <clef number="2"><sign>F</sign><line>4</line></clef>
       </attributes>
       <note>
         <pitch><step>C</step><octave>5</octave></pitch>
         <duration>8</duration>
         <voice>1</voice>
         <type>whole</type>
+        <staff>1</staff>
         <lyric number="1">
           <syllabic>single</syllabic>
           <text>The</text>
@@ -36,12 +42,37 @@
         <duration>4</duration>
         <voice>2</voice>
         <type>half</type>
+        <staff>1</staff>
       </note>
       <note>
         <pitch><step>F</step><octave>4</octave></pitch>
         <duration>4</duration>
         <voice>2</voice>
         <type>half</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <syllabic>begin</syllabic>
+          <text>ri</text>
+        </lyric>
+      </note>
+      <backup><duration>8</duration></backup>
+      <note>
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <voice>5</voice>
+        <type>half</type>
+        <staff>2</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>The</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <voice>5</voice>
+        <type>half</type>
+        <staff>2</staff>
         <lyric number="1">
           <syllabic>begin</syllabic>
           <text>ri</text>
@@ -54,6 +85,7 @@
         <duration>8</duration>
         <voice>1</voice>
         <type>whole</type>
+        <staff>1</staff>
         <lyric number="1">
           <syllabic>end</syllabic>
           <text>sing</text>
@@ -65,6 +97,19 @@
         <duration>8</duration>
         <voice>2</voice>
         <type>whole</type>
+        <staff>1</staff>
+      </note>
+      <backup><duration>8</duration></backup>
+      <note>
+        <pitch><step>B</step><octave>3</octave></pitch>
+        <duration>8</duration>
+        <voice>5</voice>
+        <type>whole</type>
+        <staff>2</staff>
+        <lyric number="1">
+          <syllabic>end</syllabic>
+          <text>sing</text>
+        </lyric>
       </note>
     </measure>
     <measure number="3">
@@ -73,6 +118,7 @@
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
+        <staff>1</staff>
         <lyric number="1">
           <syllabic>begin</syllabic>
           <text>glo</text>
@@ -83,8 +129,9 @@
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
+        <staff>1</staff>
         <lyric number="1">
-          <syllabic>end</syllabic>
+          <syllabic>single</syllabic>
           <text>ry</text>
         </lyric>
       </note>
@@ -94,6 +141,30 @@
         <duration>8</duration>
         <voice>2</voice>
         <type>whole</type>
+        <staff>1</staff>
+      </note>
+      <backup><duration>8</duration></backup>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>4</duration>
+        <voice>5</voice>
+        <type>half</type>
+        <staff>2</staff>
+        <lyric number="1">
+          <syllabic>begin</syllabic>
+          <text>glo</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>4</duration>
+        <voice>5</voice>
+        <type>half</type>
+        <staff>2</staff>
+        <lyric number="1">
+          <syllabic>end</syllabic>
+          <text>ry</text>
+        </lyric>
       </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>

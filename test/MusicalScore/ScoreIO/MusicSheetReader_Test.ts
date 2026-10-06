@@ -454,7 +454,8 @@ describe("Music Sheet Reader", () => {
     describe("Lyric words split across voices", () => {
         // Verse: "The ri-sing glo-ry" — voice 1 holds a whole note on "The" while
         // voice 2 carries "ri" (begin); "sing" (end) is carried by the next
-        // voice-1 note. "glo-ry" stays within voice 1 as a control word.
+        // voice-1 note. "glo-ry" stays within voice 1 as a control word, with "ry"
+        // marked single. The tenor sings the same words in the lower staff.
         const crossVoicePath: string = "test/data/test_lyrics_syllables_across_voices.musicxml";
 
         function readCrossVoiceSheet(rules?: EngravingRules): MusicSheet {
@@ -481,21 +482,25 @@ describe("Music Sheet Reader", () => {
             const riEntry: LyricsEntry = voice2Lyrics[0];
             const singEntry: LyricsEntry = voice1Lyrics[1];
             expect(riEntry.Word).to.not.be.undefined;
-            expect(singEntry.Word).to.equal(riEntry.Word);
+            expect(singEntry.Word === riEntry.Word, "sing is in the word of ri").to.be.true;
             expect(riEntry.Word.Syllables.map((syllable: LyricsEntry): string => syllable.Text)).to.deep.equal(["ri", "sing"]);
             expect(riEntry.SyllableIndex).to.equal(0);
             expect(singEntry.SyllableIndex).to.equal(1);
             expect(voice1Lyrics[0].Word).to.be.undefined; // single syllable stays wordless
+            // the tenor (voice 5) sings the same words in the lower staff: words are only linked within a staff
+            const tenorWords: string[] = lyricsOfVoice(crossVoiceSheet, 5).map((entry: LyricsEntry): string =>
+                entry.Word?.Syllables.map((syllable: LyricsEntry): string => syllable.Text + syllable.Parent.ParentVoice.VoiceId).join("-"));
+            expect(tenorWords, "the word of each syllable, with voice ids").to.deep.equal([undefined, "ri5-sing5", "ri5-sing5", "glo5-ry5", "glo5-ry5"]);
             done();
         });
 
-        it("keeps a well-formed same-voice word intact after re-linking", (done: Mocha.Done) => {
+        it("keeps a same-voice word intact after re-linking, also with its last syllable marked single", (done: Mocha.Done) => {
             const crossVoiceSheet: MusicSheet = readCrossVoiceSheet();
             const voice1Lyrics: LyricsEntry[] = lyricsOfVoice(crossVoiceSheet, 1);
             const gloEntry: LyricsEntry = voice1Lyrics[2];
             const ryEntry: LyricsEntry = voice1Lyrics[3];
             expect(gloEntry.Word).to.not.be.undefined;
-            expect(gloEntry.Word).to.equal(ryEntry.Word);
+            expect(ryEntry.Word === gloEntry.Word, "ry is in the word of glo").to.be.true;
             expect(gloEntry.Word.Syllables.map((syllable: LyricsEntry): string => syllable.Text)).to.deep.equal(["glo", "ry"]);
             done();
         });
@@ -511,12 +516,8 @@ describe("Music Sheet Reader", () => {
             done();
         });
 
-        // Regression guard for the review on PR #1708: the rebuild used to run on
-        // single-voice scores too, and there two simultaneous notes may legitimately
-        // carry the same syllable. Dropping the duplicate out of its word erased
-        // dashes from files that had always rendered correctly — five visual
-        // regression samples caught it. A verse sung by one voice cannot have a
-        // chain split across voices, so it must come out byte-identical.
+        // A verse sung by one voice can't have a word split across voices,
+        // so it must come out exactly as LyricsReader linked it.
         it("leaves a single-voice score untouched, dashes included", (done: Mocha.Done) => {
             const samplePath: string = "test/data/test_divisions_after_first_note_JingleBellRock_extract.musicxml";
 
