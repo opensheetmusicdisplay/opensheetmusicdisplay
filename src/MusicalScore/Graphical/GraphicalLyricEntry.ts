@@ -70,6 +70,20 @@ export class GraphicalLyricEntry {
         relativePosition.y = this.initialLabelRelativePosition.y;
     }
 
+    /**
+     * How far the label reaches below the line of its verse: a lyric with line breaks has its first line there, and its
+     * further lines below. 0 for a single line. The label is placed by its bottom (below the last line).
+     */
+    public get HeightBelowVerseLine(): number {
+        const furtherLines: number = (this.graphicalLabel.TextLines?.length ?? 1) - 1;
+        return furtherLines * this.graphicalLabel.Label.fontHeight;
+    }
+
+    /** The y of the line of the lyric's verse relative to the staff line, where the lyric's first line, its dashes and extend line are. */
+    public get VerseLineY(): number {
+        return this.graphicalLabel.PositionAndShape.RelativePosition.y - this.HeightBelowVerseLine;
+    }
+
     public hasDashFromLyricWord(): boolean {
         if (!this.ParentLyricWord) {
             return false;
