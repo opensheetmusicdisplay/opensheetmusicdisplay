@@ -26,6 +26,11 @@ export class VexFlowTextMeasurer implements ITextMeasurer {
         return this.context.measureText(text).width / fontSize;
     }
 
+    public computeTextWidthInCssFont(text: string, cssFont: string): number {
+        this.context.font = cssFont;
+        return this.context.measureText(text).width;
+    }
+
     // public computeTextWidth(text: string, font: Fonts, style: FontStyles,
     //     fontFamily: string = undefined,
     //     fontSize: number = this.fontSize): number {

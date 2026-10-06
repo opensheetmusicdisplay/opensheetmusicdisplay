@@ -729,7 +729,7 @@ export function noteTypeToDurationGroup(noteType: NoteType): BrailleDurationGrou
         case NoteType.QUARTER:
         case NoteType._64th:
             return BrailleDurationGroup.QuarterOr64th;
-        case NoteType.EIGTH:
+        case NoteType.EIGHTH:
         case NoteType._128th:
             return BrailleDurationGroup.EighthOr128th;
         default:

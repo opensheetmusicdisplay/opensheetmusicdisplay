@@ -525,6 +525,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         if (instruction) {
             const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
+            VexFlowConverter.setVexFlowTextFontFamily((repetition as any).font, this.rules);
             if (repetitionInstruction.Words) {
                 (repetition as any).setText(repetitionInstruction.Words); // drawn instead of the label, e.g. "D.C. senza replica"
             }
@@ -646,6 +647,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             //convert to VF units (pixels)
             vexFlowVoltaHeight *= 10;
             this.stave.setVoltaType(voltaType, repetitionInstruction.endingIndices[0], vexFlowVoltaHeight);
+            const volta: VF.StaveModifier = this.stave.getModifiers().last();
+            VexFlowConverter.setVexFlowTextFontFamily((volta as any).font, this.rules);
             skyBottomLineCalculator.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
         }
     }
@@ -739,7 +742,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     for (let i: number = 0; i < this.tuplets[voiceID].length; i++) {
                         const tuplet: Tuplet = this.tuplets[voiceID][i][0];
                         const vftuplet: VF.Tuplet = this.vftuplets[voiceID][i];
-                        if (!vftuplet) { // see #1330, potentially to be investigated. why undefined?
+                        if (!vftuplet) {
+                            // finalizeTuplets() makes no VexFlow tuplet for a tuplet with fewer than two notes to draw in this measure,
+                            //   e.g. a cross-staff tuplet with one note in this staff, or a tuplet with invisible rests.
                             continue;
                         }
                         if (!tuplet.RenderTupletNumber ||
@@ -766,6 +771,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
             tie.setContext(ctx);
             tie.draw();
+            // Vexflow draws the text of a tie, e.g. "H" of a hammer-on in a TAB staff (TabTie), after the tie's SVG group:
+            //   move it into the group, so that hiding or coloring the tie includes it (VexFlowGraphicalNote.setVisible(), setColor()).
+            const group: Element = (tie as any).getAttribute("el"); // undefined without SVG
+            if (group?.nextSibling?.nodeName === "text") {
+                group.appendChild(group.nextSibling);
+            }
         }
     }
 
@@ -798,6 +809,20 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
             beam.postFormat();
         }
+    }
+
+    /**
+     * Does what draw() does to the notes besides drawing them: the beams extend their notes' stems (see postFormatBeams()),
+     * and the notes are placed at their note heads (see correctNotePositions()). For the lazy reuse of a skyline
+     * (SkyBottomLineCalculator.applyGeometricSkylineSideEffectsOnly()), which skips the draw of the skyline calculation:
+     * the beams would extend the stems when the measure is drawn instead, at the stave's final position rather than the
+     * skyline calculation's, so a few stems and beams would end a few trillionths of a pixel off where render() draws them.
+     */
+    public applyDrawSideEffects(): void {
+        if (!this.MeasureRepeat) { // draw() draws the repeat sign instead of the notes then, see drawNotes()
+            this.postFormatBeams();
+        }
+        this.correctNotePositions();
     }
 
     /**
@@ -1198,7 +1223,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     let beamHasQuarterNoteOrLonger: boolean = false;
                     for (const note of beam[0].Notes) {
                         if (note.Length.RealValue >= new Fraction(1, 4).RealValue
-                            // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eigth)
+                            // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eighth)
                             && (!note.TypeLength || note.TypeLength.RealValue > 0.125)) {
                             beamHasQuarterNoteOrLonger = true;
                             break;
@@ -1353,7 +1378,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (noteTuplet) {
                     // check if there are quarter notes or longer in the tuplet, then don't beam.
                     // (TODO: check for consecutiveBeamableNotes inside tuplets like for non-tuplet notes above
-                    //   e.g quarter eigth eighth -> beam the two eigth notes)
+                    //   e.g quarter eighth eighth -> beam the two eighth notes)
                     let tupletContainsUnbeamableNote: boolean = false;
                     for (const notes of noteTuplet.Notes) {
                         for (const note of notes) {
@@ -1630,7 +1655,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         });
                       vftuplets.push(vftuplet);
                     } else {
-                        log.debug("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");
+                        // Fewer than two notes to draw in this measure, e.g. a cross-staff tuplet with one note in this staff, or a tuplet
+                        //   with invisible rests (MusicSheetCalculator adds a hidden note to its tuplet only if it shares its notehead with
+                        //   a visible unison note). No VexFlow tuplet for it, but keep its place in the list, so that
+                        //   this.vftuplets[voiceID][i] stays the VexFlow tuplet of this.tuplets[voiceID][i], as draw() pairs them.
+                        vftuplets.push(undefined);
                     }
                 }
             }
@@ -2104,6 +2133,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
 
             const fretFinger: VF.FretHandFinger = new VF.FretHandFinger(fingering.value);
+            VexFlowConverter.setVexFlowTextFontFamily((fretFinger as any).font, this.rules);
             fretFinger.setPosition(modifierPosition);
             fretFinger.setOffsetX(offsetX);
             if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
@@ -2118,6 +2148,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     fretFinger.setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
                 } else if (!this.rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
                     const stringNumber: VF.StringNumber = new VF.StringNumber(fingering.value);
+                    VexFlowConverter.setVexFlowTextFontFamily((stringNumber as any).font, this.rules);
                     stringNumber.radius = 0; // hack to remove the circle around the number
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
@@ -2165,6 +2196,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         // leave stringNumber as is, warning not really necessary
                 }
                 const vfStringNumber: VF.StringNumber = new VF.StringNumber(stringNumber);
+                VexFlowConverter.setVexFlowTextFontFamily((vfStringNumber as any).font, this.rules);
                 // Remove circle from string number. Not needed for
                 // disambiguation from fingerings since we use Roman
                 // Numerals for RenderStringNumbersClassical
@@ -2231,10 +2263,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     public addStaveTie(stavetie: VF.StaveTie, graphicalTie: GraphicalTie): void {
         this.vfTies.push(stavetie);
-        graphicalTie.vfTie = stavetie;
-        if (graphicalTie.Tie.TieDirection === PlacementEnum.Below) {
-            (stavetie as any).setDirection(1);
-        }
+        // a tie across a system break is added in two parts, the part in the first system first (layoutGraphicalTie())
+        graphicalTie.vfTies.push(stavetie);
+        graphicalTie.vfTie = graphicalTie.vfTies[0];
+        // The tie's SVG group is named after its start note, so that the note finds it (VexFlowGraphicalNote.getTieSVGs()).
+        //   Vexflow takes the id from the tie's first note, which the part of a tie continued in the next system doesn't have.
+        (stavetie as any).setStartNoteId((graphicalTie.StartNote as VexFlowGraphicalNote)?.getSVGId());
     }
 }
 

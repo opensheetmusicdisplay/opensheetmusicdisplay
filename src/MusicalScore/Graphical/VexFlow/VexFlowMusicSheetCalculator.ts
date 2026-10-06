@@ -194,8 +194,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         byMeasure.set(measure.parentSourceMeasure, measure);
       }
     }
-    if (!this.rules.RenderMeasureRepeats || this.rules.LazyConsistentGraphic) {
-      // Incremental batches can split a repeat unit.
+    // An incremental render (OpenSheetMusicDisplay.renderNext()) lays the sheet out from its first measure to the end of the batch
+    //   and draws only complete systems, which hold all their units and the patterns before them, like in render().
+    //   (A unit reaching past the end of the batch, see tryCreateMeasureRepeat(), is in the last system, which isn't drawn yet.)
+    if (!this.rules.RenderMeasureRepeats) {
       return;
     }
 
@@ -521,6 +523,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   setStemLength() during a render. Restore the value it had before the first render
       //   (usually none - but e.g. the tremolo-between-notes stem lengthening of VexFlowConverter
       //   sets it at creation, which must survive), snapshotted on the first render.
+      // - stem direction and renderFlag: the same voice-collision handling turns the stem of one of two
+      //   unison notes with stems in the same direction down (setStemDirection()) after lengthening the
+      //   other one's stem, and hides the flag of one of two colliding notes (renderFlag), but never
+      //   back. Restore both as snapshotted on the first render - otherwise a re-render would find the
+      //   stems in different directions, not lengthen the other stem, and e.g. slope its beam differently.
       // - rest positions: StaveNote.format()'s shiftRestVertical() moves colliding rests
       //   *relative* to their current line (possibly several times during the first render's
       //   format passes), and the moved line persists on the VexFlow note - so a re-render
@@ -532,24 +539,52 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   back. Restore the x_shift it had before the first render (usually 0, VexFlowConverter shifts whole
       //   rests), snapshotted on the first render, and the dots' 0 - otherwise notes that aren't staggered
       //   anymore, e.g. after PrintObject changed hiddenUnisonBaseHead (below), would stay shifted.
+      // - dot_shiftY of augmentation dots: Dot.format() sets it for the dot of a note, but adds to it for the dot of
+      //   a rest (whose value starts at the rest glyph's dot position), e.g. half a staff space up after a dotted note
+      //   on a line at the same time, on each of the two formats of a render. Restore the value it had before the
+      //   first render, snapshotted on the first render - otherwise the dot of e.g. a dotted rest below a dotted note
+      //   moved up by a staff space with every re-render.
+      // - delayXShift of delayed ornaments (e.g. a turn between two notes): Ornament.draw() calculates it from the
+      //   distance to the next note on its first draw and keeps it. Unset it, so that the next draw calculates it
+      //   for the current layout - otherwise the turn kept its distance of the previous layout, e.g. after a resize.
       for (const voice of voices) {
         for (const tickable of voice.getTickables()) {
           const note: any = tickable as any;
           note.center_x_shift = 0;
           if (note.osmdInitialXShift === undefined) {
             note.osmdInitialXShift = note.x_shift ?? 0; // first render: snapshot
+            for (const modifier of note.modifiers ?? []) {
+              if (modifier.getCategory?.() === "dots") {
+                modifier.osmdInitialDotShiftY = modifier.dot_shiftY; // first render: snapshot
+              }
+            }
           } else {
             note.x_shift = note.osmdInitialXShift;
             for (const modifier of note.modifiers ?? []) {
               if (modifier.getCategory?.() === "dots") {
                 modifier.setYShift(0);
+                if (modifier.osmdInitialDotShiftY !== undefined) {
+                  modifier.setDotShiftY(modifier.osmdInitialDotShiftY);
+                }
+              } else if (modifier.getCategory?.() === "ornaments") {
+                modifier.delayXShift = undefined; // a delayed ornament (e.g. turn) caches its x shift on its first draw
               }
             }
           }
           if (note.osmdInitialStemExtensionOverride === undefined) {
             note.osmdInitialStemExtensionOverride = note.stemExtensionOverride ?? null; // first render: snapshot
+            note.osmdInitialStemDirection = note.getStemDirection?.();
+            note.osmdInitialRenderFlag = note.renderFlag;
           } else {
             note.stemExtensionOverride = note.osmdInitialStemExtensionOverride;
+            if (note.osmdInitialRenderFlag !== undefined) {
+              note.renderFlag = note.osmdInitialRenderFlag;
+            }
+            if (note.osmdInitialStemDirection !== undefined && note.getStemDirection() !== note.osmdInitialStemDirection) {
+              const beam: VF.Beam = note.beam; // setStemDirection() detaches the note from its beam, which the formatting reads
+              note.setStemDirection(note.osmdInitialStemDirection);
+              note.beam = beam;
+            }
             if (note.isRest?.()) {
               note.shiftRestVerticalDisabled = true; // re-render: freeze rest at its current position
             }
@@ -753,7 +788,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           minSpacing = this.rules.BetweenSyllableMinimumDistance;
           if (TextAlignment.IsCenterAligned(alignment)) {
             minSpacing += 1.0; // TODO check for previous lyric alignment too. though center is not standard
-            // without this, there's not enough space for dashes between long syllables on eigth notes
+            // without this, there's not enough space for dashes between long syllables on eighth notes
           }
         }
         const syllables: LyricsEntry[] = container.ParentLyricWord.GetLyricWord.Syllables;
@@ -844,7 +879,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           if ((lastNoteDuration.Denominator) > 4) {
             elongationFactorNeededForLastContainer *= 1.1; // from 1.2 upwards, this unnecessarily bloats shorter measures
             // spacing in Vexflow depends on note duration, our minSpacing is calibrated for quarter notes
-            // if we double the measure length, the distance between eigth notes only gets half of the added length
+            // if we double the measure length, the distance between eighth notes only gets half of the added length
             // compared to a quarter note.
           }
         }
@@ -1178,23 +1213,31 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       vfEndNote = endNote.vfnote[0];
       endNoteIndexInTie = endNote.vfnote[1];
     }
+    // in a standard staff, e.g. given in the XML for the start note (a TabTie always curves upwards)
+    const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote?.sourceNote);
 
     if (tieIsAtSystemBreak) {
-      // split tie into two ties:
+      // split tie into two ties.
+      // In a TAB staff, TabTies like in one system (see below), but only the part in the first system gets the label
+      //   of a hammer-on or pull-off ("H" or "P"), like in MuseScore: it isn't repeated in the next system.
+      //   (notes: any, because the typings of TabTie want both notes, though a TabTie draws a part with one, like a StaveTie)
       if (vfStartNote) { // first_note or last_note must be not null in Vexflow
-        const vfTie1: VF.StaveTie = new VF.StaveTie({
+        const notes: any = {
           first_indices: [startNoteIndexInTie],
           first_note: vfStartNote
-        });
+        };
+        const vfTie1: VF.StaveTie = isTab ? new VF.TabTie(notes, tie.Tie.Type) : this.createStaveTie(notes, tieDirection);
+        VexFlowConverter.setVexFlowTextFontFamily((vfTie1 as any).font, this.rules); // e.g. "H" for a hammer-on
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
       }
 
       if (vfEndNote) {
-        const vfTie2: VF.StaveTie = new VF.StaveTie({
+        const notes: any = {
           last_indices: [endNoteIndexInTie],
           last_note: vfEndNote
-        });
+        };
+        const vfTie2: VF.StaveTie = isTab ? new VF.TabTie(notes) : this.createStaveTie(notes, tieDirection);
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure2.addStaveTie(vfTie2, tie);
       }
@@ -1231,26 +1274,37 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               tie.Tie.Type
             );
           }
+          VexFlowConverter.setVexFlowTextFontFamily(vfTie.font, this.rules); // e.g. "H" for a hammer-on
 
         } else { // not Tab (guitar), normal StaveTie
-          vfTie = new VF.StaveTie({
+          vfTie = this.createStaveTie({
             first_indices: [startNoteIndexInTie],
             first_note: vfStartNote,
             last_indices: [endNoteIndexInTie],
             last_note: vfEndNote
-          });
-          const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote.sourceNote);
-          if (tieDirection === PlacementEnum.Below) {
-            vfTie.setDirection(1); // + is down in vexflow
-          } else if (tieDirection === PlacementEnum.Above) {
-            vfTie.setDirection(-1);
-          }
+          }, tieDirection);
         }
 
         const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure.addStaveTie(vfTie, tie);
       }
     }
+  }
+
+  /**
+   * Creates a Vexflow tie in a standard staff, curved in the given direction.
+   * @param notes The notes of the tie (or of the part of a tie across a system break), see VF.StaveTie.
+   * @param direction The direction, e.g. from the XML. Without one, Vexflow takes it from the stem direction of the notes.
+   * @returns The Vexflow tie.
+   */
+  private createStaveTie(notes: any, direction: PlacementEnum): VF.StaveTie {
+    const vfTie: VF.StaveTie = new VF.StaveTie(notes);
+    if (direction === PlacementEnum.Below) {
+      (vfTie as any).setDirection(1); // + is down in vexflow
+    } else if (direction === PlacementEnum.Above) {
+      (vfTie as any).setDirection(-1);
+    }
+    return vfTie;
   }
 
   protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
@@ -1390,6 +1444,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     const index: number = vfStave.getModifiers().length - 1;
     const mark: VF.StaveTempo = vfStave.getModifiers()[index] as VF.StaveTempo;
+    VexFlowConverter.setVexFlowTextFontFamily((mark as any).font, this.rules);
     let xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
     if (timestamp.RealValue > 0) {
       // Within the measure, place the mark at its time, like other expressions.
@@ -1617,6 +1672,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       // fontSize and minBottomY are extra arguments from VexFlowPatch (stave.js / stavesection.js)
       (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize, minBottomY);
+      const section: VF.StaveModifier = vfStave.getModifiers().last();
+      VexFlowConverter.setVexFlowTextFontFamily((section as any).font, this.rules);
       return; // only draw one rehearsal mark at top (visible) instrument
     }
   }
@@ -2170,6 +2227,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           this.calculateWavyLineSkyBottomLine(graphicalWavyLine.startVfVoiceEntry, graphicalWavyLine.endVfVoiceEntry, graphicalWavyLine, startStaffLine);
       } else {
         graphicalWavyLine.setEndNote(endStaffEntry);
+        if (wavyLine.ParentEndMultiExpression === wavyLine.ParentStartMultiExpression) {
+          // it starts and stops at the same note, e.g. a trill line over one note from Dolet for Sibelius or MuseScore:
+          //   trill-mark, wavy-line start and wavy-line stop
+          graphicalWavyLine.coverEndNoteDuration();
+        }
         graphicalWavyLine.CalculateBoundingBox();
         this.calculateWavyLineSkyBottomLine(graphicalWavyLine.startVfVoiceEntry, graphicalWavyLine.endVfVoiceEntry, graphicalWavyLine, startStaffLine);
       }
@@ -2224,6 +2286,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //vexflow backs off by 1 unit (10 pixels) from stave edge
       stopX = endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.AbsolutePosition.x +
         endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.BorderRight - 1;
+    } else if (vfVibratoBracket.nextVfVoiceEntry) {
+      //Up to the next note, in front of its modifiers (in its bounding box). Vexflow backs off by 0.5 units (5 pixels)
+      const nextNoteBox: BoundingBox = vfVibratoBracket.nextVfVoiceEntry.PositionAndShape;
+      stopX = nextNoteBox.AbsolutePosition.x + nextNoteBox.BorderLeft - 0.5;
     } else {
       stopX = endVfVoiceEntry.PositionAndShape.AbsolutePosition.x + endVfVoiceEntry.PositionAndShape.BorderRight;
       //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
@@ -2570,7 +2636,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     const fontHeightUnits: number = 1.6; // staverepetition.js draws the text with a 12pt (16px) font
     let textWidthUnits: number = 0;
-    if (text.length > 0) {
+    if (text.length > 0 && this.rules.VexFlowTextFontFamily && MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont) {
+      // measure in the CSS font that staverepetition.js draws with, whose family can also be a generic family or a list
+      const measureFontSize: number = 20;
+      textWidthUnits = MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont(
+        text, `italic bold ${measureFontSize}px ${this.rules.VexFlowTextFontFamily}`) / measureFontSize * fontHeightUnits;
+    } else if (text.length > 0) {
       // measure with the same font family string ("times") that staverepetition.js draws with,
       //   so that the measured width matches the drawn width even if the font falls back to another one
       textWidthUnits = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
@@ -3201,6 +3272,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               },
               slideDirection
             );
+            VexFlowConverter.setVexFlowTextFontFamily((vfTie as any).font, this.rules);
 
             const startMeasure: VexFlowMeasure = (vfStartNote?.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
             if (startMeasure) {

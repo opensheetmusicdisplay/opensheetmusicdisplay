@@ -166,10 +166,21 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         } else {
             this.ctx.attributes.fill = VexFlowConverter.style(styleId);
         }
-        this.ctx.attributes["fill-opacity"] = alpha;
-        this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+        // Draw like fillRect(), but with a copy of the context's attributes that has the alpha as fill-opacity: fillRect()
+        //   draws with the context's own attributes, and VexFlow's save() and restore() don't keep the fill-opacity,
+        //   so every element drawn afterwards would get it too. The position and size (set by rect()) go before it,
+        //   so that the attributes have the same order whether or not a fillRect() (e.g. of a barline) already left them
+        //   in the context's attributes. (The typings lack rect()'s attributes parameter.)
+        const rectangleAttributes: { [name: string]: number | string } = {
+            ...this.ctx.attributes,
+            x: rectangle.x,
+            y: rectangle.y,
+            width: rectangle.width,
+            height: rectangle.height,
+            "fill-opacity": alpha,
+        };
+        (this.ctx as any).rect(rectangle.x, rectangle.y, rectangle.width, rectangle.height, rectangleAttributes);
         this.ctx.restore();
-        this.ctx.attributes["fill-opacity"] = 1;
         this.ctx.closeGroup();
         return node;
     }

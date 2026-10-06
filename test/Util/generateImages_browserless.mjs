@@ -575,6 +575,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestGraceNotesOnlyMeasure = sampleFilename.startsWith("test_grace_notes_only_measure");
     // a word continued in the next system, see test_lyrics_dash_continued_in_next_system: systems as in the file
     const isTestLyricsDashContinuedInNextSystem = sampleFilename.startsWith("test_lyrics_dash_continued_in_next_system");
+    // tab ties across system breaks, see test_tab_hammer-on_pull-off_tie_across_system_breaks: systems as in the file
+    const isTestTabTiesAcrossSystemBreaks = sampleFilename.startsWith("test_tab_hammer-on_pull-off_tie_across_system_breaks");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestFirstPageCreditWords = sampleFilename.startsWith("test_first_page_credit_words");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
@@ -603,7 +605,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawUpToMeasureNumber: drawUpToMeasureNumber,
         drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
         newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure ||
-            isTestLyricsDashContinuedInNextSystem,
+            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
@@ -707,10 +709,12 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     const isTestTransposeEnharmonic9 = sampleFilename.includes("test_transpose_enharmonic_9");
     const isTestTransposingCsharpMajorToC = sampleFilename.includes("test_transposing_csharp_major_to_c");
     const isTestTransposingGflatMajor = sampleFilename.includes("test_transposing_gflat_major");
+    const isTestTransposingFsharpMajorEsharp = sampleFilename.includes("test_transposing_fsharp_major_e_sharp");
     const isTestTransposingIntervalSpelling = sampleFilename.includes("test_transposing_interval_spelling");
+    const isTestTransposingIntervalChordSpelling = sampleFilename.includes("test_transposing_interval_chord_spelling");
     // osmd.TransposeCalculator is static, shared by all samples: set it for each sample,
-    //   so that the samples after test_transposing_interval_spelling (in directory order) don't use its calculator.
-    osmdInstance.TransposeCalculator = isTestTransposingIntervalSpelling ?
+    //   so that the samples after the interval samples (in directory order) don't use their calculator.
+    osmdInstance.TransposeCalculator = isTestTransposingIntervalSpelling || isTestTransposingIntervalChordSpelling ?
         new OSMD.IntervalTransposeCalculator() : new OSMD.TransposeCalculator();
 
     if (isTestOctaveShiftInvisibleInstrument ||
@@ -735,8 +739,16 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
         osmdInstance.Sheet.Transpose = -2;
         osmdInstance.updateGraphic();
     }
+    if (isTestTransposingFsharpMajorEsharp) {
+        osmdInstance.Sheet.Transpose = 6;
+        osmdInstance.updateGraphic();
+    }
     if (isTestTransposingIntervalSpelling) {
         osmdInstance.Sheet.Transpose = -2;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingIntervalChordSpelling) {
+        osmdInstance.Sheet.Transpose = 1;
         osmdInstance.updateGraphic();
     }
 

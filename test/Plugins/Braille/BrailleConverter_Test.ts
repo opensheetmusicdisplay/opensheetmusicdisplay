@@ -117,7 +117,7 @@ describe("Braille Converter:", () => {
             chai.expect(noteTypeToDurationGroup(NoteType._32nd)).to.equal(BrailleDurationGroup.HalfOr32nd);
             chai.expect(noteTypeToDurationGroup(NoteType.QUARTER)).to.equal(BrailleDurationGroup.QuarterOr64th);
             chai.expect(noteTypeToDurationGroup(NoteType._64th)).to.equal(BrailleDurationGroup.QuarterOr64th);
-            chai.expect(noteTypeToDurationGroup(NoteType.EIGTH)).to.equal(BrailleDurationGroup.EighthOr128th);
+            chai.expect(noteTypeToDurationGroup(NoteType.EIGHTH)).to.equal(BrailleDurationGroup.EighthOr128th);
             chai.expect(noteTypeToDurationGroup(NoteType._128th)).to.equal(BrailleDurationGroup.EighthOr128th);
             chai.expect(noteTypeToDurationGroup(NoteType.UNDEFINED)).to.equal(undefined);
             done();
@@ -407,6 +407,36 @@ describe("Braille Converter:", () => {
                 );
                 done();
             });
+        });
+
+        it("should write dotted and triplet eighths as eighths (the notated value, not the length)", async () => {
+            // 4/4: dotted eighth C5 + 16th D5, triplet eighths E5 F5 G5, half C5.
+            //   Before NoteType.EIGHTH was read from <type>eighth</type>, the value came from the length:
+            //   the dotted eighth (3/16) became a dotted quarter, the triplet eighths (1/12 each) 16ths.
+            const triplet: string = "<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>";
+            const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+                <score-partwise version="4.0">
+                    <part-list><score-part id="P1"><part-name>Flute</part-name></score-part></part-list>
+                    <part id="P1"><measure number="1">
+                        <attributes><divisions>12</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+                            <clef><sign>G</sign><line>2</line></clef></attributes>
+                        <note><pitch><step>C</step><octave>5</octave></pitch><duration>9</duration><type>eighth</type><dot/></note>
+                        <note><pitch><step>D</step><octave>5</octave></pitch><duration>3</duration><type>16th</type></note>
+                        <note><pitch><step>E</step><octave>5</octave></pitch><duration>4</duration><type>eighth</type>${triplet}
+                            <notations><tuplet type="start"/></notations></note>
+                        <note><pitch><step>F</step><octave>5</octave></pitch><duration>4</duration><type>eighth</type>${triplet}</note>
+                        <note><pitch><step>G</step><octave>5</octave></pitch><duration>4</duration><type>eighth</type>${triplet}
+                            <notations><tuplet type="stop"/></notations></note>
+                        <note><pitch><step>C</step><octave>5</octave></pitch><duration>24</duration><type>half</type></note>
+                    </measure></part>
+                </score-partwise>`;
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+            await osmd.load(xml);
+            const output: BrailleOutput = new BrailleConverter().convert(osmd.Sheet);
+            const noteMeanings: string[] = output.debugEntries.map(entry => entry.meaning)
+                .filter(meaning => !meaning.startsWith("time ") && !meaning.startsWith("octave "));
+            chai.expect(noteMeanings).to.deep.equal(["eighth/128th C5", "augmentation dot", "whole/16th D5",
+                                                     "eighth/128th E5", "eighth/128th F5", "eighth/128th G5", "half/32nd C5"]);
         });
 
         it("should handle whole rests and extreme octaves (octave 2 and 6)", (done: Mocha.Done) => {

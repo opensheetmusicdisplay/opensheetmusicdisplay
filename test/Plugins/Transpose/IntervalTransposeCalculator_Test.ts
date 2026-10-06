@@ -163,6 +163,22 @@ describe("IntervalTransposeCalculator", (): void => {
             expect(chordTexts()).to.deep.equal(["Ebmaj7", "F#m7b5"]);
         });
 
+        it("spells chord symbols far from the key simply, unless SimpleChordSymbolSpelling is off", async (): Promise<void> => {
+            await osmd.load(TestUtils.getScore("test_transposing_interval_chord_spelling.musicxml"));
+            transposeTo(1);
+            expect(firstKey(), "Eb major").to.equal(-3);
+            expect(chordTexts()).to.deep.equal(["Emaj7", "A7", "Bm7/D"]);
+            expect(noteNames(), "the notes keep the interval spelling").to.deep.equal(["Eb", "Bbb", "Cb", "Bb"]);
+            transposeTo(2);
+            expect(chordTexts(), "E major: by interval, not A#7 and Cm7/D#").to.deep.equal(["Fmaj7", "Bb7", "Cm7/Eb"]);
+
+            (osmd.TransposeCalculator as IntervalTransposeCalculator).SimpleChordSymbolSpelling = false;
+            (osmd.TransposeCalculator as IntervalTransposeCalculator).AvoidDoubleAccidentals = true;
+            transposeTo(1);
+            expect(chordTexts(), "by interval, without double accidentals").to.deep.equal(["Fbmaj7", "A7", "Cbm7/D"]);
+            expect(noteNames()).to.deep.equal(["Eb", "A", "Cb", "Bb"]);
+        });
+
         it("transposes chord symbols by Sheet.Transpose when the instrument is transposed as well", async (): Promise<void> => {
             await osmd.load(TestUtils.getScore("test_transposing_interval_spelling.musicxml"));
             osmd.Sheet.Instruments[0].Transpose = 2;
