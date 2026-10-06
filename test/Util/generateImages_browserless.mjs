@@ -39,7 +39,8 @@ if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageF
     console.log("usage: " +
         "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]");
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
-    console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)');
+    console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting additionally skips the two biggest OSMD samples,' +
+        ' ActorPreludeSample and CharlesGounod_Meditation (a few seconds each), e.g. for quick runs on slow machines)');
     console.log("example: node test/Util/generateImages_browserless.mjs ../../build ./test/data/ ./export png");
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
@@ -133,6 +134,10 @@ async function init () {
         }
     }
 
+    if (process.platform === "win32") {
+        await addFontFallbackOnWindows();
+    }
+
     // unnecessary in Node v18+:
     // fix Blob not found (to support external modules like is-blob)
     //global.Blob = Blob;
@@ -196,6 +201,9 @@ async function init () {
     const fileEndingRegex = "^.*(([.]xml)|([.]musicxml)|([.]mxl))$";
     for (const sampleFilename of sampleDirFilenames) {
         if (osmdTestMode && filterRegex === "allSmall") {
+            // The npm scripts use "all": these two samples take about 3 s (Gounod) and 5 s (Actor, 2 images) next to
+            //   ~16 s for the other 333 images, and skipping them hid regressions in them from the visual regression
+            //   tests (e.g. the 5x "Andante Simplice." in Gounod). "allSmall" is kept for quick runs on slow machines.
             if (sampleFilename.match("^(Actor)|(Gounod)")) { // TODO maybe filter by file size instead
                 debug("filtering big file: " + sampleFilename, DEBUG);
                 continue;
@@ -313,6 +321,36 @@ function decodeXmlBuffer (buffer) {
         return buffer.toString("utf8", 3); // UTF-8 with BOM
     }
     return buffer.toString(); // default UTF-8 (no BOM)
+}
+
+/**
+ * On Windows, lets node-canvas draw text that Times New Roman has no glyphs for, e.g. Chinese or ♭, instead of boxes
+ * with hex codes. A browser falls back to any installed font, but node-canvas' text renderer (Pango) falls back there
+ * only to the fonts in the font string and their Windows font links, and Times New Roman has no font links.
+ * So fallback fonts are appended to the fonts with Times New Roman, OSMD's font for the texts from the file (e.g. title,
+ * part names, words, lyrics): Segoe UI Symbol for symbols like ♭, as in a browser, and Microsoft YaHei for Chinese
+ * and Japanese, whose font links cover e.g. Korean.
+ * Not to other fonts: text in a font that isn't installed, like VexFlow's "times", would be drawn in a fallback font
+ * instead of Pango's default font.
+ */
+async function addFontFallbackOnWindows () {
+    let canvasPackage;
+    try {
+        canvasPackage = (await import("canvas")).default;
+    } catch {
+        return; // no canvas package: jsdom has no canvas that draws or measures text
+    }
+    const fallbackFonts = "'Segoe UI Symbol', 'Microsoft YaHei'";
+    const contextPrototype = canvasPackage.CanvasRenderingContext2D.prototype;
+    const fontProperty = Object.getOwnPropertyDescriptor(contextPrototype, "font");
+    Object.defineProperty(contextPrototype, "font", {
+        ...fontProperty,
+        set (font) {
+            // a font read from the context (e.g. saved to restore it later) already ends with the fallback fonts
+            const addFallback = typeof font === "string" && /times new roman/i.test(font) && !font.endsWith(fallbackFonts);
+            fontProperty.set.call(this, addFallback ? `${font}, ${fallbackFonts}` : font);
+        }
+    });
 }
 
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
@@ -517,6 +555,12 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTextOctaveShiftExtraGraphicalMeasure = sampleFilename.includes("test_octaveshift_extragraphicalmeasure");
     const isTestWedgeMultilineCrescendo = sampleFilename.includes("test_wedge_multiline_crescendo");
     const isTestWedgeMultilineDecrescendo = sampleFilename.includes("test_wedge_multiline_decrescendo");
+    const isTestWavyLineMultilineExtraGraphicalMeasure = sampleFilename.includes("test_wavy_line_multiline_extragraphicalmeasure");
+    const isTestSlidesStandardAndTabStaff = sampleFilename.includes("test_slides_standard_and_tab_staff");
+    const isTestInstructionOnlyEndpoints = sampleFilename.startsWith("test_instruction_only_");
+    const isTestPartAbbreviationsPartlyMissing = sampleFilename.includes("test_part_abbreviations_partly_missing");
+    const isTestPartAbbreviationSingleStaff = sampleFilename.includes("test_part_abbreviation_single_staff");
+    const isTestPartGroupNames = sampleFilename.includes("test_group_name");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
     const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
@@ -524,8 +568,18 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestHeavyBarline = sampleFilename.includes("test_barline_heavy-heavy_mid_score");
     const isTestTupletRatioed = sampleFilename.includes("test_tuplet_ratioed");
     const isTestDrawFromMeasureNumber9ClefChange = sampleFilename.includes("test_drawFromMeasureNumber_9_respect_earlier_clef_changes");
+    const isTestDrawFromMeasureNumber2TempoMarkings = sampleFilename.includes("test_drawFromMeasureNumber_2_tempo_markings");
     const isTestOctaveShiftMultiline = sampleFilename.includes("test_octaveshift_multiline");
+    const isTestMeasureNumbersOnlyAtSystemStart = sampleFilename.includes("test_measure_numbers_only_at_system_start");
+    // the second half of a measure split for a system break, see test_grace_notes_only_measure*: systems as in the file
+    const isTestGraceNotesOnlyMeasure = sampleFilename.startsWith("test_grace_notes_only_measure");
+    // a word continued in the next system, see test_lyrics_dash_continued_in_next_system: systems as in the file
+    const isTestLyricsDashContinuedInNextSystem = sampleFilename.startsWith("test_lyrics_dash_continued_in_next_system");
+    // tab ties across system breaks, see test_tab_hammer-on_pull-off_tie_across_system_breaks: systems as in the file
+    const isTestTabTiesAcrossSystemBreaks = sampleFilename.startsWith("test_tab_hammer-on_pull-off_tie_across_system_breaks");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
+    const isTestFirstPageCreditWords = sampleFilename.startsWith("test_first_page_credit_words");
+    const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
     osmdInstance.EngravingRules.loadDefaultValues(); // note this may also be executed in setOptions below via drawingParameters default
     if (isTestEndClefStaffEntryBboxes) {
         options.drawBoundingBoxString = "VexFlowStaffEntry";
@@ -538,6 +592,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawUpToMeasureNumber = 12;
     } else if (isTestDrawFromMeasureNumber9ClefChange) {
         drawFromMeasureNumber = 9;
+    } else if (isTestDrawFromMeasureNumber2TempoMarkings) {
+        drawFromMeasureNumber = 2;
     }
     osmdInstance.setOptions({
         autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
@@ -547,7 +603,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawingParameters: defaultOrCompactTightMode, // note: default resets all EngravingRules. could be solved differently
         drawFromMeasureNumber: drawFromMeasureNumber,
         drawUpToMeasureNumber: drawUpToMeasureNumber,
-        newSystemFromXML: isFunctionTestSystemAndPageBreaks,
+        drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
+        newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure ||
+            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
@@ -589,8 +647,17 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     if (isTextOctaveShiftExtraGraphicalMeasure ||
         isTestOctaveShiftInvisibleInstrument ||
         isTestWedgeMultilineCrescendo ||
-        isTestWedgeMultilineDecrescendo) {
+        isTestWedgeMultilineDecrescendo ||
+        isTestWavyLineMultilineExtraGraphicalMeasure ||
+        isTestInstructionOnlyEndpoints ||
+        isTestSlidesStandardAndTabStaff ||
+        isTestPartAbbreviationsPartlyMissing ||
+        isTestPartAbbreviationSingleStaff ||
+        isTestPartGroupNames) {
         osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
+    }
+    if (isTestPartAbbreviationSingleStaff) {
+        osmdInstance.EngravingRules.RenderPartAbbreviationsForSingleStaff = true;
     }
     if (isTestTabs4Strings) {
         osmdInstance.EngravingRules.TabKeySignatureSpacingAdded = false;
@@ -620,6 +687,12 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         osmdInstance.EngravingRules.RenderCopyright = true; // default false. the copyright (<rights>) is drawn below the last system
         osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true; // the sample's system breaks -> 4 systems regardless of width
     }
+    if (isTestFirstPageCreditWords) {
+        osmdInstance.EngravingRules.ReadFirstPageCreditWords = true;
+    }
+    if (isTestOptimizeExtremeLedgerBeams) {
+        osmdInstance.EngravingRules.OptimizeExtremeLedgerBeams = true;
+    }
     return options;
 }
 
@@ -635,6 +708,14 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     const isTestWordsDirectionLostWhenFirstInstrumentInvisible = sampleFilename.includes("test_words_direction_lost_when_first_instrument_invisible");
     const isTestTransposeEnharmonic9 = sampleFilename.includes("test_transpose_enharmonic_9");
     const isTestTransposingCsharpMajorToC = sampleFilename.includes("test_transposing_csharp_major_to_c");
+    const isTestTransposingGflatMajor = sampleFilename.includes("test_transposing_gflat_major");
+    const isTestTransposingFsharpMajorEsharp = sampleFilename.includes("test_transposing_fsharp_major_e_sharp");
+    const isTestTransposingIntervalSpelling = sampleFilename.includes("test_transposing_interval_spelling");
+    const isTestTransposingIntervalChordSpelling = sampleFilename.includes("test_transposing_interval_chord_spelling");
+    // osmd.TransposeCalculator is static, shared by all samples: set it for each sample,
+    //   so that the samples after the interval samples (in directory order) don't use their calculator.
+    osmdInstance.TransposeCalculator = isTestTransposingIntervalSpelling || isTestTransposingIntervalChordSpelling ?
+        new OSMD.IntervalTransposeCalculator() : new OSMD.TransposeCalculator();
 
     if (isTestOctaveShiftInvisibleInstrument ||
         isTestWordsDirectionLostWhenFirstInstrumentInvisible
@@ -652,6 +733,22 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestTransposingCsharpMajorToC) {
         osmdInstance.Sheet.Transpose = -1;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingGflatMajor) {
+        osmdInstance.Sheet.Transpose = -2;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingFsharpMajorEsharp) {
+        osmdInstance.Sheet.Transpose = 6;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingIntervalSpelling) {
+        osmdInstance.Sheet.Transpose = -2;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingIntervalChordSpelling) {
+        osmdInstance.Sheet.Transpose = 1;
         osmdInstance.updateGraphic();
     }
 

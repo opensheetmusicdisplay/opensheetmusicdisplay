@@ -63,7 +63,8 @@ function centerRest(rest, noteU, noteL) {
  * dotted-vs-tuplet unison - has no second dot to collide and still overlaps. Shared
  * by the two-voice and three-voice collision paths so the same decision is used in
  * both (the divergence between them is what previously left three-voice unisons
- * staggered).
+ * staggered). The head of a hidden note (note.hiddenUnisonBaseHead, set by OSMD)
+ * shares the visible head's column whatever the shapes, except next to a whole note.
  * @param a a notesList entry, i.e. { line, isrest, note, ... }
  * @param b the other notesList entry
  * @param staggerSameWholeNotes EngravingRules.StaggerSameWholeNotes: keep two identical whole notes apart
@@ -81,7 +82,13 @@ function mergeableUnison(a, b, staggerSameWholeNotes) {
       wholeNoteCount++;
     }
   }
-  if (halfNoteCount === 1 || wholeNoteCount === 1) return false; // mismatched notehead shapes
+  if (wholeNoteCount === 1) return false; // mismatched notehead shapes (a stem from a whole note's wider head won't fit)
+  // VexFlowPatch: a hidden note (print-object="no") sharing the visible head of the other voice's unison note gets no
+  //   column of its own: OSMD draws its head only over an identical visible head (VexFlowVoiceEntry.color()), a stem
+  //   it has rises from the shared head, and the visible note keeps its place. OSMD sets hiddenUnisonBaseHead before
+  //   each format (VexFlowMusicSheetCalculator.calculateMeasureXLayout()).
+  if (a.note.hiddenUnisonBaseHead || b.note.hiddenUnisonBaseHead) return true;
+  if (halfNoteCount === 1) return false; // mismatched notehead shapes
   if (staggerSameWholeNotes && wholeNoteCount === 2) return false; // keep identical whole notes apart
   // Both voices dotted with different dot counts -> their augmentation dots would collide
   // at the shared column; keep them staggered (one zero-dot side has nothing to collide).
@@ -161,6 +168,21 @@ export class StaveNote extends StemmableNote {
     }
 
     const voices = notesList.length;
+
+    // VexFlowPatch: the three-voice code below takes notesList[0] for the upper voice, [1] for the middle
+    //   and [2] for the lower, and only staggers the middle one. But the notes come in the order their voices
+    //   were added, i.e. by voice number in OSMD, which needn't follow pitch: with voice 1 = C4, voice 2 = C3
+    //   and voice 3 = Bb3, the C3 was tested as the middle voice and the Bb3 was drawn over the C4.
+    //   So put three notes in pitch order first, by the centre of each chord (stable: equal pitches keep
+    //   voice order). Rests keep voice order: their position comes from their voice, and the rest cases
+    //   below are written for it.
+    if (voices === 3 && !notesList.some(n => n.isrest)) {
+      const centre = n => {
+        const props = n.note.getKeyProps(); // sorted by line, lowest first
+        return (props[0].line + props[props.length - 1].line) / 2;
+      };
+      notesList.sort((a, b) => centre(b) - centre(a));
+    }
 
     let noteU = notesList[0];
     const noteM = voices > 2 ? notesList[1] : null;

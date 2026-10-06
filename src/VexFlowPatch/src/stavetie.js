@@ -46,6 +46,15 @@ export class StaveTie extends Element {
   setDirection(direction) { this.direction = direction; return this; }
 
   /**
+   * VexFlowPatch: Set the id of the note the tie starts at, which names the tie's SVG group "<id>-tie" (see renderTie()).
+   * By default, the id of the first note. Needed for a tie without a first note, e.g. the part of a tie continued in the next system.
+   *
+   * @param {string} id The id of the start note (its getAttribute('id')).
+   * @returns {StaveTie} this
+   */
+  setStartNoteId(id) { this.start_note_id = id; return this; }
+
+  /**
    * Set the notes to attach this tie to.
    *
    * @param {!Object} notes The notes to tie up.
@@ -109,8 +118,11 @@ export class StaveTie extends Element {
       const top_cp_y = ((first_y_px + last_y_px) / 2) + (cp1 * params.direction);
       const bottom_cp_y = ((first_y_px + last_y_px) / 2) + (cp2 * params.direction);
 
-      let id;
-      id = this.first_note?.getAttribute('id') + "-tie";
+      // VexFlowPatch: name the group after the note the tie starts at (setStartNoteId(), by default the first note), so that the
+      //   note can find its tie (e.g. OSMD's VexFlowGraphicalNote.getTieSVGs()). Without either, the group gets no id, instead of
+      //   "vf-undefined-tie", which every tie without a first note got, e.g. the part of a tie continued in the next system.
+      const start_note_id = this.start_note_id ?? this.first_note?.getAttribute('id');
+      const id = start_note_id ? start_note_id + '-tie' : undefined;
       this.setAttribute('el', ctx.openGroup('stavetie', id));
       ctx.beginPath();
       ctx.moveTo(params.first_x_px + first_x_shift, first_y_px);
@@ -124,11 +136,13 @@ export class StaveTie extends Element {
 
   renderText(first_x_px, last_x_px) {
     if (!this.text) return;
+    // VexFlowPatch: set the font before measuring the text, which was measured in the context's current font,
+    //   left over from what was drawn before (e.g. a canvas' default 10px sans-serif), and not centered.
+    this.context.save();
+    this.context.setFont(this.font.family, this.font.size, this.font.style);
     let center_x = (first_x_px + last_x_px) / 2;
     center_x -= this.context.measureText(this.text).width / 2;
 
-    this.context.save();
-    this.context.setFont(this.font.family, this.font.size, this.font.style);
     this.context.fillText(
       this.text,
       center_x + this.render_options.text_shift_x,

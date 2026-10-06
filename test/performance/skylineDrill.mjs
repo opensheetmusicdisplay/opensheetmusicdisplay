@@ -36,14 +36,14 @@ if (process.env.NEWSYSTEM_RULE) { // e.g. for test_octaveshift_extragraphicalmea
     osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
 }
 
-// ---- capture hook (updateLines) ----
+// ---- capture hook (setLinesFromConcatenated, called by updateLines and the geometric calculation) ----
 let capture = null;
 function installUpdateLinesHook() {
     const calculator = osmd.graphic.MusicPages[0].MusicSystems[0].StaffLines[0].SkyBottomLineCalculator;
     const proto = Object.getPrototypeOf(calculator);
-    const orig = proto.updateLines;
-    proto.updateLines = function (results) {
-        orig.call(this, results);
+    const orig = proto.setLinesFromConcatenated;
+    proto.setLinesFromConcatenated = function (...args) {
+        orig.apply(this, args);
         if (capture) {
             const measures = this.StaffLineParent.Measures.map(m => ({
                 number: m.MeasureNumber,

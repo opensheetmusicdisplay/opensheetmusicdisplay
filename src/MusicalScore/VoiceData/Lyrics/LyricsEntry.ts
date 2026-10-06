@@ -21,6 +21,8 @@ export class LyricsEntry {
     /** The syllabic value read from the XML (single/begin/middle/end).
      *  Kept to allow re-linking word chains across voices after reading. */
     public syllabic: string = "single";
+    /** The language of the text: its xml:lang or the sheet's default for the lyric (MusicSheet.LyricLanguages), see Label.language. */
+    public language: string;
 
     public get Text(): string {
         return this.text;

@@ -134,113 +134,56 @@ export class RepetitionInstructionReader {
     return pieceEndingDetected;
   }
 
-  public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number): boolean {
+  /**
+   * Reads a repetition instruction (e.g. D.S., Fine, a segno sign) from a direction.
+   * @param directionTypeNode the direction-type element (words, segno or coda)
+   * @param relativeMeasurePosition the position of the direction in the measure (not used)
+   * @param soundNode the direction's sound element, if any: <sound segno="..."> marks a segno as the target of a D.S.
+   *   Its dacapo, dalsegno, fine, tocoda, segno and coda attributes say which instruction the direction is when its words
+   *   don't name one themselves, e.g. "Fin", "Da Capo bis Ende" or "D.C. senza replica".
+   * @returns true if the direction is a repetition instruction, false if it is drawn as text
+   */
+  public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number,
+                                                        soundNode?: IXmlElement): boolean {
     const wordsNode: IXmlElement = directionTypeNode.element("words");
     const measureIndex: number = this.currentMeasureIndex;
     if (wordsNode) {
-      // must Trim string and ToLower before compare
-      const innerText: string = wordsNode.value.trim().toLowerCase();
-      // regex strings: inputs for new RegExp(). The string escaping eliminates the first backslash of each \\.
-      const dsRegEx: string = "d\\s?\\.\\s?s\\."; // "d.s.", also with spaces, e.g. "d. s."
-      const dcRegEx: string = "d\\s?\\.\\s?c\\."; // "d.c.", also with spaces
-      // only detect a repetition instruction if the words are just the instruction and nothing else.
-      //   Otherwise, text that merely mentions an instruction, e.g. "voice tacet on D.S.", would not be rendered,
-      //   and an incorrect repetition (jump) would be created (see #1687).
-      const wholeInstructionRegEx: string =
-        "(" + dsRegEx + "|dal\\s?segno|" + dcRegEx + "|da\\s?capo)( al\\s?(fine|coda))?" +
-        "|to\\s?coda|a (la )?coda|fine|coda|segno";
-      if (!StringUtil.StringIsWord(innerText, wholeInstructionRegEx, true)) {
-        return false; // the words are a general text, not (just) a repetition instruction -> render as text (e.g. UnknownExpression)
-      }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx + " al fine", true)) {
-        // @correctness i don't think we should manipulate the measure index by relative position [ssch]
-        //   it's clearly assigned a measure in the xml
-        //   this has misfired in the past, see test_staverepetitions_coda_etc_positioning.musicxml
-        //   there, it put the 'To Coda' in measure 1, same as the 'Signo', which was not correct.
-        // if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
-        //   measureIndex--;
-        // }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegnoAlFine);
-        this.addInstruction(this.repetitionInstructions, newInstruction);
-        return true;
-      }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda", true)) {
-        // if (relativeMeasurePosition < 0.5) {
-        //   measureIndex--;
-        // }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapoAlCoda);
-        this.addInstruction(this.repetitionInstructions, newInstruction);
-        return true;
-      }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al fine", true)) {
-        // if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
-        //   measureIndex--;
-        // }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapoAlFine);
-        this.addInstruction(this.repetitionInstructions, newInstruction);
-        return true;
-      }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx) ||
-        StringUtil.StringContainsSeparatedWord(innerText, "da\\s?capo", true)) {
-        // if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
-        //   measureIndex--;
-        // }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapo);
-        this.addInstruction(this.repetitionInstructions, newInstruction);
-        return true;
-      }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx, true) ||
-        StringUtil.StringContainsSeparatedWord(innerText, "dal\\s?segno", true)) {
-        // if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
-        //   measureIndex--;
-        // }
-        let newInstruction: RepetitionInstruction;
-        if (StringUtil.StringContainsSeparatedWord(innerText, "al\\s?coda", true)) {
-          newInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegnoAlCoda);
-        } else {
-          newInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegno);
+      // An exporter may split the words where their formatting changes.
+      const words: string = directionTypeNode.elements("words").map((node: IXmlElement): string => node.value).join("").trim();
+      // Measure positions aren't adjusted by the relative position in the measure (relativeMeasurePosition):
+      //   the instruction belongs to the measure it's written in (see test_staverepetitions_coda_etc_positioning.musicxml).
+      let type: RepetitionInstructionEnum = RepetitionInstructionReader.repetitionInstructionFromWords(words.toLowerCase());
+      // the words drawn instead of the instruction's label, if they say more than it or say it in another language
+      let drawnWords: string = undefined;
+      if (type === undefined) {
+        // A D.C. or D.S. after a capitalized word, usually the section to play again, e.g. "Menuetto D.C." after a trio
+        const named: RegExpMatchArray = words.match(/^[A-Z][a-zA-Z]*\s+(.+)$/);
+        type = named ? RepetitionInstructionReader.repetitionInstructionFromWords(named[1].toLowerCase()) : undefined;
+        if (!RepetitionInstructionReader.isJumpFromWords(type)) {
+          // Words that don't name an instruction, e.g. in a language other than Italian or English, or with more words, e.g.
+          //   "D.C. senza replica": the sound says which instruction they are, if any.
+          //   Otherwise they are a general text -> render as text (e.g. UnknownExpression)
+          type = RepetitionInstructionReader.repetitionInstructionFromSound(soundNode);
+          if (type === undefined) {
+            return false;
+          }
         }
-        this.addInstruction(this.repetitionInstructions, newInstruction);
-        return true;
+        // (a segno or coda sign is drawn as the sign)
+        if (words.length > 0 && type !== RepetitionInstructionEnum.Segno && type !== RepetitionInstructionEnum.Coda) {
+          drawnWords = words.replace(/\s+/g, " "); // drawn in one line
+        }
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "to\\s?coda", true) ||
-        StringUtil.StringContainsSeparatedWord(innerText, "a (la )?coda", true)) {
-        // if (relativeMeasurePosition < 0.5) {
-        //   measureIndex--;
-        // }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.ToCoda);
-        this.addInstruction(this.repetitionInstructions, newInstruction);
-        return true;
-      }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "fine", true)) {
-        // if (relativeMeasurePosition < 0.5) {
-        //   measureIndex--;
-        // }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Fine);
-        this.addInstruction(this.repetitionInstructions, newInstruction);
-        return true;
-      }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "coda", true)) {
-        // if (relativeMeasurePosition > 0.5) {
-        //   measureIndex++;
-        // }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Coda);
-        this.addInstruction(this.repetitionInstructions, newInstruction);
-        return true;
-      }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "segno", true)) {
-        // if (relativeMeasurePosition > 0.5) {
-        //   measureIndex++;
-        // }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Segno);
-        this.addInstruction(this.repetitionInstructions, newInstruction);
-        return true;
-      }
+      const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, type);
+      newInstruction.Words = drawnWords;
+      newInstruction.MarkedAsTarget = type === RepetitionInstructionEnum.Segno && !!soundNode?.attribute("segno");
+      this.addInstruction(this.repetitionInstructions, newInstruction);
+      return true;
     } else if (directionTypeNode.element("segno")) {
       // if (relativeMeasurePosition > 0.5) {
       //   measureIndex++;
       // }
       const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Segno);
+      newInstruction.MarkedAsTarget = !!soundNode?.attribute("segno");
       this.addInstruction(this.repetitionInstructions, newInstruction);
       return true;
     } else if (directionTypeNode.element("coda")) {
@@ -252,6 +195,74 @@ export class RepetitionInstructionReader {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Returns the repetition instruction that the words are, or undefined if they are a general text,
+   * which may mention an instruction, e.g. "voice tacet on D.S." (see #1687).
+   * @param text the words, trimmed and in lower case
+   */
+  private static repetitionInstructionFromWords(text: string): RepetitionInstructionEnum {
+    // regex strings: inputs for new RegExp(). The string escaping eliminates the first backslash of each \\.
+    const dalSegno: string = "(d\\s?\\.\\s?s\\.|dal\\s?segno)"; // "d.s.", also with spaces, e.g. "d. s."
+    const daCapo: string = "(d\\s?\\.\\s?c\\.|da\\s?capo)"; // "d.c.", also with spaces
+    const al: string = "\\s?al\\s?"; // also without a space, e.g. "D.C.al Fine"
+    const instructions: [string, RepetitionInstructionEnum][] = [
+      [dalSegno + al + "fine", RepetitionInstructionEnum.DalSegnoAlFine],
+      [dalSegno + al + "coda", RepetitionInstructionEnum.DalSegnoAlCoda],
+      [dalSegno, RepetitionInstructionEnum.DalSegno],
+      [daCapo + al + "fine", RepetitionInstructionEnum.DaCapoAlFine],
+      [daCapo + al + "coda", RepetitionInstructionEnum.DaCapoAlCoda],
+      [daCapo, RepetitionInstructionEnum.DaCapo],
+      ["to\\s?coda|a (la )?coda", RepetitionInstructionEnum.ToCoda],
+      ["fine", RepetitionInstructionEnum.Fine],
+      ["coda", RepetitionInstructionEnum.Coda],
+      ["segno", RepetitionInstructionEnum.Segno],
+    ];
+    for (const [regEx, type] of instructions) {
+      if (StringUtil.StringIsWord(text, regEx, true)) {
+        return type;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Returns the repetition instruction that the sound element's attributes mark, whatever the language of the words,
+   * or undefined if they mark none.
+   * @param soundNode the direction's sound element, if any
+   */
+  private static repetitionInstructionFromSound(soundNode: IXmlElement): RepetitionInstructionEnum {
+    const instructions: [string, RepetitionInstructionEnum][] = [
+      ["dacapo", RepetitionInstructionEnum.DaCapo],
+      ["dalsegno", RepetitionInstructionEnum.DalSegno],
+      ["tocoda", RepetitionInstructionEnum.ToCoda],
+      ["fine", RepetitionInstructionEnum.Fine],
+      ["segno", RepetitionInstructionEnum.Segno],
+      ["coda", RepetitionInstructionEnum.Coda],
+    ];
+    for (const [attributeName, type] of instructions) {
+      const value: string = soundNode?.attribute(attributeName)?.value;
+      if (attributeName === "dacapo" ? value === "yes" : !!value) {
+        return type;
+      }
+    }
+    return undefined;
+  }
+
+  /** Whether the instruction type is a D.C. or D.S. (with or without al Fine / al Coda). */
+  private static isJumpFromWords(type: RepetitionInstructionEnum): boolean {
+    switch (type) {
+      case RepetitionInstructionEnum.DaCapo:
+      case RepetitionInstructionEnum.DaCapoAlFine:
+      case RepetitionInstructionEnum.DaCapoAlCoda:
+      case RepetitionInstructionEnum.DalSegno:
+      case RepetitionInstructionEnum.DalSegnoAlFine:
+      case RepetitionInstructionEnum.DalSegnoAlCoda:
+        return true;
+      default:
+        return false;
+    }
   }
 
   public removeRedundantInstructions(): void {
@@ -277,7 +288,9 @@ export class RepetitionInstructionReader {
           // }
           break;
         case RepetitionInstructionEnum.Segno:
-          if (segnoCount - dalSegnaCount > 0) { // two segnos in a row
+          // Two segnos in a row: the second one is taken for a D.S. back to the first (e.g. a renvoi sign),
+          //   unless the MusicXML marks it as a D.S. target itself (a segno that a later D.S. jumps to).
+          if (segnoCount - dalSegnaCount > 0 && !instruction.MarkedAsTarget) {
             let foundInstruction: boolean = false;
             for (let idx: number = 0, len: number = this.repetitionInstructions.length; idx < len; ++idx) {
               const instr: RepetitionInstruction = this.repetitionInstructions[idx];
@@ -341,6 +354,7 @@ export class RepetitionInstructionReader {
           case RepetitionInstructionEnum.Segno:
             segnoCount++;
             break;
+          case RepetitionInstructionEnum.DalSegno: // it uses the segno before it, so a segno after it is a new one
           case RepetitionInstructionEnum.DalSegnoAlFine:
           case RepetitionInstructionEnum.DalSegnoAlCoda:
             dalSegnaCount++;

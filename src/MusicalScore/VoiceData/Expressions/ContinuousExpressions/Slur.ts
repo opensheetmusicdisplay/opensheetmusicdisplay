@@ -10,6 +10,12 @@ export class Slur {
     private startNote: Note;
     private endNote: Note;
     public PlacementXml: PlacementEnum; // how the slur is placed in the XML
+    /** Whether the slur's end isn't attached to a note: its start note also has a stop of its number that ended no earlier
+     *  slur, which Dolet for Sibelius writes e.g. for a slur running into a repeat barline (#1516). While it has no end note,
+     *  it's drawn to the barline if its start note is the last note of its measure, and not at all otherwise.
+     *  A later stop of its number still ends it at that note (e.g. if the stop on the start note was an orphan instead).
+     */
+    public HasUnattachedEnd: boolean = false;
 
     public get StartNote(): Note {
         return this.startNote;
@@ -44,6 +50,9 @@ export class Slur {
         return false;
     }
     public isCrossed(): boolean {
+        if (!this.endNote) {
+            return false; // no end note (yet), see HasUnattachedEnd
+        }
         return (this.startNote.ParentStaffEntry.ParentStaff !== this.endNote.ParentStaffEntry.ParentStaff);
     }
     public isSlurLonger(): boolean {

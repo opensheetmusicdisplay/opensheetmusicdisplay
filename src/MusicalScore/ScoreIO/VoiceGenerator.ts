@@ -149,7 +149,7 @@ export class VoiceGenerator {
         const slideElements: IXmlElement[] = notationNode.elements("slide");
         const glissElements: IXmlElement[] = notationNode.elements("glissando");
         if (this.slurReader !== undefined &&
-            (slurElements.length > 0 || slideElements.length > 0) &&
+            (slurElements.length > 0 || slideElements.length > 0 || glissElements.length > 0) &&
             !this.currentNote.ParentVoiceEntry.IsGrace) {
           this.slurReader.addSlur(slurElements, this.currentNote);
           if (slideElements.length > 0) {
@@ -350,6 +350,8 @@ export class VoiceGenerator {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
     let accidentalValue: string;
+    let accidentalParentheses: boolean = false;
+    let accidentalBracket: boolean = false;
     let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
     let noteStep: NoteEnum = NoteEnum.C;
     let displayStepUnpitched: NoteEnum = NoteEnum.C;
@@ -407,6 +409,13 @@ export class VoiceGenerator {
           }
         } else if (noteElement.name === "accidental") {
           accidentalValue = noteElement.value;
+          const parenthesesXml: string = noteElement.attribute("parentheses")?.value;
+          const bracketXml: string = noteElement.attribute("bracket")?.value;
+          accidentalParentheses = parenthesesXml === "yes";
+          accidentalBracket = bracketXml === "yes";
+          if (parenthesesXml === undefined && bracketXml === undefined && this.musicSheet.Rules.RenderCautionaryAccidentalsInParentheses) {
+            accidentalParentheses = noteElement.attribute("cautionary")?.value === "yes"; // as MuseScore reads it
+          }
           if (accidentalValue === "natural") {
             noteAccidental = AccidentalEnum.NATURAL;
             // following accidentals: ambiguous in alter value
@@ -426,13 +435,14 @@ export class VoiceGenerator {
         } else if (noteElement.name === "unpitched") {
           const displayStepElement: IXmlElement = noteElement.element("display-step");
           const octave: IXmlElement = noteElement.element("display-octave");
+          const stafflineCount: number = this.currentStaffEntry.ParentStaff.StafflineCount;
           if (octave) {
             noteOctave = parseInt(octave.value, 10);
             displayOctaveUnpitched = noteOctave - 3;
             if (octavePlusOne) {
               noteOctave += 1;
             }
-            if (this.instrument.Staves[0].StafflineCount === 1) {
+            if (stafflineCount === 1) {
               displayOctaveUnpitched += 1;
             }
           }
@@ -440,8 +450,12 @@ export class VoiceGenerator {
             noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
             let octaveShift: number = 0;
             let noteValueShift: number = this.musicSheet.Rules.PercussionXMLDisplayStepNoteValueShift;
-            if (this.instrument.Staves[0].StafflineCount === 1) {
+            if (stafflineCount === 1) {
               noteValueShift -= 3; // for percussion one line scores, we need to set the notes 3 lines lower
+            } else if (stafflineCount > 1 && stafflineCount < 5) {
+              // MusicXML counts the lines up from E4, the bottom line of a treble staff,
+              //   but VexFlowMeasure.setLineNumber() draws 2-4 lines from G4 up.
+              noteValueShift += 2;
             }
             [displayStepUnpitched, octaveShift] = Pitch.lineShiftFromNoteEnum(noteStep, noteValueShift);
             displayOctaveUnpitched += octaveShift;
@@ -514,6 +528,8 @@ export class VoiceGenerator {
       this.handleTremoloBetweenNotes(tremoloInfo, note);
     }
     note.PlaybackInstrumentId = playbackInstrumentId;
+    note.AccidentalParenthesesXml = accidentalParentheses;
+    note.AccidentalBracketXml = accidentalBracket;
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime

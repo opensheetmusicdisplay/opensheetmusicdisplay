@@ -35,8 +35,10 @@ export class Cursor {
       this.cursorElementId = `cursorImg-${id}`;
     }
 
-    const curs: HTMLElement = document.createElement("img");
+    const curs: HTMLImageElement = document.createElement("img");
     curs.id = this.cursorElementId;
+    curs.alt = ""; // decorative: screen readers skip it instead of announcing an unlabeled image
+    curs.draggable = false; // dragging on the cursor doesn't drag a copy of its image
     curs.style.position = "absolute";
     if (this.cursorOptions.follow === true) {
       this.wantedZIndex = "-1";
@@ -45,7 +47,7 @@ export class Cursor {
       this.wantedZIndex = "-2";
       curs.style.zIndex = this.wantedZIndex;
     }
-    this.cursorElement = <HTMLImageElement>curs;
+    this.cursorElement = curs;
     this.container.appendChild(curs);
   }
 
@@ -79,6 +81,7 @@ export class Cursor {
   public currentPageNumber: number = 1;
   private cursorOptions: CursorOptions;
   private cursorOptionsRendered: CursorOptions;
+  private cursorWidthRendered: number;
   private skipInvisibleNotes: boolean = true;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
@@ -143,6 +146,12 @@ export class Cursor {
       return;
     }
     this.updateCurrentPage(); // attach cursor to new page DOM if necessary
+    if (!this.getPageElement(this.currentPageNumber)) {
+      // the page isn't drawn, e.g. after drawUpToPageNumber, so the cursor can't be shown there.
+      //   It still moves (e.g. for NotesUnderCursor()), and is shown again on a drawn page.
+      this.cursorElement.style.display = "none";
+      return;
+    }
 
     // this.graphic?.Cursors?.length = 0;
     const iterator: MusicPartManagerIterator = this.iterator;
@@ -262,46 +271,68 @@ export class Cursor {
   public updateWidthAndStyle(measurePositionAndShape: BoundingBox, x: number, y: number, height: number): void {
     const cursorElement: HTMLImageElement = this.cursorElement;
     let newWidth: number = 0;
+    let newHeight: number = 0;
     switch (this.cursorOptions.type) {
       case CursorType.ThinLeft:
         cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newHeight = height * 10.0 * this.openSheetMusicDisplay.zoom;
         newWidth = 5 * this.openSheetMusicDisplay.zoom;
         break;
       case CursorType.ShortThinTopLeft:
         cursorElement.style.top = ((y-2.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = (x * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.height = (1.5 * 10.0 * this.openSheetMusicDisplay.zoom);
+        newHeight = 1.5 * 10.0 * this.openSheetMusicDisplay.zoom;
         newWidth = 5 * this.openSheetMusicDisplay.zoom;
         break;
       case CursorType.CurrentArea:
         cursorElement.style.top = measurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
         cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newHeight = height * 10.0 * this.openSheetMusicDisplay.zoom;
         newWidth = measurePositionAndShape.Size.width * 10 * this.openSheetMusicDisplay.zoom;
         break;
       case CursorType.CurrentAreaLeft:
         cursorElement.style.top = measurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
         cursorElement.style.left = measurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newHeight = height * 10.0 * this.openSheetMusicDisplay.zoom;
         newWidth = (x-measurePositionAndShape.AbsolutePosition.x) * 10 * this.openSheetMusicDisplay.zoom;
         break;
         default:
         cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newHeight = height * 10.0 * this.openSheetMusicDisplay.zoom;
         newWidth = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
         break;
     }
 
+    cursorElement.height = newHeight;
+    // the height also as inline style: page CSS overrides the height attribute, e.g. Tailwind's img { height: auto; },
+    //   which shrank the cursor to the 1 pixel height of its image. A height the app set with !important is kept.
+    if (cursorElement.style.getPropertyPriority("height") !== "important") {
+      cursorElement.style.height = newHeight + "px";
+    }
     // if (newWidth !== cursorElement.width) { // this `if` is unnecessary and prevents updating color
     cursorElement.width = newWidth;
-    if (this.cursorOptionsRendered !== this.cursorOptions) {
+    if (this.cursorImageOutdated(newWidth)) {
       this.updateStyle(newWidth, this.cursorOptions);
-      // only update style (creating new cursor element) if options changed.
-      //   For width, it seems to be enough to update cursorElement.width, see osmd#1519
+      // only draw a new cursor image if it would look different. A solid color image is stretched to a new width,
+      //   the standard cursor's gradient is redrawn, which keeps it exact (see osmd#1519).
     }
+  }
+
+  /** Whether updateStyle() would draw a different image than the current one.
+   *  The image only depends on the type, color and alpha options, and for the standard cursor's gradient on the width
+   *  (a solid color image is a single pixel, stretched to the width).
+   *  Compared by value: the options are usually changed in place (cursor.CursorOptions.color = ..., see #1519),
+   *  and cursorOptionsRendered is a clone, so comparing the objects themselves is always unequal.
+   */
+  private cursorImageOutdated(width: number): boolean {
+    const rendered: CursorOptions = this.cursorOptionsRendered;
+    return rendered === undefined ||
+      (width !== this.cursorWidthRendered && !this.hasSolidColor()) ||
+      rendered.type !== this.cursorOptions.type ||
+      rendered.color !== this.cursorOptions.color ||
+      rendered.alpha !== this.cursorOptions.alpha;
   }
 
   /** Hide the cursor. */
@@ -340,34 +371,48 @@ export class Cursor {
     if (cursorOptions !== undefined) {
       this.cursorOptions = cursorOptions;
     }
-    // Create a dummy canvas to generate the gradient for the cursor
-    // FIXME This approach needs to be improved
+    // Create a dummy canvas to generate the image for the cursor, one pixel high (the img element stretches it).
+    //   A solid color is also one pixel wide, the standard cursor's gradient as wide as the width attribute (rounded down).
     const c: HTMLCanvasElement = document.createElement("canvas");
-    c.width = this.cursorElement.width;
+    c.width = this.hasSolidColor() ? 1 : Math.max(1, Math.floor(width));
     c.height = 1;
     const ctx: CanvasRenderingContext2D = c.getContext("2d");
     ctx.globalAlpha = this.cursorOptions.alpha;
-    // Generate the gradient
-    const gradient: CanvasGradient = ctx.createLinearGradient(0, 0, this.cursorElement.width, 0);
+    ctx.fillStyle = this.cursorOptions.color;
+    ctx.fillRect(0, 0, c.width, 1);
+    if (!this.hasSolidColor()) {
+      // fade out to both sides by masking the alpha. A gradient from the color to "white" or "transparent" (black at alpha 0)
+      //   tints the edges, as canvas gradients don't interpolate with premultiplied alpha:
+      //   fading to white gave the cursor light edges on dark backgrounds.
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "destination-in";
+      const mask: CanvasGradient = ctx.createLinearGradient(0, 0, c.width, 0);
+      mask.addColorStop(0, "rgba(0,0,0,0)");
+      mask.addColorStop(0.2, "rgba(0,0,0,1)");
+      mask.addColorStop(0.8, "rgba(0,0,0,1)");
+      mask.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = mask;
+      ctx.fillRect(0, 0, c.width, 1);
+    }
+    this.cursorOptionsRendered = {...this.cursorOptions}; // clone, so that changes made in place are detected
+    this.cursorWidthRendered = width;
+    // Set the actual image
+    this.cursorElement.src = c.toDataURL("image/png");
+  }
+
+  /** Whether the cursor type is drawn in a solid color, which doesn't depend on the width
+   *  (the standard cursor fades out to both sides instead).
+   */
+  private hasSolidColor(): boolean {
     switch (this.cursorOptions.type) {
       case CursorType.ThinLeft:
       case CursorType.ShortThinTopLeft:
       case CursorType.CurrentArea:
       case CursorType.CurrentAreaLeft:
-        gradient.addColorStop(1, this.cursorOptions.color);
-        break;
+        return true;
       default:
-        gradient.addColorStop(0, "white"); // it was: "transparent"
-        gradient.addColorStop(0.2, this.cursorOptions.color);
-        gradient.addColorStop(0.8, this.cursorOptions.color);
-        gradient.addColorStop(1, "white"); // it was: "transparent"
-      break;
+        return false;
     }
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, 1);
-    this.cursorOptionsRendered = {...this.cursorOptions}; // clone, otherwise !== doesn't work
-    // Set the actual image
-    this.cursorElement.src = c.toDataURL("image/png");
   }
 
   public get Iterator(): MusicPartManagerIterator {
@@ -416,17 +461,37 @@ export class Cursor {
         //   so we do need to use gt, not gte here.
         const newPageNumber: number = page.PageNumber;
         if (newPageNumber !== this.currentPageNumber) {
-          this.container.removeChild(this.cursorElement);
-          this.container = document.getElementById("osmdCanvasPage" + newPageNumber);
-          this.container.appendChild(this.cursorElement);
-          // TODO maybe store this.pageCurrentlyAttachedTo, though right now it isn't necessary
-          // alternative to remove/append:
-          // this.openSheetMusicDisplay.enableOrDisableCursor(true);
+          this.attachToPage(newPageNumber);
         }
         return this.currentPageNumber = newPageNumber;
       }
     }
     return 1;
+  }
+
+  /** Moves the cursor element to the element of the page with the given number (see getPageElement()), if the page is drawn.
+   *  A page that isn't drawn, e.g. after drawUpToPageNumber, has no element: the cursor element stays where it is,
+   *  and update() hides it.
+   */
+  private attachToPage(pageNumber: number): void {
+    const pageElement: HTMLElement = this.getPageElement(pageNumber);
+    if (!pageElement) {
+      return;
+    }
+    this.container.removeChild(this.cursorElement);
+    this.container = pageElement;
+    this.container.appendChild(this.cursorElement);
+    // TODO maybe store this.pageCurrentlyAttachedTo, though right now it isn't necessary
+    // alternative to remove/append:
+    // this.openSheetMusicDisplay.enableOrDisableCursor(true);
+  }
+
+  /** Returns the element (div) of this OSMD instance's page with the given number, which the cursor is attached to on that page.
+   *  Found through the instance's backends, not by the element's id "osmdCanvasPage" + page number: every OSMD instance
+   *  on a web page gives its pages the same ids, so document.getElementById() can return another instance's page.
+   */
+  private getPageElement(pageNumber: number): HTMLElement {
+    return this.openSheetMusicDisplay.Drawer.Backends[pageNumber - 1]?.getInnerElement();
   }
 
   public get SkipInvisibleNotes(): boolean {

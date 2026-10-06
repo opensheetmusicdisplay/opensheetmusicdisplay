@@ -102,8 +102,10 @@ export class StaveTempo extends StaveModifier {
         ctx.fill();
       }
 
-      ctx.openGroup("bpm"); // VexFlowPatch: open group
+      const bpmGroup = ctx.openGroup("bpm"); // VexFlowPatch: open group
       ctx.fillText(' = ' + bpm + (name ? ')' : ''), x + 3 * scale, y);
+      // VexFlowPatch: keep the leading space, which SVG strips by default (only SVG returns a group)
+      bpmGroup?.lastChild.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
       ctx.closeGroup();
     }
 
@@ -114,7 +116,7 @@ export class StaveTempo extends StaveModifier {
 
   /**
    * Draw a complex metronome mark: leftNotes = rightNotes (with optional tuplet bracket).
-   * noteEquation: { left: { notes: [{duration, dots, beam}], tuplet? }, right: { ... } }
+   * noteEquation: { left: { notes: [{duration, dots, beam, tied}], tuplet? }, right: { ... } }
    * (added in VexFlowPatch)
    */
   drawNoteEquation(ctx, x, y, scale, noteEquation) {
@@ -131,7 +133,7 @@ export class StaveTempo extends StaveModifier {
     ctx.setFont(font.family, font.size, 'bold');
     x += 1.5 * baseSpacing;
     ctx.fillText('=', x, y);
-    x += ctx.measureText('=').width + 1.5 * baseSpacing;
+    x += ctx.measureText('=', true).width + 1.5 * baseSpacing;
 
     // Draw right note group (with optional tuplet)
     x = this.drawNoteGroup(ctx, x, y, scale, baseSpacing, noteEquation.right);
@@ -140,9 +142,9 @@ export class StaveTempo extends StaveModifier {
   }
 
   /**
-   * Draw a group of notes (with beams connecting flagged notes, and optional tuplet bracket).
+   * Draw a group of notes (with beams, ties to preceding notes, and optional tuplet bracket).
    * @param baseSpacing Base spacing unit — all internal spacing is derived from this.
-   * group: { notes: [{duration, dots, beam}], tuplet?: {actualNotes, bracket, showNumber} }
+   * group: { notes: [{duration, dots, beam, tied}], tuplet?: {actualNotes, bracket, showNumber} }
    * (added in VexFlowPatch)
    */
   drawNoteGroup(ctx, x, y, scale, baseSpacing, group) {
@@ -150,7 +152,7 @@ export class StaveTempo extends StaveModifier {
     const notes = group.notes;
     const tuplet = group.tuplet;
 
-    // Track positions for beams and tuplet bracket
+    // Track positions for beams, ties and tuplet bracket
     const notePositions = []; // [{x, y_top, stemX, code}]
     const beamSegments = []; // groups of notes to beam together
 
@@ -195,6 +197,23 @@ export class StaveTempo extends StaveModifier {
       }
 
       const pos = { x: noteX, y_top: stemTopY, stemX: stemX, code: code };
+      if (note.tied && notePositions.length > 0) {
+        // Stems point up, so connect the notehead centers with a tie below the notes and dots,
+        //   stopping a little short of both centers, so that chained ties don't touch.
+        const previous = notePositions[notePositions.length - 1];
+        const startX = (previous.x + previous.stemX) / 2 + scale;
+        const endX = (noteX + stemX) / 2 - scale;
+        const midX = (startX + endX) / 2;
+        const tieY = y + 5 * scale;
+        ctx.openGroup('metronometie');
+        ctx.beginPath();
+        ctx.moveTo(startX, tieY);
+        ctx.quadraticCurveTo(midX, tieY + 6 * scale, endX, tieY);
+        ctx.quadraticCurveTo(midX, tieY + 9 * scale, startX, tieY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.closeGroup();
+      }
       notePositions.push(pos);
 
       // Track beam groups
@@ -270,7 +289,7 @@ export class StaveTempo extends StaveModifier {
           : `${tuplet.actualNotes}`;
 
         ctx.setFont(this.font.family, this.font.size - 3, 'bold');
-        const numberWidth = ctx.measureText(numberText).width;
+        const numberWidth = ctx.measureText(numberText, true).width;
         const gapHalf = numberWidth / 2 + 2 * scale;
 
         // Line to gap
@@ -294,7 +313,7 @@ export class StaveTempo extends StaveModifier {
           ? `${tuplet.actualNotes}:${tuplet.normalNotes}`
           : `${tuplet.actualNotes}`;
         ctx.setFont(this.font.family, this.font.size - 3, 'bold');
-        const numberWidth = ctx.measureText(numberText).width;
+        const numberWidth = ctx.measureText(numberText, true).width;
         ctx.fillText(numberText, midX - numberWidth / 2, bracketY - 1 * scale);
       }
     }

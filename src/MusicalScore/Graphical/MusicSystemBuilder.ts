@@ -12,6 +12,7 @@ import {Instrument} from "../Instrument";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {StaffLine} from "./StaffLine";
 import {GraphicalLine} from "./GraphicalLine";
+import {GraphicalLabel} from "./GraphicalLabel";
 import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {SystemLinesEnum} from "./SystemLinesEnum";
@@ -466,6 +467,8 @@ export class MusicSystemBuilder {
                                 const instruction: AbstractNotationInstruction = staffEntry.Instructions[idx2];
                                 if (instruction instanceof ClefInstruction) {
                                     this.activeClefs[visStaffIdx] = <ClefInstruction>instruction;
+                                } else if (instruction instanceof KeyInstruction) {
+                                    this.activeKeys[visStaffIdx] = instruction;
                                 }
                             }
                         }
@@ -685,6 +688,8 @@ export class MusicSystemBuilder {
                         const abstractNotationInstruction: AbstractNotationInstruction = staffEntry.Instructions[idx2];
                         if (abstractNotationInstruction instanceof ClefInstruction) {
                             this.activeClefs[visStaffIdx] = <ClefInstruction>abstractNotationInstruction;
+                        } else if (abstractNotationInstruction instanceof KeyInstruction) {
+                            this.activeKeys[visStaffIdx] = abstractNotationInstruction;
                         }
                     }
                 }
@@ -844,7 +849,16 @@ export class MusicSystemBuilder {
         /*if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].parentSourceMeasure.endsPiece) {
             return SystemLinesEnum.ThinBold;
         }*/
-        if (this.nextMeasureHasKeyInstructionChange()) {
+        // a key change gets a double barline, unless the file gives another barline style there that we can draw:
+        //   light-heavy (e.g. at the end of a movement), heavy-heavy, or none (e.g. an invisible barline splitting a measure at the key change).
+        //   Styles we can't draw at a measure end yet (see VexFlowMeasure.addMeasureLine(), e.g. dashed, dotted, heavy) would be drawn
+        //   as a regular barline, which is too inconspicuous before a key change, so they get the double barline too,
+        //   like no barline or a "regular" one in the file (SingleThin).
+        const endingBarStyle: SystemLinesEnum = sourceMeasure?.endingBarStyleEnum;
+        const keepEndingBarStyle: boolean = endingBarStyle === SystemLinesEnum.ThinBold ||
+            endingBarStyle === SystemLinesEnum.DoubleBold ||
+            endingBarStyle === SystemLinesEnum.None;
+        if (this.nextMeasureHasKeyInstructionChange() && !keepEndingBarStyle) {
         //if (this.nextMeasureHasKeyInstructionChange() || this.thisMeasureEndsWordRepetition() || this.nextMeasureBeginsWordRepetition()) {
         //  previously, we forced a double thin barline for places like "to coda" end of measure, even if it there's no double thin barline in the xml
             return SystemLinesEnum.DoubleThin;
@@ -1001,7 +1015,10 @@ export class MusicSystemBuilder {
                 if (!sourceMeasure) {
                     return undefined;
                 }
-                return sourceMeasure.getKeyInstruction(this.visibleStaffIndices[visIndex]);
+                const key: KeyInstruction = sourceMeasure.getKeyInstruction(this.visibleStaffIndices[visIndex]);
+                if (key) {
+                    return key;
+                }
             }
         }
         return undefined;
@@ -1213,12 +1230,33 @@ export class MusicSystemBuilder {
         return systemY + snappedStafflineY - firstStafflineY;
     }
 
+    /** The top border of a page's first system (from its skyline), by which all systems of the page are moved down after the
+     *  page layout, see MusicSheetCalculator.calculateMusicSystems(). The page layout includes this move when checking
+     *  whether a system still fits above the bottom margin.
+     *  Rounded to whole pixels to keep the staff line positions snapped by snapSystemYToCrispStaffLines(),
+     *  or to the half-pixel grid if not snapping. */
+    public pageTopBorder(firstSystem: MusicSystem): number {
+        const top: number = firstSystem.PositionAndShape.BorderTop;
+        return this.rules.SnapStafflinesToCrispPixels ? Math.round(top * 10) / 10 : Math.round(top * 20) / 20;
+    }
+
+    /** Room below the last system of page 1, where calculatePageLabels places the copyright. */
+    private copyrightHeightBelowSystems(): number {
+        const copyright: GraphicalLabel = this.graphicalMusicSheet.Copyright;
+        if (!copyright || !this.rules.RenderCopyright || copyright.Label.text.trim() === "") {
+            return 0;
+        }
+        return this.rules.SheetCopyrightMargin + copyright.PositionAndShape.BorderBottom - copyright.PositionAndShape.BorderTop;
+    }
+
     /** Calculates the relative Positions of all MusicSystems.
      *
      */
     protected calculateMusicSystemsRelativePositions(): void {
         let currentPage: GraphicalMusicPage = this.createMusicPage();
         let currentYPosition: number = 0;
+        let pageTopBorder: number = 0;
+        let pageFooterHeight: number = 0;
         // xPosition is always fixed
         let currentSystem: MusicSystem = this.musicSystems[0];
         let timesPageCouldntFitSingleSystem: number = 0;
@@ -1229,6 +1267,8 @@ export class MusicSystemBuilder {
                 // if this is the first system on the current page:
                 // take top margins into account
                 this.addSystemToPage(currentPage, currentSystem);
+                pageTopBorder = this.pageTopBorder(currentSystem);
+                pageFooterHeight = this.graphicalMusicSheet.MusicPages.length === 1 ? this.copyrightHeightBelowSystems() : 0;
                 if (this.rules.CompactMode) {
                     currentYPosition = this.rules.PageTopMarginNarrow;
                 } else {
@@ -1266,6 +1306,18 @@ export class MusicSystemBuilder {
                     currentYPosition += this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
                                             this.rules.TitleBottomDistance;
                     }
+                    const credits: GraphicalLabel[] = this.graphicalMusicSheet.FirstPageCreditWords;
+                    if (credits.length > 0) {
+                        const lastCredit: GraphicalLabel = credits[credits.length - 1];
+                        const creditsBottom: number = lastCredit.PositionAndShape.RelativePosition.y +
+                            lastCredit.PositionAndShape.BorderBottom;
+                        const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
+                        const lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
+                        const authorsHeight: number = Math.max(
+                            composer ? composer.PositionAndShape.MarginSize.height + this.rules.SystemComposerDistance : 0,
+                            lyricist ? lyricist.PositionAndShape.MarginSize.height + this.rules.SystemLyricistDistance : 0);
+                        currentYPosition = Math.max(currentYPosition, creditsBottom + authorsHeight + 1);
+                    }
 
                     /*
                     see comment above - only needed for rare case of composer/lyricist being
@@ -1287,7 +1339,8 @@ export class MusicSystemBuilder {
                                                                 currentYPosition);
                 currentSystem.PositionAndShape.RelativePosition = relativePosition;
                 // check if the first system doesn't even fit on the page -> would lead to truncation at bottom end:
-                if (currentYPosition + currentSystem.PositionAndShape.BorderBottom > this.rules.PageHeight - this.rules.PageBottomMargin) {
+                if (currentYPosition - pageTopBorder + currentSystem.PositionAndShape.BorderBottom + pageFooterHeight >
+                    this.rules.PageHeight - this.rules.PageBottomMargin) {
                     // can't fit single system on page, maybe PageFormat too small
                     timesPageCouldntFitSingleSystem++;
                     if (timesPageCouldntFitSingleSystem <= 4) { // only warn once with detailed info
@@ -1318,9 +1371,9 @@ export class MusicSystemBuilder {
                 newYPosition = this.snapSystemYToCrispStaffLines(currentSystem, newYPosition);
 
                 // calculate the needed height for placing the current system on the page,
-                // to see if it still fits:
+                // including the later shift down by -pageTopBorder and the copyright below page 1:
                 const currSystemBottomYPos: number =    newYPosition +
-                                                        currentSystem.PositionAndShape.BorderMarginBottom;
+                                                        currentSystem.PositionAndShape.BorderMarginBottom - pageTopBorder + pageFooterHeight;
                 const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && previousSystem.breaksPage;
                 if (!doXmlPageBreak &&
                     (currSystemBottomYPos < this.rules.PageHeight - this.rules.PageBottomMargin)) {

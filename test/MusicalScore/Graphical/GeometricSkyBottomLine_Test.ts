@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { SkyBottomLineCalculator } from "../../../src/MusicalScore/Graphical/SkyBottomLineCalculator";
+import { GeometricSkyBottomLineContext } from "../../../src/MusicalScore/Graphical/GeometricSkyBottomLineContext";
 import { TestUtils } from "../../Util/TestUtils";
 
 /** Compares the geometric skyline/bottom-line calculation (GeometricSkyBottomLineContext)
@@ -10,14 +11,15 @@ import { TestUtils } from "../../Util/TestUtils";
 describe("GeometricSkyBottomLineCalculation", () => {
     interface ICapturedLine { sky: number[], bottom: number[] }
     // capture the lines directly after they are calculated (before later layout steps update them),
-    // by wrapping SkyBottomLineCalculator.updateLines, which both calculation methods call with their results.
+    // by wrapping SkyBottomLineCalculator.setLinesFromConcatenated, which both calculation methods call with their results
+    // (the raster method via updateLines()).
     let capture: ICapturedLine[];
-    const originalUpdateLines: any = (SkyBottomLineCalculator.prototype as any).updateLines;
+    const originalSetLines: any = (SkyBottomLineCalculator.prototype as any).setLinesFromConcatenated;
     let savedOverflowY: string;
 
     before((): void => {
-        (SkyBottomLineCalculator.prototype as any).updateLines = function (results: any): void {
-            originalUpdateLines.call(this, results);
+        (SkyBottomLineCalculator.prototype as any).setLinesFromConcatenated = function (...args: any[]): void {
+            originalSetLines.apply(this, args);
             if (capture) {
                 capture.push({ sky: [...this.SkyLine], bottom: [...this.BottomLine] });
             }
@@ -37,7 +39,7 @@ describe("GeometricSkyBottomLineCalculation", () => {
     });
 
     after((): void => {
-        (SkyBottomLineCalculator.prototype as any).updateLines = originalUpdateLines;
+        (SkyBottomLineCalculator.prototype as any).setLinesFromConcatenated = originalSetLines;
         document.documentElement.style.overflowY = savedOverflowY;
     });
 
@@ -178,5 +180,46 @@ describe("GeometricSkyBottomLineCalculation", () => {
         this.timeout(30000);
         await compareGeometricWithRaster("test_octaveshift_extragraphicalmeasure.musicxml",
             { newSystemAttribute: true });
+    });
+
+    it("draws the hammer-on and pull-off texts where the raster calculation draws them", async function (): Promise<void> {
+        // VexFlow's StaveTie.renderText() centered its text with the width measured in the context's current font,
+        // before setting the text's own font: 10pt Arial in the geometric context (initially, like the SVG context),
+        // but 10px sans-serif on the fresh canvas of the raster method, which drew "H" 1.2 px further right.
+        this.timeout(30000);
+        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(TestUtils.getDivElement(document), { autoResize: false });
+        osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
+        osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 9999999; // use the non-batched raster path
+        await osmd.load(TestUtils.getScore("OSMD_Function_Test_Tablature_Hammeron_Pulloff.musicxml"));
+
+        /** Renders with the given skyline method and returns the tie texts drawn into its context, with their x. */
+        function renderTieTexts(geometric: boolean): { text: string, x: number }[] {
+            const texts: { text: string, x: number }[] = [];
+            const context: any = geometric ? GeometricSkyBottomLineContext.prototype : CanvasRenderingContext2D.prototype;
+            const originalFillText: any = context.fillText;
+            context.fillText = function (text: string, x: number, y: number): void {
+                if (text === "H" || text === "P") {
+                    texts.push({ text, x });
+                }
+                originalFillText.call(this, text, x, y);
+            };
+            osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geometric;
+            try {
+                osmd.render();
+            } finally {
+                context.fillText = originalFillText;
+            }
+            return texts;
+        }
+        const geometricTexts: { text: string, x: number }[] = renderTieTexts(true);
+        const rasterTexts: { text: string, x: number }[] = renderTieTexts(false);
+        expect(geometricTexts.map(t => t.text).join(), "hammer-on and pull-off texts").to.equal("H,P");
+        expect(rasterTexts.map(t => t.text).join(), "hammer-on and pull-off texts of the raster method").to.equal("H,P");
+        for (let i: number = 0; i < geometricTexts.length; i++) {
+            const geometricX: number = geometricTexts[i].x;
+            const rasterX: number = rasterTexts[i].x;
+            expect(Math.abs(rasterX - geometricX), `x of "${geometricTexts[i].text}": raster ${rasterX.toFixed(2)}`
+                + ` vs geometric ${geometricX.toFixed(2)}`).to.be.below(0.01);
+        }
     });
 });

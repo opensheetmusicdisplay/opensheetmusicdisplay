@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.0">
+  <work>
+    <work-title>Hidden tremolo playback notes: ActorPreludeSample m.33</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name/>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--
+      Reduced from ActorPreludeSample.xml (Finale 2011 + Dolet), percussion part "1" (suspended cymbal), m.33.
+      The dotted half with three tremolo strokes is written out again for playback, as twelve 16ths in voice 2
+      that are hidden and take no space (print-object="no" print-spacing="no"), beamed among themselves.
+      Only the first of them shares the dotted half's notehead, so it's the only one drawn to reach its beam,
+      and that beam has no other drawn note: none of the 16ths may be drawn, no stem, flags or notehead.
+    -->
+    <measure number="1">
+      <attributes>
+        <divisions>8</divisions>
+        <key print-object="no">
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+        <time>
+          <beats>3</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>percussion</sign>
+        </clef>
+      </attributes>
+      <note>
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>24</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <dot/>
+        <stem>down</stem>
+        <notations>
+          <ornaments>
+            <tremolo type="single">3</tremolo>
+          </ornaments>
+        </notations>
+      </note>
+      <backup>
+        <duration>24</duration>
+      </backup>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+      </note>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+      </note>
+      <note print-object="no" print-spacing="no">
+        <unpitched>
+          <display-step>E</display-step>
+          <display-octave>5</display-octave>
+        </unpitched>
+        <duration>2</duration>
+        <voice>2</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

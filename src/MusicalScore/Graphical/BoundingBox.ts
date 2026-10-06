@@ -4,6 +4,7 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
 import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";
 import { GraphicalObject } from "./GraphicalObject";
+import { ClassType } from "../Interfaces/AClassHierarchyTrackable";
 
 /**
  * A bounding box delimits an area on the 2D plane.
@@ -295,8 +296,10 @@ export class BoundingBox {
 
     /**
      * This method calculates the BoundingBoxes
+     * @param ignoreClasses The classes (or class names, see isInstanceOfClass()) of the objects whose bounding boxes,
+     *   and their children's, to leave as they are, e.g. [GraphicalMeasure]
      */
-    public calculateBoundingBox(ignoreClasses: string[] = []): void {
+    public calculateBoundingBox(ignoreClasses: (ClassType | string)[] = []): void {
         if (this.childElements.length === 0) {
             return;
         }
@@ -368,13 +371,21 @@ export class BoundingBox {
         this.yBordersHaveBeenSet = true;
     }
 
-    public calculateTopBottomBorders(): void {
+    /**
+     * Calculates the top and bottom borders (and margins) of this bounding box from those of its child elements.
+     * @param recursive whether to calculate those of the child elements first, recursively (default).
+     *   false only recalculates this bounding box, when the borders below it are up to date
+     *   (repeating the calculation for an unchanged child element gives the same borders).
+     */
+    public calculateTopBottomBorders(recursive: boolean = true): void {
         if (this.childElements.length === 0) {
             return;
         }
-        for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
-            const childElement: BoundingBox = this.ChildElements[idx];
-            childElement.calculateTopBottomBorders();
+        if (recursive) {
+            for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
+                const childElement: BoundingBox = this.ChildElements[idx];
+                childElement.calculateTopBottomBorders();
+            }
         }
         let minTop: number = Number.MAX_VALUE;
         let maxBottom: number = Number.MIN_VALUE;
@@ -579,19 +590,22 @@ export class BoundingBox {
         return undefined;
     }
 
-    //Generics don't work like this in TS. Casting doesn't filter out objects.
-    //instanceof doesn't work either with generic types. Hopefully instanceof becomes available at some point, for now we have to do annoyingly
-    //specific implementations after calling this to filter the objects.
+    /**
+     * Returns the objects of this bounding box and its descendants that lie inside the region (liesInside), or overlap it.
+     * The generic type T doesn't select the objects (types don't exist at runtime), classOrName does.
+     * @param classOrName The class of the objects, e.g. GraphicalMeasure, or its name, which is unreliable in minified builds
+     *   (see isInstanceOfClass())
+     */
     public getObjectsInRegion<T extends GraphicalObject>(region: BoundingBox, liesInside: boolean = true,
-                                                         className: string = GraphicalObject.name): T[] {
+                                                         classOrName: ClassType | string = GraphicalObject): T[] {
         let result: T[] = [];
         for (const child of this.childElements) {
-            result = result.concat(child.getObjectsInRegion<T>(region, liesInside, className));
+            result = result.concat(child.getObjectsInRegion<T>(region, liesInside, classOrName));
         }
 
         //if (!result || result.length === 0) {
         // audioplayer: this.dataObject as T
-        if (this.dataObject && (this.dataObject as T).isInstanceOfClass(className)) {
+        if (this.dataObject && (this.dataObject as T).isInstanceOfClass(classOrName)) {
             if (liesInside) {
                 if (region.liesInsideBorders(this)) {
                     result.push(this.dataObject as T);

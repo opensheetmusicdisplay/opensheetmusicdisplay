@@ -15,16 +15,18 @@ describe("RepetitionInstructionReader", () => {
         reader.prepareReadingMeasure(undefined, 0);
 
         /**
-         * Lets the reader handle a direction-type node with the given words text.
+         * Lets the reader handle a direction with the given words text, and a sound element if attributes are given.
          * @param wordsText the text content of the words element
+         * @param soundAttributes the attributes of the direction's sound element, e.g. 'fine="yes"'
          * @returns true if the reader handled the words as a repetition instruction
          */
-        function handleWords(wordsText: string): boolean {
+        function handleWords(wordsText: string, soundAttributes?: string): boolean {
             reader.repetitionInstructions.length = 0;
             const doc: Document = new DOMParser().parseFromString(
-                "<direction-type><words>" + wordsText + "</words></direction-type>", "text/xml");
-            const directionTypeNode: IXmlElement = new IXmlElement(doc.documentElement);
-            return reader.handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode, 0);
+                "<direction><direction-type><words>" + wordsText + "</words></direction-type>" +
+                (soundAttributes ? "<sound " + soundAttributes + "/>" : "") + "</direction>", "text/xml");
+            const direction: IXmlElement = new IXmlElement(doc.documentElement);
+            return reader.handleRepetitionInstructionsFromWordsOrSymbols(direction.element("direction-type"), 0, direction.element("sound"));
         }
 
         interface WordsTestCase {
@@ -38,7 +40,10 @@ describe("RepetitionInstructionReader", () => {
             { text: "dal segno al coda", expectedType: RepetitionInstructionEnum.DalSegnoAlCoda },
             { text: "D.S.", expectedType: RepetitionInstructionEnum.DalSegno },
             { text: "Dal Segno", expectedType: RepetitionInstructionEnum.DalSegno },
+            { text: "D.S.al Coda", expectedType: RepetitionInstructionEnum.DalSegnoAlCoda },
             { text: "D.C. al Fine", expectedType: RepetitionInstructionEnum.DaCapoAlFine },
+            { text: "D.C.al Fine", expectedType: RepetitionInstructionEnum.DaCapoAlFine },
+            { text: "Da Capo al Fine", expectedType: RepetitionInstructionEnum.DaCapoAlFine },
             { text: "D.C. al Coda", expectedType: RepetitionInstructionEnum.DaCapoAlCoda },
             { text: "D.C.", expectedType: RepetitionInstructionEnum.DaCapo },
             { text: "Da Capo", expectedType: RepetitionInstructionEnum.DaCapo },
@@ -54,6 +59,7 @@ describe("RepetitionInstructionReader", () => {
                 expect(handleWords(testCase.text), "words are handled as repetition instruction").to.equal(true);
                 expect(reader.repetitionInstructions.length).to.equal(1);
                 expect(reader.repetitionInstructions[0].type).to.equal(testCase.expectedType);
+                expect(reader.repetitionInstructions[0].Words, "drawn as its label").to.equal(undefined);
             });
         }
 
@@ -63,6 +69,7 @@ describe("RepetitionInstructionReader", () => {
             "gradually build up to coda",
             "drums tacet until Fine",
             "Tuning D-A-D-G-B-D, Capo 4th fret",
+            "tacet D.S.",
         ];
         for (const text of plainTextCases) {
             it("does not detect \"" + text + "\" as repetition instruction", () => {
@@ -70,6 +77,60 @@ describe("RepetitionInstructionReader", () => {
                 expect(reader.repetitionInstructions.length).to.equal(0);
             });
         }
+
+        // a D.C. or D.S. after a capitalized word, usually the section to play again: its words are drawn instead of its label
+        it("detects the D.C. in \"Menuetto D.C. al Fine\", whose words are drawn instead of its label", () => {
+            expect(handleWords("Menuetto D.C. al Fine"), "words are handled as repetition instruction").to.equal(true);
+            expect(reader.repetitionInstructions.length).to.equal(1);
+            expect(reader.repetitionInstructions[0].type).to.equal(RepetitionInstructionEnum.DaCapoAlFine);
+            expect(reader.repetitionInstructions[0].Words).to.equal("Menuetto D.C. al Fine");
+        });
+
+        interface SoundTestCase {
+            text: string;
+            sound: string;
+            expectedType: RepetitionInstructionEnum;
+            /** the words drawn instead of the instruction's label, or undefined for the label */
+            expectedWords: string;
+        }
+        // words in other languages or with more words than an instruction, which only the sound names: drawn instead of the label
+        const soundCases: SoundTestCase[] = [
+            { text: "Fin", sound: "fine=\"yes\"", expectedType: RepetitionInstructionEnum.Fine, expectedWords: "Fin" },
+            { text: "Da Capo bis Ende", sound: "dacapo=\"yes\"", expectedType: RepetitionInstructionEnum.DaCapo, expectedWords: "Da Capo bis Ende" },
+            { text: "Dal Segno bis Ende", sound: "dalsegno=\"segno1\"", expectedType: RepetitionInstructionEnum.DalSegno,
+              expectedWords: "Dal Segno bis Ende" },
+            { text: "Zur Coda", sound: "tocoda=\"coda1\"", expectedType: RepetitionInstructionEnum.ToCoda, expectedWords: "Zur Coda" },
+            // whether to take the repeats after the jump (issue #1767)
+            { text: "D.C. senza replica", sound: "dacapo=\"yes\"", expectedType: RepetitionInstructionEnum.DaCapo,
+              expectedWords: "D.C. senza replica" },
+            { text: "D.S. al Coda (with repeats)", sound: "dalsegno=\"s\"", expectedType: RepetitionInstructionEnum.DalSegno,
+              expectedWords: "D.S. al Coda (with repeats)" },
+            // words that name an instruction still say which one it is, and are drawn as its label
+            { text: "D.C. al Fine", sound: "dacapo=\"yes\"", expectedType: RepetitionInstructionEnum.DaCapoAlFine, expectedWords: undefined },
+        ];
+        for (const testCase of soundCases) {
+            it("reads \"" + testCase.text + "\" with <sound " + testCase.sound + "/> as repetition instruction", () => {
+                expect(handleWords(testCase.text, testCase.sound), "words are handled as repetition instruction").to.equal(true);
+                expect(reader.repetitionInstructions.length).to.equal(1);
+                expect(reader.repetitionInstructions[0].type).to.equal(testCase.expectedType);
+                expect(reader.repetitionInstructions[0].Words, "drawn words").to.equal(testCase.expectedWords);
+            });
+        }
+
+        // a segno read from the sound is a D.S. target, like a segno sign with <sound segno>, so it isn't taken for a D.S.
+        it("marks a segno read from <sound segno> as the target of a D.S.", () => {
+            expect(handleWords("Zeichen", "segno=\"segno2\"")).to.equal(true);
+            expect(reader.repetitionInstructions[0].type).to.equal(RepetitionInstructionEnum.Segno);
+            expect(reader.repetitionInstructions[0].MarkedAsTarget).to.equal(true);
+            expect(reader.repetitionInstructions[0].Words, "drawn as the sign").to.equal(undefined);
+        });
+
+        it("leaves words it doesn't know as text without a sound that names an instruction", () => {
+            expect(handleWords("Fin")).to.equal(false);
+            expect(handleWords("Fin", "tempo=\"100\"")).to.equal(false);
+            expect(handleWords("Fin", "dacapo=\"no\"")).to.equal(false);
+            expect(reader.repetitionInstructions.length).to.equal(0);
+        });
     });
 
     describe("words mentioning D.S. within a longer text (issue #1687)", () => {

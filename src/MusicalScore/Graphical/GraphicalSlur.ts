@@ -12,6 +12,7 @@ import { Matrix2D } from "../../Common/DataObjects/Matrix2D";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
+import { GraphicalMeasure } from "./GraphicalMeasure";
 import { Fraction } from "../../Common/DataObjects/Fraction";
 import { StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
@@ -138,6 +139,8 @@ export class GraphicalSlur extends GraphicalCurve {
                                                         endY);
             if (slurEndNote) {
                     endUpperLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
+            } else if (!this.slur.EndNote) {
+                    endUpperLeft.x = this.getUnattachedEndX();
             } else {
                     // Slur continues to next StaffLine - must reach the end of current StaffLine
                     endUpperLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
@@ -311,6 +314,8 @@ export class GraphicalSlur extends GraphicalCurve {
                                                         endY);
             if (slurEndNote) {
                 endLowerLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
+            } else if (!this.slur.EndNote) {
+                endLowerLeft.x = this.getUnattachedEndX();
             } else {
                 // Slur continues to next StaffLine - must reach the end of current StaffLine
                 endLowerLeft.x = this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
@@ -715,6 +720,8 @@ export class GraphicalSlur extends GraphicalCurve {
             //         }
             //     }
             // }
+        } else if (!this.slur.EndNote) {
+            endX = this.getUnattachedEndX();
         } else {
             endX = staffLine.PositionAndShape.Size.width;
         }
@@ -732,7 +739,9 @@ export class GraphicalSlur extends GraphicalCurve {
             }
         }
         if (!slurEndNote) {
-            if (this.placement === PlacementEnum.Above) {
+            if (!this.slur.EndNote) {
+                endY = startY; // a short slur to the barline, like Sibelius draws one without end note (see Slur.HasUnattachedEnd)
+            } else if (this.placement === PlacementEnum.Above) {
                 endY = startY - 1;
             } else {
                 endY = startY + 1;
@@ -762,6 +771,20 @@ export class GraphicalSlur extends GraphicalCurve {
         return {startX, startY, endX, endY};
     }
 
+    /** Where a slur without end note ends (see Slur.HasUnattachedEnd), relative to the staffline: at the barline of its
+     *  measure, before the end instructions like a repeat sign or a clef change at the measure end.
+     *  If that's too close to the start note to look like a slur (e.g. before a repeat sign), it reaches a bit past the note,
+     *  over the repeat dots, but not up to the barline.
+     */
+    private getUnattachedEndX(): number {
+        const endMeasure: GraphicalMeasure = this.staffEntries[this.staffEntries.length - 1].parentMeasure;
+        const measureEndX: number = endMeasure.PositionAndShape.RelativePosition.x + endMeasure.PositionAndShape.Size.width;
+        const startStaffEntry: GraphicalStaffEntry = this.staffEntries[0];
+        const minEndX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+            startStaffEntry.PositionAndShape.RelativePosition.x + startStaffEntry.PositionAndShape.BorderRight + 0.8;
+        return Math.max(measureEndX - (endMeasure.endInstructionsWidth ?? 0), Math.min(minEndX, measureEndX - 0.5));
+    }
+
     /**
      * This method calculates the placement of the Curve.
      * @param skyBottomLineCalculator
@@ -786,7 +809,7 @@ export class GraphicalSlur extends GraphicalCurve {
             const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
             if (graphicalStaffEntry.parentMeasure.hasMultipleVoices()) {
                 if (this.slur.StartNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice ||
-                    this.slur.EndNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice) {
+                    this.slur.EndNote?.ParentVoiceEntry.ParentVoice instanceof LinkedVoice) {
                     this.placement = PlacementEnum.Below;
                 } else { this.placement = PlacementEnum.Above; }
                 return;

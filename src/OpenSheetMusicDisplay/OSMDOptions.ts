@@ -86,7 +86,9 @@ export interface IOSMDOptions {
      * see DrawingParameters.ts:setForCompactTightMode().
      */
     drawingParameters?: string | DrawingParametersEnum;
-    /** Whether to draw credits (title, subtitle, composer, lyricist) (in future: copyright etc., see <credit>). */
+    /** Whether to draw credits, including title, subtitle, composer, lyricist, copyright and independent first-page words.
+     *  Independent words require EngravingRules.ReadFirstPageCreditWords to be enabled before loading the score.
+     */
     drawCredits?: boolean;
     /** Whether to draw the title of the piece. If false, disables drawing Subtitle as well. */
     drawTitle?: boolean;
@@ -102,7 +104,9 @@ export interface IOSMDOptions {
      *  unless explicitly enabled (drawPartNames: false, drawPartAbbreviations: true).
      */
     drawPartNames?: boolean;
-    /** Whether to draw part (instrument) name abbreviations each system after the first. Only draws if drawPartNames. Default true. */
+    /** Whether to draw part (instrument) name abbreviations each system after the first. Only draws if drawPartNames. Default true.
+     *  Single-staff systems additionally need EngravingRules.RenderPartAbbreviationsForSingleStaff.
+     */
     drawPartAbbreviations?: boolean;
     /** Whether to draw measure numbers (labels). Default true.
      * Draws a measure number label at first measure, system start measure,
@@ -192,8 +196,8 @@ export interface IOSMDOptions {
     newPageFromXML?: boolean;
     /** A custom function that is executed when the xml is read, modifies it, and returns a new xml string that OSMD then parses. */
     onXMLRead?(xml: string): string;
-    /** The cutoff number for rendering percussion clef stafflines as a single line. Default is 4.
-     *  This is number of instruments specified, e.g. a drumset:
+    /** The cutoff number for rendering percussion clef stafflines as a single line. Default is 3.
+     *  This is the number of different note positions on the staff (usually one per instrument), e.g. a drumset:
      *     <score-part id="P1">
      *       <part-name>Drumset</part-name>
      *       <part-abbreviation>D. Set</part-abbreviation>
@@ -210,7 +214,7 @@ export interface IOSMDOptions {
      *           <instrument-name>Acoustic Snare</instrument-name>
      *           </score-instrument>
      *           ...
-     *   Would still render as 5 stafflines by default, since we have 4 (or greater) instruments in this part.
+     *   Would still render as 5 stafflines by default, since we have 3 (or more) note positions in this part.
      *   While a snare:
      *   <score-part id="P2">
      *   <part-name>Concert Snare Drum</part-name>
@@ -222,15 +226,16 @@ export interface IOSMDOptions {
      *       <instrument-name>Acoustic Snare</instrument-name>
      *       </score-instrument>
      *       ...
-     *   Would render with 1 line on the staff, since we only have 2 voices.
-     *   If this value is 0, the feature is turned off.
-     *   If this value is -1, it will render all percussion clefs as a single line.
+     *   Would render with 1 line on the staff, since we only have 2 note positions.
+     *   A staff whose MusicXML gives the number of lines (<staff-lines>) keeps it, unless EngravingRules.PercussionKeepXMLStafflineCount is false.
+     *   If this value is 0, one-line reduction and percussion note positioning are turned off.
+     *   If this value is -1, one-line reduction is turned off, but notes are still placed by display-step.
      */
     percussionOneLineCutoff?: number;
     /** This property is only active if the above property is active (percussionOneLineCutoff)
      *  This is the cutoff for forcing all voices to the single line, instead of rendering them at different
      *  positions above/below the line.
-     *  The default is 3, so if a part has less than voices, all of them will be rendered on the line.
+     *  The default is 1, so a part with only one note position is rendered on the line.
      *  This is for cases like a Concert snare, which has multiple 'instruments' available (snare, side stick)
      *  should still render only on the line since there is no ambiguity.
      *  If this value is 0, the feature is turned off.
@@ -258,7 +263,8 @@ export interface IOSMDOptions {
      */
     autoGenerateMultipleRestMeasuresFromRestMeasures?: boolean;
     /**
-     * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used.
+     * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used,
+     * or with osmd.setOptions(), the cursors set before are kept.
      */
     cursorsOptions?: CursorOptions[];
     /**

@@ -4,6 +4,7 @@ import { GraphicalMeasure } from "./GraphicalMeasure";
 import { ContDynamicEnum, ContinuousDynamicExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
+import { BoundingBox } from "./BoundingBox";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { ISqueezable } from "./ISqueezable";
@@ -67,8 +68,10 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
     public updateSkyBottomLine(): void {
         // update Sky-BottomLine
         const skyBottomLineCalculator: SkyBottomLineCalculator = this.parentStaffLine.SkyBottomLineCalculator;
-        const left: number = this.IsVerbal ? this.label.PositionAndShape.RelativePosition.x + this.label.PositionAndShape.BorderMarginLeft : 0;
-        const right: number = this.IsVerbal ? this.label.PositionAndShape.RelativePosition.x + this.label.PositionAndShape.BorderMarginRight : 0;
+        // a verbal dynamic's label is at (0, 0) in this box, see MusicSheetCalculator.calculateGraphicalVerbalContinuousDynamic()
+        const box: BoundingBox = this.PositionAndShape;
+        const left: number = this.IsVerbal ? box.RelativePosition.x + box.BorderMarginLeft : 0;
+        const right: number = this.IsVerbal ? box.RelativePosition.x + box.BorderMarginRight : 0;
         if (!this.IsSoftAccent && !this.IsVerbal && this.lines.length < 2) {
             log.warn("Not enough lines for SkyBottomLine calculation");
         }
@@ -93,8 +96,8 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
                         skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].End, this.lines[0].Start);
                     } // else covered with the log.warn above
                 } else {
-                    const yValue: number = this.label.PositionAndShape.BorderMarginTop + this.label.PositionAndShape.RelativePosition.y;
-                    skyBottomLineCalculator.updateSkyLineInRange(left, right, yValue);
+                    const yValue: number = box.BorderMarginTop + box.RelativePosition.y;
+                    skyBottomLineCalculator.updateSkyLineWithLabel(left, right, yValue);
                 }
                 break;
             case PlacementEnum.Below:
@@ -106,8 +109,8 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
                         skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].End, this.lines[1].Start);
                     } // else covered with the log.warn above
                 } else {
-                    const yValue: number = this.label.PositionAndShape.BorderMarginBottom + this.label.PositionAndShape.RelativePosition.y;
-                    skyBottomLineCalculator.updateBottomLineInRange(left, right, yValue);
+                    const yValue: number = box.BorderMarginBottom + box.RelativePosition.y;
+                    skyBottomLineCalculator.updateBottomLineWithLabel(left, right, yValue);
                 }
                 break;
             default:

@@ -4,8 +4,13 @@ import { MusicSheet } from "../../../../src/MusicalScore/MusicSheet";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import { DynamicEnum, InstantaneousDynamicExpression } from
     "../../../../src/MusicalScore/VoiceData/Expressions/InstantaneousDynamicExpression";
-import { MultiExpression } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiExpression";
+import { MultiExpression, MultiExpressionEntry } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiExpression";
+import { ContDynamicEnum, ContinuousDynamicExpression } from
+    "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
+import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
+import { MultiTempoExpression, TempoExpressionEntry } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiTempoExpression";
+import { RepetitionInstructionEnum } from "../../../../src/MusicalScore/VoiceData/Instructions/RepetitionInstruction";
 
 describe("ExpressionReader", () => {
     /** Reads a test/data sample (preprocessed by karma) into a MusicSheet, optionally with custom rules. */
@@ -126,5 +131,69 @@ describe("ExpressionReader", () => {
             expect(dynamics[1].Volume, "sfzp like the other sforzando marks").to.equal(0.5);
             expect(dynamics[2].Volume, "n (niente) is silence").to.equal(0);
         });
+    });
+
+    describe("dynamics after words or a wedge in the same direction", () => {
+        let dynamics: InstantaneousDynamicExpression[];
+
+        before((): void => {
+            dynamics = collectDynamics(readSheet("test/data/test_direction_dynamics_after_words_and_wedge.musicxml"));
+        });
+
+        it("keeps the direction's placement for a dynamic after words", () => {
+            expect(dynamics[0].DynamicExpression).to.equal("p");
+            expect(dynamics[0].Placement).to.equal(PlacementEnum.Below);
+        });
+
+        it("keeps the direction's placement and sound dynamics for a dynamic after a wedge stop", () => {
+            expect(dynamics[1].DynamicExpression).to.equal("f");
+            expect(dynamics[1].Placement).to.equal(PlacementEnum.Below);
+            expect(dynamics[1].SoundDynamic).to.equal(106);
+        });
+    });
+
+    describe("wedges and words with other direction-types in the same direction", () => {
+        let sheet: MusicSheet;
+        let wedges: ContinuousDynamicExpression[];
+
+        before((): void => {
+            sheet = readSheet("test/data/test_direction_several_direction_types.musicxml");
+            wedges = sheet.SourceMeasures.flatMap((measure): ContinuousDynamicExpression[] =>
+                measure.StaffLinkedExpressions.flatMap((staffExpressions: MultiExpression[]): ContinuousDynamicExpression[] =>
+                    staffExpressions
+                        .map((expression: MultiExpression): ContinuousDynamicExpression => expression.StartingContinuousDynamic)
+                        .filter((wedge: ContinuousDynamicExpression): boolean => wedge !== undefined)
+                )
+            );
+        });
+
+        it("reads words after a dynamic", () => {
+            const labels: string[] = sheet.SourceMeasures[0].StaffLinkedExpressions[0].flatMap((expression: MultiExpression): string[] =>
+                expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
+            expect(labels).to.include("espress.");
+        });
+
+        it("keeps the direction's placement for a wedge after a wedge stop or after words", () => {
+            expect(wedges.map((wedge: ContinuousDynamicExpression): ContDynamicEnum => wedge.DynamicType))
+                .to.deep.equal([ContDynamicEnum.crescendo, ContDynamicEnum.diminuendo, ContDynamicEnum.crescendo]);
+            expect(wedges.map((wedge: ContinuousDynamicExpression): PlacementEnum => wedge.Placement))
+                .to.deep.equal([PlacementEnum.Below, PlacementEnum.Below, PlacementEnum.Below]);
+        });
+
+        it("keeps the direction's offset for a wedge stop after words", () => {
+            expect(wedges[2].EndMultiExpression.EndOffsetFraction.RealValue, "offset 1 = a quarter").to.equal(0.25);
+        });
+    });
+
+    it("reads all the words of a direction, not only the first", () => {
+        const sheet: MusicSheet = readSheet("test/data/test_direction_words_split.musicxml");
+        const tempoLabels: string[] = sheet.SourceMeasures[0].TempoExpressions.flatMap((tempo: MultiTempoExpression): string[] =>
+            tempo.EntriesList.map((entry: TempoExpressionEntry): string => entry.label));
+        const textLabels: string[] = sheet.SourceMeasures[1].StaffLinkedExpressions[0].flatMap((expression: MultiExpression): string[] =>
+            expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
+        expect(tempoLabels, "tempo direction").to.deep.equal(["Allegro con brio"]);
+        expect(textLabels, "text direction").to.deep.equal(["più f, marcato"]);
+        expect(sheet.SourceMeasures[1].LastRepetitionInstructions.map(instruction => instruction.type), "repetition direction")
+            .to.deep.equal([RepetitionInstructionEnum.DaCapo]);
     });
 });

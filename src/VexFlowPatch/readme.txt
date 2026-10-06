@@ -46,6 +46,10 @@ Fix end_x ("right") position not adding padding / subtracting length for wide en
 notehead.js (custom addition):
 add stem_up_y_shift and stem_down_y_shift to shift notehead (independent of stem length)
 
+ornament.js (custom addition):
+respect Modifier.Position.BELOW in draw() (placement="below" in MusicXML)
+setUpperAccidental() and setLowerAccidental() also take a list of accidentals, drawn side by side (e.g. sharp-sharp)
+
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
 
@@ -71,11 +75,13 @@ Save and restore noteheads (e.g. slash noteheads) in reset()
 open group for ledger lines (SVG)
 preFormat() and getBoundingBox(): add paddingRight variable to allow for custom right padding (e.g. for long lyrics below note)
 allow notehead y_shift without shifting stem (stem_up_y_shift)
+don't stagger the head of a hidden unison note (note.hiddenUnisonBaseHead, set by OSMD) beside the visible head it shares (mergeableUnison)
 
 staverepetition.js (fixed vexflow 4):
 add TO_CODA enum to type() and draw()
 fix x-positioning for TO_CODA and DS_AL_CODA in drawSymbolText()
 fix y-shift
+don't change x_shift in drawSymbolText(): every further draw of the stave moved the end texts (e.g. D.C.), alternating
 
 stavesection.js (half-fixed vexflow 4.x, collision, box not removable):
 stavesection.draw():
@@ -85,9 +91,15 @@ fix rehearsal marks not rendered with canvas backend in browser
 stavetempo.js (custom addition):
 open a context group for vf-stavetempo, and one for its subgroup vf-bpm (for just the "= 150" text node)
 add drawNoteEquation() and drawNoteGroup() for complex metronome marks (note equations like swing: 8th+8th = quarter+8th under triplet bracket)
+keep the leading space of the vf-bpm text in SVG (xml:space="preserve"), so that SVG shows "= 150" as far from the note as canvas
+measure the "=" and the tuplet numbers of note equations by their text advance, as the layout does (canvas measureText())
 
 stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
+name the group after the note the tie starts at ("<id>-tie"), set with setStartNoteId(), by default the first note:
+  the part of a tie continued in the next system has no first note, and was named "vf-undefined-tie" (custom addition)
+renderText(): set the font before measuring the text (e.g. H, P, sl. of tab ties and slides) to center it, instead of
+  measuring it in the context's current font (custom fix, vexflow 5 still measures first)
 
 stavevolta.js (merged Vexflow 3.x):
 Fix the length of voltas for first measures in a system
@@ -102,6 +114,8 @@ Add manual flag rendering variable so we can choose not to render flags if notes
 svgcontext.js (custom addition, probably not necessary for vexflow 4):
 able to add extra attributes (like svg node id) to a stroke (e.g. stem)
 fix rect() always using black color, ignoring attributes.stroke (ctx strokeStlye) -> fix defaultColorMusic ignored
+measureText(text, true) returns the text advance (getComputedTextLength()) as the width, like canvas measureText(), instead of the bounding box
+setRawFont(): use the whole family after the size (e.g. "Times New Roman" in "10pt Times New Roman"), not only its first word
 
 tables.js (custom addition):
 add inverted triangle notehead ('TI')
@@ -110,6 +124,10 @@ use scale parameter for x tabnote, offer alternative x note glyph option
 tabnote.js (merged Vexflow 3.x):
 Add a context group for each tabnote, so that it can be found in the SVG DOM ("vf-tabnote")
 use scale parameter for x tabnote, offer alternative x note glyph option
+
+tabslide.js (custom fix, vexflow 5 has no font of its own for the slide text anymore):
+set the font of the slide text "sl." with the key family instead of font, so it's drawn in Times (bold italic),
+  instead of in the browser's fallback font for the family "undefined"
 
 textbracket.js (custom fix):
 make sure text bracket doesn't go backwards+overlap (e.g. short octave bracket)
@@ -129,6 +147,8 @@ downstem flag glyph (v9a): rotate and shift the flag so that it suits the stem b
 
 vibratobracket.js: (custom option):
 add option vibratobracket.toEndOfStopStave: Render to the end of the stop note, instead of before it
+add option vibratobracket.stopBeforeNote: Render up to this note, in front of its modifiers, e.g. to the note after the stop note
+render to the end of the stop note without the width left of it (modifiers like accidentals and grace notes, displaced note heads)
 
 Currently, we are using a heavily improved and customized version of Vexflow 1.2.93,
 because of some formatter advantages compared to Vexflow 3.x versions, see this issue:

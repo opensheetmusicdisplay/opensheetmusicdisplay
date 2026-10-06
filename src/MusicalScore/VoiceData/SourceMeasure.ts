@@ -1,4 +1,5 @@
 import {Fraction} from "../../Common/DataObjects/Fraction";
+import {MeasureRepeatInstruction} from "./Instructions/MeasureRepeatInstruction";
 import {VerticalSourceStaffEntryContainer} from "./VerticalSourceStaffEntryContainer";
 import {SourceStaffEntry} from "./SourceStaffEntry";
 import {RepetitionInstruction, RepetitionInstructionEnum, AlignmentType} from "./Instructions/RepetitionInstruction";
@@ -82,6 +83,8 @@ export class SourceMeasure {
     public RhythmPrinted: RhythmInstruction; // the rhythm printed (rendered) in this measure
     public multipleRestMeasures: number; // usually undefined (0), unless "multiple-rest" given in XML (e.g. 4 measure rest)
     // public multipleRestMeasuresPerStaff: Dictionary<number, number>; // key: staffId. value: how many rest measures
+    /** MusicXML measure-repeat declarations indexed by global staff. */
+    public MeasureRepeatInstructions: Map<number, MeasureRepeatInstruction[]> = new Map<number, MeasureRepeatInstruction[]>();
     private absoluteTimestamp: Fraction;
     private completeNumberOfStaves: number;
     private duration: Fraction;
@@ -646,6 +649,9 @@ export class SourceMeasure {
                     continue; // ignore notes in invisible instruments (instruments not shown)
                 }
                 if (staffEntry.ChordContainers.length > 0) {
+                    return false;
+                }
+                if (staffEntry.Instructions.some(instruction => instruction instanceof KeyInstruction)) {
                     return false;
                 }
                 if (staffEntry.ParentStaff.hasLyrics) {

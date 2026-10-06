@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work>
+    <work-title>test_drawFromMeasureNumber_2_tempo_markings</work-title>
+  </work>
+  <identification>
+    <creator type="lyricist">Lyricist with a long name</creator>
+  </identification>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Voice</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <words font-weight="bold">Allegro</words>
+        </direction-type>
+        <direction-type>
+          <metronome><beat-unit>quarter</beat-unit><per-minute>120</per-minute></metronome>
+        </direction-type>
+        <sound tempo="120"/>
+      </direction>
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <direction placement="above">
+        <direction-type>
+          <words font-weight="bold">Meno mosso</words>
+        </direction-type>
+        <direction-type>
+          <metronome><beat-unit>quarter</beat-unit><per-minute>96</per-minute></metronome>
+        </direction-type>
+        <sound tempo="96"/>
+      </direction>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>whole</type>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+      </barline>
+    </measure>
+  </part>
+</score-partwise>

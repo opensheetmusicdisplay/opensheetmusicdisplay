@@ -42,6 +42,9 @@ export class GraphicalGlissando {
         }
 
         const staffLine: StaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
+        // A note's x is the centre of its note head (see VexFlowStaffEntry.positionNotesAtNoteHeads()): the line starts and ends
+        //   this far from the notes' x, so that it leaves the same space (GlissandoNoteOffset) to both note heads.
+        const noteHeadHalfWidth: number = 0.5;
 
         let startX: number;
         let endX: number;
@@ -51,7 +54,7 @@ export class GraphicalGlissando {
             // must be relative to StaffLine
             startX = glissStartNote.PositionAndShape.RelativePosition.x + glissStartNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
                     + glissStartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x
-                    + rules.GlissandoNoteOffset;
+                    + noteHeadHalfWidth + rules.GlissandoNoteOffset;
             //const glissStartVE: GraphicalVoiceEntry = glissStartNote.parentVoiceEntry;
             //startY = glissStartVE.PositionAndShape.RelativePosition.y + glissStartVE.PositionAndShape.BorderTop / 2;
             // startY = glissStartNote.PositionAndShape.RelativePosition.y - glissStartNote.PositionAndShape.Size.height / 2;
@@ -67,7 +70,7 @@ export class GraphicalGlissando {
         if (glissEndNote && endStaffEntry.parentMeasure.ParentStaffLine === this.StaffLine) {
             endX = glissEndNote.PositionAndShape.RelativePosition.x + glissEndNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
                 + glissEndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x
-                - 0.5 - rules.GlissandoNoteOffset; // -0.5: width of notehead. glissEndNote.x seems to be center of notehead.
+                - noteHeadHalfWidth - rules.GlissandoNoteOffset;
             if (startX > endX) { // e.g. when beginInstructionsWidth too big at start of staffline, bigger than note startX
                 startX = endX - rules.GlissandoStafflineStartMinimumWidth;
             }

@@ -182,9 +182,11 @@ export class SVGContext {
     // Assumes size first, splits on space -- which is presently
     // how all existing modules are calling this.
     const fontArray = font.split(' ');
+    // VexFlowPatch: the family is everything after the size, e.g. "Times New Roman" in "10pt Times New Roman", not only "Times"
+    const family = fontArray.slice(1).join(' ');
 
-    this.attributes['font-family'] = fontArray[1];
-    this.state['font-family'] = fontArray[1];
+    this.attributes['font-family'] = family;
+    this.state['font-family'] = family;
 
     this.attributes['font-size'] = fontArray[0];
     this.state['font-size'] = fontArray[0];
@@ -296,15 +298,19 @@ export class SVGContext {
   // ### Drawing helper methods:
 
   applyAttributes(element, attributes) {
+    // VexFlowPatch: a plain loop and setAttribute() instead of Object.keys().forEach() and setAttributeNS(null, ...).
+    // Every drawn SVG element passes through here, and setAttributeNS is slower in browsers (it validates the qualified
+    // name for a namespace). For these unprefixed names on new SVG elements (no lowercasing outside the HTML namespace)
+    // both create the same attributes in the same order, so the SVG output is unchanged.
     const attrNamesToIgnore = attrNamesToIgnoreMap[element.nodeName];
-    Object
-      .keys(attributes)
-      .forEach(propertyName => {
-        if (attrNamesToIgnore && attrNamesToIgnore[propertyName]) {
-          return;
-        }
-        element.setAttributeNS(null, propertyName, attributes[propertyName]);
-      });
+    const propertyNames = Object.keys(attributes);
+    for (let i = 0; i < propertyNames.length; i++) {
+      const propertyName = propertyNames[i];
+      if (attrNamesToIgnore && attrNamesToIgnore[propertyName]) {
+        continue;
+      }
+      element.setAttribute(propertyName, attributes[propertyName]);
+    }
 
     return element;
   }
@@ -540,10 +546,11 @@ export class SVGContext {
     const path = this.create('path');
     let newAttributes = attributes;
     if (typeof attributes === 'undefined') {
-        attributes = {};
-        Vex.Merge(attributes, this.attributes);
-        attributes.stroke = 'none';
-        newAttributes = attributes;
+      // VexFlowPatch: set the context's attributes (with stroke "none" and the path) directly, instead of copying them into
+      // a new attributes object first (for every glyph): the same attributes in the same order, see setPathAttributes().
+      this.setPathAttributes(path, 'stroke', 'none', undefined, undefined);
+      this.add(path);
+      return this;
     } else {
       newAttributes = attributes;
       Vex.Merge(newAttributes, this.attributes); // this overrides attributes either way
@@ -568,6 +575,12 @@ export class SVGContext {
     this.glow();
 
     const path = this.create('path');
+    if (!extraAttributes) {
+      // VexFlowPatch: without extra attributes, set the context's attributes directly, like fill()
+      this.setPathAttributes(path, 'fill', 'none', 'stroke-width', this.lineWidth);
+      this.add(path);
+      return this;
+    }
     const attributes = {};
     Vex.Merge(attributes, this.attributes);
     if (extraAttributes) {
@@ -582,8 +595,46 @@ export class SVGContext {
     return this;
   }
 
+  // VexFlowPatch: sets the context's attributes on a new path element, with up to two of them replaced, and the current
+  // path as "d", in the order that copying them into a new object first gave (Vex.Merge() into {}, then assigning the
+  // replacements and "d", then applyAttributes()): the for...in order of the context's attributes (like Vex.Merge()),
+  // followed by the replaced attributes and "d" that the context's attributes don't have. Skips the attributes that
+  // applyAttributes() ignores for paths.
+  setPathAttributes(path, name1, value1, name2, value2) {
+    const attrNamesToIgnore = attrNamesToIgnoreMap.path;
+    const attributes = this.attributes;
+    let has1 = false;
+    let has2 = false;
+    let hasD = false;
+    for (const name in attributes) {
+      let value = attributes[name];
+      if (name === name1) {
+        has1 = true;
+        value = value1;
+      } else if (name === name2) {
+        has2 = true;
+        value = value2;
+      } else if (name === 'd') {
+        hasD = true;
+        value = this.path;
+      }
+      if (!attrNamesToIgnore[name]) {
+        path.setAttribute(name, value);
+      }
+    }
+    if (!has1) {
+      path.setAttribute(name1, value1);
+    }
+    if (name2 !== undefined && !has2) {
+      path.setAttribute(name2, value2);
+    }
+    if (!hasD) {
+      path.setAttribute('d', this.path);
+    }
+  }
+
   // ## Text Methods:
-  measureText(text) {
+  measureText(text, useTextAdvance = false) {
     const txt = this.create('text');
     if (typeof (txt.getBBox) !== 'function') {
       return { x: 0, y: 0, width: 0, height: 0 };
@@ -598,6 +649,10 @@ export class SVGContext {
     let bbox = txt.getBBox();
     if (this.ie && text !== '' && this.attributes['font-style'] === 'italic') {
       bbox = this.ieMeasureTextFix(bbox, text);
+    }
+    if (useTextAdvance && typeof txt.getComputedTextLength === 'function') {
+      // VexFlowPatch: use the text advance, as Canvas measureText().width does, rather than glyph bounds.
+      bbox = { x: bbox.x, y: bbox.y, width: txt.getComputedTextLength(), height: bbox.height };
     }
 
     this.svg.removeChild(txt);

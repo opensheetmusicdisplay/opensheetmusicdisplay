@@ -80,6 +80,11 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     /** Only exists on multiple rest measure (VexFlowMultiRestMeasure). See isMultiRestMeasure() function. */
     public multiRestElement: any;
 
+    /** Whether a backend replaces this measure's note content with a repeat sign. */
+    public get NotesAreAbbreviated(): boolean {
+        return false;
+    }
+
     public get ParentStaff(): Staff {
         return this.parentStaff;
     }
@@ -402,4 +407,3 @@ export abstract class GraphicalMeasure extends GraphicalObject {
         return transposeHalftones;
     }
 }
-

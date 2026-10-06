@@ -26,23 +26,29 @@ export class Tie {
      */
     public NoteIndexToTieDirection: NoteIndexToPlacementEnum = {};
 
+    /**
+     * Gets the direction of the tie from the given note to the next one: the direction given at that note,
+     * or at the last note before it that gives one (see NoteIndexToTieDirection), else TieDirection.
+     * @param startNote The note of the tie that the part starts at. Without it, TieDirection.
+     * @returns The direction, PlacementEnum.NotYetDefined if none is given.
+     */
     public getTieDirection(startNote?: Note): PlacementEnum {
         if (!startNote) {
             return this.TieDirection;
         }
-        for (let i: number = 0; i < this.Notes.length; i++) {
-            const tieNote: Note = this.Notes[i];
-            if (tieNote === startNote) {
-                const directionAtIndex: PlacementEnum = this.NoteIndexToTieDirection[i];
-                if (directionAtIndex) {
-                    return directionAtIndex;
-                } else {
-                    return this.TieDirection;
-                }
+        const noteIndex: number = this.Notes.indexOf(startNote);
+        if (noteIndex < 0) {
+            log.debug("Tie.getTieDirection(): note not in tie.Notes");
+            // ^ happens in Christbaum measure 19 - probably note sharing stem
+            return this.TieDirection;
+        }
+        for (let i: number = noteIndex; i > 0; i--) {
+            const directionAtIndex: PlacementEnum = this.NoteIndexToTieDirection[i];
+            // not just if (directionAtIndex): PlacementEnum.Above is 0
+            if (directionAtIndex !== undefined && directionAtIndex !== PlacementEnum.NotYetDefined) {
+                return directionAtIndex;
             }
         }
-        log.debug("tie.getTieDuration note not in tie.Notes");
-        // ^ happens in Christbaum measure 19 - probably note sharing stem
         return this.TieDirection;
     }
 

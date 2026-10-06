@@ -12,6 +12,9 @@ export class VexFlowVibratoBracket extends GraphicalWavyLine {
     public endNote: Vex.Flow.StemmableNote;
     public startVfVoiceEntry: VexFlowVoiceEntry;
     public endVfVoiceEntry: VexFlowVoiceEntry;
+    /** The voice entry after the end note in its voice, which the bracket ends in front of when it covers the end note's
+     *  whole duration (see coverEndNoteDuration()). */
+    public nextVfVoiceEntry: VexFlowVoiceEntry;
     //Line where vexflow renders the bracket. VF default is 1
     public line: number = 1;
     private isVibrato: boolean = false;
@@ -30,15 +33,13 @@ export class VexFlowVibratoBracket extends GraphicalWavyLine {
      * @param graphicalStaffEntry the staff entry that holds the start note
      */
      public setStartNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
-        for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
-            const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
-            if (vve?.vfStaveNote) {
-                this.startNote = vve.vfStaveNote;
-                this.startVfVoiceEntry = vve;
-                return true;
-            }
+        const vve: VexFlowVoiceEntry = this.findNoteVoiceEntry(graphicalStaffEntry);
+        if (!vve) {
+            return false; // couldn't find a startNote
         }
-        return false; // couldn't find a startNote
+        this.startNote = vve.vfStaveNote;
+        this.startVfVoiceEntry = vve;
+        return true;
     }
 
     /**
@@ -46,20 +47,79 @@ export class VexFlowVibratoBracket extends GraphicalWavyLine {
      * @param graphicalStaffEntry the staff entry that holds the end note
      */
     public setEndNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
-        // this is duplicate code from setStartNote, but if we make one general method, we add a lot of branching.
-        for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
-            const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
-            if (vve?.vfStaveNote) {
-                this.endNote = vve.vfStaveNote;
-                this.endVfVoiceEntry = vve;
-                const parentMeasureStaffEntries: GraphicalStaffEntry[] = this.endVfVoiceEntry.parentStaffEntry.parentMeasure.staffEntries;
-                const lastStaffEntry: GraphicalStaffEntry = parentMeasureStaffEntries[parentMeasureStaffEntries.length - 1];
-                //If this is the last staff entry of the stave (measure), render line to end of measure
-                this.toEndOfStopStave = (lastStaffEntry === this.endVfVoiceEntry.parentStaffEntry);
-                return true;
+        const vve: VexFlowVoiceEntry = this.findNoteVoiceEntry(graphicalStaffEntry);
+        if (!vve) {
+            return false; // couldn't find an endNote
+        }
+        this.endNote = vve.vfStaveNote;
+        this.endVfVoiceEntry = vve;
+        const parentMeasureStaffEntries: GraphicalStaffEntry[] = vve.parentStaffEntry.parentMeasure.staffEntries;
+        const lastStaffEntry: GraphicalStaffEntry = parentMeasureStaffEntries[parentMeasureStaffEntries.length - 1];
+        //If this is the last staff entry of the stave (measure), render line to end of measure
+        this.toEndOfStopStave = (lastStaffEntry === vve.parentStaffEntry);
+        return true;
+    }
+
+    /**
+     * Lets the bracket cover the whole duration of its end note: it ends in front of the next note in the end note's voice,
+     * or at the end of the measure if the end note is the last one of its voice there.
+     * Otherwise it ends at the end of the end note. A bracket that starts and stops at the same note then ends left of the end
+     * of the note's trill mark, where its wavy line starts, so it is drawn as a stub or not at all.
+     */
+    public coverEndNoteDuration(): void {
+        this.nextVfVoiceEntry = this.findNextVoiceEntryInVoice(this.endVfVoiceEntry);
+        this.toEndOfStopStave = !this.nextVfVoiceEntry;
+    }
+
+    /**
+     * Finds the voice entry that follows a voice entry in its voice and measure. Grace notes before a main note are skipped:
+     * the main note is found instead, its left edge includes them. Grace notes after the voice entry's note count, e.g. a
+     * Nachschlag ending a trill, which shares the note's staff entry.
+     * @param voiceEntry the voice entry to find the next one of
+     */
+    private findNextVoiceEntryInVoice(voiceEntry: VexFlowVoiceEntry): VexFlowVoiceEntry {
+        const staffEntries: GraphicalStaffEntry[] = voiceEntry.parentStaffEntry.parentMeasure.staffEntries;
+        let isAfterVoiceEntry: boolean = false;
+        for (let i: number = staffEntries.indexOf(voiceEntry.parentStaffEntry); i < staffEntries.length; i++) {
+            for (const gve of staffEntries[i].graphicalVoiceEntries as VexFlowVoiceEntry[]) {
+                if (gve === voiceEntry) {
+                    isAfterVoiceEntry = true;
+                    continue;
+                }
+                const isGraceBeforeMainNote: boolean = gve.parentVoiceEntry.IsGrace && !gve.parentVoiceEntry.GraceAfterMainNote &&
+                    !gve.isStandAloneGrace;
+                if (isAfterVoiceEntry && gve.vfStaveNote && !isGraceBeforeMainNote &&
+                    gve.parentVoiceEntry.ParentVoice === voiceEntry.parentVoiceEntry.ParentVoice) {
+                    return gve;
+                }
             }
         }
-        return false; // couldn't find an endNote
+        return undefined;
+    }
+
+    /**
+     * Finds the voice entry of the note in a staff entry that the wavy line attaches to: the first one with a Vexflow note,
+     * preferring a main note to a grace note. Grace notes before their main note share its staff entry and come first,
+     * e.g. an acciaccatura before a trill, but the trill mark and its wavy line belong to the main note.
+     * @param graphicalStaffEntry the staff entry that holds the note
+     */
+    private findNoteVoiceEntry(graphicalStaffEntry: GraphicalStaffEntry): VexFlowVoiceEntry {
+        if (!graphicalStaffEntry) {
+            // e.g. an empty measure in the drawing range, or an IsExtraGraphicalMeasure, has no staff entries
+            return undefined;
+        }
+        let firstGraceVoiceEntry: VexFlowVoiceEntry;
+        for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
+            const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
+            if (!vve?.vfStaveNote) {
+                continue;
+            }
+            if (!vve.parentVoiceEntry.IsGrace) {
+                return vve;
+            }
+            firstGraceVoiceEntry ??= vve; // used if the staff entry has only grace notes
+        }
+        return firstGraceVoiceEntry;
     }
 
     public CalculateBoundingBox(): void {
@@ -72,7 +132,8 @@ export class VexFlowVibratoBracket extends GraphicalWavyLine {
 		const bracket: Vex.Flow.VibratoBracket = new Vex.Flow.VibratoBracket({
 			start: this.startNote,
 			stop: this.endNote,
-            toEndOfStopStave: this.toEndOfStopStave
+            toEndOfStopStave: this.toEndOfStopStave,
+            stopBeforeNote: this.nextVfVoiceEntry?.vfStaveNote
 		});
         bracket.setLine(this.line);
         if (this.isVibrato) {

@@ -26,6 +26,9 @@ export class Label {
     public fontFamily: string; // default undefined: will use EngravingRules.DefaultFontFamily at rendering
     public fontStyle: FontStyles;
     public fontHeight: number;
+    /** The language of the text as a BCP 47 tag, e.g. "ja" or "zh-CN", read from MusicXML's xml:lang (undefined if not given).
+     * It is drawn as the text's language, so that e.g. a browser draws kanji with Japanese instead of Chinese glyphs. */
+    public language: string;
     public textAlignment: TextAlignmentEnum;
     public IsCreditLabel: boolean = false;
 

@@ -2,6 +2,7 @@ import {AbstractTempoExpression} from "./AbstractTempoExpression";
 import {PlacementEnum} from "./AbstractExpression";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {MultiTempoExpression} from "./MultiTempoExpression";
+import {NoteTypeHandler} from "../NoteType";
 
 /** A single note in a complex metronome mark (e.g. swing notation: two eighth notes = quarter + eighth under triplet). */
 export interface MetronomeNote {
@@ -11,6 +12,8 @@ export interface MetronomeNote {
     dots: number;
     /** Beam state for this note: "begin", "continue", "end", or undefined */
     beam?: string;
+    /** Whether this note is tied to the preceding note in the same group. */
+    tied?: boolean;
 }
 
 /** Tuplet bracket information for a group of metronome notes. */
@@ -49,6 +52,8 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
     public dotted: boolean;
     public beatUnit: string;
     public isMetronomeMark: boolean;
+    /** Whether a metronome mark is drawn (false for MusicXML print-object="no"). A hidden mark still sets the tempo. */
+    public printObject: boolean = true;
     /** For complex metronome marks (note equations like swing): left-side note group */
     public metronomeNoteGroupLeft: MetronomeNoteGroup;
     /** For complex metronome marks (note equations like swing): right-side note group */
@@ -254,6 +259,45 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
                 return 60;
                 //throw new ArgumentOutOfRangeException("instTempo");
         }
+    }
+    /** The factor by which a note equation (metronomeNoteGroupLeft = metronomeNoteGroupRight) changes the tempo.
+     *  The left side is read in the old tempo and the right side in the new one (the usual reading of a metric modulation),
+     *  so quarter = dotted quarter gives 1.5: the new dotted quarter lasts as long as the old quarter.
+     *  Both sides of a swing mark (two eighths = triplet quarter + eighth) last one quarter, so it keeps the tempo (1).
+     *  1 if this is no note equation or a side's length is unknown. A fraction, so that e.g. 144 * 2 / 3 stays exactly 96.
+     */
+    public getNoteEquationTempoFactor(): Fraction {
+        const left: Fraction = InstantaneousTempoExpression.getMetronomeNoteGroupLength(this.metronomeNoteGroupLeft);
+        const right: Fraction = InstantaneousTempoExpression.getMetronomeNoteGroupLength(this.metronomeNoteGroupRight);
+        if (!(left?.RealValue > 0) || !(right?.RealValue > 0)) {
+            return new Fraction(1, 1);
+        }
+        return new Fraction(right.GetExpandedNumerator() * left.Denominator, right.Denominator * left.GetExpandedNumerator());
+    }
+
+    /** The length of one side of a note equation, e.g. 3/8 for a dotted quarter. A side's tuplet covers all its notes
+     *  (the reader keeps one tuplet per side). Undefined for an empty side or an unknown note type.
+     */
+    private static getMetronomeNoteGroupLength(group: MetronomeNoteGroup): Fraction {
+        if (!group?.notes?.length) {
+            return undefined;
+        }
+        let length: Fraction = new Fraction(0, 1);
+        for (const note of group.notes) {
+            let noteLength: Fraction;
+            try {
+                noteLength = NoteTypeHandler.getNoteDurationFromType(note.type);
+            } catch {
+                return undefined;
+            }
+            // each dot adds half of the previous value: 3/2 for one dot, 7/4 for two
+            const dotFactor: Fraction = new Fraction(Math.pow(2, note.dots + 1) - 1, Math.pow(2, note.dots));
+            length = Fraction.plus(length, Fraction.multiply(noteLength, dotFactor));
+        }
+        if (group.tuplet?.actualNotes > 0 && group.tuplet.normalNotes > 0) {
+            length = Fraction.multiply(length, new Fraction(group.tuplet.normalNotes, group.tuplet.actualNotes));
+        }
+        return length;
     }
     public static isInputStringInstantaneousTempo(inputString: string): boolean {
         if (!inputString) { return false; }

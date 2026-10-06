@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <movement-title>Swing mark after an unmarked measure</movement-title>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Violin</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="2">
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <metronome-note><metronome-type>eighth</metronome-type><metronome-beam number="1">begin</metronome-beam></metronome-note>
+            <metronome-note><metronome-type>eighth</metronome-type><metronome-beam number="1">end</metronome-beam></metronome-note>
+            <metronome-relation>equals</metronome-relation>
+            <metronome-note>
+              <metronome-type>quarter</metronome-type>
+              <metronome-tuplet bracket="yes" show-number="actual" type="start"><actual-notes>3</actual-notes><normal-notes>2</normal-notes><normal-type>eighth</normal-type></metronome-tuplet>
+            </metronome-note>
+            <metronome-note>
+              <metronome-type>eighth</metronome-type>
+              <metronome-tuplet type="stop"><actual-notes>3</actual-notes><normal-notes>2</normal-notes><normal-type>eighth</normal-type></metronome-tuplet>
+            </metronome-note>
+          </metronome>
+        </direction-type>
+        <sound><swing><first>2</first><second>1</second><swing-style>Standard</swing-style></swing></sound>
+      </direction>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+  </part>
+</score-partwise>

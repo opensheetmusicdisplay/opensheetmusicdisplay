@@ -22,6 +22,16 @@ import { PlaybackSettings } from "../Common/DataObjects/PlaybackSettings";
 
 // FIXME Andrea: Commented out some unnecessary/not-ported-yet code, have a look at (*)
 
+/** A default language of lyrics, from MusicXML's <defaults><lyric-language xml:lang="..." number="..." name="...">. */
+export interface LyricLanguage {
+    /** The lyric number it's for (undefined: any number, unless a name is given) */
+    number?: string;
+    /** The lyric name it's for (undefined: any name, unless a number is given) */
+    name?: string;
+    /** The language as a BCP 47 tag, e.g. "ja", see Label.language */
+    language: string;
+}
+
 /**
  * This is the representation of a complete piece of sheet music.
  * It includes the contents of a MusicXML file after the reading.
@@ -59,6 +69,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private title: Label;
     private subtitle: Label;
     private composer: Label;
+    private firstPageCreditWords: Label[] = [];
     private lyricist: Label;
     private copyright: Label;
     // private languages: Language[] = [];
@@ -88,6 +99,8 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public MeasureWidthFactor: number = 1.0;
     /** Ignore tempo instructions like metronome numbers, e.g. because a bpm was set in the UI */
     public IgnoreTempoInstructions: boolean = false;
+    /** The default languages of the lyrics. A lyric's own xml:lang comes first, see LyricsEntry.language. */
+    public LyricLanguages: LyricLanguage[] = [];
 
     /**
      * Get the global index within the music sheet for this staff.
@@ -236,6 +249,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
     public set Composer(value: Label) {
         this.composer = value;
+    }
+    public get FirstPageCreditWords(): Label[] {
+        return this.firstPageCreditWords;
     }
     public get Lyricist(): Label {
         return this.lyricist;
@@ -464,14 +480,23 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //    }
     //
     //}
+    /** The tempo at the start of the piece, not the first later tempo instruction. */
     public getExpressionsStartTempoInBPM(): number {
-        if (this.TimestampSortedTempoExpressionsList.length > 0) {
-            const me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
-            if (me.InstantaneousTempo) {
-                return me.InstantaneousTempo.TempoInBpm;
-            } else if (me.ContinuousTempo) {
-                return me.ContinuousTempo.StartTempo;
+        const expressions: MultiTempoExpression[] = this.TimestampSortedTempoExpressionsList;
+        let me: MultiTempoExpression = expressions[0];
+        if (!me || me.AbsolutePlaybackTimestamp.RealValue !== 0) {
+            return this.userStartTempoInBPM;
+        }
+        // At time zero, use the last explicit sound tempo as the baseline, or the last instruction.
+        for (let i: number = 1; i < expressions.length && expressions[i].AbsolutePlaybackTimestamp.RealValue === 0; i++) {
+            if (!(me.PlaybackTempoInBpm > 0) || expressions[i].PlaybackTempoInBpm > 0) {
+                me = expressions[i];
             }
+        }
+        if (me.InstantaneousTempo) {
+            return me.PlaybackTempoInBpm ?? me.InstantaneousTempo.TempoInBpm;
+        } else if (me.ContinuousTempo) {
+            return me.ContinuousTempo.StartTempo;
         }
         return this.userStartTempoInBPM;
     }

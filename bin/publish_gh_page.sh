@@ -23,6 +23,7 @@
 #       so the changes can be reviewed there and committed/pushed manually.
 # Options:
 #   --demo-only   Skip building and copying the class documentation (typedoc); only update the demo.
+# Note: On Windows, this should be executed e.g. in git bash, as it tends not to work in a normal terminal/Powershell
 
 set -e
 

@@ -23,6 +23,10 @@ export class Staff {
     private volume: number = 1;
     private id: number;
     private stafflineCount: number = 5;
+    /** The number of staff lines the XML gives (<staff-lines>), undefined if it gives none.
+     *  The percussion one-line layout keeps it, see EngravingRules.PercussionKeepXMLStafflineCount.
+     */
+    public xmlStafflineCount: number;
     public hasLyrics: boolean = false;
     public openTieDict: { [_: number]: Tie } = {};
 

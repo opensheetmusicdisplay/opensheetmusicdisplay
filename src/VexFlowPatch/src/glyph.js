@@ -178,11 +178,17 @@ export class Glyph extends Element {
       cache = Object.create(null);
       font.cached_widths = cache;
     }
-    const key = code + '/' + point;
-    let width = cache[key];
+    // cache[code][point] rather than cache[code + '/' + point]: the same keys (a number's property key is its string),
+    // without concatenating a key string on every call (and converting the point to a string, for integer points).
+    let widths = cache[code];
+    if (widths === undefined) {
+      widths = Object.create(null);
+      cache[code] = widths;
+    }
+    let width = widths[point];
     if (width === undefined) {
       width = new Glyph(code, point).getMetrics().width;
-      cache[key] = width;
+      widths[point] = width;
     }
     return width;
   }

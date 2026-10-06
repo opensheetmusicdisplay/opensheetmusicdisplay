@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work><work-title>test_ornament_accidental_mark_sharp-sharp</work-title></work>
+  <part-list><score-part id="P1"><part-name>Violin</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>1</divisions><key><fifths>5</fifths><mode>minor</mode></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+      <note><pitch><step>G</step><alter>1</alter><octave>4</octave></pitch><duration>2</duration><type>half</type><notations><ornaments><turn/><accidental-mark placement="below">double-sharp</accidental-mark></ornaments></notations></note>
+      <note><pitch><step>F</step><alter>2</alter><octave>4</octave></pitch><duration>1</duration><type>quarter</type><accidental>double-sharp</accidental></note>
+      <note><pitch><step>G</step><alter>1</alter><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>G</step><alter>1</alter><octave>4</octave></pitch><duration>2</duration><type>half</type><notations><ornaments><turn/><accidental-mark placement="below">sharp-sharp</accidental-mark></ornaments></notations></note>
+      <note><pitch><step>F</step><alter>2</alter><octave>4</octave></pitch><duration>1</duration><type>quarter</type><accidental>sharp-sharp</accidental></note>
+      <note><pitch><step>G</step><alter>1</alter><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+    </measure>
+    <measure number="3">
+      <note><pitch><step>G</step><alter>1</alter><octave>4</octave></pitch><duration>2</duration><type>half</type><notations><ornaments><turn/><accidental-mark placement="below">natural-sharp</accidental-mark></ornaments></notations></note>
+      <note><pitch><step>F</step><alter>1</alter><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note><pitch><step>G</step><alter>1</alter><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+    </measure>
+    <measure number="4">
+      <note><pitch><step>E</step><alter>1</alter><octave>5</octave></pitch><duration>2</duration><type>half</type><accidental>sharp</accidental><notations><ornaments><turn/><accidental-mark placement="above">sharp-sharp</accidental-mark></ornaments></notations></note>
+      <note><pitch><step>F</step><alter>2</alter><octave>5</octave></pitch><duration>1</duration><type>quarter</type><accidental>sharp-sharp</accidental></note>
+      <note><pitch><step>G</step><alter>1</alter><octave>5</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+</score-partwise>

@@ -13,8 +13,9 @@ import { Tie } from "../VoiceData/Tie";
  */
 export class AccidentalCalculator {
     private keySignatureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
-    private currentAlterationsComparedToKeyInstructionList: number[] = [];
     private currentInMeasureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
+    /** The last note of each pitch in the current measure that got an accidental, except grace notes (see isAccidentalDrawnAtSameTime()) */
+    private lastNoteWithAccidentalDict: Dictionary<number, GraphicalNote> = new Dictionary<number, GraphicalNote>();
     private activeKeyInstruction: KeyInstruction;
     public Transpose: number; // set in MusicSheetCalculator
 
@@ -34,7 +35,7 @@ export class AccidentalCalculator {
      */
     public doCalculationsAtEndOfMeasure(): void {
         this.currentInMeasureNoteAlterationsDict.clear();
-        this.currentAlterationsComparedToKeyInstructionList.clear();
+        this.lastNoteWithAccidentalDict.clear();
         for (const key of this.keySignatureNoteAlterationsDict.keys()) {
             this.currentInMeasureNoteAlterationsDict.setValue(key, this.keySignatureNoteAlterationsDict.getValue(key));
         }
@@ -82,26 +83,24 @@ export class AccidentalCalculator {
             }
         }
 
-        const isInCurrentAlterationsToKeyList: boolean = this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) >= 0;
         if (this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey)) {
-            if (isInCurrentAlterationsToKeyList) {
-                this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
-            }
             if (this.currentInMeasureNoteAlterationsDict.getValue(pitchKey) !== pitch.AccidentalHalfTones) {
                 if (this.keySignatureNoteAlterationsDict.containsKey(pitchKey) &&
                     this.keySignatureNoteAlterationsDict.getValue(pitchKey) !== pitch.AccidentalHalfTones) {
-                    this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
                     this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.AccidentalHalfTones);
                 } else if (pitch.Accidental !== AccidentalEnum.NONE) {
-                    // explicit accidental that matches key signature (or no key sig for this pitch)
-                    // Restore to key signature state or remove if not in key sig (#1564)
+                    // explicit accidental that matches the key signature, or of a pitch the key signature doesn't alter:
+                    //   restore the key signature state (#1564), or remember a sharp or flat the key signature doesn't have,
+                    //   e.g. F# after F natural in C major, so that the next F natural gets its natural sign again.
                     if (this.keySignatureNoteAlterationsDict.containsKey(pitchKey)) {
                         this.currentInMeasureNoteAlterationsDict.setValue(
                             pitchKey,
                             this.keySignatureNoteAlterationsDict.getValue(pitchKey)
                         );
-                    } else {
+                    } else if (pitch.AccidentalHalfTones === 0) {
                         this.currentInMeasureNoteAlterationsDict.remove(pitchKey);
+                    } else {
+                        this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.AccidentalHalfTones);
                     }
                 } else {
                     // pitch.Accidental === NONE: returning to natural state
@@ -125,33 +124,43 @@ export class AccidentalCalculator {
                 if (this.isAlterAmbiguousAccidental(pitch.Accidental) && ! pitch.AccidentalXml) {
                     return; // only display accidental if it was given as an accidental in the XML
                 }
-                MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
-            } else if (pitch.AccidentalXml && this.Transpose === 0 && !isInCurrentAlterationsToKeyList) {
+                this.addAccidental(graphicalNote, pitch, pitchKey);
+            } else if (pitch.AccidentalXml && this.Transpose === 0 && !this.isAccidentalDrawnAtSameTime(graphicalNote, pitch, pitchKey)) {
                 // courtesy accidental
-                //   without the !isInCurrentAlterationsToKeyList check, we get a double natural in Dichterliebe measure 9.
-                MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
+                this.addAccidental(graphicalNote, pitch, pitchKey);
                 // if transpose !== 0 (we're transposing), the courtesy accidental might not be appropriate here.
             }
         } else { // pitchkey not in measure dict:
             if (pitch.Accidental !== AccidentalEnum.NONE) {
-                if (!isInCurrentAlterationsToKeyList) {
-                    this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
-                }
                 this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.AccidentalHalfTones);
                 if (this.isAlterAmbiguousAccidental(pitch.Accidental) && ! pitch.AccidentalXml) {
                     return;
                 }
-                MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
-            } else {
-                if (isInCurrentAlterationsToKeyList) {
-                    // we need here a AccidentalEnum.NATURAL now to get it rendered - AccidentalEnum.NONE would not be rendered
-                    pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL,
-                        undefined, false, pitch.OctaveShiftApplied);
-                    this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
-                    MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
-                }
+                this.addAccidental(graphicalNote, pitch, pitchKey);
             }
         }
+    }
+
+    /** Adds the accidental of the pitch to the note, and remembers the note for isAccidentalDrawnAtSameTime(). */
+    private addAccidental(graphicalNote: GraphicalNote, pitch: Pitch, pitchKey: number): void {
+        MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
+        if (!graphicalNote.parentVoiceEntry.parentVoiceEntry.IsGrace) {
+            this.lastNoteWithAccidentalDict.setValue(pitchKey, graphicalNote);
+        }
+    }
+
+    /**
+     * Whether a note of the same pitch at the same time, in another voice or in the same chord, already got this accidental.
+     * One accidental serves all these notes, e.g. in Dichterliebe measure 9, where two voices start with G natural,
+     * both with a natural given in the XML: drawing both would put two naturals in front of the note.
+     * Grace notes are drawn at their own position, so they are not counted.
+     */
+    private isAccidentalDrawnAtSameTime(graphicalNote: GraphicalNote, pitch: Pitch, pitchKey: number): boolean {
+        const noteWithAccidental: GraphicalNote = this.lastNoteWithAccidentalDict.getValue(pitchKey);
+        return noteWithAccidental !== undefined &&
+            !graphicalNote.parentVoiceEntry.parentVoiceEntry.IsGrace &&
+            noteWithAccidental.parentVoiceEntry.parentStaffEntry === graphicalNote.parentVoiceEntry.parentStaffEntry &&
+            noteWithAccidental.DrawnAccidental === pitch.Accidental;
     }
 
     private isAlterAmbiguousAccidental(accidental: AccidentalEnum): boolean {
@@ -167,7 +176,6 @@ export class AccidentalCalculator {
             keyAccidentalType = AccidentalEnum.FLAT;
         }
         this.keySignatureNoteAlterationsDict.clear();
-        this.currentAlterationsComparedToKeyInstructionList.length = 0;
         for (let octave: number = -9; octave < 9; octave++) {
             for (let i: number = 0; i < noteEnums.length; i++) {
                 this.keySignatureNoteAlterationsDict.setValue(<number>noteEnums[i] + octave * 12, Pitch.HalfTonesFromAccidental(keyAccidentalType));

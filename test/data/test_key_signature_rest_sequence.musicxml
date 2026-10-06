@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <movement-title>Key change inside a sequence of rests</movement-title>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Violin</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+      </note>
+      <backup>
+        <duration>3</duration>
+      </backup>
+      <attributes>
+        <key>
+          <fifths>1</fifths>
+        </key>
+      </attributes>
+      <forward>
+        <duration>3</duration>
+      </forward>
+    </measure>
+    <measure number="3">
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

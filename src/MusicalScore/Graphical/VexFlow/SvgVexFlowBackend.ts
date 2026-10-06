@@ -31,7 +31,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
 
     public getCanvasSize(): number {
-        return document.getElementById("osmdCanvasPage" + this.graphicalMusicPage.PageNumber)?.offsetHeight;
+        return this.inner?.offsetHeight;
     }
 
     public initialize(container: HTMLElement, zoom: number): void {
@@ -113,9 +113,13 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
     public renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                       heightInPixel: number, screenPosition: PointF2D,
-                      color: string = undefined, fontFamily: string = undefined): Node {
+                      color: string = undefined, fontFamily: string = undefined, language: string = undefined): Node {
         this.ctx.save();
         const node: Node = this.ctx.openGroup("text");
+        if (language) {
+            // xml:lang (rather than lang) is also understood by SVG 1.1 tools, e.g. for exported SVG files
+            (node as Element).setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:lang", language);
+        }
 
         if (color) {
             this.ctx.attributes.fill = color;
@@ -162,10 +166,21 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         } else {
             this.ctx.attributes.fill = VexFlowConverter.style(styleId);
         }
-        this.ctx.attributes["fill-opacity"] = alpha;
-        this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+        // Draw like fillRect(), but with a copy of the context's attributes that has the alpha as fill-opacity: fillRect()
+        //   draws with the context's own attributes, and VexFlow's save() and restore() don't keep the fill-opacity,
+        //   so every element drawn afterwards would get it too. The position and size (set by rect()) go before it,
+        //   so that the attributes have the same order whether or not a fillRect() (e.g. of a barline) already left them
+        //   in the context's attributes. (The typings lack rect()'s attributes parameter.)
+        const rectangleAttributes: { [name: string]: number | string } = {
+            ...this.ctx.attributes,
+            x: rectangle.x,
+            y: rectangle.y,
+            width: rectangle.width,
+            height: rectangle.height,
+            "fill-opacity": alpha,
+        };
+        (this.ctx as any).rect(rectangle.x, rectangle.y, rectangle.width, rectangle.height, rectangleAttributes);
         this.ctx.restore();
-        this.ctx.attributes["fill-opacity"] = 1;
         this.ctx.closeGroup();
         return node;
     }

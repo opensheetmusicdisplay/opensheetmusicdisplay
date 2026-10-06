@@ -1,6 +1,7 @@
 // Validation harness: compares skyline/bottomline arrays between the geometric calculation
 // (GeometricSkyBottomLineContext) and the pixel-based (raster) calculations, for all test samples.
-// The arrays are captured directly after SkyBottomLineCalculator.updateLines(), i.e. before later layout
+// The arrays are captured directly after SkyBottomLineCalculator.setLinesFromConcatenated() (called by updateLines()
+// and the geometric calculation), i.e. before later layout
 // steps (lyrics, dynamics, ...) modify them, isolating the calculator difference.
 // Values are in OSMD units (1 unit = 1 staff space = 10px). Differences < ~0.1 units are expected
 // (raster quantizes to pixels and includes the anti-aliasing halo, geometric is exact).
@@ -52,16 +53,16 @@ const osmd = new OSMD.OpenSheetMusicDisplay(div, {
 osmd.setLogLevel("warn");
 
 // ---- capture hook ----
-let capture = null; // when set to an array, every updateLines() result is pushed into it
+let capture = null; // when set to an array, every setLinesFromConcatenated() result is pushed into it
 let hookInstalled = false;
 function installHook() {
     if (hookInstalled) { return; }
     const calculator = osmd.graphic.MusicPages[0]?.MusicSystems[0]?.StaffLines[0]?.SkyBottomLineCalculator;
     if (!calculator) { return; }
     const proto = Object.getPrototypeOf(calculator);
-    const orig = proto.updateLines;
-    proto.updateLines = function (results) {
-        orig.call(this, results);
+    const orig = proto.setLinesFromConcatenated;
+    proto.setLinesFromConcatenated = function (...args) {
+        orig.apply(this, args);
         if (capture) {
             capture.push({ sky: Array.from(this.SkyLine), bottom: Array.from(this.BottomLine) });
         }

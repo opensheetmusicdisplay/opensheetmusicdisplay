@@ -4,6 +4,12 @@ export class RepetitionInstructionComparer /*implements IComparer<RepetitionInst
     public static Compare(x: RepetitionInstruction, y: RepetitionInstruction): number {
         if (x.parentRepetition !== undefined && y.parentRepetition) {
             if (x.alignment === AlignmentType.End && y.alignment === AlignmentType.End) {
+                // An instruction before the start of its repetition, e.g. the jump to a first ending that starts the repetition,
+                //   comes after the instructions of the repetitions that end here, e.g. a D.C. and a backward repeat.
+                const xBeforeItsStart: boolean = x.measureIndex < x.parentRepetition.StartIndex;
+                if (xBeforeItsStart !== y.measureIndex < y.parentRepetition.StartIndex) {
+                    return xBeforeItsStart ? 1 : -1;
+                }
                 if (x.parentRepetition.StartIndex < y.parentRepetition.StartIndex) {
                     return 1;
                 }
@@ -59,6 +65,14 @@ export class RepetitionInstruction /*implements IComparable*/ {
     public parentRepetition: Repetition;
     /** How many times this should be repeated */
     public Times: number;
+    /**
+     * The words of the score, drawn instead of the instruction's label (e.g. "D.C."), where the label goes,
+     * as they say more than the label or say it in another language, e.g. "D.C. senza replica", "Menuetto D.C. al Fine" or "Fin".
+     * Undefined for words that only name the instruction (e.g. "Da Capo", drawn as "D.C."), and for a segno or coda sign.
+     */
+    public Words: string;
+    /** Whether the MusicXML marks this segno as the target of a D.S. (<sound segno="...">): it is never taken for a D.S. itself. */
+    public MarkedAsTarget: boolean = false;
 
     public CompareTo(obj: Object): number {
         const other: RepetitionInstruction = <RepetitionInstruction>obj;

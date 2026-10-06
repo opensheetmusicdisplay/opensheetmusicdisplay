@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <movement-title>Tempo state: numeric tempos, two metric modulations, a tempo, a swing mark</movement-title>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Violin</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type><metronome><beat-unit>quarter</beat-unit><per-minute>60</per-minute></metronome></direction-type>
+        <sound tempo="60"/>
+      </direction>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="2">
+      <direction placement="above">
+        <direction-type><metronome><beat-unit>quarter</beat-unit><per-minute>96</per-minute></metronome></direction-type>
+        <sound tempo="96"/>
+      </direction>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="3">
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <metronome-note><metronome-type>quarter</metronome-type></metronome-note>
+            <metronome-relation>equals</metronome-relation>
+            <metronome-note><metronome-type>quarter</metronome-type><metronome-dot/></metronome-note>
+          </metronome>
+        </direction-type>
+      </direction>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="4">
+      <direction placement="above"><direction-type><words>a tempo</words></direction-type></direction>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="5">
+      <direction placement="above">
+        <direction-type>
+          <metronome><beat-unit>quarter</beat-unit><beat-unit-dot/><beat-unit>quarter</beat-unit></metronome>
+        </direction-type>
+      </direction>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+    <measure number="6">
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <metronome-note><metronome-type>eighth</metronome-type><metronome-beam number="1">begin</metronome-beam></metronome-note>
+            <metronome-note><metronome-type>eighth</metronome-type><metronome-beam number="1">end</metronome-beam></metronome-note>
+            <metronome-relation>equals</metronome-relation>
+            <metronome-note>
+              <metronome-type>quarter</metronome-type>
+              <metronome-tuplet bracket="yes" show-number="actual" type="start"><actual-notes>3</actual-notes><normal-notes>2</normal-notes><normal-type>eighth</normal-type></metronome-tuplet>
+            </metronome-note>
+            <metronome-note>
+              <metronome-type>eighth</metronome-type>
+              <metronome-tuplet type="stop"><actual-notes>3</actual-notes><normal-notes>2</normal-notes><normal-type>eighth</normal-type></metronome-tuplet>
+            </metronome-note>
+          </metronome>
+        </direction-type>
+        <sound><swing><first>2</first><second>1</second><swing-style>Standard</swing-style></swing></sound>
+      </direction>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note>
+    </measure>
+  </part>
+</score-partwise>
