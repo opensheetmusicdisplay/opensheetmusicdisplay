@@ -923,16 +923,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     /**
-     * Gives the voice entries of beamed notes the vertical extent of their stems as drawn, i.e. reaching the beam.
+     * Gives the voice entries of beamed notes the vertical borders of their stems as drawn, i.e. reaching the beam.
      * A voice entry gets its bounding box from its Vexflow note in VexFlowStaffEntry.calculateXPosition()
      * (VexFlowVoiceEntry.applyBordersFromVexflow()), before the beams extend their notes' stems to reach them
-     * (postFormatBeams(), when the measure is drawn). So a beamed note's voice entry ended at its unextended stem tip,
+     * (postFormatBeams(), in draw() or applyDrawSideEffects()). So a beamed note's voice entry ended at its unextended stem tip,
      * short of the beam, and a slur on the stem side, which starts and ends at the voice entry's border
      * (GraphicalSlur.calculateStartAndEnd()), started on the stem under the beam and crossed the beam and what is above it,
      * e.g. a fingering (test_slur_above_beamed_stem_up_fingering_traumerei_measure3).
      */
     private updateBeamedVoiceEntryBorders(): void {
-        this.postFormatBeams(); // already done when the measure was drawn, not when SkyBottomLineCalculator skips drawing it
         const staveTopY: number = this.stave.getYForLine(0); // the notes are on the stave where it is now, see correctNotePositions()
         for (const gse of this.staffEntries) {
             for (const gve of gse.graphicalVoiceEntries as VexFlowVoiceEntry[]) {

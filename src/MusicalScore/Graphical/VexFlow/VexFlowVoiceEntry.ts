@@ -30,20 +30,24 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         const boundingBox: any = staveNote.getBoundingBox();
         const modifierWidth: number = staveNote.getNoteHeadBeginX() - boundingBox.x;
 
+        this.PositionAndShape.RelativePosition.y = boundingBox.y / unitInPixels; // the top of the note, e.g. the tip of an up-stem
         this.applyVerticalBordersFromVexflow(boundingBox);
         const halfStavenoteWidth: number = (staveNote.width - ((staveNote as any).paddingRight ?? 0)) / 2;
         this.PositionAndShape.BorderLeft = -(modifierWidth + halfStavenoteWidth) / unitInPixels; // Left of our X origin is the modifier
         this.PositionAndShape.BorderRight = (boundingBox.w - modifierWidth) / unitInPixels; // Right of x origin is the note
     }
 
-    /** Sets the vertical extent of this voice entry to the one of its Vexflow note: from the top to the bottom of its bounding box,
-     *  e.g. from the stem tip of a note with its stem up. See VexFlowMeasure.updateBeamedVoiceEntryBorders().
+    /** Sets the vertical borders of this voice entry to the bounding box of its Vexflow note, e.g. from the tip of an up-stem
+     *  that a beam extended (see VexFlowMeasure.updateBeamedVoiceEntryBorders()) to the lowest note head. Keeps the position of
+     *  the voice entry, which its notes are placed relative to (VexFlowMeasure.correctNotePositions()): the next render's
+     *  calculateXPosition() puts the voice entry there again (applyBordersFromVexflow()) and calculates the bounding boxes with
+     *  the notes still where this render placed them.
      *  @param staveTopY The y of the stave's top line where the note's bounding box was measured (0 in calculateXPosition()).
      */
     public applyVerticalBordersFromVexflow(boundingBox: any, staveTopY: number = 0): void {
-        this.PositionAndShape.RelativePosition.y = (boundingBox.y - staveTopY) / unitInPixels;
-        this.PositionAndShape.BorderTop = 0;
-        this.PositionAndShape.BorderBottom = boundingBox.h / unitInPixels;
+        const top: number = (boundingBox.y - staveTopY) / unitInPixels - this.PositionAndShape.RelativePosition.y;
+        this.PositionAndShape.BorderTop = top;
+        this.PositionAndShape.BorderBottom = top + boundingBox.h / unitInPixels;
     }
 
     public set vfStaveNote(value: VF.StemmableNote) {

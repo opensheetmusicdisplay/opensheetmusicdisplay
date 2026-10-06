@@ -4,7 +4,8 @@ import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSh
 import { GraphicalSlur } from "../../../src/MusicalScore/Graphical/GraphicalSlur";
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
 import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
-import { VexFlowMeasure } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
+import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
+import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { PlacementEnum } from "../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { unitInPixels } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 
@@ -25,28 +26,34 @@ describe("Slur above a beamed group of stem-up notes", () => {
         await osmd.load(TestUtils.getScore("test_slur_above_beamed_stem_up_fingering_traumerei_measure3.musicxml"));
     });
 
-    /** The y of the tip of the note's stem as drawn, i.e. where the beam is, relative to its staff line like a slur's points. */
-    function drawnStemTipY(note: GraphicalNote): number {
-        const vfNote: any = (note as VexFlowGraphicalNote).vfnote[0];
-        const stave: any = (note.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure).getVFStave();
-        return (vfNote.getStemExtents().topY - stave.getYForLine(0)) / unitInPixels;
+    /** The y of the tip of the note's stem as drawn in the SVG, i.e. where the beam is, relative to its staff line like a slur's points. */
+    function drawnStemTipY(note: GraphicalNote, staffLine: StaffLine): number {
+        const stem: SVGGraphicsElement = (note as VexFlowGraphicalNote).getStemSVG() as unknown as SVGGraphicsElement;
+        return stem.getBBox().y / unitInPixels - staffLine.PositionAndShape.AbsolutePosition.y;
     }
 
     for (const geometricSkyline of [true, false]) {
         const skyline: string = geometricSkyline ? "geometric skyline" : "raster skyline";
         it(`starts and ends the slur above the beam, on every render (${skyline})`, () => {
             osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geometricSkyline;
+            let firstRenderBoxes: number[];
             for (const render of ["first render", "re-render"]) {
                 osmd.render();
-                const slurs: GraphicalSlur[] = osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0].GraphicalSlurs;
+                const staffLine: StaffLine = osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
+                // the bounding boxes of the staff entries, which span the voice entries, are the same on every render
+                const boxes: number[] = staffLine.Measures[0].staffEntries.flatMap((staffEntry: GraphicalStaffEntry): number[] =>
+                    [staffEntry.PositionAndShape.BorderTop, staffEntry.PositionAndShape.BorderBottom]);
+                firstRenderBoxes ??= boxes;
+                expect(boxes, `${render}: staff entry boxes`).to.deep.equal(firstRenderBoxes);
+                const slurs: GraphicalSlur[] = staffLine.GraphicalSlurs;
                 expect(slurs.length, render).to.equal(1);
                 const slur: GraphicalSlur = slurs[0];
                 expect(slur.placement, render).to.equal(PlacementEnum.Above);
                 const startNote: GraphicalNote = slur.staffEntries[0].findGraphicalNoteFromNote(slur.slur.StartNote);
                 const endNote: GraphicalNote = slur.staffEntries[slur.staffEntries.length - 1].findGraphicalNoteFromNote(slur.slur.EndNote);
                 // (negative y is up. Before the fix, the slur started 2.3 units under the beam, on the G4's stem.)
-                expect(slur.bezierStartPt.y, `${render}: start of the slur above the beam`).to.be.below(drawnStemTipY(startNote));
-                expect(slur.bezierEndPt.y, `${render}: end of the slur above the beam`).to.be.below(drawnStemTipY(endNote));
+                expect(slur.bezierStartPt.y, `${render}: start of the slur above the beam`).to.be.below(drawnStemTipY(startNote, staffLine));
+                expect(slur.bezierEndPt.y, `${render}: end of the slur above the beam`).to.be.below(drawnStemTipY(endNote, staffLine));
             }
         });
     }
