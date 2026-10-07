@@ -211,7 +211,7 @@
 
 ### Features
 
-* **Demo:** Screen Reader compatible buttons: All buttons are named, switch <div> to <button>, add name via aria-label for non-conventional buttons (no visual change) ([b0d4d22](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b0d4d22589e6cee63019689d5b203528d1dabd86))
+* **Demo:** Screen Reader compatible buttons: All buttons are named, switch `<div>` to `<button>`, add name via aria-label for non-conventional buttons (no visual change) ([b0d4d22](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b0d4d22589e6cee63019689d5b203528d1dabd86))
 * **Slurs:** Prevent bloated slurs (unnecessarily high arcs): Flatten Slurs against obstacles and over long distances (PR [#1693](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1693), [#1466](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1466), [#971](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/971)) ([0837928](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/08379287913feb68f873ab2acf06ed164fb49415))
 
 
@@ -988,7 +988,7 @@
 
 ### Bug Fixes
 
-* **Credit Error:** Fix NaN error when <credit> element has justify attribute ([dec2f1f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/dec2f1f45cc82dcdc69c59a2ed098e92bd3a1f58))
+* **Credit Error:** Fix NaN error when `<credit>` element has justify attribute ([dec2f1f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/dec2f1f45cc82dcdc69c59a2ed098e92bd3a1f58))
 * **Release:** Fix typings not included in release (1.4.0) ([5829be3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5829be32d2601b2ca08e51e68d98ee1df7bc1630))
 
 ### Features
