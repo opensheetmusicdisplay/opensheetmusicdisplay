@@ -86,3 +86,53 @@ describe("Slur above fingerings", () => {
         });
     }
 });
+
+/**
+ * A slur isn't raised into a fingering it passes under: the sky line doesn't say what is under its points.
+ * test_slur_under_fingering_on_other_voice_stem_traumerei_measure11: Schumann's Träumerei m.11, right hand: the lower voice's slur,
+ * placed above, passes under the stem of the upper voice's B-flat4 and the 5 on it, which no slur within SlurTangentMaxAngle gets over.
+ * Raised as far as that angle allows, it ran into the 5.
+ */
+describe("Slur under a fingering on the stem of another voice", () => {
+    let container: HTMLElement;
+    let osmd: OpenSheetMusicDisplay;
+    beforeEach(async () => {
+        container = TestUtils.getDivElement(document);
+        container.style.width = "800px";
+        osmd = TestUtils.createOpenSheetMusicDisplay(container);
+        await osmd.load(TestUtils.getScore("test_slur_under_fingering_on_other_voice_stem_traumerei_measure11.musicxml"));
+    });
+    afterEach(() => {
+        container.remove();
+    });
+
+    for (const geometricSkyline of [true, false]) {
+        it(`keeps the slur out of the 5 (${geometricSkyline ? "geometric" : "raster"} skyline)`, () => {
+            osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geometricSkyline;
+            osmd.render();
+            const staffLine: StaffLine = osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
+            expect(staffLine.GraphicalSlurs.length).to.equal(1);
+            const slur: GraphicalSlur = staffLine.GraphicalSlurs[0];
+            const five: GraphicalLabel = slur.staffEntries.flatMap(staffEntry => staffEntry.FingeringEntries)
+                .find(fingering => fingering.Label.text === "5");
+            expect(five).to.not.equal(undefined);
+            const box: BoundingBox = five.PositionAndShape; // relative to the staff line
+            const [left, right] = [box.RelativePosition.x + box.BorderLeft, box.RelativePosition.x + box.BorderRight];
+            const [top, bottom] = [box.RelativePosition.y + box.BorderTop, box.RelativePosition.y + box.BorderBottom];
+            let highest: number = Number.POSITIVE_INFINITY; // the slur's highest point over the 5 (negative y is up)
+            for (let i: number = 0; i <= 1000; i++) {
+                const t: number = i / 1000;
+                const u: number = 1 - t;
+                const [p0, p1, p2, p3] = [slur.bezierStartPt, slur.bezierStartControlPt, slur.bezierEndControlPt, slur.bezierEndPt];
+                const x: number = u * u * u * p0.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * p3.x;
+                const y: number = u * u * u * p0.y + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * p3.y;
+                if (x > left && x < right) {
+                    highest = Math.min(highest, y);
+                }
+            }
+            // under the 5, as it was before the curve cleared obstacles, at most grazing its box
+            //   (raised into it, the slur ran through its upper half: 0.2 to 0.3 under its top)
+            expect(highest, "the slur's highest point over the 5").to.be.above((top + bottom) / 2);
+        });
+    }
+});
