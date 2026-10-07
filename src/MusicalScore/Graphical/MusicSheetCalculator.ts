@@ -717,9 +717,11 @@ export abstract class MusicSheetCalculator {
                 //     position = 3.4 + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
                 // }
                 const previousRelativeX: number = lyricsEntryLabel.PositionAndShape.RelativePosition.x;
-                lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(previousRelativeX, position);
+                // the label is placed by its bottom: a lyric with line breaks starts on the line of its verse and goes on below it
+                const labelBottom: number = position + lyricEntry.HeightBelowVerseLine;
+                lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(previousRelativeX, labelBottom);
                 lyricsEntryLabel.Label.fontStyle = lyricEntry.LyricsEntry.FontStyle;
-                maxPosition = Math.max(maxPosition, position);
+                maxPosition = Math.max(maxPosition, labelBottom);
             }
         }
 
@@ -3830,7 +3832,7 @@ export abstract class MusicSheetCalculator {
                 endStaffentry.PositionAndShape.RelativePosition.x +
                 lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x +
                 nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
-            const y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
+            const y: number = lyricEntry.VerseLineY;
             let numberOfDashes: number = 1;
             if ((endX - startX) > this.rules.MinimumDistanceBetweenDashes * 3) {
                 // *3: need distance between word to first dash, dash to dash, dash to next word
@@ -3854,7 +3856,7 @@ export abstract class MusicSheetCalculator {
                 lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
             const lastGraphicalMeasure: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
             const endX: number = lastGraphicalMeasure.PositionAndShape.RelativePosition.x + lastGraphicalMeasure.PositionAndShape.Size.width;
-            let y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
+            let y: number = lyricEntry.VerseLineY;
 
             // calculate Dashes for the first StaffLine
             this.calculateDashes(startStaffLine, startX, endX, y);
@@ -3869,7 +3871,7 @@ export abstract class MusicSheetCalculator {
                 const secondEndX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
                     endStaffentry.PositionAndShape.RelativePosition.x +
                     nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
-                y = nextLyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
+                y = nextLyricEntry.VerseLineY;
                 this.calculateDashes(nextStaffLine, secondStartX, secondEndX, y);
             }
         }
@@ -3948,7 +3950,7 @@ export abstract class MusicSheetCalculator {
      * @param {GraphicalLyricEntry} lyricEntry
      */
     private calculateLyricExtend(lyricEntry: GraphicalLyricEntry): void {
-        let startY: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
+        let startY: number = lyricEntry.VerseLineY;
         const startStaffEntry: GraphicalStaffEntry = lyricEntry.StaffEntryParent;
         const startStaffLine: StaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
 
@@ -4029,7 +4031,7 @@ export abstract class MusicSheetCalculator {
             // though we don't have the vexflow note's bbox yet and extend layouting is unconstrained,
             // we have more room for spacing without it.
             // needed in order to line up with the Label's text bottom line (is the y position of the underscore)
-            startY -= lyricEntry.GraphicalLabel.PositionAndShape.Size.height / 4;
+            startY -= lyricEntry.GraphicalLabel.Label.fontHeight / 4; // the height of a line
             // create a Line (as underscore after the LyricLabel's End)
             this.calculateSingleLyricWordWithUnderscore(startStaffLine, startX, endX, startY);
         } else { // start and end on different StaffLines
@@ -4041,7 +4043,7 @@ export abstract class MusicSheetCalculator {
             const endX: number = lastMeasureBb.RelativePosition.x +
                 lastMeasureBb.Size.width;
             // needed in order to line up with the Label's text bottom line
-            startY -= lyricEntry.GraphicalLabel.PositionAndShape.Size.height / 4;
+            startY -= lyricEntry.GraphicalLabel.Label.fontHeight / 4; // the height of a line
             // first Underscore until the StaffLine's End
             this.calculateSingleLyricWordWithUnderscore(startStaffLine, startX, endX, startY);
             if (!endStaffEntry) {

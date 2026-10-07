@@ -39,6 +39,7 @@ export class LyricsReader {
                                 }
                             }
                             text = text.replace("  ", " "); // filter multiple spaces from concatenating e.g. text "a " with elision " "
+                            text = text.replace(/\n+$/, ""); // a line break at the end isn't followed by a further line of text
                             // <elision> separates Multiple syllabels on a single LyricNote
                             // "-" text indicating separated syllabel should be ignored
                             // we calculate the Dash element much later
