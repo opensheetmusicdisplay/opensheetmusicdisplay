@@ -21,6 +21,8 @@ export class MultiExpression {
     private sourceMeasure: SourceMeasure;
     private staffNumber: number;
     private timestamp: Fraction;
+    /** Explicit MusicXML sound-dynamics timing, independent of the printed position. */
+    public PlaybackTimestamp: Fraction;
     public EndOffsetFraction: Fraction;
     /** The 'number="x"' given in XML, e.g. of a wedge, used to identify similar expressions. */
     public numberXml: number;
@@ -58,6 +60,9 @@ export class MultiExpression {
     }
     public get AbsoluteTimestamp(): Fraction {
         return Fraction.plus(this.timestamp, this.sourceMeasure.AbsoluteTimestamp);
+    }
+    public get AbsolutePlaybackTimestamp(): Fraction {
+        return Fraction.plus(this.PlaybackTimestamp ?? this.timestamp, this.sourceMeasure.AbsoluteTimestamp);
     }
     public get InstantaneousDynamic(): InstantaneousDynamicExpression {
         return this.instantaneousDynamic;

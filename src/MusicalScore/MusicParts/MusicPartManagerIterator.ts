@@ -42,6 +42,7 @@ export class MusicPartManagerIterator {
             do {
                 this.moveToNext();
             } while ((!this.currentVoiceEntries || this.currentTimeStamp.lt(startTimestamp)) && !this.endReached);
+            this.currentDynamicChangingExpressions.length = 0;
             for (let staffIndex: number = 0; staffIndex < this.activeDynamicExpressions.length; staffIndex++) {
                 if (this.activeDynamicExpressions[staffIndex]) {
                     if (this.activeDynamicExpressions[staffIndex] instanceof ContinuousDynamicExpression) {
@@ -512,31 +513,22 @@ export class MusicPartManagerIterator {
     }
     private activateCurrentDynamicOrTempoInstructions(): void {
         const timeSortedDynamics: DynamicsContainer[] = this.musicSheet.TimestampSortedDynamicExpressionsList;
-        while (
-            this.currentDynamicEntryIndex > 0 && (
-            this.currentDynamicEntryIndex >= timeSortedDynamics.length ||
-            timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp.gte(this.CurrentSourceTimestamp))) {
-                this.currentDynamicEntryIndex--;
+        // Rebuild all staves after a backward jump across a dynamic change.
+        if (this.currentDynamicEntryIndex > 0 &&
+            timeSortedDynamics[this.currentDynamicEntryIndex - 1].parMultiExpression().AbsolutePlaybackTimestamp.gt(this.CurrentSourceTimestamp)) {
+            this.currentDynamicEntryIndex = 0;
+            this.activeDynamicExpressions.fill(undefined);
         }
+        const changedStaves: Set<number> = new Set();
         while (
           this.currentDynamicEntryIndex < timeSortedDynamics.length &&
-          timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp.lt(this.CurrentSourceTimestamp)
-        ) {
-            this.currentDynamicEntryIndex++;
-        }
-        while (
-          this.currentDynamicEntryIndex < timeSortedDynamics.length
-          && timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp.Equals(this.CurrentSourceTimestamp)
+          timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsolutePlaybackTimestamp.lte(this.CurrentSourceTimestamp)
         ) {
             const dynamicsContainer: DynamicsContainer = timeSortedDynamics[this.currentDynamicEntryIndex];
             const staffIndex: number = dynamicsContainer.staffNumber;
-            if (this.CurrentSourceTimestamp.Equals(dynamicsContainer.parMultiExpression().AbsoluteTimestamp)) {
-                if (dynamicsContainer.continuousDynamicExpression) {
-                    this.activeDynamicExpressions[staffIndex] = dynamicsContainer.continuousDynamicExpression;
-                } else if (dynamicsContainer.instantaneousDynamicExpression) {
-                    this.activeDynamicExpressions[staffIndex] = dynamicsContainer.instantaneousDynamicExpression;
-                }
-            }
+            this.activeDynamicExpressions[staffIndex] = dynamicsContainer.continuousDynamicExpression ??
+                dynamicsContainer.instantaneousDynamicExpression;
+            changedStaves.add(staffIndex);
             this.currentDynamicEntryIndex++;
         }
         this.currentDynamicChangingExpressions.length = 0;
@@ -546,14 +538,14 @@ export class MusicPartManagerIterator {
                 let endTime: Fraction;
                 if (this.activeDynamicExpressions[staffIndex] instanceof ContinuousDynamicExpression) {
                     const continuousDynamic: ContinuousDynamicExpression = <ContinuousDynamicExpression>this.activeDynamicExpressions[staffIndex];
-                    startTime = continuousDynamic.StartMultiExpression.AbsoluteTimestamp;
-                    endTime = continuousDynamic.EndMultiExpression.AbsoluteTimestamp;
+                    startTime = continuousDynamic.StartMultiExpression.AbsolutePlaybackTimestamp;
+                    endTime = continuousDynamic.EndMultiExpression.AbsolutePlaybackTimestamp;
                     if (this.CurrentSourceTimestamp.gte(startTime) && this.CurrentSourceTimestamp.lte(endTime)) {
                         this.currentDynamicChangingExpressions.push(new DynamicsContainer(continuousDynamic, staffIndex));
                     }
                 } else {
                     const instantaneousDynamic: InstantaneousDynamicExpression = <InstantaneousDynamicExpression>this.activeDynamicExpressions[staffIndex];
-                    if (this.CurrentSourceTimestamp.Equals(instantaneousDynamic.ParentMultiExpression.AbsoluteTimestamp)) {
+                    if (changedStaves.has(staffIndex)) {
                         this.currentDynamicChangingExpressions.push(new DynamicsContainer(instantaneousDynamic, staffIndex));
                     }
                 }

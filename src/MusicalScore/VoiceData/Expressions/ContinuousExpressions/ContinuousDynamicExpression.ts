@@ -91,10 +91,10 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         );
     }
     public getInterpolatedDynamic(currentAbsoluteTimestamp: Fraction): number {
-        const continuousAbsoluteStartTimestamp: Fraction = this.StartMultiExpression.AbsoluteTimestamp;
+        const continuousAbsoluteStartTimestamp: Fraction = this.StartMultiExpression.AbsolutePlaybackTimestamp;
         let continuousAbsoluteEndTimestamp: Fraction;
         if (this.EndMultiExpression) {
-            continuousAbsoluteEndTimestamp = this.EndMultiExpression.AbsoluteTimestamp;
+            continuousAbsoluteEndTimestamp = this.EndMultiExpression.AbsolutePlaybackTimestamp;
         } else {
             continuousAbsoluteEndTimestamp = Fraction.plus(
                 this.startMultiExpression.SourceMeasureParent.AbsoluteTimestamp, this.startMultiExpression.SourceMeasureParent.Duration
