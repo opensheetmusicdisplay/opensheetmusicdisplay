@@ -11,6 +11,9 @@ import { EngravingRules } from "../../../../src/MusicalScore/Graphical/Engraving
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { MultiTempoExpression, TempoExpressionEntry } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiTempoExpression";
 import { RepetitionInstructionEnum } from "../../../../src/MusicalScore/VoiceData/Instructions/RepetitionInstruction";
+import { Fraction } from "../../../../src/Common/DataObjects/Fraction";
+import { DynamicsContainer } from "../../../../src/MusicalScore/VoiceData/HelperObjects/DynamicsContainer";
+import { MusicPartManagerIterator } from "../../../../src/MusicalScore/MusicParts/MusicPartManagerIterator";
 
 describe("ExpressionReader", () => {
     /** Reads a test/data sample (preprocessed by karma) into a MusicSheet, optionally with custom rules. */
@@ -183,6 +186,55 @@ describe("ExpressionReader", () => {
         it("keeps the direction's offset for a wedge stop after words", () => {
             expect(wedges[2].EndMultiExpression.EndOffsetFraction.RealValue, "offset 1 = a quarter").to.equal(0.25);
         });
+    });
+
+    it("places dynamics and wedge starts using divisions offsets without moving explicit sound changes", () => {
+        const sheet: MusicSheet = readSheet("test/data/test_dynamics_wedge_display_sound_offset.musicxml");
+        const dynamics: InstantaneousDynamicExpression[] = collectDynamics(sheet);
+        const wedges: ContinuousDynamicExpression[] = sheet.SourceMeasures.flatMap(measure =>
+            measure.StaffLinkedExpressions[0]
+                .map(expression => expression.StartingContinuousDynamic)
+                .filter(wedge => wedge !== undefined));
+        const marks: InstantaneousDynamicExpression[] = dynamics.filter(dynamic => dynamic.DynamicExpression === "p");
+        expect(marks.map(dynamic => dynamic.ParentMultiExpression.Timestamp.RealValue), "p anchors, also with default-x in m3")
+            .to.deep.equal([0.25, 0.25, 0.25]);
+        expect(wedges.map(wedge => wedge.StartMultiExpression.Timestamp.RealValue), "wedge anchors, also with default-x in m3")
+            .to.deep.equal([0.25, 0.25, 0.25]);
+        expect(wedges.map(wedge => wedge.EndMultiExpression.Timestamp.RealValue), "wedge stops keep their existing note anchor")
+            .to.deep.equal([0.75, 0.75, 0.75]);
+        for (const [index, wedge] of wedges.entries()) {
+            wedge.StartVolume = 0.2;
+            wedge.EndVolume = 0.8;
+            const midpoint: Fraction = new Fraction([0.625, 1.5, 2.5625][index], 1);
+            expect(wedge.getInterpolatedDynamic(midpoint), "interpolation uses the independent sound start in m" + (index + 1))
+                .to.be.closeTo(0.5, 1e-8);
+        }
+
+        // Reading the sheet leaves registration of playback dynamics to its consumer.
+        const timeline: DynamicsContainer[] = sheet.TimestampSortedDynamicExpressionsList;
+        for (const dynamic of dynamics) {
+            timeline.push(new DynamicsContainer(dynamic, 0));
+        }
+        timeline.sort(DynamicsContainer.Compare);
+        const iterator: MusicPartManagerIterator = sheet.MusicPartManager.getIterator();
+        const active: string[] = [];
+        const changes: number[] = [];
+        for (let i: number = 0; !iterator.EndReached && i < 12; i++) {
+            active.push((iterator.ActiveDynamicExpressions[0] as InstantaneousDynamicExpression)?.DynamicExpression);
+            changes.push(iterator.getCurrentDynamicChangingExpressions().length);
+            iterator.moveToNext();
+        }
+        expect(iterator.EndReached).to.equal(true);
+        expect(active, "default sound=no, sound=yes, then a sound-local offset")
+            .to.deep.equal(["mf", "p", "p", "mf", "p", "p", "p", "mf", "mf", "p", "p"]);
+        expect(changes, "one notification per change, including a sound change between notes")
+            .to.deep.equal([1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0]);
+        iterator.moveToPrevious(); // last note
+        iterator.moveToPrevious(); // sound change between beats 2 and 3 has taken effect
+        expect((iterator.ActiveDynamicExpressions[0] as InstantaneousDynamicExpression).DynamicExpression).to.equal("p");
+        iterator.moveToPrevious();
+        expect((iterator.ActiveDynamicExpressions[0] as InstantaneousDynamicExpression).DynamicExpression).to.equal("mf");
+        expect((iterator.clone().ActiveDynamicExpressions[0] as InstantaneousDynamicExpression).DynamicExpression).to.equal("mf");
     });
 
     it("reads all the words of a direction, not only the first", () => {

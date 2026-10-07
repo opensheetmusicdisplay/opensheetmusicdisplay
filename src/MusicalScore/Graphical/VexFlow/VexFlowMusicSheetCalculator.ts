@@ -34,7 +34,6 @@ import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { TechnicalInstruction } from "../../VoiceData/Instructions/TechnicalInstruction";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
-import { GraphicalLabel } from "../GraphicalLabel";
 import { LyricsEntry } from "../../VoiceData/Lyrics/LyricsEntry";
 import { GraphicalLyricWord } from "../GraphicalLyricWord";
 import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
@@ -2869,10 +2868,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                                                                                this.rules.StaffHeight);
 
       graphicalStaffEntry.LyricsEntries.push(graphicalLyricEntry);
-
-      // create corresponding GraphicalLabel
-      const graphicalLabel: GraphicalLabel = graphicalLyricEntry.GraphicalLabel;
-      graphicalLabel.setLabelPositionAndShapeBorders();
 
       if (lyricsEntry.Word) {
         const lyricsEntryIndex: number = lyricsEntry.Word.Syllables.indexOf(lyricsEntry);

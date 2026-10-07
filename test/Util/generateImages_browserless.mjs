@@ -1,6 +1,9 @@
 //import Blob from "cross-blob"; // unnecessary in Node v18+
+import ChildProcess from "child_process";
 import FS from "fs";
 import jsdom from "jsdom";
+import Path from "path";
+import { fileURLToPath } from "url";
 //import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
 import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
 // for debugging, use opensheetmusicdisplay.min.js, created by npm run build:webpack-dev
@@ -14,6 +17,9 @@ import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to 
   It's also used with the visual regression test system (using PNGs) in
   `tools/visual_regression.sh`
   (see package.json, used with npm run generate:blessed and generate:current, then test:visual).
+  It also writes source_commit.txt into the image directory, with the git branch and commit the images were
+  generated from, so that you can tell which state e.g. visual_regression/blessed shows (see writeSourceCommitFile()),
+  and warns if the build is older than the files in src/, as the images may then not show that commit (checkBuildAge()).
 
   Note: this script needs to "fake" quite a few browser elements, like window, document,
   and a Canvas HTMLElement (for PNG) or the DOM (for SVG)   ,
@@ -45,6 +51,8 @@ if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageF
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
 }
+// the root folder of the OSMD checkout this script is in, whose build it imports (../../build)
+const checkoutDirectory = Path.resolve(Path.dirname(fileURLToPath(import.meta.url)), "../..");
 const useWhiteTabNumberBackground = true;
 // use white instead of transparent background for tab numbers for PNG export.
 //   can fix black rectangles displayed, depending on your image viewer / program.
@@ -195,6 +203,11 @@ async function init () {
 
     // Create the image directory if it doesn't exist.
     FS.mkdirSync(imageDir, { recursive: true });
+    const buildAge = checkBuildAge();
+    writeSourceCommitFile(imageDir, buildAge);
+    if (buildAge.warning) {
+        debug(`Warning: ${buildAge.warning}`);
+    }
 
     const sampleDirFilenames = FS.readdirSync(sampleDir);
     let samplesToProcess = []; // samples we want to process/generate pngs of, excluding the filtered out files/filenames
@@ -297,6 +310,9 @@ async function init () {
         }
     }
 
+    if (buildAge.warning) {
+        debug(`Warning: ${buildAge.warning}`); // again, as the log of the samples may have scrolled it out of view
+    }
     debug("done, exiting.");
 }
 
@@ -351,6 +367,110 @@ async function addFontFallbackOnWindows () {
             fontProperty.set.call(this, addFallback ? `${font}, ${fallbackFonts}` : font);
         }
     });
+}
+
+/**
+ * Checks whether the build the images are rendered with (build/opensheetmusicdisplay.min.js) is older than a file in
+ * src/, e.g. after switching branches, pulling or editing files without building, or after a failed build. The images
+ * then show the code of the last build, which may not be the commit that source_commit.txt names.
+ * @returns {{ built?: Date, warning?: string }} When the build was made, and a warning if it's older than a file in src/.
+ */
+function checkBuildAge () {
+    const result = {};
+    try {
+        const build = FS.statSync(Path.join(checkoutDirectory, "build", "opensheetmusicdisplay.min.js"));
+        result.built = build.mtime;
+        let newerFiles = 0;
+        let newestFile;
+        const checkFolder = (folder) => {
+            for (const entry of FS.readdirSync(folder, { withFileTypes: true })) {
+                const path = Path.join(folder, entry.name);
+                if (entry.isDirectory()) {
+                    checkFolder(path);
+                    continue;
+                }
+                const file = FS.statSync(path);
+                if (file.mtimeMs > build.mtimeMs) {
+                    newerFiles++;
+                    if (!newestFile || file.mtimeMs > newestFile.mtimeMs) {
+                        newestFile = { path, mtimeMs: file.mtimeMs };
+                    }
+                }
+            }
+        };
+        checkFolder(Path.join(checkoutDirectory, "src"));
+        if (newerFiles > 0) {
+            const example = Path.relative(checkoutDirectory, newestFile.path).replaceAll(Path.sep, "/");
+            result.warning = `the build is older than ${newerFiles} file(s) in src/, e.g. ${example}: ` +
+                "the images may not show this commit (build first, e.g. npm run build)";
+        }
+    } catch {
+        // e.g. no src folder next to the build: nothing to compare with
+    }
+    return result;
+}
+
+/**
+ * Formats a date as local time, e.g. "2026-10-07 14:03:12".
+ * @param {Date} date The date.
+ * @returns {string} The formatted date.
+ */
+function formatLocalTime (date) {
+    const twoDigits = (number) => String(number).padStart(2, "0");
+    return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())} ` +
+        `${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}:${twoDigits(date.getSeconds())}`;
+}
+
+/**
+ * Writes source_commit.txt into the image directory: the git branch and commit of the OSMD checkout this script is in,
+ * whose build renders the images, the files with uncommitted changes, and when the build was made, with a warning if
+ * it's older than a file in src/. So you can tell which state an image folder shows after generating images on several
+ * branches or renaming the folders, and visualRegression.mjs lists the states of blessed/ and current/ it compared.
+ * @param {string} directory The image directory.
+ * @param {{ built?: Date, warning?: string }} buildAge The age of the build, from checkBuildAge().
+ */
+function writeSourceCommitFile (directory, buildAge) {
+    // git runs in the checkout's root folder, like in a terminal at the root, where e.g. safe.directory "." lets git
+    //   use a checkout on a drive without file owners ("dubious ownership")
+    const git = (...args) => ChildProcess.execFileSync("git", args, {
+        cwd: checkoutDirectory, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]
+    }).trim();
+    let lines;
+    let summary;
+    try {
+        let branch = git("rev-parse", "--abbrev-ref", "HEAD");
+        if (branch === "HEAD") {
+            // detached HEAD, e.g. a checked out tag or commit: described by the latest tag, e.g. "2.2.0-55-g52b16c29"
+            branch = `detached HEAD (${git("describe", "--tags", "--always")})`;
+        }
+        const commit = git("rev-parse", "HEAD");
+        // tracked files only, as untracked ones are mostly unrelated (e.g. notes, test output)
+        const changedFiles = git("diff", "HEAD", "--name-only", "-z").split("\0").filter((file) => file !== "");
+        lines = [
+            `branch: ${branch}`,
+            `commit: ${commit}`,
+            `subject: ${git("log", "-1", "--format=%s")}`,
+            `uncommitted changes: ${changedFiles.length > 0 ? `${changedFiles.length} file(s)` : "none"}`,
+            ...changedFiles.map((file) => `  ${file}`),
+        ];
+        summary = `${branch} ${commit.substring(0, 8)}${changedFiles.length > 0 ? " + uncommitted changes" : ""}`;
+    } catch (error) {
+        // e.g. not a git checkout, git isn't installed, or git doesn't trust the checkout ("dubious ownership")
+        const reason = (error.stderr?.trim() || error.message).split("\n")[0];
+        lines = [`branch: unknown (${reason})`];
+        summary = `an unknown branch and commit (${reason})`;
+    }
+    if (buildAge.built) {
+        lines.push(`built: ${formatLocalTime(buildAge.built)}`);
+    }
+    if (buildAge.warning) {
+        lines.push(`warning: ${buildAge.warning}`);
+    }
+    lines.push(`generated: ${formatLocalTime(new Date())}`);
+    lines.push(`arguments: ${process.argv.slice(2).join(" ")}`);
+    const file = Path.join(directory, "source_commit.txt");
+    FS.writeFileSync(file, lines.join("\n") + "\n");
+    debug(`generating images of ${summary} (see ${file})`);
 }
 
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
