@@ -940,6 +940,73 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // Vexflow moves the C5 of voice 2 right of the D5 of voice 1, a second above (its x shift, see StaveNote.format()).
+   // Before fix, the marks above or below a note were drawn at its unmoved x (StaveNote.getModifierStartXY() left out the
+   // x shift): the accent of the C5 on the head of the D5, and the tremolo strokes of the C5 left of its stem. And the
+   // mordent of the C5, on the text line above the trill of the D5, was drawn at the trill's height, over it: each ornament
+   // counted its text line from its own note, the mordent from the head of the C5, the trill from the stem tip of the D5.
+   // Likewise the fermatas of two whole notes, the one of the C5 from its head, the one of the D5 from the line above the
+   // staff that it was moved to.
+   it("Draws the marks of a voice moved aside at its notes, and stacks the marks of both voices", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_articulations_voices_moved_aside.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         /** The note of the voice on the measure's first beat. */
+         function noteOnBeat1(measureIndex: number, voiceId: number): VexFlowGraphicalNote {
+            return osmd.GraphicSheet.findGraphicalMeasure(measureIndex, 0).staffEntries[0].graphicalVoiceEntries
+               .find((gve: GraphicalVoiceEntry) => gve.parentVoiceEntry.ParentVoice.VoiceId === voiceId).notes[0] as VexFlowGraphicalNote;
+         }
+         /** A drawn box, in units like the notes' positions (y points down). */
+         interface Box { left: number, right: number, top: number, bottom: number }
+         /** The drawn box of the note's only mark. */
+         function markBox(note: VexFlowGraphicalNote): Box {
+            const box: DOMRect = (note.getSVGGElement().querySelector(".vf-modifiers") as SVGGElement).getBBox();
+            return { left: box.x / unitInPixels, right: (box.x + box.width) / unitInPixels,
+               top: box.y / unitInPixels, bottom: (box.y + box.height) / unitInPixels };
+         }
+
+         // m1: the accents, centered on their note heads (the note's x is the center of its drawn head)
+         const d5: VexFlowGraphicalNote = noteOnBeat1(0, 1);
+         const c5: VexFlowGraphicalNote = noteOnBeat1(0, 2);
+         expect(c5.PositionAndShape.AbsolutePosition.x - d5.PositionAndShape.AbsolutePosition.x, "m1: the C5 is drawn right of the D5")
+            .to.be.above(0.5);
+         for (const [note, name] of [[d5, "D5"], [c5, "C5"]] as [VexFlowGraphicalNote, string][]) {
+            const accent: Box = markBox(note);
+            expect((accent.left + accent.right) / 2, `m1: the accent of the ${name} on its head`)
+               .to.be.closeTo(note.PositionAndShape.AbsolutePosition.x, 0.1);
+         }
+
+         // m2: the tremolo strokes of the C5 cross its stem
+         const tremoloNote: VexFlowGraphicalNote = noteOnBeat1(1, 2);
+         const tremolo: Box = markBox(tremoloNote);
+         const stemBox: DOMRect = (tremoloNote.getSVGGElement().querySelector(".vf-stem") as SVGGElement).getBBox();
+         const stemX: number = (stemBox.x + stemBox.width / 2) / unitInPixels;
+         expect(stemX, "m2: the stem of the C5 between the left and the right end of its tremolo strokes")
+            .to.be.within(tremolo.left, tremolo.right);
+
+         // m3: the mordent of the C5 above its head, and above the trill of the D5
+         const trill: Box = markBox(noteOnBeat1(2, 1));
+         const mordentNote: VexFlowGraphicalNote = noteOnBeat1(2, 2);
+         const mordent: Box = markBox(mordentNote);
+         expect((mordent.left + mordent.right) / 2, "m3: the mordent of the C5 above its head")
+            .to.be.closeTo(mordentNote.PositionAndShape.AbsolutePosition.x, 0.1);
+         expect(mordent.bottom, "m3: the bottom of the mordent of the C5 above the top of the trill of the D5").to.be.at.most(trill.top);
+
+         // m4: the fermata of the C5 above the fermata of the D5 (whole notes: both moved out of the staff)
+         const d5Fermata: Box = markBox(noteOnBeat1(3, 1));
+         const c5Fermata: Box = markBox(noteOnBeat1(3, 2));
+         expect(c5Fermata.bottom, "m4: the bottom of the fermata of the C5 above the top of the fermata of the D5")
+            .to.be.at.most(d5Fermata.top);
+         done();
+      }).catch(done);
+   });
+
    // A fingering label is stacked in the pitch order of its note, which is not the order the
    // fingerings were read in, so the label's index in FingeringEntries says nothing about which
    // note it belongs to. GraphicalLabel.sourceNote carries that link, letting a consumer find the

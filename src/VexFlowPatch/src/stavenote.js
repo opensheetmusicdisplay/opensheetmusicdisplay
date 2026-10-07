@@ -884,7 +884,11 @@ export class StaveNote extends StemmableNote {
         x += this.flag.getMetrics().width;
       }
     } else if (position === BELOW || position === ABOVE) {
-      x = this.getGlyphWidth() / 2;
+      // VexFlowPatch: center on the note head where it's drawn, i.e. also add the x_shift of a note moved aside from
+      //   another voice's note (see format()) or of a whole-measure rest (set by OSMD), like for the RIGHT position:
+      //   getAbsoluteX() excludes it. Otherwise e.g. the accent of the lower of two voices a second apart was drawn over
+      //   the upper voice's note head.
+      x = this.getGlyphWidth() / 2 + this.x_shift;
     }
 
     return {

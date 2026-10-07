@@ -254,6 +254,37 @@ export class Articulation extends Modifier {
 
   getCategory() { return Articulation.CATEGORY; }
 
+  // VexFlowPatch: the other articulations at this time on the side of this one: those of the other voices' notes in the
+  //   staff, which share this articulation's ModifierContext, and so the text lines that format() gave its articulations
+  getOtherArticulationsOnSameSide() {
+    if (!isStaveNote(this.note)) {
+      return [];
+    }
+    const articulations = this.getModifierContext()?.getModifiers(Articulation.CATEGORY) ?? [];
+    return articulations.filter(articulation => articulation.getPosition() === this.position &&
+      articulation.note !== this.note && isStaveNote(articulation.note));
+  }
+
+  // VexFlowPatch: the y from which the text line of this articulation is counted (see draw()): its note's stem tip or head
+  //   with a distance, or, for an articulation that is moved out of the staff, the line it's moved to less its text line
+  getTextLineBaseY() {
+    const { note, position, text_line: textLine } = this;
+    const stave = note.getStave();
+    const staffSpace = stave.getSpacingBetweenLines();
+    const sitsOutsideStaff = !this.articulation.between_lines || note.getCategory() === 'tabnotes';
+    const initialOffset = getInitialOffset(note, position);
+    if (position === ABOVE) {
+      const baseY = getTopY(note, textLine) - initialOffset * staffSpace;
+      return sitsOutsideStaff
+        ? Math.min(stave.getYForTopText(Articulation.INITIAL_OFFSET) + textLine * staffSpace, baseY)
+        : baseY;
+    }
+    const baseY = getBottomY(note, textLine) + initialOffset * staffSpace;
+    return sitsOutsideStaff
+      ? Math.max(stave.getYForBottomText(Articulation.INITIAL_OFFSET) - textLine * staffSpace, baseY)
+      : baseY;
+  }
+
   // Render articulation in position next to note.
   draw() {
     const {
@@ -279,6 +310,11 @@ export class Articulation extends Modifier {
     let { x } = note.getModifierStartXY(position, index);
     // VexFlowPatch: breath mark support
     if (this.type === 'abr') { // breath mark
+      // placed by the distance to the next note's time (tick context), so not moved with a note moved aside from another
+      //   voice's note (its x_shift, which getModifierStartXY() adds): that brought it closer to the next note, e.g. onto its stem
+      if (isStaveNote(note)) {
+        x -= note.getXShift();
+      }
       let delayXShift = 0;
       // delay code similar to ornament.js delayed variable handling
       const noteTickContext = note.getTickContext();
@@ -324,6 +360,18 @@ export class Articulation extends Modifier {
           : y;
       },
     }[position]();
+    // VexFlowPatch: the text line of an articulation (see format()) is also counted from the bases of the articulations at
+    //   this time on its side of the other voices' notes in the staff (see getTextLineBaseY()), not only from its own note:
+    //   e.g. the fermata of a stem-down note, on text line 2, was drawn below the fermata on text line 0 above the stem of the
+    //   stem-up note of another voice a second above, over it and that stem, and the fermatas of two whole notes low in the
+    //   staff were both moved out of it to the same line.
+    for (const other of this.getOtherArticulationsOnSameSide()) {
+      // a note's ys follow the stave only when its voice draws it (see Ornament.draw())
+      other.note.setStave(other.note.getStave());
+      y = position === ABOVE
+        ? Math.min(y, other.getTextLineBaseY() - textLine * staffSpace)
+        : Math.max(y, other.getTextLineBaseY() + textLine * staffSpace);
+    }
     // VexFlowPatch: respect modifier.y_shift
     if (this.y_shift) {
         y += this.y_shift;

@@ -13,6 +13,9 @@ Each .js has comments like "// VexFlowPatch: [explanation]" to indicate what was
 articulation.js (custom addition):
 respect modifier.y_shift (y_shift affects y position of rendering)
 breath mark support
+keep a breath mark at the time of its note: not moved with the note's x_shift (which getModifierStartXY() adds, see stavenote.js)
+count the text line of an articulation also from the bases of the articulations on its side of the other voices' notes at
+  its time (getTextLineBaseY(), with the move out of the staff), so that the articulations of two voices don't overlap
 
 beam.js (custom addition):
 fix beam slopes changing on each re-render (render() call)
@@ -49,6 +52,9 @@ add stem_up_y_shift and stem_down_y_shift to shift notehead (independent of stem
 ornament.js (custom addition):
 respect Modifier.Position.BELOW in draw() (placement="below" in MusicXML)
 setUpperAccidental() and setLowerAccidental() also take a list of accidentals, drawn side by side (e.g. sharp-sharp)
+count the text line of an ornament from the outermost of the notes at its time with ornaments or articulations on its side,
+  i.e. of all voices in the staff, not only from its own note, so that the ornaments of two voices don't overlap
+format(): an ornament's accidental marks take text lines too, so that the ornament stacked on it isn't drawn beside them
 
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
@@ -76,6 +82,8 @@ open group for ledger lines (SVG)
 preFormat() and getBoundingBox(): add paddingRight variable to allow for custom right padding (e.g. for long lyrics below note)
 allow notehead y_shift without shifting stem (stem_up_y_shift)
 don't stagger the head of a hidden unison note (note.hiddenUnisonBaseHead, set by OSMD) beside the visible head it shares (mergeableUnison)
+getModifierStartXY(): add the note's x_shift for the positions ABOVE and BELOW too (articulations, ornaments), like for RIGHT,
+  so that the marks of a note moved aside from another voice's note (or of a whole-measure rest) are drawn at the note
 
 staverepetition.js (fixed vexflow 4):
 add TO_CODA enum to type() and draw()
@@ -137,6 +145,7 @@ open group to get SVG group+class for key signature
 
 tremolo.js (fixed vexflow 4):
 Add extra_stroke_scale, y_spacing_scale
+add the note's x_shift, so that the strokes cross the stem of a note moved aside from another voice's note (custom fix)
 
 tuplet.js (vexflow 4: need to check if this option available):
 Add option tuplet.RenderTupletNumber

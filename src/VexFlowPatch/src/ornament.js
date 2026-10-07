@@ -52,6 +52,28 @@ function createAccidentalGlyph(accids, scale, spacing) {
   };
 }
 
+// VexFlowPatch: the y from which the text lines of the ornaments above a note are counted (see Ornament.draw()): a staff
+//   space above its stem tip, or above its head if the stem is down (one and a half above a beamed stem tip)
+function getTopBaseY(note) {
+  const spacing = note.getStave().getSpacingBetweenLines();
+  const stemExtents = note.getStem().getExtents();
+  if (note.getStemDirection() === StaveNote.STEM_DOWN) {
+    return stemExtents.baseY - spacing;
+  }
+  // Beamed stems are longer than quarter note stems
+  return stemExtents.topY - spacing * (note.beam ? 1.5 : 1);
+}
+
+// VexFlowPatch: the y from which the text lines of the ornaments below a note are counted: a staff space below its lowest
+//   head or its stem tip (one and a half below a beamed stem tip)
+function getBottomBaseY(note) {
+  const spacing = note.getStave().getSpacingBetweenLines();
+  const stemExtents = note.getStem().getExtents();
+  const noteBottom = Math.max(...note.getYs(),
+    note.hasStem() ? Math.max(stemExtents.topY, stemExtents.baseY) : -Infinity);
+  return noteBottom + spacing * (note.getStemDirection() === StaveNote.STEM_DOWN && note.beam ? 1.5 : 1);
+}
+
 export class Ornament extends Modifier {
   static get CATEGORY() { return 'ornaments'; }
 
@@ -63,7 +85,9 @@ export class Ornament extends Modifier {
     let width = 0;
     for (let i = 0; i < ornaments.length; ++i) {
       const ornament = ornaments[i];
-      const increment = 2;
+      // VexFlowPatch: the accidental marks take text lines too (10: a staff space, as in Articulation.format()), so that the
+      //   next ornament isn't drawn over them
+      const increment = 2 + Math.ceil(ornament.getAccidentalsHeight() / 10);
 
       width = Math.max(ornament.getWidth(), width);
 
@@ -114,6 +138,18 @@ export class Ornament extends Modifier {
 
   getCategory() { return Ornament.CATEGORY; }
 
+  // VexFlowPatch: the height of the ornament's accidental marks below and above its glyph, with their paddings
+  getAccidentalsHeight() {
+    let height = 0;
+    if (this.accidentalLower) {
+      height += this.accidentalLower.getMetrics().height + this.render_options.accidentalLowerPadding;
+    }
+    if (this.accidentalUpper) {
+      height += this.accidentalUpper.getMetrics().height + this.render_options.accidentalUpperPadding;
+    }
+    return height;
+  }
+
   // Set whether the ornament is to be delayed
   setDelayed(delayed) { this.delayed = delayed; return this; }
 
@@ -131,6 +167,21 @@ export class Ornament extends Modifier {
     this.accidentalLower = createAccidentalGlyph(accid, this.render_options.font_scale / 1.3,
       this.render_options.accidentalSpacing / 1.3);
     return this;
+  }
+
+  // VexFlowPatch: the other notes at this time with ornaments or articulations on the side of this one: those of the other
+  //   voices in the staff, which share this ornament's ModifierContext, and so the text lines that format() gave them (the
+  //   articulations first, see ModifierContext.PREFORMAT, so an ornament is stacked outside the articulations of other notes)
+  getOtherNotesOnSameSide() {
+    const isTabNote = note => note.getCategory() === 'tabnotes';
+    if (isTabNote(this.note)) {
+      return [];
+    }
+    const context = this.getModifierContext();
+    const modifiers = [...(context?.getModifiers('articulations') ?? []), ...(context?.getModifiers(Ornament.CATEGORY) ?? [])];
+    return modifiers
+      .filter(modifier => modifier.getPosition() === this.position && modifier.note !== this.note && !isTabNote(modifier.note))
+      .map(modifier => modifier.note);
   }
 
   // Render ornament in position next to note.
@@ -172,8 +223,21 @@ export class Ornament extends Modifier {
       lineSpacing += 0.5;
     }
 
-    const totalSpacing = spacing * (this.text_line + lineSpacing);
-    const glyphYBetweenLines = y - totalSpacing;
+    // VexFlowPatch: the text line of an ornament (see format()) is counted from the outermost of the notes at this time
+    //   with ornaments on its side, i.e. of all voices in the staff (see getOtherNotesOnSameSide()), not only from its own
+    //   note: e.g. the turn of a stem-down note, on text line 2, was drawn at the height of the mordent on text line 0
+    //   above the stem of the stem-up note of another voice a second above, over it.
+    const otherNotes = this.getOtherNotesOnSameSide();
+    for (const note of otherNotes) {
+      // a note's ys follow the stave only when its voice draws it (Voice.draw() sets the stave): a voice drawn after this
+      //   one still has those of the previous draw, e.g. of the skyline's, where the stave was elsewhere
+      note.setStave(note.getStave());
+    }
+    let topBaseY = y - spacing * lineSpacing;
+    for (const note of otherNotes) {
+      topBaseY = Math.min(topBaseY, getTopBaseY(note));
+    }
+    const glyphYBetweenLines = topBaseY - spacing * this.text_line;
 
     // Get initial coordinates for the modifier position
     const start = this.note.getModifierStartXY(this.position, this.index);
@@ -182,18 +246,12 @@ export class Ornament extends Modifier {
     if (this.position === Modifier.Position.BELOW) {
       // VexFlowPatch: Place the entire ornament, including accidentals, below the stave and note.
       // Glyphs are drawn upwards from their bottom origin.
-      const noteBottom = Math.max(...this.note.getYs(),
-        this.note.hasStem() ? Math.max(stemExtents.topY, stemExtents.baseY) : -Infinity);
-      const bottomSpacing = spacing * (this.text_line + 1 +
-        (stemDir === StaveNote.STEM_DOWN && this.note.beam ? 0.5 : 0));
-      let height = this.glyph.getMetrics().height;
-      if (this.accidentalLower) {
-        height += this.accidentalLower.getMetrics().height + this.render_options.accidentalLowerPadding;
+      let bottomBaseY = getBottomBaseY(this.note);
+      for (const note of otherNotes) {
+        bottomBaseY = Math.max(bottomBaseY, getBottomBaseY(note));
       }
-      if (this.accidentalUpper) {
-        height += this.accidentalUpper.getMetrics().height + this.render_options.accidentalUpperPadding;
-      }
-      glyphY = Math.max(stave.getYForBottomText(this.text_line), noteBottom + bottomSpacing) + height;
+      const height = this.glyph.getMetrics().height + this.getAccidentalsHeight();
+      glyphY = Math.max(stave.getYForBottomText(this.text_line), bottomBaseY + spacing * this.text_line) + height;
     }
     glyphY += this.y_shift;
 
