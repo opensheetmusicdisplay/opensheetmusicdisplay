@@ -170,6 +170,25 @@ describe("RepetitionInstructionReader", () => {
                 "<measure><direction><offset sound=\"yes\">4</offset><sound fine=\"yes\"><offset>0</offset></sound></direction></measure>"]),
                 "sound offset overrides direction offset").to.equal(0);
         });
+
+        // The repetition calculator handles the instructions in the order they were read, so a jump taken at the barline
+        //   before goes where words at the end of the measure before would be read, e.g. as Dorico writes a D.C. after a
+        //   second ending with a backward repeat, at the start of the third ending (#1766).
+        it("adds a jump at the start of a measure where words at the end of the measure before would be read", () => {
+            const measureReader: RepetitionInstructionReader = new RepetitionInstructionReader();
+            measureReader.MusicSheet = new MusicSheet();
+            measureReader.xmlMeasureList = [["<measure/>", "<measure><sound dacapo=\"yes\"/></measure>"].map(element)];
+            measureReader.prepareReadingMeasure(undefined, 0);
+            measureReader.handleLineRepetitionInstructions(
+                element("<barline location=\"right\"><ending number=\"2\" type=\"stop\"/><repeat direction=\"backward\"/></barline>"));
+            // A later part's segno can follow the preceding part's right barline in the reader's list.
+            measureReader.handleRepetitionInstructionsFromWordsOrSymbols(element("<direction-type><segno/></direction-type>"), 1);
+            measureReader.prepareReadingMeasure(undefined, 1);
+            measureReader.handleLineRepetitionInstructions(element("<barline location=\"left\"><ending number=\"3\" type=\"start\"/></barline>"));
+            measureReader.handleRepetitionInstructionsFromWordsOrSymbols(element("<direction-type><words>D.C.</words></direction-type>"), 0);
+            expect(measureReader.repetitionInstructions.map((instruction: RepetitionInstruction): string => RepetitionInstructionEnum[instruction.type]))
+                .to.deep.equal(["DaCapo", "Ending", "BackJumpLine", "Segno", "Ending"]);
+        });
     });
 
     describe("words mentioning D.S. within a longer text (issue #1687)", () => {

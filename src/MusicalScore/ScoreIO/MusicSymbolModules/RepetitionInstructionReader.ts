@@ -181,7 +181,7 @@ export class RepetitionInstructionReader {
       const newInstruction: RepetitionInstruction = new RepetitionInstruction(atBarlineBefore ? measureIndex - 1 : measureIndex, type);
       newInstruction.Words = drawnWords;
       newInstruction.MarkedAsTarget = type === RepetitionInstructionEnum.Segno && !!soundNode?.attribute("segno");
-      this.addInstruction(this.repetitionInstructions, newInstruction);
+      this.addInstruction(this.repetitionInstructions, newInstruction, atBarlineBefore);
       return true;
     } else if (directionTypeNode.element("segno")) {
       // if (relativeMeasurePosition > 0.5) {
@@ -438,7 +438,15 @@ export class RepetitionInstructionReader {
     return false;
   }
 
-  private addInstruction(currentRepetitionInstructions: RepetitionInstruction[], newInstruction: RepetitionInstruction): void {
+  /**
+   * Adds the instruction unless the list has it already.
+   * @param atBarlineBefore whether it's a jump read at the start of its measure but taken at the barline before (#1766).
+   *   It goes where words at the end of the measure before would be read, so that the repetition calculator, which handles
+   *   the list in order, treats both the same: before the instructions read since, those of the barline before (a backward
+   *   repeat, an ending's end) and those of its own measure (e.g. an ending's start).
+   */
+  private addInstruction(currentRepetitionInstructions: RepetitionInstruction[], newInstruction: RepetitionInstruction,
+                         atBarlineBefore: boolean = false): void {
     let addInstruction: boolean = true;
     for (let idx: number = 0, len: number = currentRepetitionInstructions.length; idx < len; ++idx) {
       const repetitionInstruction: RepetitionInstruction = currentRepetitionInstructions[idx];
@@ -448,7 +456,22 @@ export class RepetitionInstructionReader {
       }
     }
     if (addInstruction) {
-      currentRepetitionInstructions.push(newInstruction);
+      let index: number = currentRepetitionInstructions.length;
+      // Parts are read in turn, so ordinary instructions can follow another part's right barline.
+      for (let idx: number = 0, len: number = currentRepetitionInstructions.length; atBarlineBefore && idx < len; ++idx) {
+        if (RepetitionInstructionReader.isAfterWordsAtMeasureEnd(currentRepetitionInstructions[idx], newInstruction.measureIndex)) {
+          index = idx;
+          break;
+        }
+      }
+      currentRepetitionInstructions.splice(index, 0, newInstruction);
     }
+  }
+
+  /** Whether the instruction is read after words at the end of the measure: at the measure's right barline or later. */
+  private static isAfterWordsAtMeasureEnd(instruction: RepetitionInstruction, measureIndex: number): boolean {
+    return instruction.measureIndex > measureIndex ||
+      instruction.measureIndex === measureIndex && (instruction.type === RepetitionInstructionEnum.BackJumpLine ||
+        instruction.type === RepetitionInstructionEnum.Ending && instruction.alignment !== AlignmentType.Begin);
   }
 }
