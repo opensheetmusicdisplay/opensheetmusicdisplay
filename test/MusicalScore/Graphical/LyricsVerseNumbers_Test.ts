@@ -79,9 +79,12 @@ describe("Lyrics with verse numbers", () => {
         expect(noteDistance(0), "from the first note to the second, like from the third to the fourth").to.be.closeTo(noteDistance(2), 0.05);
         expect(noteDistance(1), "from the second note to the third, like from the third to the fourth").to.be.closeTo(noteDistance(2), 0.05);
         const lyricStart: number = lyricX(staffEntries[2].LyricsEntries[0], 0);
-        // measure 2: a later lyric of the verse starts with its number. The first lyric of the verse in the lower staff starts after it
+        // measure 2: a later lyric of the verse starts with its number, and so does the first lyric of a verse at the same note.
+        //   The first lyric of the verse in the lower staff starts after its numbers
         expect(lyricX(staffLines[0].Measures[1].staffEntries[0].LyricsEntries[0], 0), "the number of 2. lah").to.be.closeTo(lyricStart, 0.1);
-        expect(lyricX(staffLines[1].Measures[1].staffEntries[0].LyricsEntries[0], 3), "the lyric of 1. lah in the lower staff")
+        expect(lyricX(staffLines[0].Measures[1].staffEntries[0].LyricsEntries[1], 0), "the number of 4. lah, at the note of 2. lah")
+            .to.be.closeTo(lyricStart, 0.1);
+        expect(lyricX(staffLines[1].Measures[1].staffEntries[0].LyricsEntries[0], 5), "the lyric of 1.2. lah in the lower staff")
             .to.be.closeTo(lyricStart, 0.1);
     });
 

@@ -4,8 +4,9 @@
   Measure 1, upper staff: verse 1 starts with "1. ", verse 2 with the wide (full-width) digit and period of Japanese text.
   Verse 3 starts a note later, with a short lyric, which is moved right like the other short lyrics (LyricsExtraXShiftForShortLyrics).
   The number is left of the lyric, which starts at its note like the lyrics of the other notes, and the notes are evenly spaced.
-  Measure 2: "2. lah" in the upper staff is a later lyric of its verse, it starts with the number at the note.
-  "1. lah" in the lower staff is the first lyric of the verse in that staff, with the number left of it. -->
+  Measure 2: "2. lah" in the upper staff is a later lyric of its verse, it starts with the number at the note, and so does
+  "4. lah", which starts its verse at that note: the numbers of a note move together.
+  "1.2. lah" in the lower staff (a lyric of two verses) is the first lyric of the verse in that staff, with the numbers left of it. -->
 <score-partwise version="4.0">
   <work>
     <work-title>Lyrics with verse numbers</work-title>
@@ -144,6 +145,10 @@
           <syllabic>single</syllabic>
           <text>2. lah</text>
         </lyric>
+        <lyric number="4">
+          <syllabic>single</syllabic>
+          <text>4. lah</text>
+        </lyric>
       </note>
       <backup>
         <duration>4</duration>
@@ -159,7 +164,7 @@
         <staff>2</staff>
         <lyric number="1">
           <syllabic>single</syllabic>
-          <text>1. lah</text>
+          <text>1.2. lah</text>
         </lyric>
       </note>
       <barline location="right">
