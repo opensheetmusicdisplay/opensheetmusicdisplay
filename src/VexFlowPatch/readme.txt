@@ -81,6 +81,7 @@ staverepetition.js (fixed vexflow 4):
 add TO_CODA enum to type() and draw()
 fix x-positioning for TO_CODA and DS_AL_CODA in drawSymbolText()
 fix y-shift
+don't change x_shift in drawSymbolText(): every further draw of the stave moved the end texts (e.g. D.C.), alternating
 
 stavesection.js (half-fixed vexflow 4.x, collision, box not removable):
 stavesection.draw():
@@ -95,6 +96,8 @@ measure the "=" and the tuplet numbers of note equations by their text advance, 
 
 stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
+name the group after the note the tie starts at ("<id>-tie"), set with setStartNoteId(), by default the first note:
+  the part of a tie continued in the next system has no first note, and was named "vf-undefined-tie" (custom addition)
 renderText(): set the font before measuring the text (e.g. H, P, sl. of tab ties and slides) to center it, instead of
   measuring it in the context's current font (custom fix, vexflow 5 still measures first)
 
@@ -112,6 +115,7 @@ svgcontext.js (custom addition, probably not necessary for vexflow 4):
 able to add extra attributes (like svg node id) to a stroke (e.g. stem)
 fix rect() always using black color, ignoring attributes.stroke (ctx strokeStlye) -> fix defaultColorMusic ignored
 measureText(text, true) returns the text advance (getComputedTextLength()) as the width, like canvas measureText(), instead of the bounding box
+setRawFont(): use the whole family after the size (e.g. "Times New Roman" in "10pt Times New Roman"), not only its first word
 
 tables.js (custom addition):
 add inverted triangle notehead ('TI')
@@ -143,6 +147,8 @@ downstem flag glyph (v9a): rotate and shift the flag so that it suits the stem b
 
 vibratobracket.js: (custom option):
 add option vibratobracket.toEndOfStopStave: Render to the end of the stop note, instead of before it
+add option vibratobracket.stopBeforeNote: Render up to this note, in front of its modifiers, e.g. to the note after the stop note
+render to the end of the stop note without the width left of it (modifiers like accidentals and grace notes, displaced note heads)
 
 Currently, we are using a heavily improved and customized version of Vexflow 1.2.93,
 because of some formatter advantages compared to Vexflow 3.x versions, see this issue:

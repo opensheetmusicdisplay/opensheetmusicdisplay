@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for the position of a rest at the same time as a cross-staff note of another staff's voice.
+    A two-staff piano part in 4/4, voices 1 and 2 on the upper staff, voices 5 and 6 on the lower staff.
+    Measure 1: voice 5's quarter rest on the lower staff, with voice 1's G3 (stem up) crossing down into the lower staff.
+    Measure 2: voice 2's quarter rest on the upper staff, with voice 5's A3 (stem down) crossing up into the upper staff.
+      Voice 1 has no note on beat 1 (forward).
+    Before the fix, both rests left their staff towards the other staff: voice 5 is an upper voice, so its rest was put
+    above the cross-staff note and its stem, between the staves, and voice 2's rest below the cross-staff note, between the staves.
+    The cross-staff notes belong to the other staff's voices, so the rests stay in their staves now.
+    Measure 3: voice 1's quarter rest above voice 5's B4 (stem up) crossing up into the upper staff.
+    Measure 4: voice 6's quarter rest below voice 1's G3 (stem up) crossing down into the lower staff.
+      Voice 5 has no note on beat 1 (forward).
+    In measures 3 and 4, the rests still avoid the cross-staff notes: they move away from the other staff.
+  -->
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <staves>2</staves>
+        <clef number="1"><sign>G</sign><line>2</line></clef>
+        <clef number="2"><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <!-- voice 1: G3 crossing down into the lower staff, then the upper staff -->
+      <note>
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem><staff>1</staff>
+      </note>
+      <backup><duration>4</duration></backup>
+      <!-- voice 5: the rest at the time of voice 1's G3 -->
+      <note>
+        <rest/>
+        <duration>1</duration><voice>5</voice><type>quarter</type><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+    </measure>
+    <measure number="2">
+      <!-- voice 1: no note on beat 1 -->
+      <forward><duration>1</duration><voice>1</voice><staff>1</staff></forward>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><staff>1</staff>
+      </note>
+      <backup><duration>4</duration></backup>
+      <!-- voice 2: the rest at the time of voice 5's A3 -->
+      <note>
+        <rest/>
+        <duration>1</duration><voice>2</voice><type>quarter</type><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem><staff>1</staff>
+      </note>
+      <backup><duration>4</duration></backup>
+      <!-- voice 5: A3 crossing up into the upper staff, then the lower staff -->
+      <note>
+        <pitch><step>A</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>down</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+    </measure>
+    <measure number="3">
+      <!-- voice 1: the rest at the time of voice 5's B4 -->
+      <note>
+        <rest/>
+        <duration>1</duration><voice>1</voice><type>quarter</type><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><staff>1</staff>
+      </note>
+      <backup><duration>4</duration></backup>
+      <!-- voice 5: B4 crossing up into the upper staff, then the lower staff -->
+      <note>
+        <pitch><step>B</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>up</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+    </measure>
+    <measure number="4">
+      <!-- voice 1: G3 crossing down into the lower staff, then the upper staff -->
+      <note>
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem><staff>1</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem><staff>1</staff>
+      </note>
+      <backup><duration>4</duration></backup>
+      <!-- voice 5: no note on beat 1 -->
+      <forward><duration>1</duration><voice>5</voice><staff>2</staff></forward>
+      <note>
+        <pitch><step>E</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>5</voice><type>quarter</type><stem>up</stem><staff>2</staff>
+      </note>
+      <backup><duration>4</duration></backup>
+      <!-- voice 6: the rest at the time of voice 1's G3 -->
+      <note>
+        <rest/>
+        <duration>1</duration><voice>6</voice><type>quarter</type><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>6</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>6</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>6</voice><type>quarter</type><stem>down</stem><staff>2</staff>
+      </note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+</score-partwise>

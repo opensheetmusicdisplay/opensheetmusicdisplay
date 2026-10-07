@@ -29,6 +29,8 @@ export class VibratoBracket extends Element {
     this.stop = bracket_data.stop;
     //VexFlowPatch: Needed an option to render to the end of the stop note stave vs. the stop note itself
     this.toEndOfStopStave = bracket_data.toEndOfStopStave;
+    //VexFlowPatch: option to render up to this note, e.g. the note after the stop note, to cover the stop note's whole duration
+    this.stopBeforeNote = bracket_data.stopBeforeNote;
 
     this.line = 1;
 
@@ -74,10 +76,19 @@ export class VibratoBracket extends Element {
     let stop_x = 0;
 
     if(this.stop) {
-      stop_x = (this.toEndOfStopStave) ?
-        this.stop.getStave().getTieEndX() - 10 :
+      if (this.toEndOfStopStave) {
+        stop_x = this.stop.getStave().getTieEndX() - 10;
+      } else if (this.stopBeforeNote) {
+        // VexFlowPatch: Render up to the stopBeforeNote, in front of its modifiers (e.g. accidentals, grace notes)
+        const metrics = this.stopBeforeNote.getMetrics();
+        stop_x = this.stopBeforeNote.getAbsoluteX() - metrics.modLeftPx - metrics.extraLeftPx - 5;
+      } else {
         // VexFlowPatch: Render to the end of the stop note, instead of before it
-        this.stop.getAbsoluteX() + this.stop.getWidth()
+        //   getWidth() also counts what is left of the note: modifiers like accidentals, grace notes and the left half of a fermata,
+        //   also of the staff's other notes at this position, and note heads displaced to the left
+        const metrics = this.stop.getMetrics();
+        stop_x = this.stop.getAbsoluteX() + this.stop.getWidth() - metrics.modLeftPx - metrics.extraLeftPx;
+      }
     } else {
       stop_x = this.start.getStave().getTieEndX() - 10;
     }

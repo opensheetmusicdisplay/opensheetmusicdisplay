@@ -18,6 +18,7 @@ import { ColoringModes } from "../Common/Enums/ColoringModes";
 import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions, CursorType } from "./OSMDOptions";
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
+import { ContinuousDynamicExpression } from "../MusicalScore/VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { Dictionary } from "typescript-collections";
 import { AutoColorSet } from "../MusicalScore/Graphical/DrawingEnums";
 import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage";
@@ -231,33 +232,29 @@ export class OpenSheetMusicDisplay {
     }
 
     /** Lazy rendering (LazyConsistentGraphic): number of systems already drawn into the shared
-     *  backend across prior batches. Greedy layout is *usually* forward-stable, so the next batch skips
-     *  redrawing these and draws from this index -- but some scores re-position earlier systems as the
-     *  prefix grows, so each batch verifies the drawn systems against lazyDrawnSystemY and redraws from
+     *  backends across prior batches, counted through the pages. Greedy layout is *usually* forward-stable, so the next
+     *  batch skips redrawing these and draws from this index -- but some scores re-position earlier systems as the
+     *  prefix grows, so each batch verifies the drawn systems against lazyDrawnSystemPositions and redraws from
      *  the topmost one that moved (reconciliation). */
     private lazyDrawnSystemCount: number = 0;
-    /** Lazy rendering: the absolute Y (in units) each already-drawn system [index] was drawn at,
+    /** Lazy rendering: the page and the absolute Y (in units, on the page) each already-drawn system [index] was drawn at,
      *  used to detect when a later batch's full-prefix layout moves an earlier system (forward-stability
      *  is not universal) so it can be redrawn at its corrected position. */
-    private lazyDrawnSystemY: number[] = [];
-    /** Lazy HORIZONTAL rendering (RenderSingleHorizontalStaffline): number of graphical measures already
-     *  drawn into the shared SVG (left-to-right). The next batch draws from here, deferring the prefix's
-     *  last measure (it carries an end-barline until it becomes interior), like the vertical path defers
-     *  its last system. */
+    private lazyDrawnSystemPositions: { pageNumber: number, y: number }[] = [];
+    /** Lazy HORIZONTAL rendering (RenderSingleHorizontalStaffline): number of graphical measures of the top
+     *  staffline already drawn, counted through the systems in order (see renderAppendGrowingHorizontal()).
+     *  The next batch draws from here. */
     private lazyDrawnHMeasureCount: number = 0;
-
-    /** Lazy HORIZONTAL: for a multi-staff score, lay the whole score out ONCE on the first batch and reuse that
-     *  final layout for every batch (only the drawn x-window grows). A growing partial re-layout would route
-     *  slurs/ties along each batch's boundary skyline and size the inter-staff gap to the prefix's max
-     *  clearance -- so lower stafflines would drift down batch to batch. A single horizontal staffline always
-     *  fits one SVG, so the full layout is safe; only the (expensive) DRAW stays lazy. Single-staff scores keep
-     *  the growing layout (lazy layout + draw; nothing below the top line to drift). */
-    private lazyHReuseLayout: boolean = false;
 
     /** Incremental rendering ({@link renderNext}): whether a session is in progress (started, not yet reset). */
     private lazyIncrementalActive: boolean = false;
     /** Incremental rendering: source-measure index where the next batch continues (the drawn frontier). */
     private lazyNextSourceIndex: number = 0;
+    /** Incremental rendering of the endless page: the width in pixels all batches of the session lay the sheet out at, the
+     *  container's content width when the first batch read it (like render() reads it once). A batch reading the width again
+     *  laid its systems out narrower than the ones drawn before when the container had become narrower in between, e.g. by
+     *  the vertical scrollbar the page gets once the first batch makes it longer than the window. */
+    private lazyLayoutWidth: number = 0;
     /** Incremental rendering: the draw-measure range the lazy layout mutates, saved on begin and restored on
      *  reset, so a later normal render() isn't left limited to the last batch's draw range. */
     private lazySavedMinMeasureToDrawIndex: number = 0;
@@ -358,21 +355,24 @@ export class OpenSheetMusicDisplay {
      *  clearFirst=true starts a fresh session (clears prior content, resets the counters). Returns the
      *  source-measure index at which the next batch should continue. fromMeasureIndex is informational --
      *  the drawn frontier is tracked internally. Targets the endless vertical-scroll format and
-     *  RenderSingleHorizontalStaffline. `targetNewSystems`, if set, draws that many whole systems this batch
-     *  (vertical path only; ignored for the single horizontal staffline, which is one system). */
+     *  RenderSingleHorizontalStaffline (laid out once, then drawn to the right batch by batch).
+     *  `targetNewSystems`, if set, draws that many whole systems this batch (vertical path only; ignored for
+     *  the single horizontal staffline, which is one system). */
     private renderAppend(fromMeasureIndex: number, toMeasureIndex: number, clearFirst: boolean = false,
                          targetNewSystems?: number): number {
         if (!this.graphic) {
             throw new Error("OSMD: load() needs to be called before renderNext()");
         }
+        if (this.rules.RenderSingleHorizontalStaffline) {
+            // Single horizontal staffline: laid out once like render() (so without the lazy caches and gates of
+            // LazyConsistentGraphic), drawing only the newly-entered measures each batch.
+            this.rules.LazyConsistentGraphic = false;
+            return this.renderAppendGrowingHorizontal(toMeasureIndex, clearFirst);
+        }
         // Lazy rendering lays out the whole prefix [0..toMeasureIndex] into one growing, globally-consistent
         // graphic and draws only the newly-stable systems (renderAppendGrowing). LazyConsistentGraphic gates
         // that path's reuse caches; a normal render() forces it off so the caches never affect a non-lazy render.
         this.rules.LazyConsistentGraphic = true;
-        if (this.rules.RenderSingleHorizontalStaffline) {
-            // Single horizontal staffline: one system growing to the RIGHT; draw only the newly-entered measures.
-            return this.renderAppendGrowingHorizontal(fromMeasureIndex, toMeasureIndex, clearFirst);
-        }
         return this.renderAppendGrowing(fromMeasureIndex, toMeasureIndex, clearFirst, targetNewSystems);
     }
 
@@ -382,6 +382,8 @@ export class OpenSheetMusicDisplay {
      * or the first after load(), render() or resetIncrementalRendering() -- starts a fresh session: it
      * clears the container and lays the score out from the first measure. Each later call appends the next
      * batch. Returns progress; once `done` is true the whole sheet is rendered and further calls are no-ops.
+     * Like render(), a session lays the sheet out at the container's width when it starts: to adapt it to a new
+     * width, e.g. after a resize, start a new session.
      * Page labels are drawn with the batch that finalizes their position: the title block (title, subtitle,
      * composer, lyricist) with the first batch, the copyright (below the last system) with the final batch.
      *
@@ -508,9 +510,8 @@ export class OpenSheetMusicDisplay {
         this.lazyIncrementalActive = false;
         this.lazyNextSourceIndex = 0;
         this.lazyDrawnSystemCount = 0;
-        this.lazyDrawnSystemY = [];
+        this.lazyDrawnSystemPositions = [];
         this.lazyDrawnHMeasureCount = 0;
-        this.lazyHReuseLayout = false;
         this.rules.MinMeasureToDrawIndex = this.lazySavedMinMeasureToDrawIndex;
         this.rules.MaxMeasureToDrawIndex = this.lazySavedMaxMeasureToDrawIndex;
     }
@@ -656,9 +657,11 @@ export class OpenSheetMusicDisplay {
      * we skip drawing the already-drawn systems above and DEFER the last system of a non-final batch (it
      * is unstretched and shifts once it becomes an interior, stretched system next batch). But this is NOT
      * universal -- some scores re-position earlier systems by several px as later systems are added -- so
-     * each batch first VERIFIES the drawn systems against their drawn Y (lazyDrawnSystemY) and, if any
+     * each batch first VERIFIES the drawn systems against their drawn Y (lazyDrawnSystemPositions) and, if any
      * moved, redraws the whole drawn range at the corrected positions (reconciliation). In the common
      * (stable) case nothing is redrawn. See export/inspect_prefix_stability.mjs / inspect_optionb_drawpos.mjs.
+     * The layout can have several pages (NewPageAtXMLNewPageAttribute), each drawn into its own backend like in render():
+     * the systems are counted through the pages, and a backend is added for each page the layout grows to.
      *
      * @returns the source-measure index at which the next batch should continue (past the last drawn system).
      */
@@ -666,8 +669,9 @@ export class OpenSheetMusicDisplay {
                                 targetNewSystems?: number): number {
         if (clearFirst) {
             this.lazyDrawnSystemCount = 0;
-            this.lazyDrawnSystemY = [];
+            this.lazyDrawnSystemPositions = [];
             this.graphic.GetCalculator?.clearSkyBottomLineCache(); // fresh lazy session: drop reused sky/bottom lines
+            this.lazyLayoutWidth = this.getContainerContentWidth();
         }
         const lastSheetMeasureIndex: number = this.sheet.SourceMeasures.length - 1;
 
@@ -676,8 +680,7 @@ export class OpenSheetMusicDisplay {
         this.rules.MinMeasureToDrawIndex = 0;
         this.rules.MaxMeasureToDrawIndex = Math.min(toMeasureIndex, lastSheetMeasureIndex);
 
-        const width: number = this.getContainerContentWidth();
-        this.sheet.pageWidth = width / this.zoom / 10.0;
+        this.sheet.pageWidth = this.lazyLayoutWidth / this.zoom / 10.0; // the session's width, see lazyLayoutWidth
         this.rules.PageHeight = 100001; // lazy assumes the endless (vertical scroll) page format
 
         this.graphic.reCalculate();
@@ -686,31 +689,51 @@ export class OpenSheetMusicDisplay {
         // minNewSystems + 1 systems total); otherwise this batch only grew the current last system. Extend the
         // prefix by a batch span and retry until enough systems appear or the sheet ends. minNewSystems is 1 in
         // measures mode (the batch's other complete systems are drawn too) and `targetNewSystems` in systems mode.
-        let page: GraphicalMusicPage = this.graphic.MusicPages[0];
+        // Then also until the wedges and octave shifts reaching into the systems to draw end in a complete system (see
+        // lazySpannerEndInLastSystem()), without drawing the systems this adds.
+        let systems: MusicSystem[] = this.lazyLaidOutSystems();
         const minNewSystems: number = targetNewSystems ?? 1;
         const extendStep: number = Math.max(4, toMeasureIndex - fromMeasureIndex + 1);
+        // Hold the last (unstretched, not-yet-stable) system unless this is the final batch, where the last
+        // system is the sheet's true last system and never changes again. In systems mode, also cap the draw at
+        // `targetNewSystems` new systems (the layout may hold a few more from the last extend step), so each
+        // batch advances by exactly that many whole systems; any extra are re-laid-out and drawn next batch.
+        const nonFinalDrawToIdxExcl: (layoutSystemCount: number) => number = (layoutSystemCount: number): number =>
+            targetNewSystems !== undefined ? Math.min(layoutSystemCount - 1, this.lazyDrawnSystemCount + targetNewSystems) : layoutSystemCount - 1;
+        let drawToIdxExclCap: number; // the draw range end once the layout has enough systems
         let extendedTo: number = this.rules.MaxMeasureToDrawIndex;
-        while (page && extendedTo < lastSheetMeasureIndex &&
-               page.MusicSystems.length < this.lazyDrawnSystemCount + minNewSystems + 1) {
-            extendedTo = Math.min(extendedTo + extendStep, lastSheetMeasureIndex);
+        while (systems.length > 0 && extendedTo < lastSheetMeasureIndex) {
+            let extendTo: number = extendedTo + extendStep;
+            if (systems.length >= this.lazyDrawnSystemCount + minNewSystems + 1) {
+                if (drawToIdxExclCap === undefined) {
+                    drawToIdxExclCap = nonFinalDrawToIdxExcl(systems.length);
+                }
+                const spannerEndIndex: number = this.lazySpannerEndInLastSystem(systems, drawToIdxExclCap);
+                if (spannerEndIndex < 0) {
+                    break; // long enough
+                }
+                extendTo = Math.max(extendTo, spannerEndIndex + 1);
+            }
+            extendedTo = Math.min(extendTo, lastSheetMeasureIndex);
             this.rules.MaxMeasureToDrawIndex = extendedTo;
             this.graphic.reCalculate();
-            page = this.graphic.MusicPages[0];
+            systems = this.lazyLaidOutSystems();
         }
-        if (!page || page.MusicSystems.length === 0) {
+        if (systems.length === 0) {
             return lastSheetMeasureIndex + 1; // produced nothing (e.g. all-invisible): nothing more to do
         }
 
-        const systemCount: number = page.MusicSystems.length;
+        const systemCount: number = systems.length;
         const finalBatch: boolean = extendedTo >= lastSheetMeasureIndex;
-        const sysAbsY: (i: number) => number = i => page.MusicSystems[i].StaffLines[0].PositionAndShape.AbsolutePosition.y;
+        const sysAbsY: (i: number) => number = i => systems[i].StaffLines[0].PositionAndShape.AbsolutePosition.y;
         // Reconciliation: forward-stability is not universal -- this batch's full-prefix layout may have
-        // moved an already-drawn system. If the topmost drawn system whose Y changed exists, everything
-        // already drawn is stale; clear the backend and redraw the whole drawn range at the corrected
+        // moved an already-drawn system. If the topmost drawn system whose Y (or page) changed exists, everything
+        // already drawn is stale; clear the backends and redraw the whole drawn range at the corrected
         // positions. In the common (stable) case nothing moved and we only append the new systems.
         let someDrawnSystemMoved: boolean = false;
         for (let i: number = 0; i < this.lazyDrawnSystemCount && i < systemCount; i++) {
-            if (Math.abs(sysAbsY(i) - (this.lazyDrawnSystemY[i] ?? sysAbsY(i))) > 1e-4) {
+            const drawnAt: { pageNumber: number, y: number } = this.lazyDrawnSystemPositions[i];
+            if (drawnAt && (drawnAt.pageNumber !== systems[i].Parent.PageNumber || Math.abs(sysAbsY(i) - drawnAt.y) > 1e-4)) {
                 someDrawnSystemMoved = true;
                 break;
             }
@@ -718,54 +741,65 @@ export class OpenSheetMusicDisplay {
         // Recreating the backend erases everything, so a recreate batch redraws from system 0.
         const recreateBackend: boolean = clearFirst || someDrawnSystemMoved;
         const drawFromIdx: number = recreateBackend ? 0 : this.lazyDrawnSystemCount;
-        // Hold the last (unstretched, not-yet-stable) system unless this is the final batch, where the last
-        // system is the sheet's true last system and never changes again. In systems mode, also cap the draw at
-        // `targetNewSystems` new systems (the layout may hold a few more from the last extend step), so each
-        // batch advances by exactly that many whole systems; any extra are re-laid-out and drawn next batch.
-        let drawToIdxExcl: number;
-        if (finalBatch) {
-            drawToIdxExcl = systemCount;
-        } else if (targetNewSystems !== undefined) {
-            drawToIdxExcl = Math.min(systemCount - 1, this.lazyDrawnSystemCount + targetNewSystems);
-        } else {
-            drawToIdxExcl = systemCount - 1;
-        }
+        const drawToIdxExcl: number = finalBatch ? systemCount : Math.min(nonFinalDrawToIdxExcl(systemCount), drawToIdxExclCap ?? systemCount);
         if (drawToIdxExcl <= drawFromIdx) {
             this.lazyDrawnSystemCount = Math.max(this.lazyDrawnSystemCount, drawToIdxExcl);
             return lastSheetMeasureIndex + 1; // no new complete system (only happens at the very end)
         }
-        const lastDrawnSystem: MusicSystem = page.MusicSystems[drawToIdxExcl - 1];
 
         // createOrRefreshRenderBackend rebuilds the drawer (resetting the lazy draw window), so it must
-        // run BEFORE setting that window below. A purely-appending batch keeps the existing backend.
+        // run BEFORE setting that window below. A purely-appending batch keeps the existing backends.
+        // The backends are as wide as the layout, also when the container's width has changed since the first batch.
         if (recreateBackend) {
-            this.createOrRefreshRenderBackend();
+            this.createOrRefreshRenderBackend(this.lazyLayoutWidth);
         }
-        const backend: VexFlowBackend = this.drawer.Backends[0];
-        const isCanvas: boolean = backend.getOSMDBackendType() === BackendType.Canvas;
-        // Grow the backend to fit through the last system we draw. On the final batch, size exactly as
-        // createOrRefreshRenderBackend() does for a full page so the finished image height byte-matches a
-        // normal render; on continuation batches, size to the last drawn system (the deferred system's
-        // slot is filled next batch).
-        let heightUnits: number;
-        if (finalBatch) {
-            heightUnits = page.PositionAndShape.Size.height + this.rules.PageBottomMargin + page.PositionAndShape.BorderTop;
-        } else {
-            heightUnits = lastDrawnSystem.PositionAndShape.AbsolutePosition.y
-                + lastDrawnSystem.PositionAndShape.BorderBottom + this.rules.PageBottomMargin;
+        // A backend per page, like render(): a batch whose layout reaches a new page adds one for it. Grow each backend to fit
+        // through the last system we draw on its page. Once all of a page's systems are drawn (on the final batch, or before
+        // a page break), size it exactly as createOrRefreshRenderBackend() does for a full page so the finished image height
+        // byte-matches a normal render; until then, size it to its last drawn system (the deferred system's slot is filled
+        // next batch), or to nothing, as long as none of its systems is drawn.
+        const pageWidth: number = this.drawer.Backends[0].width;
+        let pageFirstSystemIdx: number = 0; // index of the page's first system in systems
+        for (const page of this.graphic.MusicPages) {
+            if (page.PageNumber > this.rules.MaxPageToDrawNumber) {
+                break; // not drawn, see lazyLaidOutSystems()
+            }
+            let backend: VexFlowBackend = this.drawer.Backends[page.PageNumber - 1];
+            if (!backend) {
+                backend = this.createBackend(this.backendType, page);
+                this.drawer.Backends.push(backend);
+            }
+            const isCanvas: boolean = backend.getOSMDBackendType() === BackendType.Canvas;
+            const drawnPageSystems: number = Math.min(Math.max(drawToIdxExcl - pageFirstSystemIdx, 0), page.MusicSystems.length);
+            let heightUnits: number = 0;
+            if (drawnPageSystems === page.MusicSystems.length) {
+                heightUnits = page.PositionAndShape.Size.height + this.rules.PageBottomMargin + page.PositionAndShape.BorderTop;
+            } else if (drawnPageSystems > 0) {
+                const lastDrawnSystem: MusicSystem = page.MusicSystems[drawnPageSystems - 1];
+                heightUnits = lastDrawnSystem.PositionAndShape.AbsolutePosition.y
+                    + lastDrawnSystem.PositionAndShape.BorderBottom + this.rules.PageBottomMargin;
+            }
+            if (heightUnits > 0) {
+                if (isCanvas) {
+                    heightUnits += 0.1; // Canvas bug: cuts off the bottom pixel with PageBottomMargin = 0
+                }
+                if (this.rules.RenderTitle) {
+                    heightUnits += this.rules.TitleTopDistance; // title sits above the first system
+                }
+            }
+            backend.graphicalMusicPage = page;
+            backend.resize(pageWidth, heightUnits * 10 * this.zoom);
+            if (pageFirstSystemIdx >= drawFromIdx) {
+                // Nothing drawn on the page yet (e.g. a new backend): its background, as createOrRefreshRenderBackend() sets it.
+                //   (A canvas keeps it when resized only from a size greater than 0.)
+                backend.clear();
+            }
+            // Re-establish the default music color: createOrRefreshRenderBackend sets it on the first batch,
+            // but a reused canvas backend keeps stateful context and could inherit a stale fill/stroke color.
+            backend.getContext().setFillStyle(this.rules.DefaultColorMusic);
+            backend.getContext().setStrokeStyle(this.rules.DefaultColorMusic);
+            pageFirstSystemIdx += page.MusicSystems.length;
         }
-        if (isCanvas) {
-            heightUnits += 0.1; // Canvas bug: cuts off the bottom pixel with PageBottomMargin = 0
-        }
-        if (this.rules.RenderTitle) {
-            heightUnits += this.rules.TitleTopDistance; // title sits above the first system
-        }
-        backend.graphicalMusicPage = page;
-        backend.resize(backend.width, heightUnits * 10 * this.zoom);
-        // Re-establish the default music color: createOrRefreshRenderBackend sets it on the first batch,
-        // but a reused canvas backend keeps stateful context and could inherit a stale fill/stroke color.
-        backend.getContext().setFillStyle(this.rules.DefaultColorMusic);
-        backend.getContext().setStrokeStyle(this.rules.DefaultColorMusic);
         this.drawer.setZoom(this.zoom);
 
         if (this.drawingParameters.drawCursors) {
@@ -774,7 +808,7 @@ export class OpenSheetMusicDisplay {
         // Mark everything up to the drawn range as on-screen (for playback/cursor lookups), since the
         // graphic was rebuilt this batch.
         for (let i: number = 0; i < drawToIdxExcl; i++) {
-            for (const staffLine of page.MusicSystems[i].StaffLines) {
+            for (const staffLine of systems[i].StaffLines) {
                 for (const measure of staffLine.Measures) {
                     if (measure?.parentSourceMeasure) { // some graphical measures (e.g. extra-instruction) have none
                         measure.parentSourceMeasure.WasRendered = true;
@@ -782,7 +816,7 @@ export class OpenSheetMusicDisplay {
                 }
             }
         }
-        // Draw only the new systems (and the title block only on the first batch); see drawPage().
+        // Draw only the new systems (and the title block only on the first batch), counted through the pages; see drawPage().
         this.drawer.LazyDrawSystemsFromIndex = drawFromIdx;
         this.drawer.LazyDrawSystemsToIndexExcl = drawToIdxExcl;
         this.drawer.drawSheet(this.graphic);
@@ -804,9 +838,9 @@ export class OpenSheetMusicDisplay {
         // Record where each drawn system landed, so the next batch can detect (and reconcile) any that
         // the growing layout moves.
         for (let i: number = 0; i < drawToIdxExcl; i++) {
-            this.lazyDrawnSystemY[i] = sysAbsY(i);
+            this.lazyDrawnSystemPositions[i] = { pageNumber: systems[i].Parent.PageNumber, y: sysAbsY(i) };
         }
-        this.lazyDrawnSystemY.length = drawToIdxExcl;
+        this.lazyDrawnSystemPositions.length = drawToIdxExcl;
         this.lazyDrawnSystemCount = drawToIdxExcl;
         this.rules.RenderCount++;
 
@@ -814,126 +848,168 @@ export class OpenSheetMusicDisplay {
             return lastSheetMeasureIndex + 1;
         }
         // Continue at the deferred (held) system's first source measure.
-        const heldMeasures: GraphicalMeasure[] = page.MusicSystems[drawToIdxExcl].StaffLines[0].Measures;
+        const heldMeasures: GraphicalMeasure[] = systems[drawToIdxExcl].StaffLines[0].Measures;
         return this.sheet.SourceMeasures.indexOf(heldMeasures[0].parentSourceMeasure);
     }
 
     /**
-     * Lazy rendering for RenderSingleHorizontalStaffline (one continuous staffline, horizontal scroll).
-     * Lays out the whole prefix [0..toMeasureIndex] as ONE system (greedy builder at SheetMaximumWidth so it
-     * never breaks) and draws only the measures (and spanning elements) whose right edge first entered the
-     * drawn frontier this batch -- the single SVG grows to the RIGHT (and taller if later measures are tall).
-     * Measure X and Y are forward-stable here, so unlike the vertical path there is no reconciliation and no
-     * deferred last unit: every batch simply appends. SVG backend only (Canvas keeps its existing width cap).
+     * Lazy rendering: where the furthest wedge or octave shift ends that reaches into the systems a batch draws and ends in the
+     * last system of its layout, or beyond. Such a wedge or octave shift needs a longer layout: their parts depend on the system
+     * they end in, e.g. a wedge's parts after the first are placed at its last system's bottom line, and an octave shift ends at
+     * a note there. The last system still grows (and is stretched once complete), and the end can be beyond the layout, where a
+     * wedge isn't calculated at all, so the systems drawn now would be drawn with other or without these parts. They aren't
+     * drawn again. A wedge or octave shift without an end is ignored, and so is a verbal continuous dynamic like "cresc.",
+     * which is drawn at its start only (see GraphicalContinuousDynamicExpression.IsVerbal).
+     * @param systems the systems of the layout, in order
+     * @param drawToIdxExcl the index of the first system the batch doesn't draw
+     * @returns the source-measure index of the furthest end in the last system or beyond, or -1 if there is none
+     */
+    private lazySpannerEndInLastSystem(systems: MusicSystem[], drawToIdxExcl: number): number {
+        const firstMeasureIndex: (system: MusicSystem) => number =
+            (system: MusicSystem): number => system.StaffLines[0].Measures[0].parentSourceMeasure.measureListIndex;
+        const firstUndrawnMeasureIndex: number = firstMeasureIndex(systems[drawToIdxExcl]);
+        let endIndex: number = -1;
+        for (let measureIndex: number = 0; measureIndex < firstUndrawnMeasureIndex; measureIndex++) {
+            for (const staffExpressions of this.sheet.SourceMeasures[measureIndex].StaffLinkedExpressions) {
+                for (const multiExpression of staffExpressions) {
+                    const wedge: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
+                    const isVerbal: boolean = wedge?.Label?.length > 0;
+                    for (const end of [isVerbal ? undefined : wedge?.EndMultiExpression, multiExpression.OctaveShiftStart?.ParentEndMultiExpression]) {
+                        if (end) {
+                            endIndex = Math.max(endIndex, end.SourceMeasureParent.measureListIndex);
+                        }
+                    }
+                }
+            }
+        }
+        return endIndex >= firstMeasureIndex(systems[systems.length - 1]) ? endIndex : -1;
+    }
+
+    /**
+     * Lazy rendering: the systems of the laid-out pages that are drawn (see EngravingRules.MaxPageToDrawNumber), in order.
+     * The systems a batch draws are counted through them (see MusicSheetDrawer.LazyDrawSystemsFromIndex).
+     * @returns the systems of the pages in order
+     */
+    private lazyLaidOutSystems(): MusicSystem[] {
+        const systems: MusicSystem[] = [];
+        for (const page of this.graphic.MusicPages) {
+            if (page.PageNumber > this.rules.MaxPageToDrawNumber) {
+                break; // not drawn (see VexFlowMusicSheetDrawer.drawSheet())
+            }
+            systems.push(...page.MusicSystems);
+        }
+        return systems;
+    }
+
+    /**
+     * Lazy rendering for RenderSingleHorizontalStaffline (one staffline growing to the right, horizontal scroll).
+     * The first batch lays the whole score out like render(), and each batch reuses that layout and draws only the
+     * measures entering the drawn frontier (and the elements ending in them), so that the finished incremental render
+     * looks like a normal render(). Laying out a growing prefix instead would move what is drawn already, e.g. a
+     * higher note further right moves the staffline down, and the lyrics of a staffline are aligned at one height.
+     * Laying out the whole staffline is fast anyway, drawing it is the expensive part, which stays lazy.
+     * The layout can have several systems, e.g. with forced system breaks (NewSystemAtXMLNewSystemAttribute,
+     * RenderXMeasuresPerLineAkaSystem) or where the staffline would be wider than SheetMaximumWidth, and pages
+     * (NewPageAtXMLNewPageAttribute): the frontier advances through the measures of all systems in order, and each
+     * system a batch reaches is drawn in its own x-window, from the system's previous frontier to its new one. A
+     * system's first window is open to the left and its last one to the right, so that every element is drawn once,
+     * also the ones beyond the first or last measure, like the instrument names or a long last chord symbol.
+     * @param toMeasureIndex source-measure index up to which this batch draws (at least the next measure, so that
+     *  the frontier always advances)
+     * @param clearFirst whether this batch starts a new session: lays the score out and creates the backends
      * @returns the source-measure index at which the next batch should continue.
      */
-    private renderAppendGrowingHorizontal(fromMeasureIndex: number, toMeasureIndex: number, clearFirst: boolean): number {
+    private renderAppendGrowingHorizontal(toMeasureIndex: number, clearFirst: boolean): number {
+        const lastSheetMeasureIndex: number = this.sheet.SourceMeasures.length - 1;
         if (clearFirst) {
             this.lazyDrawnHMeasureCount = 0;
-            this.graphic.GetCalculator?.clearSkyBottomLineCache();
-            // Multi-staff: lay the whole score out once and reuse that final layout (see lazyHReuseLayout);
-            // single-staff: grow the laid-out prefix each batch.
-            this.lazyHReuseLayout = this.sheet.getCompleteNumberOfStaves() > 1;
-        }
-        const lastSheetMeasureIndex: number = this.sheet.SourceMeasures.length - 1;
-        // One horizontal staffline: SheetMaximumWidth keeps it a single system; the cursor coordinate region
-        // still uses the real container width (mirrors render()).
-        this.rules.MinMeasureToDrawIndex = 0;
-        this.sheet.pageWidth = this.rules.SheetMaximumWidth / this.zoom / 10.0;
-        this.rules.PageHeight = 100001;
-        if (this.lazyHReuseLayout) {
-            // Lay the whole score out once on the first batch; later batches reuse it (only the drawn x-window
-            // grows). This keeps every element at its final, full-score position, so multi-staff batches are
-            // byte-identical to a normal render.
-            if (clearFirst) {
-                this.rules.MaxMeasureToDrawIndex = lastSheetMeasureIndex;
-                this.graphic.reCalculate();
-            }
-        } else {
-            this.rules.MaxMeasureToDrawIndex = Math.min(toMeasureIndex, lastSheetMeasureIndex);
+            // One horizontal staffline: SheetMaximumWidth keeps it a single system (mirrors render()).
+            this.rules.MinMeasureToDrawIndex = 0;
+            this.rules.MaxMeasureToDrawIndex = lastSheetMeasureIndex;
+            this.sheet.pageWidth = this.rules.SheetMaximumWidth / this.zoom / 10.0;
+            this.rules.PageHeight = 100001;
             this.graphic.reCalculate();
+            this.createOrRefreshRenderBackend(); // a backend per page, like render()
         }
-        const page: GraphicalMusicPage = this.graphic.MusicPages[0];
-        if (!page || page.MusicSystems.length === 0 || page.MusicSystems[0].StaffLines.length === 0) {
+        // The measures of the top staffline of all systems, in drawing order.
+        const pages: GraphicalMusicPage[] = this.graphic.MusicPages.filter(page => page.PageNumber <= this.rules.MaxPageToDrawNumber);
+        const measures: GraphicalMeasure[] = [];
+        for (const page of pages) {
+            for (const system of page.MusicSystems) {
+                measures.push(...(system.StaffLines[0]?.Measures ?? []));
+            }
+        }
+        if (measures.length === 0) {
             return lastSheetMeasureIndex + 1; // produced nothing (e.g. all invisible)
         }
-        const system: MusicSystem = page.MusicSystems[0];
-        const measures0: GraphicalMeasure[] = system.StaffLines[0].Measures;
-        const drawFromIdx: number = Math.min(this.lazyDrawnHMeasureCount, measures0.length);
-        let finalBatch: boolean;
-        let drawToIdxExcl: number;
-        if (this.lazyHReuseLayout) {
-            // Reused full layout -- every measure is already final, so draw up to the requested source frontier
-            // with no deferral (no growing-prefix end-barline to hold). Find the graphical measures whose source
-            // measure is at/before the frontier (mapping handles multi-rests that collapse several into one).
-            const frontierSource: number = Math.min(toMeasureIndex, lastSheetMeasureIndex);
-            finalBatch = frontierSource >= lastSheetMeasureIndex;
-            let f: number = drawFromIdx;
-            while (f < measures0.length && measures0[f].parentSourceMeasure.measureListIndex <= frontierSource) {
-                f++;
+        // Draw the measures up to source measure toMeasureIndex, but at least one. A measure without a source measure
+        // (an extra instruction measure ending a system, e.g. with the next system's clef) is drawn with the one before.
+        const drawFromIdx: number = Math.min(this.lazyDrawnHMeasureCount, measures.length);
+        let drawToIdxExcl: number = drawFromIdx;
+        while (drawToIdxExcl < measures.length) {
+            const sourceMeasure: SourceMeasure = measures[drawToIdxExcl].parentSourceMeasure;
+            if (sourceMeasure && sourceMeasure.measureListIndex > toMeasureIndex && drawToIdxExcl > drawFromIdx) {
+                break;
             }
-            drawToIdxExcl = f;
-        } else {
-            // Growing prefix -- HOLD the prefix's last measure: as the prefix end it carries an end-barline and
-            // is unstretched, and becomes a normal interior measure (drawn) next batch (the horizontal analog of
-            // the vertical path deferring its last system).
-            finalBatch = this.rules.MaxMeasureToDrawIndex >= lastSheetMeasureIndex;
-            drawToIdxExcl = finalBatch ? measures0.length : measures0.length - 1;
+            drawToIdxExcl++;
         }
-        if (drawToIdxExcl <= drawFromIdx) {
-            // No new complete measure this batch; continue at the next undrawn measure (or finish).
-            return finalBatch ? lastSheetMeasureIndex + 1
-                : this.sheet.SourceMeasures.indexOf(measures0[drawFromIdx].parentSourceMeasure);
-        }
+        const finalBatch: boolean = drawToIdxExcl >= measures.length;
+
+        // The x-window of each system the batch reaches: the objects whose right edge is in (fromX, toX] -- the new
+        // measures, and the elements ending in them, e.g. a slur. The windows end a bit right of a measure's right edge.
         const measureRightX: (m: GraphicalMeasure) => number =
             m => m.PositionAndShape.AbsolutePosition.x + m.PositionAndShape.BorderRight;
-        // x-window: only objects whose right edge is in (fromX, toX] -- the measures that newly completed
-        // this batch plus any spanning element (slur, ...) whose right end just became available.
-        const fromX: number = drawFromIdx > 0 ? measureRightX(measures0[drawFromIdx - 1]) : Number.NEGATIVE_INFINITY;
-        const toX: number = measureRightX(measures0[drawToIdxExcl - 1]);
+        const windows: Map<MusicSystem, { fromX: number, toX: number }> = new Map();
+        const drawnWidthUnits: Map<GraphicalMusicPage, number> = new Map(); // up to the right edge of the drawn measures
+        let systemStartIdx: number = 0; // index of the system's first measure in measures
+        for (const page of pages) {
+            for (const system of page.MusicSystems) {
+                const systemMeasures: GraphicalMeasure[] = system.StaffLines[0]?.Measures ?? [];
+                const fromIdx: number = Math.max(drawFromIdx - systemStartIdx, 0);
+                const toIdxExcl: number = Math.min(drawToIdxExcl - systemStartIdx, systemMeasures.length);
+                systemStartIdx += systemMeasures.length;
+                if (toIdxExcl > 0) {
+                    const widthUnits: number = measureRightX(systemMeasures[toIdxExcl - 1]) + this.rules.PageRightMargin;
+                    drawnWidthUnits.set(page, Math.max(drawnWidthUnits.get(page) ?? 0, widthUnits));
+                }
+                if (fromIdx < toIdxExcl) {
+                    windows.set(system, {
+                        fromX: fromIdx === 0 ? Number.NEGATIVE_INFINITY : measureRightX(systemMeasures[fromIdx - 1]) + 1e-4,
+                        toX: toIdxExcl === systemMeasures.length ? Number.POSITIVE_INFINITY : measureRightX(systemMeasures[toIdxExcl - 1]) + 1e-4
+                    });
+                }
+            }
+        }
 
-        if (clearFirst) {
-            this.createOrRefreshRenderBackend(); // one persistent backend, sized to the first batch's page
+        // Size the backends like render() (createOrRefreshRenderBackend), but until the final batch only as wide as the
+        // measures drawn on them, so that the container's scroll width grows with the drawn frontier (scrolling near it
+        // renders the next batch, see enableIncrementalRenderingOnScroll()).
+        const fullWidthUnits: number = this.rules.PageLeftMargin + this.graphic.MusicPages[0].PositionAndShape.Size.width + this.rules.PageRightMargin;
+        for (const backend of this.drawer.Backends) {
+            const page: GraphicalMusicPage = backend.graphicalMusicPage;
+            const widthUnits: number = finalBatch ? fullWidthUnits : drawnWidthUnits.get(page) ?? 0;
+            let heightUnits: number = page.PositionAndShape.Size.height + this.rules.PageBottomMargin + page.PositionAndShape.BorderTop;
+            if (backend.getOSMDBackendType() === BackendType.Canvas) {
+                heightUnits += 0.1; // Canvas bug: cuts off the bottom pixel with PageBottomMargin = 0
+            }
+            if (this.rules.RenderTitle) {
+                heightUnits += this.rules.TitleTopDistance;
+            }
+            backend.resize(widthUnits * 10 * this.zoom, heightUnits * 10 * this.zoom);
+            backend.getContext().setFillStyle(this.rules.DefaultColorMusic);
+            backend.getContext().setStrokeStyle(this.rules.DefaultColorMusic);
         }
-        const backend: VexFlowBackend = this.drawer.Backends[0];
-        // Grow the single backend to fit what's drawn so far: width to the drawn frontier (so the SVG/scroll
-        // width tracks drawn content even when the whole score is laid out in reuse mode), height to the full
-        // page (later measures may have taller content). The staff origin is forward-stable, so already-drawn
-        // content stays put.
-        const widthUnits: number = this.lazyHReuseLayout
-            ? toX + this.rules.PageRightMargin
-            : this.rules.PageLeftMargin + page.PositionAndShape.Size.width + this.rules.PageRightMargin;
-        let heightUnits: number = page.PositionAndShape.Size.height + this.rules.PageBottomMargin + page.PositionAndShape.BorderTop;
-        if (this.rules.RenderTitle) {
-            heightUnits += this.rules.TitleTopDistance;
-        }
-        backend.graphicalMusicPage = page;
-        backend.resize(widthUnits * 10 * this.zoom, heightUnits * 10 * this.zoom);
-        backend.getContext().setFillStyle(this.rules.DefaultColorMusic);
-        backend.getContext().setStrokeStyle(this.rules.DefaultColorMusic);
         this.drawer.setZoom(this.zoom);
 
         if (this.drawingParameters.drawCursors) {
             this.graphic.Cursors.length = 0;
         }
-        // Mark the measures drawn so far on-screen (playback / cursor lookups), since the graphic was rebuilt.
-        for (let i: number = 0; i < drawToIdxExcl; i++) {
-            for (const staffLine of system.StaffLines) {
-                const m: GraphicalMeasure = staffLine.Measures[i];
-                if (m?.parentSourceMeasure) {
-                    m.parentSourceMeasure.WasRendered = true;
-                }
-            }
-        }
-        // Each batch draws the measures (and once-only left-edge brackets/labels) up to its frontier. The
-        // page labels (title/credits) re-center as the page widens, so they are drawn only on the final batch,
-        // at their full-width positions; drawPage() then opens the x-window so none are dropped (see drawPage).
-        this.drawer.LazyDrawFromXUnits = fromX;
-        this.drawer.LazyDrawToXUnits = toX + 1e-4;
+        // The page labels (title/credits) and bounding boxes are drawn with the final batch, when the page is drawn to its
+        // full width; drawPage() then opens the x-window so none are dropped (see drawPage).
+        this.drawer.LazyDrawSystemWindows = windows;
         this.drawer.LazySkipPageLabels = !finalBatch;
         this.drawer.drawSheet(this.graphic);
-        this.drawer.LazyDrawFromXUnits = Number.NEGATIVE_INFINITY;
-        this.drawer.LazyDrawToXUnits = Number.POSITIVE_INFINITY;
+        this.drawer.LazyDrawSystemWindows = undefined;
         this.drawer.LazySkipPageLabels = false;
 
         if (this.drawingParameters.drawCursors) {
@@ -947,11 +1023,16 @@ export class OpenSheetMusicDisplay {
         if (finalBatch) {
             return lastSheetMeasureIndex + 1;
         }
-        // Continue at the held (deferred) last measure.
-        return this.sheet.SourceMeasures.indexOf(measures0[drawToIdxExcl].parentSourceMeasure);
+        // Continue at the first measure not drawn yet.
+        return measures[drawToIdxExcl].parentSourceMeasure.measureListIndex;
     }
 
-    protected createOrRefreshRenderBackend(): void {
+    /**
+     * Removes the backends (SVG or canvas) from the container and creates a new one for each page drawn.
+     * @param pageWidth the width of the pages in pixels. By default the container's content width, read after removing the
+     *  backends. An incremental render passes the width all its batches lay the sheet out at (see lazyLayoutWidth).
+     */
+    protected createOrRefreshRenderBackend(pageWidth?: number): void {
         // console.log("[OSMD] createOrRefreshRenderBackend()");
 
         // Remove old backends
@@ -977,7 +1058,7 @@ export class OpenSheetMusicDisplay {
         this.drawer.skyLineVisible = this.drawSkyLine;
 
         // Set page width
-        let width: number = this.getContainerContentWidth();
+        let width: number = pageWidth ?? this.getContainerContentWidth();
         if (this.rules.RenderSingleHorizontalStaffline) {
             width = (this.EngravingRules.PageLeftMargin + this.graphic.MusicPages[0].PositionAndShape.Size.width + this.EngravingRules.PageRightMargin)
                 * 10 * this.zoom;

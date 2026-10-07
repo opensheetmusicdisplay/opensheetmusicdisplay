@@ -465,6 +465,9 @@ export class MusicPartManagerIterator {
                         return;
                     }
                     if (forwardJumpTargetMeasureIndex === -2) {
+                        // The piece ends at this Fine. As at the end of the last measure, the iterator still moves past this
+                        //   measure (no return here): Cursor.update() moves it back into this measure and forth again to draw
+                        //   the cursor at the end, and only passing the Fine again ends it again.
                         this.endReached = true;
                     }
                 }

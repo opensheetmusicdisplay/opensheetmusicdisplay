@@ -107,10 +107,14 @@ export class GraphicalNote extends GraphicalObject {
     }
 }
 
-/** Coloring options for VexFlowGraphicalNote.setColor(). */
+/** Coloring options for VexFlowGraphicalNote.setColor().
+ * Slurs, ties and glissandi belong to the note they start at: coloring only the note they end at doesn't color them.
+ */
 export interface ColoringOptions {
   applyToBeams?: boolean;
   applyToFlag?: boolean;
+  /** Glissandi and slides: their lines, and in a TAB staff their label "sl." too. */
+  applyToGlissandi?: boolean;
   applyToLedgerLines?: boolean;
   applyToLyrics?: boolean;
   applyToModifiers?: boolean;
