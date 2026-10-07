@@ -252,8 +252,10 @@ export class ExpressionReader {
 
             dirContentNode = dirNode.element("dynamics");
             if (dirContentNode) {
-                this.directionTimestamp = this.readDirectionTimestamp(
-                    dirContentNode.attribute("default-x") ? undefined : offsetNode, inSourceMeasureCurrentFraction);
+                // The offset also applies when the dynamics have a default-x: OSMD places them by their timestamp and doesn't
+                //   read default-x, and exporters write a default-x that matches the offset, e.g. Finale writes dynamics at
+                //   the start of the measure with the offset to their beat.
+                this.directionTimestamp = this.readDirectionTimestamp(offsetNode, inSourceMeasureCurrentFraction);
                 const fromNotation: boolean = directionNode.element("notations") !== undefined;
                 this.interpretInstantaneousDynamics(dirContentNode, currentMeasure, timestampFraction, fromNotation);
                 continue;
@@ -280,8 +282,7 @@ export class ExpressionReader {
 
             dirContentNode = dirNode.element("wedge");
             if (dirContentNode) {
-                this.directionTimestamp = this.readDirectionTimestamp(
-                    dirContentNode.attribute("default-x") ? undefined : offsetNode, inSourceMeasureCurrentFraction);
+                this.directionTimestamp = this.readDirectionTimestamp(offsetNode, inSourceMeasureCurrentFraction); // see dynamics
                 this.interpretWedge(directionNode, dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
                 continue;
             }

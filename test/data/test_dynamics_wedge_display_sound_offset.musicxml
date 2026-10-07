@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- The markings before beat 3 point back to beat 2. The first two measures differ only
-     in note subdivision and the sound flag; in m3 default-x affects only the dynamic,
+     in note subdivision and the sound flag; in m3 both markings also have a default-x,
      and a sound-local offset places the sound change between beats 2 and 3. -->
 <score-partwise version="4.0">
   <part-list>
@@ -51,7 +51,7 @@
       <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
       <direction placement="below">
         <direction-type><dynamics default-x="0"><p/></dynamics></direction-type>
-        <direction-type><wedge type="crescendo"/></direction-type>
+        <direction-type><wedge type="crescendo" default-x="0"/></direction-type>
         <offset sound="yes">-1</offset>
         <sound dynamics="30"><offset>-0.5</offset></sound>
       </direction>

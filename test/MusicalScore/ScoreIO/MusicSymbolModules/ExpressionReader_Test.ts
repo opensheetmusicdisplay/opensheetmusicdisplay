@@ -196,9 +196,9 @@ describe("ExpressionReader", () => {
                 .map(expression => expression.StartingContinuousDynamic)
                 .filter(wedge => wedge !== undefined));
         const marks: InstantaneousDynamicExpression[] = dynamics.filter(dynamic => dynamic.DynamicExpression === "p");
-        expect(marks.map(dynamic => dynamic.ParentMultiExpression.Timestamp.RealValue), "p anchors, with default-x only in m3")
-            .to.deep.equal([0.25, 0.25, 0.5]);
-        expect(wedges.map(wedge => wedge.StartMultiExpression.Timestamp.RealValue), "wedge sibling keeps its own offset")
+        expect(marks.map(dynamic => dynamic.ParentMultiExpression.Timestamp.RealValue), "p anchors, also with default-x in m3")
+            .to.deep.equal([0.25, 0.25, 0.25]);
+        expect(wedges.map(wedge => wedge.StartMultiExpression.Timestamp.RealValue), "wedge anchors, also with default-x in m3")
             .to.deep.equal([0.25, 0.25, 0.25]);
         expect(wedges.map(wedge => wedge.EndMultiExpression.Timestamp.RealValue), "wedge stops keep their existing note anchor")
             .to.deep.equal([0.75, 0.75, 0.75]);
