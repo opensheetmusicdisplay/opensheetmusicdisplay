@@ -283,6 +283,11 @@ export class EngravingRules {
      * after reading, so that dashes are drawn between their syllables.
      * Set before loading a score: the words are linked when loading. */
     public RelinkLyricWordsAcrossVoices: boolean;
+    /** Whether the first lyric of a verse in a staff, if its text starts with the verse number, e.g. "1. Si" (MusicXML has no
+     * element for the number), is aligned like a lyric without one, with the number left of where the lyric starts. Default true.
+     * If false, the text is aligned as a whole, with the lyric right of the number. For left-aligned lyrics (LyricsAlignmentStandard).
+     * Set before loading a score: the lyrics are measured when its graphical objects are created. */
+    public LyricsVerseNumberLeftOfLyric: boolean;
     public LyricsYOffsetToStaffHeight: number;
     public LyricsYMarginToBottomLine: number;
     /** Extra x-shift (to the right) for short lyrics to be better vertically aligned.
@@ -956,6 +961,7 @@ export class EngravingRules {
         this.LyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
         this.LyricsHeight = 2.0; // actually size of lyrics
         this.RelinkLyricWordsAcrossVoices = true;
+        this.LyricsVerseNumberLeftOfLyric = true;
         this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.LyricsYMarginToBottomLine = 0.2;
         this.LyricsExtraXShiftForShortLyrics = 0.5; // also see ChordSymbolExtraXShiftForShortChordSymbols, same principle
