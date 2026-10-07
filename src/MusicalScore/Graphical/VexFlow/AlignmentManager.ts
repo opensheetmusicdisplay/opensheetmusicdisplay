@@ -82,9 +82,8 @@ export class AlignmentManager {
                 for (let exprIdx: number = 0; exprIdx < aes.length; exprIdx++) {
                     const expr: AbstractGraphicalExpression = aes[exprIdx];
                     const centerOffset: number = centerYs[exprIdx] - yIdeal;
+                    const shift: number = this.limitShift(expr, -centerOffset, aes);
                     // FIXME: Expressions should not behave differently.
-                    // TODO: The 0.8 are because the letters are a bit too far done
-                    const shift: number = this.limitShift(expr, expr instanceof VexFlowContinuousDynamicExpression ? -centerOffset : -centerOffset * 0.8, aes);
                     if (expr instanceof VexFlowContinuousDynamicExpression) {
                         (expr as VexFlowContinuousDynamicExpression).shiftYPosition(shift);
                         (expr as VexFlowContinuousDynamicExpression).calcPsi();
