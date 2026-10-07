@@ -129,9 +129,11 @@ export class Repetition extends StaveModifier {
       symbol_x = text_x + ctx.measureText(text).width + 12;
     } else {
       // VexFlowPatch: fix placement, like for DS_AL_CODA
-      this.x_shift = -(text_x + ctx.measureText(text).width + 12 + stave.options.vertical_bar_width + 12);
+      //   (in a local variable: assigned to this.x_shift, which it is calculated from, it moved the text
+      //   on every further draw of the stave, alternating between this position and one further right)
+      const x_shift = -(text_x + ctx.measureText(text).width + 12 + stave.options.vertical_bar_width + 12);
       // TO_CODA and DS_AL_CODA draw in the next measure without this x_shift, not sure why not for other symbols.
-      text_x = this.x + this.x_shift + stave.options.vertical_bar_width;
+      text_x = this.x + x_shift + stave.options.vertical_bar_width;
       symbol_x = text_x + ctx.measureText(text).width + 12;
     }
     if (this.xShiftAsPercentOfStaveWidth) {

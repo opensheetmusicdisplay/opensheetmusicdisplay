@@ -43,6 +43,14 @@ import { TabNote } from "../../VoiceData/TabNote";
 
 // type StemmableNote = VF.StemmableNote;
 
+/** A format of the voices of a vertical measure (see VexFlowMeasure.format()). */
+export interface IVerticalMeasureFormat {
+    /** The format function, shared by the measures of the vertical measure (see VexFlowMeasure.formatVoices). */
+    formatVoices: (width: number, parent: VexFlowMeasure) => void;
+    /** The width the voices were justified to, in pixels. */
+    justifyWidth: number;
+}
+
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, sourceMeasure?: SourceMeasure, staffLine?: StaffLine) {
         super(staff, sourceMeasure, staffLine);
@@ -74,6 +82,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public vfTies: VF.StaveTie[] = [];
     /** The repetition instructions given as words or symbols (coda, dal segno..) */
     public vfRepetitionWords: VF.Repetition[] = [];
+    /** Whether a metronome mark is drawn on this staff measure (they are drawn on the first visible staff). */
+    public hasMetronomeMark: boolean = false;
     /** The VexFlow Stave (= one measure in a staffline) */
     protected stave!: VF.Stave;
     /** VexFlow StaveConnectors (vertical lines) */
@@ -128,6 +138,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         (this.stave as any).MeasureNumber = this.MeasureNumber; // for debug info. vexflow automatically uses stave.measure for rendering measure numbers
         // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
+        this.hasMetronomeMark = false;
         this.vfRepetitionWords = []; // the modifiers were discarded with the old stave above, so don't keep stale entries
 
         if (this.ParentStaff) {
@@ -514,6 +525,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         if (instruction) {
             const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
+            VexFlowConverter.setVexFlowTextFontFamily((repetition as any).font, this.rules);
             if (repetitionInstruction.Words) {
                 (repetition as any).setText(repetitionInstruction.Words); // drawn instead of the label, e.g. "D.C. senza replica"
             }
@@ -635,6 +647,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             //convert to VF units (pixels)
             vexFlowVoltaHeight *= 10;
             this.stave.setVoltaType(voltaType, repetitionInstruction.endingIndices[0], vexFlowVoltaHeight);
+            const volta: VF.StaveModifier = this.stave.getModifiers().last();
+            VexFlowConverter.setVexFlowTextFontFamily((volta as any).font, this.rules);
             skyBottomLineCalculator.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
         }
     }
@@ -728,7 +742,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     for (let i: number = 0; i < this.tuplets[voiceID].length; i++) {
                         const tuplet: Tuplet = this.tuplets[voiceID][i][0];
                         const vftuplet: VF.Tuplet = this.vftuplets[voiceID][i];
-                        if (!vftuplet) { // see #1330, potentially to be investigated. why undefined?
+                        if (!vftuplet) {
+                            // finalizeTuplets() makes no VexFlow tuplet for a tuplet with fewer than two notes to draw in this measure,
+                            //   e.g. a cross-staff tuplet with one note in this staff, or a tuplet with invisible rests.
                             continue;
                         }
                         if (!tuplet.RenderTupletNumber ||
@@ -755,6 +771,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
             tie.setContext(ctx);
             tie.draw();
+            // Vexflow draws the text of a tie, e.g. "H" of a hammer-on in a TAB staff (TabTie), after the tie's SVG group:
+            //   move it into the group, so that hiding or coloring the tie includes it (VexFlowGraphicalNote.setVisible(), setColor()).
+            const group: Element = (tie as any).getAttribute("el"); // undefined without SVG
+            if (group?.nextSibling?.nodeName === "text") {
+                group.appendChild(group.nextSibling);
+            }
         }
     }
 
@@ -789,17 +811,67 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
     }
 
-    // this currently formats multiple measures, see VexFlowMusicSheetCalculator.formatMeasures()
-    public format(): void {
+    /**
+     * Does what draw() does to the notes besides drawing them: the beams extend their notes' stems (see postFormatBeams()),
+     * and the notes are placed at their note heads (see correctNotePositions()). For the lazy reuse of a skyline
+     * (SkyBottomLineCalculator.applyGeometricSkylineSideEffectsOnly()), which skips the draw of the skyline calculation:
+     * the beams would extend the stems when the measure is drawn instead, at the stave's final position rather than the
+     * skyline calculation's, so a few stems and beams would end a few trillionths of a pixel off where render() draws them.
+     */
+    public applyDrawSideEffects(): void {
+        if (!this.MeasureRepeat) { // draw() draws the repeat sign instead of the notes then, see drawNotes()
+            this.postFormatBeams();
+        }
+        this.correctNotePositions();
+    }
+
+    /**
+     * Formats the voices of this measure's vertical measure, i.e. of all its staves (see VexFlowMusicSheetCalculator.formatMeasures()),
+     * to the width of this measure's stave.
+     * @param lastFormats For a series of formats, like the skyline calculation's (see SkyBottomLineCalculator), which formats every
+     *   measure, and so each vertical measure once per staff: the last format of each vertical measure in the series.
+     *   A format that would just repeat the last one of its vertical measure is skipped: it would compute the same result again
+     *   (see isRepeatedFormat()). Without lastFormats, the measure is always formatted.
+     */
+    public format(lastFormats?: Map<SourceMeasure, IVerticalMeasureFormat>): void {
         // If this is the first stave in the vertical measure, call the format
         // method to set the width of all the voices
         if (this.formatVoices) {
+            if (lastFormats && this.isRepeatedFormat(lastFormats)) {
+                return;
+            }
             // set the width of the voices to the current measure width:
             // (The width of the voices does not include the instructions (StaveModifiers))
             this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels, this);
         }
 
         // this.correctNotePositions(); // now done at the end of draw()
+    }
+
+    /**
+     * Whether formatting this measure now would repeat the last format of its vertical measure in lastFormats: the same format
+     * function (shared by the vertical measure's staves, unless they align rests differently) to the same width. The staves of
+     * a vertical measure have the same width and aligned note start x (see Stave.formatBegModifiers()), so that's the rule,
+     * and the repeated format would compute the same result, leaving the voices as they are. Otherwise, records this format
+     * in lastFormats as the vertical measure's last one.
+     * Never a repeat if the vertical measure has tablature: a tab note re-measures its width with the stave's current context
+     * when it's drawn (TabNote.setStave()), which can change the result of the next format.
+     * @param lastFormats the last format of each vertical measure in a series of formats.
+     * @returns true if the format would be a repeat (and can be skipped), false if it was recorded as the last format.
+     */
+    private isRepeatedFormat(lastFormats: Map<SourceMeasure, IVerticalMeasureFormat>): boolean {
+        const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
+        if (!sourceMeasure || sourceMeasure.VerticalMeasureList.some(measure => measure?.isTabMeasure)) {
+            return false;
+        }
+        const stave: VF.Stave = this.getVFStave();
+        const justifyWidth: number = stave.getNoteEndX() - stave.getNoteStartX() - 10; // the width VF.Formatter.formatToStave() formats to
+        const lastFormat: IVerticalMeasureFormat = lastFormats.get(sourceMeasure);
+        if (lastFormat?.formatVoices === this.formatVoices && lastFormat.justifyWidth === justifyWidth) {
+            return true;
+        }
+        lastFormats.set(sourceMeasure, {formatVoices: this.formatVoices, justifyWidth: justifyWidth});
+        return false;
     }
 
     /**
@@ -814,6 +886,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             this.correctTabNotePositions();
             return; // TAB notes are on their strings
         }
+        this.updateBeamedVoiceEntryBorders(); // before placing the notes relative to their voice entries
         // The note heads' y relative to the top line (the measure's y), from their lines on the stave: the y they got when drawn
         //   might be from another position of the stave, e.g. SkyBottomLineCalculator moves it, and can call this without drawing.
         const staveTopY: number = this.stave.getYForLine(0);
@@ -845,6 +918,28 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const noteHeadY: number = (this.stave.getYForNote(noteHead.getLine()) - staveTopY) / unitInPixels;
                     gNote.PositionAndShape.RelativePosition.y = noteHeadY - voiceEntryY;
                 }
+            }
+        }
+    }
+
+    /**
+     * Gives the voice entries of beamed notes the vertical borders of their stems as drawn, i.e. reaching the beam.
+     * A voice entry gets its bounding box from its Vexflow note in VexFlowStaffEntry.calculateXPosition()
+     * (VexFlowVoiceEntry.applyBordersFromVexflow()), before the beams extend their notes' stems to reach them
+     * (postFormatBeams(), in draw() or applyDrawSideEffects()). So a beamed note's voice entry ended at its unextended stem tip,
+     * short of the beam, and a slur on the stem side, which starts and ends at the voice entry's border
+     * (GraphicalSlur.calculateStartAndEnd()), started on the stem under the beam and crossed the beam and what is above it,
+     * e.g. a fingering (test_slur_above_beamed_stem_up_fingering_traumerei_measure3).
+     */
+    private updateBeamedVoiceEntryBorders(): void {
+        const staveTopY: number = this.stave.getYForLine(0); // the notes are on the stave where it is now, see correctNotePositions()
+        for (const gse of this.staffEntries) {
+            for (const gve of gse.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
+                const vfStaveNote: any = gve.vfStaveNote;
+                if (!vfStaveNote?.beam || !vfStaveNote.preFormatted || !vfStaveNote.getNoteHeadBeginX || gve.notes[0]?.sourceNote.isRest()) {
+                    continue; // (like applyBordersFromVexflow(), not for a TabNote, and rest positions are already fine, see below)
+                }
+                gve.applyVerticalBordersFromVexflow(vfStaveNote.getBoundingBox(), staveTopY);
             }
         }
     }
@@ -1127,7 +1222,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     let beamHasQuarterNoteOrLonger: boolean = false;
                     for (const note of beam[0].Notes) {
                         if (note.Length.RealValue >= new Fraction(1, 4).RealValue
-                            // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eigth)
+                            // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eighth)
                             && (!note.TypeLength || note.TypeLength.RealValue > 0.125)) {
                             beamHasQuarterNoteOrLonger = true;
                             break;
@@ -1282,7 +1377,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (noteTuplet) {
                     // check if there are quarter notes or longer in the tuplet, then don't beam.
                     // (TODO: check for consecutiveBeamableNotes inside tuplets like for non-tuplet notes above
-                    //   e.g quarter eigth eighth -> beam the two eigth notes)
+                    //   e.g quarter eighth eighth -> beam the two eighth notes)
                     let tupletContainsUnbeamableNote: boolean = false;
                     for (const notes of noteTuplet.Notes) {
                         for (const note of notes) {
@@ -1559,7 +1654,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         });
                       vftuplets.push(vftuplet);
                     } else {
-                        log.debug("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");
+                        // Fewer than two notes to draw in this measure, e.g. a cross-staff tuplet with one note in this staff, or a tuplet
+                        //   with invisible rests (MusicSheetCalculator adds a hidden note to its tuplet only if it shares its notehead with
+                        //   a visible unison note). No VexFlow tuplet for it, but keep its place in the list, so that
+                        //   this.vftuplets[voiceID][i] stays the VexFlow tuplet of this.tuplets[voiceID][i], as draw() pairs them.
+                        vftuplets.push(undefined);
                     }
                 }
             }
@@ -2033,6 +2132,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
 
             const fretFinger: VF.FretHandFinger = new VF.FretHandFinger(fingering.value);
+            VexFlowConverter.setVexFlowTextFontFamily((fretFinger as any).font, this.rules);
             fretFinger.setPosition(modifierPosition);
             fretFinger.setOffsetX(offsetX);
             if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
@@ -2047,6 +2147,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     fretFinger.setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
                 } else if (!this.rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
                     const stringNumber: VF.StringNumber = new VF.StringNumber(fingering.value);
+                    VexFlowConverter.setVexFlowTextFontFamily((stringNumber as any).font, this.rules);
                     stringNumber.radius = 0; // hack to remove the circle around the number
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
@@ -2094,6 +2195,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         // leave stringNumber as is, warning not really necessary
                 }
                 const vfStringNumber: VF.StringNumber = new VF.StringNumber(stringNumber);
+                VexFlowConverter.setVexFlowTextFontFamily((vfStringNumber as any).font, this.rules);
                 // Remove circle from string number. Not needed for
                 // disambiguation from fingerings since we use Roman
                 // Numerals for RenderStringNumbersClassical
@@ -2160,10 +2262,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     public addStaveTie(stavetie: VF.StaveTie, graphicalTie: GraphicalTie): void {
         this.vfTies.push(stavetie);
-        graphicalTie.vfTie = stavetie;
-        if (graphicalTie.Tie.TieDirection === PlacementEnum.Below) {
-            (stavetie as any).setDirection(1);
-        }
+        // a tie across a system break is added in two parts, the part in the first system first (layoutGraphicalTie())
+        graphicalTie.vfTies.push(stavetie);
+        graphicalTie.vfTie = graphicalTie.vfTies[0];
+        // The tie's SVG group is named after its start note, so that the note finds it (VexFlowGraphicalNote.getTieSVGs()).
+        //   Vexflow takes the id from the tie's first note, which the part of a tie continued in the next system doesn't have.
+        (stavetie as any).setStartNoteId((graphicalTie.StartNote as VexFlowGraphicalNote)?.getSVGId());
     }
 }
 

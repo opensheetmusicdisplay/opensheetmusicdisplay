@@ -35,6 +35,8 @@ export class GraphicalSlur extends GraphicalCurve {
     public graceEnd: boolean;
     private rules: EngravingRules;
     public SVGElement: Node;
+    /** While calculateCurve() calculates the curve again, past the fingerings of its start and end notes it ran into. */
+    private fingeringsRunInto: {start: BoundingBox[], end: BoundingBox[]};
 
     /**
      * Compares the timespan of two Graphical Slurs
@@ -96,10 +98,12 @@ export class GraphicalSlur extends GraphicalCurve {
         const startEndPoints: {startX: number, startY: number, endX: number, endY: number} =
             this.calculateStartAndEnd(slurStartNote, slurEndNote, staffLine, rules, skyBottomLineCalculator);
 
-        const startX: number = startEndPoints.startX;
-        const endX: number = startEndPoints.endX;
+        let startX: number = startEndPoints.startX;
+        let endX: number = startEndPoints.endX;
         let startY: number = startEndPoints.startY;
         let endY: number = startEndPoints.endY;
+        // from a note to the next one, in this staffline: nothing between them for the curve to clear (see placePastEndFingerings())
+        const toNextNote: boolean = this.staffEntries.length === 2 && slurStartNote !== undefined && slurEndNote !== undefined;
 
         // Degenerate case: start and end point (nearly) coincide, e.g. for a zero-length slur from a malformed
         // file. The curve calculation below would divide 0 by 0 (start-end angle, tangent slopes) and produce
@@ -152,8 +156,22 @@ export class GraphicalSlur extends GraphicalCurve {
                 endUpperLeft.x += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
             }
 
+            // above or beside the fingerings of the start and end notes the curve ran into, see retryPastEndFingerings()
+            const start: PointF2D = this.placePastEndFingerings(slurStartNote, true, startX, startY, startUpperRight.x, endX,
+                                                                this.fingeringsRunInto?.start, toNextNote);
+            const end: PointF2D = this.placePastEndFingerings(slurEndNote, false, endX, endY, endUpperLeft.x, startX,
+                                                              this.fingeringsRunInto?.end, toNextNote);
+            if (start.x !== startX || end.x !== endX) { // the sky line points stay between the start and the end
+                startUpperRight.x = Math.max(startUpperRight.x, start.x);
+                endUpperLeft.x = Math.min(endUpperLeft.x, end.x);
+            }
+            [startX, startY, endX, endY] = [start.x, start.y, end.x, end.y];
+            startUpperRight.y = startY;
+            endUpperLeft.y = endY;
+
             // SkyLinePointsList between firstStaffEntry startUpperRightPoint and lastStaffentry endUpperLeftPoint
             points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
+            const obstacles: PointF2D[] = this.getObstacles(points, skyBottomLineCalculator); // without the point added if there is none
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endUpperLeft.x - startUpperRight.x) / 2 + startUpperRight.x,
@@ -241,6 +259,10 @@ export class GraphicalSlur extends GraphicalCurve {
             // calculate Curve's Control Points
             const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =
                 this.calculateControlPoints(end2.x, startAngle, endAngle, transformedPoints, heightWidthRatio, startY, endY);
+            this.clearObstacles(controlPoints.startControlPoint, controlPoints.endControlPoint, end2.x,
+                                this.calculateTranslatedAndRotatedPointListAbove(obstacles, startX, startY, rotationMatrix),
+                                this.getFingeringCorners().map(corners =>
+                                    this.calculateTranslatedAndRotatedPointListAbove(corners, startX, startY, rotationMatrix)));
 
             let startControlPoint: PointF2D = controlPoints.startControlPoint;
             let endControlPoint: PointF2D = controlPoints.endControlPoint;
@@ -267,6 +289,10 @@ export class GraphicalSlur extends GraphicalCurve {
             this.bezierStartControlPt = new PointF2D(startControlPoint.x, startControlPoint.y - startYOffset);
             this.bezierEndControlPt = new PointF2D(endControlPoint.x, endControlPoint.y - endYOffset);
             this.bezierEndPt = new PointF2D(endX, endY - endYOffset);
+
+            if (this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startUpperRight.x, endUpperLeft.x)) {
+                return;
+            }
 
             // calculate slur Curvepoints and update Skyline
             const length: number = staffLine.SkyLine.length;
@@ -327,8 +353,24 @@ export class GraphicalSlur extends GraphicalCurve {
                 endLowerLeft.x += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
             }
 
+            // below or beside the fingerings of the start and end notes the curve ran into, see retryPastEndFingerings()
+            const start: PointF2D = this.placePastEndFingerings(slurStartNote, true, startX, startY, startLowerRight.x, endX,
+                                                                this.fingeringsRunInto?.start, toNextNote);
+            const end: PointF2D = this.placePastEndFingerings(slurEndNote, false, endX, endY, endLowerLeft.x, startX,
+                                                              this.fingeringsRunInto?.end, toNextNote);
+            if (start.x !== startX || end.x !== endX) { // the sky line points stay between the start and the end
+                startLowerRight.x = Math.max(startLowerRight.x, start.x);
+                endLowerLeft.x = Math.min(endLowerLeft.x, end.x);
+            }
+            [startX, startY, endX, endY] = [start.x, start.y, end.x, end.y];
+            startLowerRight.y = startY;
+            endLowerLeft.y = endY;
+
             // BottomLinePointsList between firstStaffEntry startLowerRightPoint and lastStaffentry endLowerLeftPoint
             points = this.calculateBottomPoints(startLowerRight, endLowerLeft, staffLine, skyBottomLineCalculator);
+            // without the point added if there is none, nor the bare staff, which calculateBottomPoints() keeps
+            const obstacles: PointF2D[] = this.getObstacles(points.filter(point => point.y !== staffLine.BottomLineOffset),
+                                                            skyBottomLineCalculator);
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endLowerLeft.x - startLowerRight.x) / 2 + startLowerRight.x,
@@ -412,6 +454,10 @@ export class GraphicalSlur extends GraphicalCurve {
             // calculate Curve's Control Points
             const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =
                 this.calculateControlPoints(end2.x, startAngle, endAngle, transformedPoints, heightWidthRatio, startY, endY);
+            this.clearObstacles(controlPoints.startControlPoint, controlPoints.endControlPoint, end2.x,
+                                this.calculateTranslatedAndRotatedPointListBelow(obstacles, startX, startY, rotationMatrix),
+                                this.getFingeringCorners().map(corners =>
+                                    this.calculateTranslatedAndRotatedPointListBelow(corners, startX, startY, rotationMatrix)));
             let startControlPoint: PointF2D = controlPoints.startControlPoint;
             let endControlPoint: PointF2D = controlPoints.endControlPoint;
 
@@ -435,6 +481,10 @@ export class GraphicalSlur extends GraphicalCurve {
             // this.intersection.x += startX;
             // this.intersection.y += startY;
             /* for DEBUG only */
+
+            if (this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startLowerRight.x, endLowerLeft.x)) {
+                return;
+            }
 
             // calculate CurvePoints
             const length: number = staffLine.BottomLine.length;
@@ -859,6 +909,333 @@ export class GraphicalSlur extends GraphicalCurve {
                 this.placement = PlacementEnum.Above;
             } else { this.placement = PlacementEnum.Below; }
         }
+    }
+
+    /**
+     * Calculates the curve again if it runs into a fingering of its start or end note, with its start or end past those or beside them
+     * (see placePastEndFingerings()), e.g. one right above the last note. calculateTopPoints() and calculateBottomPoints() leave
+     * the start and end staff entries out: the tangents to something right above the start or end would be vertical.
+     * Only the part of those staff entries the curve passes over counts, from the start or end to the entry's edge
+     * towards the other end: not e.g. the fingering left of the stem a slur above a note with its stem up starts at.
+     * @param startEntryX The edge of the start note's staff entry towards the end, relative to the staffline.
+     * @param endEntryX The edge of the end note's staff entry towards the start.
+     * @returns Whether the curve was calculated again (and added to the sky or bottom line), so there is nothing left to do.
+     */
+    private retryPastEndFingerings(rules: EngravingRules, startNote: GraphicalNote, endNote: GraphicalNote,
+                                   startEntryX: number, endEntryX: number): boolean {
+        if (this.fingeringsRunInto) {
+            return false; // this is the second calculation
+        }
+        const start: BoundingBox[] = this.getFingeringsRunInto(startNote, this.bezierStartPt.x, startEntryX);
+        const end: BoundingBox[] = this.getFingeringsRunInto(endNote, endEntryX, this.bezierEndPt.x);
+        if (start.length === 0 && end.length === 0) {
+            return false;
+        }
+        this.fingeringsRunInto = {start, end};
+        try {
+            this.calculateCurve(rules);
+        } finally {
+            this.fingeringsRunInto = undefined;
+        }
+        return true;
+    }
+
+    /** The fingerings of the note's staff entry that the curve passes closer than SlurNoteHeadYOffset to, or through, from fromX
+     *  to toX (relative to the staffline). */
+    private getFingeringsRunInto(note: GraphicalNote, fromX: number, toX: number): BoundingBox[] {
+        const outward: number = this.placement === PlacementEnum.Above ? -1 : 1;
+        const margin: number = this.rules.SlurNoteHeadYOffset;
+        const runInto: BoundingBox[] = [];
+        for (const fingering of note?.parentVoiceEntry.parentStaffEntry.FingeringEntries ?? []) {
+            const box: BoundingBox = fingering.PositionAndShape; // relative to the staffline, see calculateFingerings()
+            const [near, far] = this.getOutwardExtent(box);
+            for (let i: number = 0; i <= 100; i++) {
+                // (calculateCurvePointAtIndex(1) is not the end point, but (0, 0))
+                const point: PointF2D = i < 100 ? this.calculateCurvePointAtIndex(i / 100) : this.bezierEndPt;
+                if (point.x >= Math.max(fromX, box.RelativePosition.x + box.BorderLeft) &&
+                    point.x <= Math.min(toX, box.RelativePosition.x + box.BorderRight) &&
+                    point.y * outward > near - margin && point.y * outward < far + margin) {
+                    runInto.push(box);
+                    break;
+                }
+            }
+        }
+        return runInto;
+    }
+
+    /** The near and far edges of the box from the staff on the slur's side, as distances outward (up for a slur above). */
+    private getOutwardExtent(box: BoundingBox): number[] {
+        const top: number = box.RelativePosition.y + box.BorderTop;
+        const bottom: number = box.RelativePosition.y + box.BorderBottom;
+        return this.placement === PlacementEnum.Above ? [-bottom, -top] : [top, bottom];
+    }
+
+    /**
+     * Where the start or end goes if the curve ran into fingerings of its note (see retryPastEndFingerings()): past them
+     * (clearEndFingerings()), or, for a slur from a note to the next one that would then climb by more than half its width, beside
+     * them, on the note head's side (on the stem's side, it starts at the stem's tip, where a beam can be): left of their column at
+     * the end, right of it at the start. That keeps such a short slur close to its notes, below the fingerings, e.g. from one chord
+     * of 16ths to the next.
+     * @param x The start's or end's x.
+     * @param y The start's or end's y.
+     * @param entryX The edge of the note's staff entry towards the other end, relative to the staffline.
+     * @param otherX The other end's x.
+     * @param runInto The fingerings of the note's staff entry the curve ran into, see retryPastEndFingerings().
+     * @param toNextNote Whether the slur goes from a note to the next one, both in this staffline.
+     */
+    private placePastEndFingerings(note: GraphicalNote, isStart: boolean, x: number, y: number, entryX: number, otherX: number,
+                                   runInto: BoundingBox[], toNextNote: boolean): PointF2D {
+        if (!runInto?.length) {
+            return new PointF2D(x, y);
+        }
+        const pastY: number = isStart ? this.clearEndFingerings(note, x, entryX, y, runInto) :
+            this.clearEndFingerings(note, entryX, x, y, runInto);
+        const stem: StemDirectionType = note.parentVoiceEntry.parentVoiceEntry.StemDirection;
+        const headSide: boolean = this.placement === PlacementEnum.Above ? stem !== StemDirectionType.Up : stem !== StemDirectionType.Down;
+        if (toNextNote && headSide && Math.abs(pastY - y) > Math.abs(otherX - x) / 2) {
+            const gap: number = 0.3; // from the fingerings, a little less than the distance from the notes, as there is space in a text box
+            const besideX: number = isStart ? Math.max(...runInto.map(box => box.RelativePosition.x + box.BorderRight)) + gap :
+                Math.min(...runInto.map(box => box.RelativePosition.x + box.BorderLeft)) - gap;
+            // not far from the note, and still a slur
+            if (Math.abs(besideX - x) <= 1.2 && (isStart ? otherX - besideX : besideX - otherX) >= 1.5) {
+                return new PointF2D(besideX, y);
+            }
+        }
+        return new PointF2D(x, pastY);
+    }
+
+    /**
+     * Moves the start or the end of the slur away from the staff (up for a slur above, down for one below) past the given
+     * fingerings of its note, which the curve ran into, and any stacked on them, keeping the distance from them it keeps from
+     * its note (SlurNoteHeadYOffset).
+     * @param note The slur's start or end note, if it is in this staffline.
+     * @param fromX The left end of the part of the note's staff entry the curve passes over, relative to the staffline.
+     * @param toX Its right end.
+     * @param y The start's or end's y.
+     * @param runInto The fingerings of the note's staff entry the curve ran into, see retryPastEndFingerings().
+     * @returns The y of the start or end past the fingerings.
+     */
+    private clearEndFingerings(note: GraphicalNote, fromX: number, toX: number, y: number, runInto: BoundingBox[]): number {
+        if (!runInto?.length) {
+            return y;
+        }
+        const outward: number = this.placement === PlacementEnum.Above ? -1 : 1;
+        const margin: number = this.rules.SlurNoteHeadYOffset;
+        // the fingerings over that part, nearest to the note first
+        const boxes: BoundingBox[] = (note.parentVoiceEntry.parentStaffEntry.FingeringEntries ?? [])
+            .map(fingering => fingering.PositionAndShape)
+            .filter(box => box.RelativePosition.x + box.BorderRight > fromX && box.RelativePosition.x + box.BorderLeft < toX)
+            .sort((a, b) => this.getOutwardExtent(a)[0] - this.getOutwardExtent(b)[0]);
+        let distance: number = y * outward; // how far out the start or end is
+        for (const box of boxes) {
+            const [near, far] = this.getOutwardExtent(box);
+            if (runInto.includes(box) || near < distance + margin && far > distance - margin) {
+                distance = Math.max(distance, far + margin);
+            }
+        }
+        return distance * outward;
+    }
+
+    /** The points of the sky or bottom line for clearObstacles(): each sample at both its edges, since what it holds can be
+     *  anywhere along it, e.g. the edge of a fingering under a slur rising steeply from its start. */
+    private getObstacles(points: PointF2D[], skyBottomLineCalculator: SkyBottomLineCalculator): PointF2D[] {
+        const halfSample: number = 0.5 / skyBottomLineCalculator.SamplingUnit;
+        const obstacles: PointF2D[] = [];
+        for (const point of points) {
+            obstacles.push(new PointF2D(point.x - halfSample, point.y), new PointF2D(point.x + halfSample, point.y));
+        }
+        return obstacles;
+    }
+
+    /**
+     * Raises the control points where the curve passes closer than SlurNoteHeadYOffset to an obstacle, e.g. the fingering of
+     * the note next to the start. The tangents only keep the lines from the start and end through the control points above the
+     * obstacles, and the curve runs below those lines, the more so near the start and end.
+     * Coordinates as in calculateControlPoints(): the start at the origin, the end on the x-axis, the obstacles above it.
+     * Raising a control point doesn't move the curve sideways: the curve's height at an x grows linearly with the control
+     * points' heights. But it raises the whole curve, by much for an obstacle next to the start or end, where the control point
+     * has only a small share in the curve. So if that would make the curve more than 0.5 higher, the tangents get steeper first
+     * (steepenTangents()), which brings the curve up near its ends without raising its top.
+     * Only the obstacles under the tangents count: the curve can reach them, running between them and its tangents.
+     * The sky or bottom line doesn't say what is under its points: if the curve, raised, runs further into a fingering it passed
+     * under or beside, it stays as it was (e.g. under a fingering on the stem of another voice, in the middle of a short slur).
+     * The fingerings of the start and end notes are retryPastEndFingerings()'s.
+     * @param endX The end point's x.
+     * @param obstacles The sky- or bottom line points between the start and end staff entries.
+     * @param fingerings The corners of the fingerings of the notes between the start and end, see getFingeringCorners().
+     */
+    private clearObstacles(startControlPoint: PointF2D, endControlPoint: PointF2D, endX: number, obstacles: PointF2D[],
+                           fingerings: PointF2D[][]): void {
+        const [startControlX, endControlX, startControlY, endControlY] = [startControlPoint.x, endControlPoint.x, startControlPoint.y,
+                                                                          endControlPoint.y];
+        const depths: number[] = fingerings.map(corners => this.getDepthIn(startControlPoint, endControlPoint, endX, corners));
+        // the tangents' slopes: calculateAngles() puts them above the obstacles, except where it limits them to SlurTangentMaxAngle
+        const startSlope: number = startControlPoint.y / startControlPoint.x;
+        const endSlope: number = endControlPoint.y / (endX - endControlPoint.x);
+        // out of the curve's reach, e.g. stems hanging over the slur from a beam above
+        const reachable: PointF2D[] = obstacles.filter(obstacle => obstacle.x > 0 && obstacle.x < endX &&
+            obstacle.y <= obstacle.x * startSlope && obstacle.y <= (endX - obstacle.x) * endSlope);
+        let misses: {t: number, height: number, obstacle: PointF2D}[] = this.getMisses(startControlPoint, endControlPoint, endX, reachable);
+        let raised: {startY: number, endY: number} = this.getRaisedControlPoints(startControlPoint, endControlPoint, endX, misses);
+        const raise: number = this.getCurveTop(raised.startY, raised.endY).height -
+            this.getCurveTop(startControlPoint.y, endControlPoint.y).height;
+        if (raise > 0.5) {
+            this.steepenTangents(startControlPoint, endControlPoint, endX, misses);
+            misses = this.getMisses(startControlPoint, endControlPoint, endX, reachable);
+            raised = this.getRaisedControlPoints(startControlPoint, endControlPoint, endX, misses);
+        }
+        startControlPoint.y = raised.startY;
+        endControlPoint.y = raised.endY;
+        // (give or take the sampling of getDepthIn())
+        if (fingerings.some((corners, i) => this.getDepthIn(startControlPoint, endControlPoint, endX, corners) > depths[i] + 0.05)) {
+            [startControlPoint.x, endControlPoint.x, startControlPoint.y, endControlPoint.y] = [startControlX, endControlX, startControlY,
+                                                                                                endControlY];
+        }
+    }
+
+    /** The corners of the fingerings of the notes between the start and end, relative to the staffline (see calculateFingerings()). */
+    private getFingeringCorners(): PointF2D[][] {
+        const fingerings: PointF2D[][] = [];
+        for (const staffEntry of this.staffEntries.slice(1, -1)) {
+            for (const fingering of staffEntry.FingeringEntries ?? []) {
+                const box: BoundingBox = fingering.PositionAndShape;
+                const [left, right] = [box.RelativePosition.x + box.BorderLeft, box.RelativePosition.x + box.BorderRight];
+                const [top, bottom] = [box.RelativePosition.y + box.BorderTop, box.RelativePosition.y + box.BorderBottom];
+                fingerings.push([new PointF2D(left, top), new PointF2D(right, top), new PointF2D(left, bottom), new PointF2D(right, bottom)]);
+            }
+        }
+        return fingerings;
+    }
+
+    /** How far the curve runs into the box with these corners, from its nearest edge (0 if it doesn't; coordinates as in clearObstacles()). */
+    private getDepthIn(startControlPoint: PointF2D, endControlPoint: PointF2D, endX: number, corners: PointF2D[]): number {
+        const xs: number[] = corners.map(corner => corner.x);
+        const ys: number[] = corners.map(corner => corner.y);
+        const [left, right, low, high] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+        let depth: number = 0;
+        for (let i: number = 1; i < 100; i++) {
+            const t: number = i / 100;
+            const x: number = 3 * (1 - t) * (1 - t) * t * startControlPoint.x + 3 * (1 - t) * t * t * endControlPoint.x + t * t * t * endX;
+            const y: number = 3 * (1 - t) * (1 - t) * t * startControlPoint.y + 3 * (1 - t) * t * t * endControlPoint.y;
+            if (x > left && x < right) {
+                depth = Math.max(depth, Math.min(y - low, high - y));
+            }
+        }
+        return depth;
+    }
+
+    /** Where the curve passes closer than SlurNoteHeadYOffset to the obstacles, and by how much (coordinates as in clearObstacles()). */
+    private getMisses(startControlPoint: PointF2D, endControlPoint: PointF2D, endX: number,
+                      obstacles: PointF2D[]): {t: number, height: number, obstacle: PointF2D}[] {
+        const misses: {t: number, height: number, obstacle: PointF2D}[] = [];
+        for (const obstacle of obstacles) {
+            // the curve's x grows with t, since 0 <= startControlPoint.x <= endControlPoint.x <= endX: bisect
+            let tMin: number = 0;
+            let tMax: number = 1;
+            for (let i: number = 0; i < 30; i++) {
+                const tMid: number = (tMin + tMax) / 2;
+                const x: number = 3 * (1 - tMid) * (1 - tMid) * tMid * startControlPoint.x + 3 * (1 - tMid) * tMid * tMid * endControlPoint.x
+                    + tMid * tMid * tMid * endX;
+                if (x < obstacle.x) {
+                    tMin = tMid;
+                } else {
+                    tMax = tMid;
+                }
+            }
+            const t: number = (tMin + tMax) / 2;
+            const curveY: number = 3 * (1 - t) * (1 - t) * t * startControlPoint.y + 3 * (1 - t) * t * t * endControlPoint.y;
+            const miss: number = obstacle.y + this.rules.SlurNoteHeadYOffset - curveY;
+            if (miss > 0) {
+                misses.push({t, height: miss, obstacle});
+            }
+        }
+        return misses;
+    }
+
+    /**
+     * The heights of the control points at which the curve clears the misses, as low as possible: a miss in the first half of
+     * the curve raises the start control point, one in the second half the end one, by as much as the miss that needs the most,
+     * after what the start control point already gave. Not past the steepest tangent allowed (calculateAngles()): what is right
+     * next to an end is out of the curve's reach. Coordinates as in clearObstacles().
+     */
+    private getRaisedControlPoints(startControlPoint: PointF2D, endControlPoint: PointF2D, endX: number,
+                                   misses: {t: number, height: number}[]): {startY: number, endY: number} {
+        let startRaise: number = 0;
+        for (const miss of misses) {
+            if (miss.t <= 0.5) {
+                startRaise = Math.max(startRaise, miss.height / (3 * (1 - miss.t) * (1 - miss.t) * miss.t));
+            }
+        }
+        let endRaise: number = 0;
+        for (const miss of misses) {
+            if (miss.t > 0.5) {
+                const remaining: number = miss.height - 3 * (1 - miss.t) * (1 - miss.t) * miss.t * startRaise;
+                endRaise = Math.max(endRaise, remaining / (3 * (1 - miss.t) * miss.t * miss.t));
+            }
+        }
+        const maxSlope: number = Math.tan(this.rules.SlurTangentMaxAngle * GraphicalSlur.degreesToRadiansFactor);
+        return {
+            startY: Math.max(startControlPoint.y, Math.min(startControlPoint.y + startRaise, startControlPoint.x * maxSlope)),
+            endY: Math.max(endControlPoint.y, Math.min(endControlPoint.y + endRaise, (endX - endControlPoint.x) * maxSlope)),
+        };
+    }
+
+    /**
+     * Moves the start control point towards the start and the end one towards the end, as far as the curve needs to clear the
+     * misses before and after its top, but to no steeper tangents than SlurTangentMaxAngle - 10, leaving room to raise them.
+     * The curve's height at t only depends on the control points' heights, so the curve then reaches the height it needs sooner
+     * after the start (or later before the end), without its top getting higher. Coordinates as in clearObstacles().
+     */
+    private steepenTangents(startControlPoint: PointF2D, endControlPoint: PointF2D, endX: number,
+                            misses: {t: number, height: number, obstacle: PointF2D}[]): void {
+        const b1: (t: number) => number = t => 3 * (1 - t) * (1 - t) * t; // the control points' weights in the curve
+        const b2: (t: number) => number = t => 3 * (1 - t) * t * t;
+        const heightAt: (t: number) => number = t => b1(t) * startControlPoint.y + b2(t) * endControlPoint.y;
+        const top: {t: number, height: number} = this.getCurveTop(startControlPoint.y, endControlPoint.y);
+        let startControlX: number = startControlPoint.x;
+        let endControlX: number = endControlPoint.x;
+        for (const miss of misses) {
+            const height: number = miss.obstacle.y + this.rules.SlurNoteHeadYOffset;
+            if (height >= top.height) {
+                continue; // only raising the curve clears it
+            }
+            // where the curve reaches that height on the obstacle's side of the top: the curve rises from t = from to t = to
+            let from: number = miss.t <= top.t ? 0 : 1;
+            let to: number = top.t;
+            for (let i: number = 0; i < 30; i++) {
+                const mid: number = (from + to) / 2;
+                if (heightAt(mid) < height) {
+                    from = mid;
+                } else {
+                    to = mid;
+                }
+            }
+            const t: number = to;
+            // there, the curve's x must not be past the obstacle's (before the top) or before it (after the top)
+            if (miss.t <= top.t) {
+                startControlX = Math.min(startControlX, (miss.obstacle.x - b2(t) * endControlPoint.x - t * t * t * endX) / b1(t));
+            } else {
+                endControlX = Math.max(endControlX, (miss.obstacle.x - b1(t) * startControlPoint.x - t * t * t * endX) / b2(t));
+            }
+        }
+        const steepestSlope: number = Math.tan((this.rules.SlurTangentMaxAngle - 10) * GraphicalSlur.degreesToRadiansFactor);
+        startControlPoint.x = Math.min(startControlPoint.x, Math.max(startControlX, startControlPoint.y / steepestSlope, 0));
+        endControlPoint.x = Math.max(endControlPoint.x, Math.min(endControlX, endX - endControlPoint.y / steepestSlope, endX));
+    }
+
+    /** The highest point of the curve (its t and its height), with the control points at the heights startY and endY
+     *  (coordinates as in clearObstacles()). */
+    private getCurveTop(startY: number, endY: number): {t: number, height: number} {
+        const top: {t: number, height: number} = {t: 0.5, height: 0};
+        for (let i: number = 1; i < 100; i++) {
+            const t: number = i / 100;
+            const height: number = 3 * (1 - t) * (1 - t) * t * startY + 3 * (1 - t) * t * t * endY;
+            if (height > top.height) {
+                top.t = t;
+                top.height = height;
+            }
+        }
+        return top;
     }
 
     /**

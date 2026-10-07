@@ -19,6 +19,7 @@ import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/Grap
 import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { GraphicalLabel } from "../../../../src/MusicalScore/Graphical/GraphicalLabel";
+import { BoundingBox } from "../../../../src/MusicalScore/Graphical/BoundingBox";
 import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
@@ -840,6 +841,105 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // A fingering is placed from the sky line (above the staff) or the bottom line (below) in the range of its label's margin box.
+   // Before fix: that range was read before the label's borders were set, so it had no width: only the samples at the note's x,
+   // which missed a stem beside the note head. E.g. here the 1 of beat 3 (treble staff) was drawn on voice 1's stem,
+   // the 1 of beat 1 (bass staff) on voice 6's stem.
+   it("Places fingerings clear of the stems under their labels", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_fingering_two_voices_pitch_order.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         let stemsUnderLabels: number = 0;
+         for (const staffIndex of [0, 1]) {
+            const above: boolean = staffIndex === 0; // fingerings above the treble staff, below the bass staff
+            for (const staffEntry of osmd.GraphicSheet.findGraphicalMeasure(0, staffIndex).staffEntries) {
+               for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                  // the drawn stem, in the page's units like the fingerings' boxes
+                  const stem: SVGGElement = (voiceEntry.notes[0] as VexFlowGraphicalNote).getSVGGElement().querySelector(".vf-stem");
+                  const stemBox: DOMRect = stem.getBBox();
+                  const stemLeft: number = stemBox.x / unitInPixels;
+                  const stemRight: number = (stemBox.x + stemBox.width) / unitInPixels;
+                  for (const fingering of staffEntry.FingeringEntries) {
+                     const box: BoundingBox = fingering.PositionAndShape;
+                     if (stemRight < box.AbsolutePosition.x + box.BorderMarginLeft || stemLeft > box.AbsolutePosition.x + box.BorderMarginRight) {
+                        continue;
+                     }
+                     stemsUnderLabels++;
+                     const description: string = `staff ${staffIndex + 1}, fingering ${fingering.Label.text}`;
+                     // (a tolerance of 1 pixel. The fingerings overlapped the stems by about a staff space.)
+                     if (above) {
+                        expect(box.AbsolutePosition.y + box.BorderBottom, `${description} must be above the stem`)
+                           .to.be.at.most(stemBox.y / unitInPixels + 0.1);
+                     } else {
+                        expect(box.AbsolutePosition.y + box.BorderTop, `${description} must be below the stem`)
+                           .to.be.at.least((stemBox.y + stemBox.height) / unitInPixels - 0.1);
+                     }
+                  }
+               }
+            }
+         }
+         expect(stemsUnderLabels, "stems under fingering labels").to.be.at.least(2);
+         done();
+      }).catch(done);
+   });
+
+   // A fingering above or below the staff is centred on its note's head, also where Vexflow moves a voice's notes aside from
+   // another voice's notes, e.g. the lower of two voices a second apart (m1 beat 1: voice 2's C5 right of voice 1's D5).
+   // Before fix: the fingerings of a staff entry were all at its x, the middle of the voice entry reaching the farthest right,
+   // so the 4 of the D5 was drawn above the C5. The fingerings of a chord stay in one column (m1 beat 3: C5-D5 in voice 1,
+   // whose D5 is drawn right of the stem), above the heads that aren't displaced: before fix, they were above the stem.
+   // So do the fingerings of voices drawn in one column (m2: a half note beside a whole note), centred on the wider head.
+   it("Centres each fingering on the head of its note, also of a voice moved aside", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_fingering_voices_moved_aside.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const staffEntries: GraphicalStaffEntry[] = osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries;
+         function fingering(staffEntry: GraphicalStaffEntry, text: string): GraphicalLabel {
+            return staffEntry.FingeringEntries.find((label: GraphicalLabel) => label.Label.text === text);
+         }
+         /** The x of the centre of the drawn note head of the fingering's note. */
+         function noteX(label: GraphicalLabel): number {
+            return osmd.EngravingRules.GNote(label.sourceNote).PositionAndShape.AbsolutePosition.x;
+         }
+
+         const d5Fingering: GraphicalLabel = fingering(staffEntries[0], "4");
+         const c5Fingering: GraphicalLabel = fingering(staffEntries[0], "3");
+         expect(noteX(c5Fingering) - noteX(d5Fingering), "beat 1: the C5 is drawn right of the D5").to.be.above(0.5);
+         expect(d5Fingering.PositionAndShape.AbsolutePosition.x, "beat 1: the 4 above the D5").to.be.closeTo(noteX(d5Fingering), 0.001);
+         expect(c5Fingering.PositionAndShape.AbsolutePosition.x, "beat 1: the 3 above the C5").to.be.closeTo(noteX(c5Fingering), 0.001);
+
+         const chordC5Fingering: GraphicalLabel = fingering(staffEntries[1], "1");
+         const chordD5Fingering: GraphicalLabel = fingering(staffEntries[1], "2");
+         expect(noteX(chordD5Fingering) - noteX(chordC5Fingering), "beat 3: the D5 is drawn right of the C5").to.be.above(0.5);
+         expect(chordC5Fingering.PositionAndShape.AbsolutePosition.x, "beat 3: the 1 above the C5")
+            .to.be.closeTo(noteX(chordC5Fingering), 0.001);
+         expect(chordD5Fingering.PositionAndShape.AbsolutePosition.x, "beat 3: the 2 in the column of the 1")
+            .to.be.closeTo(chordC5Fingering.PositionAndShape.AbsolutePosition.x, 0.001);
+
+         const columnEntry: GraphicalStaffEntry = osmd.GraphicSheet.findGraphicalMeasure(1, 0).staffEntries[0];
+         const halfNoteFingering: GraphicalLabel = fingering(columnEntry, "5");
+         const wholeNoteFingering: GraphicalLabel = fingering(columnEntry, "1");
+         expect(noteX(wholeNoteFingering) - noteX(halfNoteFingering), "m2: the whole note's head is wider").to.be.above(0.1);
+         expect(halfNoteFingering.PositionAndShape.AbsolutePosition.x, "m2: the 5 of the half note in the column of the 1")
+            .to.be.closeTo(wholeNoteFingering.PositionAndShape.AbsolutePosition.x, 0.001);
+         expect(wholeNoteFingering.PositionAndShape.AbsolutePosition.x, "m2: the 1 above the whole note")
+            .to.be.closeTo(noteX(wholeNoteFingering), 0.001);
+         done();
+      }).catch(done);
+   });
+
    // A fingering label is stacked in the pitch order of its note, which is not the order the
    // fingerings were read in, so the label's index in FingeringEntries says nothing about which
    // note it belongs to. GraphicalLabel.sourceNote carries that link, letting a consumer find the
@@ -944,6 +1044,67 @@ describe("VexFlow Measure", () => {
          done();
       }).catch(done);
    });
+
+   // A measure makes no VexFlow tuplet for a tuplet with fewer than two notes to draw in it, e.g. a cross-staff tuplet with
+   //   one note in the staff, or a tuplet with invisible rests. draw() pairs the measure's tuplets with its VexFlow tuplets
+   //   by index, so each VexFlow tuplet after such a tuplet showed or hid its number as decided for the tuplet before its own.
+   // In test_tuplet_crossstaff_first_triplet_number, voice 1 plays four triplets without brackets, the first one with its
+   //   first two notes on the lower staff, and the default rules show the numbers of the first two triplets only. The upper
+   //   staff showed the 3rd triplet's number too, as it got the 2nd triplet's decision. The same with the first two notes as
+   //   invisible rests on the upper staff.
+   for (const [variant, invisibleRests] of [
+      ["a cross-staff tuplet with one note in the staff", false],
+      ["a tuplet with invisible rests", true],
+   ] as [string, boolean][]) {
+      it(`Shows the tuplet numbers decided for the tuplets after ${variant}`, async () => {
+         let score: Document = TestUtils.getScore("test_tuplet_crossstaff_first_triplet_number.musicxml");
+         if (invisibleRests) {
+            score = score.cloneNode(true) as Document;
+            for (const note of Array.from(score.getElementsByTagName("note")).slice(0, 2)) {
+               note.setAttribute("print-object", "no");
+               note.replaceChild(score.createElement("rest"), note.getElementsByTagName("pitch")[0]);
+               note.getElementsByTagName("staff")[0].textContent = "1";
+            }
+         }
+         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+         await osmd.load(score);
+         osmd.render();
+         const triplets: Tuplet[] = [];
+         for (const voiceEntry of osmd.Sheet.Instruments[0].Voices[0].VoiceEntries) {
+            if (!triplets.includes(voiceEntry.Notes[0].NoteTuplet)) {
+               triplets.push(voiceEntry.Notes[0].NoteTuplet);
+            }
+         }
+         expect(triplets.length, "triplets of voice 1").to.equal(4);
+         expect(triplets.map((tuplet: Tuplet) => tuplet.RenderTupletNumber), "numbers to show").to.deep.equal([true, true, false, false]);
+         const [upperMeasure, lowerMeasure] = osmd.GraphicSheet.MeasureList[0];
+         const drawnNotes: (tuplet: Tuplet, measure: GraphicalMeasure) => Note[] = (tuplet: Tuplet, measure: GraphicalMeasure): Note[] =>
+            tuplet.Notes.flat().filter((note: Note) => note.PrintObject && note.ParentStaff === measure.ParentStaff);
+         expect(drawnNotes(triplets[0], upperMeasure).length, "notes of the first triplet drawn on the upper staff").to.equal(1);
+
+         // The indices of the triplets with a number drawn in the measure. The numbers are the glyphs (filled paths) in the
+         //   measure's SVG group that belong to no note, beam, clef, key or time signature, which have groups of their own
+         //   (the staff lines are stroked). A number is centered over the triplet's notes in the staff.
+         const numberedTriplets: (measure: GraphicalMeasure) => number[] = (measure: GraphicalMeasure): number[] => {
+            const measureGroup: Element = (measure.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote)
+               .getSVGGElement().closest("g.vf-measure");
+            const numbers: Element[] = Array.from(measureGroup.querySelectorAll("path[stroke='none']")).filter((path: Element) =>
+               !path.closest("g.vf-stavenote, g.vf-beam, g.vf-clef, g.vf-keysignature, g.vf-timesignature"));
+            return numbers.map((tupletNumber: Element) => {
+               const numberBox: DOMRect = (tupletNumber as SVGGraphicsElement).getBBox();
+               const centerX: number = numberBox.x + numberBox.width / 2;
+               return triplets.findIndex((tuplet: Tuplet) => {
+                  const noteBoxes: DOMRect[] = drawnNotes(tuplet, measure).map((note: Note) =>
+                     (osmd.EngravingRules.GNote(note) as VexFlowGraphicalNote).getSVGGElement().getBBox());
+                  return noteBoxes.length > 0 && Math.min(...noteBoxes.map((box: DOMRect) => box.x)) <= centerX &&
+                     centerX <= Math.max(...noteBoxes.map((box: DOMRect) => box.x + box.width));
+               });
+            });
+         };
+         expect(numberedTriplets(upperMeasure), "triplets with a number on the upper staff").to.deep.equal([1]);
+         expect(numberedTriplets(lowerMeasure), "triplets with a number on the lower staff").to.deep.equal(invisibleRests ? [] : [0]);
+      });
+   }
 
    // Non-regression test for EngravingRules.SlurFlattenToObstacle (issue #1466). Long/steep slurs otherwise arc far
    // above the notes they span; the apex is capped to a small margin above the highest spanned object. This checks

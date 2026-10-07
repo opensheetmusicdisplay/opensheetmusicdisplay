@@ -7,9 +7,11 @@
 // This version needs only Node.js and node-canvas (already an OSMD dependency, also used
 // by generateImages_browserless.mjs and test/performance/compareImages.mjs).
 //
-// It produces the SAME diff/ output folder as the bash script:
+// It produces the SAME diff/ output folder as the bash script, plus diffs.txt:
 //   diff/results.txt              - every compared image with its diff value, biggest change on top
-//   diff/warnings.txt             - images present in only one of blessed/ or current/
+//   diff/diffs.txt                - what to look at: the compared states of blessed/ and current/ (see below),
+//                                   the changed samples (with their diff region), then the warnings, like the console summary
+//   diff/warnings.txt             - images present in only one of blessed/ or current/, or that could not be compared
 //   diff/<name>.png               - red-highlight diff image (only for changed samples)
 //   diff/<name>_Blessed.png       - copy of the blessed (old / reference) image
 //   diff/<name>_Current.png       - copy of the current (new) image
@@ -28,6 +30,14 @@
 // look exactly (verified pixel-for-pixel against example output): unchanged content is dimmed
 // 80% toward white, changed pixels are red (#ff0000) composited at alpha 0x50 over the current
 // pixel - so a moved black notehead shows as dark maroon and a thin line as pink.
+//
+// Compared states
+// ---------------
+// generateImages_browserless.mjs writes source_commit.txt into the image folder, with the git branch and commit the
+// images were generated from. The console summary ends with the states of blessed/ and current/, and diffs.txt starts
+// with them, e.g. "blessed: develop 52b16c29, generated 2026-10-07 14:03:12" with the commit's subject below, so you can
+// see what was compared, even after generating images on several branches or switching the folders around. A folder
+// generated with a build older than the files in src/ gets a warning there, as its images may not show that commit.
 //
 // Usage
 // -----
@@ -64,7 +74,10 @@ const BLESSED = Path.join(BUILDFOLDER, "blessed");
 const CURRENT = Path.join(BUILDFOLDER, "current");
 const DIFF = Path.join(BUILDFOLDER, "diff");
 const RESULTS = Path.join(DIFF, "results.txt");
+const DIFFS = Path.join(DIFF, "diffs.txt");
 const WARNINGS = Path.join(DIFF, "warnings.txt");
+// written into blessed/ and current/ by generateImages_browserless.mjs
+const SOURCE_COMMIT_FILE = "source_commit.txt";
 
 // A pixel counts as "changed" when any channel differs by more than this.
 // 0 matches ImageMagick's default fuzz (any difference at all), catching even minimal changes.
@@ -101,12 +114,14 @@ function listPngs(dir, prefix) {
 }
 
 /**
- * Decodes a PNG file into raw RGBA pixel data via node-canvas.
- * @param {string} file absolute or relative path to a PNG
+ * Decodes a PNG into raw RGBA pixel data via node-canvas.
+ * Takes the file's content rather than its path: node-canvas opens a path itself, which fails on Windows for paths
+ * longer than 260 characters (e.g. a long sample name in a deep folder), where Node's fs reads the file fine.
+ * @param {Buffer} png the content of a PNG file
  * @returns {Promise<{ w: number, h: number, data: Uint8ClampedArray }>} pixel buffer
  */
-async function decode(file) {
-    const img = await loadImage(file);
+async function decode(png) {
+    const img = await loadImage(png);
     const c = createCanvas(img.width, img.height);
     const ctx = c.getContext("2d");
     ctx.drawImage(img, 0, 0);
@@ -153,6 +168,110 @@ function progressBar(done, total) {
     process.stdout.write(`\rProgress : [${bar}] ${pct}%`);
 }
 
+/**
+ * Writes lines to a text file, one per line (an empty file for no lines).
+ * @param {string} file path of the file to write
+ * @param {string[]} lines lines to write
+ */
+function writeLines(file, lines) {
+    FS.writeFileSync(file, lines.join("\n") + (lines.length ? "\n" : ""));
+}
+
+/**
+ * Describes a changed sample, as listed in the console summary and in diffs.txt.
+ * @param {{ name: string, diffPixels: number, total: number, region: string, note?: string }} r result of diffImage()
+ * @returns {string} e.g. "test_chord_whole_rest_overlap.musicxml_1: 1930 px (0.3385%) region x111-1246 y188-281"
+ */
+function formatChange(r) {
+    if (r.note) {
+        return `${r.name}: ${r.diffPixels} px [${r.note}: ${r.region}]`;
+    }
+    const pct = r.total > 0 ? (100 * r.diffPixels / r.total).toFixed(4) : "?";
+    return `${r.name}: ${r.diffPixels} px (${pct}%) region ${r.region}`;
+}
+
+/**
+ * Word-wraps a text into lines of at most width characters, each starting with indent.
+ * A word longer than that gets a line of its own.
+ * @param {string} text the text to wrap
+ * @param {string} indent the start of each line, e.g. spaces
+ * @param {number} width maximum line length, including the indent (Infinity: one line)
+ * @returns {string[]} the lines
+ */
+function wrapWords(text, indent, width) {
+    const lines = [];
+    let line = "";
+    for (const word of text.split(" ")) {
+        if (line !== "" && indent.length + line.length + 1 + word.length > width) {
+            lines.push(indent + line);
+            line = word;
+        } else {
+            line = line === "" ? word : `${line} ${word}`;
+        }
+    }
+    lines.push(indent + line);
+    return lines;
+}
+
+/**
+ * Reads the state the images of a folder were generated from, from the source_commit.txt that
+ * generateImages_browserless.mjs writes into it.
+ * @param {string} dir image folder (blessed or current)
+ * @returns {{ description: string, subject?: string, warning?: string }} the description, e.g. "develop 52b16c29 +
+ *   uncommitted changes in 2 file(s), generated 2026-10-07 14:03:12", the subject (first line) of the commit's message,
+ *   and the warning if the images were generated with a build older than the files in src/
+ */
+function readSource(dir) {
+    const file = Path.join(dir, SOURCE_COMMIT_FILE);
+    if (!FS.existsSync(file)) {
+        return { description: `unknown (no ${SOURCE_COMMIT_FILE}: generated before it was added, or not by generateImages_browserless.mjs)` };
+    }
+    const info = {}; // "key: value" lines, e.g. info.commit (indented lines, listing the changed files, are skipped)
+    for (const line of FS.readFileSync(file, "utf8").split(/\r?\n/)) {
+        const match = /^([a-z][a-z ]*): (.*)$/.exec(line);
+        if (match) {
+            info[match[1]] = match[2];
+        }
+    }
+    let description = info.branch ?? "unknown branch";
+    if (info.commit) {
+        description += ` ${info.commit.substring(0, 8)}`;
+    }
+    const changes = info["uncommitted changes"];
+    if (changes && changes !== "none") {
+        description += ` + uncommitted changes in ${changes}`;
+    }
+    if (info.generated) {
+        description += `, generated ${info.generated}`;
+    }
+    return { description, subject: info.subject, warning: info.warning };
+}
+
+/**
+ * Lists the compared states of blessed/ and current/, as shown at the end of the console summary and at the top of
+ * diffs.txt: for each folder its branch, commit, uncommitted changes and generation time, and below that the commit's
+ * subject, which can be long (e.g. a merge's), so a blank line separates the folders, and a warning about the build.
+ * @param {{ blessed: object, current: object }} sources the states of blessed/ and current/, from readSource()
+ * @param {number} width line length to word-wrap the subjects to (Infinity: one line each)
+ * @returns {string[]} the lines
+ */
+function formatCompared(sources, width) {
+    const lines = ["Compared:"];
+    for (const [label, source] of Object.entries(sources)) {
+        if (lines.length > 1) {
+            lines.push("");
+        }
+        lines.push(`  ${label}: ${source.description}`);
+        if (source.subject) {
+            lines.push(...wrapWords(source.subject, "    ", width));
+        }
+        if (source.warning) {
+            lines.push(...wrapWords(`Warning: ${source.warning}`, "    ", width));
+        }
+    }
+    return lines;
+}
+
 // ---------------------------------------------------------------------------
 // Core comparison
 // ---------------------------------------------------------------------------
@@ -176,8 +295,8 @@ async function diffImage(name, writeImages) {
         return { name: base, diffPixels: 0, total: 0, region: "-" };
     }
 
-    const blessed = await decode(blessedPath);
-    const current = await decode(currentPath);
+    const blessed = await decode(bufBlessed);
+    const current = await decode(bufCurrent);
 
     // Dimensions differ => layout changed size; cannot overlay pixel-for-pixel.
     if (blessed.w !== current.w || blessed.h !== current.h) {
@@ -201,7 +320,7 @@ async function diffImage(name, writeImages) {
         }
         return {
             name: base, diffPixels: total, total,
-            region: `SIZE ${blessed.w}x${blessed.h} -> ${current.w}x${current.h}`,
+            region: `${blessed.w}x${blessed.h} -> ${current.w}x${current.h}`,
             note: "dimensions differ",
         };
     }
@@ -351,17 +470,32 @@ async function main() {
     // ---- sort: biggest change first, then alphabetical (deterministic) ----
     compared.sort((x, y) => (y.diffPixels - x.diffPixels) || x.name.localeCompare(y.name));
 
-    // ---- write results.txt (every compared image, mirroring the bash "<name> <value>" format) ----
-    const resultLines = compared.map((r) => `${r.name} ${r.diffPixels}`);
-    FS.writeFileSync(RESULTS, resultLines.join("\n") + (resultLines.length ? "\n" : ""));
-    FS.writeFileSync(WARNINGS, warnings.join("\n") + (warnings.length ? "\n" : ""));
+    // ---- write results.txt (every compared image, mirroring the bash "<name> <value>" format) and warnings.txt ----
+    writeLines(RESULTS, compared.map((r) => `${r.name} ${r.diffPixels}`));
+    writeLines(WARNINGS, warnings);
+
+    // ---- the compared states of blessed/ and current/, at the top of diffs.txt and the end of the console summary ----
+    const sources = { blessed: readSource(BLESSED), current: readSource(CURRENT) };
+
+    // ---- write diffs.txt: what to look at, the compared states, the changed samples, then the warnings ----
+    const fails = compared.filter((r) => r.diffPixels > 0);
+    const changedLines = fails.map(formatChange);
+    const diffsLines = [...formatCompared(sources, Infinity), ""]; // blank line between the lists
+    if (fails.length > 0) {
+        diffsLines.push(`${fails.length} changed sample(s):`, ...changedLines.map((line) => `  ${line}`));
+    } else {
+        diffsLines.push("All samples identical (0 differing pixels).");
+    }
+    if (warnings.length > 0) {
+        diffsLines.push("", `${warnings.length} warning(s):`, ...warnings.map((w) => `  ${w.trim()}`));
+    }
+    writeLines(DIFFS, diffsLines);
 
     // ---- console summary ----
-    const fails = compared.filter((r) => r.diffPixels > 0);
-
-    console.log(`\nResults stored in ${RESULTS}`);
+    console.log(`\nResults stored in ${RESULTS} (all samples, biggest change first),`);
+    console.log(`changed samples and warnings in ${DIFFS}.`);
     console.log(`All samples with a pixel difference are copied into ${DIFF}`);
-    console.log(`(as <name>.png diff, <name>_Blessed.png and <name>_Current.png), sorted by number of differing pixels.\n`);
+    console.log(`(as <name>.png diff, <name>_Blessed.png and <name>_Current.png).\n`);
 
     if (warnings.length > 0) {
         const MAX_SHOWN = 15;
@@ -373,10 +507,8 @@ async function main() {
     }
     if (fails.length > 0) {
         console.log(`You have ${fails.length} changed sample(s):`);
-        for (const r of fails) {
-            const pct = r.total > 0 ? (100 * r.diffPixels / r.total).toFixed(4) : "?";
-            const extra = r.note ? ` [${r.note}]` : ` (${pct}%) region ${r.region}`;
-            console.log(`  ${r.name}: ${r.diffPixels} px${extra}`);
+        for (const line of changedLines) {
+            console.log(`  ${line}`);
         }
         if (Number.isFinite(MAX_DIFF_IMAGES) && fails.length > MAX_DIFF_IMAGES) {
             console.log(`(image files written for the first ${MAX_DIFF_IMAGES} changes only; raise MAX_DIFF_IMAGES to write more.)`);
@@ -384,6 +516,10 @@ async function main() {
     } else {
         console.log("Success - all samples identical (0 differing pixels)!");
     }
+    // the subjects are word-wrapped to the terminal's width, keeping their indent (a column spare, against an extra line
+    //   break in terminals that wrap a line filling the width). Piped or redirected output keeps them on one line.
+    const consoleWidth = process.stdout.isTTY && process.stdout.columns > 0 ? process.stdout.columns - 1 : Infinity;
+    console.log(`\n${formatCompared(sources, consoleWidth).join("\n")}`);
 
     // Exit 0 even when samples changed: like the bash script, a regression is reported through
     // results.txt and the diff images, not the exit code (so `npm run` does not print an error).

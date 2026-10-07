@@ -28,10 +28,9 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     }
 
     public getCanvasSize(): number {
-        return document.getElementById("osmdCanvasPage" + this.graphicalMusicPage.PageNumber)?.offsetHeight;
+        return this.inner?.offsetHeight;
         // smaller inner canvas:
-        // return Number.parseInt(
-        //     document.getElementById("osmdCanvasVexFlowBackendCanvas" + this.graphicalMusicPage.PageNumber)?.style.height, 10);
+        // return Number.parseInt(this.canvas?.style.height, 10);
     }
 
     public initialize(container: HTMLElement, zoom: number, id: string = undefined): void {

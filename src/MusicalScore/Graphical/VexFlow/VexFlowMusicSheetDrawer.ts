@@ -36,6 +36,7 @@ import { GraphicalGlissando } from "../GraphicalGlissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { SvgVexFlowBackend } from "./SvgVexFlowBackend";
+import { VexFlowConverter } from "./VexFlowConverter";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { TremoloBetweenNotes } from "../../VoiceData/Note";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
@@ -193,14 +194,42 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     private drawGlissandi(vfStaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
         for (const gGliss of vfStaffLine.GraphicalGlissandi) {
+            if (!this.lazyDrawsGlissando(gGliss)) {
+                continue; // lazy horizontal: drawn with the batch whose x-window its end enters, like a slur
+            }
             this.drawGlissando(gGliss, absolutePos);
         }
+    }
+
+    /**
+     * Lazy horizontal rendering: whether a glissando belongs in this batch's draw x-window, by the right edge of its
+     * staff entries in this staffline.
+     * @param gGliss the glissando (the part of it in one staffline)
+     * @returns true when not lazy-horizontal, or when the glissando has no staff entries (don't suppress it)
+     */
+    private lazyDrawsGlissando(gGliss: GraphicalGlissando): boolean {
+        let rightX: number = Number.NEGATIVE_INFINITY;
+        for (const staffEntry of gGliss.staffEntries) {
+            rightX = Math.max(rightX, staffEntry.PositionAndShape.AbsolutePosition.x + staffEntry.PositionAndShape.BorderRight);
+        }
+        return rightX === Number.NEGATIVE_INFINITY || this.lazyDrawsAtX(rightX);
     }
 
     private drawGlissando(gGliss: GraphicalGlissando, abs: PointF2D): void {
         if (!gGliss.StaffLine.ParentStaff.isTab) {
             gGliss.calculateLine(this.rules);
         }
+        const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;
+        if (!gGliss.Line && !vfTie) {
+            return;
+        }
+        // Draw the glissando in a group with an id from its start note, like a slur or tie, so that the note can find it,
+        //   e.g. to hide it (VexFlowGraphicalNote.getGlissandoSVGs()). In a TAB staff, the group holds the line and the label "sl."
+        //   that the Vexflow TabSlide draws. The part of a glissando continued in the next system gets the id too,
+        //   unlike a Vexflow tie, which would take it from its first note, missing there.
+        const context: IRenderContext = this.backend.getContext();
+        const startNoteId: string = (this.rules.GNote(gGliss.Glissando.StartNote) as VexFlowGraphicalNote)?.getSVGId();
+        context.openGroup("glissando", startNoteId ? `${startNoteId}-glissando` : undefined);
         if (gGliss.Line) {
             const newStart: PointF2D = new PointF2D(gGliss.Line.Start.x + abs.x, gGliss.Line.Start.y);
             const newEnd: PointF2D = new PointF2D(gGliss.Line.End.x + abs.x, gGliss.Line.End.y);
@@ -208,13 +237,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             //   because unfortunately RelativePosition seems imprecise.
             gGliss.Line.SVGElement = this.drawLine(newStart, newEnd, gGliss.Color, gGliss.Width);
         } else {
-            const vfTie: VF.StaveTie = (gGliss as VexFlowGlissando).vfTie;
-            if (vfTie) {
-                const context: IRenderContext = this.backend.getContext();
-                vfTie.setContext(context);
-                vfTie.draw();
-            }
+            vfTie.setContext(context);
+            vfTie.draw();
         }
+        context.closeGroup();
     }
 
     private drawSlur(graphicalSlur: GraphicalSlur, abs: PointF2D): void {
@@ -285,13 +311,17 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
 
         let newBuzzRollId: number = 0;
-        // Draw the StaffEntries
+        // Draw the StaffEntries. Their labels (chord symbols, fingerings, lyrics) are drawn with the measure, also where
+        //   they reach beyond its right edge: the lazy x-window gated the measure, and the next batch doesn't draw it again.
+        const forceLabels: boolean = this.LazyForcePageLabels;
+        this.LazyForcePageLabels = true;
         for (const staffEntry of measure.staffEntries) {
             this.drawStaffEntry(staffEntry);
             if (!measure.NotesAreAbbreviated) { // these notes aren't drawn either (EngravingRules.RenderMeasureRepeats)
                 newBuzzRollId = this.drawBuzzRolls(staffEntry, newBuzzRollId);
             }
         }
+        this.LazyForcePageLabels = forceLabels;
         if (!measure.NotesAreAbbreviated) {
             this.drawTremolosBetweenNotes(measure);
         }
@@ -772,6 +802,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 if (this.rules.DefaultColorMusic) {
                     (textBracket as any).render_options.color = this.rules.DefaultColorMusic;
                 }
+                VexFlowConverter.setVexFlowTextFontFamily((textBracket as any).font, this.rules);
                 textBracket.setContext(ctx);
                 try {
                     textBracket.draw();

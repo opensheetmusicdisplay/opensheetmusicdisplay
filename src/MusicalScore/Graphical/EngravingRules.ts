@@ -85,9 +85,14 @@ export class EngravingRules {
     public ClefLeftMargin: number;
     public ClefRightMargin: number;
     /** How many unique note positions a percussion score needs to have to not be rendered on one line.
-     * To always use 5 lines for percussion, set this to 0. (works unless the XML says <staff-lines>1)
+     * Set this to 0 to disable one-line reduction and percussion note positioning, or -1 to keep the note positioning.
+     * A staff whose XML gives the number of lines (<staff-lines>) keeps it, unless PercussionKeepXMLStafflineCount is false.
      */
     public PercussionOneLineCutoff: number;
+    /** Whether a percussion staff whose XML gives the number of lines (<staff-lines>) keeps it. Default true.
+     * If false, PercussionOneLineCutoff also draws such a staff on one line, e.g. a snare drum with <staff-lines>5.
+     */
+    public PercussionKeepXMLStafflineCount: boolean;
     public PercussionForceVoicesOneLineCutoff: number;
     public PercussionUseXMLDisplayStep: boolean;
     public PercussionXMLDisplayStepNoteValueShift: number;
@@ -274,6 +279,15 @@ export class EngravingRules {
      */
     public LyricsAlignmentStandard: TextAlignmentEnum;
     public LyricsHeight: number;
+    /** Whether to re-link lyric word chains split across voices of the same staff
+     * after reading, so that dashes are drawn between their syllables.
+     * Set before loading a score: the words are linked when loading. */
+    public RelinkLyricWordsAcrossVoices: boolean;
+    /** Whether the first lyric of a verse in a staff, if its text starts with the verse number, e.g. "1. Si" (MusicXML has no
+     * element for the number), is aligned like a lyric without one, with the number left of where the lyric starts. Default true.
+     * If false, the text is aligned as a whole, with the lyric right of the number. For left-aligned lyrics (LyricsAlignmentStandard).
+     * Set before loading a score: the lyrics are measured when its graphical objects are created. */
+    public LyricsVerseNumberLeftOfLyric: boolean;
     public LyricsYOffsetToStaffHeight: number;
     public LyricsYMarginToBottomLine: number;
     /** Extra x-shift (to the right) for short lyrics to be better vertically aligned.
@@ -504,6 +518,14 @@ export class EngravingRules {
     public DefaultColorTitle: string;
     public DefaultColorCursor: string;
     public DefaultFontFamily: string;
+    /** Font family of the texts that VexFlow draws in fonts of its own: rehearsal marks, ending numbers, the text of
+     *  metronome marks, repetition instructions like "D.C. al Fine", octave shift texts like "8va", fingerings left or right
+     *  of notes and of grace notes, string numbers, and in tabs the fret numbers, bends, and the texts of hammer-ons,
+     *  pull-offs and slides.
+     *  If undefined, these keep VexFlow's fonts (e.g. bold sans-serif for rehearsal marks, Times for repetition instructions).
+     *  Their size, weight and style don't change. Set it e.g. to DefaultFontFamily to draw all texts in the same font.
+     *  Set before loading a score: fingerings, string numbers, tab fret numbers and bends are created when loading. */
+    public VexFlowTextFontFamily: string;
     public DefaultFontStyle: FontStyles;
     public DefaultVexFlowNoteFont: string;
     public MaxMeasureToDrawIndex: number;
@@ -564,7 +586,7 @@ export class EngravingRules {
      *  A whole repeat unit stays written out if it spans systems or the draw range, its reference is not visible,
      *  or it contains clef/key/time changes, grace notes, lyrics/extenders, trill lines, multi-rests,
      *  connections outside the unit or to another staff, or a slur with an unattached end.
-     *  TAB staves and incremental renderNext() remain written out. */
+     *  TAB staves remain written out. */
     public RenderMeasureRepeats: boolean;
     public RenderRehearsalMarks: boolean;
     public RenderClefsAtBeginningOfStaffline: boolean;
@@ -748,6 +770,7 @@ export class EngravingRules {
         this.ClefLeftMargin = 0.5;
         this.ClefRightMargin = 0.75;
         this.PercussionOneLineCutoff = 3; // percussion parts with <3 unique note positions rendered on one line
+        this.PercussionKeepXMLStafflineCount = true;
         this.PercussionForceVoicesOneLineCutoff = 1;
         this.PercussionUseXMLDisplayStep = true;
         this.PercussionXMLDisplayStepNoteValueShift = 0;
@@ -937,6 +960,8 @@ export class EngravingRules {
         // Lyrics
         this.LyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
         this.LyricsHeight = 2.0; // actually size of lyrics
+        this.RelinkLyricWordsAcrossVoices = true;
+        this.LyricsVerseNumberLeftOfLyric = true;
         this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.LyricsYMarginToBottomLine = 0.2;
         this.LyricsExtraXShiftForShortLyrics = 0.5; // also see ChordSymbolExtraXShiftForShortChordSymbols, same principle
@@ -1053,6 +1078,7 @@ export class EngravingRules {
         this.applyDefaultColorMusic("#000000"); // black. undefined is only black if a note's color hasn't been changed before.
         this.DefaultColorCursor = "#33e02f"; // green
         this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
+        this.VexFlowTextFontFamily = undefined; // if undefined, VexFlow's fonts
         this.DefaultFontStyle = FontStyles.Regular;
         this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
         this.MaxMeasureToDrawIndex = Number.MAX_VALUE;
