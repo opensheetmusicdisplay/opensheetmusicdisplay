@@ -36,7 +36,8 @@
 // generateImages_browserless.mjs writes source_commit.txt into the image folder, with the git branch and commit the
 // images were generated from. The console summary ends with the states of blessed/ and current/, and diffs.txt starts
 // with them, e.g. "blessed: develop 52b16c29, generated 2026-10-07 14:03:12" with the commit's subject below, so you can
-// see what was compared, even after generating images on several branches or switching the folders around.
+// see what was compared, even after generating images on several branches or switching the folders around. A folder
+// generated with a build older than the files in src/ gets a warning there, as its images may not show that commit.
 //
 // Usage
 // -----
@@ -216,8 +217,9 @@ function wrapWords(text, indent, width) {
  * Reads the state the images of a folder were generated from, from the source_commit.txt that
  * generateImages_browserless.mjs writes into it.
  * @param {string} dir image folder (blessed or current)
- * @returns {{ description: string, subject?: string }} the description, e.g. "develop 52b16c29 + uncommitted changes
- *   in 2 file(s), generated 2026-10-07 14:03:12", and the subject (first line) of the commit's message
+ * @returns {{ description: string, subject?: string, warning?: string }} the description, e.g. "develop 52b16c29 +
+ *   uncommitted changes in 2 file(s), generated 2026-10-07 14:03:12", the subject (first line) of the commit's message,
+ *   and the warning if the images were generated with a build older than the files in src/
  */
 function readSource(dir) {
     const file = Path.join(dir, SOURCE_COMMIT_FILE);
@@ -242,15 +244,14 @@ function readSource(dir) {
     if (info.generated) {
         description += `, generated ${info.generated}`;
     }
-    return { description, subject: info.subject };
+    return { description, subject: info.subject, warning: info.warning };
 }
 
 /**
  * Lists the compared states of blessed/ and current/, as shown at the end of the console summary and at the top of
  * diffs.txt: for each folder its branch, commit, uncommitted changes and generation time, and below that the commit's
- * subject, which can be long (e.g. a merge's), so a blank line separates the folders.
- * @param {{ blessed: { description: string, subject?: string }, current: { description: string, subject?: string } }} sources
- *   the states of blessed/ and current/, from readSource()
+ * subject, which can be long (e.g. a merge's), so a blank line separates the folders, and a warning about the build.
+ * @param {{ blessed: object, current: object }} sources the states of blessed/ and current/, from readSource()
  * @param {number} width line length to word-wrap the subjects to (Infinity: one line each)
  * @returns {string[]} the lines
  */
@@ -263,6 +264,9 @@ function formatCompared(sources, width) {
         lines.push(`  ${label}: ${source.description}`);
         if (source.subject) {
             lines.push(...wrapWords(source.subject, "    ", width));
+        }
+        if (source.warning) {
+            lines.push(...wrapWords(`Warning: ${source.warning}`, "    ", width));
         }
     }
     return lines;
