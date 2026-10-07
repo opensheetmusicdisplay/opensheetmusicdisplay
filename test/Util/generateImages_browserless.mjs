@@ -1,6 +1,9 @@
 //import Blob from "cross-blob"; // unnecessary in Node v18+
+import ChildProcess from "child_process";
 import FS from "fs";
 import jsdom from "jsdom";
+import Path from "path";
+import { fileURLToPath } from "url";
 //import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
 import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
 // for debugging, use opensheetmusicdisplay.min.js, created by npm run build:webpack-dev
@@ -14,6 +17,8 @@ import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to 
   It's also used with the visual regression test system (using PNGs) in
   `tools/visual_regression.sh`
   (see package.json, used with npm run generate:blessed and generate:current, then test:visual).
+  It also writes source_commit.txt into the image directory, with the git branch and commit the images were
+  generated from, so that you can tell which state e.g. visual_regression/blessed shows (see writeSourceCommitFile()).
 
   Note: this script needs to "fake" quite a few browser elements, like window, document,
   and a Canvas HTMLElement (for PNG) or the DOM (for SVG)   ,
@@ -195,6 +200,7 @@ async function init () {
 
     // Create the image directory if it doesn't exist.
     FS.mkdirSync(imageDir, { recursive: true });
+    writeSourceCommitFile(imageDir);
 
     const sampleDirFilenames = FS.readdirSync(sampleDir);
     let samplesToProcess = []; // samples we want to process/generate pngs of, excluding the filtered out files/filenames
@@ -351,6 +357,56 @@ async function addFontFallbackOnWindows () {
             fontProperty.set.call(this, addFallback ? `${font}, ${fallbackFonts}` : font);
         }
     });
+}
+
+/**
+ * Writes source_commit.txt into the image directory: the git branch and commit of the OSMD checkout this script is in,
+ * whose build renders the images, and the files with uncommitted changes. So you can tell which state an image folder
+ * shows after generating images on several branches or renaming the folders, and visualRegression.mjs lists the
+ * states of blessed/ and current/ it compared.
+ * Note that the images show the state of the build: after switching branches, run npm run build:webpack first.
+ * @param {string} directory The image directory.
+ */
+function writeSourceCommitFile (directory) {
+    // the root folder of the checkout whose build is imported (../../build). git runs there, like in a terminal at the
+    //   root, where e.g. safe.directory "." lets git use a checkout on a drive without file owners ("dubious ownership")
+    const checkoutDirectory = Path.resolve(Path.dirname(fileURLToPath(import.meta.url)), "../..");
+    const git = (...args) => ChildProcess.execFileSync("git", args, {
+        cwd: checkoutDirectory, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]
+    }).trim();
+    let lines;
+    let summary;
+    try {
+        let branch = git("rev-parse", "--abbrev-ref", "HEAD");
+        if (branch === "HEAD") {
+            // detached HEAD, e.g. a checked out tag or commit: described by the latest tag, e.g. "2.2.0-55-g52b16c29"
+            branch = `detached HEAD (${git("describe", "--tags", "--always")})`;
+        }
+        const commit = git("rev-parse", "HEAD");
+        // tracked files only, as untracked ones are mostly unrelated (e.g. notes, test output)
+        const changedFiles = git("diff", "HEAD", "--name-only", "-z").split("\0").filter((file) => file !== "");
+        lines = [
+            `branch: ${branch}`,
+            `commit: ${commit}`,
+            `subject: ${git("log", "-1", "--format=%s")}`,
+            `uncommitted changes: ${changedFiles.length > 0 ? `${changedFiles.length} file(s)` : "none"}`,
+            ...changedFiles.map((file) => `  ${file}`),
+        ];
+        summary = `${branch} ${commit.substring(0, 8)}${changedFiles.length > 0 ? " + uncommitted changes" : ""}`;
+    } catch (error) {
+        // e.g. not a git checkout, git isn't installed, or git doesn't trust the checkout ("dubious ownership")
+        const reason = (error.stderr?.trim() || error.message).split("\n")[0];
+        lines = [`branch: unknown (${reason})`];
+        summary = `an unknown branch and commit (${reason})`;
+    }
+    const now = new Date();
+    const twoDigits = (number) => String(number).padStart(2, "0");
+    lines.push(`generated: ${now.getFullYear()}-${twoDigits(now.getMonth() + 1)}-${twoDigits(now.getDate())} ` +
+        `${twoDigits(now.getHours())}:${twoDigits(now.getMinutes())}:${twoDigits(now.getSeconds())}`);
+    lines.push(`arguments: ${process.argv.slice(2).join(" ")}`);
+    const file = Path.join(directory, "source_commit.txt");
+    FS.writeFileSync(file, lines.join("\n") + "\n");
+    debug(`generating images of ${summary} (see ${file})`);
 }
 
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
