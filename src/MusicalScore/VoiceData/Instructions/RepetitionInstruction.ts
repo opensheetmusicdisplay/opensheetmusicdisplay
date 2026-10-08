@@ -74,7 +74,7 @@ export class RepetitionInstruction /*implements IComparable*/ {
     /** Whether the MusicXML marks this segno as the target of a D.S. (<sound segno="...">): it is never taken for a D.S. itself. */
     public MarkedAsTarget: boolean = false;
 
-    public CompareTo(obj: Object): number {
+    public CompareTo(obj: object): number {
         const other: RepetitionInstruction = <RepetitionInstruction>obj;
         if (this.measureIndex > other.measureIndex) {
             return 1;

@@ -39,7 +39,7 @@ export abstract class MusicSystem extends GraphicalObject {
     protected groupLabels: Map<InstrumentalGroup, GraphicalLabel> = new Map<InstrumentalGroup, GraphicalLabel>();
     protected measureNumberLabels: GraphicalLabel[] = [];
     protected maxLabelLength: number;
-    protected objectsToRedraw: [Object[], Object][] = [];
+    protected objectsToRedraw: [object[], object][] = [];
     protected instrumentBrackets: GraphicalObject[] = [];
     protected groupBrackets: GraphicalObject[] = [];
     protected graphicalMarkedAreas: GraphicalMarkedArea[] = [];
@@ -95,7 +95,7 @@ export abstract class MusicSystem extends GraphicalObject {
         return [...this.groupLabels.values(), ...this.labels.values()];
     }
 
-    public get ObjectsToRedraw(): [Object[], Object][] {
+    public get ObjectsToRedraw(): [object[], object][] {
         return this.objectsToRedraw;
     }
 
