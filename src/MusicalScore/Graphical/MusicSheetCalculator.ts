@@ -1039,6 +1039,8 @@ export abstract class MusicSheetCalculator {
         // (must come after Slurs)
         if (!this.leadSheet) {
             this.calculateOrnaments();
+            // calculate all OctaveShifts
+            this.calculateOctaveShifts(); // should be before chord symbols
         }
         // calculate StaffEntry ChordSymbols
         this.calculateChordSymbols();
@@ -1050,8 +1052,6 @@ export abstract class MusicSheetCalculator {
             this.calculateExpressionAlignements();
             // calculate all Mood and Unknown Expression
             this.calculateMoodAndUnknownExpressions();
-            // calculate all OctaveShifts
-            this.calculateOctaveShifts();
             if (this.rules.RenderPedals) {
                 // calculate all Pedal Expressions
                 this.calculatePedals();
