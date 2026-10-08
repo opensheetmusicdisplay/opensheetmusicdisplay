@@ -237,7 +237,7 @@ describe("ExpressionReader", () => {
         expect((iterator.clone().ActiveDynamicExpressions[0] as InstantaneousDynamicExpression).DynamicExpression).to.equal("mf");
     });
 
-    it("reads all the words of a direction, not only the first", () => {
+    it("reads all text fragments of a direction, not only the first", () => {
         const sheet: MusicSheet = readSheet("test/data/test_direction_words_split.musicxml");
         const tempoLabels: string[] = sheet.SourceMeasures[0].TempoExpressions.flatMap((tempo: MultiTempoExpression): string[] =>
             tempo.EntriesList.map((entry: TempoExpressionEntry): string => entry.label));
@@ -245,6 +245,7 @@ describe("ExpressionReader", () => {
             expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
         expect(tempoLabels, "tempo direction").to.deep.equal(["Allegro con brio"]);
         expect(textLabels, "text direction").to.deep.equal(["più f, marcato"]);
+        expect(sheet.SourceMeasures[0].rehearsalExpression.label, "rehearsal direction").to.equal("A′");
         expect(sheet.SourceMeasures[1].LastRepetitionInstructions.map(instruction => instruction.type), "repetition direction")
             .to.deep.equal([RepetitionInstructionEnum.DaCapo]);
     });
