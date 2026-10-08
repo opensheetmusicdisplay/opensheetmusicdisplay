@@ -486,7 +486,7 @@ export class InstrumentReader {
                                                                                                         relativePositionInMeasure,
                                                                                                         xmlNode.element("sound"));
           }
-          if (!handeled) {
+          if (!handeled || directionTypeNodes.length > 1) {
            let expressionReader: ExpressionReader = this.expressionReaders[0];
            const staffIndex: number = this.readExpressionStaffNumber(xmlNode) - 1;
            if (staffIndex < this.expressionReaders.length) {
@@ -522,7 +522,8 @@ export class InstrumentReader {
              expressionReader.readExpressionParameters(
                xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, false
              );
-             expressionReader.read(xmlNode, this.currentMeasure, currentFraction, previousFraction.clone());
+             expressionReader.read(xmlNode, this.currentMeasure, currentFraction, previousFraction.clone(),
+                                   handeled ? directionTypeNodes.slice(1) : directionTypeNodes);
            }
           }
         } else if (xmlNode.name === "barline") {

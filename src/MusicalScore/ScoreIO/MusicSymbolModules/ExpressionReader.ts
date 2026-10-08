@@ -155,7 +155,8 @@ export class ExpressionReader {
         }
     }
     public read(directionNode: IXmlElement, currentMeasure: SourceMeasure,
-                inSourceMeasureCurrentFraction: Fraction, inSourceMeasurePreviousFraction: Fraction = undefined): void {
+                inSourceMeasureCurrentFraction: Fraction, inSourceMeasurePreviousFraction: Fraction = undefined,
+                dirNodes: IXmlElement[] = directionNode.elements("direction-type")): void {
         let isTempoInstruction: boolean = false;
         let isDynamicInstruction: boolean = false;
 
@@ -199,7 +200,6 @@ export class ExpressionReader {
                 isDynamicInstruction = true;
             }
         }
-        const dirNodes: IXmlElement[] = directionNode.elements("direction-type");
         const originalDirectionTimestamp: Fraction = this.directionTimestamp;
         for (const dirNode of dirNodes) {
             this.directionTimestamp = originalDirectionTimestamp;
