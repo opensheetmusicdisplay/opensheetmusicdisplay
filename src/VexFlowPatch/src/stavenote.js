@@ -362,7 +362,20 @@ export class StaveNote extends StemmableNote {
         && mergeableUnison(noteU, noteM, stagger_same_whole_notes)) ||
       (intersectsLower && noteL.note.getKeyProps().length === 1
         && mergeableUnison(noteM, noteL, stagger_same_whole_notes)));
-    if (!isUnisonWithNeighbour && (intersectsUpper || intersectsLower)) {
+    // VexFlowPatch: when only the middle and the lower note collide, a second apart or on one line, and the middle
+    //   note's stem goes the other way from the upper one's, move the lower note instead, as the two-voice path does
+    //   for a second: the middle note stays on the beat under the upper one without reading as a chord with it, and
+    //   it keeps its stem clear of the lower note (moved right, it ran past the lower note like a chord with a second).
+    //   With the same stem direction, the middle and the upper note on the beat would read as a chord, so the middle
+    //   one still moves. So does a dotted middle note: its dots stay next to its head, where the moved lower note can
+    //   cover them.
+    const lowerKeys = noteL.note.getKeyProps();
+    const gapBelow = noteM.line - lowerKeys[lowerKeys.length - 1].line; // lowest middle key to highest lower key
+    const headsCollideBelow = intersectsLower && !intersectsUpper && !noteU.isrest &&
+      gapBelow >= 0 && gapBelow <= 0.5 && noteM.stemDirection !== noteU.stemDirection && noteM.note.dots === 0;
+    if (!isUnisonWithNeighbour && headsCollideBelow) {
+      noteL.note.setXShift(voiceXShift);
+    } else if (!isUnisonWithNeighbour && (intersectsUpper || intersectsLower)) {
       xShift = voiceXShift + 3;      // shift middle note right
       noteM.note.setXShift(xShift);
     }
