@@ -93,7 +93,7 @@ don't change x_shift in drawSymbolText(): every further draw of the stave moved 
 
 stavesection.js (half-fixed vexflow 4.x, collision, box not removable):
 stavesection.draw():
-adjust rectangle positioning, make height depend on text height
+adjust rectangle positioning, make height depend on font size (the measured text height differs per platform, and canvas has none)
 fix rehearsal marks not rendered with canvas backend in browser
 
 stavetempo.js (custom addition):

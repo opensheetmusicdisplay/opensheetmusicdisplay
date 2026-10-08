@@ -289,7 +289,7 @@ export class ExpressionReader {
 
             dirContentNode = dirNode.element("rehearsal");
             if (dirContentNode) {
-                const text: string = dirNode.elements("rehearsal").map(node => node.value).join("");
+                const text: string = dirNode.elements("rehearsal").map((rehearsalNode: IXmlElement): string => rehearsalNode.value).join("");
                 this.interpretRehearsalMark(text, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
                 continue;
             }
