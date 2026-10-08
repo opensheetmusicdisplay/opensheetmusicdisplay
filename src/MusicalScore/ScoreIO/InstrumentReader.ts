@@ -450,11 +450,15 @@ export class InstrumentReader {
           if (notationsNode !== undefined && notationsNode.element("dynamics")) {
             const expressionReader: ExpressionReader = this.expressionReaders[this.readExpressionStaffNumber(xmlNode) - 1];
             if (expressionReader) {
+             // a note's <dynamics> have their own placement attribute (a direction's dynamics have the direction's)
              expressionReader.readExpressionParameters(
-               xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, false
+               notationsNode.element("dynamics"), this.instrument, this.divisions, currentFraction, previousFraction,
+               this.currentMeasure.MeasureNumber, false
              );
+             // the <notations> contain the <dynamics> as a direction's <direction-type> does. They belong to the note's
+             //   timestamp (previousFraction is the one of the note before a grace note).
              expressionReader.read(
-               xmlNode, this.currentMeasure, previousFraction
+               xmlNode, this.currentMeasure, musicTimestamp, undefined, [notationsNode]
              );
             }
           }

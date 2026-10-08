@@ -155,6 +155,16 @@ describe("ExpressionReader", () => {
         });
     });
 
+    it("reads dynamics in a note's notations at the note, with their own placement", () => {
+        const dynamics: InstantaneousDynamicExpression[] = collectDynamics(readSheet("test/data/test_dynamics_in_notations.musicxml"));
+        expect(dynamics.map((dynamic: InstantaneousDynamicExpression): string => dynamic.DynamicExpression))
+            .to.deep.equal(["p", "f", "mf"]);
+        expect(dynamics.map((dynamic: InstantaneousDynamicExpression): number => dynamic.ParentMultiExpression.Timestamp.RealValue),
+               "the notes' timestamps, the grace note's in m2 (not the note's before it)").to.deep.equal([0.25, 0.5, 0.5]);
+        expect(dynamics.map((dynamic: InstantaneousDynamicExpression): PlacementEnum => dynamic.Placement),
+               "placement attribute of the dynamics").to.deep.equal([PlacementEnum.Below, PlacementEnum.Above, PlacementEnum.Below]);
+    });
+
     describe("wedges and words with other direction-types in the same direction", () => {
         let sheet: MusicSheet;
         let wedges: ContinuousDynamicExpression[];
