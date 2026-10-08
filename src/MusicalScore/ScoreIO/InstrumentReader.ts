@@ -124,9 +124,12 @@ export class InstrumentReader {
    * @param currentMeasure
    * @param measureStartAbsoluteTimestamp - Using this instead of currentMeasure.AbsoluteTimestamp as it isn't set yet
    * @param octavePlusOne Software like Guitar Pro gives one octave too low, so we need to add one
+   * @param readNotationDynamics Whether to read the `<dynamics>` in a note's `<notations>` (not those of Guitar Pro 5, which
+   *   gives every note its dynamic there, its velocity)
    * @returns {boolean}
    */
-  public readNextXmlMeasure(currentMeasure: SourceMeasure, measureStartAbsoluteTimestamp: Fraction, octavePlusOne: boolean): boolean {
+  public readNextXmlMeasure(currentMeasure: SourceMeasure, measureStartAbsoluteTimestamp: Fraction, octavePlusOne: boolean,
+                            readNotationDynamics: boolean = true): boolean {
     if (this.currentXmlMeasureIndex >= this.xmlMeasureList.length) {
       return false;
     }
@@ -447,7 +450,7 @@ export class InstrumentReader {
           );
 
           // notationsNode created further up for multiple checks
-          if (notationsNode !== undefined && notationsNode.element("dynamics")) {
+          if (readNotationDynamics && notationsNode !== undefined && notationsNode.element("dynamics")) {
             const expressionReader: ExpressionReader = this.expressionReaders[this.readExpressionStaffNumber(xmlNode) - 1];
             if (expressionReader) {
              // a note's <dynamics> have their own placement attribute (a direction's dynamics have the direction's)
