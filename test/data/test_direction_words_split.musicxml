@@ -14,6 +14,12 @@
       </attributes>
       <direction placement="above">
         <direction-type>
+          <rehearsal font-weight="bold">A</rehearsal>
+          <rehearsal font-size="10">′</rehearsal>
+        </direction-type>
+      </direction>
+      <direction placement="above">
+        <direction-type>
           <words font-weight="bold">Allegro </words>
           <words font-weight="normal">con brio</words>
         </direction-type>

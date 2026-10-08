@@ -289,7 +289,8 @@ export class ExpressionReader {
 
             dirContentNode = dirNode.element("rehearsal");
             if (dirContentNode) {
-                this.interpretRehearsalMark(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
+                const text: string = dirNode.elements("rehearsal").map(node => node.value).join("");
+                this.interpretRehearsalMark(text, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
                 continue;
             }
         }
@@ -851,10 +852,10 @@ export class ExpressionReader {
         this.addWedge(wedgeNode, currentMeasure, inSourceMeasureCurrentFraction);
     }
     private interpretRehearsalMark(
-        rehearsalNode: IXmlElement, currentMeasure: SourceMeasure,
+        text: string, currentMeasure: SourceMeasure,
         inSourceMeasureCurrentFraction: Fraction, currentMeasureIndex: number): void {
         // TODO create multi expression? for now we just need to have a static rehearsal mark though.
-        currentMeasure.rehearsalExpression = new RehearsalExpression(rehearsalNode.value, this.placement);
+        currentMeasure.rehearsalExpression = new RehearsalExpression(text, this.placement);
     }
     private createNewMultiExpressionIfNeeded(currentMeasure: SourceMeasure, numberXml: number,
         timestamp: Fraction = undefined, playbackTimestamp: Fraction = undefined): MultiExpression {
