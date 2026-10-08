@@ -2,7 +2,8 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <!-- Directions with several direction-types, which share the direction's placement and offset:
      m.1 words after a dynamic (mf espress.), m.2 a diminuendo starting where the crescendo stops,
-     m.3 a crescendo after words (poco), m.4 its stop after words (molto) with an offset. -->
+     m.3 a crescendo after words (poco), m.4 its stop after words (molto) with an offset.
+     A segno shares m.1 with Tempo I; a sound-labeled D.C. shares m.4 with another expression. -->
 <score-partwise version="4.0">
   <work>
     <work-title>test_direction_several_direction_types</work-title>
@@ -20,6 +21,10 @@
         <time><beats>4</beats><beat-type>4</beat-type></time>
         <clef><sign>G</sign><line>2</line></clef>
       </attributes>
+      <direction placement="above">
+        <direction-type><segno/></direction-type>
+        <direction-type><words>Tempo I</words></direction-type>
+      </direction>
       <direction placement="below">
         <direction-type>
           <dynamics><mf/></dynamics>
@@ -153,6 +158,11 @@
         <voice>1</voice>
         <type>half</type>
       </note>
+      <direction placement="above">
+        <direction-type><words>Da Capo bis Ende</words></direction-type>
+        <direction-type><words>mit Ausdruck</words></direction-type>
+        <sound dacapo="yes"/>
+      </direction>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
       </barline>

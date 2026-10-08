@@ -170,10 +170,18 @@ describe("ExpressionReader", () => {
             );
         });
 
-        it("reads words after a dynamic", () => {
+        it("reads words after a dynamic or a repetition mark", () => {
             const labels: string[] = sheet.SourceMeasures[0].StaffLinkedExpressions[0].flatMap((expression: MultiExpression): string[] =>
                 expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
             expect(labels).to.include("espress.");
+            expect(sheet.SourceMeasures[0].FirstRepetitionInstructions
+                .filter(instruction => instruction.type === RepetitionInstructionEnum.Segno).length).to.equal(1);
+            const tempoLabels: string[] = sheet.SourceMeasures[0].TempoExpressions.flatMap(tempo =>
+                tempo.EntriesList.map(entry => entry.label));
+            expect(tempoLabels).to.deep.equal(["Tempo I"]);
+            const last: typeof sheet.SourceMeasures[0] = sheet.SourceMeasures[3];
+            expect(last.LastRepetitionInstructions.find(instruction => instruction.type === RepetitionInstructionEnum.DaCapo)?.Words)
+                .to.equal("Da Capo bis Ende");
         });
 
         it("keeps the direction's placement for a wedge after a wedge stop or after words", () => {

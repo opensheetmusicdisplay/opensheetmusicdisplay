@@ -23,7 +23,7 @@ describe("Words expressions (GraphicalUnknownExpression)", () => {
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
         await osmd.load(TestUtils.getScore("test_direction_several_direction_types.musicxml"));
         osmd.render();
-        const words: string[] = ["espress.", "poco", "molto"];
+        const words: string[] = ["espress.", "poco", "molto", "mit Ausdruck"];
         const registered: string[] = osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0].AbstractExpressions
             .filter(expression => expression instanceof GraphicalUnknownExpression)
             .map(expression => (expression as GraphicalUnknownExpression).Label.Label.text);
