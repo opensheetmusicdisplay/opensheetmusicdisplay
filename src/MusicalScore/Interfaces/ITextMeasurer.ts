@@ -11,6 +11,10 @@ export interface ITextMeasurer {
      *  Optional, so that measurers implementing the interface without it keep working.
      *  Without it, the texts in EngravingRules.VexFlowTextFontFamily get as much space as in VexFlow's fonts. */
     computeTextWidthInCssFont?(text: string, cssFont: string): number;
+    /** Width of a MusicXML symbol in text-height units; zero for unsupported symbols. */
+    computeSymbolWidthToHeightRatio?(name: string): number;
+    /** A mixed-label text run's advance and left ink inset, in text-height units. */
+    computeTextRunMetrics?(text: string, font: Fonts, style: FontStyles, fontFamily?: string): {width: number, leftInset: number};
     // computeTextWidth(text: string, font: Fonts, style: FontStyles,
     //                  fontFamily?: string, fontSize?: number): number;
     setFontSize(fontSize: number): number;

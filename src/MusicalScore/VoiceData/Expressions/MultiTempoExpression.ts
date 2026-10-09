@@ -5,6 +5,7 @@ import {PlacementEnum} from "./AbstractExpression";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {AbstractTempoExpression} from "./AbstractTempoExpression";
 import {ContinuousTempoExpression} from "./ContinuousExpressions/ContinuousTempoExpression";
+import {sameTextRuns} from "../../Label";
 
 export class MultiTempoExpression {
 
@@ -117,7 +118,7 @@ export class MultiTempoExpression {
 
     private checkIfAlreadyExists(abstractTempoExpression: AbstractTempoExpression ): boolean {
         for (const entry of this.expressions) {
-            if (entry.label === abstractTempoExpression.Label) {
+            if (entry.label === abstractTempoExpression.Label && sameTextRuns(entry.Expression.TextRuns, abstractTempoExpression.TextRuns)) {
                 return true;
             }
         }

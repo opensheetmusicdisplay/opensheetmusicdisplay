@@ -40,6 +40,8 @@ import { VexFlowConverter } from "./VexFlowConverter";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { TremoloBetweenNotes } from "../../VoiceData/Note";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
+import { VexFlowInlineSymbol } from "./VexFlowInlineSymbol";
+import { FontStyles } from "../../../Common/Enums/FontStyles";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -940,14 +942,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         let node: Node;
         for (let i: number = 0; i < graphicalLabel.TextLines?.length; i++) {
-            const currLine: {text: string, xOffset: number, width: number} = graphicalLabel.TextLines[i];
+            const currLine: typeof graphicalLabel.TextLines[number] = graphicalLabel.TextLines[i];
             const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
             const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
-            const newNode: Node = this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color,
-                                                          graphicalLabel.Label.fontFamily, graphicalLabel.Label.language);
+            const newNode: Node = currLine.runs ? this.renderTextRuns(graphicalLabel, currLine, linePosition, height, fontStyle, color) :
+                this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color,
+                                        graphicalLabel.Label.fontFamily, graphicalLabel.Label.language);
             if (!node) {
                 node = newNode;
-            } else {
+            } else if (newNode) {
                 node.appendChild(newNode);
             }
             screenPosition.y = screenPosition.y + fontHeightInPixel;
@@ -957,6 +960,23 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
         // font currently unused, replaced by fontFamily
         return node; // alternatively, return Node[] and refactor annotationElementMap to handle node array instead of single node
+    }
+
+    private renderTextRuns(graphicalLabel: GraphicalLabel, line: typeof graphicalLabel.TextLines[number],
+                           position: PointF2D, height: number, style: FontStyles, color: string): Node {
+        const ctx: IRenderContext = this.backend.getContext();
+        const node: Node = ctx.openGroup("words");
+        for (const run of line.runs) {
+            const x: number = position.x + this.calculatePixelDistance(run.xOffset);
+            if (run.content.symbol) {
+                VexFlowInlineSymbol.create(run.content.symbol).draw(ctx, x, position.y, height, run.content.symbol, color);
+            } else if (run.content.text) {
+                this.backend.renderText(height, style, graphicalLabel.Label.font, run.content.text, height,
+                    new PointF2D(x, position.y), color, graphicalLabel.Label.fontFamily, graphicalLabel.Label.language);
+            }
+        }
+        ctx.closeGroup();
+        return node;
     }
 
     /**

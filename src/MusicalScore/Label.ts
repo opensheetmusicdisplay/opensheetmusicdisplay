@@ -19,6 +19,8 @@ export class Label {
     }
 
     public text: string;
+    /** Ordered MusicXML words/symbol content, separate from the text used for recognition. */
+    public TextRuns: LabelTextRun[];
     public print: boolean;
     public color: OSMDColor;
     public colorDefault: string; // TODO this is Vexflow format, convert to OSMDColor. for now convenient for default colors.
@@ -35,4 +37,45 @@ export class Label {
     public ToString(): string {
         return this.text;
     }
+}
+
+export interface LabelTextRun {
+    text?: string;
+    symbol?: string;
+}
+
+/** The text-note family that can be printed with the bundled notation font. */
+export function isSupportedTextSymbol(name: string): boolean {
+    return /^(metNoteWhole|metNote(Half|Quarter|8th|16th|32nd|64th|128th)(Up|Down)|metAugmentationDot)$/.test(name);
+}
+
+/** Words alone keep their existing identity; mixed labels also compare their symbols and order. */
+export function sameTextRuns(first: LabelTextRun[], second: LabelTextRun[]): boolean {
+    if (first === second) { return true; }
+    return !!first && !!second && JSON.stringify(splitTextRuns(first)) === JSON.stringify(splitTextRuns(second));
+}
+
+/** Split and trim lines as for plain labels, without inserting spaces at XML element boundaries. */
+export function splitTextRuns(runs: LabelTextRun[]): LabelTextRun[][] {
+    const lines: LabelTextRun[][] = [[]];
+    for (const run of runs) {
+        if (run.symbol !== undefined) {
+            if (isSupportedTextSymbol(run.symbol)) { lines[lines.length - 1].push(run); }
+            continue;
+        }
+        const parts: string[] = run.text.split(/[\n\r]+/g);
+        for (let index: number = 0; index < parts.length; index++) {
+            if (index > 0) { lines.push([]); }
+            const line: LabelTextRun[] = lines[lines.length - 1];
+            const previous: LabelTextRun = line[line.length - 1];
+            if (previous?.text !== undefined) { previous.text += parts[index]; }
+            else { line.push({text: parts[index]}); }
+        }
+    }
+    for (const line of lines) {
+        if (line[0]?.text !== undefined) { line[0].text = line[0].text.trimStart(); }
+        const last: LabelTextRun = line[line.length - 1];
+        if (last?.text !== undefined) { last.text = last.text.trimEnd(); }
+    }
+    return lines.map(line => line.filter(run => run.symbol !== undefined || run.text !== ""));
 }
