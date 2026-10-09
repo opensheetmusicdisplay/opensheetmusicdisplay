@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
+import { Instrument } from "../../../../src/MusicalScore/Instrument";
 import { MusicSheet } from "../../../../src/MusicalScore/MusicSheet";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import { DynamicEnum, InstantaneousDynamicExpression } from
@@ -10,6 +11,7 @@ import { ContDynamicEnum, ContinuousDynamicExpression } from
 import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { MultiTempoExpression, TempoExpressionEntry } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiTempoExpression";
+import { UnknownExpression } from "../../../../src/MusicalScore/VoiceData/Expressions/UnknownExpression";
 import { RepetitionInstructionEnum } from "../../../../src/MusicalScore/VoiceData/Instructions/RepetitionInstruction";
 import { Fraction } from "../../../../src/Common/DataObjects/Fraction";
 import { DynamicsContainer } from "../../../../src/MusicalScore/VoiceData/HelperObjects/DynamicsContainer";
@@ -163,6 +165,20 @@ describe("ExpressionReader", () => {
                "the notes' timestamps, the grace note's in m2 (not the note's before it)").to.deep.equal([0.25, 0.5, 0.5]);
         expect(dynamics.map((dynamic: InstantaneousDynamicExpression): PlacementEnum => dynamic.Placement),
                "placement attribute of the dynamics").to.deep.equal([PlacementEnum.Below, PlacementEnum.Above, PlacementEnum.Below]);
+    });
+
+    it("places an expression without placement below a single staff without lyrics (HasLyrics only for parts with lyrics)", () => {
+        // every note set Instrument.HasLyrics, so such expressions were placed above, as on a vocal staff
+        const song: MusicSheet = readSheet("test/data/Mozart_AnChloe.xml");
+        expect(song.Instruments.map((instrument: Instrument): boolean => instrument.HasLyrics), "voice, piano").to.deep.equal([true, false]);
+        // the G.P. in m18 of this clarinet part has neither a placement attribute nor default-y
+        const sheet: MusicSheet = readSheet("test/data/test_multiple_rest_measures_with_key_signatures_1329_no_crowded_notes.musicxml");
+        expect(sheet.Instruments[0].HasLyrics).to.equal(false);
+        const generalPause: UnknownExpression = sheet.SourceMeasures
+            .flatMap((measure): MultiExpression[] => measure.StaffLinkedExpressions[0])
+            .flatMap((expression: MultiExpression): UnknownExpression[] => expression.UnknownList)
+            .find((expression: UnknownExpression): boolean => expression.Label === "G.P.");
+        expect(generalPause.Placement).to.equal(PlacementEnum.Below);
     });
 
     describe("wedges and words with other direction-types in the same direction", () => {
