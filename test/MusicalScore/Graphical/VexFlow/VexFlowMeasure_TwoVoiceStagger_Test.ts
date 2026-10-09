@@ -75,7 +75,7 @@ describe("VexFlow Measure - Two-Voice Stagger", () => {
    const lowerChordPath: string = "test_two_voice_stagger_lower_chord_second.musicxml";
 
    it("Should stagger a lower chord whose top key is a second below the upper note", (done: Mocha.Done) => {
-      // Measure 1: an A4 over E4+G4, then an A4+C5 over E4+G4. Measure 2, beat 4: an A4 over E4+G4.
+      // Measure 1: an A4 over E4+G4, then an A4+C5 over E4+G4. Measure 2: the A4 eighth over E4+G4.
       const measures: VexFlowMeasure[] = renderMeasures(lowerChordPath);
       for (const [measureIndex, timestamp] of [[0, 0], [0, 0.25], [1, 0.875]]) {
          const gves: VexFlowVoiceEntry[] = voiceEntriesAt(measures[measureIndex], timestamp);
