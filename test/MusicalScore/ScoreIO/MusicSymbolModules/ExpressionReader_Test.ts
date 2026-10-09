@@ -271,6 +271,15 @@ describe("ExpressionReader", () => {
         expect((iterator.clone().ActiveDynamicExpressions[0] as InstantaneousDynamicExpression).DynamicExpression).to.equal("mf");
     });
 
+    it("places Gounod's cresc. at its divisions offset, not scaled by the preceding half note", () => {
+        const sheet: MusicSheet = readSheet("test/data/CharlesGounod_Meditation.xml");
+        const crescendos: MultiExpression[] = sheet.SourceMeasures[19].StaffLinkedExpressions[0]
+            .filter(expression => expression.StartingContinuousDynamic?.Label === "cresc.");
+        expect(crescendos.length).to.equal(1);
+        // After a half note: 16 - 15 divisions at 8 per quarter = 1/32 of a whole note.
+        expect(crescendos[0].Timestamp.RealValue).to.equal(1 / 32);
+    });
+
     it("reads all text fragments of a direction, not only the first", () => {
         const sheet: MusicSheet = readSheet("test/data/test_direction_words_split.musicxml");
         const tempoLabels: string[] = sheet.SourceMeasures[0].TempoExpressions.flatMap((tempo: MultiTempoExpression): string[] =>

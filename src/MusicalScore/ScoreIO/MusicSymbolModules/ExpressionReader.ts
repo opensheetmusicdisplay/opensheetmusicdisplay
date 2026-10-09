@@ -803,9 +803,8 @@ export class ExpressionReader {
             }
         }
         if (text.length > 0) {
-            if (wordsNode.hasAttributes && wordsNode.attribute("default-x")) {
-                this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
-            }
+            // The caller has already added the divisions offset, also for words without default-x.
+            this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
             if (this.checkIfWordsNodeIsRepetitionInstruction(text)) {
                 return;
             }
