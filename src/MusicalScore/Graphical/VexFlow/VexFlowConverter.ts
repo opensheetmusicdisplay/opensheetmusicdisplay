@@ -827,10 +827,19 @@ export class VexFlowConverter {
             return;
         }
 
+        // While another voice sounds in the staff, a mark at the note head faces it, e.g. the accent above a stem-down A4
+        //   lands on the head of a stem-up C5 of the other voice. Two parts sharing a staff put their marks at the stem end
+        //   instead (Gould, Behind Bars, pp. 117-118). A placement from the XML still wins.
+        const otherVoiceSounding: boolean = gNote.sourceNote.ParentVoiceEntry.Articulations.length > 0 &&
+            VexFlowConverter.otherVoiceSoundsDuring(gNote.parentVoiceEntry);
         for (const articulation of gNote.sourceNote.ParentVoiceEntry.Articulations) {
             let vfArtPosition: number = VF.Modifier.Position.ABOVE;
 
-            if (vfnote.getStemDirection() === VF.Stem.UP) {
+            if (otherVoiceSounding) {
+                if (vfnote.getStemDirection() === VF.Stem.DOWN) {
+                    vfArtPosition = VF.Modifier.Position.BELOW;
+                }
+            } else if (vfnote.getStemDirection() === VF.Stem.UP) {
                 vfArtPosition = VF.Modifier.Position.BELOW;
 
                 // if rules.ArticulationAboveNoteForStemUp set:
@@ -994,6 +1003,29 @@ export class VexFlowConverter {
                 (vfnote as StaveNote).addModifier(0, vfArt);
             }
         }
+    }
+
+    /** Whether a visible note or rest of another voice in the staff sounds during the voice entry, e.g. a half note of
+     *  another voice under the second quarter of the measure. Hidden notes and rests (e.g. of a voice only for playback)
+     *  don't count. */
+    private static otherVoiceSoundsDuring(gve: GraphicalVoiceEntry): boolean {
+        const length: (entry: GraphicalVoiceEntry) => number =
+            (entry: GraphicalVoiceEntry): number => Math.max(...entry.notes.map(n => n.sourceNote.Length.RealValue));
+        const start: number = gve.parentStaffEntry.relInMeasureTimestamp.RealValue;
+        const end: number = start + length(gve);
+        for (const staffEntry of gve.parentStaffEntry.parentMeasure.staffEntries) {
+            const otherStart: number = staffEntry.relInMeasureTimestamp.RealValue;
+            if (otherStart >= end) {
+                continue;
+            }
+            for (const other of staffEntry.graphicalVoiceEntries) {
+                if (other.parentVoiceEntry.ParentVoice !== gve.parentVoiceEntry.ParentVoice &&
+                    otherStart + length(other) > start && other.notes.some(n => n.sourceNote.PrintObject)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static generateOrnaments(vfnote: VF.StemmableNote, oContainer: OrnamentContainer): void {
