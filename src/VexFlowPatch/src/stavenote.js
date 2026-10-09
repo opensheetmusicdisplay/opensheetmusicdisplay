@@ -251,7 +251,13 @@ export class StaveNote extends StemmableNote {
               }
             }
           } else if (lineDiff < 1 && lineDiff > 0) {//if the notes are quite close but not on the same line, shift
-            noteL.note.setXShift(xShift);
+            // VexFlowPatch: an upper note's dots stay next to its head, where the lower note moved right can cover
+            //   them. So when only the upper note is dotted, stem up over a stem down, move it instead, as MuseScore does.
+            //   If both are dotted, also move an upper note in a space: Dot.format() then puts the lower note's dot in
+            //   the space below it, clear of the moved note. On a line, the moved note would cover the lower dot.
+            const dottedUpper = noteU.note.dots > 0 && (noteL.note.dots === 0 || Math.abs(noteU.line % 1) === 0.5) &&
+              noteU.stemDirection === 1 && noteL.stemDirection === -1;
+            (dottedUpper ? noteU : noteL).note.setXShift(xShift);
           } else if (noteU.note.voice !== noteL.note.voice) {//If we are not in the same voice
             if (noteU.stemDirection === noteL.stemDirection) {
               if (noteU.line > noteL.line) {
