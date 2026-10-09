@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for staggering two voices a second apart when the lower note is a chord.
+    Voice 1 is stems up, voice 2 stems down. Whether the notes are a second apart was decided from the
+    lowest key of each note: for a lower chord, that is its bottom key, not its top key, which is the one
+    next to the upper note. So E4+G4 under an A4 wasn't staggered, and the A4 and G4 heads overlapped.
+    Measure 1: an A4 over E4+G4, then an A4+C5 over E4+G4 (the upper note a chord too): the lower chord
+    moves right. Then an A4 over E4+A4, whose top key is in unison with the A4: the A4 heads still share
+    a column, nothing moves. Then a C5 over E4+G4, a third apart: nothing moves.
+    Measure 2: a dotted A4 over E4+G4, then a dotted A4 over a dotted E4+G4 (the upper note in a space):
+    the dotted A4 moves, with its dot, as it does over a G4 alone. Then an A4 eighth over E4+G4: the
+    lower chord moves.
+    Measure 3: crossed voices, the stem-up chord E4+G4 under a stem-down A4: the A4 moves right, as it
+    does over a G4 alone (beat 3).
+  -->
+  <part-list>
+    <score-part id="P1"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+
+      <!-- Voice 1 (upper): A4, A4+C5, A4, C5 -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><chord/><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+
+      <backup><duration>8</duration></backup>
+
+      <!-- Voice 2 (lower): E4+G4, E4+G4, E4+A4, E4+G4 -->
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
+    <measure number="2">
+      <!-- Voice 1 (upper): dotted A4 and an A4 eighth, twice -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><dot/><stem>up</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><dot/><stem>up</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem></note>
+
+      <backup><duration>8</duration></backup>
+
+      <!-- Voice 2 (lower): E4+G4 half, then dotted E4+G4 and an E4+G4 eighth -->
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>half</type><stem>down</stem></note>
+      <note><chord/><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>half</type><stem>down</stem></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><dot/><stem>down</stem></note>
+      <note><chord/><pitch><step>G</step><octave>4</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><dot/><stem>down</stem></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem></note>
+      <note><chord/><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem></note>
+    </measure>
+    <measure number="3">
+      <!-- Voice 1 (stems up, below): E4+G4 half, then G4 half -->
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+      <note><chord/><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+
+      <backup><duration>8</duration></backup>
+
+      <!-- Voice 2 (stems down, above): A4 half, twice -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>half</type><stem>down</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>half</type><stem>down</stem></note>
+    </measure>
+  </part>
+</score-partwise>
