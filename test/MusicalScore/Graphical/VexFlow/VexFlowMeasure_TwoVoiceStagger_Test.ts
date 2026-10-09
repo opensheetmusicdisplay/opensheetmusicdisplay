@@ -53,14 +53,23 @@ describe("VexFlow Measure - Two-Voice Stagger", () => {
       done();
    });
 
-   it("Should still stagger the lower note when it is dotted too", (done: Mocha.Done) => {
-      // Measure 2: a dotted A4 over a dotted G4, then an A4 over a dotted G4.
-      const measure: VexFlowMeasure = renderMeasures()[1];
-      for (const timestamp of [0, 0.5]) {
-         const gves: VexFlowVoiceEntry[] = voiceEntriesAt(measure, timestamp);
-         expect(gves.length).to.equal(2, `the beat at ${timestamp} should have two voices`);
+   it("Should stagger a dotted upper note in a space over a dotted lower note, whose dot then goes below", (done: Mocha.Done) => {
+      // Measure 2, beat 1: a dotted A4 over a dotted G4.
+      const gves: VexFlowVoiceEntry[] = voiceEntriesAt(renderMeasures()[1], 0);
+      expect(gves.length).to.equal(2, "the first beat should have two voices");
+      expect(noteX(gves, 1) - noteX(gves, 2)).to.be.greaterThan(1,
+         "the dotted upper note in a space must be staggered, the lower dot going to the space below");
+      done();
+   });
+
+   it("Should still stagger the lower note when it is the only one dotted, or the dotted upper note is on a line", (done: Mocha.Done) => {
+      // Measure 2, beat 3: an A4 over a dotted G4. Measure 3, beat 1: a dotted G4 over a dotted F4.
+      const measures: VexFlowMeasure[] = renderMeasures();
+      for (const [measureIndex, timestamp] of [[1, 0.5], [2, 0]]) {
+         const gves: VexFlowVoiceEntry[] = voiceEntriesAt(measures[measureIndex], timestamp);
+         expect(gves.length).to.equal(2, `measure ${measureIndex + 1} at ${timestamp} should have two voices`);
          expect(noteX(gves, 2) - noteX(gves, 1)).to.be.greaterThan(1,
-            `at ${timestamp}, the dotted lower note must be staggered, as before`);
+            `in measure ${measureIndex + 1} at ${timestamp}, the dotted lower note must be staggered, as before`);
       }
       done();
    });
