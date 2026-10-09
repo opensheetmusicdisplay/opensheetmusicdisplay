@@ -98,4 +98,56 @@ describe("VexFlow Measure - Three-Voice Stagger", () => {
       done();
    });
 
+   it("Should stagger the lower note a second below a middle note whose stem doesn't point down at it", (done: Mocha.Done) => {
+      // Measure 1: a D5 (stem up), an A4 whole note and a G4 (stem down), the A4 and the G4 a second apart.
+      const path: string = "test_three_voice_stagger_middle_head_crossed_stems.musicxml";
+      const gves: VexFlowVoiceEntry[] = voiceEntriesAt(renderMeasure(path), 0);
+      expect(gves.length).to.equal(3, "beat 1 should have three voices");
+      // a whole note's head is wider than a half note's, so their centres differ by a fraction of a staggering shift
+      expect(noteX(gves, 2)).to.be.closeTo(noteX(gves, 1), 0.5, "the A4 whole note stays on the beat under the D5");
+      // The same G4 moved past a half-note A4 (beat 1 of test_three_voice_stagger_lower_second): a whole note's head
+      //   is wider, so the G4 must go further to clear it.
+      const halfNoteGves: VexFlowVoiceEntry[] = voiceEntriesAt(renderMeasure("test_three_voice_stagger_lower_second.musicxml"), 0);
+      const pastHalfNote: number = noteX(halfNoteGves, 3) - noteX(halfNoteGves, 1);
+      expect(noteX(gves, 3) - noteX(gves, 1)).to.be.greaterThan(pastHalfNote + 0.1,
+         "the G4 collides with the A4 a second above, so it must be staggered clear of the whole note's head");
+      done();
+   });
+
+   it("Should stagger a stem-up middle note a second above a stem-down lower note, whatever the voice numbers", (done: Mocha.Done) => {
+      // Measure 2: an E6 (stem up) far above a C5 (stem up) and a B4 (stem down) a second apart. The C5 on the beat
+      // would read as a chord with the E6, so it moves, as when its stem points down. Beat 3 swaps voices 2 and 3.
+      const measure: VexFlowMeasure = renderMeasure("test_three_voice_stagger_middle_head_crossed_stems.musicxml", 1);
+      for (const [timestamp, middle, lower] of [[0, 2, 3], [0.5, 3, 2]]) {
+         const gves: VexFlowVoiceEntry[] = voiceEntriesAt(measure, timestamp);
+         expect(gves.length).to.equal(3, `the beat at ${timestamp} should have three voices`);
+         expect(noteX(gves, middle) - noteX(gves, lower)).to.be.greaterThan(1,
+            `the C5 of voice ${middle} collides with the B4 a second below, so they must not share a column`);
+      }
+      done();
+   });
+
+   it("Should stagger a stem-up lower note whose stem crosses a stem-down middle note", (done: Mocha.Done) => {
+      // Measure 3: E5 (stem up), B4 (stem down), G4 (stem up), a third apart. Beat 3 swaps voices 2 and 3.
+      const measure: VexFlowMeasure = renderMeasure("test_three_voice_stagger_middle_head_crossed_stems.musicxml", 2);
+      for (const [timestamp, middle, lower] of [[0, 2, 3], [0.5, 3, 2]]) {
+         const gves: VexFlowVoiceEntry[] = voiceEntriesAt(measure, timestamp);
+         expect(gves.length).to.equal(3, `the beat at ${timestamp} should have three voices`);
+         expect(noteX(gves, lower) - noteX(gves, 1)).to.be.greaterThan(1,
+            `the G4 of voice ${lower} must be staggered, its stem clear of the E5's`);
+         expect(noteX(gves, middle)).to.be.closeTo(noteX(gves, 1), 0.01,
+            `the B4 of voice ${middle} stays on the beat under the E5`);
+      }
+      done();
+   });
+
+   it("Should not stagger a crossing lower note whose stem is hidden", (done: Mocha.Done) => {
+      // Measure 4: measure 3 with the G4's stem hidden (<stem>none</stem>): no stem runs up the E5's.
+      const gves: VexFlowVoiceEntry[] = voiceEntriesAt(
+         renderMeasure("test_three_voice_stagger_middle_head_crossed_stems.musicxml", 3), 0);
+      expect(gves.length).to.equal(3, "beat 1 should have three voices");
+      expect(noteX(gves, 3)).to.be.closeTo(noteX(gves, 1), 0.01, "the G4 with a hidden stem stays on the beat");
+      done();
+   });
+
 });
