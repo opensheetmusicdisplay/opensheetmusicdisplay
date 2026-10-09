@@ -373,9 +373,10 @@ export class StaveNote extends StemmableNote {
     //   With the same stem direction, the middle and the upper note on the beat would read as a chord, so the middle
     //   one still moves. So does a dotted middle note: its dots stay next to its head, where the moved lower note can
     //   cover them.
-    //   Crossed stems, a stem-down middle note over a stem-up lower note, move the lower note too, as MuseScore moves
-    //   the stem-up voice: on the beat, its stem ran up the upper note's stem as if they were a chord. A stem hidden
-    //   with <stem>none</stem> (drawn transparent) runs nowhere, so that lower note stays.
+    //   Crossed stems, a stem-down middle note over a stem-up lower note, move the lower note too: on the beat, its
+    //   stem ran up the upper note's stem as if they were a chord. Behind Bars moves the lower of two parts stemmed the
+    //   same way to the right (p. 313). A stem hidden with <stem>none</stem> (drawn transparent) runs nowhere, so that
+    //   lower note stays.
     const secondBelow = gapBelow >= 0 && gapBelow <= 0.5 && noteM.stemDirection !== noteU.stemDirection &&
       noteM.note.dots === 0;
     const lowerStemStyle = noteL.note.getStemStyle();
@@ -383,7 +384,7 @@ export class StaveNote extends StemmableNote {
       lowerStemStyle?.strokeStyle !== "#00000000";
     const moveLower = intersectsLower && !intersectsUpper && !noteU.isrest && (secondBelow || crossedStems);
     if (!isUnisonWithNeighbour && moveLower) {
-      noteL.note.setXShift(Math.max(voiceXShift, noteM.voice_shift)); // clear of the middle note's head
+      noteL.note.setXShift(Math.max(voiceXShift, noteM.note.getGlyphWidth())); // clear of the middle note's head
     } else if (!isUnisonWithNeighbour && (intersectsUpper || intersectsLower)) {
       xShift = voiceXShift + 3;      // shift middle note right
       noteM.note.setXShift(xShift);
