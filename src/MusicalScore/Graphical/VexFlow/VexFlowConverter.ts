@@ -833,9 +833,10 @@ export class VexFlowConverter {
         //   instead (Gould, Behind Bars, pp. 117-118). A beamed group is placed as a whole, at the stem end if another voice
         //   sounds during any of its notes: not some dots below the heads and some above the beam. A placement from the XML
         //   still wins.
-        const beamNotes: Note[] = gNote.sourceNote.NoteBeam?.Notes ?? [gNote.sourceNote];
+        //   Of a chord, only the first note in the XML is in the beam (not necessarily gNote, the lowest).
+        const beamNotes: Note[] = gNote.sourceNote.ParentVoiceEntry.Notes[0].NoteBeam?.Notes ?? [gNote.sourceNote];
         const otherVoiceSounding: boolean = gNote.sourceNote.ParentVoiceEntry.Articulations.length > 0 &&
-            beamNotes.some(note => VexFlowConverter.otherVoiceSoundsDuring(note.ParentVoiceEntry));
+            beamNotes.some((note: Note) => VexFlowConverter.otherVoiceSoundsDuring(note.ParentVoiceEntry));
         for (const articulation of gNote.sourceNote.ParentVoiceEntry.Articulations) {
             let vfArtPosition: number = VF.Modifier.Position.ABOVE;
 
@@ -1014,7 +1015,7 @@ export class VexFlowConverter {
      *  don't count. */
     private static otherVoiceSoundsDuring(voiceEntry: VoiceEntry): boolean {
         const length: (entry: VoiceEntry) => number =
-            (entry: VoiceEntry): number => Math.max(...entry.Notes.map(note => note.Length.RealValue));
+            (entry: VoiceEntry): number => Math.max(...entry.Notes.map((note: Note) => note.Length.RealValue));
         const staffEntry: SourceStaffEntry = voiceEntry.ParentSourceStaffEntry;
         const staffIndex: number = staffEntry.ParentStaff.idInMusicSheet;
         const start: number = staffEntry.Timestamp.RealValue;
@@ -1027,7 +1028,7 @@ export class VexFlowConverter {
             }
             for (const other of otherStaffEntry.VoiceEntries) {
                 if (other.ParentVoice !== voiceEntry.ParentVoice && otherStart + length(other) > start &&
-                    other.Notes.some(note => note.PrintObject)) {
+                    other.Notes.some((note: Note) => note.PrintObject)) {
                     return true;
                 }
             }
