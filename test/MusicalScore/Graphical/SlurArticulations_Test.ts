@@ -4,6 +4,7 @@ import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSh
 import { GraphicalSlur } from "../../../src/MusicalScore/Graphical/GraphicalSlur";
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
 import { GraphicalLabel } from "../../../src/MusicalScore/Graphical/GraphicalLabel";
+import { BoundingBox } from "../../../src/MusicalScore/Graphical/BoundingBox";
 import { GraphicalMeasure } from "../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
@@ -32,11 +33,14 @@ interface Box {
  * test_slur_articulations_start_end: one slur per measure, with marks at its start or end, see the comment in the sample.
  * test_slur_end_clear_of_articulations (from isc's PR #1827): slurs ending at marks, see the comment in the sample.
  * test_slur_articulations_outside: accents and a fermata outside slurs, and slurs beside fingerings, see the comment in the sample.
+ * test_slur_beside_fingering_obstacles: slurs that ran into accidentals and a key signature beside fingerings, and slurs from
+ * notes with an ornament, see the comment in the sample.
  */
 describe("Slur at a note with an articulation", () => {
     let osmd: OpenSheetMusicDisplay;
+    let container: HTMLElement;
     beforeEach(() => {
-        const container: HTMLElement = TestUtils.getDivElement(document);
+        container = TestUtils.getDivElement(document);
         // the same systems in every browser (ChromeHeadless's page is narrower): a slur across a system break is drawn in two parts
         container.style.width = "1350px";
         osmd = TestUtils.createOpenSheetMusicDisplay(container);
@@ -266,6 +270,83 @@ describe("Slur at a note with an articulation", () => {
                                                   firstMeasure.ParentStaffLine);
             expect(accentAtNote.top - firstRenderAccent.top, "without slurs: the accent of m.1, below where the slur moved it")
                 .to.be.at.least(0.3);
+        });
+    }
+
+    for (const geometricSkyline of [true, false]) {
+        const skyline: string = geometricSkyline ? "geometric skyline" : "raster skyline";
+        it(`starts or ends a slur past fingerings when beside them it runs into accidentals or a key signature, and keeps it clear of ornaments (${skyline})`,
+           async () => {
+            osmd.setOptions({newSystemFromXML: true}); // the system break in the slur of m.6 to m.7
+            await osmd.load(TestUtils.getScore("test_slur_beside_fingering_obstacles.musicxml"));
+            osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geometricSkyline;
+            let firstRenderTrill: Box;
+            for (const render of ["first render", "re-render"]) {
+                osmd.render();
+                // the slur of m.6 to m.7 in two parts, and the slur over the staccatos in m.5
+                expect(slurs().length, render).to.equal(10);
+
+                // m.1: rising steeply, the slur starts beyond the mordent, which would be too far from the note above it, as an accent
+                //   (before, it started at the note under it and ran into it)
+                expect(clearance(slurIn(1), "start"), `${render}: ${describeSlur(slurIn(1))}, its start beyond the mordent`)
+                    .to.be.at.least(minClearance());
+                // m.8: the trill outside the slur, which passes under it (before, it started at the note under it and ran into it); the
+                //   outermost of the marks, beyond the dot
+                const trill: Box = drawnMarks(slurIn(8), "start", true).pop();
+                expect(clearanceFrom(slurIn(8), trill, true), `${render}: ${describeSlur(slurIn(8))}, its start under the trill`)
+                    .to.be.at.least(minClearanceUnder);
+                // on a re-render, the trill is where the first render put it, not moved on from there
+                firstRenderTrill ??= trill;
+                expect(trill.top, `${render}: the trill of m.8`).to.be.closeTo(firstRenderTrill.top, 0.01);
+
+                // m.3 and m.4: the slur passes over the accidentals of its end note (before, it ended beside the fingerings, on the sharp)
+                for (const measure of [3, 4]) {
+                    const slur: GraphicalSlur = slurIn(measure);
+                    for (const accidental of drawnMarks(slur, "end", true)) {
+                        expect(clearanceFrom(slur, accidental), `${render}: ${describeSlur(slur)}, over the accidentals of its end note`)
+                            .to.be.at.least(0);
+                    }
+                }
+
+                // m.5: the slur from the A5 starts over the fingering (before, beside it, from where it ran into the flat of the Ab5)
+                const fromA5: GraphicalSlur = slurs().filter((graphicalSlur: GraphicalSlur) =>
+                    graphicalSlur.staffEntries[0].parentMeasure.MeasureNumber === 5)
+                    .sort((a: GraphicalSlur, b: GraphicalSlur) => a.bezierStartPt.x - b.bezierStartPt.x)[0];
+                const fingering: GraphicalLabel = fromA5.staffEntries[0].FingeringEntries[0];
+                expect(fingering.PositionAndShape.RelativePosition.y + fingering.PositionAndShape.BorderTop - fromA5.bezierStartPt.y,
+                       `${render}: ${describeSlur(fromA5)}, its start over the fingering`).to.be.above(0);
+
+                // m.9 and m.10: the slur still starts beside the fingering 4 and ends beside the fingering 3 (the tie into m.10, next to
+                //   the start of its slur, is there past the fingering as well)
+                const [slur9, slur10] = [slurIn(9), slurIn(10)];
+                const fingering4: BoundingBox = slur9.staffEntries[0].FingeringEntries[0].PositionAndShape;
+                expect(slur9.bezierStartPt.x - (fingering4.RelativePosition.x + fingering4.BorderRight),
+                       `${render}: ${describeSlur(slur9)}, its start right of the fingering`).to.be.at.least(0.2);
+                const fingering3: BoundingBox = slur10.staffEntries[slur10.staffEntries.length - 1].FingeringEntries[0].PositionAndShape;
+                expect(fingering3.RelativePosition.x + fingering3.BorderLeft - slur10.bezierEndPt.x,
+                       `${render}: ${describeSlur(slur10)}, its end left of the fingering`).to.be.at.least(0.2);
+
+                // m.7: the part of the slur in the last system passes over the key signature (before, it ended beside the fingering,
+                //   which brought it down through the key signature from the start of the staff)
+                const lastPart: GraphicalSlur = slurIn(7);
+                const staffLine: StaffLine = lastPart.staffEntries[0].parentMeasure.ParentStaffLine;
+                const flats: Box[] = Array.from(container.querySelectorAll(".vf-measure[id='7'] .vf-keysignature path"))
+                    .map((flat: Element) => toStaffLine(flat as SVGGraphicsElement, staffLine));
+                expect(flats.length, `${render}: the flats of the key signature of m.7`).to.equal(2);
+                for (const flat of flats) {
+                    expect(clearanceFrom(lastPart, flat), `${render}: the slur of m.7, over the key signature`).to.be.at.least(0);
+                }
+            }
+
+            // without slurs, a re-render draws the trill of m.8 where Vexflow puts it at the note, not where the slur moved it
+            //   (the move is reset for every render, see VexFlowMusicSheetCalculator.calculateMeasureXLayout())
+            osmd.EngravingRules.RenderSlurs = false;
+            osmd.render();
+            const trillNote: GraphicalNote = osmd.GraphicSheet.MeasureList[7][0].staffEntries[0].graphicalVoiceEntries[0].notes[0];
+            const trillAtNote: Box = Array.from(marksGroup(trillNote).children)
+                .map((mark: Element) => toStaffLine(mark as SVGGraphicsElement, trillNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine))
+                .sort((a: Box, b: Box) => a.top - b.top)[0]; // the outermost of the marks
+            expect(trillAtNote.top - firstRenderTrill.top, "without slurs: the trill of m.8, below where the slur moved it").to.be.at.least(0.1);
         });
     }
 });
