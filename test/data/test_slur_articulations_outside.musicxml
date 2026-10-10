@@ -21,6 +21,11 @@
     not over them, from where it would only fall.
     Measure 9: D5 with a tenuto and fingering 4, slurred to the next note (Diabelli, sonatina op. 168 no. 1, m. 1): the slur
     starts beside the fingering.
+    Measure 10: G5 and F5, stems up, slurred below the staff, an accent under the G5: the accent is between the note and the
+    slur, which passes beyond it, so it stays there.
+    Measure 11: G4, C5 and G5, slurred, fingerings 2 and 5 on the C5 and the G5: the slur passes over the 2, so it ends past
+    the 5 too, not beside it, which made it rise over the 2 and fall again (Beethoven's Moonlight Sonata, 3rd movement, m. 42,
+    see test_slurs_long_steep_arc_moonlight_sonata_issue1466).
   -->
   <part-list>
     <score-part id="P1"><part-name>Piano</part-name></score-part>
@@ -89,6 +94,17 @@
       <note><pitch><step>D</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="start" number="1"/><articulations><tenuto/></articulations><technical><fingering>4</fingering></technical></notations></note>
       <note><pitch><step>B</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="stop" number="1"/></notations></note>
       <note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>down</stem></note>
+    </measure>
+    <measure number="10">
+      <note><pitch><step>G</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>up</stem><notations><slur type="start" number="1"/><articulations><accent/></articulations></notations></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>up</stem><notations><slur type="stop" number="1"/></notations></note>
+      <note><rest/><duration>4</duration><voice>1</voice><type>half</type></note>
+    </measure>
+    <measure number="11">
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><technical><fingering>2</fingering></technical></notations></note>
+      <note><pitch><step>G</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="stop" number="1"/><technical><fingering>5</fingering></technical></notations></note>
+      <note><rest/><duration>2</duration><voice>1</voice><type>quarter</type></note>
       <barline location="right"><bar-style>light-heavy</bar-style></barline>
     </measure>
   </part>

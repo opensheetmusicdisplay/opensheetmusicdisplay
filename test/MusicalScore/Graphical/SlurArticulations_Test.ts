@@ -199,7 +199,7 @@ describe("Slur at a note with an articulation", () => {
             let firstRenderAccent: Box;
             for (const render of ["first render", "re-render"]) {
                 osmd.render();
-                expect(slurs().length, render).to.equal(9);
+                expect(slurs().length, render).to.equal(11);
                 // m.1, m.2, m.4, m.5, m.7: the accent or fermata outside the slur, which passes under it
                 for (const [measure, end] of [[1, "start"], [2, "end"], [4, "start"], [5, "end"], [7, "start"]] as [number, "start" | "end"][]) {
                     const slur: GraphicalSlur = slurIn(measure);
@@ -221,6 +221,8 @@ describe("Slur at a note with an articulation", () => {
 
                 // m.6: rising steeply, the slur goes over the accent, which would be too far from the note above it
                 expect(clearance(slurIn(6), "start"), `${render}: the slur of m.6 beyond the accent`).to.be.at.least(minClearance());
+                // m.10: the slur below the staff passes beyond the accent under the G5 above the staff, which stays there
+                expect(clearance(slurIn(10), "start"), `${render}: the slur of m.10 beyond the accent`).to.be.at.least(minClearance());
 
                 // m.7: the fingering still above the accent, which moved out of the slur's way
                 const fingering: GraphicalLabel = slurIn(7).staffEntries[0].FingeringEntries[0];
@@ -244,6 +246,10 @@ describe("Slur at a note with an articulation", () => {
                     expect(clearance(slur, "start"), `${render}: ${describeSlur(slur)}, its start beyond the mark`)
                         .to.be.at.least(minClearance());
                 }
+                // m.11: the slur passes over the fingering of the C5 in between, so it ends over the fingering of the G5 too
+                const fingeringAtEnd: GraphicalLabel = slurIn(11).staffEntries[slurIn(11).staffEntries.length - 1].FingeringEntries[0];
+                expect(fingeringAtEnd.PositionAndShape.RelativePosition.y + fingeringAtEnd.PositionAndShape.BorderTop -
+                    slurIn(11).bezierEndPt.y, `${render}: the slur of m.11, its end over the fingering`).to.be.above(0);
             }
 
             // without slurs, a re-render draws the accent of m.1 where Vexflow puts it at the note, not where the slur moved it
