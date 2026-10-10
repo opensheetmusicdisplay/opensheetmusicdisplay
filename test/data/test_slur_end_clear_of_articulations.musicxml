@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <!--
-  A slur ending at a note with an articulation on the slur's side ends past the articulation, by the distance it keeps from
-  a note head. It moved out by a fixed SlurEndArticulationYOffset, which didn't clear an accent, nor a staccato that VexFlow
-  moves from a line into the next space.
+  A slur ending at a note with an articulation on the slur's side ends past a staccato or tenuto, by the distance it keeps
+  from a note head, and under an accent or a fermata, which goes outside the slur (see test_slur_articulations_outside). It
+  moved out by a fixed SlurEndArticulationYOffset, which didn't clear an accent, nor a staccato that VexFlow moves from a
+  line into the next space.
   Measure 1: one voice, a slur ending at a staccato moved from the D5's line into the space above (on develop, the slur ended in it).
   Measure 2: two voices, a slur ending at a staccato at the stem end of a stem-up C5.
-  Measure 3: one voice, stems down, slurs above, ending at a staccato, then at an accent (on develop, the slur ended in it).
+  Measure 3: one voice, stems down, slurs above, ending at a staccato, then at an accent, which goes above the slur's end (on
+  develop, the slur ended in it).
   Measure 4: one voice, stems up, slurs below, ending at a staccato, then at a tenuto (already clear on develop).
-  Measure 5: two voices, the upper voice's slurs above, ending at a staccato, then at an accent (on develop, through it).
-  Measure 6: two voices, the lower voice's slurs below, ending at a staccato, then at an accent (on develop, through it).
-  Measure 7: a slur ending at a fermata just above the staff (on develop, the slur ended in it).
+  Measure 5: two voices, the upper voice's slurs above, ending at a staccato, then at an accent, which goes above the slur's end
+  (on develop, through it).
+  Measure 6: two voices, the lower voice's slurs below, ending at a staccato, then at an accent, which goes below the slur's end
+  (on develop, through it).
+  Measure 7: a slur ending at a fermata just above the staff, which goes above the slur's end (on develop, the slur ended in it).
   Measure 8: a slur ending under a fermata well above the staff, which stays outside the slur, as on develop.
   Measures 9-10: a slur coming down to a chord under a fermata above the staff, which stays outside the slur, as on develop:
   the slur passes under it.

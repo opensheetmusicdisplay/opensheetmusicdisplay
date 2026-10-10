@@ -13,8 +13,8 @@
     Measure 4: G4, A4 and G4 (stems up), slurred below, staccatos on both G4s: the slur started and ended on the dots.
     Measure 5: two voices, C5 and D5 (stems up) slurred above over an E4 (stem down), a staccato on the D5, at the end of
     its stem (the mark of a voice sharing a staff).
-    Measure 6: C5 and B4, an accent on the C5, where the slur starts: the slur started through it. (An accent may also
-    go outside the slur, e.g. one moved out for a slur placed in the XML, see test_slur_overlap_articulation_accent.)
+    Measure 6: C5 and B4, an accent on the C5, where the slur starts: the slur started through it. The accent goes
+    outside the slur, above its start (see test_slur_articulations_outside).
   -->
   <part-list>
     <score-part id="P1"><part-name>Piano</part-name></score-part>

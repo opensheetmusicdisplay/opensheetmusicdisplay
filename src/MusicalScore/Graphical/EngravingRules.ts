@@ -352,6 +352,10 @@ export class EngravingRules {
      * @deprecated
      */
     public SlurEndArticulationYOffset: number;
+    /** Not used anymore: an accent at the start or end of a slur goes outside it, beyond its curve, unless that is too far from the
+     *  note (see GraphicalSlur), not this fixed distance further out at the start of a slur placed in the XML.
+     * @deprecated
+     */
     public SlurStartArticulationYOffsetOfArticulation: number;
     public SlurStemXOffset: number;
     public SlurSlopeMaxAngle: number;
