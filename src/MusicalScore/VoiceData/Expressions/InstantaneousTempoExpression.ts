@@ -178,11 +178,13 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         "ad libitum",
         "alla breve",
     ];
+    /** Words that make a tempo word a change of the tempo in force, e.g. piu lento, poco lento. */
+    private static listInstantaneousTempoRelative: string[] = ["più", "piu", "meno", "poco"];
 
     public TempoType: TempoType;
     public InstTempo: InstTempo;
     /** This is `none` unless `TempoType` is `change`. */
-    public ChangeSubType: ChangeSubType;
+    public ChangeSubType: ChangeSubType = ChangeSubType.none;
     private tempoInBpm: number;
 
     // Must refactor: In c# use 'out' arguments
@@ -371,6 +373,23 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
     public getAbsoluteFloatTimestamp(): number {
         return Fraction.plus(this.ParentMultiTempoExpression.SourceMeasureParent.AbsoluteTimestamp, this.ParentMultiTempoExpression.Timestamp).RealValue;
     }
+    /** Whether this changes the tempo in force for a while rather than giving a tempo of its own, so that "a tempo"
+     *  returns to the tempo before it: a change word like rit. or accel., a word with only add-ons like poco rit.,
+     *  or a tempo word with più, meno or poco like piu lento or poco lento.
+     *  Not a metronome mark, a tempo word like Allegro, "a tempo", Tempo I or doppio movimento.
+     */
+    public isTemporaryChange(): boolean {
+        switch (this.TempoType) {
+            case TempoType.change:
+                return this.ChangeSubType === ChangeSubType.none;
+            case TempoType.addon:
+                return true;
+            case TempoType.inst:
+                return InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoRelative, this.label);
+            default:
+                return false;
+        }
+    }
     private setTempoAndTempoType(soundTempo: number): void {
         if (!this.label) {
             this.tempoInBpm = soundTempo;
@@ -516,7 +535,20 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         } else if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoChangesGeneral, this.label)) {
             this.tempoInBpm = 0;
             this.TempoType = TempoType.change;
+            this.ChangeSubType = InstantaneousTempoExpression.getChangeSubType(this.label);
         }
+    }
+
+    /** The tempo a change word asks for, if any: "a tempo", Tempo I (tempo primo) or doppio movimento. */
+    private static getChangeSubType(label: string): ChangeSubType {
+        if (InstantaneousTempoExpression.isStringInStringList(["tempo primo", "tempo i"], label)) {
+            return ChangeSubType.tempoprimo;
+        } else if (InstantaneousTempoExpression.isStringInStringList(["a tempo"], label)) {
+            return ChangeSubType.atempo;
+        } else if (InstantaneousTempoExpression.isStringInStringList(["doppio movimento"], label)) {
+            return ChangeSubType.doppioMovimento;
+        }
+        return ChangeSubType.none;
     }
 }
 

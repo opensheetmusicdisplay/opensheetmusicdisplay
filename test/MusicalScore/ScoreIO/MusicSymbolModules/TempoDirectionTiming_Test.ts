@@ -37,6 +37,11 @@ describe("Tempo direction timing", (): void => {
           ${soundTempo ? `<sound tempo="${soundTempo}"/>` : ""}</direction>`;
     }
 
+    /** A direction with words and no <sound tempo>. */
+    function wordsDirection(text: string): string {
+        return `<direction><direction-type><words>${text}</words></direction-type></direction>`;
+    }
+
     function score(content: string): Document {
         return new DOMParser().parseFromString(`<score-partwise version="4.0">
           <part-list><score-part id="P1"><part-name>Flute</part-name></score-part></part-list>
@@ -236,5 +241,29 @@ describe("Tempo direction timing", (): void => {
             "<direction><direction-type><words>stretto</words></direction-type></direction>" + note("D") + note("E") + note("F")));
         expect(osmd.Sheet.TimestampSortedTempoExpressionsList[1].ContinuousTempo.StartTempo).to.equal(60);
         expect(bpms()).to.deep.equal([60, 60, 60, 60]);
+    });
+
+    it("returns to the tempo before the latest temporary change at a tempo, and to the first tempo at Tempo I", async (): Promise<void> => {
+        // piu lento and poco lento get Lento's 48 BPM
+        await osmd.load(score(tempo(120) + note("C") + wordsDirection("piu lento") + note("D") +
+            wordsDirection("a tempo") + note("E") + note("F")));
+        expect(bpms()).to.deep.equal([120, 48, 120, 120]);
+        // in quarter notes per minute: half = 30 without a sound tempo is 60
+        await osmd.load(score(metronome("half", 30) + note("C") + wordsDirection("piu lento") + note("D") +
+            wordsDirection("a tempo") + note("E") + note("F")));
+        expect(bpms()).to.deep.equal([60, 48, 60, 60]);
+        await osmd.load(score(tempo(120) + note("C") + tempo(90) + note("D") + wordsDirection("poco lento") + note("E") +
+            wordsDirection("a tempo") + note("F")));
+        expect(bpms()).to.deep.equal([120, 90, 48, 90]);
+        await osmd.load(score(tempo(120) + note("C") + tempo(90) + note("D") + wordsDirection("Tempo I") + note("E") + note("F")));
+        expect(bpms()).to.deep.equal([120, 90, 120, 120]);
+        // a temporary change with a metronome mark at the same time
+        await osmd.load(score(tempo(120) + note("C") + tempo(144) + wordsDirection("piu mosso") + note("D") +
+            wordsDirection("a tempo") + note("E") + note("F")));
+        expect(bpms()).to.deep.equal([120, 144, 120, 120]);
+        // the first tempo of the piece, although poco makes it look like a temporary change
+        await osmd.load(score(note("C") + wordsDirection("Poco allegretto") + note("D") + note("E") +
+            wordsDirection("a tempo") + note("F")));
+        expect(bpms()).to.deep.equal([100, 112, 112, 112]);
     });
 });
