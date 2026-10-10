@@ -77,10 +77,12 @@ export class TemposCalculator implements IAfterSheetReadingModule {
                     if (ite.isMetronomeMark) {
                         const factor: Fraction = ite.getNoteEquationTempoFactor();
                         ite.TempoInBpm = previousTempo * factor.GetExpandedNumerator() / factor.Denominator;
-                    } else if (ite instanceof InstantaneousTempoExpression && ite.TempoType !== TempoType.change) {
+                    } else if (ite.TempoType === TempoType.inst) {
                         // An inst tempo should normally have a non-zero BPM.
                         ite.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo(ite.InstTempo);
                     }
+                    // A change word (e.g. rit.) and a word with only add-ons (e.g. poco rit., molto accel.) have no tempo of their own:
+                    //   0 BPM keeps the tempo in force (MusicPartManagerIterator.updateCurrentBpm()). A return to a tempo gets that tempo.
                     // A change tempo will have a 0 BPM unless it was set by #calculatePrimoTempo, because it was on the first measure.
                     if (ite.TempoType === TempoType.change) {
                         switch (ite.ChangeSubType) {

@@ -266,4 +266,10 @@ describe("Tempo direction timing", (): void => {
             wordsDirection("a tempo") + note("F")));
         expect(bpms()).to.deep.equal([100, 112, 112, 112]);
     });
+
+    it("keeps the tempo at poco rit. and molto accel., which have no BPM of their own", async (): Promise<void> => {
+        await osmd.load(score(tempo(120) + note("C") + wordsDirection("poco rit.") + note("D") + wordsDirection("a tempo") +
+            note("E") + wordsDirection("molto accel.") + note("F")));
+        expect(bpms()).to.deep.equal([120, 120, 120, 120]);
+    });
 });
