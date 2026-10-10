@@ -1,8 +1,10 @@
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
+import { SourceMeasure } from "../VoiceData";
 import { Glissando } from "../VoiceData/Glissando";
 import { ColDirEnum } from "./BoundingBox";
 import { EngravingRules } from "./EngravingRules";
 import { GraphicalLine } from "./GraphicalLine";
+import { GraphicalMeasure } from "./GraphicalMeasure";
 import { GraphicalNote } from "./GraphicalNote";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { StaffLine } from "./StaffLine";
@@ -78,7 +80,12 @@ export class GraphicalGlissando {
             //endY = glissEndVe.PositionAndShape.RelativePosition.y + glissEndVe.PositionAndShape.BorderTop;
             endY = glissEndNote.PositionAndShape.AbsolutePosition.y;
         } else {
-            if (staffLine.Measures.last().parentSourceMeasure.HasEndLine) {
+            const lastMeasure: GraphicalMeasure = staffLine.Measures.last();
+            const lastSourceMeasure: SourceMeasure =
+                lastMeasure.parentSourceMeasure ??
+                lastMeasure.ExtraGraphicalMeasurePreviousMeasure?.parentSourceMeasure;
+
+            if (lastSourceMeasure?.HasEndLine) {
                 return;
                 // TODO inquire how this can happen: start of glissando at end of last measure. maybe faulty xml? or about slur/slide indices?
             }
