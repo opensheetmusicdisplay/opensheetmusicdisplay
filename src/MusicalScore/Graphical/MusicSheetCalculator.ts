@@ -1060,14 +1060,16 @@ export abstract class MusicSheetCalculator {
             if (this.rules.RenderWavyLines) {
                 this.calculateWavyLines();
             }
-            // calculate RepetitionInstructions (Dal Segno, Coda, etc)
-            this.calculateWordRepetitionInstructions();
         }
         // calculate endings last, so they appear above measure numbers
         this.calculateRepetitionEndings();
         // calcualte all Tempo Expressions
         if (!this.leadSheet) {
             this.calculateTempoExpressions();
+            // calculate RepetitionInstructions (Dal Segno, Coda, etc), after the tempo texts: they are shifted above what's in
+            //   their way (see VexFlowMusicSheetCalculator.placeWordRepetitionInSkyline()), e.g. a segno above Tempo I, but
+            //   reserve no skyline space in their default position, so a tempo text placed after them overlapped them
+            this.calculateWordRepetitionInstructions();
         }
         this.calculateRehearsalMarks();
 
