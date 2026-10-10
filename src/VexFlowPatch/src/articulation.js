@@ -308,6 +308,7 @@ export class Articulation extends Modifier {
 
     // Articulations are centered over/under the note head.
     let { x } = note.getModifierStartXY(position, index);
+    const headX = x; // VexFlowPatch: see drawnXRangeFromHead below
     // VexFlowPatch: breath mark support
     if (this.type === 'abr') { // breath mark
       // placed by the distance to the next note's time (tick context), so not moved with a note moved aside from another
@@ -392,5 +393,12 @@ export class Articulation extends Modifier {
     L(`Rendering articulation at (x: ${x}, y: ${y})`);
 
     glyph.render(ctx, x, y);
+    // VexFlowPatch: where the glyph was drawn, for what has to stay clear of it, e.g. the end of a slur
+    //   (GraphicalSlur.clearEndArticulations()): across from the centre of the note head, and down from the stave's top line,
+    //   since the stave can be drawn elsewhere before it is drawn for good, e.g. by SkyBottomLineCalculator.
+    const left = x + glyph.originShift.x + glyph.bbox.getX() - headX;
+    this.drawnXRangeFromHead = [left, left + glyph.bbox.getW()];
+    const top = y + glyph.originShift.y + glyph.bbox.getY() - stave.getYForLine(0);
+    this.drawnYRangeFromTopLine = [top, top + glyph.bbox.getH()];
   }
 }

@@ -16,6 +16,8 @@ breath mark support
 keep a breath mark at the time of its note: not moved with the note's x_shift (which getModifierStartXY() adds, see stavenote.js)
 count the text line of an articulation also from the bases of the articulations on its side of the other voices' notes at
   its time (getTextLineBaseY(), with the move out of the staff), so that the articulations of two voices don't overlap
+keep where the glyph was drawn, from the note head and the stave's top line (drawnXRangeFromHead, drawnYRangeFromTopLine), so that
+  a slur ending at the note clears it
 
 beam.js (custom addition):
 fix beam slopes changing on each re-render (render() call)

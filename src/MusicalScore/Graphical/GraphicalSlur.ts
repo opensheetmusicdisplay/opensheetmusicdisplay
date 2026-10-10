@@ -16,6 +16,7 @@ import { GraphicalMeasure } from "./GraphicalMeasure";
 import { Fraction } from "../../Common/DataObjects/Fraction";
 import { StemDirectionType } from "../VoiceData/VoiceEntry";
 import { VexFlowGraphicalNote } from "./VexFlow";
+import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 import Vex from "vexflow";
 import VF = Vex.Flow;
 
@@ -37,6 +38,12 @@ export class GraphicalSlur extends GraphicalCurve {
     public SVGElement: Node;
     /** While calculateCurve() calculates the curve again, past the fingerings of its start and end notes it ran into. */
     private fingeringsRunInto: {start: BoundingBox[], end: BoundingBox[]};
+    /** The top or bottom corners of the articulations the end clears, for clearObstacles(), see clearEndArticulations(). */
+    private endArticulationCorners: PointF2D[] = [];
+    /** The articulations clearEndArticulations() left outside the slur, as their outward extents, see retryPastEndArticulations(). */
+    private endArticulationsOutside: {left: number, right: number, near: number, far: number}[] = [];
+    /** While calculateCurve() calculates the curve again, past every articulation of its end note, see retryPastEndArticulations(). */
+    private clearingEveryEndArticulation: boolean = false;
 
     /**
      * Compares the timespan of two Graphical Slurs
@@ -171,7 +178,8 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // SkyLinePointsList between firstStaffEntry startUpperRightPoint and lastStaffentry endUpperLeftPoint
             points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
-            const obstacles: PointF2D[] = this.getObstacles(points, skyBottomLineCalculator); // without the point added if there is none
+            const obstacles: PointF2D[] = this.getObstacles(points, skyBottomLineCalculator) // without the point added if there is none
+                .concat(this.endArticulationCorners);
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endUpperLeft.x - startUpperRight.x) / 2 + startUpperRight.x,
@@ -290,7 +298,8 @@ export class GraphicalSlur extends GraphicalCurve {
             this.bezierEndControlPt = new PointF2D(endControlPoint.x, endControlPoint.y - endYOffset);
             this.bezierEndPt = new PointF2D(endX, endY - endYOffset);
 
-            if (this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startUpperRight.x, endUpperLeft.x)) {
+            if (this.retryPastEndArticulations(rules) ||
+                this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startUpperRight.x, endUpperLeft.x)) {
                 return;
             }
 
@@ -370,7 +379,7 @@ export class GraphicalSlur extends GraphicalCurve {
             points = this.calculateBottomPoints(startLowerRight, endLowerLeft, staffLine, skyBottomLineCalculator);
             // without the point added if there is none, nor the bare staff, which calculateBottomPoints() keeps
             const obstacles: PointF2D[] = this.getObstacles(points.filter(point => point.y !== staffLine.BottomLineOffset),
-                                                            skyBottomLineCalculator);
+                                                            skyBottomLineCalculator).concat(this.endArticulationCorners);
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endLowerLeft.x - startLowerRight.x) / 2 + startLowerRight.x,
@@ -482,7 +491,8 @@ export class GraphicalSlur extends GraphicalCurve {
             // this.intersection.y += startY;
             /* for DEBUG only */
 
-            if (this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startLowerRight.x, endLowerLeft.x)) {
+            if (this.retryPastEndArticulations(rules) ||
+                this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startLowerRight.x, endLowerLeft.x)) {
                 return;
             }
 
@@ -623,6 +633,8 @@ export class GraphicalSlur extends GraphicalCurve {
         let startY: number = 0;
         let endX: number = 0;
         let endY: number = 0;
+        this.endArticulationCorners = [];
+        this.endArticulationsOutside = [];
 
         if (slurStartNote) {
             // must be relative to StaffLine
@@ -696,6 +708,7 @@ export class GraphicalSlur extends GraphicalCurve {
             }
 
             const slurEndVE: GraphicalVoiceEntry = slurEndNote.parentVoiceEntry;
+            const headX: number = endX; // the centre of the note head, before the move towards the stem below
 
             // check for articulation -> shift end y (slur further outward)
             //   this should not be necessary for the start note, and for accents (>) it's even counter productive there
@@ -724,7 +737,7 @@ export class GraphicalSlur extends GraphicalCurve {
                     endY = Math.min(endY, slurEndVE.parentStaffEntry.getSkylineMin());
                 }
                 if (articulationPlacement === PlacementEnum.Above) {
-                    endY -= this.rules.SlurEndArticulationYOffset;
+                    endY = this.clearEndArticulations(slurEndNote, headX, endY);
                 }
             } else {
                 endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
@@ -732,7 +745,7 @@ export class GraphicalSlur extends GraphicalCurve {
                     endY = Math.max(endY, slurEndVE.parentStaffEntry.getBottomlineMax());
                 }
                 if (articulationPlacement === PlacementEnum.Below) {
-                    endY += this.rules.SlurEndArticulationYOffset;
+                    endY = this.clearEndArticulations(slurEndNote, headX, endY);
                 }
             }
 
@@ -912,6 +925,70 @@ export class GraphicalSlur extends GraphicalCurve {
     }
 
     /**
+     * Where the end goes when the end note has articulations on the slur's side: SlurEndArticulationYOffset further out, as
+     * before, and at least at the far edge of the farthest articulation as drawn that the end runs into, from which
+     * calculateCurve() keeps SlurNoteHeadYOffset, as from a note head. The offset alone didn't clear them: a slur ended through
+     * an accent, on the dot of a staccato that VexFlow moves from a line into the next space, or in a fermata.
+     * An articulation already SlurNoteHeadYOffset beyond the curve's end stays outside the slur, which passes under it, e.g. a
+     * fermata well above the staff, unless the curve runs into it on its way to the end (see retryPastEndArticulations()).
+     * The corners of the articulations cleared go to endArticulationCorners, for clearObstacles() to keep the curve that far
+     * from them over their width too: the end is at the stem of a stem-up note under a slur above, right of the articulation,
+     * and the curve of a short slur rising to its end ran over it lower than its end, e.g. on a staccato at the stem end.
+     * @param note The end note.
+     * @param headX The x of the centre of the note's head, relative to the staffline.
+     * @param y The y of the end at the note, relative to the staffline.
+     * @returns The y of the end past the articulations, relative to the staffline.
+     */
+    private clearEndArticulations(note: GraphicalNote, headX: number, y: number): number {
+        const above: boolean = this.placement === PlacementEnum.Above;
+        const position: number = above ? VF.Modifier.Position.ABOVE : VF.Modifier.Position.BELOW;
+        const outward: number = above ? -1 : 1;
+        const measureY: number = note.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.y;
+        let endY: number = y + outward * this.rules.SlurEndArticulationYOffset;
+        // where an articulation's near edge has to be for it to stay outside the slur: SlurNoteHeadYOffset beyond the curve's
+        //   end, which calculateCurve() puts SlurNoteHeadYOffset beyond endY
+        const outside: number = endY + outward * 2 * this.rules.SlurNoteHeadYOffset;
+        for (const modifier of ((note as VexFlowGraphicalNote).vfnote?.[0] as any)?.modifiers ?? []) {
+            const xRange: number[] = modifier.drawnXRangeFromHead; // see articulation.js
+            const yRange: number[] = modifier.drawnYRangeFromTopLine;
+            if (modifier.getCategory() !== VF.Articulation.CATEGORY || modifier.position !== position || !xRange || !yRange) {
+                continue; // e.g. not drawn
+            }
+            const [nearEdge, farEdge] = (above ? [yRange[1], yRange[0]] : yRange).map(edge => measureY + edge / unitInPixels);
+            if (!this.clearingEveryEndArticulation && (nearEdge - outside) * outward >= 0) {
+                this.endArticulationsOutside.push({left: headX + xRange[0] / unitInPixels, right: headX + xRange[1] / unitInPixels,
+                                                   near: nearEdge * outward, far: farEdge * outward});
+                continue;
+            }
+            endY = above ? Math.min(endY, farEdge) : Math.max(endY, farEdge);
+            this.endArticulationCorners.push(new PointF2D(headX + xRange[0] / unitInPixels, farEdge),
+                                             new PointF2D(headX + xRange[1] / unitInPixels, farEdge));
+        }
+        return endY;
+    }
+
+    /**
+     * Calculates the curve again if it runs into an articulation of its end note that clearEndArticulations() left outside the
+     * slur, this time with the end past it: e.g. a slur coming down steeply onto its end ran through a fermata above the staff.
+     * Before retryPastEndFingerings(), whose fingerings are then those of the new curve, e.g. above that fermata.
+     * @returns Whether the curve was calculated again (and added to the sky or bottom line), so there is nothing left to do.
+     */
+    private retryPastEndArticulations(rules: EngravingRules): boolean {
+        if (this.clearingEveryEndArticulation || this.fingeringsRunInto || !this.endArticulationsOutside.some(articulation =>
+            this.runsInto(articulation.left, articulation.right, articulation.near, articulation.far, this.bezierStartPt.x,
+                          this.bezierEndPt.x))) {
+            return false;
+        }
+        this.clearingEveryEndArticulation = true;
+        try {
+            this.calculateCurve(rules);
+        } finally {
+            this.clearingEveryEndArticulation = false;
+        }
+        return true;
+    }
+
+    /**
      * Calculates the curve again if it runs into a fingering of its start or end note, with its start or end past those or beside them
      * (see placePastEndFingerings()), e.g. one right above the last note. calculateTopPoints() and calculateBottomPoints() leave
      * the start and end staff entries out: the tangents to something right above the start or end would be vertical.
@@ -943,24 +1020,31 @@ export class GraphicalSlur extends GraphicalCurve {
     /** The fingerings of the note's staff entry that the curve passes closer than SlurNoteHeadYOffset to, or through, from fromX
      *  to toX (relative to the staffline). */
     private getFingeringsRunInto(note: GraphicalNote, fromX: number, toX: number): BoundingBox[] {
-        const outward: number = this.placement === PlacementEnum.Above ? -1 : 1;
-        const margin: number = this.rules.SlurNoteHeadYOffset;
         const runInto: BoundingBox[] = [];
         for (const fingering of note?.parentVoiceEntry.parentStaffEntry.FingeringEntries ?? []) {
             const box: BoundingBox = fingering.PositionAndShape; // relative to the staffline, see calculateFingerings()
             const [near, far] = this.getOutwardExtent(box);
-            for (let i: number = 0; i <= 100; i++) {
-                // (calculateCurvePointAtIndex(1) is not the end point, but (0, 0))
-                const point: PointF2D = i < 100 ? this.calculateCurvePointAtIndex(i / 100) : this.bezierEndPt;
-                if (point.x >= Math.max(fromX, box.RelativePosition.x + box.BorderLeft) &&
-                    point.x <= Math.min(toX, box.RelativePosition.x + box.BorderRight) &&
-                    point.y * outward > near - margin && point.y * outward < far + margin) {
-                    runInto.push(box);
-                    break;
-                }
+            if (this.runsInto(box.RelativePosition.x + box.BorderLeft, box.RelativePosition.x + box.BorderRight, near, far, fromX, toX)) {
+                runInto.push(box);
             }
         }
         return runInto;
+    }
+
+    /** Whether the curve passes closer than SlurNoteHeadYOffset to, or through, a box from left to right whose outward extent
+     *  (see getOutwardExtent()) is near to far, from fromX to toX (relative to the staffline). */
+    private runsInto(left: number, right: number, near: number, far: number, fromX: number, toX: number): boolean {
+        const outward: number = this.placement === PlacementEnum.Above ? -1 : 1;
+        const margin: number = this.rules.SlurNoteHeadYOffset;
+        for (let i: number = 0; i <= 100; i++) {
+            // (calculateCurvePointAtIndex(1) is not the end point, but (0, 0))
+            const point: PointF2D = i < 100 ? this.calculateCurvePointAtIndex(i / 100) : this.bezierEndPt;
+            if (point.x >= Math.max(fromX, left) && point.x <= Math.min(toX, right) &&
+                point.y * outward > near - margin && point.y * outward < far + margin) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** The near and far edges of the box from the staff on the slur's side, as distances outward (up for a slur above). */

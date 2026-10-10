@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<!--
+  A slur ending at a note with an articulation on the slur's side ends past the articulation, by the distance it keeps from
+  a note head. It moved out by a fixed SlurEndArticulationYOffset, which didn't clear an accent, nor a staccato that VexFlow
+  moves from a line into the next space.
+  Measure 1: one voice, a slur ending at a staccato moved from the D5's line into the space above (on develop, the slur ended in it).
+  Measure 2: two voices, a slur ending at a staccato at the stem end of a stem-up C5.
+  Measure 3: one voice, stems down, slurs above, ending at a staccato, then at an accent (on develop, the slur ended in it).
+  Measure 4: one voice, stems up, slurs below, ending at a staccato, then at a tenuto (already clear on develop).
+  Measure 5: two voices, the upper voice's slurs above, ending at a staccato, then at an accent (on develop, through it).
+  Measure 6: two voices, the lower voice's slurs below, ending at a staccato, then at an accent (on develop, through it).
+  Measure 7: a slur ending at a fermata just above the staff (on develop, the slur ended in it).
+  Measure 8: a slur ending under a fermata well above the staff, which stays outside the slur, as on develop.
+  Measures 9-10: a slur coming down to a chord under a fermata above the staff, which it ran through on develop, ending past it.
+-->
+<score-partwise version="4.0">
+  <work><work-title>Slur ends clear of articulations</work-title></work>
+  <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>2</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+      <!-- one voice: a slur from B4 to D5, stems down, the staccato of the D5 (on a line) moved into the space above -->
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">begin</beam><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">end</beam><notations><slur type="stop" number="1"/><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><rest/><duration>4</duration><voice>1</voice><type>half</type></note>
+    </measure>
+    <measure number="2">
+      <!-- two voices: a slur from A4 to C5, stems up, the staccato at the C5's stem end; an E4 half note below -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">begin</beam><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">end</beam><notations><slur type="stop" number="1"/><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><rest/><duration>4</duration><voice>1</voice><type>half</type></note>
+      <backup><duration>8</duration></backup>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>half</type><stem>down</stem></note>
+      <note><rest/><duration>4</duration><voice>2</voice><type>half</type></note>
+    </measure>
+    <measure number="3">
+      <!-- one voice, stems down, slurs above: a staccato on the last note, then an accent -->
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">begin</beam><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>G</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>A</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">end</beam><notations><slur type="stop" number="1"/><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>A</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">begin</beam><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>G</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">end</beam><notations><slur type="stop" number="1"/><articulations><accent/></articulations></notations></note>
+    </measure>
+    <measure number="4">
+      <!-- one voice, stems up, slurs below: a staccato on the last note, then a tenuto -->
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">begin</beam><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">end</beam><notations><slur type="stop" number="1"/><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">begin</beam><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">end</beam><notations><slur type="stop" number="1"/><articulations><tenuto/></articulations></notations></note>
+    </measure>
+    <measure number="5">
+      <!-- two voices: the upper voice's slurs above, the marks at the stem ends: a staccato, then an accent -->
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">begin</beam><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">end</beam><notations><slur type="stop" number="1"/><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">begin</beam><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">end</beam><notations><slur type="stop" number="1"/><articulations><accent/></articulations></notations></note>
+      <backup><duration>8</duration></backup>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>8</duration><voice>2</voice><type>whole</type><stem>down</stem></note>
+    </measure>
+    <measure number="6">
+      <!-- two voices: the lower voice's slurs below, the marks at the stem ends: a staccato, then an accent -->
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type><stem>up</stem></note>
+      <backup><duration>8</duration></backup>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">begin</beam><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">end</beam><notations><slur type="stop" number="1"/><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">begin</beam><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">end</beam><notations><slur type="stop" number="1"/><articulations><accent/></articulations></notations></note>
+    </measure>
+    <measure number="7">
+      <!-- a slur ending at a fermata on the D5, just above the staff -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="start" number="1" placement="above"/></notations></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="stop" number="1"/><fermata type="upright"/></notations></note>
+    </measure>
+    <measure number="8">
+      <!-- a slur ending at an F4 under a fermata above the staff, which stays outside the slur -->
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>down</stem><notations><slur type="start" number="1" placement="above"/></notations></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>down</stem><notations><slur type="stop" number="1"/><fermata type="upright"/></notations></note>
+    </measure>
+    <measure number="9">
+      <!-- the end of Burgmüller's Harmonie des anges, op. 100 no. 21: a slur from a stem-up B4 to a whole note chord under a fermata -->
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>up</stem><notations><slur type="start" number="1" placement="above"/></notations></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+    </measure>
+    <measure number="10">
+      <note><pitch><step>B</step><octave>3</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type><notations><slur type="stop" number="1"/><fermata type="upright"/></notations></note>
+      <note><chord/><pitch><step>G</step><octave>4</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type></note>
+    </measure>
+  </part>
+</score-partwise>
