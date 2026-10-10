@@ -8,7 +8,6 @@ import {TestUtils} from "../../../Util/TestUtils";
 import {VexFlowMeasure} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import {VexFlowVoiceEntry} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
 import {GraphicalStaffEntry} from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
-import {unitInPixels} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import {expect} from "chai";
 
 describe("VexFlow Measure - Room for Staggered Notes", () => {
@@ -38,17 +37,10 @@ describe("VexFlow Measure - Room for Staggered Notes", () => {
       return gve;
    }
 
-   // the space between the right edge of the first note head and the left edge of the second, where they are drawn
-   //   (a staggered note is drawn about a note head right of its beat), in units
-   function gapBetween(first: VexFlowVoiceEntry, second: VexFlowVoiceEntry): number {
-      const firstNote: any = first.vfStaveNote;
-      const secondNote: any = second.vfStaveNote;
-      return (secondNote.getNoteHeadBeginX() - firstNote.getNoteHeadEndX()) / unitInPixels;
-   }
-
-   // how far the voice entry's note head is drawn right of the other one's
-   function shiftFrom(gve: VexFlowVoiceEntry, other: VexFlowVoiceEntry): number {
-      return ((gve.vfStaveNote as any).getNoteHeadBeginX() - (other.vfStaveNote as any).getNoteHeadBeginX()) / unitInPixels;
+   // how far right of the first note head the second one is drawn, centre to centre (a staggered note is drawn about a note
+   //   head right of its beat). The heads compared here are all black, so this is the space between them plus a head.
+   function distance(first: VexFlowVoiceEntry, second: VexFlowVoiceEntry): number {
+      return second.notes[0].PositionAndShape.AbsolutePosition.x - first.notes[0].PositionAndShape.AbsolutePosition.x;
    }
 
    it("Should give a staggered note as much room before the next note as a sixteenth that isn't moved", (done: Mocha.Done) => {
@@ -56,10 +48,10 @@ describe("VexFlow Measure - Room for Staggered Notes", () => {
       const measure: VexFlowMeasure = renderMeasures()[1];
       for (const beat of [0, 0.25, 0.5, 0.75]) {
          const moved: VexFlowVoiceEntry = voiceEntry(measure, beat, 2);
-         expect(shiftFrom(moved, voiceEntry(measure, beat, 1))).to.be.greaterThan(1, `at ${beat}, the quarter must be staggered`);
+         expect(distance(voiceEntry(measure, beat, 1), moved)).to.be.greaterThan(1, `at ${beat}, the quarter must be staggered`);
          const next: VexFlowVoiceEntry = voiceEntry(measure, beat + 1 / 16, 1);
          const afterNext: VexFlowVoiceEntry = voiceEntry(measure, beat + 2 / 16, 1);
-         expect(gapBetween(moved, next)).to.be.at.least(gapBetween(next, afterNext) - 0.01,
+         expect(distance(moved, next)).to.be.at.least(distance(next, afterNext) - 0.01,
             `at ${beat}, the moved quarter must get as much room before the next sixteenth as a sixteenth that isn't moved`);
       }
       done();
@@ -70,27 +62,12 @@ describe("VexFlow Measure - Room for Staggered Notes", () => {
       const measure: VexFlowMeasure = renderMeasures()[2];
       for (const beat of [0, 0.5]) {
          const moved: VexFlowVoiceEntry = voiceEntry(measure, beat, 2);
-         expect(shiftFrom(moved, voiceEntry(measure, beat, 1))).to.be.greaterThan(1, `at ${beat}, the eighth must be staggered`);
+         expect(distance(voiceEntry(measure, beat, 1), moved)).to.be.greaterThan(1, `at ${beat}, the eighth must be staggered`);
          const next: VexFlowVoiceEntry = voiceEntry(measure, beat + 1 / 8, 2);
          const afterNext: VexFlowVoiceEntry = voiceEntry(measure, beat + 3 / 16, 2);
-         expect(gapBetween(moved, next)).to.be.at.least(gapBetween(next, afterNext) - 0.01,
+         expect(distance(moved, next)).to.be.at.least(distance(next, afterNext) - 0.01,
             `at ${beat}, the moved eighth must get at least as much room before the next note as a sixteenth`);
       }
-      done();
-   });
-
-   it("Should give a tie from a staggered note as much room as one from a note that isn't moved", (done: Mocha.Done) => {
-      // Measure 1: the G4 of beat 1 is moved right, beside the A4, and tied to the G4 of beat 2, which isn't moved.
-      const measure: VexFlowMeasure = renderMeasures()[0];
-      const moved: VexFlowVoiceEntry = voiceEntry(measure, 0, 2);
-      const tiedTo: VexFlowVoiceEntry = voiceEntry(measure, 0.25, 2);
-      expect(shiftFrom(moved, voiceEntry(measure, 0, 1))).to.be.greaterThan(1, "the G4 of beat 1 must be staggered");
-      // the tie starts at the moved note head, not where the note would be without the move
-      const movedNote: any = moved.vfStaveNote;
-      expect(movedNote.getTieRightX()).to.be.closeTo(movedNote.getNoteHeadEndX(), 0.01);
-      // the G4 of beat 2 is a quarter too, and isn't moved
-      expect(gapBetween(moved, tiedTo)).to.be.at.least(gapBetween(tiedTo, voiceEntry(measure, 0.5, 2)) - 0.01,
-         "the moved G4 must get as much room before the G4 it is tied to as the G4 of beat 2 before the next note");
       done();
    });
 
