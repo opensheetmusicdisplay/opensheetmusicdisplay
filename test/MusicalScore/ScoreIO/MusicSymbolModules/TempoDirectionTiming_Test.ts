@@ -2,6 +2,7 @@ import {expect} from "chai";
 import {TestUtils} from "../../../Util/TestUtils";
 import {OpenSheetMusicDisplay} from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import {MusicPartManagerIterator} from "../../../../src/MusicalScore/MusicParts/MusicPartManagerIterator";
+import {SourceMeasure} from "../../../../src/MusicalScore/VoiceData/SourceMeasure";
 
 describe("Tempo direction timing", (): void => {
     let div: HTMLElement;
@@ -50,6 +51,28 @@ describe("Tempo direction timing", (): void => {
         expect(iterator.EndReached).to.equal(true);
         return result;
     }
+
+    it("places recognized words at their offset without moving explicit sound changes", async (): Promise<void> => {
+        await osmd.load(score(tempo(60) + note("C") + `
+          <direction><direction-type><words>dolce</words></direction-type><offset>1</offset></direction>
+          <direction><direction-type><words default-x="80">cantabile</words></direction-type><offset>1</offset></direction>
+          ` + note("D") + `
+          <direction><direction-type><words>Allegro</words></direction-type><offset>-1</offset></direction>
+          <direction><direction-type><words>stretto</words></direction-type><offset>-1</offset></direction>
+          ` + note("E") + `
+          <direction><direction-type><words>Andante</words></direction-type>
+            <offset sound="yes">-1</offset><sound tempo="90"><offset>0</offset></sound></direction>
+          ` + note("F")));
+        const measure: SourceMeasure = osmd.Sheet.SourceMeasures[0];
+        expect(measure.TempoExpressions.slice(1).map(expression => [expression.CombinedExpressionsText, expression.Timestamp.RealValue]),
+               "inferred Allegro and stretto, then explicit Andante")
+            .to.deep.equal([["Allegro", 0.25], ["stretto", 0.25], ["Andante", 0.5]]);
+        expect(measure.StaffLinkedExpressions[0].flatMap(expression =>
+            expression.MoodList.map(mood => [mood.Label, expression.Timestamp.RealValue])), "dolce and cantabile with default-x")
+            .to.deep.equal([["dolce", 0.5], ["cantabile", 0.5]]);
+        expect(bpms(), "Allegro starts on beat 2, explicit sound 90 on beat 4, not at its display offset")
+            .to.deep.equal([60, 130, 130, 90]);
+    });
 
     it("uses the sound flag and sound-local offset to place playback changes", async (): Promise<void> => {
         for (const sound of ["", " sound=\"no\"", " sound=\"yes\""]) {
