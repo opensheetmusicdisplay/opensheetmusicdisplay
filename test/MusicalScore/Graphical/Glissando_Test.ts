@@ -68,6 +68,55 @@ describe("Glissandi", () => {
 });
 
 /**
+ * A glissando crossing a system break whose preceding system ends in an extra graphical measure for a courtesy key or
+ * time signature used to throw while looking up the end barline on the extra measure's undefined parentSourceMeasure.
+ */
+describe("Glissandi across systems with courtesy signatures", () => {
+    let container: HTMLElement;
+    let osmd: OpenSheetMusicDisplay;
+
+    beforeEach(() => {
+        container = TestUtils.getDivElement(document);
+        container.style.width = "1000px";
+        osmd = TestUtils.createOpenSheetMusicDisplay(container);
+    });
+    afterEach(() => {
+        osmd.clear();
+        container.remove();
+    });
+
+    for (const sample of [
+        "test_glissando_system_break_courtesy_key_signature.musicxml",
+        "test_glissando_system_break_courtesy_time_signature.musicxml",
+    ]) {
+        it(`draws ${sample} through system breaks ending in extra graphical measures`, async () => {
+            await osmd.load(TestUtils.getScore(sample));
+            expect((): void => osmd.render()).not.to.throw();
+
+            let crossingGlissandi: number = 0;
+            for (const page of osmd.GraphicSheet.MusicPages) {
+                for (const system of page.MusicSystems) {
+                    for (const staffLine of system.StaffLines) {
+                        if (!staffLine.Measures.last().IsExtraGraphicalMeasure) {
+                            continue;
+                        }
+                        for (const glissando of staffLine.GraphicalGlissandi) {
+                            const endStaffEntry: GraphicalStaffEntry = glissando.staffEntries[glissando.staffEntries.length - 1];
+                            if (!endStaffEntry.findGraphicalNoteFromNote(glissando.Glissando.EndNote)) {
+                                crossingGlissandi++;
+                                expect(glissando.Line, "the glissando segment before the system break is drawn")
+                                    .to.not.equal(undefined);
+                            }
+                        }
+                    }
+                }
+            }
+            expect(crossingGlissandi, "glissandi cross systems ending in an extra graphical measure").to.be.greaterThan(0);
+        });
+    }
+});
+
+/**
  * test_slides_standard_and_tab_staff.musicxml is a guitar part whose standard and tab staff both write each slide with number 1:
  * from the last note of measure 1 to the first note of measure 2, within measure 3, and within measure 4 (new system).
  */

@@ -27,6 +27,7 @@ describe("XML interface", () => {
         "JohannSebastianBach_Air.xml",
         "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
         "JosephHaydn_ConcertanteCello.xml",
+        "test_glissando_system_break_courtesy_key_signature.musicxml",
         "Mozart_AnChloe.xml",
         "Mozart_DasVeilchen.xml",
         "MuzioClementi_SonatinaOpus36No1_Part1.xml",
@@ -38,6 +39,7 @@ describe("XML interface", () => {
         "ScottJoplin_The_Entertainer.xml",
         "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
         "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
+        "test_glissando_system_break_courtesy_time_signature.musicxml",
         "VariousChordTests.musicxml",
     ];
     for (const score of xmlTestset) {
