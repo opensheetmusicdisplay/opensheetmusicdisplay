@@ -167,11 +167,16 @@ describe("Slur at a note with an articulation", () => {
                 osmd.render();
                 expect(slurs().length, render).to.equal(13);
                 for (const slur of slurs()) {
-                    // the accents of m.3 and m.6 and the fermatas go outside the slur, which passes under them, but not the accent of
-                    //   m.5 at the end of a stem of the upper voice, on the beam, which would then be too far from it (Behind Bars p. 122)
-                    const underMarks: boolean = hasMarkOutside(slur, "end") &&
-                        slur.staffEntries[slur.staffEntries.length - 1].parentMeasure.MeasureNumber !== 5;
+                    // the accents of m.3 and m.6 and the fermatas go outside the slur, which passes under them
+                    const underMarks: boolean = hasMarkOutside(slur, "end");
                     // (before PR #1828, the slurs ran into the staccato of m.1, the accents of m.3, m.5 and m.6, and the fermata of m.7)
+                    if (underMarks && slur.staffEntries[slur.staffEntries.length - 1].parentMeasure.MeasureNumber === 5) {
+                        // the accent at the end of a stem of the upper voice, on the beam, goes inside the slur if it would be too far
+                        //   from its note outside it (Behind Bars p. 122): how steep the slur gets there depends on the layout
+                        expect(Math.max(clearance(slur, "end", true) - minClearanceUnder, clearance(slur, "end") - minClearance()),
+                               `${render}: ${describeSlur(slur)}, its end under or beyond the marks`).to.be.at.least(0);
+                        continue;
+                    }
                     expect(clearance(slur, "end", underMarks), `${render}: ${describeSlur(slur)}, its end ${underMarks ? "under" : "beyond"}` +
                         " the marks").to.be.at.least(underMarks ? minClearanceUnder : minClearance());
                 }

@@ -13,8 +13,9 @@
     the slur's start (Gould's example), the staccatos inside.
     Measure 5: G5 down to D5, a fermata on the D5, where the slur ends: the fermata goes above the slur's end, which came
     down onto it.
-    Measure 6: a short slur from a G4 with an accent rising steeply to a G5, stems down (Gould's example): the accent would
-    be too far from the G4 above the slur, so it stays inside, and the slur goes over it.
+    Measure 6: a short slur from a C5 with an accent rising steeply to a C6, stems down (Gould's example is from G4 to G5,
+    where the slur starts above the middle of the staff anyway): the accent would be too far from the C5 above the slur, so
+    it stays inside, and the slur goes over it.
     Measure 7: as measure 1, with a fingering above the accent: the fingering goes above the slur with the accent.
     Measure 8: four chords E5 and G5 with staccatos, slurred, fingerings 1 and 2 on the first one (isc's comment on PR 1828:
     Beethoven's Pathetique, 3rd movement, m. 154): the slur starts beside the fingerings, right of them, past the staccato,
@@ -68,10 +69,10 @@
       <note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>down</stem><notations><slur type="stop" number="1"/><fermata type="upright"/></notations></note>
     </measure>
     <measure number="6">
-      <note><pitch><step>G</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">begin</beam></note>
-      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam><notations><slur type="start" number="1"/><articulations><accent/></articulations></notations></note>
-      <note><pitch><step>G</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam><notations><slur type="stop" number="1"/></notations></note>
-      <note><pitch><step>B</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">end</beam></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">begin</beam></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam><notations><slur type="start" number="1"/><articulations><accent/></articulations></notations></note>
+      <note><pitch><step>C</step><octave>6</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam><notations><slur type="stop" number="1"/></notations></note>
+      <note><pitch><step>G</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">end</beam></note>
       <note><rest/><duration>4</duration><voice>1</voice><type>half</type></note>
     </measure>
     <measure number="7">
