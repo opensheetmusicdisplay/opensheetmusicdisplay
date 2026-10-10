@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for the marks other than staccatos and tenutos at the start or end of a slur, and for fingerings there.
+    Gould, Behind Bars, pp. 121-122: only staccato and tenuto marks go inside the first and last notes of a slur; accents at
+    the beginning and end of a slur go outside it, so that the slur can remain closer to the note heads, unless they would
+    then be too far from the note; pp. 188-189: a pause goes outside a slur that ends at its note. The slur went over them.
+    Measure 1: C5 to F5 (stems down), slurred above, an accent on the C5: the accent goes above the slur's start.
+    Measure 2: F5 to C5, an accent on the C5, where the slur ends: the accent goes above the slur's end.
+    Measure 3: a staccato and an accent on the C5 at the start: the staccato goes inside the slur, the accent outside.
+    Measure 4: four F4 eighths (stems up), slurred below, staccatos, and an accent on the first one: the accent goes below
+    the slur's start (Gould's example), the staccatos inside.
+    Measure 5: G5 down to D5, a fermata on the D5, where the slur ends: the fermata goes above the slur's end, which came
+    down onto it.
+    Measure 6: a short slur from a G4 with an accent rising steeply to a G5, stems down (Gould's example): the accent would
+    be too far from the G4 above the slur, so it stays inside, and the slur goes over it.
+    Measure 7: as measure 1, with a fingering above the accent: the fingering goes above the slur with the accent.
+    Measure 8: four chords E5 and G5 with staccatos, slurred, fingerings 1 and 2 on the first one (isc's comment on PR 1828:
+    Beethoven's Pathetique, 3rd movement, m. 154): the slur starts beside the fingerings, right of them, past the staccato,
+    not over them, from where it would only fall.
+    Measure 9: D5 with a tenuto and fingering 4, slurred to the next note (Diabelli, sonatina op. 168 no. 1, m. 1): the slur
+    starts beside the fingering.
+  -->
+  <part-list>
+    <score-part id="P1"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="start" number="1"/><articulations><accent/></articulations></notations></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="stop" number="1"/></notations></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="stop" number="1"/><articulations><accent/></articulations></notations></note>
+    </measure>
+    <measure number="3">
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="start" number="1"/><articulations><staccato/><accent/></articulations></notations></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="stop" number="1"/></notations></note>
+    </measure>
+    <measure number="4">
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">begin</beam><notations><slur type="start" number="1"/><articulations><accent/></articulations></notations></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam><notations><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam><notations><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">end</beam><notations><slur type="stop" number="1"/><articulations><staccato/></articulations></notations></note>
+      <note><rest/><duration>4</duration><voice>1</voice><type>half</type></note>
+    </measure>
+    <measure number="5">
+      <note><pitch><step>G</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="start" number="1"/></notations></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>down</stem><notations><slur type="stop" number="1"/><fermata type="upright"/></notations></note>
+    </measure>
+    <measure number="6">
+      <note><pitch><step>G</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">begin</beam></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam><notations><slur type="start" number="1"/><articulations><accent/></articulations></notations></note>
+      <note><pitch><step>G</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">continue</beam><notations><slur type="stop" number="1"/></notations></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>down</stem><beam number="1">end</beam></note>
+      <note><rest/><duration>4</duration><voice>1</voice><type>half</type></note>
+    </measure>
+    <measure number="7">
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="start" number="1"/><articulations><accent/></articulations><technical><fingering>2</fingering></technical></notations></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="stop" number="1"/></notations></note>
+    </measure>
+    <measure number="8">
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="start" number="1"/><articulations><staccato/></articulations><technical><fingering>1</fingering></technical></notations></note>
+      <note><chord/><pitch><step>G</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><technical><fingering>2</fingering></technical></notations></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><articulations><staccato/></articulations></notations></note>
+      <note><chord/><pitch><step>G</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><articulations><staccato/></articulations></notations></note>
+      <note><chord/><pitch><step>G</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="stop" number="1"/><articulations><staccato/></articulations></notations></note>
+      <note><chord/><pitch><step>G</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
+    <measure number="9">
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="start" number="1"/><articulations><tenuto/></articulations><technical><fingering>4</fingering></technical></notations></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem><notations><slur type="stop" number="1"/></notations></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>down</stem></note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+</score-partwise>

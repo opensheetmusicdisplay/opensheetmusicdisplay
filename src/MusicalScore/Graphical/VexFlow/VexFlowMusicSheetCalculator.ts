@@ -546,6 +546,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // - delayXShift of delayed ornaments (e.g. a turn between two notes): Ornament.draw() calculates it from the
       //   distance to the next note on its first draw and keeps it. Unset it, so that the next draw calculates it
       //   for the current layout - otherwise the turn kept its distance of the previous layout, e.g. after a resize.
+      // - the y_shift of articulations: GraphicalSlur.placeArticulationsOutside() moves an accent or a fermata at the start or end
+      //   of a slur beyond it. Restore the value it had before the first render, snapshotted on the first render - otherwise a
+      //   re-render would start from the moved position, in the skyline too.
       for (const voice of voices) {
         for (const tickable of voice.getTickables()) {
           const note: any = tickable as any;
@@ -555,6 +558,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             for (const modifier of note.modifiers ?? []) {
               if (modifier.getCategory?.() === "dots") {
                 modifier.osmdInitialDotShiftY = modifier.dot_shiftY; // first render: snapshot
+              } else if (modifier.getCategory?.() === "articulations") {
+                modifier.osmdInitialYShift = modifier.y_shift; // first render: snapshot
               }
             }
           } else {
@@ -567,6 +572,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 }
               } else if (modifier.getCategory?.() === "ornaments") {
                 modifier.delayXShift = undefined; // a delayed ornament (e.g. turn) caches its x shift on its first draw
+              } else if (modifier.getCategory?.() === "articulations" && modifier.osmdInitialYShift !== undefined) {
+                modifier.setYShift(modifier.osmdInitialYShift);
               }
             }
           }
