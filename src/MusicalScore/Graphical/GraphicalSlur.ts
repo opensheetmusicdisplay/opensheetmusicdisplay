@@ -21,8 +21,8 @@ import { VexFlowGraphicalNote, unitInPixels } from "./VexFlow";
 import Vex from "vexflow";
 import VF = Vex.Flow;
 
-/** An articulation of a slur's start or end note, relative to the staff line: its left and right, and its near and far edges
- *  as distances outward from the staff on the slur's side (see GraphicalSlur.getOutwardExtent()). */
+/** An articulation or an ornament of a slur's start or end note, relative to the staff line: its left and right, and its near and
+ *  far edges as distances outward from the staff on the slur's side (see GraphicalSlur.getOutwardExtent()). */
 interface ArticulationExtent {
     left: number;
     right: number;
@@ -32,13 +32,26 @@ interface ArticulationExtent {
     inside: boolean;
 }
 
-/** An articulation that GraphicalSlur.getYPastArticulations() left outside the slur, at its start or end note. */
+/** An articulation or an ornament that GraphicalSlur.getYPastArticulations() left outside the slur, at its start or end note. */
 interface ArticulationOutside extends ArticulationExtent {
     isStart: boolean;
-    /** The Vexflow articulation, moved beyond the slur by GraphicalSlur.placeArticulationsOutside(). */
+    /** The Vexflow articulation or ornament, moved beyond the slur by GraphicalSlur.placeArticulationsOutside(). */
     articulation: any;
     /** Its extent as Vexflow draws it now, e.g. after moving it. */
     measure: () => ArticulationExtent;
+}
+
+/** While GraphicalSlur.calculateCurve() calculates the curve again past the fingerings of its start and end notes it ran into
+ *  (see GraphicalSlur.retryPastEndFingerings()): those fingerings, how far out the curve got before (see
+ *  GraphicalSlur.placePastEndFingerings()), and whether it then went beside them (see GraphicalSlur.retryPastBesideFingerings()):
+ *  notBeside is undefined while it may, true while the curve is calculated past them after it ran into what is at its ends beside
+ *  them (besideDepth: how far), and false when it went beside them again, as it ran in about as deep past them. */
+interface FingeringsRunInto {
+    start: BoundingBox[];
+    end: BoundingBox[];
+    furthestOut: number;
+    besideDepth?: number;
+    notBeside?: boolean;
 }
 
 /** A label stacked on the articulations left outside a slur at its start or end note, a fingering or a measure number, which
@@ -70,9 +83,9 @@ export class GraphicalSlur extends GraphicalCurve {
     public graceEnd: boolean;
     private rules: EngravingRules;
     public SVGElement: Node;
-    /** While calculateCurve() calculates the curve again, past the fingerings of its start and end notes it ran into, and how far out
-     *  the curve got before (see placePastEndFingerings()). */
-    private fingeringsRunInto: {start: BoundingBox[], end: BoundingBox[], furthestOut: number};
+    /** While calculateCurve() calculates the curve again past the fingerings of its start and end notes it ran into, see
+     *  FingeringsRunInto. */
+    private fingeringsRunInto: FingeringsRunInto;
     /** The far corners of the articulations of the start and end notes the slur clears, for clearObstacles(), see getYPastArticulations(). */
     private articulationCorners: PointF2D[] = [];
     /** The articulations of the start and end notes that getYPastArticulations() left outside the slur, from the note outward,
@@ -207,7 +220,8 @@ export class GraphicalSlur extends GraphicalCurve {
                                                                 this.fingeringsRunInto?.start, toNextNote);
             const end: PointF2D = this.placePastEndFingerings(slurEndNote, false, endX, endY, endUpperLeft.x, startX,
                                                               this.fingeringsRunInto?.end, toNextNote);
-            if (start.x !== startX || end.x !== endX) { // the sky line points stay between the start and the end
+            const beside: boolean = start.x !== startX || end.x !== endX;
+            if (beside) { // the sky line points stay between the start and the end
                 startUpperRight.x = Math.max(startUpperRight.x, start.x);
                 endUpperLeft.x = Math.min(endUpperLeft.x, end.x);
             }
@@ -339,7 +353,8 @@ export class GraphicalSlur extends GraphicalCurve {
 
             const passedClose: {start: boolean, end: boolean} = this.keepPassedArticulationsInside();
             if (this.retryPastArticulationsOutside(rules, passedClose) ||
-                this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startUpperRight.x, endUpperLeft.x)) {
+                this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startUpperRight.x, endUpperLeft.x) ||
+                this.retryPastBesideFingerings(rules, staffLine, beside, startUpperRight.x, endUpperLeft.x)) {
                 return;
             }
             this.placeArticulationsOutside(staffLine);
@@ -408,7 +423,8 @@ export class GraphicalSlur extends GraphicalCurve {
                                                                 this.fingeringsRunInto?.start, toNextNote);
             const end: PointF2D = this.placePastEndFingerings(slurEndNote, false, endX, endY, endLowerLeft.x, startX,
                                                               this.fingeringsRunInto?.end, toNextNote);
-            if (start.x !== startX || end.x !== endX) { // the sky line points stay between the start and the end
+            const beside: boolean = start.x !== startX || end.x !== endX;
+            if (beside) { // the sky line points stay between the start and the end
                 startLowerRight.x = Math.max(startLowerRight.x, start.x);
                 endLowerLeft.x = Math.min(endLowerLeft.x, end.x);
             }
@@ -534,7 +550,8 @@ export class GraphicalSlur extends GraphicalCurve {
 
             const passedClose: {start: boolean, end: boolean} = this.keepPassedArticulationsInside();
             if (this.retryPastArticulationsOutside(rules, passedClose) ||
-                this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startLowerRight.x, endLowerLeft.x)) {
+                this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startLowerRight.x, endLowerLeft.x) ||
+                this.retryPastBesideFingerings(rules, staffLine, beside, startLowerRight.x, endLowerLeft.x)) {
                 return;
             }
             this.placeArticulationsOutside(staffLine);
@@ -845,6 +862,9 @@ export class GraphicalSlur extends GraphicalCurve {
      * p. 121): another mark, e.g. an accent or a fermata, and the ones beyond it go outside the slur, which stays closer to the
      * note (p. 122), and placeArticulationsOutside() moves them beyond it, with the fingerings stacked on them. Unless that takes
      * them too far from the note: then the slur goes past them too (see retryPastArticulationsOutside()).
+     * So does an ornament, e.g. a trill or a mordent, which wasn't taken into account: the slur started at the note under it and
+     * could run through it (isc's comment on PR #1830: Bach, Invention No. 1, m. 14, rising steeply to the next notes; Mozart,
+     * Sonata K. 545, m. 15 and 17, under the trill). The marks under it stay inside, see below.
      * The marks are taken where Vexflow draws them, e.g. the staccato of a note on a line in the next stave space.
      * The corners of the marks the slur clears go to articulationCorners, for clearObstacles() to keep the curve that far from them
      * over their width too: e.g. the end of a slur above a stem-up note is at the stem, right of a staccato at the stem end, and a
@@ -867,8 +887,8 @@ export class GraphicalSlur extends GraphicalCurve {
         const staveTopY: number = stave.getYForLine(0); // relative to the staff line, like the notes (see VexFlowMeasure.correctNotePositions())
         const marks: ArticulationOutside[] = vfnote.getModifiers()
             // (a breath mark is after the note)
-            .filter((modifier: any) => modifier.getCategory() === VF.Articulation.CATEGORY && modifier.getPosition() === position &&
-                modifier.type !== "abr")
+            .filter((modifier: any) => (modifier.getCategory() === VF.Articulation.CATEGORY && modifier.type !== "abr" ||
+                modifier.getCategory() === VF.Ornament.CATEGORY) && modifier.getPosition() === position)
             .map((articulation: any): ArticulationOutside => {
                 const measure: () => ArticulationExtent = () => {
                     const extent: {left: number, right: number, top: number, bottom: number} = articulation.getExtent();
@@ -886,12 +906,12 @@ export class GraphicalSlur extends GraphicalCurve {
         marks.sort((a: ArticulationExtent, b: ArticulationExtent): number => a.near - b.near); // from the note outward
         // a fermata goes outside even when the other marks don't (Behind Bars pp. 188-189, see retryPastArticulationsOutside()), but
         //   none of a grace note's do, which VexFlowMusicSheetCalculator.calculateMeasureXLayout() doesn't reset for each render,
-        //   nor those under an ornament, e.g. a trill, which Vexflow stacks on them and doesn't move along (see Ornament.format())
+        //   nor the articulations under an ornament, which Vexflow stacks on them and doesn't move along (see Ornament.format())
         const clearEvery: boolean = isStart ? this.clearingEveryArticulationAt?.start : this.clearingEveryArticulationAt?.end;
-        const keepInside: boolean = note.sourceNote.IsGraceNote || vfnote.getModifiers().some((modifier: any) =>
-            modifier.getCategory() === VF.Ornament.CATEGORY && modifier.getPosition() === position);
+        const ornamentIndex: number = marks.findIndex((mark: ArticulationOutside) => mark.articulation.getCategory() === VF.Ornament.CATEGORY);
         let distance: number = y * outward; // how far out the start or end is
         for (const [index, mark] of marks.entries()) {
+            const keepInside: boolean = note.sourceNote.IsGraceNote || index < ornamentIndex;
             if (!mark.inside && !keepInside && (!clearEvery || GraphicalSlur.isFermata(mark))) {
                 const outside: ArticulationOutside[] = marks.slice(index);
                 this.articulationsOutside.push(...outside);
@@ -1004,7 +1024,7 @@ export class GraphicalSlur extends GraphicalCurve {
      */
     private retryPastArticulationsOutside(rules: EngravingRules, passedClose: {start: boolean, end: boolean}): boolean {
         if (this.clearingEveryArticulationAt || this.fingeringsRunInto) {
-            return false; // this is the second calculation
+            return false; // this is a later calculation
         }
         const tooFar: (isStart: boolean) => boolean = (isStart: boolean) =>
             this.getShiftOutside(isStart) > 0 && this.getRiseOutside(isStart) > GraphicalSlur.articulationOutsideSlurMaxRise;
@@ -1240,7 +1260,7 @@ export class GraphicalSlur extends GraphicalCurve {
     private retryPastEndFingerings(rules: EngravingRules, startNote: GraphicalNote, endNote: GraphicalNote,
                                    startEntryX: number, endEntryX: number): boolean {
         if (this.fingeringsRunInto) {
-            return false; // this is the second calculation
+            return false; // this is a later calculation, past or beside them
         }
         const start: BoundingBox[] = this.getFingeringsRunInto(startNote, this.bezierStartPt.x, startEntryX);
         const end: BoundingBox[] = this.getFingeringsRunInto(endNote, endEntryX, this.bezierEndPt.x);
@@ -1254,6 +1274,79 @@ export class GraphicalSlur extends GraphicalCurve {
             this.fingeringsRunInto = undefined;
         }
         return true;
+    }
+
+    /**
+     * Calculates the curve again with its start and end past the fingerings of their notes if it starts or ends beside them
+     * (see placePastEndFingerings()), low, and then runs into what the sky or bottom line holds where the curve isn't kept clear of
+     * it (see getDepthIntoEnds()): e.g. the sharp of its end note, left of the fingering it ends beside, or the flat of the next
+     * note, which it ran through from beside the fingering of its start note, or, for a slur from the previous staffline, the key
+     * signature. Past the fingerings, the curve stays further out, as before PR #1830 (isc's comment on PR #1830: Chopin, Ballade
+     * No. 1, m. 83, m. 108 and m. 111, Nocturne op. 9 no. 2, m. 27). Unless it runs in about as deep from there: then it was something
+     * else, e.g. a slur ending above the start note, and the curve goes beside them again.
+     * @param beside Whether the curve starts or ends beside the fingerings.
+     * @param startEntryX The x where the sky or bottom line points of calculateTopPoints() or calculateBottomPoints() start.
+     * @param endEntryX The x where they end.
+     * @returns Whether the curve was calculated again (and added to the sky or bottom line), so there is nothing left to do.
+     */
+    private retryPastBesideFingerings(rules: EngravingRules, staffLine: StaffLine, beside: boolean, startEntryX: number,
+                                      endEntryX: number): boolean {
+        const fingerings: FingeringsRunInto = this.fingeringsRunInto;
+        const tryingPast: boolean = fingerings?.notBeside === undefined; // beside them, not tried past them yet
+        if (!fingerings || fingerings.notBeside === false || tryingPast && !beside) {
+            return false; // the first calculation, nothing beside them, or beside them after all
+        }
+        const depth: number = this.getDepthIntoEnds(staffLine, startEntryX, endEntryX);
+        if (tryingPast ? depth <= 0 : depth <= fingerings.besideDepth - 0.1) {
+            return false;
+        }
+        fingerings.besideDepth ??= depth;
+        fingerings.notBeside = tryingPast;
+        this.calculateCurve(rules);
+        return true;
+    }
+
+    /**
+     * How far the curve runs into what the sky or bottom line holds where it isn't kept clear of it (calculateTopPoints() and
+     * calculateBottomPoints() leave it out), or passes closer than half SlurNoteHeadYOffset to it (0 if it doesn't): over the
+     * start and end staff entries, between its start and startEntryX and between endEntryX and its end, and, for a slur from the
+     * previous staffline, over the clef and the key signature it starts at (see calculateStartAndEnd()). Not over the fingerings
+     * of those staff entries, nor the articulations left outside the slur, which move out of its way (see
+     * placeArticulationsOutside()).
+     * @param startEntryX The x where the sky or bottom line points of calculateTopPoints() or calculateBottomPoints() start.
+     * @param endEntryX The x where they end.
+     */
+    private getDepthIntoEnds(staffLine: StaffLine, startEntryX: number, endEntryX: number): number {
+        const above: boolean = this.placement === PlacementEnum.Above;
+        const outward: number = above ? -1 : 1;
+        const line: number[] = above ? staffLine.SkyLine : staffLine.BottomLine;
+        const samplingUnit: number = staffLine.SkyBottomLineCalculator.SamplingUnit;
+        // the edge of the staff on the slur's side, as a distance outward: nothing in the line beyond it there
+        const staffEdge: number = above ? 0 : staffLine.StaffHeight;
+        const margin: number = this.rules.SlurNoteHeadYOffset / 2;
+        // the samples of the fingerings of the start and end staff entries, which the start or end can be beside, and of the
+        //   articulations left outside the slur: they fill every sample they touch (see MusicSheetCalculator.calculateFingerings()),
+        //   e.g. the one the start or end is in
+        const skippedSamples: number[][] = [this.staffEntries[0], this.staffEntries[this.staffEntries.length - 1]]
+            .flatMap((staffEntry: GraphicalStaffEntry) => staffEntry.FingeringEntries ?? [])
+            .map(({PositionAndShape: box}: GraphicalLabel) => [box.RelativePosition.x + box.BorderLeft, box.RelativePosition.x + box.BorderRight])
+            .concat(this.articulationsOutside.map((mark: ArticulationOutside) => [mark.left, mark.right]))
+            .map(([left, right]) => [Math.floor(left * samplingUnit), Math.ceil(right * samplingUnit)]);
+        let depth: number = 0;
+        for (let i: number = 0; i <= 100; i++) {
+            // (calculateCurvePointAtIndex(1) is not the end point, but (0, 0))
+            const point: PointF2D = i < 100 ? this.calculateCurvePointAtIndex(i / 100) : this.bezierEndPt;
+            const index: number = Math.floor(point.x * samplingUnit);
+            if (point.x > startEntryX && point.x < endEntryX || index < 0 || index >= line.length ||
+                skippedSamples.some(([first, end]) => index >= first && index < end)) {
+                continue;
+            }
+            const value: number = line[index] * outward;
+            if (value > staffEdge) {
+                depth = Math.max(depth, value + margin - point.y * outward);
+            }
+        }
+        return depth;
     }
 
     /** The fingerings of the note's staff entry that the curve passes closer than SlurNoteHeadYOffset to, or through, from fromX
@@ -1321,7 +1414,8 @@ export class GraphicalSlur extends GraphicalCurve {
      * would then climb by more than half its width, which keeps such a short slur close to its notes, below the fingerings, e.g. from
      * one chord of 16ths to the next. And for a slur whose start or end would be further out past them than the curve got without
      * them, unless it passes over fingerings of the notes between anyway: the slur would only fall from there, lopsided, e.g. from
-     * the fingering on the staccato of the first of four chords with staccatos (isc's comment on PR #1828).
+     * the fingering on the staccato of the first of four chords with staccatos (isc's comment on PR #1828). Unless beside them, the
+     * curve ran into what is at its ends (see retryPastBesideFingerings()).
      * @param x The start's or end's x.
      * @param y The start's or end's y.
      * @param entryX The edge of the note's staff entry towards the other end, relative to the staffline.
@@ -1344,7 +1438,7 @@ export class GraphicalSlur extends GraphicalCurve {
         const overMiddleFingerings: boolean = this.staffEntries.slice(1, -1).some((staffEntry: GraphicalStaffEntry) =>
             (staffEntry.FingeringEntries ?? []).some((fingering: GraphicalLabel) => this.getOutwardExtent(fingering.PositionAndShape)[1] > staffEdge));
         const lopsided: boolean = pastY * outward > this.fingeringsRunInto.furthestOut && !overMiddleFingerings;
-        if (headSide && (toNextNote && Math.abs(pastY - y) > Math.abs(otherX - x) / 2 || lopsided)) {
+        if (headSide && !this.fingeringsRunInto.notBeside && (toNextNote && Math.abs(pastY - y) > Math.abs(otherX - x) / 2 || lopsided)) {
             const gap: number = 0.3; // from the fingerings, a little less than the distance from the notes, as there is space in a text box
             const besideX: number = isStart ? Math.max(...runInto.map(box => box.RelativePosition.x + box.BorderRight)) + gap :
                 Math.min(...runInto.map(box => box.RelativePosition.x + box.BorderLeft)) - gap;

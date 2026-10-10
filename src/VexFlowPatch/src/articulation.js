@@ -349,7 +349,7 @@ export class Articulation extends Modifier {
   //   coordinates
   getExtent() {
     const { note, glyph } = this;
-    // a note's ys follow the stave only when its voice draws it (see Ornament.draw())
+    // a note's ys follow the stave only when its voice draws it (see Ornament.getRenderXY())
     note.setStave(note.getStave());
     const top = this.getRenderY() + glyph.originShift.y + glyph.bbox.getY(); // (getRenderY() sets the glyph's origin)
     const left = this.getXShift() + glyph.originShift.x + glyph.bbox.getX();
@@ -392,7 +392,7 @@ export class Articulation extends Modifier {
     //   stem-up note of another voice a second above, over it and that stem, and the fermatas of two whole notes low in the
     //   staff were both moved out of it to the same line.
     for (const other of this.getOtherArticulationsOnSameSide()) {
-      // a note's ys follow the stave only when its voice draws it (see Ornament.draw())
+      // a note's ys follow the stave only when its voice draws it (see Ornament.getRenderXY())
       other.note.setStave(other.note.getStave());
       y = position === ABOVE
         ? Math.min(y, other.getTextLineBaseY() - textLine * staffSpace)
