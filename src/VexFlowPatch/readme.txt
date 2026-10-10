@@ -140,6 +140,11 @@ set the font of the slide text "sl." with the key family instead of font, so it'
 textbracket.js (custom fix):
 make sure text bracket doesn't go backwards+overlap (e.g. short octave bracket)
 
+tickcontext.js (custom fix):
+preFormat(): add the x_shift of a note moved right (e.g. staggered beside another voice's note by StaveNote.format()) to
+  the context's extraRightPx, so that the spacing makes room for it: the next note doesn't run into it, and a tie from it
+  keeps its length
+
 timesignature.js (fixed vexflow 4):
 open group to get SVG group+class for key signature
 
