@@ -289,8 +289,6 @@ export class Articulation extends Modifier {
   draw() {
     const {
       note, index, position, glyph,
-      articulation: { between_lines: canSitBetweenLines },
-      text_line: textLine,
       context: ctx,
     } = this;
 
@@ -303,8 +301,6 @@ export class Articulation extends Modifier {
     this.setRendered();
 
     const stave = note.getStave();
-    const staffSpace = stave.getSpacingBetweenLines();
-    const isTab = note.getCategory() === 'tabnotes';
 
     // Articulations are centered over/under the note head.
     let { x } = note.getModifierStartXY(position, index);
@@ -340,6 +336,36 @@ export class Articulation extends Modifier {
     if (x_shift) {
       x += x_shift; // VexFlowPatch: support x_shift for breath_mark
     }
+    const y = this.getRenderY();
+
+    L(`Rendering articulation at (x: ${x}, y: ${y})`);
+
+    glyph.render(ctx, x, y);
+  }
+
+  // VexFlowPatch: the box of the glyph as draw() renders it, e.g. for a slur that starts or ends at the note to keep its distance
+  //   from it before drawing (see OSMD's GraphicalSlur): left and right from the centre of the note head, which draw() centres
+  //   the glyph on (getModifierStartXY(), not for a breath mark, which it places after the note), top and bottom in the stave's
+  //   coordinates
+  getExtent() {
+    const { note, glyph } = this;
+    // a note's ys follow the stave only when its voice draws it (see Ornament.draw())
+    note.setStave(note.getStave());
+    const top = this.getRenderY() + glyph.originShift.y + glyph.bbox.getY(); // (getRenderY() sets the glyph's origin)
+    const left = this.getXShift() + glyph.originShift.x + glyph.bbox.getX();
+    return { left, right: left + glyph.bbox.getW(), top, bottom: top + glyph.bbox.getH() };
+  }
+
+  // VexFlowPatch: the y at which draw() renders the glyph, with the glyph's origin set for it (from draw(), to get it before drawing)
+  getRenderY() {
+    const {
+      note, index, position, glyph,
+      articulation: { between_lines: canSitBetweenLines },
+      text_line: textLine,
+    } = this;
+    const stave = note.getStave();
+    const staffSpace = stave.getSpacingBetweenLines();
+    const isTab = note.getCategory() === 'tabnotes';
     const shouldSitOutsideStaff = !canSitBetweenLines || isTab;
 
     const initialOffset = getInitialOffset(note, position);
@@ -388,9 +414,6 @@ export class Articulation extends Modifier {
 
       y += Math.abs(snappedLine - articLine) * staffSpace * offsetDirection;
     }
-
-    L(`Rendering articulation at (x: ${x}, y: ${y})`);
-
-    glyph.render(ctx, x, y);
+    return y;
   }
 }

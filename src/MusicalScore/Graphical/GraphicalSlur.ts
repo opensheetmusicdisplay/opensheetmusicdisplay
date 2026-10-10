@@ -15,9 +15,25 @@ import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { GraphicalMeasure } from "./GraphicalMeasure";
 import { Fraction } from "../../Common/DataObjects/Fraction";
 import { StemDirectionType } from "../VoiceData/VoiceEntry";
-import { VexFlowGraphicalNote } from "./VexFlow";
+import { VexFlowGraphicalNote, unitInPixels } from "./VexFlow";
 import Vex from "vexflow";
 import VF = Vex.Flow;
+
+/** An articulation of a slur's start or end note, relative to the staff line: its left and right, and its near and far edges
+ *  as distances outward from the staff on the slur's side (see GraphicalSlur.getOutwardExtent()). */
+interface ArticulationExtent {
+    left: number;
+    right: number;
+    near: number;
+    far: number;
+    /** Whether it goes inside the slur also at the slur's start or end note (see GraphicalSlur.getYPastArticulations()). */
+    inside: boolean;
+}
+
+/** An articulation that GraphicalSlur.getYPastArticulations() left outside the slur, at its start or end note. */
+interface ArticulationOutside extends ArticulationExtent {
+    isStart: boolean;
+}
 
 export class GraphicalSlur extends GraphicalCurve {
     // private intersection: PointF2D;
@@ -37,6 +53,13 @@ export class GraphicalSlur extends GraphicalCurve {
     public SVGElement: Node;
     /** While calculateCurve() calculates the curve again, past the fingerings of its start and end notes it ran into. */
     private fingeringsRunInto: {start: BoundingBox[], end: BoundingBox[]};
+    /** The far corners of the articulations of the start and end notes the slur clears, for clearObstacles(), see getYPastArticulations(). */
+    private articulationCorners: PointF2D[] = [];
+    /** The articulations of the start and end notes that getYPastArticulations() left outside the slur, see retryPastArticulationsOutside(). */
+    private articulationsOutside: ArticulationOutside[] = [];
+    /** While calculateCurve() calculates the curve again with the slur past every articulation of its start or end note (or both),
+     *  see retryPastArticulationsOutside(). */
+    private clearingEveryArticulationAt: {start: boolean, end: boolean};
 
     /**
      * Compares the timespan of two Graphical Slurs
@@ -171,7 +194,8 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // SkyLinePointsList between firstStaffEntry startUpperRightPoint and lastStaffentry endUpperLeftPoint
             points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
-            const obstacles: PointF2D[] = this.getObstacles(points, skyBottomLineCalculator); // without the point added if there is none
+            const obstacles: PointF2D[] = this.getObstacles(points, skyBottomLineCalculator) // without the point added if there is none
+                .concat(this.articulationCorners);
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endUpperLeft.x - startUpperRight.x) / 2 + startUpperRight.x,
@@ -290,7 +314,8 @@ export class GraphicalSlur extends GraphicalCurve {
             this.bezierEndControlPt = new PointF2D(endControlPoint.x, endControlPoint.y - endYOffset);
             this.bezierEndPt = new PointF2D(endX, endY - endYOffset);
 
-            if (this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startUpperRight.x, endUpperLeft.x)) {
+            if (this.retryPastArticulationsOutside(rules) ||
+                this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startUpperRight.x, endUpperLeft.x)) {
                 return;
             }
 
@@ -370,7 +395,7 @@ export class GraphicalSlur extends GraphicalCurve {
             points = this.calculateBottomPoints(startLowerRight, endLowerLeft, staffLine, skyBottomLineCalculator);
             // without the point added if there is none, nor the bare staff, which calculateBottomPoints() keeps
             const obstacles: PointF2D[] = this.getObstacles(points.filter(point => point.y !== staffLine.BottomLineOffset),
-                                                            skyBottomLineCalculator);
+                                                            skyBottomLineCalculator).concat(this.articulationCorners);
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endLowerLeft.x - startLowerRight.x) / 2 + startLowerRight.x,
@@ -482,7 +507,8 @@ export class GraphicalSlur extends GraphicalCurve {
             // this.intersection.y += startY;
             /* for DEBUG only */
 
-            if (this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startLowerRight.x, endLowerLeft.x)) {
+            if (this.retryPastArticulationsOutside(rules) ||
+                this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startLowerRight.x, endLowerLeft.x)) {
                 return;
             }
 
@@ -623,6 +649,8 @@ export class GraphicalSlur extends GraphicalCurve {
         let startY: number = 0;
         let endX: number = 0;
         let endY: number = 0;
+        this.articulationCorners = [];
+        this.articulationsOutside = [];
 
         if (slurStartNote) {
             // must be relative to StaffLine
@@ -643,25 +671,14 @@ export class GraphicalSlur extends GraphicalCurve {
                 startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderTop;
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     startY = Math.min(endY, slurStartVE.parentStaffEntry.getSkylineMin());
-                    // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
-                    //     if (articulation.placement === PlacementEnum.Above) {
-                    //         startY -= this.rules.SlurEndArticulationYOffset;
-                    //         break;
-                    //     }
-                    // }
                 }
             } else {
                 startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     startY = Math.max(endY, slurStartVE.parentStaffEntry.getBottomlineMax());
                 }
-                // for (const articulation of slurStartVE.parentVoiceEntry.Articulations) {
-                //     if (articulation.placement === PlacementEnum.Below) {
-                //         startY += 1;
-                //         break;
-                //     }
-                // }
             }
+            startY = this.getYPastArticulations(slurStartNote, true, startX, startY);
 
             // If the stem points towards the starting point of the slur, shift the slur by a small amount to start (approximately) at the x-position
             // of the notehead. Note: an exact calculation using the position of the note is too complicate for the payoff
@@ -696,45 +713,18 @@ export class GraphicalSlur extends GraphicalCurve {
             }
 
             const slurEndVE: GraphicalVoiceEntry = slurEndNote.parentVoiceEntry;
-
-            // check for articulation -> shift end y (slur further outward)
-            //   this should not be necessary for the start note, and for accents (>) it's even counter productive there
-            //   TODO alternatively, we could fix the bounding box of the note to include the ornament, but that seems tricky
-            let articulationPlacement: PlacementEnum; // whether there's an articulation and where
-            for (const articulation of slurEndVE.parentVoiceEntry.Articulations) {
-                articulationPlacement = articulation.placement;
-                if (articulation.placement === PlacementEnum.NotYetDefined) {
-                    for (const modifier of ((slurEndNote as VexFlowGraphicalNote).vfnote[0] as any).modifiers) {
-                        if (modifier.getCategory() === VF.Articulation.CATEGORY) {
-                            if (modifier.position === VF.Modifier.Position.ABOVE) {
-                                articulation.placement = PlacementEnum.Above;
-                                articulationPlacement = PlacementEnum.Above;
-                            } else if (modifier.position === VF.Modifier.Position.BELOW) {
-                                articulation.placement = PlacementEnum.Below;
-                                articulationPlacement = PlacementEnum.Below;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
             if (this.placement === PlacementEnum.Above) {
                 endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderTop;
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     endY = Math.min(endY, slurEndVE.parentStaffEntry.getSkylineMin());
-                }
-                if (articulationPlacement === PlacementEnum.Above) {
-                    endY -= this.rules.SlurEndArticulationYOffset;
                 }
             } else {
                 endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
                 if (this.rules.SlurPlacementUseSkyBottomLine) {
                     endY = Math.max(endY, slurEndVE.parentStaffEntry.getBottomlineMax());
                 }
-                if (articulationPlacement === PlacementEnum.Below) {
-                    endY += this.rules.SlurEndArticulationYOffset;
-                }
             }
+            endY = this.getYPastArticulations(slurEndNote, false, endX, endY);
 
             // If the stem points towards the endpoint of the slur, shift the slur by a small amount to start (approximately) at the x-position
             // of the notehead. Note: an exact calculation using the position of the note is too complicate for the payoff
@@ -820,6 +810,100 @@ export class GraphicalSlur extends GraphicalCurve {
 
         return {startX, startY, endX, endY};
     }
+
+    /**
+     * The y that the slur keeps its distance (SlurNoteHeadYOffset) from at its start or end note: beyond the note's articulations
+     * on the slur's side that go between the note and the slur. Staccato dots and wedges and tenuto lines always do (Behind Bars
+     * p. 121), other marks unless they are beyond where the slur would start or end anyway, e.g. an accent moved out for the slur
+     * (SlurStartArticulationYOffsetOfArticulation): that mark and the ones beyond it stay outside the slur, unless the curve
+     * still runs into them (see retryPastArticulationsOutside()).
+     * The marks are taken where Vexflow draws them, e.g. the staccato of a note on a line in the next stave space.
+     * The corners of the marks the slur clears go to articulationCorners, for clearObstacles() to keep the curve that far from them
+     * over their width too: e.g. the end of a slur above a stem-up note is at the stem, right of a staccato at the stem end, and a
+     * short slur rising to it ran over the dot lower than its end.
+     * @param note the slur's start or end note
+     * @param isStart whether it is the start note
+     * @param headX the x of the center of the note head, relative to the staff line
+     * @param y the border of the note's voice entry on the slur's side, relative to the staff line
+     * @returns y, or the outer edge of the outermost of those marks
+     */
+    private getYPastArticulations(note: GraphicalNote, isStart: boolean, headX: number, y: number): number {
+        const vfnote: any = (note as VexFlowGraphicalNote).vfnote?.[0];
+        const stave: any = vfnote?.getStave?.();
+        if (!stave) {
+            return y;
+        }
+        const above: boolean = this.placement === PlacementEnum.Above;
+        const outward: number = above ? -1 : 1;
+        const position: number = above ? VF.Modifier.Position.ABOVE : VF.Modifier.Position.BELOW;
+        const staveTopY: number = stave.getYForLine(0); // relative to the staff line, like the notes (see VexFlowMeasure.correctNotePositions())
+        const marks: ArticulationExtent[] = vfnote.getModifiers()
+            // (a breath mark is after the note)
+            .filter((modifier: any) => modifier.getCategory() === VF.Articulation.CATEGORY && modifier.getPosition() === position &&
+                modifier.type !== "abr")
+            .map((articulation: any): ArticulationExtent => {
+                const extent: {left: number, right: number, top: number, bottom: number} = articulation.getExtent();
+                const [top, bottom] = [(extent.top - staveTopY) / unitInPixels, (extent.bottom - staveTopY) / unitInPixels];
+                return {
+                    left: headX + extent.left / unitInPixels,
+                    right: headX + extent.right / unitInPixels,
+                    near: above ? -bottom : top, // as distances outward, see getOutwardExtent()
+                    far: above ? -top : bottom,
+                    inside: GraphicalSlur.articulationsInsideSlur.includes(articulation.type),
+                };
+            });
+        marks.sort((a: ArticulationExtent, b: ArticulationExtent): number => a.near - b.near); // from the note outward
+        const clearEvery: boolean = isStart ? this.clearingEveryArticulationAt?.start : this.clearingEveryArticulationAt?.end;
+        let distance: number = y * outward; // how far out the start or end is
+        for (const [index, mark] of marks.entries()) {
+            // how far the mark is beyond where the slur would start or end, at SlurNoteHeadYOffset beyond the distance
+            const beyond: number = mark.near - distance - this.rules.SlurNoteHeadYOffset;
+            if (!mark.inside && !clearEvery && beyond > GraphicalSlur.articulationOutsideSlurMinDistance) {
+                for (const outside of marks.slice(index)) {
+                    this.articulationsOutside.push({...outside, isStart});
+                }
+                break;
+            }
+            distance = Math.max(distance, mark.far);
+            this.articulationCorners.push(new PointF2D(mark.left, mark.far * outward), new PointF2D(mark.right, mark.far * outward));
+        }
+        return distance * outward;
+    }
+
+    /**
+     * Calculates the curve again if it runs into an articulation of its start or end note that getYPastArticulations() left
+     * outside the slur, this time with the slur past every articulation of that note: e.g. a slur coming down steeply onto its
+     * end ran into a fermata just above the staff. Before retryPastEndFingerings(), whose fingerings are then those of the new
+     * curve, e.g. above that fermata. (After isc's slur end fix in PR #1827.)
+     * @returns Whether the curve was calculated again (and added to the sky or bottom line), so there is nothing left to do.
+     */
+    private retryPastArticulationsOutside(rules: EngravingRules): boolean {
+        if (this.clearingEveryArticulationAt || this.fingeringsRunInto) {
+            return false; // this is the second calculation
+        }
+        const runInto: ArticulationOutside[] = this.articulationsOutside.filter((mark: ArticulationOutside) =>
+            this.runsInto(mark.left, mark.right, mark.near, mark.far, this.bezierStartPt.x, this.bezierEndPt.x,
+                          GraphicalSlur.articulationOutsideSlurMinDistance));
+        if (runInto.length === 0) {
+            return false;
+        }
+        this.clearingEveryArticulationAt = {start: runInto.some((mark: ArticulationOutside) => mark.isStart),
+                                            end: runInto.some((mark: ArticulationOutside) => !mark.isStart)};
+        try {
+            this.calculateCurve(rules);
+        } finally {
+            this.clearingEveryArticulationAt = undefined;
+        }
+        return true;
+    }
+
+    /** Vexflow's types of the articulations that go inside a slur also at its start and end note (see getYPastArticulations()):
+     *  staccato, staccatissimo (wedge), tenuto. */
+    private static readonly articulationsInsideSlur: string[] = ["a.", "av", "a-"];
+    /** How far another articulation has to be beyond where a slur would start or end to stay outside it (see getYPastArticulations()),
+     *  and how far the curve has to stay from it then (see retryPastArticulationsOutside()): Vexflow draws the first articulation on a
+     *  note's side where the slur would start or end (one stave space from the note head's center). */
+    private static readonly articulationOutsideSlurMinDistance: number = 0.3;
 
     /** Where a slur without end note ends (see Slur.HasUnattachedEnd), relative to the staffline: at the barline of its
      *  measure, before the end instructions like a repeat sign or a clef change at the measure end.
@@ -943,24 +1027,31 @@ export class GraphicalSlur extends GraphicalCurve {
     /** The fingerings of the note's staff entry that the curve passes closer than SlurNoteHeadYOffset to, or through, from fromX
      *  to toX (relative to the staffline). */
     private getFingeringsRunInto(note: GraphicalNote, fromX: number, toX: number): BoundingBox[] {
-        const outward: number = this.placement === PlacementEnum.Above ? -1 : 1;
-        const margin: number = this.rules.SlurNoteHeadYOffset;
         const runInto: BoundingBox[] = [];
         for (const fingering of note?.parentVoiceEntry.parentStaffEntry.FingeringEntries ?? []) {
             const box: BoundingBox = fingering.PositionAndShape; // relative to the staffline, see calculateFingerings()
             const [near, far] = this.getOutwardExtent(box);
-            for (let i: number = 0; i <= 100; i++) {
-                // (calculateCurvePointAtIndex(1) is not the end point, but (0, 0))
-                const point: PointF2D = i < 100 ? this.calculateCurvePointAtIndex(i / 100) : this.bezierEndPt;
-                if (point.x >= Math.max(fromX, box.RelativePosition.x + box.BorderLeft) &&
-                    point.x <= Math.min(toX, box.RelativePosition.x + box.BorderRight) &&
-                    point.y * outward > near - margin && point.y * outward < far + margin) {
-                    runInto.push(box);
-                    break;
-                }
+            if (this.runsInto(box.RelativePosition.x + box.BorderLeft, box.RelativePosition.x + box.BorderRight, near, far, fromX, toX,
+                              this.rules.SlurNoteHeadYOffset)) {
+                runInto.push(box);
             }
         }
         return runInto;
+    }
+
+    /** Whether the curve passes closer than margin to, or through, a box from left to right whose outward extent (see
+     *  getOutwardExtent()) is near to far, from fromX to toX (relative to the staffline). */
+    private runsInto(left: number, right: number, near: number, far: number, fromX: number, toX: number, margin: number): boolean {
+        const outward: number = this.placement === PlacementEnum.Above ? -1 : 1;
+        for (let i: number = 0; i <= 100; i++) {
+            // (calculateCurvePointAtIndex(1) is not the end point, but (0, 0))
+            const point: PointF2D = i < 100 ? this.calculateCurvePointAtIndex(i / 100) : this.bezierEndPt;
+            if (point.x >= Math.max(fromX, left) && point.x <= Math.min(toX, right) &&
+                point.y * outward > near - margin && point.y * outward < far + margin) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** The near and far edges of the box from the staff on the slur's side, as distances outward (up for a slur above). */
