@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for the articulations of voices that share a staff, which have no placement in the XML.
+    Measure 1: voice 1 is a C5, stem up, voice 2 an A4, stem down, a third below. Beat 1: an accent on the A4,
+    beat 2: an accent on the C5, beat 3: a staccato on both. At the note head, as for a single voice, the mark of
+    either note lands on the other note's head (the accent above the A4 on the C5). They should be at the stem
+    end: above the C5's stem, below the A4's (Gould, Behind Bars, pp. 117-118).
+    Beat 4: the accent of the A4 has placement="above" in the XML, which still wins.
+    Measure 2: three voices, E5 (stem up) over B4 and G4 (stems down), then C5 over A4 and G4, the middle note
+    with an accent. Its accent should be below its stem, not above its head, on or next to the upper note.
+    Measure 3: a single voice, A4 (stem up) and C5 (stem down) with accents: they stay at the note head.
+    Measure 4: a C5 (stem down) with an accent over hidden notes of a second voice (print-object="no", e.g. a
+    voice only for playback, as in Chopin's Nocturne No. 20, m. 18): nothing to avoid, the accent stays above it.
+    Measure 5: A4 quarters (stem up), accents on beats 1 and 3, and in voice 2 only an E4 on beat 2. The other
+    voice doesn't sound during the accented notes: their accents stay below the heads.
+    Measure 6: four beamed eighths (stem up) with staccatos, and in voice 2 only an E4 under the last two.
+    The beamed group keeps one placement: all four staccatos above the beam, not two below the heads.
+  -->
+  <part-list>
+    <score-part id="P1"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+
+      <!-- Voice 1 (upper): C5 x4, an accent on beat 2, a staccato on beat 3 -->
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><notations><articulations><accent/></articulations></notations></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><notations><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+
+      <backup><duration>4</duration></backup>
+
+      <!-- Voice 2 (lower): A4 x4, an accent on beat 1, a staccato on beat 3, an accent placed above on beat 4 -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem><notations><articulations><accent/></articulations></notations></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem><notations><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem><notations><articulations><accent placement="above"/></articulations></notations></note>
+    </measure>
+    <measure number="2">
+
+      <!-- Voice 1 (upper): E5, then C5 -->
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+
+      <backup><duration>4</duration></backup>
+
+      <!-- Voice 2 (middle): B4, then A4, with accents -->
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>half</type><stem>down</stem><notations><articulations><accent/></articulations></notations></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>half</type><stem>down</stem><notations><articulations><accent/></articulations></notations></note>
+
+      <backup><duration>4</duration></backup>
+
+      <!-- Voice 3 (lower): G4, G4 -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>3</voice><type>half</type><stem>down</stem></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>3</voice><type>half</type><stem>down</stem></note>
+    </measure>
+    <measure number="3">
+
+      <!-- A single voice: A4 (stem up), C5 (stem down), with accents -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><stem>up</stem><notations><articulations><accent/></articulations></notations></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>2</duration><voice>1</voice><type>half</type><stem>down</stem><notations><articulations><accent/></articulations></notations></note>
+    </measure>
+    <measure number="4">
+
+      <!-- Voice 1: a C5 whole note (stem down) with an accent -->
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type><stem>down</stem><notations><articulations><accent/></articulations></notations></note>
+
+      <backup><duration>4</duration></backup>
+
+      <!-- Voice 2: hidden A4 quarters -->
+      <note print-object="no"><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note print-object="no"><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note print-object="no"><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note print-object="no"><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
+    <measure number="5">
+
+      <!-- Voice 1: A4 quarters (stem up), accents on beats 1 and 3 -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><notations><articulations><accent/></articulations></notations></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem><notations><articulations><accent/></articulations></notations></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+
+      <backup><duration>4</duration></backup>
+
+      <!-- Voice 2: only an E4 on beat 2 -->
+      <forward><duration>1</duration><voice>2</voice></forward>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <forward><duration>2</duration><voice>2</voice></forward>
+    </measure>
+    <measure number="6">
+      <attributes><divisions>2</divisions></attributes>
+
+      <!-- Voice 1: four beamed eighths (stem up) with staccatos, then a half note -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">begin</beam><notations><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam><notations><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam><notations><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">end</beam><notations><articulations><staccato/></articulations></notations></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+
+      <backup><duration>8</duration></backup>
+
+      <!-- Voice 2: only an E4 under the last two eighths -->
+      <forward><duration>2</duration><voice>2</voice></forward>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <forward><duration>4</duration><voice>2</voice></forward>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+</score-partwise>
