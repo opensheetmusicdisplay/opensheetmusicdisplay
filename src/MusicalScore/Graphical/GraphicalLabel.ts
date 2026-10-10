@@ -1,5 +1,5 @@
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
-import { Label } from "../Label";
+import { Label, LabelTextRun, splitTextRuns } from "../Label";
 import { Note } from "../VoiceData/Note";
 import { BoundingBox } from "./BoundingBox";
 import { Clickable } from "./Clickable";
@@ -12,7 +12,7 @@ import { MusicSheetCalculator } from "./MusicSheetCalculator";
 export class GraphicalLabel extends Clickable {
     private label: Label;
     private rules: EngravingRules;
-    public TextLines: {text: string, xOffset: number, width: number}[];
+    public TextLines: {text: string, xOffset: number, width: number, runs?: PositionedLabelTextRun[]}[];
     /** A reference to the Node in the SVG, if SVGBackend, otherwise undefined.
      *  Allows manipulation without re-rendering, e.g. for dynamics, lyrics, etc.
      *  For the Canvas backend, this is unfortunately not possible.
@@ -69,7 +69,9 @@ export class GraphicalLabel extends Clickable {
         }
         this.TextLines = [];
         const labelMarginBorderFactor: number = this.rules?.LabelMarginBorderFactor ?? 0.1;
-        const lines: string[] = this.Label.text.split(/[\n\r]+/g);
+        const runLines: LabelTextRun[][] = this.Label.TextRuns ? splitTextRuns(this.Label.TextRuns) : undefined;
+        const lines: string[] = runLines ? runLines.map(runs => runs.map(run => run.text ?? "").join("")) :
+            this.Label.text.split(/[\n\r]+/g);
         const numOfLines: number = lines.length;
         let maxWidth: number = 0;
         for (let i: number = 0; i < numOfLines; i++) {
@@ -77,12 +79,13 @@ export class GraphicalLabel extends Clickable {
             const widthToHeightRatio: number =
             MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
                line, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
-            const currWidth: number = this.Label.fontHeight * widthToHeightRatio;
+            const runs: PositionedLabelTextRun[] = runLines ? this.measureTextRuns(runLines[i]) : undefined;
+            const currWidth: number = runs ? runs.reduce((width, run) => width + run.width, 0) : this.Label.fontHeight * widthToHeightRatio;
             // const currWidth: number = MusicSheetCalculator.TextMeasurer.computeTextWidth(
             //     line, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
             maxWidth = Math.max(maxWidth, currWidth);
             // here push only text and width of the text:
-            this.TextLines.push({text: line, xOffset: 0, width: currWidth});
+            this.TextLines.push({text: line, xOffset: 0, width: currWidth, runs});
         }
 
         // maxWidth is calculated ->
@@ -174,4 +177,31 @@ export class GraphicalLabel extends Clickable {
         bbox.BorderMarginBottom = bbox.BorderBottom + height * labelMarginBorderFactor;
         bbox.BorderMarginRight = bbox.BorderRight + height * labelMarginBorderFactor;
     }
+
+    private measureTextRuns(runs: LabelTextRun[]): PositionedLabelTextRun[] {
+        let xOffset: number = 0;
+        return runs.map(run => {
+            let ratio: number;
+            let leftInset: number = 0;
+            if (run.symbol) {
+                ratio = MusicSheetCalculator.TextMeasurer.computeSymbolWidthToHeightRatio?.(run.symbol) ?? 0;
+            } else {
+                const metrics: {width: number, leftInset: number} = MusicSheetCalculator.TextMeasurer.computeTextRunMetrics?.(
+                    run.text, this.Label.font, this.Label.fontStyle, this.Label.fontFamily);
+                ratio = metrics?.width ?? MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
+                    run.text, this.Label.font, this.Label.fontStyle, this.Label.fontFamily);
+                leftInset = (metrics?.leftInset ?? 0) * this.Label.fontHeight;
+            }
+            const width: number = this.Label.fontHeight * ratio;
+            const positioned: PositionedLabelTextRun = {content: run, xOffset: xOffset + leftInset, width};
+            xOffset += width;
+            return positioned;
+        });
+    }
+}
+
+export interface PositionedLabelTextRun {
+    content: LabelTextRun;
+    xOffset: number;
+    width: number;
 }

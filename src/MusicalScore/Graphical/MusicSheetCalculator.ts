@@ -52,7 +52,7 @@ import log from "loglevel";
 import { GraphicalLyricEntry } from "./GraphicalLyricEntry";
 import { GraphicalLyricWord } from "./GraphicalLyricWord";
 import { GraphicalLine } from "./GraphicalLine";
-import { Label } from "../Label";
+import { Label, LabelTextRun, sameTextRuns } from "../Label";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceStaffEntryContainer";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
@@ -818,15 +818,19 @@ export abstract class MusicSheetCalculator {
         const defaultYXml: number = multiExpression.UnknownList[0]?.defaultYXml;
         if ((multiExpression.MoodList.length > 0) || (multiExpression.UnknownList.length > 0)) {
         let combinedExprString: string  = "";
+        const textRuns: LabelTextRun[] = multiExpression.EntriesList.some(entry => entry.expression.TextRuns) ? [] : undefined;
         for (let idx: number = 0, len: number = multiExpression.EntriesList.length; idx < len; ++idx) {
             const entry: MultiExpressionEntry = multiExpression.EntriesList[idx];
             if (entry.prefix !== "") {
+                textRuns?.push({text: (combinedExprString === "" ? "" : " ") + entry.prefix});
                 if (combinedExprString === "") {
                     combinedExprString += entry.prefix;
                 } else {
                     combinedExprString += " " + entry.prefix;
                 }
             }
+            if (combinedExprString !== "") { textRuns?.push({text: " "}); }
+            textRuns?.push(...(entry.expression.TextRuns ?? [{text: entry.label}]));
             if (combinedExprString === "") {
                 combinedExprString += entry.label;
             } else {
@@ -850,7 +854,7 @@ export abstract class MusicSheetCalculator {
                                                                 relative, combinedExprString,
                                                                 multiExpression.getFontstyleOfFirstEntry(),
                                                                 placement,
-                                                                fontHeight);
+                                                                fontHeight, TextAlignmentEnum.CenterBottom, 0, textRuns);
         const colorXML: string = multiExpression.getColorXMLOfFirstEntry();
         if (this.rules.ExpressionsUseXMLColor && colorXML) {
             graphLabel.ColorXML = colorXML;
@@ -2038,8 +2042,10 @@ export abstract class MusicSheetCalculator {
                              placement: PlacementEnum,
                              fontHeight: number,
                              textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom,
-                             yPadding: number = 0): GraphicalLabel {
+                             yPadding: number = 0,
+                             textRuns?: LabelTextRun[]): GraphicalLabel {
         const label: Label = new Label(combinedString, textAlignment);
+        label.TextRuns = textRuns;
         label.fontStyle = style;
         label.fontHeight = fontHeight;
 
@@ -2178,7 +2184,8 @@ export abstract class MusicSheetCalculator {
                                                                        entry.Expression.Placement,
                                                                        this.rules.UnknownTextHeight,
                                                                        textAlignment,
-                                                                       this.rules.TempoYSpacing);
+                                                                       this.rules.TempoYSpacing,
+                                                                       entry.Expression.TextRuns);
                 if (entry.Expression.ColorXML && this.rules.ExpressionsUseXMLColor) {
                     graphLabel.ColorXML = entry.Expression.ColorXML;
                 }
@@ -2218,6 +2225,7 @@ export abstract class MusicSheetCalculator {
             if ((renderedExpression.Label ?? "").trim() !== (tempoExpression.Label ?? "").trim()) {
                 continue;
             }
+            if (!sameTextRuns(renderedExpression.TextRuns, tempoExpression.TextRuns)) { continue; }
             return true;
         }
         return false;

@@ -20,6 +20,7 @@ import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
 import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
+import { LabelTextRun, sameTextRuns, isSupportedTextSymbol } from "../../Label";
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;
@@ -265,6 +266,7 @@ export class ExpressionReader {
             if (dirContentNode) {
                 // an exporter may split the words where their formatting changes
                 const text: string = dirNode.elements("words").map((wordsNode: IXmlElement): string => wordsNode.value).join("");
+                const textRuns: LabelTextRun[] = this.readTextRuns(dirNode);
                 if (isTempoInstruction) {
                     this.directionTimestamp = this.readDirectionTimestamp(
                         dirContentNode.attribute("default-x") ? undefined : offsetNode, inSourceMeasureCurrentFraction);
@@ -273,9 +275,10 @@ export class ExpressionReader {
                     const instantaneousTempoExpression: InstantaneousTempoExpression = new InstantaneousTempoExpression(
                         text, this.placement, this.staffNumber, this.soundTempo, this.currentMultiTempoExpression);
                     instantaneousTempoExpression.language = dirContentNode.attribute("xml:lang")?.value;
+                    instantaneousTempoExpression.TextRuns = textRuns;
                     this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
                 } else if (!isDynamicInstruction) {
-                    this.interpretWords(dirContentNode, text, currentMeasure, timestampFraction);
+                    this.interpretWords(dirContentNode, text, currentMeasure, timestampFraction, textRuns);
                 }
                 continue;
             }
@@ -306,6 +309,22 @@ export class ExpressionReader {
         if (this.openContinuousTempoExpression) {
             this.closeOpenContinuousTempo(Fraction.plus(sourceMeasure.AbsoluteTimestamp, timestamp));
         }
+    }
+
+    /** Keep recognition words unchanged; preserve only printable symbols in the display sequence. */
+    private readTextRuns(directionType: IXmlElement): LabelTextRun[] {
+        if (!directionType.element("symbol")) { return undefined; }
+        const runs: LabelTextRun[] = [];
+        for (const node of directionType.elements()) {
+            if (node.name === "symbol" && isSupportedTextSymbol(node.value.trim())) {
+                runs.push({symbol: node.value.trim()});
+            } else if (node.name === "words") {
+                const previous: LabelTextRun = runs[runs.length - 1];
+                if (previous?.text !== undefined) { previous.text += node.value; }
+                else { runs.push({text: node.value}); }
+            }
+        }
+        return runs.some(run => run.symbol) ? runs : undefined;
     }
     public addOctaveShift(directionNode: IXmlElement, currentMeasure: SourceMeasure, endTimestamp: Fraction,
                           endVoiceEntryCount: number = 0): void {
@@ -763,9 +782,10 @@ export class ExpressionReader {
             }
         }
     }
-    private interpretWords(wordsNode: IXmlElement, text: string, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction): void {
+    private interpretWords(wordsNode: IXmlElement, text: string, currentMeasure: SourceMeasure,
+                           inSourceMeasureCurrentFraction: Fraction, textRuns?: LabelTextRun[]): void {
         if (currentMeasure.Rules.IgnoreBracketsWords && (
-            /^\(\s*\)$/.test(text) || /^\[\s*\]$/.test(text) // (*) and [*]
+            !textRuns && (/^\(\s*\)$/.test(text) || /^\[\s*\]$/.test(text)) // (*) and [*]
         )) { // regex: brackets with arbitrary white space in-between
             return;
         }
@@ -808,7 +828,8 @@ export class ExpressionReader {
             if (this.checkIfWordsNodeIsRepetitionInstruction(text)) {
                 return;
             }
-            this.fillMultiOrTempoExpression(text, currentMeasure, inSourceMeasureCurrentFraction, fontStyle, fontColor, defaultYXml, language);
+            this.fillMultiOrTempoExpression(text, currentMeasure, inSourceMeasureCurrentFraction, fontStyle, fontColor,
+                                            defaultYXml, language, textRuns);
         }
     }
     private readNumber(node: IXmlElement): number {
@@ -940,7 +961,8 @@ export class ExpressionReader {
         }
     }
     private fillMultiOrTempoExpression(inputString: string, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction,
-        fontStyle: FontStyles, fontColor: string, defaultYXml: number = undefined, language: string = undefined): void {
+        fontStyle: FontStyles, fontColor: string, defaultYXml: number = undefined, language: string = undefined,
+        textRuns?: LabelTextRun[]): void {
         if (!inputString) {
             return;
         }
@@ -950,7 +972,7 @@ export class ExpressionReader {
 
         //for (const splitStr of splitStrings) {
         this.createExpressionFromString("", tmpInputString, currentMeasure, inSourceMeasureCurrentFraction, inputString, fontStyle, fontColor,
-                                        defaultYXml, language);
+                                        defaultYXml, language, textRuns);
         //}
     }
     /*
@@ -986,7 +1008,8 @@ export class ExpressionReader {
                                        fontStyle: FontStyles,
                                        fontColor: string,
                                        defaultYXml: number = undefined,
-                                       language: string = undefined): boolean {
+                                       language: string = undefined,
+                                       textRuns?: LabelTextRun[]): boolean {
         const isInstantaneousTempo: boolean = InstantaneousTempoExpression.isInputStringInstantaneousTempo(stringTrimmed);
         const isContinuousTempo: boolean = ContinuousTempoExpression.isInputStringContinuousTempo(stringTrimmed);
         if (isInstantaneousTempo || isContinuousTempo) {
@@ -996,7 +1019,8 @@ export class ExpressionReader {
                     const multiTempoExpression: MultiTempoExpression = currentMeasure.TempoExpressions[idx];
                     if (multiTempoExpression.Timestamp === this.directionTimestamp &&
                         multiTempoExpression.InstantaneousTempo !== undefined &&
-                        multiTempoExpression.InstantaneousTempo.Label.indexOf(stringTrimmed) !== -1) {
+                        multiTempoExpression.InstantaneousTempo.Label.indexOf(stringTrimmed) !== -1 &&
+                        sameTextRuns(multiTempoExpression.InstantaneousTempo.TextRuns, textRuns)) {
                         return false;
                     }
                 }
@@ -1011,6 +1035,7 @@ export class ExpressionReader {
                                                                                                                       this.currentMultiTempoExpression);
                 instantaneousTempoExpression.ColorXML = fontColor;
                 instantaneousTempoExpression.language = language;
+                instantaneousTempoExpression.TextRuns = textRuns;
                 this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, prefix);
                 return true;
             }
@@ -1022,6 +1047,7 @@ export class ExpressionReader {
                     this.currentMultiTempoExpression);
                 continuousTempoExpression.ColorXML = fontColor;
                 continuousTempoExpression.language = language;
+                continuousTempoExpression.TextRuns = textRuns;
                 this.currentMultiTempoExpression.addExpression(continuousTempoExpression, prefix);
                 return true;
             }
@@ -1054,6 +1080,7 @@ export class ExpressionReader {
                     stringTrimmed);
             continuousDynamicExpression.ColorXML = fontColor;
             continuousDynamicExpression.language = language;
+            continuousDynamicExpression.TextRuns = textRuns;
             const openWordContinuousDynamic: MultiExpression = this.getMultiExpression;
             if (openWordContinuousDynamic) {
                 this.closeOpenContinuousDynamic(openWordContinuousDynamic.StartingContinuousDynamic, currentMeasure, inSourceMeasureCurrentFraction);
@@ -1074,6 +1101,7 @@ export class ExpressionReader {
             moodExpression.fontStyle = fontStyle;
             moodExpression.ColorXML = fontColor;
             moodExpression.language = language;
+            moodExpression.TextRuns = textRuns;
             multiExpression.addExpression(moodExpression, prefix);
             return true;
         }
@@ -1091,7 +1119,8 @@ export class ExpressionReader {
                         // if at other parts of the score
                         if (this.globalStaffIndex > 0) {
                             // don't add duplicate TempoExpression
-                            if (multiTempoExpression.EntriesList[0].label.indexOf(stringTrimmed) >= 0) {
+                            if (multiTempoExpression.EntriesList[0].label.indexOf(stringTrimmed) >= 0 &&
+                                sameTextRuns(multiTempoExpression.EntriesList[0].Expression.TextRuns, textRuns)) {
                                 return false;
                         } else {
                             break;
@@ -1109,6 +1138,7 @@ export class ExpressionReader {
         unknownExpression.fontStyle = fontStyle;
         unknownExpression.ColorXML = fontColor;
         unknownExpression.language = language;
+        unknownExpression.TextRuns = textRuns;
         unknownExpression.defaultYXml = defaultYXml;
         unknownExpression.parentMeasure = currentMeasure;
         unknownMultiExpression.addExpression(unknownExpression, prefix);
