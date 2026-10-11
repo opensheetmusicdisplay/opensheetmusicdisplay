@@ -16,6 +16,8 @@ breath mark support
 keep a breath mark at the time of its note: not moved with the note's x_shift (which getModifierStartXY() adds, see stavenote.js)
 count the text line of an articulation also from the bases of the articulations on its side of the other voices' notes at
   its time (getTextLineBaseY(), with the move out of the staff), so that the articulations of two voices don't overlap
+getExtent(): the box of the articulation as draw() renders it (its y now from getRenderY()), so that OSMD's slurs can start
+  and end beyond the articulations of their notes before drawing
 
 beam.js (custom addition):
 fix beam slopes changing on each re-render (render() call)
@@ -55,6 +57,8 @@ setUpperAccidental() and setLowerAccidental() also take a list of accidentals, d
 count the text line of an ornament from the outermost of the notes at its time with ornaments or articulations on its side,
   i.e. of all voices in the staff, not only from its own note, so that the ornaments of two voices don't overlap
 format(): an ornament's accidental marks take text lines too, so that the ornament stacked on it isn't drawn beside them
+getExtent(): the box of the ornament with its accidental marks as draw() renders it (its position now from getRenderXY()), so
+  that OSMD's slurs can keep clear of the ornaments of their start and end notes before drawing
 
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.

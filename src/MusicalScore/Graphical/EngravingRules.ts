@@ -347,7 +347,15 @@ export class EngravingRules {
     public TieHeightInterpolationK: number;
     public TieHeightInterpolationD: number;
     public SlurNoteHeadYOffset: number;
+    /** Not used anymore: a slur starts and ends SlurNoteHeadYOffset beyond the articulations of its start and end notes on its
+     *  side, as drawn (see GraphicalSlur), not this fixed distance beyond the end note.
+     * @deprecated
+     */
     public SlurEndArticulationYOffset: number;
+    /** Not used anymore: an accent at the start or end of a slur goes outside it, beyond its curve, unless that is too far from the
+     *  note (see GraphicalSlur), not this fixed distance further out at the start of a slur placed in the XML.
+     * @deprecated
+     */
     public SlurStartArticulationYOffsetOfArticulation: number;
     public SlurStemXOffset: number;
     public SlurSlopeMaxAngle: number;
