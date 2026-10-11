@@ -2980,11 +2980,25 @@ export abstract class MusicSheetCalculator {
         if (ties.length === 1) {
             const tie: Tie = ties[0];
             if (tie.TieDirection === PlacementEnum.NotYetDefined) {
-                const voiceId: number = tie.Notes[0].ParentVoiceEntry.ParentVoice.VoiceId;
+                const note: Note = tie.Notes[0];
+                const voiceEntry: VoiceEntry = note.ParentVoiceEntry;
+                const voiceId: number = voiceEntry.ParentVoice.VoiceId;
+                const hasStem: boolean = note.TypeLength?.RealValue < 1 && voiceEntry.StemDirectionXml !== StemDirectionType.None;
                 // put ties of second voices (e.g. 2 for right hand, 6 left hand) below by default
                 //   TODO could be more precise but also more complex by checking lower notes, other notes, etc.
                 if (voiceId === 2 || voiceId === 6) {
                     tie.TieDirection = PlacementEnum.Below;
+                } else if (hasStem && this.otherVoicePresentInMeasure(voiceEntry, true)) {
+                    // Where two parts share a staff, a tie curves on its stem side, away from the other part: upwards in
+                    //   the upper part, downwards in the lower (#1141). Left to Vexflow, it curved away from the stem, i.e.
+                    //   a tie of a stem-up note in the upper part curved down into the other part, e.g. Schumann's
+                    //   Träumerei m.12, where it then read as a tie between the other part's notes. (A note without a stem,
+                    //   e.g. a whole note, has no stem side: Vexflow still decides.)
+                    if (voiceEntry.StemDirection === StemDirectionType.Up) {
+                        tie.TieDirection = PlacementEnum.Above;
+                    } else if (voiceEntry.StemDirection === StemDirectionType.Down) {
+                        tie.TieDirection = PlacementEnum.Below;
+                    }
                 }
             }
         }
@@ -4452,22 +4466,46 @@ export abstract class MusicSheetCalculator {
         // setBeamNotesWantedStemDirections() will be called at end of measure (createGraphicalMeasure)
     }
 
-    /** Whether a voice other than the given entry's has an entry (note or rest) in the same measure on the same staff. */
-    private otherVoicePresentInMeasure(voiceEntry: VoiceEntry): boolean {
+    /** Whether a voice other than the given entry's has an entry (note or rest) in the same measure on the same staff,
+     *  with onlyVisible one with a note or rest that is drawn, i.e. not of a voice only for playback (print-object="no").
+     *  A voice with most of its entries of the measure on another staff doesn't count: it only crosses into this staff,
+     *  e.g. the top notes of a left-hand arpeggio in the right hand's staff (Dichterliebe m.9). */
+    private otherVoicePresentInMeasure(voiceEntry: VoiceEntry, onlyVisible: boolean = false): boolean {
         const staffEntry: SourceStaffEntry = voiceEntry.ParentSourceStaffEntry;
         const staffIndex: number = staffEntry.ParentStaff.idInMusicSheet;
-        for (const container of staffEntry.VerticalContainerParent.ParentMeasure.VerticalSourceStaffEntryContainers) {
+        const measure: SourceMeasure = staffEntry.VerticalContainerParent.ParentMeasure;
+        for (const container of measure.VerticalSourceStaffEntryContainers) {
             const otherStaffEntry: SourceStaffEntry = container.StaffEntries[staffIndex];
             if (!otherStaffEntry) {
                 continue;
             }
             for (const otherVoiceEntry of otherStaffEntry.VoiceEntries) {
-                if (otherVoiceEntry.ParentVoice !== voiceEntry.ParentVoice) {
+                if (otherVoiceEntry.ParentVoice !== voiceEntry.ParentVoice &&
+                    (!onlyVisible || otherVoiceEntry.Notes.some((note: Note) => note.PrintObject)) &&
+                    !this.voiceMostlyOnOtherStaves(otherVoiceEntry.ParentVoice, measure, staffIndex)) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    /** Whether the voice has more entries in the measure on other staves than on the staff with the given index. */
+    private voiceMostlyOnOtherStaves(voice: Voice, measure: SourceMeasure, staffIndex: number): boolean {
+        let entriesOnStaff: number = 0;
+        let entriesElsewhere: number = 0;
+        for (const container of measure.VerticalSourceStaffEntryContainers) {
+            container.StaffEntries.forEach((staffEntry: SourceStaffEntry, index: number) => {
+                if (staffEntry?.VoiceEntries.some((entry: VoiceEntry) => entry.ParentVoice === voice)) {
+                    if (index === staffIndex) {
+                        entriesOnStaff++;
+                    } else {
+                        entriesElsewhere++;
+                    }
+                }
+            });
+        }
+        return entriesElsewhere > entriesOnStaff;
     }
 
     /** Sets a voiceEntry's stem direction to one already set in other notes in its beam, if it has one. */

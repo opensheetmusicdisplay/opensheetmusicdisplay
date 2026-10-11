@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work>
+    <work-title>test_tie_direction_parts_sharing_staff_traumerei_measure12</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!-- Schumann's Traumerei m.12, right hand: the tie of the stem-up D4 of the upper part (voice 1) curves up, above the C4 of the lower part
+         moved aside, not down into it -->
+    <measure number="1">
+      <attributes>
+        <divisions>240</divisions>
+        <key><fifths>-1</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>360</duration>
+        <voice>1</voice>
+        <type>quarter</type><dot/><stem>up</stem>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>120</duration><tie type="start"/>
+        <voice>1</voice>
+        <type>eighth</type><stem>up</stem><notations><tied type="start"/></notations>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>240</duration><tie type="stop"/>
+        <voice>1</voice>
+        <type>quarter</type><stem>up</stem><notations><tied type="stop"/></notations>
+      </note>
+      <note>
+        <rest/>
+        <duration>120</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>120</duration>
+        <voice>1</voice>
+        <type>eighth</type><stem>up</stem>
+      </note>
+      <backup><duration>960</duration></backup>
+      <forward><duration>360</duration><voice>2</voice></forward>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>120</duration>
+        <voice>2</voice>
+        <type>eighth</type><stem>down</stem>
+      </note>
+      <note>
+        <pitch><step>B</step><alter>-1</alter><octave>3</octave></pitch>
+        <duration>240</duration>
+        <voice>2</voice>
+        <type>quarter</type><stem>down</stem>
+      </note>
+      <forward><duration>240</duration><voice>2</voice></forward>
+    </measure>
+    <!-- The lower part (voice 4, stems down) under an upper part (voice 3, stems up): its tie curves down, not up into the F4 -->
+    <measure number="2">
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>480</duration>
+        <voice>3</voice>
+        <type>half</type><stem>up</stem>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>480</duration>
+        <voice>3</voice>
+        <type>half</type><stem>up</stem>
+      </note>
+      <backup><duration>960</duration></backup>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>480</duration><tie type="start"/>
+        <voice>4</voice>
+        <type>half</type><stem>down</stem><notations><tied type="start"/></notations>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>240</duration><tie type="stop"/>
+        <voice>4</voice>
+        <type>quarter</type><stem>down</stem><notations><tied type="stop"/></notations>
+      </note>
+      <note>
+        <pitch><step>B</step><alter>-1</alter><octave>3</octave></pitch>
+        <duration>240</duration>
+        <voice>4</voice>
+        <type>quarter</type><stem>down</stem>
+      </note>
+    </measure>
+    <!-- A single voice: its tie curves away from the stem, as before -->
+    <measure number="3">
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>480</duration><tie type="start"/>
+        <voice>1</voice>
+        <type>half</type><stem>up</stem><notations><tied type="start"/></notations>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>480</duration><tie type="stop"/>
+        <voice>1</voice>
+        <type>half</type><stem>up</stem><notations><tied type="stop"/></notations>
+      </note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+</score-partwise>
