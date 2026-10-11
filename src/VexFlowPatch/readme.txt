@@ -38,6 +38,10 @@ comment out unnecessary error thrown, which prevents the fix to
   (custom addition, unnecessary in vexflow 4)
 fix x set to NaN when totalTicks = 0 (bugfix for some tab scores, not sure if fixed in vexflow 4)
 
+glyph.js (custom addition):
+cache outline bounding boxes, glyph widths and scaled outline segments, and hand outlines to OSMD's geometric skyline context directly (performance, #1681, #1704, #1712, #1713, #1786)
+start a glyph's path with its outline, without a lone move to the glyph's origin, which Firefox 132 counted in getBBox() (#1833)
+
 gracenotegroup.js (custom addition, needs check if necessary in vexflow 4):
 check for gracenotegroup.spacing set, to allow e.g. spacing = 0 by default.
 (with previous default 4, spacing is way too large unnecessarily, in most cases)

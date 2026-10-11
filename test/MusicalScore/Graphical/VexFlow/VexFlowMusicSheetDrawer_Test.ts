@@ -79,6 +79,25 @@ describe("VexFlow Music Sheet Drawer", () => {
         });
     });
 
+    /**
+     * A glyph, e.g. a note head or an articulation, is drawn as a path from its outline, which starts with a move of its own.
+     * Vexflow moved to the glyph's origin first, which left a lone point at the start of the path. It draws nothing, but
+     * Firefox 132 counted it in getBBox(): e.g. the box of a tenuto, whose origin is almost a staff space below its line, reached
+     * past the slur ending beyond it in test_slur_end_clear_of_articulations (see SlurArticulations_Test).
+     */
+    it("starts each glyph's path with its outline, without a lone move to the glyph's origin", async () => {
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+        await osmd.load(TestUtils.getScore("test_slur_end_clear_of_articulations.musicxml"));
+        osmd.render();
+        const paths: string[] = Array.from(container.querySelectorAll("path"), (path: SVGPathElement): string => path.getAttribute("d"));
+        expect(paths.length, "paths drawn").to.be.greaterThan(0);
+        // a move followed by another move: the first one only adds a point
+        const startingWithLoneMove: string[] = paths.filter((d: string): boolean => /^\s*M[^A-Za-z]*M/i.test(d));
+        expect(startingWithLoneMove.length, `paths starting with a lone move, e.g. ${startingWithLoneMove[0]?.slice(0, 60)}`).to.equal(0);
+        container.remove();
+    });
+
     it("draws sheet \"Clementi pt. 1\"", (done: Mocha.Done) => {
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         expect(score).to.not.be.undefined;
