@@ -1,5 +1,4 @@
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
-import { SourceMeasure } from "../VoiceData";
 import { Glissando } from "../VoiceData/Glissando";
 import { ColDirEnum } from "./BoundingBox";
 import { EngravingRules } from "./EngravingRules";
@@ -80,16 +79,17 @@ export class GraphicalGlissando {
             //endY = glissEndVe.PositionAndShape.RelativePosition.y + glissEndVe.PositionAndShape.BorderTop;
             endY = glissEndNote.PositionAndShape.AbsolutePosition.y;
         } else {
-            const lastMeasure: GraphicalMeasure = staffLine.Measures.last();
-            const lastSourceMeasure: SourceMeasure =
-                lastMeasure.parentSourceMeasure ??
-                lastMeasure.ExtraGraphicalMeasurePreviousMeasure?.parentSourceMeasure;
-
-            if (lastSourceMeasure?.HasEndLine) {
+            // The staff line can end in an extra measure that only shows a courtesy key or time signature. It has no source
+            //   measure, and the line ends before it, at the end of the last measure.
+            let lastMeasure: GraphicalMeasure = staffLine.Measures.last();
+            if (lastMeasure.IsExtraGraphicalMeasure) {
+                lastMeasure = lastMeasure.ExtraGraphicalMeasurePreviousMeasure;
+            }
+            if (lastMeasure.parentSourceMeasure.HasEndLine) {
                 return;
                 // TODO inquire how this can happen: start of glissando at end of last measure. maybe faulty xml? or about slur/slide indices?
             }
-            endX = staffLine.PositionAndShape.Size.width;
+            endX = lastMeasure.PositionAndShape.RelativePosition.x + lastMeasure.PositionAndShape.Size.width;
             if (endX - startX > rules.GlissandoStafflineEndOffset) {
                 startX = endX - rules.GlissandoStafflineEndOffset;
             } // else: don't try to set a potentially bigger offset for a note very close to the staffline end

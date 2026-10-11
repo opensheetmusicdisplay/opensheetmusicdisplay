@@ -2,13 +2,12 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="4.0">
   <work>
-    <work-title>無題のスコア</work-title>
+    <work-title>test_glissando_system_break_courtesy_key_signature</work-title>
     </work>
   <identification>
-    <creator type="composer">作曲者 / 編曲者</creator>
     <encoding>
       <software>MuseScore Studio 4.7.5</software>
-      <encoding-date>2026-10-11</encoding-date>
+      <encoding-date>2026-10-12</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -71,11 +70,7 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="600.17" default-y="1611.01" justify="center" valign="top" font-size="22">無題のスコア</credit-words>
-    </credit>
-  <credit page="1">
-    <credit-type>composer</credit-type>
-    <credit-words default-x="1114.62" default-y="1511.01" justify="right" valign="bottom">作曲者 / 編曲者</credit-words>
+    <credit-words default-x="600.16" default-y="1611.01" justify="center" valign="top" font-size="22">test_glissando_system_break_courtesy_key_signature</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">

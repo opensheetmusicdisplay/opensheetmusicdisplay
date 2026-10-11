@@ -106,6 +106,8 @@ describe("Glissandi across systems with courtesy signatures", () => {
                                 crossingGlissandi++;
                                 expect(glissando.Line, "the glissando segment before the system break is drawn")
                                     .to.not.equal(undefined);
+                                expect(glissando.Line.End.x, "the segment ends at the barline, before the courtesy signature")
+                                    .to.be.closeTo(staffLine.Measures.last().PositionAndShape.RelativePosition.x, 0.01);
                             }
                         }
                     }
