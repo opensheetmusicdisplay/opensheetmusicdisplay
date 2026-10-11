@@ -1331,14 +1331,14 @@ export class GraphicalSlur extends GraphicalCurve {
             .flatMap((staffEntry: GraphicalStaffEntry) => staffEntry.FingeringEntries ?? [])
             .map(({PositionAndShape: box}: GraphicalLabel) => [box.RelativePosition.x + box.BorderLeft, box.RelativePosition.x + box.BorderRight])
             .concat(this.articulationsOutside.map((mark: ArticulationOutside) => [mark.left, mark.right]))
-            .map(([left, right]) => [Math.floor(left * samplingUnit), Math.ceil(right * samplingUnit)]);
+            .map(([left, right]: number[]) => [Math.floor(left * samplingUnit), Math.ceil(right * samplingUnit)]);
         let depth: number = 0;
         for (let i: number = 0; i <= 100; i++) {
             // (calculateCurvePointAtIndex(1) is not the end point, but (0, 0))
             const point: PointF2D = i < 100 ? this.calculateCurvePointAtIndex(i / 100) : this.bezierEndPt;
             const index: number = Math.floor(point.x * samplingUnit);
             if (point.x > startEntryX && point.x < endEntryX || index < 0 || index >= line.length ||
-                skippedSamples.some(([first, end]) => index >= first && index < end)) {
+                skippedSamples.some(([first, end]: number[]) => index >= first && index < end)) {
                 continue;
             }
             const value: number = line[index] * outward;
