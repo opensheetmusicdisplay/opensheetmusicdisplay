@@ -13,6 +13,7 @@ export default defineConfig(
             "*_min.ts",
             ".karma_temp/",
             ".claude/",
+            ".tmp/",
             "build/",
             "demo/",
             "export/",
