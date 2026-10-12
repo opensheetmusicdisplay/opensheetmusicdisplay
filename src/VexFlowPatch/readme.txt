@@ -16,6 +16,8 @@ breath mark support
 keep a breath mark at the time of its note: not moved with the note's x_shift (which getModifierStartXY() adds, see stavenote.js)
 count the text line of an articulation also from the bases of the articulations on its side of the other voices' notes at
   its time (getTextLineBaseY(), with the move out of the staff), so that the articulations of two voices don't overlap
+getExtent(): the box of the articulation as draw() renders it (its y now from getRenderY()), so that OSMD's slurs can start
+  and end beyond the articulations of their notes before drawing
 
 beam.js (custom addition):
 fix beam slopes changing on each re-render (render() call)
@@ -36,6 +38,10 @@ comment out unnecessary error thrown, which prevents the fix to
   (custom addition, unnecessary in vexflow 4)
 fix x set to NaN when totalTicks = 0 (bugfix for some tab scores, not sure if fixed in vexflow 4)
 
+glyph.js (custom addition):
+cache outline bounding boxes, glyph widths and scaled outline segments, and hand outlines to OSMD's geometric skyline context directly (performance, #1681, #1704, #1712, #1713, #1786)
+start a glyph's path with its outline, without a lone move to the glyph's origin, which Firefox 132 counted in getBBox() (#1833)
+
 gracenotegroup.js (custom addition, needs check if necessary in vexflow 4):
 check for gracenotegroup.spacing set, to allow e.g. spacing = 0 by default.
 (with previous default 4, spacing is way too large unnecessarily, in most cases)
@@ -55,6 +61,8 @@ setUpperAccidental() and setLowerAccidental() also take a list of accidentals, d
 count the text line of an ornament from the outermost of the notes at its time with ornaments or articulations on its side,
   i.e. of all voices in the staff, not only from its own note, so that the ornaments of two voices don't overlap
 format(): an ornament's accidental marks take text lines too, so that the ornament stacked on it isn't drawn beside them
+getExtent(): the box of the ornament with its accidental marks as draw() renders it (its position now from getRenderXY()), so
+  that OSMD's slurs can keep clear of the ornaments of their start and end notes before drawing
 
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
@@ -139,6 +147,11 @@ set the font of the slide text "sl." with the key family instead of font, so it'
 
 textbracket.js (custom fix):
 make sure text bracket doesn't go backwards+overlap (e.g. short octave bracket)
+
+tickcontext.js (custom fix):
+preFormat(): add the x_shift of a note moved right (e.g. staggered beside another voice's note by StaveNote.format()) to
+  the context's extraRightPx, so that the spacing makes room for it: the next note doesn't run into it, and a tie from it
+  keeps its length
 
 timesignature.js (fixed vexflow 4):
 open group to get SVG group+class for key signature

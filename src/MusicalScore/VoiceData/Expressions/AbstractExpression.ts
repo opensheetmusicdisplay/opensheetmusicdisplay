@@ -1,5 +1,4 @@
 import { SourceMeasure } from "../SourceMeasure";
-import { LabelTextRun } from "../../Label";
 
 export class AbstractExpression {
     protected placement: PlacementEnum;
@@ -7,7 +6,6 @@ export class AbstractExpression {
     public ColorXML: string;
     /** The xml:lang of the expression's words, see Label.language. */
     public language: string;
-    public TextRuns: LabelTextRun[];
 
     constructor(placement: PlacementEnum) {
         this.placement = placement;

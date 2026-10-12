@@ -28,9 +28,9 @@ import { Note, TremoloBetweenNotes, TremoloInfo } from "../../../MusicalScore/Vo
 import StaveNote = VF.StaveNote;
 import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
+import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
-import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { Staff } from "../../VoiceData/Staff";
@@ -827,10 +827,23 @@ export class VexFlowConverter {
             return;
         }
 
+        // While another voice sounds in the staff, a mark at the note head faces it, e.g. the accent above a stem-down A4
+        //   lands on the head of a stem-up C5 of the other voice. Two parts sharing a staff put their marks at the stem end
+        //   instead (Gould, Behind Bars, pp. 117-118). A beamed group is placed as a whole, at the stem end if another voice
+        //   sounds during any of its notes: not some dots below the heads and some above the beam. A placement from the XML
+        //   still wins.
+        //   Of a chord, only the first note in the XML is in the beam (not necessarily gNote, the lowest).
+        const beamNotes: Note[] = gNote.sourceNote.ParentVoiceEntry.Notes[0].NoteBeam?.Notes ?? [gNote.sourceNote];
+        const otherVoiceSounding: boolean = gNote.sourceNote.ParentVoiceEntry.Articulations.length > 0 &&
+            beamNotes.some((note: Note) => VexFlowConverter.otherVoiceSoundsDuring(note.ParentVoiceEntry));
         for (const articulation of gNote.sourceNote.ParentVoiceEntry.Articulations) {
             let vfArtPosition: number = VF.Modifier.Position.ABOVE;
 
-            if (vfnote.getStemDirection() === VF.Stem.UP) {
+            if (otherVoiceSounding) {
+                if (vfnote.getStemDirection() === VF.Stem.DOWN) {
+                    vfArtPosition = VF.Modifier.Position.BELOW;
+                }
+            } else if (vfnote.getStemDirection() === VF.Stem.UP) {
                 vfArtPosition = VF.Modifier.Position.BELOW;
 
                 // if rules.ArticulationAboveNoteForStemUp set:
@@ -865,16 +878,6 @@ export class VexFlowConverter {
             switch (articulationEnum) {
                 case ArticulationEnum.accent: {
                     vfArt = new VF.Articulation("a>");
-                    const slurs: Slur[] = gNote.sourceNote.NoteSlurs;
-                    for (const slur of slurs) {
-                        if (slur.StartNote === gNote.sourceNote) { // && slur.PlacementXml === articulation.placement
-                            if (slur.PlacementXml === PlacementEnum.Above) {
-                                vfArt.setYShift(-rules.SlurStartArticulationYOffsetOfArticulation * 10);
-                            } else if (slur.PlacementXml === PlacementEnum.Below) {
-                                vfArt.setYShift(rules.SlurStartArticulationYOffsetOfArticulation * 10);
-                            }
-                        }
-                    }
                     (vfArt as any).render_options = {
                         ...(vfArt as any).render_options,
                         extra_left_px: 0,
@@ -994,6 +997,32 @@ export class VexFlowConverter {
                 (vfnote as StaveNote).addModifier(0, vfArt);
             }
         }
+    }
+
+    /** Whether a visible note or rest of another voice in the staff sounds during the voice entry, e.g. a half note of
+     *  another voice under the second quarter of the measure. Hidden notes and rests (e.g. of a voice only for playback)
+     *  don't count. */
+    private static otherVoiceSoundsDuring(voiceEntry: VoiceEntry): boolean {
+        const length: (entry: VoiceEntry) => number =
+            (entry: VoiceEntry): number => Math.max(...entry.Notes.map((note: Note) => note.Length.RealValue));
+        const staffEntry: SourceStaffEntry = voiceEntry.ParentSourceStaffEntry;
+        const staffIndex: number = staffEntry.ParentStaff.idInMusicSheet;
+        const start: number = staffEntry.Timestamp.RealValue;
+        const end: number = start + length(voiceEntry);
+        for (const container of staffEntry.VerticalContainerParent.ParentMeasure.VerticalSourceStaffEntryContainers) {
+            const otherStaffEntry: SourceStaffEntry = container.StaffEntries[staffIndex];
+            const otherStart: number = otherStaffEntry?.Timestamp.RealValue;
+            if (!otherStaffEntry || otherStart >= end) {
+                continue;
+            }
+            for (const other of otherStaffEntry.VoiceEntries) {
+                if (other.ParentVoice !== voiceEntry.ParentVoice && otherStart + length(other) > start &&
+                    other.Notes.some((note: Note) => note.PrintObject)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static generateOrnaments(vfnote: VF.StemmableNote, oContainer: OrnamentContainer): void {

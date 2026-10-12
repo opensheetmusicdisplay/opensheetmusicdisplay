@@ -232,6 +232,11 @@ export class StaveNote extends StemmableNote {
           //If we are sharing a line, switch one notes stem direction.
           //If we are sharing a line and in the same voice, only then offset one note
           const lineDiff = Math.abs(noteU.line - noteL.line);
+          // VexFlowPatch: line is a note's lowest key. Next to a chord, the keys facing each other are the lowest
+          //   of the note above and the highest of the note below: E4+G4 under an A4 are a second apart, not a fourth.
+          //   gap is the distance between those two keys, or <= 0 if the notes share or interleave keys.
+          const topLine = n => n.note.getKeyProps().slice(-1)[0].line;
+          const gap = Math.max(noteU.line - topLine(noteL), noteL.line - topLine(noteU));
           // Stagger (x-shift) only if the two notes share a line but can't overlap as a
           // unison - i.e. their notehead shapes or dots differ (see mergeableUnison).
           if (lineDiff === 0 && !mergeableUnison(noteU, noteL, stagger_same_whole_notes)) {
@@ -250,7 +255,7 @@ export class StaveNote extends StemmableNote {
                 }
               }
             }
-          } else if (lineDiff < 1 && lineDiff > 0) {//if the notes are quite close but not on the same line, shift
+          } else if ((lineDiff < 1 && lineDiff > 0) || (gap < 1 && gap > 0)) {//if the notes are quite close but not on the same line, shift
             // VexFlowPatch: an upper note's dots stay next to its head, where the lower note moved right can cover
             //   them. So when only the upper note is dotted, stem up over a stem down, move it instead, as MuseScore does.
             //   If both are dotted, also move an upper note in a space: Dot.format() then puts the lower note's dot in

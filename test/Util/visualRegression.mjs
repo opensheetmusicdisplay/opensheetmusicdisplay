@@ -7,7 +7,7 @@
 // This version needs only Node.js and node-canvas (already an OSMD dependency, also used
 // by generateImages_browserless.mjs and test/performance/compareImages.mjs).
 //
-// It produces the SAME diff/ output folder as the bash script, plus diffs.txt:
+// It produces the SAME diff/ output folder as the bash script, plus diffs.txt and crops/:
 //   diff/results.txt              - every compared image with its diff value, biggest change on top
 //   diff/diffs.txt                - what to look at: the compared states of blessed/ and current/ (see below),
 //                                   the changed samples (with their diff region), then the warnings, like the console summary
@@ -15,7 +15,11 @@
 //   diff/<name>.png               - red-highlight diff image (only for changed samples)
 //   diff/<name>_Blessed.png       - copy of the blessed (old / reference) image
 //   diff/<name>_Current.png       - copy of the current (new) image
-// so you can flip between _Blessed and _Current in an image viewer to see what moved.
+//   diff/crops/<name>_crop<n>.png - the blessed and the current crop of each changed region, e.g. for a pull request,
+//                                   also alone as <name>_crop<n>_Blessed.png and <name>_crop<n>_Current.png
+//                                   (see visualRegressionCrops.mjs; not with --nocrops)
+// so you can flip between _Blessed and _Current in an image viewer to see what moved, also in the crops, which show each
+// change without searching the whole page for it, e.g. on a large score.
 //
 // Difference metric
 // -----------------
@@ -41,24 +45,27 @@
 //
 // Usage
 // -----
-//   node test/Util/visualRegression.mjs [imageBaseFolder] [sampleNamePrefix]
+//   node test/Util/visualRegression.mjs [imageBaseFolder] [sampleNamePrefix] [--nocrops]
 //     imageBaseFolder  folder containing blessed/ and current/ subfolders (default ./visual_regression)
 //     sampleNamePrefix optional: only compare images whose filename starts with this prefix
+//     --nocrops        optional: don't write the crops of the changed regions (npm run test:visual:nocrops)
 //
 //   Environment variables (optional):
 //     CHANNEL_THRESHOLD  per-channel delta above which a pixel counts as changed (default 0 = any difference)
 //     NPROC              number of images decoded concurrently (default 8)
 //     MAX_DIFF_IMAGES    cap on how many diff/_Blessed/_Current image sets to write (default: no cap)
+//     MAX_REGIONS        cap on how many crops to write per changed image, of its first changed regions (default 6)
 //
 // Typical workflow (identical to the bash version):
 //   npm run generate:blessed    # render the reference state (e.g. develop) into visual_regression/blessed
 //   npm run generate:current    # render your changes            into visual_regression/current
 //   node test/Util/visualRegression.mjs ./visual_regression
-//   # then inspect visual_regression/diff/
+//   # then inspect visual_regression/diff/crops/ and visual_regression/diff/
 
 import FS from "fs";
 import Path from "path";
 import canvasPkg from "canvas";
+import { writeCrops } from "./visualRegressionCrops.mjs";
 
 const { loadImage, createCanvas } = canvasPkg;
 
@@ -69,10 +76,12 @@ const { loadImage, createCanvas } = canvasPkg;
 const rawArgs = process.argv.slice(2).filter((a) => !a.startsWith("-"));
 const BUILDFOLDER = rawArgs[0] || "./visual_regression";
 const PREFIX = rawArgs[1] || "";
+const NO_CROPS = process.argv.slice(2).includes("--nocrops");
 
 const BLESSED = Path.join(BUILDFOLDER, "blessed");
 const CURRENT = Path.join(BUILDFOLDER, "current");
 const DIFF = Path.join(BUILDFOLDER, "diff");
+const CROPS = Path.join(DIFF, "crops");
 const RESULTS = Path.join(DIFF, "results.txt");
 const DIFFS = Path.join(DIFF, "diffs.txt");
 const WARNINGS = Path.join(DIFF, "warnings.txt");
@@ -86,6 +95,8 @@ const CHANNEL_THRESHOLD = parseInt(process.env.CHANNEL_THRESHOLD ?? "0", 10);
 const CONCURRENCY = Math.max(1, parseInt(process.env.NPROC ?? "8", 10));
 // Optional cap on the number of changed samples for which we write image files (results.txt is always complete).
 const MAX_DIFF_IMAGES = process.env.MAX_DIFF_IMAGES ? parseInt(process.env.MAX_DIFF_IMAGES, 10) : Infinity;
+// Cap on the number of crops per changed image (visualRegressionCrops.mjs), of its first changed regions.
+const MAX_REGIONS = Math.max(1, parseInt(process.env.MAX_REGIONS ?? "6", 10));
 
 // ImageMagick diff-style constants, reverse-engineered from `compare -highlight-color '#ff000050'`.
 const HL_R = 255, HL_G = 0, HL_B = 0;      // highlight color #ff0000
@@ -217,9 +228,10 @@ function wrapWords(text, indent, width) {
  * Reads the state the images of a folder were generated from, from the source_commit.txt that
  * generateImages_browserless.mjs writes into it.
  * @param {string} dir image folder (blessed or current)
- * @returns {{ description: string, subject?: string, warning?: string }} the description, e.g. "develop 52b16c29 +
- *   uncommitted changes in 2 file(s), generated 2026-10-07 14:03:12", the subject (first line) of the commit's message,
- *   and the warning if the images were generated with a build older than the files in src/
+ * @returns {{ description: string, state?: string, subject?: string, warning?: string }} the description, e.g.
+ *   "develop 52b16c29 + uncommitted changes in 2 file(s), generated 2026-10-07 14:03:12", the state alone (without the
+ *   generation time, for the labels of the crops), the subject (first line) of the commit's message, and the warning if
+ *   the images were generated with a build older than the files in src/
  */
 function readSource(dir) {
     const file = Path.join(dir, SOURCE_COMMIT_FILE);
@@ -233,18 +245,16 @@ function readSource(dir) {
             info[match[1]] = match[2];
         }
     }
-    let description = info.branch ?? "unknown branch";
+    let state = info.branch ?? "unknown branch";
     if (info.commit) {
-        description += ` ${info.commit.substring(0, 8)}`;
+        state += ` ${info.commit.substring(0, 8)}`;
     }
     const changes = info["uncommitted changes"];
     if (changes && changes !== "none") {
-        description += ` + uncommitted changes in ${changes}`;
+        state += ` + uncommitted changes in ${changes}`;
     }
-    if (info.generated) {
-        description += `, generated ${info.generated}`;
-    }
-    return { description, subject: info.subject, warning: info.warning };
+    const description = info.generated ? `${state}, generated ${info.generated}` : state;
+    return { description, state, subject: info.subject, warning: info.warning };
 }
 
 /**
@@ -404,11 +414,17 @@ async function main() {
 
     // ---- prepare the diff (output + temp) folder ----
     FS.mkdirSync(DIFF, { recursive: true });
-    // Clear previous run's files (only regular files directly inside diff/, never recurse).
-    for (const f of FS.readdirSync(DIFF)) {
-        const p = Path.join(DIFF, f);
-        if (FS.statSync(p).isFile()) {
-            FS.rmSync(p);
+    // Clear previous run's files (only regular files directly inside diff/, never recurse),
+    //   and its crops, also with --nocrops, as they don't belong to this comparison.
+    for (const dir of [DIFF, CROPS]) {
+        if (!FS.existsSync(dir)) {
+            continue;
+        }
+        for (const f of FS.readdirSync(dir)) {
+            const p = Path.join(dir, f);
+            if (FS.statSync(p).isFile()) {
+                FS.rmSync(p);
+            }
         }
     }
 
@@ -491,11 +507,43 @@ async function main() {
     }
     writeLines(DIFFS, diffsLines);
 
+    // ---- before/after crops of the changed regions (visualRegressionCrops.mjs), unless --nocrops ----
+    let crops;
+    let cropsError;
+    if (fails.length > 0 && !NO_CROPS) {
+        console.log("Cropping the changed regions...");
+        const labels = Object.entries(sources).map(([folder, source]) => source.state ? `${folder}: ${source.state}` : folder);
+        try {
+            crops = await writeCrops(DIFF, CROPS, {
+                labels, channelThreshold: CHANNEL_THRESHOLD, maxRegions: MAX_REGIONS, onProgress: progressBar,
+            });
+        } catch (err) {
+            cropsError = err; // reported in the summary, which an exit here would lose
+        }
+        if (process.stdout.isTTY) {
+            process.stdout.write("\n");
+        }
+    }
+
     // ---- console summary ----
     console.log(`\nResults stored in ${RESULTS} (all samples, biggest change first),`);
     console.log(`changed samples and warnings in ${DIFFS}.`);
     console.log(`All samples with a pixel difference are copied into ${DIFF}`);
-    console.log(`(as <name>.png diff, <name>_Blessed.png and <name>_Current.png).\n`);
+    console.log(`(as <name>.png diff, <name>_Blessed.png and <name>_Current.png).`);
+    if (crops) {
+        const notes = [`as <name>_crop<n>.png, <name>_crop<n>_Blessed.png and <name>_crop<n>_Current.png: ${crops.count} crop(s)`];
+        if (crops.capped.length > 0) {
+            notes.push(`the first ${MAX_REGIONS} regions of ${crops.capped.length} image(s) with more (MAX_REGIONS)`);
+        }
+        if (crops.uncropped.length > 0) {
+            notes.push(`none of ${crops.uncropped.join(", ")}, as only the image size changed`);
+        }
+        console.log(`Before/after crops of their changed regions, e.g. for a pull request, are in ${CROPS}`);
+        console.log(`(${notes.join("; ")}).`);
+    } else if (cropsError) {
+        console.log(`Warning: could not write the crops of the changed regions into ${CROPS}:`, cropsError);
+    }
+    console.log("");
 
     if (warnings.length > 0) {
         const MAX_SHOWN = 15;

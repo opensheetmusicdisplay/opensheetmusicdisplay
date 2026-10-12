@@ -271,6 +271,15 @@ describe("ExpressionReader", () => {
         expect((iterator.clone().ActiveDynamicExpressions[0] as InstantaneousDynamicExpression).DynamicExpression).to.equal("mf");
     });
 
+    it("places Gounod's cresc. at its divisions offset, not scaled by the preceding half note", () => {
+        const sheet: MusicSheet = readSheet("test/data/CharlesGounod_Meditation.xml");
+        const crescendos: MultiExpression[] = sheet.SourceMeasures[19].StaffLinkedExpressions[0]
+            .filter(expression => expression.StartingContinuousDynamic?.Label === "cresc.");
+        expect(crescendos.length).to.equal(1);
+        // After a half note: 16 - 15 divisions at 8 per quarter = 1/32 of a whole note.
+        expect(crescendos[0].Timestamp.RealValue).to.equal(1 / 32);
+    });
+
     it("reads all text fragments of a direction, not only the first", () => {
         const sheet: MusicSheet = readSheet("test/data/test_direction_words_split.musicxml");
         const tempoLabels: string[] = sheet.SourceMeasures[0].TempoExpressions.flatMap((tempo: MultiTempoExpression): string[] =>
@@ -282,5 +291,18 @@ describe("ExpressionReader", () => {
         expect(sheet.SourceMeasures[0].rehearsalExpression.label, "rehearsal direction").to.equal("A′");
         expect(sheet.SourceMeasures[1].LastRepetitionInstructions.map(instruction => instruction.type), "repetition direction")
             .to.deep.equal([RepetitionInstructionEnum.DaCapo]);
+    });
+
+    it("puts note symbols between words into the text, stem-down ones as stem-up, but not other symbols", () => {
+        const sheet: MusicSheet = readSheet("test/data/test_words_symbols.musicxml");
+        const tempos: MultiTempoExpression[] = sheet.SourceMeasures[0].TempoExpressions;
+        expect(tempos.map((tempo: MultiTempoExpression): string => tempo.InstantaneousTempo.Label), "tempo marks, the oboe's repeated")
+            .to.deep.equal(["Fast (Straight\u266A)", "Fast (Straight\u{1D161}\u00B7)", "Fast (Straight\u266A)"]);
+        expect(tempos.slice(0, 2).map((tempo: MultiTempoExpression): number => tempo.InstantaneousTempo.TempoInBpm)).to.deep.equal([112, 160]);
+        const words: (measureIndex: number) => string[] = (measureIndex: number): string[] =>
+            sheet.SourceMeasures[measureIndex].StaffLinkedExpressions[0].flatMap((expression: MultiExpression): string[] =>
+                expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
+        expect(words(0), "measure 1").to.deep.equal(["(\u{1D15E})"]);
+        expect(words(1), "measure 2").to.deep.equal(["Hold (\u{1D15D}),\nthen play (\u2669) Keep going", "cresc.\u266A"]);
     });
 });

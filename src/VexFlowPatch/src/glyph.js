@@ -131,7 +131,9 @@ export class Glyph extends Element {
       return;
     }
     ctx.beginPath();
-    ctx.moveTo(x_pos, y_pos);
+    // VexFlowPatch: no ctx.moveTo(x_pos, y_pos) before the outline. Every glyph outline starts with a move of its own, so
+    //   this one only left a lone point at the glyph's origin at the start of the path. It draws nothing, but Firefox 132
+    //   counted it in the path's getBBox(), e.g. a tenuto's box reached to its origin, almost a staff space below its line.
     // VexFlowPatch: replay cached scaled segments (position added per point) instead of re-walking
     // and re-coercing the outline string array on every draw. Produces byte-identical coordinates.
     const segments = getScaledGlyphSegments(outline, scale);

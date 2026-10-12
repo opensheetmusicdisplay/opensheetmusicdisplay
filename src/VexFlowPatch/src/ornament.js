@@ -52,7 +52,7 @@ function createAccidentalGlyph(accids, scale, spacing) {
   };
 }
 
-// VexFlowPatch: the y from which the text lines of the ornaments above a note are counted (see Ornament.draw()): a staff
+// VexFlowPatch: the y from which the text lines of the ornaments above a note are counted (see Ornament.getRenderXY()): a staff
 //   space above its stem tip, or above its head if the stem is down (one and a half above a beamed stem tip)
 function getTopBaseY(note) {
   const spacing = note.getStave().getSpacingBetweenLines();
@@ -184,6 +184,21 @@ export class Ornament extends Modifier {
       .map(modifier => modifier.note);
   }
 
+  // VexFlowPatch: the box of the ornament with its accidentals as draw() renders it, e.g. for a slur that starts or ends at
+  //   the note to keep its distance from it before drawing (see OSMD's GraphicalSlur): left and right from the centre of the
+  //   note head, which draw() centres it on (getModifierStartXY()), unless it is delayed, top and bottom in the stave's
+  //   coordinates
+  getExtent() {
+    // a note's ys follow the stave only when its voice draws it (see getRenderXY())
+    this.note.setStave(this.note.getStave());
+    const { y } = this.getRenderXY();
+    const shift = this.delayed ? this.delayXShift : 0; // (set by getRenderXY())
+    const width = Math.max(...[this.glyph, this.accidentalLower, this.accidentalUpper].filter(glyph => glyph)
+      .map(glyph => glyph.getMetrics().width));
+    const height = this.glyph.getMetrics().height + this.getAccidentalsHeight();
+    return { left: shift - width / 2, right: shift + width / 2, top: y - height, bottom: y };
+  }
+
   // Render ornament in position next to note.
   draw() {
     this.checkContext();
@@ -195,6 +210,28 @@ export class Ornament extends Modifier {
     this.setRendered();
 
     const ctx = this.context;
+    let { x: glyphX, y: glyphY } = this.getRenderXY();
+
+    L('Rendering ornament: ', this.ornament, glyphX, glyphY);
+
+    if (this.accidentalLower) {
+      this.accidentalLower.render(ctx, glyphX, glyphY);
+      glyphY -= this.accidentalLower.getMetrics().height;
+      glyphY -= this.render_options.accidentalLowerPadding;
+    }
+
+    this.glyph.render(ctx, glyphX, glyphY);
+    glyphY -= this.glyph.getMetrics().height;
+
+    if (this.accidentalUpper) {
+      glyphY -= this.render_options.accidentalUpperPadding;
+      this.accidentalUpper.render(ctx, glyphX, glyphY);
+    }
+  }
+
+  // VexFlowPatch: where draw() renders the ornament: the x of its centre and the y of its bottom, with its lower accidental
+  //   (from draw(), to get it before drawing, see getExtent())
+  getRenderXY() {
     const stemDir = this.note.getStemDirection();
     const stave = this.note.getStave();
 
@@ -272,21 +309,6 @@ export class Ornament extends Modifier {
       }
       glyphX += delayXShift;
     }
-
-    L('Rendering ornament: ', this.ornament, glyphX, glyphY);
-
-    if (this.accidentalLower) {
-      this.accidentalLower.render(ctx, glyphX, glyphY);
-      glyphY -= this.accidentalLower.getMetrics().height;
-      glyphY -= this.render_options.accidentalLowerPadding;
-    }
-
-    this.glyph.render(ctx, glyphX, glyphY);
-    glyphY -= this.glyph.getMetrics().height;
-
-    if (this.accidentalUpper) {
-      glyphY -= this.render_options.accidentalUpperPadding;
-      this.accidentalUpper.render(ctx, glyphX, glyphY);
-    }
+    return { x: glyphX, y: glyphY };
   }
 }
