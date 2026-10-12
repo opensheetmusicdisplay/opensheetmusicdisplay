@@ -54,6 +54,20 @@ interface FingeringsRunInto {
     notBeside?: boolean;
 }
 
+/** An accidental of the chord a slur ends at, relative to the staff line: its left and right, and its far edge as a distance
+ *  outward from the staff on the slur's side (see GraphicalSlur.getEndAccidentals()). */
+type AccidentalExtent = Pick<ArticulationExtent, "left" | "right" | "far">;
+
+/** While GraphicalSlur.calculateCurve() calculates the curve again with its end further out, past the accidentals of its end note
+ *  it ran into (see GraphicalSlur.retryPastEndAccidentals()): those accidentals, how much further out, how many times it went
+ *  further, and whether clearObstacles() keeps the curve clear of them, the end being as far out as it goes. */
+interface EndPastAccidentals {
+    accidentals: AccidentalExtent[];
+    shift: number;
+    tries: number;
+    clearing: boolean;
+}
+
 /** A label stacked on the articulations left outside a slur at its start or end note, a fingering or a measure number, which
  *  moves along with them (see GraphicalSlur.placeArticulationsOutside()). */
 interface LabelOutside {
@@ -86,7 +100,8 @@ export class GraphicalSlur extends GraphicalCurve {
     /** While calculateCurve() calculates the curve again past the fingerings of its start and end notes it ran into, see
      *  FingeringsRunInto. */
     private fingeringsRunInto: FingeringsRunInto;
-    /** The far corners of the articulations of the start and end notes the slur clears, for clearObstacles(), see getYPastArticulations(). */
+    /** The far corners of the articulations of the start and end notes the slur clears, for clearObstacles(), see getYPastArticulations(),
+     *  and of the accidentals of its end note once its end is as far out past them as it goes, see retryPastEndAccidentals(). */
     private articulationCorners: PointF2D[] = [];
     /** The articulations of the start and end notes that getYPastArticulations() left outside the slur, from the note outward,
      *  see placeArticulationsOutside(). */
@@ -96,6 +111,8 @@ export class GraphicalSlur extends GraphicalCurve {
     /** While calculateCurve() calculates the curve again with the slur past every articulation of its start or end note (or both),
      *  see retryPastArticulationsOutside(). */
     private clearingEveryArticulationAt: {start: boolean, end: boolean};
+    /** While calculateCurve() calculates the curve again with its end further out, see EndPastAccidentals. */
+    private endPastAccidentals: EndPastAccidentals;
 
     /**
      * Compares the timespan of two Graphical Slurs
@@ -161,6 +178,15 @@ export class GraphicalSlur extends GraphicalCurve {
         let endX: number = startEndPoints.endX;
         let startY: number = startEndPoints.startY;
         let endY: number = startEndPoints.endY;
+        const pastAccidentals: EndPastAccidentals = this.endPastAccidentals;
+        if (pastAccidentals) { // further out, see retryPastEndAccidentals()
+            const outward: number = this.placement === PlacementEnum.Above ? -1 : 1;
+            endY += outward * pastAccidentals.shift;
+            if (pastAccidentals.clearing) {
+                this.articulationCorners.push(...pastAccidentals.accidentals.flatMap(({left, right, far}) =>
+                    [new PointF2D(left, far * outward), new PointF2D(right, far * outward)]));
+            }
+        }
         // from a note to the next one, in this staffline: nothing between them for the curve to clear (see placePastEndFingerings())
         const toNextNote: boolean = this.staffEntries.length === 2 && slurStartNote !== undefined && slurEndNote !== undefined;
 
@@ -354,7 +380,8 @@ export class GraphicalSlur extends GraphicalCurve {
             const passedClose: {start: boolean, end: boolean} = this.keepPassedArticulationsInside();
             if (this.retryPastArticulationsOutside(rules, passedClose) ||
                 this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startUpperRight.x, endUpperLeft.x) ||
-                this.retryPastBesideFingerings(rules, staffLine, beside, startUpperRight.x, endUpperLeft.x)) {
+                this.retryPastBesideFingerings(rules, staffLine, beside, startUpperRight.x, endUpperLeft.x) ||
+                this.retryPastEndAccidentals(rules, slurEndNote)) {
                 return;
             }
             this.placeArticulationsOutside(staffLine);
@@ -551,7 +578,8 @@ export class GraphicalSlur extends GraphicalCurve {
             const passedClose: {start: boolean, end: boolean} = this.keepPassedArticulationsInside();
             if (this.retryPastArticulationsOutside(rules, passedClose) ||
                 this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startLowerRight.x, endLowerLeft.x) ||
-                this.retryPastBesideFingerings(rules, staffLine, beside, startLowerRight.x, endLowerLeft.x)) {
+                this.retryPastBesideFingerings(rules, staffLine, beside, startLowerRight.x, endLowerLeft.x) ||
+                this.retryPastEndAccidentals(rules, slurEndNote)) {
                 return;
             }
             this.placeArticulationsOutside(staffLine);
@@ -1156,6 +1184,8 @@ export class GraphicalSlur extends GraphicalCurve {
      *  note more steeply, they go inside it (see retryPastArticulationsOutside()). Over an accent, a slur leaving the note gently
      *  rises up to about 0.45. */
     private static readonly articulationOutsideSlurMaxRise: number = 0.6;
+    /** How many times a slur's end goes further out past the accidentals of its end note at most (see retryPastEndAccidentals()). */
+    private static readonly endPastAccidentalsMaxTries: number = 3;
 
     /** Where a slur without end note ends (see Slur.HasUnattachedEnd), relative to the staffline: at the barline of its
      *  measure, before the end instructions like a repeat sign or a clef change at the measure end.
@@ -1304,6 +1334,90 @@ export class GraphicalSlur extends GraphicalCurve {
         fingerings.notBeside = tryingPast;
         this.calculateCurve(rules);
         return true;
+    }
+
+    /**
+     * Calculates the curve again with its end further out (up for a slur above) if it runs into the accidentals of the chord it
+     * ends at (see getEndAccidentals()), or passes closer than half SlurNoteHeadYOffset to them: calculateTopPoints() and
+     * calculateBottomPoints() stop at the left border of the end staff entry, left of the accidentals, so the curve ran into e.g.
+     * the sharp of a high note it rises to steeply, or the flat of a note it comes down to (sschmidTU's review of PR #1832: Haydn,
+     * Concertante, m. 161; Telemann, Sonata No. 1, Dolce, m. 13; Actor Prelude, m. 16; Schubert, An die Musik, m. 16).
+     * Not by keeping the curve clear of them with the end at the note: right next to the end, that takes a tangent steeper than
+     * SlurTangentMaxAngle (see clearObstacles()), or, steeper tangents counting them in, a high arch over the whole slur.
+     * Moving the end out moves the curve near it about as far, so it goes out by how deep the curve ran in, and again if the
+     * curve still does, a few times at most. But not further out than the accidentals' far edge plus SlurNoteHeadYOffset, as
+     * far from them as from the note: rising steeply to its end, the curve is lower over the accidental than there, and the end
+     * would float far from the note (Haydn, m. 161). From there, clearObstacles() keeps the curve clear of them, like of the
+     * articulations at its start and end (see articulationCorners).
+     * @returns Whether the curve was calculated again (and added to the sky or bottom line), so there is nothing left to do.
+     */
+    private retryPastEndAccidentals(rules: EngravingRules, endNote: GraphicalNote): boolean {
+        const past: EndPastAccidentals = this.endPastAccidentals;
+        if (past?.clearing) {
+            return false; // the last calculation, clear of them
+        }
+        const accidentals: AccidentalExtent[] = past?.accidentals ?? this.getEndAccidentals(endNote);
+        const margin: number = this.rules.SlurNoteHeadYOffset / 2;
+        const depth: number = Math.max(0, ...accidentals.map(({left, right, far}) => margin - this.getDistanceBeyond(left, right, far)));
+        if (depth <= 0) {
+            return false;
+        }
+        const outward: number = this.placement === PlacementEnum.Above ? -1 : 1;
+        // how much further out the end may go, to as far beyond them as it is from the note
+        const room: number = Math.max(...accidentals.map(accidental => accidental.far)) + this.rules.SlurNoteHeadYOffset -
+            this.bezierEndPt.y * outward;
+        const tries: number = (past?.tries ?? 0) + 1;
+        const clearing: boolean = room <= 0.01 || tries > GraphicalSlur.endPastAccidentalsMaxTries;
+        this.endPastAccidentals = {accidentals, shift: (past?.shift ?? 0) + (clearing ? 0 : Math.min(depth, room)), tries, clearing};
+        try {
+            this.calculateCurve(rules);
+        } finally {
+            this.endPastAccidentals = past;
+        }
+        return true;
+    }
+
+    /**
+     * The accidentals of the chord the slur ends at: their left and right, relative to the staffline, and their far edges from the
+     * staff on the slur's side, as distances outward (see getOutwardExtent()). Where Accidental.draw() renders them: the glyph's
+     * right edge at the x of getModifierStartXY() plus the accidental's x shift, and a cautionary one's parentheses on either side.
+     */
+    private getEndAccidentals(endNote: GraphicalNote): AccidentalExtent[] {
+        const vfnote: any = (endNote as VexFlowGraphicalNote)?.vfnote?.[0];
+        const stave: any = vfnote?.getStave?.();
+        const vfAccidentals: any[] = (stave && vfnote.preFormatted ? vfnote.getModifiers() : [])
+            .filter((modifier: any) => modifier.getCategory() === VF.Accidental.CATEGORY);
+        if (vfAccidentals.length === 0) {
+            return [];
+        }
+        vfnote.setStave(stave); // a note's ys follow the stave only when its voice draws it, as in Articulation.getExtent()
+        // the Vexflow note's x is relative to the measure (see VexFlowStaffEntry.positionNotesAtNoteHeads())
+        const measureX: number = endNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
+        const staveTopY: number = stave.getYForLine(0); // relative to the staff line, like the notes (see VexFlowMeasure.correctNotePositions())
+        const above: boolean = this.placement === PlacementEnum.Above;
+        const accidentals: AccidentalExtent[] = [];
+        for (const accidental of vfAccidentals) {
+            const {x, y} = vfnote.getModifierStartXY(accidental.getPosition(), accidental.getIndex());
+            let glyphX: number = x + accidental.getXShift();
+            const glyphs: {glyph: any, x: number}[] = [];
+            if (accidental.cautionary) {
+                const {parenLeft, parenRight, glyph, render_options: {parenLeftPadding, parenRightPadding}} = accidental;
+                glyphs.push({glyph: parenRight, x: glyphX});
+                glyphX -= parenRight.getMetrics().width + parenRightPadding + accidental.accidental.parenRightPaddingAdjustment;
+                glyphs.push({glyph, x: glyphX});
+                glyphX -= glyph.getMetrics().width + parenLeftPadding;
+                glyphs.push({glyph: parenLeft, x: glyphX});
+            } else {
+                glyphs.push({glyph: accidental.glyph, x: glyphX});
+            }
+            for (const {glyph, x: renderX} of glyphs) {
+                const left: number = (renderX + glyph.originShift.x + glyph.bbox.getX()) / unitInPixels + measureX;
+                const top: number = (y + accidental.y_shift + glyph.originShift.y + glyph.bbox.getY() - staveTopY) / unitInPixels;
+                const far: number = above ? -top : top + glyph.bbox.getH() / unitInPixels;
+                accidentals.push({left, right: left + glyph.bbox.getW() / unitInPixels, far});
+            }
+        }
+        return accidentals;
     }
 
     /**
