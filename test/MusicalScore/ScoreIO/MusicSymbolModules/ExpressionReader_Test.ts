@@ -292,4 +292,17 @@ describe("ExpressionReader", () => {
         expect(sheet.SourceMeasures[1].LastRepetitionInstructions.map(instruction => instruction.type), "repetition direction")
             .to.deep.equal([RepetitionInstructionEnum.DaCapo]);
     });
+
+    it("puts note symbols between words into the text, stem-down ones as stem-up, but not other symbols", () => {
+        const sheet: MusicSheet = readSheet("test/data/test_words_symbols.musicxml");
+        const tempos: MultiTempoExpression[] = sheet.SourceMeasures[0].TempoExpressions;
+        expect(tempos.map((tempo: MultiTempoExpression): string => tempo.InstantaneousTempo.Label), "tempo marks, the oboe's repeated")
+            .to.deep.equal(["Fast (Straight\u266A)", "Fast (Straight\u{1D161}\u00B7)", "Fast (Straight\u266A)"]);
+        expect(tempos.slice(0, 2).map((tempo: MultiTempoExpression): number => tempo.InstantaneousTempo.TempoInBpm)).to.deep.equal([112, 160]);
+        const words: (measureIndex: number) => string[] = (measureIndex: number): string[] =>
+            sheet.SourceMeasures[measureIndex].StaffLinkedExpressions[0].flatMap((expression: MultiExpression): string[] =>
+                expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
+        expect(words(0), "measure 1").to.deep.equal(["(\u{1D15E})"]);
+        expect(words(1), "measure 2").to.deep.equal(["Hold (\u{1D15D}),\nthen play (\u2669) Keep going", "cresc.\u266A"]);
+    });
 });

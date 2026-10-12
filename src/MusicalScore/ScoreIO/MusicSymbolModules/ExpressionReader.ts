@@ -44,6 +44,16 @@ export class ExpressionReader {
     private WedgeYPosXml: number;
     private openPedal: Pedal;
     private openWavyLine: WavyLine;
+    /** Unicode text for SMuFL note symbols between words, e.g. metNote8thUp in "Fast (Straight ♪)".
+     *  Notes use the text's font or a fallback font. Stem-down variants use the same note value's stem-up character.
+     *  Unsupported names are omitted without removing the surrounding words. */
+    private static readonly noteSymbolTexts: ReadonlyMap<string, string> = new Map([
+        ["metNoteWhole", "\u{1D15D}"], ["metNoteHalfUp", "\u{1D15E}"],
+        ["metNoteQuarterUp", "\u2669"], ["metNote8thUp", "\u266A"],
+        ["metNote16thUp", "\u{1D161}"], ["metNote32ndUp", "\u{1D162}"],
+        ["metNote64thUp", "\u{1D163}"], ["metNote128thUp", "\u{1D164}"],
+        ["metAugmentationDot", "\u00B7"],
+    ]);
     constructor(musicSheet: MusicSheet, instrument: Instrument, staffNumber: number) {
         this.musicSheet = musicSheet;
         this.staffNumber = staffNumber;
@@ -247,8 +257,9 @@ export class ExpressionReader {
 
             dirContentNode = dirNode.element("words");
             if (dirContentNode) {
-                // an exporter may split the words where their formatting changes
-                const text: string = dirNode.elements("words").map((wordsNode: IXmlElement): string => wordsNode.value).join("");
+                // an exporter may split the words where their formatting changes, and put a note symbol between them
+                const text: string = dirNode.elements().map((node: IXmlElement): string => node.name === "words" ? node.value :
+                    node.name === "symbol" ? ExpressionReader.noteSymbolTexts.get(node.value.trim().replace(/Down$/, "Up")) ?? "" : "").join("");
                 if (isTempoInstruction) {
                     this.directionTimestamp = this.readDirectionTimestamp(
                         dirContentNode.attribute("default-x") ? undefined : offsetNode, inSourceMeasureCurrentFraction);
