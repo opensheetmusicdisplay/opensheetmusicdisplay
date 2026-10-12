@@ -70,19 +70,6 @@ export class ExpressionReader {
             }
         }
         this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
-        let offsetFraction: Fraction = new Fraction(Math.abs(this.offsetDivisions), divisions * 4);
-
-        if (this.offsetDivisions > 0) {
-            if (inSourceMeasureCurrentFraction.RealValue > 0) {
-                offsetFraction = Fraction.multiply(Fraction.minus(inSourceMeasureCurrentFraction, inSourceMeasureFormerFraction), offsetFraction);
-                this.directionTimestamp = Fraction.plus(offsetFraction, inSourceMeasureCurrentFraction);
-            } else { this.directionTimestamp = Fraction.createFromFraction(offsetFraction); }
-        } else if (this.offsetDivisions < 0) {
-            if (inSourceMeasureCurrentFraction.RealValue > 0) {
-                offsetFraction = Fraction.multiply(Fraction.minus(inSourceMeasureCurrentFraction, inSourceMeasureFormerFraction), offsetFraction);
-                this.directionTimestamp = Fraction.minus(inSourceMeasureCurrentFraction, offsetFraction);
-            } else { this.directionTimestamp = Fraction.createFromFraction(offsetFraction); }
-        }
 
         const directionTypeNodes: IXmlElement[] = xmlNode.elements("direction-type");
 
@@ -166,9 +153,6 @@ export class ExpressionReader {
           const offsetValue: number = Number.parseInt(offsetNode.value, 10);
           timestampFraction.Add(new Fraction(offsetValue, 4 * this.divisions));
         }
-        // this.directionTimestamp = timestampFraction.clone();
-        //   this could be correct, but leads to odd differences with Musescore for elements like dim. and wedges.
-
         const n: IXmlElement = directionNode.element("sound");
         if (n) {
             const tempoAttr: IXmlAttribute = n.attribute("tempo");
